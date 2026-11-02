@@ -12,7 +12,9 @@ The strict build checks 25 HTML pages and their local links/assets. Chromium
 checks pass for desktop search and mobile navigation/layout. A stale coverage
 link was corrected. The Documentation workflow builds pull requests and deploys
 only main through GitHub Pages. No creator, validator or viewer runtime code
-changed. See [website maintenance](WEBSITE.md).
+changed. GitHub Pages deployment [41522412226](https://github.com/thinkbox-digital/eapdf/actions/runs/41522412226) passes.
+Live guide URLs, search and mobile navigation were checked successfully.
+See [website maintenance](WEBSITE.md).
 
 **Fresh public snapshot — 2026-11-02:**
 Published at https://github.com/thinkbox-digital/eapdf with fresh history.
