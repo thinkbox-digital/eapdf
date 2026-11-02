@@ -5,7 +5,7 @@ This app can run behind `thinkbox.digital` as a small Flask service proxied by n
 ## Install
 
 ```bash
-cd /media/lepore/Work/thinkbox/convert
+cd /path/to/eapdf
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements-web.txt
@@ -30,7 +30,7 @@ http://127.0.0.1:8876
 ## Production with gunicorn
 
 ```bash
-cd /media/lepore/Work/thinkbox/convert
+cd /path/to/eapdf
 . .venv/bin/activate
 gunicorn --workers 2 --threads 4 --timeout 660 --bind 127.0.0.1:8876 validator_web:app
 ```
@@ -52,7 +52,7 @@ The application uses HTTP Basic authentication over HTTPS. Every route, includin
 
 Use:
 
-- [validator-web.service](/media/lepore/Work/thinkbox/convert/deploy/validator-web.service)
+- [validator-web.service](../deploy/validator-web.service)
 
 Install it:
 
@@ -72,7 +72,7 @@ Provision a certificate for the configured host names and confirm the certificat
 
 Use:
 
-- [nginx-thinkbox.digital.conf](/media/lepore/Work/thinkbox/convert/deploy/nginx-thinkbox.digital.conf)
+- [nginx-thinkbox.digital.conf](../deploy/nginx-thinkbox.digital.conf)
 
 This publishes the app at:
 

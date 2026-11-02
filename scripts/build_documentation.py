@@ -38,6 +38,8 @@ def rewrite_links(text, source, destination):
         url = urlsplit(value)
         if url.scheme or url.netloc or not url.path:
             return match.group(0)
+        if url.path.startswith('/'):
+            raise ValueError(f'{source}: absolute local link {url.path}')
         path = posixpath.normpath(posixpath.join(posixpath.dirname(source), url.path))
         if not (ROOT / path).exists():
             raise ValueError(f'{source}: missing link target {path}')

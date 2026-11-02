@@ -8,7 +8,7 @@ This guide explains how to use the Gmail input workflow in this project, includi
 - running Gmail exports into EA-PDF
 
 Code reference:
-- [GmailDownloadToPdf.java](/media/lepore/Work/thinkbox/convert/src/main/java/eapdf/GmailDownloadToPdf.java)
+- [GmailDownloadToPdf.java](../src/main/java/eapdf/GmailDownloadToPdf.java)
 
 Official Google references used for the setup steps:
 - Gmail Java quickstart: https://developers.google.com/workspace/gmail/api/quickstart/java
@@ -102,13 +102,14 @@ The code expects a standard Google desktop OAuth client JSON file.
 The program resolves credentials in this order:
 
 1. `--credentials /path/to/credentials.json`
-2. [config/credentials.json](/media/lepore/Work/thinkbox/convert/config/credentials.json)
+2. `config/credentials.json`
 3. `credentials.json` in the project root
 
 Recommended location:
-- [config/credentials.json](/media/lepore/Work/thinkbox/convert/config/credentials.json)
+- `config/credentials.json`
 
-Do not commit real credentials if the repo is shared.
+The [public example](../config/credentials.example.json) shows the expected structure;
+use your own downloaded OAuth client file. Do not commit real credentials.
 
 ## Step 5: Understand The Token Store
 
@@ -138,7 +139,7 @@ On the first Gmail run:
 4. the token is stored in the token directory
 
 Relevant code:
-- [authorize(...)](/media/lepore/Work/thinkbox/convert/src/main/java/eapdf/GmailDownloadToPdf.java)
+- [authorize(...)](../src/main/java/eapdf/GmailDownloadToPdf.java)
 
 ## Common Commands
 
@@ -232,7 +233,7 @@ The current code selects all messages returned for the chosen mailbox/labels, su
 `--email` records archive-owner metadata; it does not exclude other participants' messages.
 
 This is implemented in:
-- [buildMessageQuery(...)](/media/lepore/Work/thinkbox/convert/src/main/java/eapdf/GmailDownloadToPdf.java)
+- [buildMessageQuery(...)](../src/main/java/eapdf/GmailDownloadToPdf.java)
 
 ## Troubleshooting
 
@@ -241,7 +242,7 @@ This is implemented in:
 The program did not find:
 
 - an explicit `--credentials` path
-- [config/credentials.json](/media/lepore/Work/thinkbox/convert/config/credentials.json)
+- `config/credentials.json`
 - or `credentials.json` in the project root
 
 ### Browser Does Not Complete Login
@@ -281,7 +282,7 @@ java -cp dist/emailtopdfa.jar eapdf.GmailDownloadToPdf \
 
 Current defaults from the code:
 
-- credentials path fallback: [config/credentials.json](/media/lepore/Work/thinkbox/convert/config/credentials.json)
+- credentials path fallback: `config/credentials.json`
 - token store fallback: `~/.gmail_token_store`
 - OAuth callback port: `8888`
 - Gmail scope: read-only
