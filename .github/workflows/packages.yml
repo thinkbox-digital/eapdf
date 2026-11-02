@@ -1,6 +1,11 @@
 name: Publish patched libraries
 on:
   workflow_dispatch:
+    inputs:
+      verify_only:
+        description: Verify existing packages without republishing
+        type: boolean
+        default: false
 permissions:
   contents: read
   packages: write
@@ -21,6 +26,7 @@ jobs:
       - name: Verify locked library artifacts
         run: python3 scripts/build_patched_openhtmltopdf.py
       - name: Publish binary and matching source JARs
+        if: ${{ !inputs.verify_only }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash

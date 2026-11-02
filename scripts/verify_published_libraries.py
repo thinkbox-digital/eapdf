@@ -5,17 +5,24 @@ import json
 import os
 from pathlib import Path
 from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 lock = json.loads((ROOT / 'third_party/openhtmltopdf/lock.json').read_text())
 repository = os.environ['GITHUB_REPOSITORY']
 if repository != 'thinkbox-digital/eapdf':
     raise SystemExit('Refusing an unexpected package repository')
-class NoRedirect(HTTPRedirectHandler):
+class SafeRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None
+        if urlparse(newurl).scheme != 'https':
+            raise SystemExit('Refusing a non-HTTPS package redirect')
+        redirected = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if redirected is not None:
+            # GitHub uses signed storage URLs; never forward the registry token.
+            redirected.remove_header('Authorization')
+        return redirected
 
-opener = build_opener(NoRedirect)
+opener = build_opener(SafeRedirect)
 credential = base64.b64encode((os.environ['GITHUB_ACTOR'] + ':' + os.environ['GITHUB_TOKEN']).encode()).decode()
 for artifact in lock['artifacts']:
     relative = Path(artifact['path']).relative_to('third_party/maven').as_posix()
