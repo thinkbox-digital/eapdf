@@ -25,7 +25,12 @@ in the project POM or commit it. Add the repository above with server id `github
 in a consuming project's Maven configuration. Existing EA-PDF builds use their
 verified local copies by default and do not need that configuration.
 
+Published packages are listed at
+https://github.com/thinkbox-digital/eapdf/packages.
+
 Maintainers publish with the manual **Publish patched libraries** Actions workflow.
 It uses the repository's short-lived `GITHUB_TOKEN`, verifies locked bytes before
 upload and verifies downloaded bytes afterward. Package versions are immutable;
 change the version and lock when changing library bytes.
+
+Use the workflow’s `verify_only` option to recheck existing package versions without republishing.

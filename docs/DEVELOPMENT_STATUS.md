@@ -1,7 +1,7 @@
 # Development status and restart guide
 
 **Fresh public snapshot — 2026-11-02:**
-This source tree is prepared for a new public repository with fresh history.
+Published at https://github.com/thinkbox-digital/eapdf with fresh history.
 The previous repository remains a private archive; its commits, tags, issues,
 Actions records and historical credentials are not imported. The owner confirmed
 that the email samples are public. Local comparison files, ISO reference PDFs,
@@ -11,6 +11,13 @@ Application artifacts belong in Releases. The two patched OpenHTMLtoPDF librarie
 are published through Packages with their corresponding source JARs; verified
 local build copies preserve token-free builds. See [package usage](PACKAGES.md).
 The isolated source snapshot passes the Java release gate and viewer checks.
+GitHub conversion quality run 41519981174 passes; package verification run
+41519993090 confirms all six Maven artifacts match the locked bytes. All 13 release
+assets match their SHA-256 checksums. The first package verification failed on a
+storage redirect; the corrected check follows HTTPS redirects without forwarding
+authentication. An earlier quality run was superseded, not a test failure.
+Private vulnerability reporting, dependency alerts, secret scanning and push
+protection are enabled. See [launch verification](PUBLIC_LAUNCH.txt).
 Earlier entries below are historical records of private development.
 
 **Public-release preparation — 2026-11-02:**
