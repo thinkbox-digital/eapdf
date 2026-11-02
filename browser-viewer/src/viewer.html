@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EA-PDF viewer</title><link rel="stylesheet" href="viewer.css"><script type="module" src="viewer.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="viewer.html" aria-label="EA-PDF viewer home"><span class="brand-mark">EA</span><span>EA-PDF <span class="brand-light">viewer</span></span></a>
+    <div class="header-actions"><label class="open-file" title="Open PDF">Open PDF<input id="file" disabled type="file" accept=".pdf,application/pdf"></label><button id="export-csv" class="quiet" disabled title="Export email metadata, folder paths and attachment lists">Export finding aid (CSV)</button><button id="restart" class="quiet" hidden disabled title="Close cached documents and reopen the original PDF at the beginning">Reopen PDF</button><button id="close" class="quiet" disabled>Close / cancel</button></div>
+  </header>
+  <section id="linked-file" hidden><span id="linked-label"></span><button id="open-linked">Open linked PDF</button></section>
+  <div class="toolbar"><button id="toggle-navigation" aria-expanded="true" aria-controls="navigation-panel">Messages</button><button id="toggle-details" aria-expanded="true" aria-controls="details-panel">Details</button>
+    <nav aria-label="Page controls"><button id="back" title="Return to parent PDF" disabled>← Parent PDF</button><span class="divider"></span><button id="previous" title="Previous page" aria-label="Previous page" disabled>‹</button><label class="page-label">Page <input id="page" type="text" inputmode="numeric" autocomplete="off" aria-label="Page number" title="Type a page number and press Enter" value="1" disabled></label><span id="pages">of 0</span><button id="next" title="Next page" aria-label="Next page" disabled>›</button><button id="retry" disabled>Retry page</button><button id="zoom-out" title="Zoom out" aria-label="Zoom out" disabled>−</button><select id="zoom" aria-label="Zoom" disabled><option value="fit-width">Fit width</option><option value="fit-page">Fit page</option><option value="0.5">50%</option><option value="0.6">60%</option><option value="0.7">70%</option><option value="0.8">80%</option><option value="0.9">90%</option><option value="1" selected>100%</option><option value="1.1">110%</option><option value="1.2">120%</option><option value="1.3">130%</option><option value="1.4">140%</option><option value="1.5">150%</option><option value="1.6">160%</option><option value="1.7">170%</option><option value="1.8">180%</option><option value="1.9">190%</option><option value="2">200%</option></select><button id="zoom-in" title="Zoom in" aria-label="Zoom in" disabled>+</button></nav>
+    <form id="search-form" role="search"><select id="search-scope" aria-label="Search scope"><option value="document">This PDF</option><option value="collection">Whole collection</option></select><input id="search" aria-label="Find in this PDF" placeholder="Find in this PDF…" type="search" maxlength="500" disabled><button id="find-previous" type="button" disabled>Previous match</button><button id="find" disabled>Next match</button><button id="cancel-search" type="button" hidden>Cancel search</button></form>
+  </div>
+  <div class="location-bar"><nav id="breadcrumbs" aria-label="Document path"></nav><span id="search-status" role="status"></span></div>
+  <div id="workspace">
+    <aside id="navigation-panel" class="navigation-panel" aria-label="Messages and collections"><div class="panel-heading"><h2>Documents & messages</h2></div><label class="message-filter">Find emails<input id="message-filter" type="search" placeholder="Subject, sender or date" aria-label="Filter messages"></label><details id="outline-panel" hidden><summary>PDF bookmarks</summary><ul id="outline"></ul></details><details id="collection-results" hidden open><summary>Collection search results</summary><div id="collection-search-summary" role="status"></div><ul id="collection-matches"></ul></details><ul id="tree"></ul></aside>
+    <main id="viewport" tabindex="0" aria-label="PDF pages; scroll to read more" aria-busy="false">
+      <div id="empty-state"><img class="empty-logo" src="assets/thinkbox_logo.jpg" alt="ThinkBox Digital" width="656" height="555"><h2>Read email preserved in PDF.</h2><p>Open or drop a PDF to browse its messages and embedded files.</p><p class="muted">Files selected here stay on your device.</p></div>
+      <div id="page-surface" hidden><canvas id="canvas" hidden aria-label="Rendered PDF page"></canvas><div id="text-layer" class="textLayer"></div></div>
+    </main>
+    <aside id="details-panel" class="details-panel" aria-label="Document details">
+        <section class="detail-section files-section"><div class="panel-heading"><h2>Embedded files</h2><span id="file-count" class="badge">0</span></div><div id="files"></div></section>
+      <details class="detail-section" open><summary>Document information</summary><div id="document-info"></div></details>
+      <details id="reading-notes" class="detail-section" hidden><summary>Reading notes <span id="note-count" class="badge">0</span></summary><div id="diagnostics"></div></details>
+    </aside>
+  </div>
+  <footer><span id="status" role="status" aria-live="polite">Loading viewer…</span><span class="privacy-note">Conformance not evaluated · <span id="viewer-version">__VIEWER_VERSION__</span></span></footer>
+</body>
+</html>

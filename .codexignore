@@ -1,0 +1,10 @@
+target/
+debug_out/
+out_pdfs/
+downloaded_attachments/
+downloaded_eml/
+in/
+*.pdf
+*.jar
+*.ttf
+*.jpg

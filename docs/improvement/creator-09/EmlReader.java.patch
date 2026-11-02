@@ -1,0 +1,48 @@
+--- before/EmlReader.java
++++ after/EmlReader.java
+@@ -13,7 +13,7 @@
+ import java.util.*;
+ 
+ class EmlReader {
+-  static Session mimeSession(byte[] raw) {
++  static int headerEnd(byte[] raw) {
+     int end = 0;
+     while (end < raw.length) {
+       int start = end;
+@@ -22,6 +22,11 @@
+       if (end < raw.length && raw[end] == '\r') end++;
+       if (end < raw.length && raw[end] == '\n') end++;
+     }
++    return end;
++  }
++
++  static Session mimeSession(byte[] raw) {
++    int end = headerEnd(raw);
+     boolean utf8 = true;
+     try {
+       StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(raw, 0, end));
+@@ -81,6 +86,14 @@
+       r.sourceBytes = raw;
+       r.sourceFilename = !Common.nz(sourceFilename).isBlank() ? sourceFilename : (Common.safeFileStem(Common.nz(r.subject).isBlank() ? "message" : r.subject) + ".eml");
+       r.sourceMime = "message/rfc822";
++      if (Boolean.parseBoolean(s.getProperty("mail.mime.allowutf8"))) {
++        for (int i = 0, end = headerEnd(raw); i < end; i++) {
++          if (raw[i] < 0) {
++            r.sourceMime = "message/global";
++            break;
++          }
++        }
++      }
+       r.afRelationship = "Source";
+ 
+       AssociatedFile src = new AssociatedFile();
+@@ -88,7 +101,8 @@
+       src.mime = r.sourceMime;
+       src.afRelationship = "Source";
+       src.bytes = raw;
+-      src.description = "Original RFC 822 source";
++      src.description = r.sourceMime.equals("message/global")
++          ? "Original international email source" : "Original RFC 822 source";
+       src.checksumMd5 = Common.md5Hex(src.bytes);
+       src.checksumSha256 = Common.sha256Hex(src.bytes);
+       src.emailAttachment = false;

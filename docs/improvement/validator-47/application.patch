@@ -1,0 +1,206 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -5008,7 +5008,7 @@
+                 if good:
+                     report.ok("USERPROPS_TYPE","UserProperties V entry has allowed type",{"name":name,"tag":elem["type"],"actual":actual_kind,"value":observed_pdf_value(value)})
+                 else:
+-                    report.fail("USERPROPS_TYPE","UserProperties V entry has wrong type",{"name":name,"tag":elem["type"],"expected":kind,"actual":actual_kind,"value":str(value)})
++                    report.fail("USERPROPS_TYPE","UserProperties V entry has wrong type",{"name":name,"tag":elem["type"],"expected":kind,"actual":actual_kind,"value":observed_pdf_value(value)})
+             else:
+                 actual_kind=userprop_value_kind(value)
+                 if actual_kind in ("string","int","real","bool"):
+@@ -5084,9 +5084,17 @@
+             owner=by_element.get(id(owner["parent"]))
+         identity={}
+         if owner is not None:
+-            identity={userprop_name(p):str(dict_get(p,"/V",""))
+-                      for p in parse_userproperties(owner["attrs"])
+-                      if userprop_name(p) in {"Mail_GUID","Mail_MessageID"}}
++            try:
++                for prop in parse_userproperties(owner["attrs"]):
++                    identity_name=userprop_name(prop)
++                    if identity_name not in {"Mail_GUID","Mail_MessageID"}:
++                        continue
++                    identity_value=dict_get(prop,"/V",None)
++                    if not isinstance(identity_value,pikepdf.String):
++                        raise ValueError("Message identity is not a PDF string")
++                    identity[identity_name]=str(identity_value)
++            except (UnicodeError,ValueError,pikepdf.PdfError):
++                identity={}  # Wrong/unreadable identity data cannot select a source owner.
+         guid=identity.get("Mail_GUID","")
+         message_id=identity.get("Mail_MessageID","")
+         owners=[record for record in records if
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -6908,7 +6908,8 @@
+       "scopes": [
+         "file"
+       ],
+-      "issue_ids": []
++      "issue_ids": [],
++      "owner_identity_value_review": "V47: source owner identity uses actual PDF strings and guarded decoding. Wrongly typed or unreadable supplied identity values leave the owner unavailable instead of being coerced into an identity or causing an operational exception. Keep recommendation-only source comparisons and existing broader owner/duplicate policies separate."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -7034,7 +7035,8 @@
+       "scopes": [
+         "file"
+       ],
+-      "issue_ids": []
++      "issue_ids": [],
++      "value_diagnostic_review": "V47: known V object-type violations retain their prescribed data failure even if text display decoding fails. Use the existing observed_pdf_value representation instead of str(value) in wrong-type diagnostics. Do not add new type, ASCII, source-value or matching requirements. Generic ISO UserProperties V(any) does not override the narrower EA Table12 fields. Unreadable String V paths remain separately reviewable."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+--- before/tests/test_userproperty_value_diagnostics.py
++++ after/tests/test_userproperty_value_diagnostics.py
+@@ -0,0 +1,96 @@
++"""Definite wrong V types must not abort when diagnostic text decoding fails."""
++import tempfile
++import unittest
++from pathlib import Path
++
++import pikepdf
++from test_preservation_safety import ROOT, validator as v
++
++
++class UserPropertyValueDiagnosticTests(unittest.TestCase):
++    def document(self):
++        return pikepdf.open(ROOT / 'tests/fixtures/eapdf/validator-operands/valid.pdf')
++
++    def message(self, pdf):
++        elements = []
++        v.walk_struct_elems(pdf.Root.StructTreeRoot.K, elements)
++        return next(e['elem'] for e in elements if e['type'] == 'Mail_Message')
++
++    def bad_name(self):
++        return pikepdf.Object.parse(b'/Vendor#FF')
++
++    def bad_dictionary(self):
++        return pikepdf.Object.parse(b'<< /Vendor#FF 1 >>')
++
++    def check(self, name=None, value=None):
++        with self.document() as pdf:
++            message = self.message(pdf)
++            if name is not None:
++                prop = next((p for p in message.A.P if str(p.N) == name), None)
++                if prop is None:
++                    message.A.P.append(pikepdf.Dictionary(N=name, V=value))
++                else:
++                    prop.V = value
++            with tempfile.TemporaryDirectory(prefix='.eapdf-value-diagnostics-', dir=ROOT) as directory:
++                path = Path(directory) / 'focused.pdf'
++                pdf.save(path, static_id=True, fix_metadata_version=False)
++                report = v.validate(str(path))
++        failures = {i['code'] for i in report.items if i['level'] == 'FAIL'}
++        self.assertNotIn('VALIDATION_ERROR', failures)
++        return failures, report
++
++    def assert_type_failure(self, name, value):
++        failures, report = self.check(name, value)
++        self.assertEqual({'USERPROPS_TYPE'}, failures)
++        self.assertEqual('FAIL', report.summary()['status'])
++        return report
++
++    def test_guid_name_value_reports_type_failure(self):
++        self.assert_type_failure('Mail_GUID', self.bad_name())
++
++    def test_guid_array_value_reports_type_failure(self):
++        self.assert_type_failure('Mail_GUID', pikepdf.Array([self.bad_name()]))
++
++    def test_guid_dictionary_value_reports_type_failure(self):
++        self.assert_type_failure('Mail_GUID', self.bad_dictionary())
++
++    def test_subject_name_value_reports_type_failure(self):
++        self.assert_type_failure('Mail_Subject', self.bad_name())
++
++    def test_subject_dictionary_value_reports_type_failure(self):
++        self.assert_type_failure('Mail_Subject', self.bad_dictionary())
++
++    def test_date_name_value_reports_type_failure(self):
++        self.assert_type_failure('Mail_Sent', self.bad_name())
++
++    def test_size_name_value_reports_type_failure(self):
++        self.assert_type_failure('Mail_SizeInBytes', self.bad_name())
++
++    def test_message_id_name_value_does_not_abort_owner_identity_assessment(self):
++        self.assert_type_failure('Mail_MessageID', self.bad_name())
++
++    def test_count_dictionary_with_unreadable_member_does_not_abort(self):
++        self.assert_type_failure('Mail_NumberAttachments', pikepdf.Dictionary(Raw=self.bad_name()))
++
++    def test_generic_header_name_value_keeps_existing_type_failure(self):
++        self.assert_type_failure('Mail_X-Extra', self.bad_name())
++
++    def test_generic_header_dictionary_value_keeps_existing_type_failure(self):
++        self.assert_type_failure('Mail_X-Extra', self.bad_dictionary())
++
++    def test_readable_wrong_guid_type_keeps_existing_type_failure(self):
++        self.assert_type_failure('Mail_GUID', pikepdf.Name('/Unrelated'))
++
++    def test_unicode_text_values_remain_legal(self):
++        failures, report = self.check('Mail_Subject', 'Unicode résumé')
++        self.assertEqual(set(), failures)
++        self.assertEqual('PASS', report.summary()['status'])
++
++    def test_baseline_guid_string_remains_legal(self):
++        failures, report = self.check()
++        self.assertEqual(set(), failures)
++        self.assertEqual('PASS', report.summary()['status'])
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- before/scripts/build_eapdf_property_value_diagnostic_fixtures.py
++++ after/scripts/build_eapdf_property_value_diagnostic_fixtures.py
+@@ -0,0 +1,50 @@
++"""Wrong property V types remain data failures even with unreadable display data."""
++import hashlib
++import json
++from pathlib import Path
++
++import pikepdf
++from build_eapdf_message_owner_fixtures import structure_elements, guid_property
++
++ROOT = Path(__file__).resolve().parents[1]
++OUT = ROOT / 'tests/fixtures/eapdf/validator-property-value-diagnostics'
++SEED = ROOT / 'tests/fixtures/eapdf/validator-operands/valid.pdf'
++
++
++def main():
++    OUT.mkdir(parents=True, exist_ok=True)
++    cases = []
++    names = ('guid-name-value', 'guid-array-value', 'subject-name-value', 'date-name-value',
++             'size-name-value', 'generic-name-value', 'unicode-string-value', 'baseline-guid-value',
++             'guid-dictionary-value', 'subject-dictionary-value', 'generic-dictionary-value')
++    for name in names:
++        with pikepdf.open(SEED) as pdf:
++            message = next(e for e in structure_elements(pdf) if e.get('/S') == pikepdf.Name('/Mail_Message'))
++            if name.startswith('guid-'):
++                guid_property(message).V = (pikepdf.Array([pikepdf.Object.parse(b'/Vendor#FF')])
++                    if name == 'guid-array-value' else pikepdf.Object.parse(b'<< /Vendor#FF 1 >>')
++                    if name == 'guid-dictionary-value' else pikepdf.Object.parse(b'/Vendor#FF'))
++            elif name != 'baseline-guid-value':
++                key = {'subject-name-value': 'Mail_Subject', 'date-name-value': 'Mail_Sent',
++                    'size-name-value': 'Mail_SizeInBytes', 'generic-name-value': 'Mail_X-Extra',
++                    'unicode-string-value': 'Mail_Subject', 'subject-dictionary-value': 'Mail_Subject',
++                    'generic-dictionary-value': 'Mail_X-Extra'}[name]
++                value = ('Unicode résumé' if name == 'unicode-string-value' else
++                    pikepdf.Object.parse(b'<< /Vendor#FF 1 >>') if name.endswith('dictionary-value') else
++                    pikepdf.Object.parse(b'/Vendor#FF'))
++                message.A.P.append(pikepdf.Dictionary(N=key, V=value))
++            path = OUT / (name + '.pdf')
++            pdf.save(path, static_id=True, fix_metadata_version=False)
++        legal = name in ('unicode-string-value', 'baseline-guid-value')
++        cases.append(dict(file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
++            expected_status='PASS' if legal else 'FAIL', expected_failures=[] if legal else ['USERPROPS_TYPE']))
++    (OUT / 'expectations.json').write_text(json.dumps(dict(
++        authority='EA-PDF9.7 Table12 prescribed V types; ISO32000-2:2020 14.7.6.4 Table362 generic V any type does not replace narrower EA field types',
++        source_files={str(SEED.relative_to(ROOT)): hashlib.sha256(SEED.read_bytes()).hexdigest()},
++        boundary='Known wrong types are data failures independent of display decoding. Wrong/unreadable message identity data cannot choose a source owner. Preserve existing generic Mail_* scalar constraints, Unicode text, raw name checks, presence and matching uncertainty. Unreadable String V values and other scalar owner policies remain separate.',
++        cases=cases), indent=2) + '\n')
++    print('Built eleven property-value diagnostic controls.')
++
++
++if __name__ == '__main__':
++    main()

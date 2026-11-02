@@ -1,0 +1,68 @@
+{
+  "batch": "V11",
+  "authority": "validator_rule_text.json",
+  "scope": [
+    "first creator item",
+    "exact-GUID-owned attachment count presence",
+    "creator/producer provenance",
+    "supplied NumberMessages type",
+    "size-comparison semantic prerequisite",
+    "separate Table 11 ISO expectations"
+  ],
+  "tests": {
+    "full_packaged": {
+      "status": "PASS",
+      "run": 376,
+      "passed": 375,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 1,
+      "seconds": 1401.576,
+      "log": "docs/improvement/validator-11/full-tests.log"
+    },
+    "unit": {
+      "status": "PASS",
+      "run": 376,
+      "passed": 349,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 27,
+      "seconds": 5.68,
+      "log": "docs/improvement/validator-11/unit-tests-final.log"
+    }
+  },
+  "retained_corpus": {
+    "cases": 92,
+    "pdfa_passes": 92,
+    "exact_outcomes_matched": 92,
+    "results": "retained-corpus-results.json"
+  },
+  "new_pdf_probes": {
+    "cases": 12,
+    "results": "corpus-results-final.json"
+  },
+  "entry_points": {
+    "checks": 6,
+    "results": "entry-points.json",
+    "boundary": "First seven-case fixture revision; initial freeze retained separately."
+  },
+  "source_boundary": {
+    "manifest": "verification-inputs.json",
+    "capsule": "runtime-inputs.zip",
+    "integrity": "verification-integrity.json"
+  },
+  "creator_artifact": "272ad741590552489dfb6d096f7ee4b01035fb3faf1c76d817394c0c2ad5e16a",
+  "inventory": {
+    "records": 301,
+    "file_records": 249,
+    "rule_codes": 224,
+    "unmapped_mandatory_conditional_file_records": 0,
+    "open_expert_dependency_questions": 11
+  },
+  "limits": [
+    "Mapping is not implementation completeness or conformance certification.",
+    "Eleven expert/dependency questions and mixed-rule/ownership review remain open.",
+    "Optional official PREMIS schema is unavailable.",
+    "Earlier incomplete and failed logs remain historical evidence."
+  ]
+}

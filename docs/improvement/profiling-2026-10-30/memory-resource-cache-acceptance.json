@@ -1,0 +1,24 @@
+{
+  "candidate_sha256": "fbd8f93aa88fa80e2d4ced63466c3b897ca2c9db5c4e5bd98a670ab4ed7902a5",
+  "tests_including_packaging": {
+    "tests": 201,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 9
+  },
+  "unit_tests": 199,
+  "packaging_checks": 2,
+  "matrix_outputs": 22,
+  "unchanged_rule_level_counts_and_pdfa_assertion_totals": true,
+  "original_pdf_and_source_hashes_unchanged": true,
+  "large_retry_uses_previous_frozen_jar": true,
+  "source_sha256": {
+    "validator-desktop/src/main/java/org/verapdf/pdfa/validation/validators/BaseValidator.java": "adbd669a3e1f4f33e4f6b43aeb06316f62b981b8df0c7f33b1b975ebe393ac3d",
+    "validator-desktop/src/main/java/org/verapdf/pdfa/validation/validators/SpillableIdSet.java": "3d3707803a5e77c3172de990c882139a6bf57fa87992058a31ca093d087856c9",
+    "validator-desktop/src/main/java/eapdf/IndexedPdfLoader.java": "a9bf2dad2f310b25ab40ddfbe65971af69a42c0ddff27cf386b6706ceb5cef57",
+    "validator-desktop/src/main/java/eapdf/ValidationResourceCache.java": "7f3bbded89e4d0e5670d705a32f4b10ccfa73d8bb48b51523f5ef4e502b847d9",
+    "validator-desktop/src/test/java/eapdf/ValidationResourceCacheTests.java": "72ca0eb2849308f4edbe822a14ebc2355d6aaa4fcc31903d7b4d4d090a78c211",
+    "validator-desktop/src/test/java/org/verapdf/pdfa/validation/validators/SpillableIdSetTests.java": "89d5b6e5ec2f5eb8ca97ac3e46bb475083e3c73a9931c332a5c42cd6ad309c87"
+  },
+  "evidence": "output/performance-fixes-2026-10-30/memory-final-candidate-acceptance"
+}

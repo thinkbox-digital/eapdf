@@ -1,0 +1,532 @@
+CIDSet policy correction (2026-10-27)
+The forced CIDSet removal and mandatory absence check described in this historical
+report have been reverted. The forthcoming ISO 19005-4 revision changes "shall"
+to "should": https://github.com/veraPDF/veraPDF-library/issues/1647#issuecomment-6457552448
+PDFBox now uses its normal save-time subsetting. The recorded PDFs and receipts
+remain unchanged; CIDSet absence is no longer an extra acceptance requirement.
+
+Real-world input conversion audit — 2026-10-27
+
+Status: the corrected conversion and validation runs are complete.
+All 135 original candidates were attempted. All 95 current files were rerun
+with the final creator and Java validator. Current outcomes: 58 passed;
+23 validation incomplete; four missing source data; four rejected non-email
+Outlook items; six stopped at processing limits.
+Incomplete validation is not a pass.
+Creator: 308 tests passed. Java validator: 163 passed, one GUI test skipped.
+Python: 13 Outlook-source tests and eight sample-runner tests passed.
+
+Original inventory: 179 files under in/. Of these, 135 have supported email extensions,
+totaling 5,196.6 MiB. The other 44 files are inventoried separately and were not
+converted: they are social-media JSON/JSONL, media assets and supporting files.
+These are not supported standalone email inputs.
+31 EML; 61 MSG; 26 PST; 17 MBOX in the original inventory.
+The current folder contains 31 EML, 36 MSG, 11 PST and 17 MBOX.
+This audit does not exercise live Gmail retrieval.
+All 135 files were attempted. Baseline: 42 passed Java validation, 69 did not
+convert, and 24 converted but failed or could not complete validation.
+
+The folder contains a mixture of real mail, test messages, Outlook items that
+are not emails, and files whose extension has another meaning. Fifteen .pst
+files do not have an Outlook PST header. Several .msg files are application
+message catalogs, not Outlook messages. Those are not successful conversions.
+The audit did not edit original input bytes. Before the folder reorganization,
+all 135 candidate hashes matched the preserved baseline. During testing, the
+workspace changed: 41 files moved to in/, 40 rejected non-email candidates were
+removed, and all 44 unrelated files were removed. The 95 remaining files all
+match their original hashes. Regression paths, sample commands and Maven test
+resources now use the flattened layout. Historical attempt paths remain in
+the evidence so earlier results are not misrepresented as new conversions.
+
+Confirmed issues and corrections
+
+1. Seven EML messages declared the unsupported character set windows-3839 and
+crashed the creator. Display recovery now uses strictly valid UTF-8, otherwise
+Windows-1252, with a warning. The original email bytes are retained. The guessed
+display encoding is not represented as a verified sender encoding.
+
+2. Several mailing-list exports have a complete date and time but no timezone.
+The creator previously rejected them. It now preserves strictly parsed ctime
+values as timezone-free XMP dates and retains the original Date as Raw-Sent.
+It does not invent UTC or borrow a Received timestamp. Missing dates still fail.
+
+3. A real HTML table produced a Div directly inside a table row. The correction
+preserves existing cells while removing the anonymous wrapper, or supplies a
+cell around actual non-cell content. The original failing sample1.mbox now
+passes Java validation.
+
+4. Other real HTML contains paragraphs inside styled inline wrappers. Those
+wrappers and enclosing paragraphs are normalized into block groups without
+changing the visible content. A regression uses the original Acceleo email.
+
+5. A real PST has a valid empty RTF body. Empty HTML rendering was incorrectly
+treated as a conversion failure. The creator independently checks the RTF text,
+retains the original RTF, and reports the recovery. Unrendered RTF images and
+objects are not silently accepted as empty content.
+
+6. The PST library miscalculated row offsets after the first ANSI data block.
+This broke recipient lists and sometimes folder iteration. The local correction
+uses the proper ANSI/Unicode payload size and computes each row offset directly.
+All six originally failing recipient tables now pass, including lists of
+139–270 recipients. The copied library source retains its original notices.
+
+7. The PST library treated subnode index blocks as leaf data blocks. A narrow
+adapter now follows their leaf references. All 23,173 messages and 65,783
+recipient rows in pst_22_200401-06JanJun.pst were inspected successfully afterward.
+
+8. Missing PST attachment payloads caused an unexplained null-pointer crash.
+The creator now reports the input, message descriptor, and attachment position.
+It still refuses to invent an empty attachment or silently discard it.
+
+9. Java validation used recursive traversal of a PDF object graph as though it
+were a shallow tree. It now uses an iterative, cycle-safe traversal with a
+bounded container count. Ownership-check work scales with page count and has a
+hard upper cap. Files beyond the supported inspection budget remain incomplete.
+
+10. The native CPU ceiling counted all worker threads against a one-thread time
+allowance. It now accounts for worker processor capacity while the supervisor
+continues to enforce the same elapsed-time limit. The corpus runner bounds both
+case concurrency and worker concurrency, and gives Java validation enough heap
+for the larger archives.
+
+11. Large PST validation repeatedly recomputed attachment ownership for every
+message and every native file. Runtime stack samples confirmed this bottleneck.
+The validator now caches each immutable attachment-owner result and indexes
+email identities once per validation. All duplicate identity matches are kept.
+The changes do not turn ambiguous ownership into a unique match.
+
+12. PST attachments with Content-ID were excluded from the PDF attachment count,
+although the retained MIME source still contained named attachments. This even
+affected Word documents. They now count as attachments and retain the same
+native payload bytes, consistent with EML handling and both validators.
+
+13. A native Word attachment retained the obsolete MIME label multipart/appledouble.
+Exporting its binary bytes as a base64 multipart produced a checksum mismatch.
+The payload is now exported as application/octet-stream, with the old label
+retained in its description and a warning. The bytes are unchanged.
+
+14. Structure validation repeatedly scanned the entire logical tree to find
+each element's immediate children and each field value's siblings. Runtime
+samples confirmed the cost on archives with hundreds of thousands of objects.
+The validator now indexes children once, preserving parent identity and order.
+
+15. Antivirus text notices in the May and April PSTs have Content-ID values.
+Exporting those native attachments as inline text made them look like additional
+message bodies. They now have an explicit attachment disposition; their content
+IDs and original payload bytes are retained. Real regression messages include
+mailsecurity.txt and alert.txt.
+
+16. Jakarta Mail can ignore a declared transfer encoding for message subtypes
+such as message/delivery-status. The reader and Java validator now decode the
+raw part according to that header. The May PST's ATT11471.txt contains 201 original
+bytes; counting its base64 representation caused a false size/checksum failure.
+The independent Python MIME handling already reads the decoded payload.
+
+17. PDFBox generates CIDSet during font subsetting inside save(). Current
+collection examples contained the deprecated entry, including embedded message
+PDFs. The creator now finishes the same pending subsetting queue first, clears
+it, and removes CIDSet from font descriptors only when XMP identifies PDF/A-4.
+This covers PDF/A-4, -4e and -4f, including collection children and finding aids.
+PDF/A-3 uses the original font path. Embedded font programs, CIDToGIDMap and
+ToUnicode remain intact. The tests compare program and mapping bytes, rendered
+pixels and extracted multilingual text. veraPDF passes the PDF/A-3U and PDF/A-4
+controls. Independent qpdf/pikepdf checks reject the old examples and accept
+the corrected font control; Poppler rendering and extracted text are identical.
+The independent check is limited to CIDSet, not a second full PDF/A certification.
+PDFBox source: https://github.com/apache/pdfbox/blob/3.0.8/pdfbox/src/main/java/org/apache/pdfbox/pdmodel/font/PDCIDFontType2Embedder.java
+
+The regenerated examples now pass all 188 independent CIDSet inspections:
+24 primary PDFs, eight finding aids and 156 embedded message PDFs. These checks
+covered 1,086 font descriptors. The complete example matrix also passed Java
+validation. A real two-page email retained byte-identical Poppler rendering and
+text after CIDSet cleanup, along with all 12 font-program/glyph-map entries.
+
+Other observed input quirks
+
+Several Outlook files disagree internally: a dedicated Message-ID property
+differs from the retained transport header, or the declared preferred body is
+missing while another body is available. Existing recovery warnings are kept.
+These differences must not be hidden by changing the original source bytes.
+The corpus also contains detached email signatures. Retention of a signature
+does not verify it; the creator explicitly reports that it was not verified.
+Counts of log warnings are not counts of affected messages, because supervised
+conversion can repeat warnings in its final summary.
+
+Limits that must stay visible
+
+Valid Outlook messages without inspectable original headers, or with unsupported
+native attachment evidence, can still receive an incomplete validation result.
+That is not a passing result and is not proof of a specification violation.
+
+The genuine PST folder inventories total 274,543 items. An attempted conversion
+of a PST is not proof that every message in it was converted. Complete exports
+may stop at a missing payload, a source defect, or the existing whole-job count,
+metadata, temporary-storage, output-size, or time limits. No sampled mailbox is
+being represented as a complete export. Final per-file outcomes appear below.
+
+A separate scan of all seven ANSI PSTs enumerated 269,247 items and 580,109
+recipient rows with no errors after the parser repairs. This scan checks folder
+and recipient reading; it is not conversion or attachment-payload verification.
+May–July 2005 enumerates 48,129 physical items versus 48,131 advertised folder
+items. The entire difference is a search folder advertising two results but
+returning no children. Search results can refer to existing messages; this is
+not evidence that two additional physical emails should be invented.
+
+Reproduction and evidence
+
+Run: python3 -B scripts/run_real_world_corpus.py
+Use bounded parallel processing and the standalone Java validator.
+Output/evidence: output/real-world-2026-10-27/
+Original baseline: output/real-world-2026-10-27/baseline-evidence/run-results.json
+Each case retains source/output hashes, conversion logs and validation JSON.
+
+Microsoft's PST descriptions used to verify the two library corrections:
+https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-pst/7f5ec68f-d4fd-404f-95c3-fe3495a034ec
+https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-pst/d0e6fbaf-00e3-4d4d-bea8-8ab3cdb4fde6
+https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-pst/729fb9bd-060a-4bbc-9b3b-8f014b487dad
+
+Interpretation questions and working assumptions are also recorded in
+specification-audit/specification-reexamination-2026-10-27.txt.
+
+Final results by input type
+
+EML: 31 passed.
+MSG: 20 validation incomplete, 12 passed, 4 rejected input.
+PST: 3 validation incomplete, 1 missing source data, 6 processing limit, 1 passed.
+MBOX: 14 passed, 3 missing source data.
+
+What remains unresolved
+
+The three MBOX files with missing dates and the 1999 PST with a missing native
+attachment payload cannot produce a complete export without additional source
+evidence. Four remaining MSG files contain Outlook contacts or notes.
+
+Some generated files pass PDF/A but remain incomplete for EA-PDF because the
+validator cannot establish all source/header/attachment comparisons. These are
+not reported as compliant. Passing automated checks also does not establish
+perfect visual fidelity or independent EA-PDF certification.
+
+Six large PSTs still exceed processing capacity. Raising only the metadata
+allowance was insufficient: four retries reached 100,000 temporary files, the
+8,205-item November–December archive exceeded the 600-second wall limit, and
+the 23,173-item January–June 2004 archive exhausted its 2 GiB worker heap.
+The defaults remain bounded. These mailboxes need a separate capacity/streaming
+solution or a controlled partitioned export; no partial mailbox is called complete.
+
+
+Final artifact and evidence notes
+
+All 81 generated corpus PDFs pass PDF/A and the independent CIDSet check.
+No explicit EA-PDF rule failures remain in these files. The 23 incomplete
+results still need inspectable source evidence or unambiguous source matching
+before they can pass overall. The July, May and April PST attachment failures are cleared;
+their final Java validations took approximately 297, 357 and 392 seconds.
+These are observed run times, not a controlled performance benchmark.
+
+The local creator, creator GUI and Java validator JARs in dist/ were rebuilt.
+No public release was published. Current corpus outputs and Java reports are
+under output/real-world-2026-10-27/final/. Every successfully converted current
+file also passed the independent qpdf/pikepdf CIDSet check.
+Complete JUnit reports are retained under output/real-world-2026-10-27/test-reports/.
+
+Historical reports are retained outside final/. Earlier Java passes did not
+detect the deprecated CIDSet entries and are not substituted for the new font
+checks. Slow intermediate validations were stopped or timed out during the
+performance investigation; their reports are superseded by the completed final run.
+
+The machine-readable report beside this file records input/output hashes, build
+hashes, complete per-case results, processing settings and evidence paths.
+The 128 MiB metadata retries are under output/real-world-2026-10-27/large-budget/.
+Normal corpus runs used two concurrent cases, up to two render workers per case,
+a 2 GiB creator worker heap and a 3 GiB validator heap. The separate larger-budget
+batch used one concurrent case. Example refresh used one concurrent format with
+two creator workers while the final corpus batch ran.
+
+Per-file current outcomes
+
+in/2.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/2019.10.07 Weary comments.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: native attachment inventory not independently inspectable; source email cannot be matched unambiguously.
+in/2019.10.08 DEP response.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; viewer attachment conditions unavailable.
+in/2019.10.10a additional comments and questions for DEP.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/31018.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/3p-dev.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/Agenda and timeline slides.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/Drafts.mbox
+  Missing source data: A message has no verifiable sent date; no date was invented.
+in/EmailWith2Attachments.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/EmailWithAttachments.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: native attachment inventory not independently inspectable; source email cannot be matched unambiguously.
+in/EmailWithInnerMailAndAttachments.MSG
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: native attachment inventory not independently inspectable; source email cannot be matched unambiguously.
+in/EmailWithMsgAttachment.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: native attachment inventory not independently inspectable; source email cannot be matched unambiguously.
+in/EmailWithReactions.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/EmailWithSpecialCharsInSubject.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/EmailWithSpecialCharsInSubject_2.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/HtmlSampleEmail.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/HtmlSampleEmailWithAttachment.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/RtfSampleEmail.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/RtfSampleEmailWithAttachment.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/RtfWithShortRussianString.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; viewer attachment conditions unavailable.
+in/Swetlana Novikova.msg
+  Rejected input: Outlook contact or note, not an email.
+in/TxtSampleEmail.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/TxtSampleEmailWithAttachment.msg
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/acceleo-dev.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/acute-dev.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/adore-dev.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/agileuml-dev.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/ai.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/auriza.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/contact-plain.msg
+  Rejected input: Outlook contact or note, not an email.
+in/contact-unicode.msg
+  Rejected input: Outlook contact or note, not an email.
+in/contributions.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_01_403.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_02_23641.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_03_994.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_04_920.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_05_55.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_06_2313.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_07_1549.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_08_10484.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_09_10715.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_10_16554.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_11_2564.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_12_3632.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_13_7575.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_14_7246.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_15_1043.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_16_4116.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_17_3939.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_18_2058.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_19_7616.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_20_4614.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_21_7263.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_22_6750.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_23_25.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_24_5870.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/eml_25_1447.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/enron-sample.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/enron.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/mbox_01_fmt_720_MBOX_quoted.mbox
+  Missing source data: A message has no verifiable sent date; no date was invented.
+in/message.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously.
+in/msg.mbox
+  Missing source data: A message has no verifiable sent date; no date was invented.
+in/msgKitOut_attach.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously.
+in/msgKitOut_noattach.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; viewer attachment conditions unavailable.
+in/msg_13_msgKitOut_attach.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously.
+in/no-attachments.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; viewer attachment conditions unavailable.
+in/note.msg
+  Rejected input: Outlook contact or note, not an email.
+in/pst_02_07+July+2003+Public+2.pst
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; original body media comparison unavailable.
+in/pst_06_1999.pst
+  Missing source data: Native attachment payload missing at message 5068004, attachment 1; no empty replacement was invented.
+in/pst_14_05+May+2003+Public+2.pst
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; original body media comparison unavailable.
+in/pst_16_2005b_May-Jul_GovernF.pst
+  Processing limit: Export metadata exceeds the processing limit of 33554432 bytes
+  Higher-budget retry: Conversion exceeded the temporary-file count limit of 100000.
+in/pst_20_200501-06JanJun.pst
+  Processing limit: Export metadata exceeds the processing limit of 33554432 bytes
+  Higher-budget retry: Conversion exceeded the temporary-file count limit of 100000.
+in/pst_21_04+April+2003+Public+2.pst
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; original body media comparison unavailable.
+in/pst_22_200401-06JanJun.pst
+  Processing limit: Export metadata exceeds the processing limit of 33554432 bytes
+  Higher-budget retry: The 2 GiB creator worker heap was exhausted.
+in/pst_23_2005d_Nov-Dec_GovernF.pst
+  Processing limit: Export metadata exceeds the processing limit of 33554432 bytes
+  Higher-budget retry: Conversion exceeded the whole-job time limit.
+in/pst_24_GovernFJan-MAr2003.pst
+  Processing limit: Export metadata exceeds the processing limit of 33554432 bytes
+  Higher-budget retry: Conversion exceeded the temporary-file count limit of 100000.
+in/pst_25_2005b_Mar-April_GovernFShiavo.pst
+  Processing limit: Export metadata exceeds the processing limit of 33554432 bytes
+  Higher-budget retry: Conversion exceeded the temporary-file count limit of 100000.
+in/qwerty_1-orig.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; viewer attachment conditions unavailable.
+in/qwerty_2-with_custom_properties.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; viewer attachment conditions unavailable.
+in/qwerty_3.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; viewer attachment conditions unavailable.
+in/sample.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/sample.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/sample1.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/sediment.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: native attachment inventory not independently inspectable; source email cannot be matched unambiguously.
+in/tdwg-lit.mbox
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/test.MSG
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/test.pst
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/test3.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/test3_old.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/test4.eml
+  Passed: Converted; Java EA-PDF and PDF/A validation passed.
+in/testOut.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously.
+in/testOut_attach.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously.
+in/testOut_noattach.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; viewer attachment conditions unavailable.
+in/test_Blammo.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously; viewer attachment conditions unavailable.
+in/test_internal.msg
+  Validation incomplete: PDF/A passed; EA-PDF checks remain incomplete: source email cannot be matched unambiguously.
+
+Previously rejected candidates removed during the audit
+
+in/email/MSGReader-master/not-a-MSG-file.msg — rejected as a non-email input before removal.
+in/msg_01_HUNGARIA.MSG — rejected as a non-email input before removal.
+in/msg_02_APPEXP.MSG — rejected as a non-email input before removal.
+in/msg_03_LSM-J.MSG — rejected as a non-email input before removal.
+in/msg_04_ACCOUNTQ.MSG — rejected as a non-email input before removal.
+in/msg_05_ERRACCNT.MSG — rejected as a non-email input before removal.
+in/msg_06_IPXRTRNM.MSG — rejected as a non-email input before removal.
+in/msg_07_evfecbl.msg — rejected as a non-email input before removal.
+in/msg_08_AVKMSG.MSG — rejected as a non-email input before removal.
+in/msg_09_TBMI2.MSG — rejected as a non-email input before removal.
+in/msg_10_smouse.msg — rejected as a non-email input before removal.
+in/msg_11_INAMNT.MSG — rejected as a non-email input before removal.
+in/msg_12_ACFH.MSG — rejected as a non-email input before removal.
+in/msg_14_RBDEFINE.MSG — rejected as a non-email input before removal.
+in/msg_15_dde41.msg — rejected as a non-email input before removal.
+in/msg_16_TWUNIV.MSG — rejected as a non-email input before removal.
+in/msg_17_DEVFLOPY.MSG — rejected as a non-email input before removal.
+in/msg_18_COMMON.MSG — rejected as a non-email input before removal.
+in/msg_19_mkandnor.msg — rejected as a non-email input before removal.
+in/msg_20_M2ZMODEM.MSG — rejected as a non-email input before removal.
+in/msg_21_LSM-F.MSG — rejected as a non-email input before removal.
+in/msg_22_RSPAWN.MSG — rejected as a non-email input before removal.
+in/msg_23_NCOPY.MSG — rejected as a non-email input before removal.
+in/msg_24_LSM-F.MSG — rejected as a non-email input before removal.
+in/msg_25_somk.msg — rejected as a non-email input before removal.
+in/pst_01_Bitmap_extrude1.pst — rejected as a non-email input before removal.
+in/pst_03_Extrude3.pst — rejected as a non-email input before removal.
+in/pst_04_Distortion2.pst — rejected as a non-email input before removal.
+in/pst_05_DropShadow7.pst — rejected as a non-email input before removal.
+in/pst_07_SOBR_Blue.Pst — rejected as a non-email input before removal.
+in/pst_08_FiT4_TrailTool.PST — rejected as a non-email input before removal.
+in/pst_09_DropShadow11.pst — rejected as a non-email input before removal.
+in/pst_10_FiT4_Twirl.PST — rejected as a non-email input before removal.
+in/pst_11_Blend2.pst — rejected as a non-email input before removal.
+in/pst_12_PRSTBuz2.PST — rejected as a non-email input before removal.
+in/pst_13_Envelope5.pst — rejected as a non-email input before removal.
+in/pst_15_DropShadow2.pst — rejected as a non-email input before removal.
+in/pst_17_Large_Glow_.Pst — rejected as a non-email input before removal.
+in/pst_18_FiT4_LiveFrame.PST — rejected as a non-email input before removal.
+in/pst_19_Extrude6.pst — rejected as a non-email input before removal.
+
+Other files originally inventoried, subsequently removed without conversion
+
+in/email/MSGReader-master/.gitattributes — unsupported standalone email input type.
+in/facebook/ApacheSoftwareFoundation.jsonl — unsupported standalone email input type.
+in/facebook/BarackObama.jsonl — unsupported standalone email input type.
+in/twitter/BarackObama.jsonl — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/001_image.jpg — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/002_video.m3u8 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/002_video.mp4 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/003_video.m3u8 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/003_video.mp4 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/004_video.m3u8 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/005_video.mp4 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/006_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/007_video.m3u8 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/008_video.m3u8 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/009_video.mp4 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/010_video.mp4 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/011_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/012_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/013_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/014_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/015_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/016_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/017_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/018_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/022_video.m3u8 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/023_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/024_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/025_video.m3u8 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/026_video.m3u8 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/027_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/028_video.mp4 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/029_video.m3u8 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/030_video.m3u8 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/031_video.mp4 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/032_video.mp4 — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/033_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/034_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/035_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/036_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/038_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/039_video.m4s — unsupported standalone email input type.
+in/twitter/media/2023157535134371886/040_video.m4s — unsupported standalone email input type.
+in/twitter/x_state.example.json — unsupported standalone email input type.
+in/twitter/x_state.json — unsupported standalone email input type.

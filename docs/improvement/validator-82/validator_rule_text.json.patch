@@ -1,0 +1,21 @@
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -13063,6 +13063,18 @@
+       "independent_checks": "Consistent outer originals remain checkable; ordinary binary attachments do not imply nested email. Supplied schema failures retain their independent predicates.",
+       "boundary": "This guard does not enumerate nested sources, assign nested ownership, parse MSG/PST or certify arbitrary archive contents. Unavailable candidate comparisons remain INCOMPLETE.",
+       "evidence": "docs/improvement/validator-81/evidence.json"
++    },
++    "downstream_source_binding_review": {
++      "date": "2026-10-22",
++      "basis": "The metadata pass establishes the pipeline source binding for each email record. Source-fidelity recommendations, ordered header inventories and source-derived native attachment aliases reuse that result, including unassigned ownership. They cannot independently rescore a rejected tentative original.",
++      "checks": [
++        "USERPROPS_VALUES_UNMODIFIED",
++        "HEADER_FIELDS_TAGGED_RECOMMENDED",
++        "ATTACHMENT_XMP_MATCH",
++        "ATTACHMENT_ANNOTATIONS_PRESENT"
++      ],
++      "boundary": "An unavailable source cannot establish equality, alteration or a source-derived alias checksum. Supplied type errors, known-source recommendation differences and independent native observations retain their predicates. Standalone checks without a pipeline binding retain their documented source-scoring boundary.",
++      "evidence": "docs/improvement/validator-82/evidence.json"
+     }
+   },
+   "STRUCTURE_CORRESPONDENCE": {

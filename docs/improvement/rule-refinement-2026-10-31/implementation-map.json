@@ -1,0 +1,236 @@
+{
+  "purpose": "Trace the nine audit work items to implementation and evidence. Final test outcomes are recorded separately; this map is not independent certification.",
+  "items": [
+    {
+      "audit_item": "R1",
+      "change": "Separate recommended presence from supplied-value correctness; advisory omission or unavailable advisory evidence alone is nonblocking.",
+      "rules": [
+        "EMBEDDED_SIZE_RECOMMENDED",
+        "EMBEDDED_SIZE_MATCH",
+        "EMBEDDED_MD5_RECOMMENDED",
+        "EMBEDDED_MD5_MATCH",
+        "EMBEDDED_MD5_BINARY_FORMAT",
+        "ATTACHMENT_NATIVE_BYTES_SOURCE_FIDELITY_RECOMMENDED",
+        "ATTACHMENT_XMP_INVENTORY_RECOMMENDED"
+      ],
+      "implementation": [
+        "validate_eapdf.py",
+        "validator-desktop/src/main/java/eapdf/EaPdfChecks.java",
+        "validator-desktop/src/main/java/eapdf/AttachmentChecks.java"
+      ],
+      "verification": [
+        "tests/test_top_level_rule_predicates.py",
+        "validator-desktop/src/test/java/eapdf/RefinedRuleTests.java"
+      ],
+      "boundary": "Section 7.5 does not mandate original attachment bytes; stored native-byte metadata agreement remains independently required.",
+      "current_rule_numbers": {
+        "EMBEDDED_SIZE_RECOMMENDED": 80,
+        "EMBEDDED_SIZE_MATCH": 79,
+        "EMBEDDED_MD5_RECOMMENDED": 78,
+        "EMBEDDED_MD5_MATCH": 76,
+        "EMBEDDED_MD5_BINARY_FORMAT": 77,
+        "ATTACHMENT_NATIVE_BYTES_SOURCE_FIDELITY_RECOMMENDED": 15,
+        "ATTACHMENT_XMP_INVENTORY_RECOMMENDED": 206
+      }
+    },
+    {
+      "audit_item": "R2",
+      "change": "Separate email schema, cardinality, original-conditioned Core Field presence and source-value fidelity. Keep field identity in each finding.",
+      "rules": [
+        "EMAIL_XMP_CONTAINER",
+        "EMAIL_XMP_CARDINALITY",
+        "MESSAGE_SOURCE_COVERAGE",
+        "MESSAGE_CORE_FIELDS_SOURCE_REQUIRED",
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "implementation": [
+        "src/main/java/eapdf/PreservationInventory.java",
+        "src/main/java/eapdf/PdfCreationValidator.java",
+        "validate_eapdf.py",
+        "validator-desktop/src/main/java/eapdf/MetadataChecks.java"
+      ],
+      "verification": [
+        "CreatorRuleRefinementTests",
+        "RefinedRuleTests",
+        "test_top_level_rule_predicates",
+        "Integration: missing original Subject"
+      ],
+      "boundary": "A creator reader snapshot proves its parsed record survived emission, not recovery of every native storage property. Absent isolated originals are N/A; supplied unreadable originals remain unavailable.",
+      "current_rule_numbers": {
+        "EMAIL_XMP_CONTAINER": 181,
+        "EMAIL_XMP_CARDINALITY": 57,
+        "MESSAGE_SOURCE_COVERAGE": 8,
+        "MESSAGE_CORE_FIELDS_SOURCE_REQUIRED": 182,
+        "MESSAGE_METADATA_MATCH_SOURCE": 9
+      }
+    },
+    {
+      "audit_item": "R3",
+      "change": "Separate email content-set ownership from identifier membership.",
+      "rules": [
+        "DPM_EMAIL_CONTENT_SET_OWNERSHIP",
+        "DPM_MAIL_GUID_MATCH"
+      ],
+      "implementation": [
+        "validator-desktop/src/main/java/eapdf/ContentOwnership.java",
+        "validator-desktop/src/main/java/eapdf/EaPdfChecks.java",
+        "validate_eapdf.py"
+      ],
+      "verification": [
+        "Integration: wrong email owner passes GUID membership and fails ownership"
+      ],
+      "boundary": "Document-wide front matter/report exceptions and unavailable evidence remain explicit.",
+      "current_rule_numbers": {
+        "DPM_EMAIL_CONTENT_SET_OWNERSHIP": 97,
+        "DPM_MAIL_GUID_MATCH": 101
+      }
+    },
+    {
+      "audit_item": "R4",
+      "change": "Separate attachment-icon presence from visibility and complete CropBox containment.",
+      "rules": [
+        "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "ATTACHMENT_ANNOTATIONS_VISIBLE_WITHIN_CROPBOX"
+      ],
+      "implementation": [
+        "validator-desktop/src/main/java/eapdf/PageContentChecks.java",
+        "validate_eapdf.py"
+      ],
+      "verification": [
+        "Integration: clipped icon passes presence and fails visibility"
+      ],
+      "boundary": "Each applicable owning body set requires a qualifying annotation. Extra decorative annotations need not all qualify.",
+      "current_rule_numbers": {
+        "ATTACHMENT_ANNOTATIONS_PRESENT": 61,
+        "ATTACHMENT_ANNOTATIONS_VISIBLE_WITHIN_CROPBOX": 62
+      }
+    },
+    {
+      "audit_item": "R5",
+      "change": "Separate conditional MIME-parameter presence, PDF-string type, original fidelity and native/XMP consistency. Preserve parameters in creator output.",
+      "rules": [
+        "EMBEDDED_MEDIATYPE_PARAMETERS_REQUIRED",
+        "EMBEDDED_MEDIATYPE_PARAMETERS_TYPE",
+        "SOURCE_MEDIATYPE_PARAMETERS_MATCH",
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP"
+      ],
+      "implementation": [
+        "src/main/java/eapdf/PdfMailWriter.java",
+        "src/main/java/eapdf/PdfCreationValidator.java",
+        "validate_eapdf.py",
+        "validator-desktop/src/main/java/eapdf/AttachmentChecks.java"
+      ],
+      "verification": [
+        "CreatorRuleRefinementTests",
+        "Integration: parameters omitted from both native metadata and XMP"
+      ],
+      "boundary": "XMP cannot independently prove what the original supplied. Known absent native MSG MIME properties differ from unreadable or ambiguous evidence.",
+      "current_rule_numbers": {
+        "EMBEDDED_MEDIATYPE_PARAMETERS_REQUIRED": 71,
+        "EMBEDDED_MEDIATYPE_PARAMETERS_TYPE": 70,
+        "SOURCE_MEDIATYPE_PARAMETERS_MATCH": 72,
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP": 73
+      }
+    },
+    {
+      "audit_item": "R6",
+      "change": "Label the used-custom-tag interpretation and retain the complete source trigger. Resolve the Document root through the applicable role map.",
+      "rules": [
+        "ROLEMAP_MAIL_TAGS",
+        "MAIL_MESSAGE_ROLEMAP_DOCUMENT",
+        "STRUCTTREE_ROOT_DOCUMENT"
+      ],
+      "implementation": [
+        "validator_rule_text.json",
+        "rule_documentation.py",
+        "validator-desktop/src/main/java/eapdf/SpecificationReferences.java"
+      ],
+      "verification": [
+        "test_role_mapping_review",
+        "StructureRolesTests",
+        "project-issues-review.json"
+      ],
+      "boundary": "Used-only scope is local policy, not adopted errata. Published namespace and legacy compatibility-map requirements remain.",
+      "current_rule_numbers": {
+        "ROLEMAP_MAIL_TAGS": 118,
+        "MAIL_MESSAGE_ROLEMAP_DOCUMENT": 126,
+        "STRUCTTREE_ROOT_DOCUMENT": 117
+      }
+    },
+    {
+      "audit_item": "R7",
+      "change": "Separate number type from attributable rendered count and body media type from attachment-rendering media type.",
+      "rules": [
+        "ASSET_NUMBERMESSAGES_TYPE",
+        "ASSET_NUMBERMESSAGES_MATCH_RENDERED",
+        "DPM_BODY_MEDIA_TYPE_MATCH_SOURCE",
+        "DPM_ATTACHMENT_MEDIA_TYPE_MATCH_SOURCE"
+      ],
+      "implementation": [
+        "src/main/java/eapdf/PdfMailWriter.java",
+        "src/main/java/eapdf/PdfCollectionSupport.java",
+        "validate_eapdf.py",
+        "validator-desktop/src/main/java/eapdf/MetadataChecks.java"
+      ],
+      "verification": [
+        "Integration: wrong count and body type",
+        "Duplicate-source collection",
+        "PST companion metadata inspection"
+      ],
+      "boundary": "Do not count all input messages or assign identical source occurrences by checksum alone. Unsupported companion counts are omitted.",
+      "current_rule_numbers": {
+        "ASSET_NUMBERMESSAGES_TYPE": 178,
+        "ASSET_NUMBERMESSAGES_MATCH_RENDERED": 179,
+        "DPM_BODY_MEDIA_TYPE_MATCH_SOURCE": 111,
+        "DPM_ATTACHMENT_MEDIA_TYPE_MATCH_SOURCE": 112
+      }
+    },
+    {
+      "audit_item": "R8",
+      "change": "Make completed veraPDF validation of finished bytes the PDF/A prerequisite, with separate applicable ISO/TS 32005 validation. Keep viewer claims factual.",
+      "rules": [
+        "EAPDF_CONFORMANCE_VALUE"
+      ],
+      "implementation": [
+        "validator_rule_text.json",
+        "rule_documentation.py",
+        "browser-viewer/src/viewer.ts",
+        "browser-viewer/src/metadata-csv.ts",
+        "browser-viewer/src/domain/xmp.ts"
+      ],
+      "verification": [
+        "Real primary and PDF/A-only sidecar reports",
+        "Viewer unit and Chromium browser evidence"
+      ],
+      "boundary": "Sidecars do not acquire EA-PDF requirements. Viewer inspection is not validation. Fresh Firefox runtime testing was unavailable.",
+      "current_rule_numbers": {
+        "EAPDF_CONFORMANCE_VALUE": 2
+      }
+    },
+    {
+      "audit_item": "R9",
+      "change": "Use 229 page-ordered top-level rules, retain 301 source records and 418 linked contexts, and preserve all Finding occurrences. Distinguish each current predicate from full linked clauses.",
+      "rules": [
+        "VALIDATION_INCOMPLETE"
+      ],
+      "implementation": [
+        "scripts/audit_eapdf_rule_registry.py",
+        "validator_web.py",
+        "rule_documentation.py",
+        "scripts/sync_eapdf_author_review.py",
+        "validator-desktop/src/main/java/eapdf/ValidatorGui.java"
+      ],
+      "verification": [
+        "Registry tests",
+        "test_rule_refinement_reports",
+        "229-row offline report-browser check",
+        "author-review-verification.json"
+      ],
+      "boundary": "Traceability and tests do not certify perfect extraction or every permitted representation. Historical results cannot be carried over automatically to newly split predicates.",
+      "current_rule_numbers": {
+        "VALIDATION_INCOMPLETE": 229
+      }
+    }
+  ],
+  "known_cross_validator_limit": "For two historical headerless MSG fixtures, Python can use readable native recipient tables to prove a field-specific To contradiction. Java currently stops its universal comparison at the recovered-header boundary and reports unavailable. This is retained as a narrower Java evidence capability; it is outside the passing 15-file parity set."
+}

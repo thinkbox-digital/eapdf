@@ -1,0 +1,28 @@
+{
+  "visible_apostrophe_currency_ampersand_reference_corrected": true,
+  "original_sources_exact": true,
+  "ordinary_input_reproduction": "Valid zero-padded decimal and hexadecimal HTML references. No supplied native/email corpus case claimed: audit found none.",
+  "native_pst_record_and_export_fingerprints_unchanged": 78,
+  "native_msg_content_and_attachment_multisets_unchanged": 31,
+  "checked_gmail_record_fingerprints_unchanged": 20,
+  "validation": {
+    "before": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "mandatory_failure_codes": [],
+      "staging_removed": true
+    },
+    "after": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "mandatory_failure_codes": [],
+      "staging_removed": true
+    }
+  }
+}

@@ -1,0 +1,10 @@
+[
+  {"id":"valid-c","mutation":"none","eapdf":"PASS","failures":[],"child_failures":[]},
+  {"id":"valid-ci","mutation":"none","eapdf":"PASS","failures":[],"child_failures":[]},
+  {"id":"missing-sent-c","mutation":"missing-sent","eapdf":"FAIL","failures":["COLLECTION_CHILD_VALIDATION"],"child_failures":["MESSAGE_SENT_XMP"]},
+  {"id":"missing-sent-ci","mutation":"missing-sent","eapdf":"FAIL","failures":["COLLECTION_CHILD_VALIDATION"],"child_failures":["MESSAGE_SENT_XMP"]},
+  {"id":"missing-dpart-c","mutation":"missing-dpart","eapdf":"FAIL","failures":["COLLECTION_CHILD_VALIDATION"],"child_failures":["PAGE_DPART_PRESENT"]},
+  {"id":"missing-dpart-ci","mutation":"missing-dpart","eapdf":"FAIL","failures":["COLLECTION_CHILD_VALIDATION"],"child_failures":["PAGE_DPART_PRESENT"]},
+  {"id":"bad-attachment-checksum-c","mutation":"bad-attachment-checksum","eapdf":"FAIL","failures":["COLLECTION_CHILD_VALIDATION"],"child_failures":["ATTACHMENT_ANNOTATIONS_PRESENT"]},
+  {"id":"bad-attachment-checksum-ci","mutation":"bad-attachment-checksum","eapdf":"FAIL","failures":["COLLECTION_CHILD_VALIDATION"],"child_failures":["ATTACHMENT_ANNOTATIONS_PRESENT"]}
+]

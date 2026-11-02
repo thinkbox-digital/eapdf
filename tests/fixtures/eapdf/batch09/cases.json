@@ -1,0 +1,136 @@
+[
+  {
+    "id": "source-order-and-unobserved",
+    "source": "unique",
+    "profile": "m",
+    "mutation": "none",
+    "counts": {
+      "equal": 10
+    },
+    "failures": [],
+    "occurrences": 18,
+    "matched_fields": 10
+  },
+  {
+    "id": "distinct-repeated-subject",
+    "source": "distinct",
+    "profile": "m",
+    "mutation": "none",
+    "counts": {
+      "unavailable": 10
+    },
+    "failures": [
+      "MESSAGE_SUBJECT_XMP"
+    ],
+    "occurrences": 0,
+    "matched_fields": 0,
+    "expected_source_assessment": "unavailable",
+    "evidence_note": "Repeated singleton Subject headers prevent unique source-owner binding. Preserve the separate MESSAGE_SUBJECT_XMP failure and do not claim source correspondence from rendered observations.",
+    "expected_unverified": [
+      "MESSAGE_TO_XMP",
+      "MESSAGE_FROM_XMP",
+      "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID",
+      "MESSAGE_RAW_SENT_OMIT_IF_VALID",
+      "MESSAGE_CC_XMP",
+      "MESSAGE_CC_FOAF",
+      "MESSAGE_BCC_XMP",
+      "MESSAGE_BCC_FOAF",
+      "MESSAGE_INREPLYTO_XMP"
+    ]
+  },
+  {
+    "id": "identical-repeated-subject",
+    "source": "identical",
+    "profile": "m",
+    "mutation": "none",
+    "counts": {
+      "unavailable": 10
+    },
+    "failures": [
+      "MESSAGE_SUBJECT_XMP"
+    ],
+    "occurrences": 0,
+    "matched_fields": 0,
+    "expected_source_assessment": "unavailable",
+    "evidence_note": "Repeated singleton Subject headers prevent unique source-owner binding. Preserve the separate MESSAGE_SUBJECT_XMP failure and do not claim source correspondence from rendered observations.",
+    "expected_unverified": [
+      "MESSAGE_TO_XMP",
+      "MESSAGE_FROM_XMP",
+      "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID",
+      "MESSAGE_RAW_SENT_OMIT_IF_VALID",
+      "MESSAGE_CC_XMP",
+      "MESSAGE_CC_FOAF",
+      "MESSAGE_BCC_XMP",
+      "MESSAGE_BCC_FOAF",
+      "MESSAGE_INREPLYTO_XMP"
+    ]
+  },
+  {
+    "id": "class-map-repeated-owner",
+    "source": "distinct",
+    "profile": "m",
+    "mutation": "class-map",
+    "counts": {
+      "unavailable": 10
+    },
+    "failures": [
+      "MESSAGE_SUBJECT_XMP"
+    ],
+    "occurrences": 0,
+    "matched_fields": 0,
+    "expected_source_assessment": "unavailable",
+    "evidence_note": "Repeated singleton Subject headers prevent unique source-owner binding. Preserve the separate MESSAGE_SUBJECT_XMP failure and do not claim source correspondence from rendered observations.",
+    "expected_unverified": [
+      "MESSAGE_TO_XMP",
+      "MESSAGE_FROM_XMP",
+      "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID",
+      "MESSAGE_RAW_SENT_OMIT_IF_VALID",
+      "MESSAGE_CC_XMP",
+      "MESSAGE_CC_FOAF",
+      "MESSAGE_BCC_XMP",
+      "MESSAGE_BCC_FOAF",
+      "MESSAGE_INREPLYTO_XMP"
+    ]
+  },
+  {
+    "id": "swapped-repeated-values",
+    "source": "distinct",
+    "profile": "m",
+    "mutation": "swap-values",
+    "counts": {
+      "unavailable": 10
+    },
+    "failures": [
+      "MESSAGE_SUBJECT_XMP",
+      "MAIL_CONTENTSET_ART_ONLY",
+      "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+    ],
+    "occurrences": 0,
+    "matched_fields": 0,
+    "expected_source_assessment": "unavailable",
+    "evidence_note": "Repeated singleton Subject headers prevent unique source-owner binding. Preserve the separate MESSAGE_SUBJECT_XMP failure and do not claim source correspondence from rendered observations. Swapped content also violates content-set and message ownership, independently of source availability.",
+    "expected_unverified": [
+      "MESSAGE_TO_XMP",
+      "MESSAGE_FROM_XMP",
+      "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID",
+      "MESSAGE_RAW_SENT_OMIT_IF_VALID",
+      "MESSAGE_CC_XMP",
+      "MESSAGE_CC_FOAF",
+      "MESSAGE_BCC_XMP",
+      "MESSAGE_BCC_FOAF",
+      "MESSAGE_INREPLYTO_XMP"
+    ]
+  },
+  {
+    "id": "isolated-observations-retained",
+    "source": "identical",
+    "profile": "mi",
+    "mutation": "none",
+    "counts": {
+      "unavailable": 10
+    },
+    "failures": [],
+    "occurrences": 0,
+    "matched_fields": 0
+  }
+]

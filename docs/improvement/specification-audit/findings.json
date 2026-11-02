@@ -1,0 +1,628 @@
+[
+  {
+    "id": "REQ-STARTING-SUMMARY",
+    "kind": "requirements_gap",
+    "authority_location": "DOCX sections 1-11",
+    "affected_rule_codes": [
+      "DPM_ATTACHMENTLIST_FORBIDDEN"
+    ],
+    "finding": "The starting DOCX is a short summary, explicitly stops partway through Table 8 and omits entire requirement families; it cannot establish complete coverage.",
+    "reviewed_requirement": "Use the complete pinned PDF and the clause/table inventory; retain DOCX only as historical derived input.",
+    "status": "resolved_requirement_only",
+    "implementation_changed": false,
+    "resolution": "The complete pinned PDF, section/table inventory and authoritative JSON supersede the truncated DOCX. Historical-summary inadequacy is recorded; this does not certify implementation completeness."
+  },
+  {
+    "id": "REQ-SENT",
+    "kind": "wrong_requirement_text",
+    "authority_location": "9.8.3 Table 18 p87",
+    "affected_rule_codes": [
+      "MESSAGE_SENT_XMP",
+      "MESSAGE_SENT_FORMAT"
+    ],
+    "finding": "Both rule descriptions call Sent optional, whereas Table 18 marks it Required.",
+    "reviewed_requirement": "Use required xsd:dateTime for each applicable email independently of source availability; audit source-normalization separately.",
+    "status": "corrected_authoritative_requirement_only",
+    "implementation_changed": false,
+    "resolution": "Corrected the authoritative validator_rule_text.json description and/or added the four already-declared rule descriptions. Check implementation separately in the validator phase."
+  },
+  {
+    "id": "REQ-ATTACHMENT-COUNT",
+    "kind": "wrong_requirement_text",
+    "authority_location": "9.8.3 Table 18 p88",
+    "affected_rule_codes": [
+      "MESSAGE_ATTACHMENT_COUNT_XMP"
+    ],
+    "finding": "Rule description calls NumberAttachments optional without its conditional requirement.",
+    "reviewed_requirement": "Require it for one or more attachments; default zero otherwise; distinguish PDF-internal evidence from original-source enumeration.",
+    "status": "corrected_authoritative_requirement_only",
+    "implementation_changed": false,
+    "resolution": "Corrected the authoritative validator_rule_text.json description and/or added the four already-declared rule descriptions. Check implementation separately in the validator phase."
+  },
+  {
+    "id": "REQ-INREPLYTO",
+    "kind": "wrong_requirement_text",
+    "authority_location": "9.8.3 Table 18 p88",
+    "affected_rule_codes": [
+      "MESSAGE_INREPLYTO_XMP"
+    ],
+    "finding": "Rule description calls In-Reply-To a free text string rather than an unordered collection of strings.",
+    "reviewed_requirement": "Require the unordered collection representation when supplied; preserve legal XMP serializations and do not treat message IDs as FOAF agents.",
+    "status": "corrected_authoritative_requirement_only",
+    "implementation_changed": false,
+    "resolution": "Corrected the authoritative validator_rule_text.json description and/or added the four already-declared rule descriptions. Check implementation separately in the validator phase."
+  },
+  {
+    "id": "REQ-TS-CONDITION",
+    "kind": "wrong_requirement_text",
+    "authority_location": "9.7 p74",
+    "affected_rule_codes": [
+      "LOGICAL_TS32005_DECLARATION"
+    ],
+    "finding": "Description restricts ISO/TS 32005 declaration to custom EA-PDF tags, but the clause applies to PDF 2.0 files with logical structure.",
+    "reviewed_requirement": "Use the full logical-structure condition; separately inventory actual ISO/TS 32005 conformance and its declaration.",
+    "status": "corrected_authoritative_requirement_only",
+    "implementation_changed": false,
+    "resolution": "Corrected the authoritative validator_rule_text.json description and/or added the four already-declared rule descriptions. Check implementation separately in the validator phase."
+  },
+  {
+    "id": "DEP-TS32005",
+    "kind": "missing_dependency",
+    "authority_location": "9.7 p74",
+    "affected_rule_codes": [
+      "LOGICAL_TS32005_DECLARATION"
+    ],
+    "finding": "The complete normative ISO/TS 32005 text is unavailable locally; declaration presence and public informative matrices do not prove inclusion-rule conformance.",
+    "reviewed_requirement": "Obtain and pin the full standard and applicable errata; keep the conformance requirement open meanwhile.",
+    "status": "resolved_scope_only",
+    "implementation_changed": false,
+    "custom_scope_disposition": "Upstream profile coverage/integration evidence; do not create a duplicate standards implementation or treat obtaining the complete text as a blocker to unrelated EA-PDF-only fixes.",
+    "resolution": "The EA-PDF applicability, actual ISO/TS conformance obligation and declaration obligation are explicit and separately recorded. Generic structure rules are upstream under the user scope. A standalone applicable upstream profile still needs integration/verification; the absence of complete ISO text is not a request to build duplicate rules or a blocker to resolving unrelated custom requirements.",
+    "residual_boundary": "No official erratum is claimed; runtime implementation and upstream integration need separate evidence."
+  },
+  {
+    "id": "REQ-CONTAINER-NAV-CITATION",
+    "kind": "wrong_authority",
+    "authority_location": "9.1 p62",
+    "affected_rule_codes": [
+      "PROFILE_PAGEMODE_CONTAINER",
+      "PROFILE_NFSM_CONTAINER"
+    ],
+    "finding": "Container PageMode cites a Collections-entry clause in 9.5 and NonFullScreenPageMode has an unsourced paraphrase.",
+    "reviewed_requirement": "Map both to the explicit UseAttachments requirements in 9.1 p62.",
+    "status": "corrected_authoritative_requirement_only",
+    "implementation_changed": false,
+    "resolution": "Corrected the authoritative validator_rule_text.json description and/or added the four already-declared rule descriptions. Check implementation separately in the validator phase."
+  },
+  {
+    "id": "DEP-RF-STRUCTURE",
+    "kind": "inherited_requirement_detail",
+    "authority_location": "ISO 32000-2 Table 43 p135 and 7.11.4.2 p139",
+    "affected_rule_codes": [
+      "SOURCE_FILE_SET"
+    ],
+    "finding": "Checked the underlying table and example: RF is a dictionary with EF-compatible keys; its values are Related Files arrays. The EA-PDF and ISO prose uses array shorthand. The existing rule description saying dictionary is correct.",
+    "reviewed_requirement": "Requirement resolved against Table 43: require the dictionary wrapper, matching EF keys and alternating filename/embedded-stream arrays. A draft audit assertion calling RF itself an array was corrected before acceptance; implementation remains unverified.",
+    "status": "resolved_requirement_only",
+    "implementation_changed": false
+  },
+  {
+    "id": "REQ-ATTACHMENT-SOURCE-CLAIM",
+    "kind": "overstated_authority",
+    "authority_location": "9.8.4 pp89-90 and 7.5 p44",
+    "affected_rule_codes": [
+      "ATTACHMENT_XMP_SIZE_MATCH",
+      "ATTACHMENT_XMP_CHECKSUM_MATCH",
+      "ATTACHMENT_XMP_FILENAME_MATCH_SOURCE",
+      "ATTACHMENT_XMP_MESSAGE_ID_MATCH",
+      "ATTACHMENT_NATIVE_BYTES_SOURCE_FIDELITY_RECOMMENDED"
+    ],
+    "finding": "Description invents a universal SHALL to match a record to a real source attachment; isolated sources may be absent and allowed zero-length stored placeholders differ from originals.",
+    "reviewed_requirement": "Separate required record schema/internal ownership from source-dependent fidelity. Stored SizeInBytes refers to the actual embedded bytes, not unconditionally the original source length.",
+    "status": "corrected_authoritative_requirement_only",
+    "implementation_changed": false,
+    "resolution": "Corrected the authoritative validator_rule_text.json description and/or added the four already-declared rule descriptions. Check implementation separately in the validator phase."
+  },
+  {
+    "id": "REQ-ISOLATED-SOURCE",
+    "kind": "overbroad_requirement_text",
+    "authority_location": "3.1 p7 and 7.4.2.1 p40",
+    "affected_rule_codes": [
+      "SOURCE_IN_ISOLATED"
+    ],
+    "finding": "Isolated profiles SHALL NOT include Source associated files overstates the scope; Source may be attached to rendered asset objects and isolated provenance can be partial.",
+    "reviewed_requirement": "Define catalog original-email provenance and arbitrary-object Source assets separately; review the partial-source interpretation before imposing a blanket prohibition.",
+    "status": "validator_presence_inference_repaired",
+    "implementation_changed": true,
+    "resolution": "V74 removes an unconditional catalog-Source prohibition. A source-presence provenance warning remains, and missing supported source interpretation separately produces INCOMPLETE. Complete source fidelity is not certified."
+  },
+  {
+    "id": "SPEC-T11-UNDEFINED-TAG",
+    "kind": "specification_ambiguity",
+    "authority_location": "9.7 Table 11 p76",
+    "affected_rule_codes": [
+      "MAIL_CONTENTSET_CHILDREN"
+    ],
+    "finding": "Rendered Table 11 names Mail_ContentField, undefined in Table 10, as a Mail_ContentSet child and excludes other defined custom tags.",
+    "reviewed_requirement": "Retain this literal evidence and seek an authoritative interpretation; do not silently substitute Mail_Field as if it were the published text.",
+    "status": "resolved_by_user_interpretation",
+    "implementation_changed": true,
+    "resolution": "User direction on 2026-10-19: Mail_ContentField should be Mail_Field. Implement the Table 11 Mail_ContentSet child row using Mail_Field; preserve the printed spelling in historical source evidence. This is an explicitly adopted local interpretation, not a claim of published errata."
+  },
+  {
+    "id": "SPEC-T13-CONTAINER-PARENT",
+    "kind": "specification_ambiguity",
+    "authority_location": "9.7 Table 13 p79",
+    "affected_rule_codes": [
+      "MAIL_CONTENTSET_COUNT",
+      "MAIL_MESSAGE_COUNT_CONTAINER",
+      "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+    ],
+    "finding": "Generic Table 13 ancestry conflicts with collection and document-wide content ownership; apply the recorded evidence-based document-level exception.",
+    "reviewed_requirement": "Email-owned Mail_ContentSet elements must descend from Mail_Message. Local interpretation: document-wide FrontMatter, ConversionReport and PolicySettings may descend from the Document root in any profile when actual content and DPart ancestry establish document-wide ownership. A type label alone does not establish the exception. Collections retain their document-level exception and prohibition on Mail_Message.",
+    "status": "locally_resolved",
+    "implementation_changed": true,
+    "local_resolution": {
+      "date": "2026-10-27",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "Email-owned Mail_ContentSet elements must descend from Mail_Message. Local interpretation: document-wide FrontMatter, ConversionReport and PolicySettings may descend from the Document root in any profile when actual content and DPart ancestry establish document-wide ownership. A type label alone does not establish the exception. Collections retain their document-level exception and prohibition on Mail_Message.",
+      "rationale": "Document-wide material belongs to the document in both Table 3 and DPart ownership; assigning it to the first email invents ownership.",
+      "confidence": "medium",
+      "implementation_status": "Reexamination implementation; see new regression evidence in the report.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_contentset_parent_scope.py",
+        "tests/test_attachment_native_scope.py"
+      ]
+    },
+    "reexamination_resolution": "Email-owned Mail_ContentSet elements must descend from Mail_Message. Local interpretation: document-wide FrontMatter, ConversionReport and PolicySettings may descend from the Document root in any profile when actual content and DPart ancestry establish document-wide ownership. A type label alone does not establish the exception. Collections retain their document-level exception and prohibition on Mail_Message.",
+    "superseded_local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "In c/ci, Content Sets describing collection front matter may descend from the single Document root without a Mail_Message ancestor. Mail_Message remains prohibited; Mail_ContentGroup retains its separately stated Mail_Message ancestry. In s/si/m/mi every Mail_ContentSet must descend from Mail_Message.",
+      "rationale": "The collection-specific prohibition and section 7.6 front-matter description take precedence over the generic Table 13 ancestry sentence.",
+      "confidence": "medium",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_contentset_parent_scope.py",
+        "tests/test_attachment_native_scope.py"
+      ]
+    }
+  },
+  {
+    "id": "SPEC-MESSAGEID-CASE",
+    "kind": "specification_ambiguity",
+    "authority_location": "9.6 Table 7 p70 and 9.8.3 Table 18 p87",
+    "affected_rule_codes": [
+      "DPM_MAIL_MESSAGEID_MATCH",
+      "MESSAGE_ID_XMP"
+    ],
+    "finding": "Table 7 says pdfmailmeta:messageid, while Table 18 defines Message-ID; XMP property names are case-sensitive.",
+    "reviewed_requirement": "Record both spellings; do not accidentally require two different fields or accept arbitrary case folding.",
+    "status": "locally_resolved",
+    "implementation_changed": true,
+    "local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "Message-ID is the canonical Table 18 field; the exact legacy spelling messageid is an alias for the same identifier. Neither spelling is independently required; supplied values keep their text type and conflicting aliases must not silently choose an identity. Other names remain case-sensitive. Mail_GUID retains identification precedence.",
+      "rationale": "Table 7 and Table 18 describe the same optional source header, with an editorial name discrepancy.",
+      "confidence": "high",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_local_review_decisions.py",
+        "tests/test_xmp_identity.py"
+      ]
+    }
+  },
+  {
+    "id": "SPEC-CORE-TABLES",
+    "kind": "specification_ambiguity",
+    "authority_location": "7.3.1 Table 4 p37 and 9.8.3 Table 18 pp87-88",
+    "affected_rule_codes": [
+      "MESSAGE_SIZE_XMP",
+      "MESSAGE_ATTACHMENT_COUNT_XMP",
+      "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID",
+      "MESSAGE_RAW_SENT_OMIT_IF_VALID"
+    ],
+    "finding": "Table 4 calls original message size and attachment count required and includes required Content-Type; Table 18 makes size optional, count conditional and omits Content-Type. Raw-Sent optional/blank-date wording also differs.",
+    "reviewed_requirement": "Preserve creator/source guidance and the normative schema separately, and document unresolved differences before adding mandatory XMP checks.",
+    "status": "resolved_scope_only",
+    "implementation_changed": false,
+    "resolution": "Table 4 is retained as source/creation Core Field guidance. Section 9.8.3/Table 18 supplies file schema applicability: size optional, count conditional, required Sent and Mail_GUID. Content-Type is allowed as an additional header; do not invent a new universally required Table 18 property. Source-field inclusion is recorded separately from PDF-internal schema.",
+    "residual_boundary": "No official erratum is claimed; runtime implementation and upstream integration need separate evidence."
+  },
+  {
+    "id": "SPEC-PROFILE-MATRIX",
+    "kind": "specification_ambiguity",
+    "authority_location": "3.2 Table 2 pp8-11 and 9.1 p61",
+    "affected_rule_codes": [
+      "PDFA_PART",
+      "PDFA_CONFORMANCE"
+    ],
+    "finding": "Rendered m profile row contains PDF/A-4fe; section 3 is descriptive while 9.1 has a general five-level list and file features impose further constraints.",
+    "reviewed_requirement": "Do not silently normalize 4fe or treat the descriptive matrix as unqualified normative authority; resolve profile/dependency constraints explicitly.",
+    "status": "resolved_scope_only",
+    "implementation_changed": false,
+    "resolution": "Section 3 explicitly calls its table descriptive. Keep the printed 4fe typo in source evidence; do not create that profile or silently rewrite the matrix as normative. Section 9.1 gives the five permitted PDF/A levels, and actual file features must satisfy the selected upstream profile. This resolves the local validator requirement without claiming an official textual erratum.",
+    "residual_boundary": "No official erratum is claimed; runtime implementation and upstream integration need separate evidence."
+  },
+  {
+    "id": "REQ-TABLE9",
+    "kind": "requirements_gap",
+    "authority_location": "9.7 Table 9 pp74-75",
+    "affected_rule_codes": [
+      "ROLEMAPNS_PRESENT",
+      "ROLEMAP_MAIL_TAGS"
+    ],
+    "finding": "Existing descriptions focus on custom role maps and RoleMapNS; Table 9 contains a separate complete PDF 2.0 to 1.7 backward role map.",
+    "reviewed_requirement": "Inventory all nine rows and the Title alternative; separately verify actual coverage in the broad existing checkers.",
+    "status": "corrected_authoritative_requirement_only",
+    "implementation_changed": false,
+    "resolution": "All nine Table 9 rows, including Hn n≥7 and Title→H1 or P, are inventoried. Corrected ROLEMAP_MAIL_TAGS to describe the entire table and distinguish Table 10 mappings. Execution coverage remains a validator-phase task."
+  },
+  {
+    "id": "REQ-SOFTWARE-SCOPE",
+    "kind": "requirements_gap",
+    "authority_location": "8 pp59-60",
+    "affected_rule_codes": [],
+    "finding": "The short DOCX omits the 17 software behavior obligations in normative section 8.",
+    "reviewed_requirement": "Track them as software conformance requirements, with behavior/external evidence, rather than failing an input PDF because the validator lacks a viewer feature.",
+    "status": "resolved_scope_only",
+    "implementation_changed": false,
+    "custom_scope_disposition": "Reader/viewer behavior is outside this custom PDF-file validator scope.",
+    "resolution": "All 17 behavior records remain visible and explicitly outside PDF-file validation. Their software acceptance is deferred under the user scope."
+  },
+  {
+    "id": "REQ-ANNOTATION-CONTENTS",
+    "kind": "requirements_gap",
+    "authority_location": "7.5 p44",
+    "affected_rule_codes": [
+      "ANNOTATION_CONTENTS_REQUIRED"
+    ],
+    "finding": "The Contents requirement and associated-files ModDate dependency are not explicit in the initial requirement list.",
+    "reviewed_requirement": "Track the explanatory mandatory wording and inherited dates, plus the weaker Desc guidance; verify exact authority before implementing new mandatory findings.",
+    "status": "locally_resolved",
+    "implementation_changed": true,
+    "local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "Every FileAttachment annotation must contain a PDF text-string Contents entry. Empty text is allowed because no nonempty requirement is stated. Filespec Desc remains a separate recommendation. Missing or wrong-class Contents is a failure; undecodable string text is unavailable.",
+      "rationale": "Section 7.5 explicitly says must; section 7.1 limits its own overview only and does not demote section 7.5 obligations.",
+      "confidence": "high",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_local_review_decisions.py",
+        "tests/fixtures/eapdf/validator-local-decisions/expectations.json"
+      ]
+    }
+  },
+  {
+    "id": "REQ-DPM-PROHIBITIONS",
+    "kind": "requirements_gap",
+    "authority_location": "9.6 Table 8 pp70-71",
+    "affected_rule_codes": [
+      "DPM_ATTACHMENTLIST_FORBIDDEN"
+    ],
+    "finding": "The DOCX exposes only AttachmentList prohibition; the full table also forbids four other email-related Content Set types in c/ci.",
+    "reviewed_requirement": "Record AttachmentRendering, BodyRendering, EmailHeaderRendering and RawEmailRendering individually; keep the enumeration open for other allowed types.",
+    "status": "resolved_requirements_gap_recorded",
+    "implementation_changed": false,
+    "resolution": "All five Table 8 prohibitions have explicit records. Four have no executed rule mapping and remain implementation gaps. Unknown Content Set names remain legal; recording the gaps is not a runtime repair."
+  },
+  {
+    "id": "REQ-RULETEXT-INVENTORY",
+    "kind": "traceability_gap",
+    "authority_location": "validator_rule_text.json and ALL_RULE_CODES",
+    "affected_rule_codes": [],
+    "finding": "There are 219 current rule codes but only 215 description records; DPART_OBJECT_STRUCTURE, DPM_NAME_TYPES, EMAIL_XMP_CONTAINER and MAIL_GUID_UNIQUE lack entries.",
+    "reviewed_requirement": "Include all four in reverse traceability and author accurate descriptions from the corresponding tables and inherited PDF rules.",
+    "status": "corrected_authoritative_requirement_only",
+    "implementation_changed": false,
+    "resolution": "Corrected the authoritative validator_rule_text.json description and/or added the four already-declared rule descriptions. Check implementation separately in the validator phase."
+  },
+  {
+    "id": "REQ-EXCERPT-PRECEDENCE",
+    "kind": "reporting_authority_gap",
+    "authority_location": "validate_eapdf.py spec_references_for",
+    "affected_rule_codes": [
+      "MESSAGE_SENT_XMP",
+      "MESSAGE_SENT_FORMAT",
+      "MESSAGE_ATTACHMENT_COUNT_XMP",
+      "MESSAGE_INREPLYTO_XMP"
+    ],
+    "finding": "The runtime already takes excerpt/spec text from authoritative JSON, but retains historical DOCX source labels in references. Corrected text and historical attribution can therefore disagree. Verify a single authoritative source label and retain history separately.",
+    "reviewed_requirement": "Keep validator_rule_text.json authoritative in text and attribution; historical DOCX/overrides must not be displayed as the authority for a corrected paraphrase.",
+    "status": "resolved_requirement_and_implementation",
+    "implementation_changed": true,
+    "resolution": "Implemented and regression-tested on 2026-10-19: known rules return one reference whose text, specification location and source attribution all come from authoritative validator_rule_text.json. Historical DOCX references/overrides remain fallback only when the authoritative record is unavailable.",
+    "residual_boundary": "No official erratum is claimed; runtime implementation and upstream integration need separate evidence."
+  },
+  {
+    "id": "REQ-METADATA-HEURISTICS",
+    "kind": "overstated_authority",
+    "authority_location": "9.8 p84",
+    "affected_rule_codes": [
+      "XMP_CREATOR_SEMANTICS",
+      "XMP_PRODUCER_SEMANTICS",
+      "XMP_CREATEDATE_SEMANTICS"
+    ],
+    "finding": "The clause says creation software records dc:creator[0], pdf:Producer and the creation date. It does not explicitly make software the value of dc:creator or prescribe product-name/address syntax. Inherited XMP role semantics remain to be checked; appearance or equality with a source value is not sufficient proof of error.",
+    "reviewed_requirement": "Separate type/presence and known provenance from heuristic evidence; avoid hard conformance failures based solely on appearance.",
+    "status": "corrected_authoritative_requirement_only",
+    "implementation_changed": false,
+    "resolution": "Reviewed official Adobe creator/Producer/CreateDate definitions and corrected all six presence/semantics descriptions. Creator is not software-only. Lexical appearance or equality with source values alone is insufficient evidence. Existing checking behavior requires separate repair."
+  },
+  {
+    "id": "SPEC-SECTION7-STRENGTH",
+    "kind": "specification_ambiguity",
+    "authority_location": "7.1 p23 and 7.1.1 p24",
+    "affected_rule_codes": [
+      "XMP_UTF8"
+    ],
+    "finding": "Section 7.1 says it introduces no formal SHALL/SHOULD requirements, yet states all XMP must be UTF-8; other explanatory sections also use must/needs/ought.",
+    "reviewed_requirement": "Retain the explicit requirement and its wording category, with section 9 or inherited authority where available; avoid an uppercase-keyword-only completeness scan.",
+    "status": "resolved_scope_only",
+    "implementation_changed": false,
+    "resolution": "Retain the literal section-7.1 wording and its explanatory classification. Every pinned eligible PDF/A profile independently checks XMP UTF-8, so delegate the obligation and do not invent a separate mandatory custom test from that wording. The editorial tension does not change the scoped validation ownership.",
+    "residual_boundary": "No official erratum is claimed; runtime implementation and upstream integration need separate evidence."
+  },
+  {
+    "id": "SPEC-TEXT-STRENGTH",
+    "kind": "specification_ambiguity",
+    "authority_location": "7.4.1 p39 and 9.3 p64",
+    "affected_rule_codes": [
+      "TEXT_CONTENT_PDF_TEXT_OBJECTS",
+      "CORE_FIELDS_TEXT_OBJECTS"
+    ],
+    "finding": "Section 7 says all textual email content must use text objects; 9.3 makes source text a SHOULD while Core Fields use SHALL. Rendering all headers is separately strongly recommended.",
+    "reviewed_requirement": "Keep source-text fidelity, presence of rendered fields and mandatory text-object representation distinct; do not promote missing source rendering into an invented mandatory PDF-only rule.",
+    "status": "resolved_requirement_only",
+    "implementation_changed": false,
+    "resolution": "Section 9.3 explicitly recommends source text preservation and requires PDF text objects for represented Core Fields. Section 7.3.1 strongly recommends rendering nonblank Core Fields. Keep mandatory representation of rendered fields separate from source-dependent rendering completeness; no mandatory presence-of-every-source-field-on-pages test follows.",
+    "residual_boundary": "No official erratum is claimed; runtime implementation and upstream integration need separate evidence."
+  },
+  {
+    "id": "SPEC-ATTACHMENT-SET-PRESENCE",
+    "kind": "interpretation_review",
+    "authority_location": "9.8.4 p89",
+    "affected_rule_codes": [
+      "ATTACHMENT_XMP_CONTAINER",
+      "ATTACHMENT_XMP_INVENTORY_RECOMMENDED"
+    ],
+    "finding": "Section 9.8.4 requires the attachments Bag, including zero records, while complete original attachment inventory is recommended.",
+    "reviewed_requirement": "Every EA-PDF file must include pdfmailmeta:attachments as an unordered XMP set, even when it has no attachment descriptions. Recording information for all original email attachments, including those removed for policy reasons, is SHOULD rather than SHALL; full source completeness is not a mandatory PDF-only test.",
+    "status": "locally_resolved",
+    "implementation_changed": false,
+    "local_resolution": {
+      "date": "2026-10-27",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "Every EA-PDF file must include pdfmailmeta:attachments as an unordered XMP set, even when it has no attachment descriptions. Recording information for all original email attachments, including those removed for policy reasons, is SHOULD rather than SHALL; full source completeness is not a mandatory PDF-only test.",
+      "rationale": "The required property permits zero records. Recommended inventory completeness is separate from mandatory property presence.",
+      "confidence": "high",
+      "implementation_status": "Reexamination implementation; see new regression evidence in the report.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_xmp_record_schema.py",
+        "tests/test_xmp_identity.py"
+      ]
+    },
+    "reexamination_resolution": "Every EA-PDF file must include pdfmailmeta:attachments as an unordered XMP set, even when it has no attachment descriptions. Recording information for all original email attachments, including those removed for policy reasons, is SHOULD rather than SHALL; full source completeness is not a mandatory PDF-only test.",
+    "superseded_local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "The complete original attachment inventory is a SHOULD. Absence alone is not a mandatory failure. Every supplied attachments property must be an unordered Bag, including a legal empty Bag, and supplied records satisfy Table 19.",
+      "rationale": "The opening paragraph explicitly explains why original inventory completeness is not SHALL. The following SHALL defines its supplied representation.",
+      "confidence": "high",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_xmp_record_schema.py",
+        "tests/test_xmp_identity.py"
+      ]
+    }
+  },
+  {
+    "id": "DEP-PDFA-EDITION",
+    "kind": "missing_dependency",
+    "authority_location": "4 p15 and 9.1 p61",
+    "affected_rule_codes": [
+      "PDFA_PART",
+      "PDFA_CONFORMANCE"
+    ],
+    "finding": "EA-PDF references ISO/DIS 19005-4:2024; the local copy is ISO 19005-4:2020. Local PDF/A-1/-2 are not substitutes for PDF/A-3.",
+    "reviewed_requirement": "Pin the required PDF/A-3 material and PDF/A-4 edition/errata plus the validator profiles actually used; do not claim edition-complete inherited coverage from older local files.",
+    "status": "locally_resolved",
+    "implementation_changed": false,
+    "custom_scope_disposition": "Upstream profile coverage/integration evidence; do not create a duplicate standards implementation or treat obtaining the complete text as a blocker to unrelated EA-PDF-only fixes.",
+    "local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "Use the pinned veraPDF 1.31.18 PDF/A-3 and PDF/A-4 profiles for operational baseline checks and report their actual edition/hash. Do not require a duplicate custom PDF/A implementation. Equivalence to the cited ISO/DIS 19005-4:2024 remains an external verification limit, not a claimed fact.",
+      "rationale": "An unavailable draft comparison cannot be guessed into evidence. The usable installed profile is an explicit project baseline.",
+      "confidence": "high",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "Draft/profile edition equivalence remains unverified.",
+      "evidence": [
+        "docs/improvement/verapdf-coverage/bundled-profiles.json",
+        "docs/improvement/validator-61/pdf-results.json"
+      ]
+    }
+  },
+  {
+    "id": "REQ-INHERITED-DIAGNOSTICS",
+    "kind": "authority_classification",
+    "authority_location": "9 p61 and underlying PDF/A",
+    "affected_rule_codes": [
+      "EMBEDDED_STREAM",
+      "OUTPUT_INTENT",
+      "FONTS_NONE",
+      "FONTS_EMBEDDED",
+      "FONTS_MISSING",
+      "FONTS_ALL_EMBEDDED"
+    ],
+    "finding": "Font discovery and OutputIntent heuristics are not a substitute for the exact inherited PDF/A requirements; images-only content and device-independent color alternatives can be legal.",
+    "reviewed_requirement": "Map to exact external clauses and classify operational observations separately from mandatory EA-PDF requirements.",
+    "status": "resolved_scope_only",
+    "implementation_changed": false,
+    "resolution": "All five actual PDF/A profiles are pinned. Font/MIME discovery is operational, generic font/color/type/serialization checks delegate upstream, and EA-PDF extras remain explicit. No duplicate inherited implementation is requested."
+  },
+  {
+    "id": "SPEC-ROLEMAPNS-SCOPE",
+    "kind": "interpretation_review",
+    "authority_location": "9.7 p74",
+    "affected_rule_codes": [
+      "ROLEMAPNS_PRESENT"
+    ],
+    "finding": "Wording applies to all PDF/A-4 with logical structure but speaks of EA-PDF-defined semantics; standard-only tagging and namespace-map placement need explicit treatment.",
+    "reviewed_requirement": "Record literal condition and actual semantics separately; do not infer optional custom tags are mandatory.",
+    "status": "locally_resolved",
+    "implementation_changed": false,
+    "upstream_issue": "https://github.com/pdf-association/report-an-issue/issues/21",
+    "local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "EA-PDF namespace bindings and RoleMapNS are required only when EA-PDF custom semantics are used in PDF 2.0. Standard-only structure needs no unused EA-PDF namespace. Table 9 compatibility mappings apply to the PDF 2.0 tags actually used.",
+      "rationale": "Section 9.7 explicitly makes the custom vocabulary optional; an unused namespace cannot carry used custom semantics.",
+      "confidence": "medium",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_validator_requirements_improvements.py",
+        "tests/test_spec_repairs.py"
+      ]
+    }
+  },
+  {
+    "id": "SPEC-INREPLYTO-ARRAY",
+    "kind": "specification_ambiguity",
+    "authority_location": "9.8.3 Table 18 p88",
+    "affected_rule_codes": [
+      "MESSAGE_INREPLYTO_XMP"
+    ],
+    "finding": "Table 18 calls In-Reply-To an unordered sequence. XMP distinguishes unordered arrays from ordered sequences; the requirement describes unordered strings but does not print an RDF container name.",
+    "reviewed_requirement": "Keep unordered semantic intent and string members explicit. Ask experts to confirm rdf:Bag rather than silently treating the word sequence as authority for rdf:Seq.",
+    "status": "locally_resolved",
+    "implementation_changed": true,
+    "local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "If supplied, In-Reply-To is rdf:Bag of normal free-text strings. Ordered rdf:Seq and rdf:Alt are not the prescribed unordered form. Member order is ignored in source comparison.",
+      "rationale": "The explicit word unordered selects XMP Bag; sequence is descriptive rather than the XMP ordered-array type.",
+      "confidence": "high",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_local_review_decisions.py",
+        "tests/fixtures/eapdf/validator-local-decisions/expectations.json"
+      ]
+    }
+  },
+  {
+    "id": "REQ-FOAF-REPRESENTATION",
+    "kind": "uncovered_dependency_detail",
+    "authority_location": "9.8.3 Table 18; FOAF mbox and Agent definitions; XMP equivalent-form rules",
+    "affected_rule_codes": [
+      "MESSAGE_TO_FOAF",
+      "MESSAGE_FROM_FOAF",
+      "MESSAGE_CC_FOAF",
+      "MESSAGE_BCC_FOAF"
+    ],
+    "finding": "The current helpers normalize mailbox text into mailto strings and impose SMTP-domain syntax. The reviewed EA-PDF text requires FOAF mailbox agents but does not specify that helper grammar or fully resolve literal-versus-URI serialization.",
+    "reviewed_requirement": "Track exact legal FOAF/XMP encodings and source normalization separately. Preserve permitted optional FOAF fields and valid XMP equivalents; do not treat a parser restriction as specification authority.",
+    "status": "locally_resolved",
+    "implementation_changed": false,
+    "local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "Address fields use ordered arrays of structured FOAF Agents with required mbox and optional name/other FOAF fields. Preserve supported equivalent XMP struct forms and both XMP URI text and rdf:resource mailto encodings. Validate mailbox syntax against RFC addr-spec/mailto rules without fabricating addresses; non-SMTP tokens use exact raw fields. Unhandled legal encodings remain unavailable rather than proved mismatches.",
+      "rationale": "EA-PDF fixes Agent fields and array order; FOAF identifies mailbox resources, while XMP permits URI values serialized as text. Parser convenience is not normative authority.",
+      "confidence": "medium",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_xmp_identity.py",
+        "tests/test_upstream_eapdf_issues.py"
+      ]
+    }
+  },
+  {
+    "id": "SPEC-AF-SOURCE-CARDINALITY",
+    "kind": "specification_ambiguity",
+    "authority_location": "9.4 printed p67; report-an-issue #14",
+    "affected_rule_codes": [
+      "SOURCE_AF",
+      "AF_RULE",
+      "SOURCE_FILE_SET"
+    ],
+    "finding": "The sentence combines only with at least one for catalog Source AF entries; the report explicitly asks whether exactly one or one-or-more is intended.",
+    "reviewed_requirement": "Retain the existing at-least-one rule and file-set handling as an explicit interim interpretation. Do not silently enforce exactly one or certify the ambiguity resolved.",
+    "status": "locally_resolved",
+    "implementation_changed": false,
+    "local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "Nonisolated s/m require at least one catalog Source file, with no universal exactly-one restriction. Independent source assets may each be Source. Companions in a declared file set use Supplement or RF as prescribed.",
+      "rationale": "The explicit at least one lower bound and support for multi-message sources outweigh the stray only; file-set companions remain separately constrained.",
+      "confidence": "medium",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_asset_ownership.py",
+        "tests/test_ambiguous_source_assets.py"
+      ]
+    }
+  },
+  {
+    "id": "SPEC-COLLECTION-SIZE-SEMANTICS",
+    "kind": "specification_ambiguity",
+    "authority_location": "7.6 Table 5; 9.5 Table 6; ISO 32000-2 Table 155; report-an-issue #17",
+    "affected_rule_codes": [
+      "COLLECTION_SCHEMA_FIELD"
+    ],
+    "finding": "EA-PDF describes original email bytes, while prescribed Collection subtype Size evaluates embedded-file bytes, which can be the contained PDF. The report proposes a numeric custom field but no adopted EA-PDF change is shown.",
+    "reviewed_requirement": "Keep prescribed subtype Size pending an expert disposition; do not treat it as verified original-email byte size or silently change it to N.",
+    "status": "locally_resolved",
+    "implementation_changed": false,
+    "local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "Require the Table 6 Size subtype and interpret its displayed value as embedded-file size under ISO 32000. Original message size stays in email XMP SizeInBytes or a separately named additional numeric collection field. Do not replace required Size with N or claim it proves original bytes.",
+      "rationale": "The explicit prescribed PDF subtype determines reader behavior; preserving original-size semantics separately avoids contradicting that object definition.",
+      "confidence": "high",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_catalog_collection_name_types.py",
+        "src/main/java/eapdf/PdfCollectionSupport.java"
+      ]
+    }
+  },
+  {
+    "id": "SPEC-COLLECTION-MESSAGEID-LISTS",
+    "kind": "specification_consistency_review",
+    "authority_location": "7.6 Table 5 and 9.5 Table 6; report-an-issue #17",
+    "affected_rule_codes": [
+      "COLLECTION_SCHEMA_FIELD"
+    ],
+    "finding": "Table 5 omits Message-ID from its minimum list while Table 6 explicitly requires it. Minimum lists can be satisfied together, but the duplicate-list intent needs an explicit source disposition.",
+    "reviewed_requirement": "Retain the explicit Table 6 Message-ID requirement; omission from Table 5 does not make it optional. Ask whether the minimum-list difference is intentional or an editorial omission.",
+    "status": "locally_resolved",
+    "implementation_changed": false,
+    "local_resolution": {
+      "date": "2026-10-21",
+      "authority": "User authorized reasonable project interpretations in the resumed thread; not official errata or external expert approval.",
+      "decision": "Require Message-ID in the collection schema with subtype S as explicitly stated by Table 6. Table 5 is a minimum subset, not a prohibition on Table 6 additions. A source email with no Message-ID need not acquire a fabricated value.",
+      "rationale": "Both minimum lists can be satisfied together without changing the published schema.",
+      "confidence": "high",
+      "implementation_status": "Bounded implementation and regression review in V61; not complete standard/representation coverage.",
+      "external_limit": "May be revised by published errata or expert evidence.",
+      "evidence": [
+        "tests/test_catalog_collection_name_types.py",
+        "src/main/java/eapdf/PdfCollectionSupport.java"
+      ]
+    }
+  }
+]

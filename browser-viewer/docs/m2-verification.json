@@ -1,0 +1,102 @@
+{
+  "milestone": "M2-smallest-vertical-slice",
+  "status": "ACCEPTANCE_MET",
+  "m3_started": false,
+  "repositoryHeadAtVerification": "b73d3fd5144f5e1a3e204342551fc1f63dcbdc88",
+  "baselineFilesChecked": 3147,
+  "outsideScopeChanges": [],
+  "outsideGitStatusUnchanged": true,
+  "preexistingAbsentTrackedPathsNotHashed": 94,
+  "modifiedExistingFiles": [
+    {
+      "path": "browser-viewer/README.md",
+      "before": "b52fc8102a5c8b19f7b5457db6bdd95c478f2604877e8ffc76c60ebf0d52096a",
+      "after": "17a255669bb9891d57bb0d314266b75de46751a5a92efddd30222a53ff428abc"
+    },
+    {
+      "path": "browser-viewer/THIRD_PARTY_NOTICES.md",
+      "before": "7d494a3aa5c07faedb8c57a24cd0802de9e77a6d83e3f5a777179cca5f6761a8",
+      "after": "bffe764237d66e43a0d67b82851ccd02a0031b0e12ef13406d42e5b637147a6a"
+    },
+    {
+      "path": "browser-viewer/docs/compatibility.md",
+      "before": "0420ca0582b427db226f641a69275f14c5f23c0870e160a9984b8c418b6a7acc",
+      "after": "ec0bb39f0c349c94cd8f83bffa5606d9c221f0b57b4aa6e6b54f307b7c6626bc"
+    },
+    {
+      "path": "browser-viewer/docs/decisions.md",
+      "before": "31b63cbc0bcfc741ef0d761554edbdf23f6791874a88829d3837a7fa848aa980",
+      "after": "f1495111b27e594dda8622b70e42ec1c3e9e07fc7a5e647170dcc46351454636"
+    },
+    {
+      "path": "browser-viewer/package.json",
+      "before": "cbf852b4ed6b1236e5658fa898ca6e5c42b00779dc70857c7c2e58942fb0664e",
+      "after": "1c2ce0d1bff28227ca0f6ea7cb5c13efb73553b5fae52603095034892688a918"
+    },
+    {
+      "path": "browser-viewer/scripts/build.mjs",
+      "before": "e2af0ee5786b78e6195e83ed20fd41cd90fa36a584d829eb10d3af228647f56b",
+      "after": "6c6a697718abbd21d25ad9e61b17b769546f3295d3ff76f5401c6122c359f0fb"
+    },
+    {
+      "path": "browser-viewer/tests/package.test.mjs",
+      "before": "425da6fcebe9d90af9e3e8d151c2f822d2c4aae12fe50819739b191cda1d5e72",
+      "after": "a713b225c406deb9151ae3456ce43c76691c02e8eeb7c9fae7d29ea0b915d265"
+    }
+  ],
+  "newFiles": [
+    "browser-viewer/docs/document-parts-api.md",
+    "browser-viewer/docs/m2-baseline-git-status.txt",
+    "browser-viewer/docs/m2-browser-parity.json",
+    "browser-viewer/docs/m2-results.md",
+    "browser-viewer/docs/m2-verification.json",
+    "browser-viewer/docs/pdfjs-patch-maintenance.md",
+    "browser-viewer/scripts/document-parts-smoke.mjs",
+    "browser-viewer/scripts/pdfjs-patch.mjs",
+    "browser-viewer/scripts/rebuild-pdfjs.mjs",
+    "browser-viewer/src/pdfjs-document-parts.d.ts",
+    "browser-viewer/tests/document-parts.test.mjs",
+    "browser-viewer/vendor/pdfjs-patched/pdf.mjs",
+    "browser-viewer/vendor/pdfjs-patched/pdf.worker.mjs",
+    "browser-viewer/vendor/pdfjs-patches/0001-document-parts.patch",
+    "browser-viewer/vendor/pdfjs-patches/build-task.mjs",
+    "browser-viewer/vendor/pdfjs-patches/core.test.mjs",
+    "browser-viewer/vendor/pdfjs-patches/manifest.json"
+  ],
+  "sourcePatch": {
+    "upstreamCommit": "d0991a0d53f3bb3a7307e3b83f279c1d117aafb3",
+    "existingFilesChanged": 3,
+    "newCoreFiles": 1,
+    "insertions": 350,
+    "deletions": 0,
+    "cleanGitCheckoutApplyCheck": "PASS",
+    "twoCleanSourceBuildsIdentical": true
+  },
+  "tests": {
+    "node": 8,
+    "focusedCore": 9,
+    "upstream": 73,
+    "m1Python": 15,
+    "m1Node": 2,
+    "browserParityCases": 6,
+    "failures": 0,
+    "skipped": 0,
+    "chromium": "156.0.8078.47",
+    "rendering": "PASS",
+    "newApi": "PASS",
+    "firefox": "BUILT_API_NOT_TESTED"
+  },
+  "immutableInputs": {
+    "viewer": true,
+    "adapter": true,
+    "m1Fixtures": true,
+    "m1ReferenceExtractor": true,
+    "packageLock": true,
+    "upstreamAssetPin": true
+  },
+  "buildInfoSha256": {
+    "chromium": "aa3e236a139c574f0c8a79414981de4319fbe9cd149f50b778f3cc4cb1b4a9b7",
+    "firefox": "9c88c6a29febedff79473931b8179869d0074d350685de602eaf62dfac6e0013"
+  },
+  "pdfjsPatchManifestSha256": "4fcec2608b266c0550eee136e8bfb5344b734bd20cead5e2f5ebe73ecbd5d3d4"
+}

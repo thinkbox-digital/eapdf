@@ -1,0 +1,660 @@
+{
+  "scope": "Observed current behavior; not production acceptance",
+  "sourceManifest": {
+    "fingerprint": "6d0ae14c2073283eeae46c4e9cd6d68144811b05eda8ab1ac1441077cc6ad58b",
+    "files": [
+      {
+        "path": "VERSION",
+        "sha256": "78b591400c56b7b67b8cb3b2b8a8e65e9093897f02ce0878e6b5405c68620fa7"
+      },
+      {
+        "path": "config/eapdf_config.json",
+        "sha256": "f0fc89a04bec5c508dbb1f860188afeb4113657a3bc83e60f42228fc10de4fbf"
+      },
+      {
+        "path": "pom.xml",
+        "sha256": "5a9e353dfe432baea9c60b721569ab152f894645bf57703bdc69a3cff0fd410d"
+      },
+      {
+        "path": "requirements-web.txt",
+        "sha256": "0183bb6c369becba564d3aec0f8c330709ea6f7534c9ad50af2090dde8345edb"
+      },
+      {
+        "path": "scripts/build_eapdf_declaration_fixtures.py",
+        "sha256": "e9a7cba9ac65c2994a7aa3b4dbfa72cc17203c70c133718afc936b5ce1ea98db"
+      },
+      {
+        "path": "scripts/build_eapdf_dpm_schema_fixtures.py",
+        "sha256": "f15ec33ed6d0de3942abfa2943b39c0dcfecde4f53081d61fe3cbeb3973ee114"
+      },
+      {
+        "path": "scripts/build_eapdf_email_schema_fixtures.py",
+        "sha256": "331218375286c6dafa251eadd17dc4fac8f9e0d66c6c34eb59e4545941835238"
+      },
+      {
+        "path": "scripts/build_eapdf_encoded_header_fixtures.py",
+        "sha256": "002fe6f9def700c1831eef7fe8a4fa8ad9a5c3c309e760d4327755e956394a12"
+      },
+      {
+        "path": "scripts/build_eapdf_header_inventory_fixtures.py",
+        "sha256": "2a3010d0cf6dfae2fe28e7c2838feba00bd4156c4dcf56cf1a5b929e74963d5c"
+      },
+      {
+        "path": "scripts/build_eapdf_header_occurrence_fixtures.py",
+        "sha256": "7da9cf715735a4280175ab7f3b5f3d9e98748c89e13f35b73ad007f4e8034e31"
+      },
+      {
+        "path": "scripts/build_eapdf_iso32005_profile.py",
+        "sha256": "e7b4f99cdfc1bededf18f975edf1707d5a39cc0ab30a08badd0117fb2c5d3e8d"
+      },
+      {
+        "path": "scripts/build_eapdf_recommendation_fixtures.py",
+        "sha256": "0d1a9f254ac22fb27ef6f3fcbd44172c0a366274c95fe87ad0758bca69d4e16c"
+      },
+      {
+        "path": "scripts/build_eapdf_remaining_file_fixtures.py",
+        "sha256": "e9b5b6cb72b3c80ac97cadf63adfaedc5b90c62999bd7a905303da12c294c0a6"
+      },
+      {
+        "path": "scripts/build_eapdf_requirements_audit.py",
+        "sha256": "932a23768821aeeada1af11d03d08970e8266a3bde5eb917dab7c42eab0031d6"
+      },
+      {
+        "path": "scripts/build_eapdf_review_document.py",
+        "sha256": "4c293b16fcd5202a887e357fc1887d5370127208b2df321a0cc02bc155adb6e9"
+      },
+      {
+        "path": "scripts/build_eapdf_rule_browser.py",
+        "sha256": "ccb69293e4fdc348d9b7f7652158b1442a4ec97c963ff8ad47a28b84742d3826"
+      },
+      {
+        "path": "scripts/build_eapdf_rule_fixtures.py",
+        "sha256": "6d0b2d72b7dbce9d26fdc3c05a01983eddbc45a215ab350731cb29919103d3c4"
+      },
+      {
+        "path": "scripts/build_eapdf_source_fixtures.py",
+        "sha256": "5fc3ce70523b84ba7cabe2d0a451890b5d777d39dcdf5c3ab421f46ccb9d124d"
+      },
+      {
+        "path": "scripts/build_eapdf_table11_fixtures.py",
+        "sha256": "ab9f4f870b3a9735323b7fc4452cdbeb5926e64bef2c0f7dac977a9c2f5dbbb7"
+      },
+      {
+        "path": "scripts/build_eapdf_tagging_fixtures.py",
+        "sha256": "af2d2ceb82a37648df99e8d71c925b7c1c2260200e89ce689c94a4dfa1afa644"
+      },
+      {
+        "path": "scripts/build_eapdf_upstream_issue_fixtures.py",
+        "sha256": "f757a04c6f8d9bee2d91129516883b11ca2b062b29fb28859d4637a7891396d6"
+      },
+      {
+        "path": "scripts/build_eapdf_xmp_identity_fixtures.py",
+        "sha256": "56e713535eaeb5a5f4ea22f9c39722a4ede422da268968216d537df4dae7e2d0"
+      },
+      {
+        "path": "scripts/build_eapdf_xmp_record_fixtures.py",
+        "sha256": "34d1c2d943d3c4e1239d7b182bfc9830465ce9de2f16ed5f66f3228622ddc5e7"
+      },
+      {
+        "path": "scripts/generate_decision_tree.py",
+        "sha256": "5d16ec25e812fd1a3de73845bb23041725e8ecfdc3a822920ff5f90317196ec3"
+      },
+      {
+        "path": "scripts/regenerate_email_samples.py",
+        "sha256": "8c76206c3581c8c73d940e8227b73bbc1adcfab9b1b1a903933f5b038c48ea84"
+      },
+      {
+        "path": "scripts/verify_eapdf_collection_child_fixtures.py",
+        "sha256": "b7be3bed77e84db49983a40b805025667aff2145809bb8842addf081f2eede2e"
+      },
+      {
+        "path": "scripts/verify_eapdf_input_inventory_fixtures.py",
+        "sha256": "1989fa930e0621532dbfe5bd7701a43b3c81ed024ab01d83d25c60ae94a00ae1"
+      },
+      {
+        "path": "scripts/verify_eapdf_mbox_inventory_fixtures.py",
+        "sha256": "7fb3e8c1a54e62b435da65b5ed4fd4fae2a89e74e63c974f434b3625b430f670"
+      },
+      {
+        "path": "src/main/java/eapdf/Common.java",
+        "sha256": "b56919c130d4061450e784388d0c5017f6edd2e5928d144a258183447b70802d"
+      },
+      {
+        "path": "src/main/java/eapdf/ConversionSupervisor.java",
+        "sha256": "a46c510d09fd00bd4a9108cfd5630d2a7345e8191c0621e9be9019cc7b7b3de2"
+      },
+      {
+        "path": "src/main/java/eapdf/EapdfConfig.java",
+        "sha256": "13bb68283ed7e31d05735c5543cb46a1e6bc87a53106280a1c667f36d6ada5e5"
+      },
+      {
+        "path": "src/main/java/eapdf/EapdfGui.java",
+        "sha256": "71e49d4a6c7d4192e1f7eeb3600edfd7edb72ee4ae597626c70ec3770631413d"
+      },
+      {
+        "path": "src/main/java/eapdf/EmailStyles.java",
+        "sha256": "029e6399f0587db307dceb331c7871aa5b26b20870e8d6db1156ea4cb40e65ca"
+      },
+      {
+        "path": "src/main/java/eapdf/EmailToPDFA.java",
+        "sha256": "5f9e01e320ae6c921e5069cc730dcc9b4789a79b5ce65a14e2597f6e19943639"
+      },
+      {
+        "path": "src/main/java/eapdf/EmlReader.java",
+        "sha256": "2ddc4ff3f34aa5498251d66e6e181be413c7c10ad610f5ed513c22643a6b6ff5"
+      },
+      {
+        "path": "src/main/java/eapdf/FontSupport.java",
+        "sha256": "906fdcba605309a0fec265a2a82e1b3b5181890c8ad6a195b142b4d695a298a6"
+      },
+      {
+        "path": "src/main/java/eapdf/GmailDownloadToPdf.java",
+        "sha256": "18fc6011cdcbfd4367dd5b08c74fbe567f2e391e55779534dde4b7bc38d86688"
+      },
+      {
+        "path": "src/main/java/eapdf/GmailResumeStore.java",
+        "sha256": "cd7badb79a835e85da695433d19f151fbc0483f50a5d578b5dae574ef31c8a9b"
+      },
+      {
+        "path": "src/main/java/eapdf/MboxParser.java",
+        "sha256": "cbb09f053baacfb18305585b6972d4488b6b0b5705586b37e3f6b16e94a231ef"
+      },
+      {
+        "path": "src/main/java/eapdf/MboxReadInventory.java",
+        "sha256": "26c0278f75a9cf5e22e0b684da237080bc47f2cbdd4af4e8a76a21d7c2d6bf8b"
+      },
+      {
+        "path": "src/main/java/eapdf/MboxReader.java",
+        "sha256": "fed8c3d74a7772456de8cd51af8e15a414404341c24b9dbf4473efa25cd6db69"
+      },
+      {
+        "path": "src/main/java/eapdf/Models.java",
+        "sha256": "db7e84f1f2465e095cfba511b1460a285eee27c39c9948e318707ed40957bbc2"
+      },
+      {
+        "path": "src/main/java/eapdf/MonthlyFilenameArchiveToPdf.java",
+        "sha256": "4d51a24cfcc7bcf71edcbf3f572446d17ba2fd3d707220f61e8a8dfa93168abb"
+      },
+      {
+        "path": "src/main/java/eapdf/MsgReader.java",
+        "sha256": "f704fa83cb9343446b07ca550fa8a0765abe2f4bcf8ecac2f8834e59ae56fee2"
+      },
+      {
+        "path": "src/main/java/eapdf/OutputTransaction.java",
+        "sha256": "82879efd9badd7a62d531b0e8072a94dfe41d37cd3627b833ef1bec1c22f8366"
+      },
+      {
+        "path": "src/main/java/eapdf/PayloadStore.java",
+        "sha256": "3b4f8ea0929f1797b452f689e7f51f378674f9ead280eb16ad9e6f643501d529"
+      },
+      {
+        "path": "src/main/java/eapdf/PdfCollectionSupport.java",
+        "sha256": "bcd49a89c6c1ca807bd5795cc0118fffe3a564c36dd340927a90b85c7a03374f"
+      },
+      {
+        "path": "src/main/java/eapdf/PdfCreationValidator.java",
+        "sha256": "3656c603453ece020860afeb5002e5a598d23664c694f38da484ee7ebda14289"
+      },
+      {
+        "path": "src/main/java/eapdf/PdfDocumentParts.java",
+        "sha256": "17503218b79317e1a9d9eaef78d79204e1c48da9bb9108bb4f49946dfd228b6b"
+      },
+      {
+        "path": "src/main/java/eapdf/PdfFindingAidSupport.java",
+        "sha256": "ec414290783378fc07ccf08a6a589ff87afda358259c8513458cc7e4bdcff09f"
+      },
+      {
+        "path": "src/main/java/eapdf/PdfMailWriter.java",
+        "sha256": "e52d716569a3d82e3d1689eec3851756e7a61d7302e24ca48d990b4d3a72eb25"
+      },
+      {
+        "path": "src/main/java/eapdf/PremisBuilder.java",
+        "sha256": "e5d848d4ae7f0c23fe432edd1486ece38429974187ddbec8849f6d7187e16483"
+      },
+      {
+        "path": "src/main/java/eapdf/PreservationInventory.java",
+        "sha256": "eca5b5ea9e3974baa02e86fe1247729d6d1ffbfd666853dc7d1e9d9296896217"
+      },
+      {
+        "path": "src/main/java/eapdf/ProcessingLimits.java",
+        "sha256": "cb6d6423ab10644a4c3410aaab5544567f855231bdd16a1d44e953fd06caa667"
+      },
+      {
+        "path": "src/main/java/eapdf/PstReader.java",
+        "sha256": "4cc7eac91368c0845e1cafc669f7cc44496f6e6b2276420e81c7016dbd4778ce"
+      },
+      {
+        "path": "src/main/java/eapdf/SemanticStructure.java",
+        "sha256": "999bea57db6741be47269b9a823b0c6f808a604188b74601ded1f3f724229092"
+      },
+      {
+        "path": "src/test/java/eapdf/AdditionalSpecRuleTests.java",
+        "sha256": "1dddc629dd8ce80fbc8c2c3d37db24fcb3976b9212453f35deb9ad1e52ae4a99"
+      },
+      {
+        "path": "src/test/java/eapdf/AttachmentProfilePolicyTests.java",
+        "sha256": "f8e5e702e865d5e985374ebcd051be1c90e1b7f3143b14a36fb2db8bacf4c0bb"
+      },
+      {
+        "path": "src/test/java/eapdf/CollectionChildAcceptanceTests.java",
+        "sha256": "c98f0db8d59efbdb32db9b1ab18ae8cee913796ad032320ec58b14abc4bf81bd"
+      },
+      {
+        "path": "src/test/java/eapdf/CollectionPortfolioTests.java",
+        "sha256": "5c2a01f54265f34de09eeb0d273cd8748faa4748c549250b28da387758ad198b"
+      },
+      {
+        "path": "src/test/java/eapdf/CreatorAccuracyTests.java",
+        "sha256": "a1d39f01d30c6f19e1a240bc157950bd1dc77413be43a540dd9afd64724de402"
+      },
+      {
+        "path": "src/test/java/eapdf/DeclarationNamespaceTests.java",
+        "sha256": "9fe228fa4504c0e2a46200b9fa878db813372465f8b85fc9c20538c273d3e025"
+      },
+      {
+        "path": "src/test/java/eapdf/DirectFindingAidTests.java",
+        "sha256": "527033c66c57d5d49756ec2e2af24ad0cbd1ef76fc32d757708a8ccbae0ed133"
+      },
+      {
+        "path": "src/test/java/eapdf/EmailContentRegressionTests.java",
+        "sha256": "6d039be6cd65c19e97d124389a3e13a9b6e0d2ff5622e03ee5f8e2e1ff4be736"
+      },
+      {
+        "path": "src/test/java/eapdf/GmailDownloadRecoveryTests.java",
+        "sha256": "8fceb0f1a86a7053c8a5d0b2a9afab34d8189831a0e17a510a23d8aa6ff996e0"
+      },
+      {
+        "path": "src/test/java/eapdf/MboxPreservationTests.java",
+        "sha256": "be368dcd8269aac6a09b3f162b3ec00e867fa4aaafde4ffe7521debca8eecce1"
+      },
+      {
+        "path": "src/test/java/eapdf/MboxReadInventoryTests.java",
+        "sha256": "48694795c6e5b6f1135f69e5b01ad27d22dda487c52a06ebaf88590698786551"
+      },
+      {
+        "path": "src/test/java/eapdf/MonthlyFilenameArchiveTests.java",
+        "sha256": "b672b1e8f2b3573baab56fb433ad95eda823fdd26c7801b5ea4bb2f5d9883741"
+      },
+      {
+        "path": "src/test/java/eapdf/PdfWriterArchiveTests.java",
+        "sha256": "17f84467683d8ce8cd9a0e1388b3de89ad72bec2018feb4815e70c335fe652ab"
+      },
+      {
+        "path": "src/test/java/eapdf/PdfWriterSingleMessageTests.java",
+        "sha256": "1dc7efccaede5d1f1d8c36aca061b0a8b6dc16a12f323b0fa923593a1af42bf1"
+      },
+      {
+        "path": "src/test/java/eapdf/PreservationInventoryTests.java",
+        "sha256": "9dfb48d8c65a023bcca5aab44c323d92a7a4804693f582a86403f8d3c807a906"
+      },
+      {
+        "path": "src/test/java/eapdf/PreservationRegressionTests.java",
+        "sha256": "e8797f22c4e1db0d2608c83e36f2edf5470dcbfc6f030a59d45357cbbf05ddda"
+      },
+      {
+        "path": "src/test/java/eapdf/ProcessingLimitRepairTests.java",
+        "sha256": "dc161b7bcaa74952c581776a726504f1926ccc4c18219cf1a0399f3e955cdc03"
+      },
+      {
+        "path": "src/test/java/eapdf/ReaderTests.java",
+        "sha256": "6744010826645153058c3867d850409be401b5a783b76127c50eefeb4e10fe25"
+      },
+      {
+        "path": "src/test/java/eapdf/ReleaseRegressionTests.java",
+        "sha256": "c2985d2f265ed6c75fbc3835621e93696c06f6f93768a49624fedf534f4278fa"
+      },
+      {
+        "path": "src/test/java/eapdf/RemainingPreservationTests.java",
+        "sha256": "302aa7f90c1a3e1fe3a2319613a29292fd006f43e6efe41f938b2cc393dcd338"
+      },
+      {
+        "path": "src/test/java/eapdf/RemainingWorkflowTests.java",
+        "sha256": "2d345474178deced42c08bbe0948e460eb414f6311f74686f18cee5fc389cd44"
+      },
+      {
+        "path": "src/test/java/eapdf/SpecRepairTests.java",
+        "sha256": "a9b5e4830d6e1783dc292dbada5389bdce8190f7dd670ced3db93ed8854199a3"
+      },
+      {
+        "path": "src/test/java/eapdf/SupervisedConversionTests.java",
+        "sha256": "b600ea431ae05832e73a4d842fe0153b7e578a7bb886c29b945c94461db6d882"
+      },
+      {
+        "path": "src/test/java/eapdf/TestSupport.java",
+        "sha256": "be2b8014a9ccf7180ddfe9e79e0329a8454d734e9b1fabbd25919e9dcef93453"
+      },
+      {
+        "path": "src/test/java/eapdf/UnfixedRegressionTests.java",
+        "sha256": "1dfd4948f73df938cce8509918e43dc0ddc07570f74db1565fd289d163d80168"
+      },
+      {
+        "path": "src/test/java/eapdf/UserPropertiesArrayTests.java",
+        "sha256": "9df7a5524fdd664695c720367d2f99a55a01edaded5a77b971d1eb0b6530169c"
+      },
+      {
+        "path": "tests/test_accessibility_profiles.py",
+        "sha256": "19b304ab28cbff110d666f800902b6c26951879b4fd16d25ef05dce917aa5075"
+      },
+      {
+        "path": "tests/test_additional_spec_rules.py",
+        "sha256": "f5e6bb7824be4df733218c3c5f7684ab6c62c35fa4c556bce3ec49e6bcddd155"
+      },
+      {
+        "path": "tests/test_applicability_edges.py",
+        "sha256": "70507212f019ceec8772e6777bc9bf8b032ced3841484015c7b485250c70c5d8"
+      },
+      {
+        "path": "tests/test_array_applicability.py",
+        "sha256": "722be660da12c98190682d3740fc8bd0cc7fd660b6e78671da02ba68e0c31114"
+      },
+      {
+        "path": "tests/test_creator_accuracy.py",
+        "sha256": "d8ccb6f2dae78a30b1786e77e163b255ed44f9b6cb82b74a21095d208af79795"
+      },
+      {
+        "path": "tests/test_declaration_schema.py",
+        "sha256": "ee5e2d59c95b7871da4e9141d988e75b8e982ba7ee38938afe4276adc9463d2d"
+      },
+      {
+        "path": "tests/test_dpart_diagnostics.py",
+        "sha256": "437c6428ae6ffa07b7dbcb6b20c043bb3a38819eac092bee07bd3b352a6b02c5"
+      },
+      {
+        "path": "tests/test_dpm_schema.py",
+        "sha256": "38cd4bd1413219225cb277a6a807aec5739cec5cf856915f0c1a995bfd17fbb7"
+      },
+      {
+        "path": "tests/test_effective_userproperties.py",
+        "sha256": "22e194ccd98d83c5c8e5b8dd015b0d2396b0befab7f84d1a4995bc3346dde48e"
+      },
+      {
+        "path": "tests/test_email_record_schema.py",
+        "sha256": "6f938e8917707d9546018682cf631fc39ec20d6c9332a10bc1a8121aa3ce3b10"
+      },
+      {
+        "path": "tests/test_encoded_header_safety.py",
+        "sha256": "da706cf658e8a21ad0ea551918c799d45204a1dde1b373bceca59b0a963339b2"
+      },
+      {
+        "path": "tests/test_first_five_fixes.py",
+        "sha256": "848e4900fd18c0bc1bb8c1d01f9565edd67e598081a84ef6657960ef09ee17ee"
+      },
+      {
+        "path": "tests/test_followup_security.py",
+        "sha256": "703f661936c980429119389bfebb6cd9301d457466611579ca74039bd225bcfb"
+      },
+      {
+        "path": "tests/test_generated_profiles.py",
+        "sha256": "c135aa58f72dabf0631d7895e1cfedc7b0505e8575e0a4ffb672b4cd21907e6b"
+      },
+      {
+        "path": "tests/test_header_occurrences.py",
+        "sha256": "6cf0b0c540d8d320acf808d5aa89e4d0b7c1e6e9473540cd1fa61d3e324b2eec"
+      },
+      {
+        "path": "tests/test_identification_schema.py",
+        "sha256": "b84f4ef6b0a854af025cc1900316111a529f4f2aaba250811569526ff1944e6c"
+      },
+      {
+        "path": "tests/test_iso32005_upstream.py",
+        "sha256": "6f43de92a83a621bb16f9e797fd05c1f837022c0e8b4bc8aa5caaf83e5bf9339"
+      },
+      {
+        "path": "tests/test_preservation_safety.py",
+        "sha256": "27721ae6bf6c7d27ada56b39498f0f35f308b83064b357d18e1535db86719bfe"
+      },
+      {
+        "path": "tests/test_recommendation_applicability.py",
+        "sha256": "9d8d561c2a427bbf10f9b15cf568cbb7173b8d8ae73c8cb3bdc892bccb527254"
+      },
+      {
+        "path": "tests/test_remaining_file_requirements.py",
+        "sha256": "c78c16bf8359b95f2ad819f029c288f945bdc446886a8c4a71d315541351ecbe"
+      },
+      {
+        "path": "tests/test_remaining_workflow.py",
+        "sha256": "ba34a13204c0e241f9844b44f8a38f4a24706e86b6c2f202ba61b28c169f333b"
+      },
+      {
+        "path": "tests/test_rendered_header_inventory.py",
+        "sha256": "7bdc38e46acd4c57c877a527033e1e501c7ac8bce32087af4b6e25ddb2eff4d2"
+      },
+      {
+        "path": "tests/test_report_observed_values.py",
+        "sha256": "5140ddba2c33ff69c764fe6779e0b40f7d1253a8de7408263a58d0dd9bffe915"
+      },
+      {
+        "path": "tests/test_source_attachment_references.py",
+        "sha256": "3256bcb4192c09b8e20434caf592cc975c1ab2c518d142fc4ed63b9329913295"
+      },
+      {
+        "path": "tests/test_spec_repair_integration.py",
+        "sha256": "230e6e08efa02b35ea1aac779c8b6d0a476118db20b3c803dd84f53980d37aff"
+      },
+      {
+        "path": "tests/test_spec_repairs.py",
+        "sha256": "3aeaa7774309fa6388e85eec0b240582cacbca579059cccecc8a42b3362b0910"
+      },
+      {
+        "path": "tests/test_supervised_conversion.py",
+        "sha256": "8fa2e5220c0af07ad30215ce3b775876060df48e4fea1d31e1e4d8cfaa5172bc"
+      },
+      {
+        "path": "tests/test_tagging_recommendations.py",
+        "sha256": "99b45f8292801199f310b4f44d7650f63907181324cd95971ab6e1d423c121f5"
+      },
+      {
+        "path": "tests/test_upstream_eapdf_issues.py",
+        "sha256": "9cf419ebd4b6618f830e06a0c1991ed37050bedb0728daa8e755866f06d67e1d"
+      },
+      {
+        "path": "tests/test_userproperty_dates.py",
+        "sha256": "6ec78e573a5c8163911248a3ab4bf4eb19806e9a119e8cfe3806c0a822f5fe03"
+      },
+      {
+        "path": "tests/test_userproperty_sources.py",
+        "sha256": "dfd93ed143184bcc8a0b541e1e526c8c6d5a770e93cb20453544f1824ceeedcd"
+      },
+      {
+        "path": "tests/test_userproperty_types.py",
+        "sha256": "b334e6b11c339ca489fe91da246632b73f3444843cdab14f5add4378cab077fd"
+      },
+      {
+        "path": "tests/test_validator_completion.py",
+        "sha256": "ed76383763049f489e019b32aa99ef934ba699b95d906ed765ae1da47691f336"
+      },
+      {
+        "path": "tests/test_validator_correctness.py",
+        "sha256": "5269278eb2fe425ee351ea3af762d8846679e214e027303c738accba52d10f23"
+      },
+      {
+        "path": "tests/test_validator_ownership.py",
+        "sha256": "a63fe24075c9540922e6a8143669bf1b534ae418b456b3085f51ecf56ef6459d"
+      },
+      {
+        "path": "tests/test_validator_requirements_improvements.py",
+        "sha256": "514d2ce5118fd0974e5d910d71c9e0c98168b038562fffb19dd8970ef9a72fcf"
+      },
+      {
+        "path": "tests/test_xmp_identity.py",
+        "sha256": "6560f8652afca5425b28b3cc9497195438013844613e9a479aaa7476c541f4e5"
+      },
+      {
+        "path": "tests/test_xmp_record_schema.py",
+        "sha256": "5b6d32a28e2c00baea52011cf6e530c3a8d10db5576e6f2554325cfd51edd893"
+      },
+      {
+        "path": "validate_eapdf.py",
+        "sha256": "c1d359a80d054a063484f6607a71a36a4486f025f41ea9d9a34ea3a6e8e16f62"
+      },
+      {
+        "path": "validator_rule_text.json",
+        "sha256": "6edf6785a62f2dfcad3a78d8d8d6a3028c3396003e8bb4b703359b0515a55502"
+      },
+      {
+        "path": "validator_web.py",
+        "sha256": "55f4394556465a47fadb3d4808398c36b441ed8811f878a013061656598e1065"
+      }
+    ]
+  },
+  "results": [
+    {
+      "case": "image_only",
+      "generatorExit": 0,
+      "conversionWarnings": [],
+      "imageObjects": 2,
+      "bodySubtypes": [
+        "text/html; charset=UTF-8"
+      ],
+      "figureAlternatives": [
+        "red",
+        "blue"
+      ],
+      "validation": {
+        "status": "PASS",
+        "pdfaStatus": "PASS",
+        "failures": [],
+        "warnings": [
+          "XMP_CREATEDATE_SEMANTICS",
+          "UNSPECIFIED_COLOR_SRGB_ASSUMED",
+          "REFERENCED_ASSETS_AS_ASSOCIATED_FILES",
+          "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT",
+          "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED",
+          "HEADER_FIELDS_TAGGED_RECOMMENDED"
+        ]
+      }
+    },
+    {
+      "case": "image_with_text",
+      "generatorExit": 0,
+      "conversionWarnings": [
+        "warning: An email image has no source alternative text; a generic description is used and should be reviewed for accessibility."
+      ],
+      "imageObjects": 1,
+      "bodySubtypes": [
+        "text/html; charset=UTF-8"
+      ],
+      "figureAlternatives": [
+        "Image from the original email"
+      ],
+      "validation": {
+        "status": "PASS",
+        "pdfaStatus": "PASS",
+        "failures": [],
+        "warnings": [
+          "XMP_CREATEDATE_SEMANTICS",
+          "UNSPECIFIED_COLOR_SRGB_ASSUMED",
+          "REFERENCED_ASSETS_AS_ASSOCIATED_FILES",
+          "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT",
+          "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED",
+          "HEADER_FIELDS_TAGGED_RECOMMENDED"
+        ]
+      }
+    },
+    {
+      "case": "body_parameters",
+      "generatorExit": 0,
+      "conversionWarnings": [],
+      "imageObjects": 0,
+      "bodySubtypes": [
+        "text/plain; charset=UTF-8; format=flowed"
+      ],
+      "figureAlternatives": [],
+      "validation": {
+        "status": "PASS",
+        "pdfaStatus": "PASS",
+        "failures": [],
+        "warnings": [
+          "XMP_CREATEDATE_SEMANTICS",
+          "UNSPECIFIED_COLOR_SRGB_ASSUMED",
+          "REFERENCED_ASSETS_AS_ASSOCIATED_FILES",
+          "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT",
+          "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED",
+          "HEADER_FIELDS_TAGGED_RECOMMENDED"
+        ]
+      }
+    },
+    {
+      "case": "premis",
+      "generatorExit": 0,
+      "conversionWarnings": [],
+      "imageObjects": 0,
+      "bodySubtypes": [
+        "text/html; charset=UTF-8"
+      ],
+      "figureAlternatives": [],
+      "validation": {
+        "status": "PASS",
+        "pdfaStatus": "PASS",
+        "failures": [],
+        "warnings": [
+          "XMP_CREATEDATE_SEMANTICS",
+          "UNSPECIFIED_COLOR_SRGB_ASSUMED",
+          "REFERENCED_ASSETS_AS_ASSOCIATED_FILES",
+          "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT",
+          "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED",
+          "HEADER_FIELDS_TAGGED_RECOMMENDED"
+        ]
+      }
+    },
+    {
+      "case": "colon:source",
+      "generatorExit": 0,
+      "conversionWarnings": [],
+      "imageObjects": 0,
+      "bodySubtypes": [],
+      "figureAlternatives": [],
+      "validation": {
+        "status": "PASS",
+        "pdfaStatus": "PASS",
+        "failures": [],
+        "warnings": [
+          "XMP_CREATEDATE_SEMANTICS",
+          "UNSPECIFIED_COLOR_SRGB_ASSUMED",
+          "REFERENCED_ASSETS_AS_ASSOCIATED_FILES",
+          "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT",
+          "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED",
+          "CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED",
+          "HEADER_FIELDS_TAGGED_RECOMMENDED"
+        ]
+      }
+    },
+    {
+      "case": "nfsm",
+      "validation": {
+        "status": "FAIL",
+        "pdfaStatus": "PASS",
+        "failures": [
+          "PROFILE_NFSM_SINGLE_NO_ATTACHMENTS"
+        ],
+        "warnings": [
+          "XMP_CREATEDATE_SEMANTICS",
+          "UNSPECIFIED_COLOR_SRGB_ASSUMED",
+          "REFERENCED_ASSETS_AS_ASSOCIATED_FILES",
+          "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT",
+          "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED",
+          "HEADER_FIELDS_TAGGED_RECOMMENDED"
+        ]
+      }
+    },
+    {
+      "case": "missing-subject",
+      "validation": {
+        "status": "FAIL",
+        "pdfaStatus": "PASS",
+        "failures": [
+          "MESSAGE_SUBJECT_XMP",
+          "MESSAGE_SUBJECT_XMP"
+        ],
+        "warnings": [
+          "XMP_CREATEDATE_SEMANTICS",
+          "UNSPECIFIED_COLOR_SRGB_ASSUMED",
+          "REFERENCED_ASSETS_AS_ASSOCIATED_FILES",
+          "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT",
+          "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED",
+          "HEADER_FIELDS_TAGGED_RECOMMENDED"
+        ]
+      }
+    }
+  ]
+}

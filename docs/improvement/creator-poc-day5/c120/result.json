@@ -1,0 +1,66 @@
+{
+  "checkpoint": "C120",
+  "fix": "Recognize valid RFC5322 trailing comments/whitespace after the timezone; use existing MIME tokenizer to require balanced comments and reject unparsed date text. Preserve invalid calendar date behavior.",
+  "java_focused": {
+    "tests": 32,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changed_production_classes": [
+    "eapdf/Common.class"
+  ],
+  "mailbox_messages": 1433,
+  "unrecognized_dates_before": 1433,
+  "unrecognized_dates_after": 0,
+  "all_source_header_body_instant_and_native_asset_hashes_unchanged": true,
+  "actual_pdf": "pdf-results.json",
+  "saved_samples": {
+    "1s": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "5898c04a92efeb08cc8be384333b69ca3f9a49c36123642d513193d662b96b6a"
+    },
+    "1si": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "52c5dfa58ef0542570e92d2da68fcec336f272a73bde63a39cc4deef813ab560"
+    },
+    "1m": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "356d91219e18427dcbcfda0a00d778df64451379cdfcf0521c926565f32efca2"
+    },
+    "1mi": {
+      "status": "INCOMPLETE",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "a45de3dfa438218ad73294ff4175adfd9e05aba5fd6a4913b7b9602ddbbd4184"
+    },
+    "1c": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "a86ae0d3b86cfafcc6106c0f2c529f0c4562a704ef026b13d61f42b833154cbb"
+    },
+    "1ci": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "01c988fc6a4808c180fe79b7c6b2fa414677de4dd1803a08cf510e27d81c1d55"
+    }
+  },
+  "frozen_validator_changed": false,
+  "apps": "Included in both delivered C121 apps.",
+  "known_limit": "Isolated PST 1mi native attachment comparison remains INCOMPLETE.",
+  "shared_staging_removed": true
+}

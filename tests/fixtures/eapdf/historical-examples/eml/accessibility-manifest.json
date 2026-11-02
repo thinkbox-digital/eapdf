@@ -1,0 +1,17 @@
+{
+  "created": "2026-10-29",
+  "creator_version": "1.6.0-beta.2",
+  "creator_sha256": "3937dcb3dfe5dfc154c3cbb95ea5f0f2917b02c2ae5ff64bfd624dda0046aed5",
+  "validator_sha256": "8065f67a7985d718211e477f2c05196ff99d254196e7ade890595bdabfb40083",
+  "sources": {
+    "in/Agenda and timeline slides.eml": "c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6",
+    "in/eml_01_403.eml": "311ec37e7324327f8f216266f738fa90c7cee89c36f3f0d583d33752d60934a9"
+  },
+  "file": "eml_accessibility_1c.pdf",
+  "sha256": "11c29aab49a988c784859b6aa6672e2e50ea78d717b2cf1a38281e29a303205e",
+  "pdfa": "PASS",
+  "eapdf": "PASS",
+  "pdfua2_machine": "PASS",
+  "human_accessibility_review": false,
+  "report_directory": "output/release-1.6.0-beta.2/accessibility"
+}

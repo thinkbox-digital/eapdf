@@ -1,0 +1,3322 @@
+{
+  "rule_count": 229,
+  "runtime_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
+  "check_schema": {
+    "strength": "string: obligation strength for this predicate, not all linked source clauses",
+    "applies_when": "string: exact triggering condition",
+    "assertion": "string: one independently reported predicate",
+    "evidence_needed": "string: sufficient evidence and dependency boundary"
+  },
+  "renamed_codes": {
+    "MESSAGE_SOURCE_MATCH": "MESSAGE_SOURCE_COVERAGE",
+    "ATTACHMENT_XMP_MATCH": "ATTACHMENT_XMP_SIZE_MATCH",
+    "EMBEDDED_SUBTYPE_MATCH_XMP": "EMBEDDED_MEDIA_TYPE_MATCH_XMP",
+    "SOURCE_MEDIATYPE_PARAMETERS_MATCH": "EMBEDDED_MEDIATYPE_PARAMETERS_TYPE",
+    "EMBEDDED_SIZE": "EMBEDDED_SIZE_MATCH",
+    "EMBEDDED_MD5": "EMBEDDED_MD5_MATCH",
+    "ATTACHMENT_XMP": "ATTACHMENT_XMP_CONTAINER"
+  },
+  "new_rules": [
+    {
+      "code": "EMBEDDED_MEDIATYPE_PARAMETERS_REQUIRED",
+      "rule_number": 71,
+      "check": {
+        "strength": "SHALL",
+        "applies_when": "the independently associated originating email supplies media-type parameters",
+        "assertion": "An embedded stream originating from an email with media-type parameters must contain Mail_MediaTypeParameters.",
+        "evidence_needed": "Independently associated readable original email or attachment and the generated PDF/XMP. A deliberately omitted isolated original is N/A; supplied but unreadable or ambiguous originals leave applicable comparisons unavailable."
+      },
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-PARAMS",
+        "predicate_order": 214,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "SOURCE_MEDIATYPE_PARAMETERS_MATCH",
+      "rule_number": 72,
+      "check": {
+        "strength": "SHALL",
+        "applies_when": "original parameters and the corresponding stored PDF string are independently available",
+        "assertion": "Stored Mail_MediaTypeParameters must preserve the parameters of the independently associated originating email.",
+        "evidence_needed": "Independently associated readable original email or attachment and the generated PDF/XMP. A deliberately omitted isolated original is N/A; supplied but unreadable or ambiguous originals leave applicable comparisons unavailable."
+      },
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-PARAMS",
+        "predicate_order": 215,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_EMAIL_CONTENT_SET_OWNERSHIP",
+      "rule_number": 97,
+      "check": {
+        "strength": "SHALL",
+        "applies_when": "intermediate DPart email nodes and email-owned Content Sets",
+        "assertion": "Intermediate email DPart nodes must associate each email with all and only its independently identified Content Sets.",
+        "evidence_needed": "PDF objects, decoded embedded bytes and document XMP; successful veraPDF validation is the prerequisite. Independent logical-content ownership must be established separately from the DPart identifier being tested."
+      },
+      "source_order": {
+        "printed_page": 69,
+        "pdf_page": 76,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-EMAIL-OWNERSHIP",
+        "predicate_order": 216,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_ATTACHMENT_MEDIA_TYPE_MATCH_SOURCE",
+      "rule_number": 112,
+      "check": {
+        "strength": "SHALL",
+        "applies_when": "an AttachmentRendering Content Set",
+        "assertion": "AttachmentRendering Mail_Subtype must identify the original attachment media type including parameters.",
+        "evidence_needed": "Independently associated readable original email or attachment and the generated PDF/XMP. A deliberately omitted isolated original is N/A; supplied but unreadable or ambiguous originals leave applicable comparisons unavailable."
+      },
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": 8,
+        "requirement_id": "T8-SUBTYPE",
+        "predicate_order": 217,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_NUMBERMESSAGES_MATCH_RENDERED",
+      "rule_number": 179,
+      "check": {
+        "strength": "required_if_present",
+        "applies_when": "source-asset NumberMessages is supplied",
+        "assertion": "NumberMessages must equal the successfully rendered emails attributable to that particular source-asset occurrence.",
+        "evidence_needed": "Independently associated readable original email or attachment and the generated PDF/XMP. A deliberately omitted isolated original is N/A; supplied but unreadable or ambiguous originals leave applicable comparisons unavailable. Independently owned rendered content and complete validated collection-child evidence may support the comparison."
+      },
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": 16,
+        "requirement_id": "T16-NumberMessages",
+        "predicate_order": 218,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMAIL_XMP_CARDINALITY",
+      "rule_number": 57,
+      "check": {
+        "strength": "SHALL",
+        "applies_when": "profiles s, si, m or mi",
+        "assertion": "Email XMP record count must be exactly one for s/si and at least two for m/mi.",
+        "evidence_needed": "PDF objects, decoded embedded bytes and document XMP; successful veraPDF validation is the prerequisite."
+      },
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.2",
+        "table": null,
+        "requirement_id": "EMAIL-M-CARDINALITY",
+        "predicate_order": 219,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_CORE_FIELDS_SOURCE_REQUIRED",
+      "rule_number": 182,
+      "check": {
+        "strength": "SHALL",
+        "applies_when": "an independently associated original supplies a nonempty applicable Core Field or has one or more attachments",
+        "assertion": "Email XMP must include each applicable nonempty original Core Field and the attachment count when the original has attachments.",
+        "evidence_needed": "Independently associated readable original email or attachment and the generated PDF/XMP. A deliberately omitted isolated original is N/A; supplied but unreadable or ambiguous originals leave applicable comparisons unavailable."
+      },
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": null,
+        "requirement_id": "XMP-EMAILS",
+        "predicate_order": 220,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_METADATA_MATCH_SOURCE",
+      "rule_number": 9,
+      "check": {
+        "strength": "SHALL",
+        "applies_when": "a source-derived email metadata value is supplied and its independent original evidence can be assessed",
+        "assertion": "Supplied source-derived email metadata must preserve the full original value as equivalently as representation and encoding permit.",
+        "evidence_needed": "Independently associated readable original email or attachment and the generated PDF/XMP. A deliberately omitted isolated original is N/A; supplied but unreadable or ambiguous originals leave applicable comparisons unavailable."
+      },
+      "source_order": {
+        "printed_page": 36,
+        "pdf_page": 43,
+        "section": "7.3.1",
+        "table": null,
+        "requirement_id": "HEADER-SOURCE-EQUIVALENCE",
+        "predicate_order": 221,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_CHECKSUM_MATCH",
+      "rule_number": 209,
+      "check": {
+        "strength": "required_if_present",
+        "applies_when": "attachment XMP CheckSum is supplied",
+        "assertion": "A supplied attachment XMP CheckSum must equal the MD5 digest of its independently associated native bytes stored in the EA-PDF.",
+        "evidence_needed": "PDF objects, decoded embedded bytes and document XMP; successful veraPDF validation is the prerequisite."
+      },
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-CheckSum",
+        "predicate_order": 222,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_FILENAME_MATCH_SOURCE",
+      "rule_number": 213,
+      "check": {
+        "strength": "SHALL",
+        "applies_when": "an attachment description can be associated with its original filename evidence",
+        "assertion": "Attachment XMP Filename must preserve the exact original case-sensitive filename when supplied; otherwise a suitable generated filename is permitted.",
+        "evidence_needed": "Independently associated readable original email or attachment and the generated PDF/XMP. A deliberately omitted isolated original is N/A; supplied but unreadable or ambiguous originals leave applicable comparisons unavailable."
+      },
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-Filename",
+        "predicate_order": 223,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_MESSAGE_ID_MATCH",
+      "rule_number": 215,
+      "check": {
+        "strength": "required_if_present",
+        "applies_when": "attachment Message-ID is supplied",
+        "assertion": "A supplied attachment Message-ID must identify its containing original email.",
+        "evidence_needed": "Independently associated readable original email or attachment and the generated PDF/XMP. A deliberately omitted isolated original is N/A; supplied but unreadable or ambiguous originals leave applicable comparisons unavailable. Corresponding email XMP may establish internal identity consistency; GUID ownership takes priority."
+      },
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-Message-ID",
+        "predicate_order": 224,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_NATIVE_BYTES_SOURCE_FIDELITY_RECOMMENDED",
+      "rule_number": 15,
+      "check": {
+        "strength": "SHOULD",
+        "applies_when": "nonzero retained native attachment and independently associated original bytes",
+        "assertion": "Nonzero native attachment payloads should preserve the full decoded original attachment bytes.",
+        "evidence_needed": "Independently associated readable original email or attachment and the generated PDF/XMP. A deliberately omitted isolated original is N/A; supplied but unreadable or ambiguous originals leave applicable comparisons unavailable."
+      },
+      "source_order": {
+        "printed_page": 44,
+        "pdf_page": 51,
+        "section": "7.5",
+        "table": null,
+        "requirement_id": "ATTACHMENT-BYTES",
+        "predicate_order": 225,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_ANNOTATIONS_VISIBLE_WITHIN_CROPBOX",
+      "rule_number": 62,
+      "check": {
+        "strength": "SHALL",
+        "applies_when": "qualifying native attachment annotations in an applicable owning BodyRendering Content Set",
+        "assertion": "At least one qualifying FileAttachment annotation for each attachment/body-set pair must be visible and positioned entirely within its page CropBox.",
+        "evidence_needed": "PDF objects, decoded embedded bytes and document XMP; successful veraPDF validation is the prerequisite."
+      },
+      "source_order": {
+        "printed_page": 65,
+        "pdf_page": 72,
+        "section": "9.3",
+        "table": null,
+        "requirement_id": "ATTACHMENT-ANNOT-EACH-BODY",
+        "predicate_order": 226,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_SIZE_RECOMMENDED",
+      "rule_number": 80,
+      "check": {
+        "strength": "SHOULD",
+        "applies_when": "embedded file streams",
+        "assertion": "Writers should supply the uncompressed payload byte size in embedded-file Params Size.",
+        "evidence_needed": "PDF objects, decoded embedded bytes and document XMP; successful veraPDF validation is the prerequisite."
+      },
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-SIZE-RECOMMEND",
+        "predicate_order": 227,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_MD5_RECOMMENDED",
+      "rule_number": 78,
+      "check": {
+        "strength": "SHOULD",
+        "applies_when": "embedded file streams",
+        "assertion": "Writers should supply the MD5 digest in embedded-file Params CheckSum.",
+        "evidence_needed": "PDF objects, decoded embedded bytes and document XMP; successful veraPDF validation is the prerequisite."
+      },
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-MD5-RECOMMEND",
+        "predicate_order": 228,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_INVENTORY_RECOMMENDED",
+      "rule_number": 206,
+      "check": {
+        "strength": "SHOULD",
+        "applies_when": "original emails have attachments, including policy-removed attachments",
+        "assertion": "Document-level attachment metadata should describe all original email attachments, including those removed for policy reasons.",
+        "evidence_needed": "Independently associated readable original email or attachment and the generated PDF/XMP. A deliberately omitted isolated original is N/A; supplied but unreadable or ambiguous originals leave applicable comparisons unavailable."
+      },
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": null,
+        "requirement_id": "XMP-ATTACHMENT-INVENTORY",
+        "predicate_order": 229,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    }
+  ],
+  "explicit_checks": 50,
+  "context_assertions": 418,
+  "source_inventory_records": 301,
+  "numbering": {
+    "policy": "Global order by earliest applicable linked specification page; section/table/source requirement and stable predicate order break ties; page-less operational diagnostics last.",
+    "anchor_field": "validation_scope.source_order",
+    "printed_to_pdf_page_offset": 7,
+    "rule_count": 229
+  },
+  "source_order_schema": {
+    "printed_page": "integer or null",
+    "pdf_page": "integer or null",
+    "section": "string",
+    "table": "integer or null",
+    "requirement_id": "string or null",
+    "predicate_order": "integer: stable related-predicate tie order, not current rule number",
+    "basis": "string"
+  },
+  "ordered_rules": [
+    {
+      "code": "SOURCE_IN_ISOLATED",
+      "rule_number": 1,
+      "source_order": {
+        "printed_page": 7,
+        "pdf_page": 14,
+        "section": "3.1",
+        "table": null,
+        "requirement_id": "PROFILE-ISOLATION",
+        "predicate_order": 1,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EAPDF_CONFORMANCE_VALUE",
+      "rule_number": 2,
+      "source_order": {
+        "printed_page": 7,
+        "pdf_page": 14,
+        "section": "3.1",
+        "table": 1,
+        "requirement_id": "T1-c",
+        "predicate_order": 2,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PDFA_PART",
+      "rule_number": 3,
+      "source_order": {
+        "printed_page": 8,
+        "pdf_page": 15,
+        "section": "3.2",
+        "table": 2,
+        "requirement_id": "T2-c",
+        "predicate_order": 3,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PDFA_CONFORMANCE",
+      "rule_number": 4,
+      "source_order": {
+        "printed_page": 8,
+        "pdf_page": 15,
+        "section": "3.2",
+        "table": 2,
+        "requirement_id": "T2-c",
+        "predicate_order": 4,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "CONTENT_SET_COUNT",
+      "rule_number": 5,
+      "source_order": {
+        "printed_page": 19,
+        "pdf_page": 26,
+        "section": "5",
+        "table": null,
+        "requirement_id": "CONTENTSET-CONSECUTIVE",
+        "predicate_order": 5,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "AF_RULE",
+      "rule_number": 6,
+      "source_order": {
+        "printed_page": 34,
+        "pdf_page": 41,
+        "section": "7.2",
+        "table": null,
+        "requirement_id": "SOURCE-DIRECT-RAW",
+        "predicate_order": 6,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "SOURCE_AF",
+      "rule_number": 7,
+      "source_order": {
+        "printed_page": 34,
+        "pdf_page": 41,
+        "section": "7.2",
+        "table": null,
+        "requirement_id": "SOURCE-DIRECT-RAW",
+        "predicate_order": 7,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_SOURCE_COVERAGE",
+      "rule_number": 8,
+      "source_order": {
+        "printed_page": 35,
+        "pdf_page": 42,
+        "section": "7.2",
+        "table": null,
+        "requirement_id": "SOURCE-COVERAGE",
+        "predicate_order": 8,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_METADATA_MATCH_SOURCE",
+      "rule_number": 9,
+      "source_order": {
+        "printed_page": 36,
+        "pdf_page": 43,
+        "section": "7.3.1",
+        "table": null,
+        "requirement_id": "HEADER-SOURCE-EQUIVALENCE",
+        "predicate_order": 221,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "CORE_FIELDS_TEXT_OBJECTS",
+      "rule_number": 10,
+      "source_order": {
+        "printed_page": 37,
+        "pdf_page": 44,
+        "section": "7.3.1",
+        "table": null,
+        "requirement_id": "CORE-VISIBLE-RENDERING",
+        "predicate_order": 9,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PAGE_CONTEXT_PRESENT_RECOMMENDED",
+      "rule_number": 11,
+      "source_order": {
+        "printed_page": 39,
+        "pdf_page": 46,
+        "section": "7.4.1",
+        "table": null,
+        "requirement_id": "PAGE-LABELS",
+        "predicate_order": 10,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED",
+      "rule_number": 12,
+      "source_order": {
+        "printed_page": 40,
+        "pdf_page": 47,
+        "section": "7.4.2",
+        "table": null,
+        "requirement_id": "RICH-TAGGING",
+        "predicate_order": 11,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ANNOTATION_CONTENTS_REQUIRED",
+      "rule_number": 13,
+      "source_order": {
+        "printed_page": 44,
+        "pdf_page": 51,
+        "section": "7.5",
+        "table": null,
+        "requirement_id": "ANNOTATION-CONTENTS",
+        "predicate_order": 12,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSOCIATED_FILE_MODDATE",
+      "rule_number": 14,
+      "source_order": {
+        "printed_page": 44,
+        "pdf_page": 51,
+        "section": "7.5",
+        "table": null,
+        "requirement_id": "ASSOCIATED-MODDATE",
+        "predicate_order": 13,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_NATIVE_BYTES_SOURCE_FIDELITY_RECOMMENDED",
+      "rule_number": 15,
+      "source_order": {
+        "printed_page": 44,
+        "pdf_page": 51,
+        "section": "7.5",
+        "table": null,
+        "requirement_id": "ATTACHMENT-BYTES",
+        "predicate_order": 225,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_CHILD_VALIDATION",
+      "rule_number": 16,
+      "source_order": {
+        "printed_page": 51,
+        "pdf_page": 58,
+        "section": "7.6",
+        "table": null,
+        "requirement_id": "CONTAINER-RECURSION",
+        "predicate_order": 15,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_SCHEMA_FIELD",
+      "rule_number": 17,
+      "source_order": {
+        "printed_page": 53,
+        "pdf_page": 60,
+        "section": "7.6",
+        "table": 5,
+        "requirement_id": "T5-Attachments",
+        "predicate_order": 16,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_CONTENT_TYPES",
+      "rule_number": 18,
+      "source_order": {
+        "printed_page": 54,
+        "pdf_page": 61,
+        "section": "7.6",
+        "table": null,
+        "requirement_id": "CONTAINER-MEMBERS",
+        "predicate_order": 17,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_KEY_PREFIX",
+      "rule_number": 19,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9",
+        "table": null,
+        "requirement_id": "EA-CUSTOM-KEY-PREFIX",
+        "predicate_order": 18,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_STREAM",
+      "rule_number": 20,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9",
+        "table": null,
+        "requirement_id": "PDF-EMBEDDED-STREAM",
+        "predicate_order": 19,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "STRUCTURE_CORRESPONDENCE",
+      "rule_number": 21,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9",
+        "table": null,
+        "requirement_id": "PDF-STRUCTURE-LINKS",
+        "predicate_order": 20,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DOCINFO_PRESENT",
+      "rule_number": 22,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "INFO-PRESENT",
+        "predicate_order": 24,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DOCINFO_TITLE_MATCH",
+      "rule_number": 23,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "INFO-XMP-CROSSWALK",
+        "predicate_order": 25,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DOCINFO_PRODUCER_MATCH",
+      "rule_number": 24,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "INFO-XMP-CROSSWALK",
+        "predicate_order": 26,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DOCINFO_AUTHOR_MATCH",
+      "rule_number": 25,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "INFO-XMP-CROSSWALK",
+        "predicate_order": 27,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DOCINFO_SUBJECT_MATCH",
+      "rule_number": 26,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "INFO-XMP-CROSSWALK",
+        "predicate_order": 28,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DOCINFO_CREATOR_MATCH",
+      "rule_number": 27,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "INFO-XMP-CROSSWALK",
+        "predicate_order": 29,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DOCINFO_CREATIONDATE_MATCH",
+      "rule_number": 28,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "INFO-XMP-CROSSWALK",
+        "predicate_order": 30,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DOCINFO_MODDATE_MATCH",
+      "rule_number": 29,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "INFO-XMP-CROSSWALK",
+        "predicate_order": 31,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DOCINFO_KEYWORDS",
+      "rule_number": 30,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "INFO-XMP-CROSSWALK",
+        "predicate_order": 32,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PDF_HEADER_VERSION_READ",
+      "rule_number": 31,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "PDF-VERSION",
+        "predicate_order": 21,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PDF_CATALOG_VERSION",
+      "rule_number": 32,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "PDF-VERSION",
+        "predicate_order": 22,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PDF_EFFECTIVE_VERSION",
+      "rule_number": 33,
+      "source_order": {
+        "printed_page": 61,
+        "pdf_page": 68,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "PDF-VERSION",
+        "predicate_order": 23,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "CATALOG_PIECEINFO",
+      "rule_number": 34,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "CATALOG-NO-PIECEINFO",
+        "predicate_order": 33,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "XMP_KEYWORDS",
+      "rule_number": 35,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "KEYWORDS-XMP",
+        "predicate_order": 34,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PAGEMODE_PRESENT",
+      "rule_number": 36,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-C",
+        "predicate_order": 35,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "NONFULLSCREENPAGEMODE_PRESENT",
+      "rule_number": 37,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-C",
+        "predicate_order": 36,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_PAGEMODE_CONTAINER",
+      "rule_number": 38,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-C",
+        "predicate_order": 43,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_NFSM_CONTAINER",
+      "rule_number": 39,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-C",
+        "predicate_order": 44,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_PAGEMODE_MULTI",
+      "rule_number": 40,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-M",
+        "predicate_order": 41,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_NFSM_MULTI",
+      "rule_number": 41,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-M",
+        "predicate_order": 42,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS",
+      "rule_number": 42,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-S-ATT",
+        "predicate_order": 39,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS",
+      "rule_number": 43,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-S-ATT",
+        "predicate_order": 40,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_PAGEMODE_SINGLE_NO_ATTACHMENTS",
+      "rule_number": 44,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-S-NOATT",
+        "predicate_order": 37,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_NFSM_SINGLE_NO_ATTACHMENTS",
+      "rule_number": 45,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-S-NOATT",
+        "predicate_order": 38,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "VIEWER_PREFS",
+      "rule_number": 46,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-TITLE",
+        "predicate_order": 45,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DISPLAY_DOCTITLE",
+      "rule_number": 47,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-TITLE",
+        "predicate_order": 46,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "SOURCE_FILE_SET",
+      "rule_number": 48,
+      "source_order": {
+        "printed_page": 62,
+        "pdf_page": 69,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "SOURCE-FILESET",
+        "predicate_order": 47,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPARTROOT_PRESENT",
+      "rule_number": 49,
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "DPM-ROOT",
+        "predicate_order": 49,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PAGE_DPART_PRESENT",
+      "rule_number": 50,
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "DPM-ROOT",
+        "predicate_order": 50,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "OUTLINES_PRESENT",
+      "rule_number": 51,
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.1",
+        "table": null,
+        "requirement_id": "NAV-OUTLINES",
+        "predicate_order": 48,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "CONTENT_SET_NONBLANK",
+      "rule_number": 52,
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.2",
+        "table": null,
+        "requirement_id": "CONTENTSET-EXISTS",
+        "predicate_order": 51,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PAGE_COUNT",
+      "rule_number": 53,
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.2",
+        "table": null,
+        "requirement_id": "CONTENTSET-EXISTS",
+        "predicate_order": 52,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "CONTENT_SET_OUTLINE_REF",
+      "rule_number": 54,
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.2",
+        "table": null,
+        "requirement_id": "CONTENTSET-OUTLINE",
+        "predicate_order": 53,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "OUTLINE_ITEMS_PRESENT",
+      "rule_number": 55,
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.2",
+        "table": null,
+        "requirement_id": "CONTENTSET-OUTLINE",
+        "predicate_order": 54,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_EMAIL_COUNT_MULTI",
+      "rule_number": 56,
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.2",
+        "table": null,
+        "requirement_id": "EMAIL-M-CARDINALITY",
+        "predicate_order": 56,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMAIL_XMP_CARDINALITY",
+      "rule_number": 57,
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.2",
+        "table": null,
+        "requirement_id": "EMAIL-M-CARDINALITY",
+        "predicate_order": 219,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_EMAIL_COUNT_SINGLE",
+      "rule_number": 58,
+      "source_order": {
+        "printed_page": 63,
+        "pdf_page": 70,
+        "section": "9.2",
+        "table": null,
+        "requirement_id": "EMAIL-S-CARDINALITY",
+        "predicate_order": 55,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPART_OBJECT_STRUCTURE",
+      "rule_number": 59,
+      "source_order": {
+        "printed_page": 64,
+        "pdf_page": 71,
+        "section": "9.2",
+        "table": null,
+        "requirement_id": "DPM-ALL-PAGES",
+        "predicate_order": 57,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "TEXT_CONTENT_PDF_TEXT_OBJECTS",
+      "rule_number": 60,
+      "source_order": {
+        "printed_page": 64,
+        "pdf_page": 71,
+        "section": "9.3",
+        "table": null,
+        "requirement_id": "TEXT-SOURCE",
+        "predicate_order": 58,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_ANNOTATIONS_PRESENT",
+      "rule_number": 61,
+      "source_order": {
+        "printed_page": 65,
+        "pdf_page": 72,
+        "section": "9.3",
+        "table": null,
+        "requirement_id": "ATTACHMENT-ANNOT-EACH-BODY",
+        "predicate_order": 59,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_ANNOTATIONS_VISIBLE_WITHIN_CROPBOX",
+      "rule_number": 62,
+      "source_order": {
+        "printed_page": 65,
+        "pdf_page": 72,
+        "section": "9.3",
+        "table": null,
+        "requirement_id": "ATTACHMENT-ANNOT-EACH-BODY",
+        "predicate_order": 226,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "UNSPECIFIED_COLOR_SRGB_ASSUMED",
+      "rule_number": 63,
+      "source_order": {
+        "printed_page": 65,
+        "pdf_page": 72,
+        "section": "9.3",
+        "table": null,
+        "requirement_id": "COLOR-SRGB",
+        "predicate_order": 61,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PAGE_CONTEXT_TEXT_OBJECTS_RECOMMENDED",
+      "rule_number": 64,
+      "source_order": {
+        "printed_page": 65,
+        "pdf_page": 72,
+        "section": "9.3",
+        "table": null,
+        "requirement_id": "PAGE-CONTEXT-TEXT",
+        "predicate_order": 60,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "REFERENCED_ASSETS_AS_ASSOCIATED_FILES",
+      "rule_number": 65,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.3",
+        "table": null,
+        "requirement_id": "ASSET-AF",
+        "predicate_order": 63,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT",
+      "rule_number": 66,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.3",
+        "table": null,
+        "requirement_id": "ASSET-OBJECT-ASSOCIATION",
+        "predicate_order": 64,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ACTIONABLE_URLS_LINK_ANNOTATIONS",
+      "rule_number": 67,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.3",
+        "table": null,
+        "requirement_id": "URL-LINK",
+        "predicate_order": 62,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDEDFILES_PRESENT",
+      "rule_number": 68,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "AF-NAMETREE",
+        "predicate_order": 65,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "AF_IN_NAME_TREE",
+      "rule_number": 69,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "AF-NAMETREE",
+        "predicate_order": 66,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_MEDIATYPE_PARAMETERS_TYPE",
+      "rule_number": 70,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-PARAMS",
+        "predicate_order": 69,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_MEDIATYPE_PARAMETERS_REQUIRED",
+      "rule_number": 71,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-PARAMS",
+        "predicate_order": 214,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "SOURCE_MEDIATYPE_PARAMETERS_MATCH",
+      "rule_number": 72,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-PARAMS",
+        "predicate_order": 215,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_MEDIA_TYPE_MATCH_XMP",
+      "rule_number": 73,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-SUBTYPE",
+        "predicate_order": 68,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_FILESPEC_NO_PATH_COMPONENTS",
+      "rule_number": 74,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "FILESPEC-NO-PATH",
+        "predicate_order": 67,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_MEDIATYPE_RECONSTRUCTION",
+      "rule_number": 75,
+      "source_order": {
+        "printed_page": 66,
+        "pdf_page": 73,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "MEDIATYPE-RECONSTRUCTION",
+        "predicate_order": 70,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_MD5_MATCH",
+      "rule_number": 76,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-MD5-RECOMMEND",
+        "predicate_order": 75,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_MD5_BINARY_FORMAT",
+      "rule_number": 77,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-MD5-RECOMMEND",
+        "predicate_order": 76,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_MD5_RECOMMENDED",
+      "rule_number": 78,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-MD5-RECOMMEND",
+        "predicate_order": 228,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_SIZE_MATCH",
+      "rule_number": 79,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-SIZE-RECOMMEND",
+        "predicate_order": 74,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMBEDDED_SIZE_RECOMMENDED",
+      "rule_number": 80,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "EMBEDDED-SIZE-RECOMMEND",
+        "predicate_order": 227,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "SOURCE_MIME_GENERIC",
+      "rule_number": 81,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "MEDIATYPE-GENERIC",
+        "predicate_order": 71,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_SIZE_MATCH",
+      "rule_number": 82,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "SOURCE-XMP-SIZE-TYPE",
+        "predicate_order": 72,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_CONTENTTYPE_MATCH",
+      "rule_number": 83,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.4",
+        "table": null,
+        "requirement_id": "SOURCE-XMP-SIZE-TYPE",
+        "predicate_order": 73,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "PROFILE_COLLECTION",
+      "rule_number": 84,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-FORBIDDEN",
+        "predicate_order": 77,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_FORBIDDEN",
+      "rule_number": 85,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-FORBIDDEN",
+        "predicate_order": 79,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_REQUIRED",
+      "rule_number": 86,
+      "source_order": {
+        "printed_page": 67,
+        "pdf_page": 74,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-REQUIRED",
+        "predicate_order": 78,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_EXTENSIONS",
+      "rule_number": 87,
+      "source_order": {
+        "printed_page": 68,
+        "pdf_page": 75,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-EXTENSION",
+        "predicate_order": 80,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_FILENAMES_VALID",
+      "rule_number": 88,
+      "source_order": {
+        "printed_page": 68,
+        "pdf_page": 75,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-NAMES",
+        "predicate_order": 84,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_FILENAMES_UNIQUE_CASEFOLD",
+      "rule_number": 89,
+      "source_order": {
+        "printed_page": 68,
+        "pdf_page": 75,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-NAMES",
+        "predicate_order": 85,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_NAVIGATOR_FORBIDDEN",
+      "rule_number": 90,
+      "source_order": {
+        "printed_page": 68,
+        "pdf_page": 75,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-NAVIGATOR",
+        "predicate_order": 83,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_D_FORBIDDEN",
+      "rule_number": 91,
+      "source_order": {
+        "printed_page": 68,
+        "pdf_page": 75,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-NO-DEFAULT",
+        "predicate_order": 81,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_SCHEMA_E_FALSE",
+      "rule_number": 92,
+      "source_order": {
+        "printed_page": 68,
+        "pdf_page": 75,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-NO-EDIT",
+        "predicate_order": 87,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_VIEW_FORBIDDEN",
+      "rule_number": 93,
+      "source_order": {
+        "printed_page": 68,
+        "pdf_page": 75,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-NO-HIDDEN",
+        "predicate_order": 82,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "COLLECTION_SCHEMA_PRESENT",
+      "rule_number": 94,
+      "source_order": {
+        "printed_page": 68,
+        "pdf_page": 75,
+        "section": "9.5",
+        "table": null,
+        "requirement_id": "COLLECTION-SCHEMA",
+        "predicate_order": 86,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_MAIL_GUID_PRESENT",
+      "rule_number": 95,
+      "source_order": {
+        "printed_page": 69,
+        "pdf_page": 76,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-EMAIL-OWNERSHIP",
+        "predicate_order": 90,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_MAIL_MESSAGEID_MATCH",
+      "rule_number": 96,
+      "source_order": {
+        "printed_page": 69,
+        "pdf_page": 76,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-EMAIL-OWNERSHIP",
+        "predicate_order": 92,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_EMAIL_CONTENT_SET_OWNERSHIP",
+      "rule_number": 97,
+      "source_order": {
+        "printed_page": 69,
+        "pdf_page": 76,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-EMAIL-OWNERSHIP",
+        "predicate_order": 216,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_ROOTNODE_PRESENT",
+      "rule_number": 98,
+      "source_order": {
+        "printed_page": 69,
+        "pdf_page": 76,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-ROOT-STRUCTURE",
+        "predicate_order": 88,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_NAME_TYPES",
+      "rule_number": 99,
+      "source_order": {
+        "printed_page": 69,
+        "pdf_page": 76,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-ROOT-STRUCTURE",
+        "predicate_order": 89,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_INTERMEDIATE_COUNT_CONTAINER",
+      "rule_number": 100,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-C-NO-EMAIL",
+        "predicate_order": 95,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_MAIL_GUID_MATCH",
+      "rule_number": 101,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-IDENTIFIER-MATCH",
+        "predicate_order": 91,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_LEAF_REQUIRED",
+      "rule_number": 102,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-LEAF",
+        "predicate_order": 96,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_INTERMEDIATE_COUNT_MULTI",
+      "rule_number": 103,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-M-CARDINALITY",
+        "predicate_order": 94,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_INTERMEDIATE_COUNT_SINGLE",
+      "rule_number": 104,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": null,
+        "requirement_id": "DPM-S-CARDINALITY",
+        "predicate_order": 93,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_DESC_REQUIRED",
+      "rule_number": 105,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": 8,
+        "requirement_id": "T8-DESC",
+        "predicate_order": 104,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_FRONTMATTER_REQUIRED_CONTAINER",
+      "rule_number": 106,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": 8,
+        "requirement_id": "T8-FRONTMATTER",
+        "predicate_order": 100,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_ATTACHMENTLIST_FORBIDDEN",
+      "rule_number": 107,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": 8,
+        "requirement_id": "T8-NO-AttachmentList",
+        "predicate_order": 97,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_CONTAINER_CONTENTSET_TYPES",
+      "rule_number": 108,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": 8,
+        "requirement_id": "T8-NO-AttachmentRendering",
+        "predicate_order": 98,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_SUBTYPE_REQUIRED",
+      "rule_number": 109,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": 8,
+        "requirement_id": "T8-SUBTYPE",
+        "predicate_order": 101,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_SUBTYPE_MEDIA_TYPE_NAME",
+      "rule_number": 110,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": 8,
+        "requirement_id": "T8-SUBTYPE",
+        "predicate_order": 102,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_BODY_MEDIA_TYPE_MATCH_SOURCE",
+      "rule_number": 111,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": 8,
+        "requirement_id": "T8-SUBTYPE",
+        "predicate_order": 103,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_ATTACHMENT_MEDIA_TYPE_MATCH_SOURCE",
+      "rule_number": 112,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": 8,
+        "requirement_id": "T8-SUBTYPE",
+        "predicate_order": 217,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "DPM_CONTENTSETTYPE_PRESENT",
+      "rule_number": 113,
+      "source_order": {
+        "printed_page": 70,
+        "pdf_page": 77,
+        "section": "9.6",
+        "table": 8,
+        "requirement_id": "T8-TYPE",
+        "predicate_order": 99,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "LOGICAL_TS32005_DECLARATION",
+      "rule_number": 114,
+      "source_order": {
+        "printed_page": 74,
+        "pdf_page": 81,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "DECLARATION-IDENTIFIER",
+        "predicate_order": 108,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED",
+      "rule_number": 115,
+      "source_order": {
+        "printed_page": 74,
+        "pdf_page": 81,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "TAGGING-CUSTOM-CONTENT",
+        "predicate_order": 105,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ROLEMAPNS_PRESENT",
+      "rule_number": 116,
+      "source_order": {
+        "printed_page": 74,
+        "pdf_page": 81,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "TAGGING-NAMESPACE",
+        "predicate_order": 107,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "STRUCTTREE_ROOT_DOCUMENT",
+      "rule_number": 117,
+      "source_order": {
+        "printed_page": 74,
+        "pdf_page": 81,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "TAGGING-ROOT",
+        "predicate_order": 106,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ROLEMAP_MAIL_TAGS",
+      "rule_number": 118,
+      "source_order": {
+        "printed_page": 74,
+        "pdf_page": 81,
+        "section": "9.7",
+        "table": 9,
+        "requirement_id": "T9-Artifact",
+        "predicate_order": 109,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "CUSTOM_TAG_OPERAND_MATCH",
+      "rule_number": 119,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "TAGGING-OPERAND",
+        "predicate_order": 111,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "CUSTOM_TAG_MARKED_SEQUENCE_ONLY",
+      "rule_number": 120,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "TAGGING-SEQUENCES",
+        "predicate_order": 110,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTGROUP_ROLEMAP_PART",
+      "rule_number": 121,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 10,
+        "requirement_id": "T10-Mail_ContentGroup",
+        "predicate_order": 113,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTSET_ROLEMAP_ART",
+      "rule_number": 122,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 10,
+        "requirement_id": "T10-Mail_ContentSet",
+        "predicate_order": 114,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELD_ROLEMAP_APPROPRIATE",
+      "rule_number": 123,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 10,
+        "requirement_id": "T10-Mail_Field",
+        "predicate_order": 115,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELDNAME_ROLEMAP_APPROPRIATE",
+      "rule_number": 124,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 10,
+        "requirement_id": "T10-Mail_FieldName",
+        "predicate_order": 116,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELDVALUE_ROLEMAP_APPROPRIATE",
+      "rule_number": 125,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 10,
+        "requirement_id": "T10-Mail_FieldValue",
+        "predicate_order": 117,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_MESSAGE_ROLEMAP_DOCUMENT",
+      "rule_number": 126,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 10,
+        "requirement_id": "T10-Mail_Message",
+        "predicate_order": 112,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTGROUP_CHILDREN",
+      "rule_number": 127,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 11,
+        "requirement_id": "T11-Mail_ContentGroup",
+        "predicate_order": 119,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTSET_CHILDREN",
+      "rule_number": 128,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 11,
+        "requirement_id": "T11-Mail_ContentSet",
+        "predicate_order": 120,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELD_CHILDREN",
+      "rule_number": 129,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 11,
+        "requirement_id": "T11-Mail_Field",
+        "predicate_order": 121,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELDVALUE_WITH_NAME",
+      "rule_number": 130,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 11,
+        "requirement_id": "T11-Mail_Field",
+        "predicate_order": 122,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_MESSAGE_CHILDREN",
+      "rule_number": 131,
+      "source_order": {
+        "printed_page": 75,
+        "pdf_page": 82,
+        "section": "9.7",
+        "table": 11,
+        "requirement_id": "T11-Mail_Message",
+        "predicate_order": 118,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "CONTENT_SET_MAIL_CONTENTSET_TAGGED",
+      "rule_number": 132,
+      "source_order": {
+        "printed_page": 76,
+        "pdf_page": 83,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "TAGGING-CONTENTSET-COVERAGE",
+        "predicate_order": 123,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "HEADER_FIELDS_TAGGED_RECOMMENDED",
+      "rule_number": 133,
+      "source_order": {
+        "printed_page": 76,
+        "pdf_page": 83,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "TAGGING-HEADERS",
+        "predicate_order": 124,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "USERPROPS_NAME_ASCII",
+      "rule_number": 134,
+      "source_order": {
+        "printed_page": 76,
+        "pdf_page": 83,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "USERPROPS-NAME",
+        "predicate_order": 125,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "USERPROPS_TYPE",
+      "rule_number": 135,
+      "source_order": {
+        "printed_page": 76,
+        "pdf_page": 83,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "USERPROPS-NAME",
+        "predicate_order": 126,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "USERPROPS_TAG_SCOPE",
+      "rule_number": 136,
+      "source_order": {
+        "printed_page": 76,
+        "pdf_page": 83,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "USERPROPS-NAME",
+        "predicate_order": 127,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTSET_ART_ONLY",
+      "rule_number": 137,
+      "source_order": {
+        "printed_page": 77,
+        "pdf_page": 84,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "TAGGING-ART",
+        "predicate_order": 129,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "USERPROPS_VALUES_UNMODIFIED",
+      "rule_number": 138,
+      "source_order": {
+        "printed_page": 77,
+        "pdf_page": 84,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "USERPROPS-FIDELITY",
+        "predicate_order": 128,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MULTI_EMAIL_DOCUMENT_STRUCTURE",
+      "rule_number": 139,
+      "source_order": {
+        "printed_page": 78,
+        "pdf_page": 85,
+        "section": "9.7",
+        "table": null,
+        "requirement_id": "TAGGING-M-DOCUMENT",
+        "predicate_order": 130,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTGROUP_NESTED_UNDER_MESSAGE",
+      "rule_number": 140,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-GROUP-PARENT",
+        "predicate_order": 136,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTGROUP_CONTENTSETTYPE_ATTRIBUTE_RECOMMENDED",
+      "rule_number": 141,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-GROUP-TYPE",
+        "predicate_order": 137,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT",
+      "rule_number": 142,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-GROUP-TYPE-MATCH",
+        "predicate_order": 138,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_MESSAGE_COUNT_CONTAINER",
+      "rule_number": 143,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-MESSAGE-C",
+        "predicate_order": 133,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_MESSAGE_GUID_ATTRIBUTE",
+      "rule_number": 144,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-MESSAGE-GUID",
+        "predicate_order": 134,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_MESSAGE_GUID_MATCH_DPM_XMP",
+      "rule_number": 145,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-MESSAGE-GUID",
+        "predicate_order": 135,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_MESSAGE_COUNT_MULTI",
+      "rule_number": 146,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-MESSAGE-M",
+        "predicate_order": 132,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_MESSAGE_COUNT_SINGLE",
+      "rule_number": 147,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-MESSAGE-S",
+        "predicate_order": 131,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELD_NESTING_RECOMMENDED",
+      "rule_number": 148,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-NEST-Mail_Field",
+        "predicate_order": 144,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELDNAME_NESTING_RECOMMENDED",
+      "rule_number": 149,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-NEST-Mail_FieldName",
+        "predicate_order": 146,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELDVALUE_NESTING_RECOMMENDED",
+      "rule_number": 150,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-NEST-Mail_FieldValue",
+        "predicate_order": 148,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELD_PROFILE_USE",
+      "rule_number": 151,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-PROFILE-Mail_Field",
+        "predicate_order": 143,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELDNAME_PROFILE_USE",
+      "rule_number": 152,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-PROFILE-Mail_FieldName",
+        "predicate_order": 145,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_FIELDVALUE_PROFILE_USE",
+      "rule_number": 153,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-PROFILE-Mail_FieldValue",
+        "predicate_order": 147,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTSET_COUNT",
+      "rule_number": 154,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-SET-COUNT",
+        "predicate_order": 139,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+      "rule_number": 155,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-SET-PARENT",
+        "predicate_order": 140,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTSET_SUBTYPE_ATTRIBUTE_RECOMMENDED",
+      "rule_number": 156,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-SET-SUBTYPE",
+        "predicate_order": 141,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT",
+      "rule_number": 157,
+      "source_order": {
+        "printed_page": 79,
+        "pdf_page": 86,
+        "section": "9.7",
+        "table": 13,
+        "requirement_id": "T13-SET-SUBTYPE-MATCH",
+        "predicate_order": 142,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "XMP_NS_PREFIX",
+      "rule_number": 158,
+      "source_order": {
+        "printed_page": 83,
+        "pdf_page": 90,
+        "section": "9.8",
+        "table": null,
+        "requirement_id": "XMP-CONFORMANCE",
+        "predicate_order": 149,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EAPDF_VERSION",
+      "rule_number": 159,
+      "source_order": {
+        "printed_page": 83,
+        "pdf_page": 90,
+        "section": "9.8",
+        "table": null,
+        "requirement_id": "XMP-CONFORMANCE",
+        "predicate_order": 150,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EAPDF_REV",
+      "rule_number": 160,
+      "source_order": {
+        "printed_page": 83,
+        "pdf_page": 90,
+        "section": "9.8",
+        "table": null,
+        "requirement_id": "XMP-CONFORMANCE",
+        "predicate_order": 151,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "XMP_CREATEDATE",
+      "rule_number": 161,
+      "source_order": {
+        "printed_page": 84,
+        "pdf_page": 91,
+        "section": "9.8",
+        "table": null,
+        "requirement_id": "XMP-CREATEDATE",
+        "predicate_order": 156,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "XMP_CREATEDATE_SEMANTICS",
+      "rule_number": 162,
+      "source_order": {
+        "printed_page": 84,
+        "pdf_page": 91,
+        "section": "9.8",
+        "table": null,
+        "requirement_id": "XMP-CREATEDATE",
+        "predicate_order": 157,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "XMP_CREATOR",
+      "rule_number": 163,
+      "source_order": {
+        "printed_page": 84,
+        "pdf_page": 91,
+        "section": "9.8",
+        "table": null,
+        "requirement_id": "XMP-CREATOR",
+        "predicate_order": 152,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "XMP_CREATOR_SEMANTICS",
+      "rule_number": 164,
+      "source_order": {
+        "printed_page": 84,
+        "pdf_page": 91,
+        "section": "9.8",
+        "table": null,
+        "requirement_id": "XMP-CREATOR",
+        "predicate_order": 153,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "XMP_PRODUCER",
+      "rule_number": 165,
+      "source_order": {
+        "printed_page": 84,
+        "pdf_page": 91,
+        "section": "9.8",
+        "table": null,
+        "requirement_id": "XMP-PRODUCER",
+        "predicate_order": 154,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "XMP_PRODUCER_SEMANTICS",
+      "rule_number": 166,
+      "source_order": {
+        "printed_page": 84,
+        "pdf_page": 91,
+        "section": "9.8",
+        "table": null,
+        "requirement_id": "XMP-PRODUCER",
+        "predicate_order": 155,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "XMP_TITLE",
+      "rule_number": 167,
+      "source_order": {
+        "printed_page": 84,
+        "pdf_page": 91,
+        "section": "9.8",
+        "table": null,
+        "requirement_id": "XMP-TITLE",
+        "predicate_order": 158,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EAPDF_CONFORMANCE_I_LAST",
+      "rule_number": 168,
+      "source_order": {
+        "printed_page": 84,
+        "pdf_page": 91,
+        "section": "9.8.1",
+        "table": 15,
+        "requirement_id": "T15-conformance",
+        "predicate_order": 159,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_MATCH",
+      "rule_number": 169,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": null,
+        "requirement_id": "XMP-ASSET-IDENTITY",
+        "predicate_order": 163,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "SOURCE_WITHOUT_XMP",
+      "rule_number": 170,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": null,
+        "requirement_id": "XMP-ASSETS",
+        "predicate_order": 160,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_XMP",
+      "rule_number": 171,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": null,
+        "requirement_id": "XMP-ASSETS",
+        "predicate_order": 161,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_XMP_FIELDS",
+      "rule_number": 172,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": null,
+        "requirement_id": "XMP-ASSETS",
+        "predicate_order": 162,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_CHECKSUM_FORM",
+      "rule_number": 173,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": 16,
+        "requirement_id": "T16-Checksum",
+        "predicate_order": 168,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_MD5_MATCH",
+      "rule_number": 174,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": 16,
+        "requirement_id": "T16-Checksum",
+        "predicate_order": 169,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "SOURCE_MIME_TYPE",
+      "rule_number": 175,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": 16,
+        "requirement_id": "T16-ContentType",
+        "predicate_order": 165,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_CONTENTTYPE",
+      "rule_number": 176,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": 16,
+        "requirement_id": "T16-ContentType",
+        "predicate_order": 166,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_CONTENTTYPE_GENERIC",
+      "rule_number": 177,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": 16,
+        "requirement_id": "T16-GENERIC",
+        "predicate_order": 170,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_NUMBERMESSAGES_TYPE",
+      "rule_number": 178,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": 16,
+        "requirement_id": "T16-NumberMessages",
+        "predicate_order": 167,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_NUMBERMESSAGES_MATCH_RENDERED",
+      "rule_number": 179,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": 16,
+        "requirement_id": "T16-NumberMessages",
+        "predicate_order": 218,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ASSET_SIZE_TYPE",
+      "rule_number": 180,
+      "source_order": {
+        "printed_page": 85,
+        "pdf_page": 92,
+        "section": "9.8.2",
+        "table": 16,
+        "requirement_id": "T16-SizeInBytes",
+        "predicate_order": 164,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "EMAIL_XMP_CONTAINER",
+      "rule_number": 181,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": null,
+        "requirement_id": "XMP-EMAILS",
+        "predicate_order": 171,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_CORE_FIELDS_SOURCE_REQUIRED",
+      "rule_number": 182,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": null,
+        "requirement_id": "XMP-EMAILS",
+        "predicate_order": 220,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_BCC_XMP",
+      "rule_number": 183,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Bcc",
+        "predicate_order": 191,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_BCC_FOAF",
+      "rule_number": 184,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Bcc",
+        "predicate_order": 192,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_CC_XMP",
+      "rule_number": 185,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Cc",
+        "predicate_order": 188,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_CC_FOAF",
+      "rule_number": 186,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Cc",
+        "predicate_order": 189,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_FROM_XMP",
+      "rule_number": 187,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-From",
+        "predicate_order": 175,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_FROM_FOAF",
+      "rule_number": 188,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-From",
+        "predicate_order": 176,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_INREPLYTO_XMP",
+      "rule_number": 189,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-In-Reply-To",
+        "predicate_order": 194,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_GUID_XMP",
+      "rule_number": 190,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Mail_GUID",
+        "predicate_order": 184,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MAIL_GUID_UNIQUE",
+      "rule_number": 191,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Mail_GUID",
+        "predicate_order": 185,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_ID_XMP",
+      "rule_number": 192,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Message-ID",
+        "predicate_order": 183,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_ATTACHMENT_COUNT_XMP",
+      "rule_number": 193,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-NumberAttachments",
+        "predicate_order": 187,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_RAW_BCC_XMP",
+      "rule_number": 194,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Raw-Bcc",
+        "predicate_order": 193,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_RAW_CC_XMP",
+      "rule_number": 195,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Raw-Cc",
+        "predicate_order": 190,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_RAW_FROM_XMP",
+      "rule_number": 196,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Raw-From",
+        "predicate_order": 177,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID",
+      "rule_number": 197,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Raw-Sent",
+        "predicate_order": 180,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_RAW_SENT_OMIT_IF_VALID",
+      "rule_number": 198,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Raw-Sent",
+        "predicate_order": 181,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_RAW_TO_XMP",
+      "rule_number": 199,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Raw-To",
+        "predicate_order": 174,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_SENT_XMP",
+      "rule_number": 200,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Sent",
+        "predicate_order": 178,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_SENT_FORMAT",
+      "rule_number": 201,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Sent",
+        "predicate_order": 179,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_SIZE_XMP",
+      "rule_number": 202,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-SizeInBytes",
+        "predicate_order": 186,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_SUBJECT_XMP",
+      "rule_number": 203,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-Subject",
+        "predicate_order": 182,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_TO_XMP",
+      "rule_number": 204,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-To",
+        "predicate_order": 172,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "MESSAGE_TO_FOAF",
+      "rule_number": 205,
+      "source_order": {
+        "printed_page": 86,
+        "pdf_page": 93,
+        "section": "9.8.3",
+        "table": 18,
+        "requirement_id": "T18-To",
+        "predicate_order": 173,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_INVENTORY_RECOMMENDED",
+      "rule_number": 206,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": null,
+        "requirement_id": "XMP-ATTACHMENT-INVENTORY",
+        "predicate_order": 229,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_CONTAINER",
+      "rule_number": 207,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": null,
+        "requirement_id": "XMP-ATTACHMENT-RECORDS",
+        "predicate_order": 195,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_CHECKSUM_FORM",
+      "rule_number": 208,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-CheckSum",
+        "predicate_order": 202,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_CHECKSUM_MATCH",
+      "rule_number": 209,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-CheckSum",
+        "predicate_order": 222,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_CONTENTTYPE",
+      "rule_number": 210,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-Content-Type",
+        "predicate_order": 200,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_CONTENTTYPE_MATCH",
+      "rule_number": 211,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-Content-Type",
+        "predicate_order": 201,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_FILENAME",
+      "rule_number": 212,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-Filename",
+        "predicate_order": 196,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_FILENAME_MATCH_SOURCE",
+      "rule_number": 213,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-Filename",
+        "predicate_order": 223,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID",
+      "rule_number": 214,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-Mail_GUID",
+        "predicate_order": 199,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_MESSAGE_ID_MATCH",
+      "rule_number": 215,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-Message-ID",
+        "predicate_order": 224,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_SIZE_MATCH",
+      "rule_number": 216,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-SizeInBytes",
+        "predicate_order": 14,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_SIZE_PRESENT",
+      "rule_number": 217,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-SizeInBytes",
+        "predicate_order": 197,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "ATTACHMENT_XMP_SIZE_TYPE",
+      "rule_number": 218,
+      "source_order": {
+        "printed_page": 89,
+        "pdf_page": 96,
+        "section": "9.8.4",
+        "table": 19,
+        "requirement_id": "T19-SizeInBytes",
+        "predicate_order": 198,
+        "basis": "Earliest applicable linked source page; ties by section, table, source requirement and stable predicate order."
+      }
+    },
+    {
+      "code": "FONTS_NONE",
+      "rule_number": 219,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 203,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    },
+    {
+      "code": "XMP_KEYWORDS_UNCHECKED",
+      "rule_number": 220,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 204,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    },
+    {
+      "code": "STRUCTTREE_PRESENT",
+      "rule_number": 221,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 205,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    },
+    {
+      "code": "PDFA_XMP_UNCHECKED",
+      "rule_number": 222,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 206,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    },
+    {
+      "code": "EAPDF_XMP_UNCHECKED",
+      "rule_number": 223,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 207,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    },
+    {
+      "code": "SOURCE_MIME_NONE",
+      "rule_number": 224,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 208,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    },
+    {
+      "code": "ASSET_XMP_SKIPPED",
+      "rule_number": 225,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 209,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    },
+    {
+      "code": "MESSAGE_METADATA_SKIPPED",
+      "rule_number": 226,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 210,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    },
+    {
+      "code": "OPEN",
+      "rule_number": 227,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 211,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    },
+    {
+      "code": "PROFILE_RULES_SKIPPED",
+      "rule_number": 228,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 212,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    },
+    {
+      "code": "VALIDATION_INCOMPLETE",
+      "rule_number": 229,
+      "source_order": {
+        "printed_page": null,
+        "pdf_page": null,
+        "section": "audit-policy",
+        "table": null,
+        "requirement_id": null,
+        "predicate_order": 213,
+        "basis": "Operational result or diagnostic; no normative source page is invented."
+      }
+    }
+  ]
+}

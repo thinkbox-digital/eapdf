@@ -1,0 +1,224 @@
+[
+  {
+    "id": "valid-s",
+    "creator": "PASS",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "valid-si",
+    "creator": "PASS",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "valid-m",
+    "creator": "PASS",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "valid-mi",
+    "creator": "PASS",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "valid-c",
+    "creator": "PASS",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 3,
+    "child_failures": []
+  },
+  {
+    "id": "valid-ci",
+    "creator": "PASS",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 3,
+    "child_failures": []
+  },
+  {
+    "id": "source-omitted-si",
+    "creator": "PASS",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "source-omitted-mi",
+    "creator": "PASS",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "source-omitted-ci",
+    "creator": "PASS",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 3,
+    "child_failures": []
+  },
+  {
+    "id": "missing-message-m",
+    "creator": "REJECT",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "missing-message-mi",
+    "creator": "REJECT",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "missing-message-c",
+    "creator": "REJECT",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 2,
+    "child_failures": []
+  },
+  {
+    "id": "missing-message-ci",
+    "creator": "REJECT",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 2,
+    "child_failures": []
+  },
+  {
+    "id": "missing-attachment-s",
+    "creator": "REJECT",
+    "failures": [
+      "MESSAGE_ATTACHMENT_COUNT_XMP",
+      "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS",
+      "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"
+    ],
+    "eapdf": "FAIL",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "missing-attachment-si",
+    "creator": "REJECT",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "missing-attachment-m",
+    "creator": "REJECT",
+    "failures": [
+      "MESSAGE_ATTACHMENT_COUNT_XMP"
+    ],
+    "eapdf": "FAIL",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "missing-attachment-mi",
+    "creator": "REJECT",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "missing-attachment-c",
+    "creator": "REJECT",
+    "failures": [
+      "COLLECTION_CHILD_VALIDATION"
+    ],
+    "eapdf": "FAIL",
+    "child_count": 3,
+    "child_failures": [
+      "MESSAGE_ATTACHMENT_COUNT_XMP",
+      "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS",
+      "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"
+    ]
+  },
+  {
+    "id": "missing-attachment-ci",
+    "creator": "REJECT",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 3,
+    "child_failures": []
+  },
+  {
+    "id": "changed-native-bytes",
+    "creator": "REJECT",
+    "failures": [
+      "ATTACHMENT_XMP_MATCH"
+    ],
+    "eapdf": "FAIL",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "swapped-native-owners",
+    "creator": "REJECT",
+    "failures": [
+      "ATTACHMENT_XMP_MATCH"
+    ],
+    "eapdf": "FAIL",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "reused-identical-occurrence",
+    "creator": "REJECT",
+    "failures": [
+      "ATTACHMENT_XMP_MATCH",
+      "MESSAGE_ATTACHMENT_COUNT_XMP",
+      "STRUCTURE_CORRESPONDENCE"
+    ],
+    "eapdf": "FAIL",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "changed-staged-bytes",
+    "creator": "REJECT",
+    "failures": [
+      "ATTACHMENT_XMP_MATCH"
+    ],
+    "eapdf": "FAIL",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "changed-source-bytes",
+    "creator": "REJECT",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 0,
+    "child_failures": []
+  },
+  {
+    "id": "missing-listed-child",
+    "creator": "REJECT",
+    "failures": [],
+    "eapdf": "PASS",
+    "child_count": 2,
+    "child_failures": []
+  }
+]

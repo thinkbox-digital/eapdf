@@ -1,0 +1,659 @@
+Top-level rule migration: 213 to 229 rules
+All current rules are numbered in specification page order. Page-less operational diagnostics are last.
+The old numbers describe the retained 213-rule checkpoint; codes identify the current predicate.
+
+Old #1 SOURCE_IN_ISOLATED:
+  #1 SOURCE_IN_ISOLATED [printed p7 / PDF p14 / PROFILE-ISOLATION]: Isolated status describes absent, modified or untrustworthy original email-source linkage. Do not turn this into a blanket prohibition on every Source associated file: object-level Source assets are allowed. Catalog original-email provenance and partial-source cases require their own reviewed applicability.
+
+Old #2 EAPDF_CONFORMANCE_VALUE:
+  #2 EAPDF_CONFORMANCE_VALUE [printed p7 / PDF p14 / T1-c]: For all profiles: pdfmailid:conformance is lowercase text with value s si m mi c ci; i is last if present. The normal-string value is exact; URI/array values and surrounding whitespace cannot supply a listed Text value. Qualified simple strings remain permitted.
+
+Old #3 PDFA_PART:
+  #3 PDFA_PART [printed p8 / PDF p15 / T2-c]: Prerequisite: the finished PDF must pass veraPDF validation for an EA-PDF-permitted PDF/A level: PDF/A-3a, PDF/A-3u, PDF/A-4, PDF/A-4f or PDF/A-4e. This check identifies the declared PDF/A part; it does not repeat PDF/A validation. A declaration alone is not a passing result. Extra EA-PDF restrictions and applicable ISO/TS 32005 checks remain separate.
+
+Old #4 PDFA_CONFORMANCE:
+  #4 PDFA_CONFORMANCE [printed p8 / PDF p15 / T2-c]: After successful veraPDF validation of the finished PDF, verify that its declared PDF/A conformance level is one permitted by EA-PDF: 3a, 3u, 4, 4f or 4e. This is an allowed-level check, not independent proof of PDF/A conformance. The descriptive Table 2 profile matrix differs from section 9.1; the project follows the normative section 9.1 list.
+
+Old #5 CONTENT_SET_COUNT:
+  #5 CONTENT_SET_COUNT [printed p19 / PDF p26 / CONTENTSET-CONSECUTIVE]: Every file must contain at least one Content Set. Each declared set must resolve to a consecutive, nonempty page range. Rule 51 checks blankness; rule 52 checks document page presence.
+
+Old #6 AF_RULE:
+  #6 AF_RULE [printed p34 / PDF p41 / SOURCE-DIRECT-RAW]: When non-isolated s m c: Catalog AF is a nonempty array containing at least one Source file specification representing a primary original source email asset.
+
+Old #7 SOURCE_AF:
+  #7 SOURCE_AF [printed p34 / PDF p41 / SOURCE-DIRECT-RAW]: When non-isolated s m c: Catalog AF is a nonempty array containing at least one Source file specification representing a primary original source email asset.
+
+Old #8 MESSAGE_SOURCE_MATCH:
+  #8 MESSAGE_SOURCE_COVERAGE [printed p35 / PDF p42 / SOURCE-COVERAGE]: Retained original source data must cover every represented email; additional unrendered emails and non-email source data are allowed.
+  #9 MESSAGE_METADATA_MATCH_SOURCE [printed p36 / PDF p43 / HEADER-SOURCE-EQUIVALENCE]: Supplied source-derived email metadata must preserve the full original value as equivalently as representation and encoding permit.
+
+Old #9 CORE_FIELDS_TEXT_OBJECTS:
+  #10 CORE_FIELDS_TEXT_OBJECTS [printed p37 / PDF p44 / CORE-VISIBLE-RENDERING]: When Core Fields and values are represented in page content: Use PDF text objects; this does not make rendering every source field a mandatory PDF-only presence test.
+
+Old #10 PAGE_CONTEXT_PRESENT_RECOMMENDED:
+  #11 PAGE_CONTEXT_PRESENT_RECOMMENDED [printed p39 / PDF p46 / PAGE-LABELS]: Every page should include a unique page number or other identifying context as page content.
+
+Old #11 LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED:
+  #12 LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED [printed p40 / PDF p47 / RICH-TAGGING]: Creators should preserve equivalent logical structure from source semantics. Tagged PDF 2.0 output must still satisfy ISO/TS 32005; repairing malformed source structure may be necessary.
+
+Old #12 ANNOTATION_CONTENTS_REQUIRED:
+  #13 ANNOTATION_CONTENTS_REQUIRED [printed p44 / PDF p51 / ANNOTATION-CONTENTS]: Every FileAttachment annotation must include a PDF text-string Contents entry. Empty text is permitted. Filespec Desc remains a separate recommendation.
+
+Old #13 ASSOCIATED_FILE_MODDATE:
+  #14 ASSOCIATED_FILE_MODDATE [printed p44 / PDF p51 / ASSOCIATED-MODDATE]: Associated embedded-file streams require Params ModDate as a PDF date string. Check every EF stream at catalog, object and marked-content associations; unassociated embedded files do not acquire this requirement.
+
+Old #14 ATTACHMENT_XMP_MATCH:
+  #216 ATTACHMENT_XMP_SIZE_MATCH [printed p89 / PDF p96 / T19-SizeInBytes]: Attachment XMP SizeInBytes must equal the decoded byte length of its independently associated native payload stored in the EA-PDF.
+  #209 ATTACHMENT_XMP_CHECKSUM_MATCH [printed p89 / PDF p96 / T19-CheckSum]: A supplied attachment XMP CheckSum must equal the MD5 digest of its independently associated native bytes stored in the EA-PDF.
+  #213 ATTACHMENT_XMP_FILENAME_MATCH_SOURCE [printed p89 / PDF p96 / T19-Filename]: Attachment XMP Filename must preserve the exact original case-sensitive filename when supplied; otherwise a suitable generated filename is permitted.
+  #215 ATTACHMENT_XMP_MESSAGE_ID_MATCH [printed p89 / PDF p96 / T19-Message-ID]: A supplied attachment Message-ID must identify its containing original email.
+  #15 ATTACHMENT_NATIVE_BYTES_SOURCE_FIDELITY_RECOMMENDED [printed p44 / PDF p51 / ATTACHMENT-BYTES]: Nonzero native attachment payloads should preserve the full decoded original attachment bytes.
+
+Old #15 COLLECTION_CHILD_VALIDATION:
+  #16 COLLECTION_CHILD_VALIDATION [printed p51 / PDF p58 / CONTAINER-RECURSION]: When c ci contains embedded collection members: Apart from original source email assets, contained files are EA-PDF files; ordinary indexes, XML and PDF-only finding aids are not declared exceptions.
+
+Old #16 COLLECTION_SCHEMA_FIELD:
+  #17 COLLECTION_SCHEMA_FIELD [printed p53 / PDF p60 / T5-Attachments]: When c ci: Collection Schema contains every Table 6 custom key with its prescribed PDF name Subtype; additional custom keys are allowed. Unresolved Table 5/6 conflict: Table 5 describes original-email bytes, while Table 6 prescribes the Size subtype used for embedded-file bytes. Keep the Table 6 schema keys and subtypes; the schema type alone does not settle which size value is intended.
+
+Old #17 COLLECTION_CONTENT_TYPES:
+  #18 COLLECTION_CONTENT_TYPES [printed p54 / PDF p61 / CONTAINER-MEMBERS]: When c ci contains embedded collection members: Apart from original source email assets, contained files are EA-PDF files; ordinary indexes, XML and PDF-only finding aids are not declared exceptions.
+
+Old #18 DPM_KEY_PREFIX:
+  #19 DPM_KEY_PREFIX [printed p61 / PDF p68 / EA-CUSTOM-KEY-PREFIX]: When custom EA-PDF DPM keys: Use Mail_ developer prefix; do not prohibit unrelated valid extension keys merely because they are not EA-PDF keys.
+
+Old #19 EMBEDDED_STREAM:
+  #20 EMBEDDED_STREAM [printed p61 / PDF p68 / PDF-EMBEDDED-STREAM]: An embedded file specification must reference an embedded file stream of the required type. Listing AF streams in EmbeddedFiles is a separate EA-PDF 9.4 requirement.
+
+Old #20 STRUCTURE_CORRESPONDENCE:
+  #21 STRUCTURE_CORRESPONDENCE [printed p61 / PDF p68 / PDF-STRUCTURE-LINKS]: When relevant underlying feature or diagnostic condition: Structure content references, marked content and parent lookup entries identify the same content and owning element.
+
+Old #21 PDF_HEADER_VERSION_READ:
+  #31 PDF_HEADER_VERSION_READ [printed p61 / PDF p68 / PDF-VERSION]: For all profiles: The file header and effective PDF version must each be 1.7 or 2.0. A supplied Catalog Version must be a PDF version name; a lower catalog version does not override a later header.
+
+Old #22 PDF_CATALOG_VERSION:
+  #32 PDF_CATALOG_VERSION [printed p61 / PDF p68 / PDF-VERSION]: For all profiles: The file header and effective PDF version must each be 1.7 or 2.0. A supplied Catalog Version must be a PDF version name; a lower catalog version does not override a later header.
+
+Old #23 PDF_EFFECTIVE_VERSION:
+  #33 PDF_EFFECTIVE_VERSION [printed p61 / PDF p68 / PDF-VERSION]: For all profiles: The file header and effective PDF version must each be 1.7 or 2.0. A supplied Catalog Version must be a PDF version name; a lower catalog version does not override a later header.
+
+Old #24 DOCINFO_PRESENT:
+  #22 DOCINFO_PRESENT [printed p61 / PDF p68 / INFO-PRESENT]: When PDF/A-3 based EA-PDF: Trailer Info references a Document Information dictionary.
+
+Old #25 DOCINFO_TITLE_MATCH:
+  #23 DOCINFO_TITLE_MATCH [printed p61 / PDF p68 / INFO-XMP-CROSSWALK]: When PDF/A-3 based EA-PDF: Document Information and document XMP are consistent under PDF/A-3 Table 7, including representation differences and conditional fields. Compare the explicitly qualified x-default Text item, including an empty value when present; localized alternatives cannot substitute for it. Supplied Info values must retain their PDF string type; coercing numbers, names or compound objects to text cannot establish synchronization.
+
+Old #26 DOCINFO_PRODUCER_MATCH:
+  #24 DOCINFO_PRODUCER_MATCH [printed p61 / PDF p68 / INFO-XMP-CROSSWALK]: When PDF/A-3 based EA-PDF: Document Information and document XMP are consistent under PDF/A-3 Table 7, including representation differences and conditional fields. Supplied Info values must retain their PDF string type; coercing numbers, names or compound objects to text cannot establish synchronization.
+
+Old #27 DOCINFO_AUTHOR_MATCH:
+  #25 DOCINFO_AUTHOR_MATCH [printed p61 / PDF p68 / INFO-XMP-CROSSWALK]: When PDF/A-3 based EA-PDF: Document Information and document XMP are consistent under PDF/A-3 Table 7, including representation differences and conditional fields. Supplied Info values must retain their PDF string type; coercing numbers, names or compound objects to text cannot establish synchronization.
+
+Old #28 DOCINFO_SUBJECT_MATCH:
+  #26 DOCINFO_SUBJECT_MATCH [printed p61 / PDF p68 / INFO-XMP-CROSSWALK]: When PDF/A-3 based EA-PDF: Document Information and document XMP are consistent under PDF/A-3 Table 7, including representation differences and conditional fields. Compare the explicitly qualified x-default Text item, including an empty value when present; localized alternatives cannot substitute for it. Supplied Info values must retain their PDF string type; coercing numbers, names or compound objects to text cannot establish synchronization.
+
+Old #29 DOCINFO_CREATOR_MATCH:
+  #27 DOCINFO_CREATOR_MATCH [printed p61 / PDF p68 / INFO-XMP-CROSSWALK]: When PDF/A-3 based EA-PDF: Document Information and document XMP are consistent under PDF/A-3 Table 7, including representation differences and conditional fields. Supplied Info values must retain their PDF string type; coercing numbers, names or compound objects to text cannot establish synchronization.
+
+Old #30 DOCINFO_CREATIONDATE_MATCH:
+  #28 DOCINFO_CREATIONDATE_MATCH [printed p61 / PDF p68 / INFO-XMP-CROSSWALK]: When PDF/A-3 based EA-PDF: Document Information and document XMP are consistent under PDF/A-3 Table 7, including representation differences and conditional fields. Supplied Info values must retain their PDF string type; coercing numbers, names or compound objects to text cannot establish synchronization.
+
+Old #31 DOCINFO_MODDATE_MATCH:
+  #29 DOCINFO_MODDATE_MATCH [printed p61 / PDF p68 / INFO-XMP-CROSSWALK]: When PDF/A-3 based EA-PDF: Document Information and document XMP are consistent under PDF/A-3 Table 7, including representation differences and conditional fields. Supplied Info values must retain their PDF string type; coercing numbers, names or compound objects to text cannot establish synchronization.
+
+Old #32 DOCINFO_KEYWORDS:
+  #30 DOCINFO_KEYWORDS [printed p61 / PDF p68 / INFO-XMP-CROSSWALK]: When PDF/A-3 based EA-PDF: Info Keywords includes EA-PDF. Supplied Document Info Keywords must also match normal XMP pdf:Keywords Text under the EA-PDF mandatory Info/XMP crosswalk. Supplied Info values must retain their PDF string type; coercing numbers, names or compound objects to text cannot establish synchronization.
+
+Old #33 CATALOG_PIECEINFO:
+  #34 CATALOG_PIECEINFO [printed p62 / PDF p69 / CATALOG-NO-PIECEINFO]: For all profiles: Catalog PieceInfo is prohibited; this does not prohibit page PieceInfo.
+
+Old #34 XMP_KEYWORDS:
+  #35 XMP_KEYWORDS [printed p62 / PDF p69 / KEYWORDS-XMP]: For all profiles: XMP pdf:Keywords includes EA-PDF.
+
+Old #35 PAGEMODE_PRESENT:
+  #36 PAGEMODE_PRESENT [printed p62 / PDF p69 / NAV-C]: Every profile must supply a catalog PageMode entry. The profile-specific rules check its PDF name type and allowed value.
+
+Old #36 NONFULLSCREENPAGEMODE_PRESENT:
+  #37 NONFULLSCREENPAGEMODE_PRESENT [printed p62 / PDF p69 / NAV-C]: Every profile must supply ViewerPreferences NonFullScreenPageMode. The profile-specific rules check its PDF name type and allowed value.
+
+Old #37 PROFILE_PAGEMODE_SINGLE_NO_ATTACHMENTS:
+  #44 PROFILE_PAGEMODE_SINGLE_NO_ATTACHMENTS [printed p62 / PDF p69 / NAV-S-NOATT]: When s or si without email attachments: Catalog PageMode and ViewerPreferences NonFullScreenPageMode are UseOutlines.
+
+Old #38 PROFILE_NFSM_SINGLE_NO_ATTACHMENTS:
+  #45 PROFILE_NFSM_SINGLE_NO_ATTACHMENTS [printed p62 / PDF p69 / NAV-S-NOATT]: When s or si without email attachments: Catalog PageMode and ViewerPreferences NonFullScreenPageMode are UseOutlines.
+
+Old #39 PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS:
+  #42 PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS [printed p62 / PDF p69 / NAV-S-ATT]: When s or si with email attachments: PageMode is UseAttachments; NonFullScreenPageMode is UseAttachments for PDF 2.0 and UseOutlines for PDF 1.7.
+
+Old #40 PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS:
+  #43 PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS [printed p62 / PDF p69 / NAV-S-ATT]: When s or si with email attachments: PageMode is UseAttachments; NonFullScreenPageMode is UseAttachments for PDF 2.0 and UseOutlines for PDF 1.7.
+
+Old #41 PROFILE_PAGEMODE_MULTI:
+  #40 PROFILE_PAGEMODE_MULTI [printed p62 / PDF p69 / NAV-M]: When m or mi: PageMode and NonFullScreenPageMode are UseOutlines.
+
+Old #42 PROFILE_NFSM_MULTI:
+  #41 PROFILE_NFSM_MULTI [printed p62 / PDF p69 / NAV-M]: When m or mi: PageMode and NonFullScreenPageMode are UseOutlines.
+
+Old #43 PROFILE_PAGEMODE_CONTAINER:
+  #38 PROFILE_PAGEMODE_CONTAINER [printed p62 / PDF p69 / NAV-C]: For c/ci, Catalog PageMode must be UseAttachments.
+
+Old #44 PROFILE_NFSM_CONTAINER:
+  #39 PROFILE_NFSM_CONTAINER [printed p62 / PDF p69 / NAV-C]: For c/ci, NonFullScreenPageMode must be UseAttachments in PDF 2.0. Local interpretation: use UseOutlines in PDF 1.7 because UseAttachments is a PDF 2.0 value. PageMode remains UseAttachments in both versions.
+
+Old #45 VIEWER_PREFS:
+  #46 VIEWER_PREFS [printed p62 / PDF p69 / NAV-TITLE]: Every file must contain a ViewerPreferences dictionary. Rule 46 separately requires DisplayDocTitle to be the Boolean true.
+
+Old #46 DISPLAY_DOCTITLE:
+  #47 DISPLAY_DOCTITLE [printed p62 / PDF p69 / NAV-TITLE]: For all profiles: ViewerPreferences DisplayDocTitle is the Boolean true.
+
+Old #47 SOURCE_FILE_SET:
+  #48 SOURCE_FILE_SET [printed p62 / PDF p69 / SOURCE-FILESET]: Required companion files use either the primary Source file specification RF dictionary, whose EF-compatible keys hold Related Files arrays, or catalog AF entries with relationship Supplement. Independent Source assets do not imply a file set.
+
+Old #48 OUTLINES_PRESENT:
+  #51 OUTLINES_PRESENT [printed p63 / PDF p70 / NAV-OUTLINES]: For all profiles: Catalog contains Outlines.
+
+Old #49 DPARTROOT_PRESENT:
+  #49 DPARTROOT_PRESENT [printed p63 / PDF p70 / DPM-ROOT]: For all profiles: Catalog contains DPartRoot; all pages consequently have a DPart entry.
+
+Old #50 PAGE_DPART_PRESENT:
+  #50 PAGE_DPART_PRESENT [printed p63 / PDF p70 / DPM-ROOT]: Each PDF page links to the unique reachable leaf DPart dictionary whose valid page range includes it. DPart leaf ranges do not overlap, cover every page exactly once, and their depth-first traversal follows the page-tree order under ISO32000-2 sections14.12.2/3.
+
+Old #51 CONTENT_SET_NONBLANK:
+  #52 CONTENT_SET_NONBLANK [printed p63 / PDF p70 / CONTENTSET-EXISTS]: Local interpretation of section 9.2: every Content Set must contain at least one nonblank page. Other pages in the set may be blank. Visible page content or annotations establish nonblankness; declaring a page range alone does not.
+
+Old #52 PAGE_COUNT:
+  #53 PAGE_COUNT [printed p63 / PDF p70 / CONTENTSET-EXISTS]: Every file must contain at least one PDF page. This check alone does not establish a valid or nonblank Content Set.
+
+Old #53 CONTENT_SET_OUTLINE_REF:
+  #54 CONTENT_SET_OUTLINE_REF [printed p63 / PDF p70 / CONTENTSET-OUTLINE]: When each Content Set: At least one outline in the same PDF references the first page of the Content Set; extra outlines are allowed.
+
+Old #54 OUTLINE_ITEMS_PRESENT:
+  #55 OUTLINE_ITEMS_PRESENT [printed p63 / PDF p70 / CONTENTSET-OUTLINE]: When each Content Set: At least one outline in the same PDF references the first page of the Content Set; extra outlines are allowed.
+
+Old #55 PROFILE_EMAIL_COUNT_SINGLE:
+  #58 PROFILE_EMAIL_COUNT_SINGLE [printed p63 / PDF p70 / EMAIL-S-CARDINALITY]: When s si: Exactly one email is represented and it is the only email referenced in document-level XMP.
+
+Old #56 PROFILE_EMAIL_COUNT_MULTI:
+  #56 PROFILE_EMAIL_COUNT_MULTI [printed p63 / PDF p70 / EMAIL-M-CARDINALITY]: When m mi: Two or more emails, each in document XMP and with a nonblank Content Set; at least two nonblank pages result.
+
+Old #57 DPART_OBJECT_STRUCTURE:
+  #59 DPART_OBJECT_STRUCTURE [printed p64 / PDF p71 / DPM-ALL-PAGES]: DPart hierarchy and page relationships follow ISO 32000-2. Optional Type, RecordLevel and NodeNameList retain prescribed types; a supplied RecordLevel identifies an actual zero-based level. The published Table409 correction prohibits DPart Metadata streams. DPM dictionaries and nested containers contain only permitted value classes, and dictionary keys satisfy the XML name-token constraint. Definite violations fail; unresolved spelling/decoding and bounded traversal remain unavailable. DPartRoot and every DPart node are PDF dictionary objects; a stream with matching entries cannot substitute for one. A leaf requires Start; omitted End defaults to Start for a single-page content set. Single-page leaves omit End.
+
+Old #58 TEXT_CONTENT_PDF_TEXT_OBJECTS:
+  #60 TEXT_CONTENT_PDF_TEXT_OBJECTS [printed p64 / PDF p71 / TEXT-SOURCE]: Source text should use PDF text objects. Invisible render mode 3 is allowed; OCR of images of text is not required. Rendered Core Fields have a separate mandatory text-object requirement.
+
+Old #59 ATTACHMENT_ANNOTATIONS_PRESENT:
+  #61 ATTACHMENT_ANNOTATIONS_PRESENT [printed p65 / PDF p72 / ATTACHMENT-ANNOT-EACH-BODY]: Each declared native attachment must have an associated FileAttachment annotation in every applicable BodyRendering Content Set of its owning email.
+  #62 ATTACHMENT_ANNOTATIONS_VISIBLE_WITHIN_CROPBOX [printed p65 / PDF p72 / ATTACHMENT-ANNOT-EACH-BODY]: At least one qualifying FileAttachment annotation for each attachment/body-set pair must be visible and positioned entirely within its page CropBox.
+
+Old #60 PAGE_CONTEXT_TEXT_OBJECTS_RECOMMENDED:
+  #64 PAGE_CONTEXT_TEXT_OBJECTS_RECOMMENDED [printed p65 / PDF p72 / PAGE-CONTEXT-TEXT]: Included identifying page context should use PDF text objects.
+
+Old #61 UNSPECIFIED_COLOR_SRGB_ASSUMED:
+  #63 UNSPECIFIED_COLOR_SRGB_ASSUMED [printed p65 / PDF p72 / COLOR-SRGB]: Unspecified email colors should be interpreted as sRGB. Explicit source color specifications remain authoritative.
+
+Old #62 ACTIONABLE_URLS_LINK_ANNOTATIONS:
+  #67 ACTIONABLE_URLS_LINK_ANNOTATIONS [printed p66 / PDF p73 / URL-LINK]: URLs intended to be actionable under the conversion policy should use PDF Link annotations. Making every URL actionable is not mandatory.
+
+Old #63 REFERENCED_ASSETS_AS_ASSOCIATED_FILES:
+  #65 REFERENCED_ASSETS_AS_ASSOCIATED_FILES [printed p66 / PDF p73 / ASSET-AF]: Individually preserved referenced rendering assets should use AFRelationship Source, separately from catalog original-email sources.
+
+Old #64 REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT:
+  #66 REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT [printed p66 / PDF p73 / ASSET-OBJECT-ASSOCIATION]: Individually preserved referenced rendering assets should be associated with the most appropriate PDF object, such as their image, form or font.
+
+Old #65 EMBEDDEDFILES_PRESENT:
+  #68 EMBEDDEDFILES_PRESENT [printed p66 / PDF p73 / AF-NAMETREE]: When embedded streams referenced by any AF array or AF marked-content tag: List them in catalog Names EmbeddedFiles; scope includes arbitrary-object and marked-content associations.
+
+Old #66 AF_IN_NAME_TREE:
+  #69 AF_IN_NAME_TREE [printed p66 / PDF p73 / AF-NAMETREE]: When embedded streams referenced by any AF array or AF marked-content tag: List them in catalog Names EmbeddedFiles; scope includes arbitrary-object and marked-content associations.
+
+Old #67 EMBEDDED_FILESPEC_NO_PATH_COMPONENTS:
+  #74 EMBEDDED_FILESPEC_NO_PATH_COMPONENTS [printed p66 / PDF p73 / FILESPEC-NO-PATH]: When all file specification strings: Do not include absolute/relative path components, backslashes or two periods; XMP filenames are allowed to retain paths.
+
+Old #68 EMBEDDED_SUBTYPE_MATCH_XMP:
+  #73 EMBEDDED_MEDIA_TYPE_MATCH_XMP [printed p66 / PDF p73 / EMBEDDED-SUBTYPE]: The complete reconstructed embedded media type, including supplied parameters, must agree with equivalent associated document-level XMP metadata.
+
+Old #69 SOURCE_MEDIATYPE_PARAMETERS_MATCH:
+  #70 EMBEDDED_MEDIATYPE_PARAMETERS_TYPE [printed p66 / PDF p73 / EMBEDDED-PARAMS]: A supplied embedded-stream Mail_MediaTypeParameters value must be a PDF string.
+  #71 EMBEDDED_MEDIATYPE_PARAMETERS_REQUIRED [printed p66 / PDF p73 / EMBEDDED-PARAMS]: An embedded stream originating from an email with media-type parameters must contain Mail_MediaTypeParameters.
+  #72 SOURCE_MEDIATYPE_PARAMETERS_MATCH [printed p66 / PDF p73 / EMBEDDED-PARAMS]: Stored Mail_MediaTypeParameters must preserve the parameters of the independently associated originating email.
+
+Old #70 EMBEDDED_MEDIATYPE_RECONSTRUCTION:
+  #75 EMBEDDED_MEDIATYPE_RECONSTRUCTION [printed p66 / PDF p73 / MEDIATYPE-RECONSTRUCTION]: Decode the embedded Subtype name as UTF-8 after PDF name unescaping. Local interpretation: append a semicolon only when nonempty Mail_MediaTypeParameters text is supplied. This check establishes reconstruction; rules 68-69 separately compare associated XMP.
+
+Old #71 SOURCE_MIME_GENERIC:
+  #81 SOURCE_MIME_GENERIC [printed p67 / PDF p74 / MEDIATYPE-GENERIC]: When embedded files: Avoid generic media types; do not promote this recommendation into a mandatory failure.
+
+Old #72 ASSET_SIZE_MATCH:
+  #82 ASSET_SIZE_MATCH [printed p67 / PDF p74 / SOURCE-XMP-SIZE-TYPE]: When source email asset containers: Document-level source metadata matches embedded file size and media type; XMP filenames may contain paths unlike file specification strings. A URI/container cannot be compared as a numeric size: retain its mandatory type failure and report the byte comparison as unavailable, without asserting a byte mismatch.
+
+Old #73 ASSET_CONTENTTYPE_MATCH:
+  #83 ASSET_CONTENTTYPE_MATCH [printed p67 / PDF p74 / SOURCE-XMP-SIZE-TYPE]: When source email asset containers: Document-level source metadata matches embedded file size and media type; XMP filenames may contain paths unlike file specification strings. V20: MIME recovery must not fabricate parameter equality. Invalid parameter syntax uses preserved text comparison; malformed source values remain permitted. Source attachment/body summaries retain original Content-Type text and quoted spaces. Legal folding and encoded parameter equivalence remain supported; absent or empty body types retain MIME defaults.
+
+Old #74 EMBEDDED_SIZE:
+  #79 EMBEDDED_SIZE_MATCH [printed p67 / PDF p74 / EMBEDDED-SIZE-RECOMMEND]: A supplied embedded-file Params Size value must equal the actual decoded payload byte length.
+  #80 EMBEDDED_SIZE_RECOMMENDED [printed p67 / PDF p74 / EMBEDDED-SIZE-RECOMMEND]: Writers should supply the uncompressed payload byte size in embedded-file Params Size.
+
+Old #75 EMBEDDED_MD5:
+  #76 EMBEDDED_MD5_MATCH [printed p67 / PDF p74 / EMBEDDED-MD5-RECOMMEND]: A supplied embedded-file Params CheckSum must equal the MD5 digest of the actual decoded payload.
+  #78 EMBEDDED_MD5_RECOMMENDED [printed p67 / PDF p74 / EMBEDDED-MD5-RECOMMEND]: Writers should supply the MD5 digest in embedded-file Params CheckSum.
+
+Old #76 EMBEDDED_MD5_BINARY_FORMAT:
+  #77 EMBEDDED_MD5_BINARY_FORMAT [printed p67 / PDF p74 / EMBEDDED-MD5-RECOMMEND]: If the optional embedded-file Params CheckSum is supplied, it must be a 16-byte PDF string, not the 32-character hexadecimal text used in XMP. This rule describes supplied-value format only; adding a checksum is a SHOULD recommendation and byte-digest agreement is a separate check.
+
+Old #77 PROFILE_COLLECTION:
+  #84 PROFILE_COLLECTION [printed p67 / PDF p74 / COLLECTION-FORBIDDEN]: When c ci: Catalog contains the PDF Collection entry; the specification says Collections but ISO's actual key is Collection.
+
+Old #78 COLLECTION_REQUIRED:
+  #86 COLLECTION_REQUIRED [printed p67 / PDF p74 / COLLECTION-REQUIRED]: When c ci: Catalog contains the PDF Collection entry; the specification says Collections but ISO's actual key is Collection.
+
+Old #79 COLLECTION_FORBIDDEN:
+  #85 COLLECTION_FORBIDDEN [printed p67 / PDF p74 / COLLECTION-FORBIDDEN]: When s si m mi: Catalog has no Collection entry.
+
+Old #80 COLLECTION_EXTENSIONS:
+  #87 COLLECTION_EXTENSIONS [printed p68 / PDF p75 / COLLECTION-EXTENSION]: When c ci using PDF 1.7: Declare Adobe ADBE extension BaseVersion name 1.7 and integer ExtensionLevel 5.
+
+Old #81 COLLECTION_D_FORBIDDEN:
+  #91 COLLECTION_D_FORBIDDEN [printed p68 / PDF p75 / COLLECTION-NO-DEFAULT]: When c ci: Collection D is absent.
+
+Old #82 COLLECTION_VIEW_FORBIDDEN:
+  #93 COLLECTION_VIEW_FORBIDDEN [printed p68 / PDF p75 / COLLECTION-NO-HIDDEN]: When c ci: Collection View is not H; omission or other legal values are not forbidden.
+
+Old #83 COLLECTION_NAVIGATOR_FORBIDDEN:
+  #90 COLLECTION_NAVIGATOR_FORBIDDEN [printed p68 / PDF p75 / COLLECTION-NAVIGATOR]: When Navigator is present: Navigator has neither SWF nor APIVersion.
+
+Old #84 COLLECTION_FILENAMES_VALID:
+  #88 COLLECTION_FILENAMES_VALID [printed p68 / PDF p75 / COLLECTION-NAMES]: When collection folder and filenames: Conform to ISO 32000-2 restrictions below Table 159 and case-normalized uniqueness in the applicable naming scope.
+
+Old #85 COLLECTION_FILENAMES_UNIQUE_CASEFOLD:
+  #89 COLLECTION_FILENAMES_UNIQUE_CASEFOLD [printed p68 / PDF p75 / COLLECTION-NAMES]: When collection folder and filenames: Conform to ISO 32000-2 restrictions below Table 159 and case-normalized uniqueness in the applicable naming scope.
+
+Old #86 COLLECTION_SCHEMA_PRESENT:
+  #94 COLLECTION_SCHEMA_PRESENT [printed p68 / PDF p75 / COLLECTION-SCHEMA]: When c ci: Collection Schema contains every Table 6 custom key with its prescribed subtype; additional custom keys are allowed. Unresolved Table 5/6 conflict: Table 5 describes original-email bytes, while Table 6 prescribes the Size subtype used for embedded-file bytes. Keep the Table 6 schema keys and subtypes; the schema type alone does not settle which size value is intended.
+
+Old #87 COLLECTION_SCHEMA_E_FALSE:
+  #92 COLLECTION_SCHEMA_E_FALSE [printed p68 / PDF p75 / COLLECTION-NO-EDIT]: When any Collection CustomField has E: E is the Boolean false, including extra custom fields.
+
+Old #88 DPM_ROOTNODE_PRESENT:
+  #98 DPM_ROOTNODE_PRESENT [printed p69 / PDF p76 / DPM-ROOT-STRUCTURE]: For all profiles: Define DPart metadata for every page; underlying DPart object structure follows ISO 32000-2.
+
+Old #89 DPM_NAME_TYPES:
+  #99 DPM_NAME_TYPES [printed p69 / PDF p76 / DPM-ROOT-STRUCTURE]: Required Mail_ContentSetType and conditional Mail_Subtype values are PDF names. Every name value in DPM data, including nested arrays/dictionaries and extension fields, contains valid UTF-8 after PDF name-escape decoding under the published 14.12.4.2 correction. Name values need not be XML tokens. Content Set names remain an open set.
+
+Old #90 DPM_MAIL_GUID_PRESENT:
+  #95 DPM_MAIL_GUID_PRESENT [printed p69 / PDF p76 / DPM-EMAIL-OWNERSHIP]: Every intermediate email DPart node must supply a nonempty Mail_GUID as a PDF text string. Its exact decoded Unicode value identifies the email; arbitrary value coercions cannot satisfy the type. The separate DPM ownership and XMP matching assertions remain required.
+
+Old #91 DPM_MAIL_GUID_MATCH:
+  #101 DPM_MAIL_GUID_MATCH [printed p70 / PDF p77 / DPM-IDENTIFIER-MATCH]: Every supplied canonical DPM Mail_GUID must match the corresponding document XMP email identifier under the retained PDF text-string matching rules.
+  #97 DPM_EMAIL_CONTENT_SET_OWNERSHIP [printed p69 / PDF p76 / DPM-EMAIL-OWNERSHIP]: Intermediate email DPart nodes must associate each email with all and only its independently identified Content Sets.
+
+Old #92 DPM_MAIL_MESSAGEID_MATCH:
+  #96 DPM_MAIL_MESSAGEID_MATCH [printed p69 / PDF p76 / DPM-EMAIL-OWNERSHIP]: Every supplied canonical DPM Mail_MessageID, including leaf-node values, must be a PDF text string matching the corresponding document XMP identifier.
+
+Old #93 DPM_INTERMEDIATE_COUNT_SINGLE:
+  #104 DPM_INTERMEDIATE_COUNT_SINGLE [printed p70 / PDF p77 / DPM-S-CARDINALITY]: When s si: Exactly one intermediate email node with Mail_GUID and optional Mail_MessageID.
+
+Old #94 DPM_INTERMEDIATE_COUNT_MULTI:
+  #103 DPM_INTERMEDIATE_COUNT_MULTI [printed p70 / PDF p77 / DPM-M-CARDINALITY]: When m mi: At least two intermediate email nodes with Mail_GUID and optional Mail_MessageID.
+
+Old #95 DPM_INTERMEDIATE_COUNT_CONTAINER:
+  #100 DPM_INTERMEDIATE_COUNT_CONTAINER [printed p70 / PDF p77 / DPM-C-NO-EMAIL]: When c ci: No node, not just intermediate nodes, contains Mail_MessageID or Mail_GUID.
+
+Old #96 DPM_LEAF_REQUIRED:
+  #102 DPM_LEAF_REQUIRED [printed p70 / PDF p77 / DPM-LEAF]: Every leaf DPart requires DPM as an actual PDF dictionary; non-null scalar or array values do not satisfy dictionary presence.
+
+Old #97 DPM_ATTACHMENTLIST_FORBIDDEN:
+  #107 DPM_ATTACHMENTLIST_FORBIDDEN [printed p70 / PDF p77 / T8-NO-AttachmentList]: When c ci: No DPart leaf Content Set has Mail_ContentSetType AttachmentList.
+
+Old #98 DPM_CONTAINER_CONTENTSET_TYPES:
+  #108 DPM_CONTAINER_CONTENTSET_TYPES [printed p70 / PDF p77 / T8-NO-AttachmentRendering]: For c/ci, leaf DPM Content Sets SHALL NOT use AttachmentRendering, BodyRendering, EmailHeaderRendering or RawEmailRendering. Other extension values are permitted.
+
+Old #99 DPM_CONTENTSETTYPE_PRESENT:
+  #113 DPM_CONTENTSETTYPE_PRESENT [printed p70 / PDF p77 / T8-TYPE]: Every DPart leaf must contain Mail_ContentSetType as a PDF name; its open value set does not add a nonempty-name restriction. ISO32000-2 7.3.5 explicitly permits the empty Name. Presence is tested independently of Name type and field syntax; null dictionary values are absent.
+
+Old #100 DPM_FRONTMATTER_REQUIRED_CONTAINER:
+  #106 DPM_FRONTMATTER_REQUIRED_CONTAINER [printed p70 / PDF p77 / T8-FRONTMATTER]: When DPart leaf with the stated condition: FrontMatter occurs in every c/ci container; it is optional for other profiles.
+
+Old #101 DPM_SUBTYPE_REQUIRED:
+  #109 DPM_SUBTYPE_REQUIRED [printed p70 / PDF p77 / T8-SUBTYPE]: Every BodyRendering or AttachmentRendering DPart leaf must contain Mail_Subtype. A supplied empty Name satisfies entry presence but fails the separate RFC2046 media type syntax requirement. Null dictionary values are absent; the separate DPM_NAME_TYPES check retains prescribed PDF types.
+
+Old #102 DPM_SUBTYPE_MEDIA_TYPE_NAME:
+  #110 DPM_SUBTYPE_MEDIA_TYPE_NAME [printed p70 / PDF p77 / T8-SUBTYPE]: A supplied DPart leaf Mail_Subtype name, including an optional or empty Name, must conform to the referenced media type syntax and PDF Name encoding. An empty Name has valid PDF Name syntax but cannot be a media type. Missing optional subtype data does not invent a presence requirement.
+
+Old #103 DPM_BODY_MEDIA_TYPE_MATCH_SOURCE:
+  #111 DPM_BODY_MEDIA_TYPE_MATCH_SOURCE [printed p70 / PDF p77 / T8-SUBTYPE]: BodyRendering Mail_Subtype must identify the original body media type including parameters.
+  #112 DPM_ATTACHMENT_MEDIA_TYPE_MATCH_SOURCE [printed p70 / PDF p77 / T8-SUBTYPE]: AttachmentRendering Mail_Subtype must identify the original attachment media type including parameters.
+
+Old #104 DPM_DESC_REQUIRED:
+  #105 DPM_DESC_REQUIRED [printed p70 / PDF p77 / T8-DESC]: Every DPart leaf DPM requires Mail_Desc as a human-readable PDF text string. Names, arrays, dictionaries and numeric or Boolean coercions cannot satisfy this field.
+
+Old #105 CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED:
+  #115 CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED [printed p74 / PDF p81 / TAGGING-CUSTOM-CONTENT]: When custom Content Sets are included, creation software SHOULD create logical structure and Tagged PDF for all their pages. Absence is a recommendation warning; mandatory structure requirements still apply to structure that is supplied.
+
+Old #106 STRUCTTREE_ROOT_DOCUMENT:
+  #117 STRUCTTREE_ROOT_DOCUMENT [printed p74 / PDF p81 / TAGGING-ROOT]: When logical structure is present, StructTreeRoot K must identify exactly one structure element dictionary, directly or in a one-item array, whose resolved standard role is Document. Resolve transitive RoleMap mappings when no explicit namespace applies; in PDF 2.0 use the registered namespace RoleMapNS for elements with explicit NS. Literal tag spelling alone is insufficient. Reject malformed targets, unregistered namespaces, cycles and unresolved custom roles; an inspection limit is unavailable evidence, not a proven violation.
+
+Old #107 ROLEMAPNS_PRESENT:
+  #116 ROLEMAPNS_PRESENT [printed p74 / PDF p81 / TAGGING-NAMESPACE]: Bind used PDF 2.0 custom EA-PDF tags to the registered EA-PDF namespace and resolve RoleMapNS targets transitively. A name targets the default PDF 1.7 namespace; a two-item array contains a role name and an indirect target namespace dictionary. Resolve to a standard role: Mail_Message to Document, Mail_ContentGroup to Part, Mail_ContentSet to Art, and field tags to appropriate standard roles. Reject malformed targets, unregistered namespaces, cycles and unresolved roles. Reaching an inspection limit leaves the assessment unavailable. Namespace resolution does not replace the separate EA-PDF backward-compatible RoleMap requirements. Standard-only structures continue to omit an unused EA-PDF namespace under the existing local interpretation; section 9.7 does not explicitly state that exemption.
+
+Old #108 LOGICAL_TS32005_DECLARATION:
+  #114 LOGICAL_TS32005_DECLARATION [printed p74 / PDF p81 / DECLARATION-IDENTIFIER]: PDF 2.0 / PDF/A-4 files with logical structure must conform to ISO/TS 32005 and include its PDF Declaration in document-level XMP. This applies even without custom EA-PDF tags. Declaration presence alone does not establish ISO/TS 32005 conformance. The PDF Declarations namespace is http://pdfa.org/declarations/; declarations is a Bag of structures with a required conformsTo URI whose registered ISO identifier is https://pdfa.org/declarations#iso32005. Supplied optional claimData and fields retain the PDF Declarations/XMP schema types and date precision.
+
+Old #109 ROLEMAP_MAIL_TAGS:
+  #118 ROLEMAP_MAIL_TAGS [printed p74 / PDF p81 / T9-Artifact]: For PDF/A-4 with logical structure, include the Table 9 backward-compatible RoleMap for tags actually used (local interpretation): Artifact→Private, Aside→Div, DocumentFragment→Div, Em→Span, FENote→Note, Hn (n≥7)→P, Strong→Span, Sub→Div and Title→H1 or P. When custom EA-PDF tags occur, separately apply Table 10: Mail_Message→Document, Mail_ContentGroup→Part, Mail_ContentSet→Art, and appropriate PDF 1.7 field tags. This does not mandate using the optional custom vocabulary.
+
+Old #110 CUSTOM_TAG_MARKED_SEQUENCE_ONLY:
+  #120 CUSTOM_TAG_MARKED_SEQUENCE_ONLY [printed p75 / PDF p82 / TAGGING-SEQUENCES]: When custom tags are used: Use custom tags on marked-content sequences, not marked-content points.
+
+Old #111 CUSTOM_TAG_OPERAND_MATCH:
+  #119 CUSTOM_TAG_OPERAND_MATCH [printed p75 / PDF p82 / TAGGING-OPERAND]: When custom marked-content sequences: Operand matches the corresponding custom structure element name.
+
+Old #112 MAIL_MESSAGE_ROLEMAP_DOCUMENT:
+  #126 MAIL_MESSAGE_ROLEMAP_DOCUMENT [printed p75 / PDF p82 / T10-Mail_Message]: When Mail_Message is used: Role-map Mail_Message to Document. Field mappings allow appropriate spans, paragraphs, lists or tables rather than a single mandated P. Local interpretation: require the mapping for each custom tag actually used. Table 10 introduces the full map when any listed tag occurs; this used-only application is a project interpretation, not an adopted erratum.
+
+Old #113 MAIL_CONTENTGROUP_ROLEMAP_PART:
+  #121 MAIL_CONTENTGROUP_ROLEMAP_PART [printed p75 / PDF p82 / T10-Mail_ContentGroup]: When Mail_ContentGroup is used: Role-map Mail_ContentGroup to Part. Field mappings allow appropriate spans, paragraphs, lists or tables rather than a single mandated P. Local interpretation: require the mapping for each custom tag actually used. Table 10 introduces the full map when any listed tag occurs; this used-only application is a project interpretation, not an adopted erratum.
+
+Old #114 MAIL_CONTENTSET_ROLEMAP_ART:
+  #122 MAIL_CONTENTSET_ROLEMAP_ART [printed p75 / PDF p82 / T10-Mail_ContentSet]: When Mail_ContentSet is used: Role-map Mail_ContentSet to Art. Field mappings allow appropriate spans, paragraphs, lists or tables rather than a single mandated P. Local interpretation: require the mapping for each custom tag actually used. Table 10 introduces the full map when any listed tag occurs; this used-only application is a project interpretation, not an adopted erratum.
+
+Old #115 MAIL_FIELD_ROLEMAP_APPROPRIATE:
+  #123 MAIL_FIELD_ROLEMAP_APPROPRIATE [printed p75 / PDF p82 / T10-Mail_Field]: When Mail_Field is used: Role-map Mail_Field to appropriate PDF 1.7 tag. Field mappings allow appropriate spans, paragraphs, lists or tables rather than a single mandated P. Resolve the compatibility RoleMap chain to a standard PDF 1.7 role; an arbitrary non-Mail_ name is insufficient. Reject cycles, invalid value types and unresolved names; bounded inspection remains unavailable. Local interpretation: require the mapping for each custom tag actually used. Table 10 introduces the full map when any listed tag occurs; this used-only application is a project interpretation, not an adopted erratum.
+
+Old #116 MAIL_FIELDNAME_ROLEMAP_APPROPRIATE:
+  #124 MAIL_FIELDNAME_ROLEMAP_APPROPRIATE [printed p75 / PDF p82 / T10-Mail_FieldName]: When Mail_FieldName is used: Role-map Mail_FieldName to appropriate PDF 1.7 tag. Field mappings allow appropriate spans, paragraphs, lists or tables rather than a single mandated P. Resolve the compatibility RoleMap chain to a standard PDF 1.7 role; an arbitrary non-Mail_ name is insufficient. Reject cycles, invalid value types and unresolved names; bounded inspection remains unavailable. Local interpretation: require the mapping for each custom tag actually used. Table 10 introduces the full map when any listed tag occurs; this used-only application is a project interpretation, not an adopted erratum.
+
+Old #117 MAIL_FIELDVALUE_ROLEMAP_APPROPRIATE:
+  #125 MAIL_FIELDVALUE_ROLEMAP_APPROPRIATE [printed p75 / PDF p82 / T10-Mail_FieldValue]: When Mail_FieldValue is used: Role-map Mail_FieldValue to appropriate PDF 1.7 tag. Field mappings allow appropriate spans, paragraphs, lists or tables rather than a single mandated P. Resolve the compatibility RoleMap chain to a standard PDF 1.7 role; an arbitrary non-Mail_ name is insufficient. Reject cycles, invalid value types and unresolved names; bounded inspection remains unavailable. Local interpretation: require the mapping for each custom tag actually used. Table 10 introduces the full map when any listed tag occurs; this used-only application is a project interpretation, not an adopted erratum.
+
+Old #118 MAIL_MESSAGE_CHILDREN:
+  #131 MAIL_MESSAGE_CHILDREN [printed p75 / PDF p82 / T11-Mail_Message]: Immediate custom children are zero or more Mail_ContentGroup and zero or more Mail_ContentSet, with at least one of these in total; other defined custom tags are not immediate children.
+
+Old #119 MAIL_CONTENTGROUP_CHILDREN:
+  #127 MAIL_CONTENTGROUP_CHILDREN [printed p75 / PDF p82 / T11-Mail_ContentGroup]: At least one immediate Mail_ContentSet; no other Table 10 custom child types.
+
+Old #120 MAIL_CONTENTSET_CHILDREN:
+  #128 MAIL_CONTENTSET_CHILDREN [printed p75 / PDF p82 / T11-Mail_ContentSet]: Under the user-approved correction Mail_ContentField→Mail_Field, Mail_ContentSet allows zero or more immediate Mail_Field custom children. No other Table 10 custom tag is an immediate child. Standard structure tags and unrelated extension tags are not prohibited by this row.
+
+Old #121 MAIL_FIELD_CHILDREN:
+  #129 MAIL_FIELD_CHILDREN [printed p75 / PDF p82 / T11-Mail_Field]: At least one immediate Mail_FieldName and zero or more Mail_FieldValue; no other defined custom immediate children.
+
+Old #122 MAIL_FIELDVALUE_WITH_NAME:
+  #130 MAIL_FIELDVALUE_WITH_NAME [printed p75 / PDF p82 / T11-Mail_Field]: When Mail_FieldValue occurs: It has no valid occurrence without a corresponding Mail_FieldName in the same immediate Mail_Field parent; field order is not prescribed.
+
+Old #123 CONTENT_SET_MAIL_CONTENTSET_TAGGED:
+  #132 CONTENT_SET_MAIL_CONTENTSET_TAGGED [printed p76 / PDF p83 / TAGGING-CONTENTSET-COVERAGE]: When custom tags are used: Every Content Set has Mail_ContentSet tagging; this lower-case shall is within the conditional custom-tag block.
+
+Old #124 HEADER_FIELDS_TAGGED_RECOMMENDED:
+  #133 HEADER_FIELDS_TAGGED_RECOMMENDED [printed p76 / PDF p83 / TAGGING-HEADERS]: When custom tags are used and header fields are rendered, creation software SHOULD tag field names and any supplied values with Mail_FieldName and Mail_FieldValue. This recommendation does not replace the separate mandatory immediate-child and field-value constraints.
+
+Old #125 USERPROPS_NAME_ASCII:
+  #134 USERPROPS_NAME_ASCII [printed p76 / PDF p83 / USERPROPS-NAME]: When EA-PDF UserProperties are used, each N entry must be a PDF ASCII string. The stored bytes must contain only ASCII characters; decoding UTF16 or UTF8-BOM text to ASCII-looking characters does not satisfy the ASCII-string encoding. Unrelated ASCII extension names may contain spaces or ASCII control characters; no printable-only or closed-name policy is imposed.
+
+Old #126 USERPROPS_TYPE:
+  #135 USERPROPS_TYPE [printed p76 / PDF p83 / USERPROPS-NAME]: Every UserProperties dictionary has a required V entry; dictionary null values are absent. Prescribed EA Table12 fields retain actual PDF object types, date grammar and integer bounds. Other Mail_* email header fields use string, number or Boolean values and their prescribed tag scope. Unrelated additional generic PDF UserProperties retain V(any) under ISO32000-2 Table362; no EA field-specific type is invented for them. N ASCII validation remains separate, and Unicode V strings remain allowed.
+
+Old #127 USERPROPS_TAG_SCOPE:
+  #136 USERPROPS_TAG_SCOPE [printed p76 / PDF p83 / USERPROPS-NAME]: When custom user attributes with O UserProperties are used: N is a PDF ASCII string; V type and permitted custom tags follow Table 12.
+
+Old #128 USERPROPS_VALUES_UNMODIFIED:
+  #138 USERPROPS_VALUES_UNMODIFIED [printed p77 / PDF p84 / USERPROPS-FIDELITY]: Custom user-property values should preserve original email values without truncation, even when rendered fields are cropped or hidden.
+
+Old #129 MAIL_CONTENTSET_ART_ONLY:
+  #137 MAIL_CONTENTSET_ART_ONLY [printed p77 / PDF p84 / TAGGING-ART]: When logical structure is present: Implicit or explicit Art elements represent Content Sets only; compare the same content range with outlines and DPM.
+
+Old #130 MULTI_EMAIL_DOCUMENT_STRUCTURE:
+  #139 MULTI_EMAIL_DOCUMENT_STRUCTURE [printed p78 / PDF p85 / TAGGING-M-DOCUMENT]: When m mi with logical structure: Represent each email with an implicit or explicit Document element, including Mail_Message role mapping.
+
+Old #131 MAIL_MESSAGE_COUNT_SINGLE:
+  #147 MAIL_MESSAGE_COUNT_SINGLE [printed p79 / PDF p86 / T13-MESSAGE-S]: When custom tagging in s si: Exactly one Mail_Message.
+
+Old #132 MAIL_MESSAGE_COUNT_MULTI:
+  #146 MAIL_MESSAGE_COUNT_MULTI [printed p79 / PDF p86 / T13-MESSAGE-M]: When custom tagging in m mi: At least two Mail_Message elements.
+
+Old #133 MAIL_MESSAGE_COUNT_CONTAINER:
+  #143 MAIL_MESSAGE_COUNT_CONTAINER [printed p79 / PDF p86 / T13-MESSAGE-C]: When c ci: No Mail_Message elements.
+
+Old #134 MAIL_MESSAGE_GUID_ATTRIBUTE:
+  #144 MAIL_MESSAGE_GUID_ATTRIBUTE [printed p79 / PDF p86 / T13-MESSAGE-GUID]: Mail_Message requires a Mail_GUID user property recognized by its exact N string under the actual UserProperties name owner. A later empty value does not erase an existing nonempty occurrence. Each individual supplied value retains separate type/matching constraints; whole-P replacement across attribute objects is preserved.
+
+Old #135 MAIL_MESSAGE_GUID_MATCH_DPM_XMP:
+  #145 MAIL_MESSAGE_GUID_MATCH_DPM_XMP [printed p79 / PDF p86 / T13-MESSAGE-GUID]: Every applicable Mail_GUID property in the active UserProperties P array must match DPM/XMP and its connected email identity. Each P dictionary is an individual property; a later same-name property does not discard earlier occurrences. Preserve uniform legal repetitions and established whole-P-array replacement across attribute objects. Known contradictions fail; unreadable or non-string values and ambiguous context remain unverified.
+
+Old #136 MAIL_CONTENTGROUP_NESTED_UNDER_MESSAGE:
+  #140 MAIL_CONTENTGROUP_NESTED_UNDER_MESSAGE [printed p79 / PDF p86 / T13-GROUP-PARENT]: When Mail_ContentGroup occurs: It is nested below Mail_Message; group itself remains optional.
+
+Old #137 MAIL_CONTENTGROUP_CONTENTSETTYPE_ATTRIBUTE_RECOMMENDED:
+  #141 MAIL_CONTENTGROUP_CONTENTSETTYPE_ATTRIBUTE_RECOMMENDED [printed p79 / PDF p86 / T13-GROUP-TYPE]: Mail_ContentGroup SHOULD have a Mail_ContentSetType attribute. Assess presence by the exact supplied name, without treating an empty supplied value as absence. Missing recommended attributes WARN; when supplied, the separate conditional matching requirement and Table12 value type apply.
+
+Old #138 MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT:
+  #142 MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT [printed p79 / PDF p86 / T13-GROUP-TYPE-MATCH]: Every supplied active Mail_ContentSetType property on a Mail_ContentGroup retains its conditional DPM matching constraint. Inspect individual occurrences, including empty strings, using exact characters and independently resolved content contexts. Later same-name values do not override earlier properties. Optional absence remains conditional N/A; unbound XMP fields and unavailable data retain their separate limits.
+
+Old #139 MAIL_CONTENTSET_COUNT:
+  #154 MAIL_CONTENTSET_COUNT [printed p79 / PDF p86 / T13-SET-COUNT]: When custom tagging is used: At least one Mail_ContentSet.
+
+Old #140 MAIL_CONTENTSET_NESTED_UNDER_MESSAGE:
+  #155 MAIL_CONTENTSET_NESTED_UNDER_MESSAGE [printed p79 / PDF p86 / T13-SET-PARENT]: Email-owned Mail_ContentSet elements must descend from Mail_Message. Local interpretation: document-wide FrontMatter, ConversionReport and PolicySettings may descend from the Document root in any profile when actual content and DPart ancestry establish document-wide ownership. A type label alone does not establish the exception. Collections retain their document-level exception and prohibition on Mail_Message.
+
+Old #141 MAIL_CONTENTSET_SUBTYPE_ATTRIBUTE_RECOMMENDED:
+  #156 MAIL_CONTENTSET_SUBTYPE_ATTRIBUTE_RECOMMENDED [printed p79 / PDF p86 / T13-SET-SUBTYPE]: When Mail_ContentSet occurs, it should carry a Mail_Subtype attribute. The recommendation is not conditioned on a supplied self Mail_ContentSetType property or limited to rendering categories. Resolved missing names warn; unresolved attribute evidence cannot justify a recommendation PASS. Supplied empty/repeated properties retain name presence and separate type/matching assessment. This SHOULD guidance does not create a mandatory DPM field or a new conformance failure; absent optional custom vocabulary remains N/A.
+
+Old #142 MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT:
+  #157 MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT [printed p79 / PDF p86 / T13-SET-SUBTYPE-MATCH]: Every supplied active Mail_Subtype property must match its independently connected DPart media type and parameters where present. Use MIME matching: media type/subtype and parameter names ignore case; generic parameter values retain case, charset names ignore case, parameter order and delimiting quotes do not change values. Preserve meaningful quoted spaces and raw malformed values instead of repairing them into equality. Known contradictions fail; absent or ambiguous counterparts remain unverified.
+
+Old #143 MAIL_FIELD_PROFILE_USE:
+  #151 MAIL_FIELD_PROFILE_USE [printed p79 / PDF p86 / T13-PROFILE-Mail_Field]: When Mail_Field occurs: Only use in s si m mi.
+
+Old #144 MAIL_FIELD_NESTING_RECOMMENDED:
+  #148 MAIL_FIELD_NESTING_RECOMMENDED [printed p79 / PDF p86 / T13-NEST-Mail_Field]: When Mail_Field occurs: SHOULD be nested below Mail_ContentSet; distinguish recommended ancestry from mandatory immediate-child constraints.
+
+Old #145 MAIL_FIELDNAME_PROFILE_USE:
+  #152 MAIL_FIELDNAME_PROFILE_USE [printed p79 / PDF p86 / T13-PROFILE-Mail_FieldName]: When Mail_FieldName occurs: Only use in s si m mi.
+
+Old #146 MAIL_FIELDNAME_NESTING_RECOMMENDED:
+  #149 MAIL_FIELDNAME_NESTING_RECOMMENDED [printed p79 / PDF p86 / T13-NEST-Mail_FieldName]: When Mail_FieldName occurs: SHOULD be nested below Mail_Field; distinguish recommended ancestry from mandatory immediate-child constraints.
+
+Old #147 MAIL_FIELDVALUE_PROFILE_USE:
+  #153 MAIL_FIELDVALUE_PROFILE_USE [printed p79 / PDF p86 / T13-PROFILE-Mail_FieldValue]: When Mail_FieldValue occurs: Only use in s si m mi.
+
+Old #148 MAIL_FIELDVALUE_NESTING_RECOMMENDED:
+  #150 MAIL_FIELDVALUE_NESTING_RECOMMENDED [printed p79 / PDF p86 / T13-NEST-Mail_FieldValue]: When Mail_FieldValue occurs: SHOULD be nested below Mail_Field; distinguish recommended ancestry from mandatory immediate-child constraints.
+
+Old #149 XMP_NS_PREFIX:
+  #158 XMP_NS_PREFIX [printed p83 / PDF p90 / XMP-CONFORMANCE]: For all profiles: Include all three Table 14 custom namespace URIs with their exact required prefixes, in addition to PDF/A-required namespaces.
+
+Old #150 EAPDF_VERSION:
+  #159 EAPDF_VERSION [printed p83 / PDF p90 / XMP-CONFORMANCE]: For all profiles: pdfmailid:version is integer with value 1. This is the integer value 1, not a canonical spelling requirement: permitted signs, zero padding and XML whitespace retain that value. RDF URI and array/structure values cannot supply the simple integer.
+
+Old #151 EAPDF_REV:
+  #160 EAPDF_REV [printed p83 / PDF p90 / XMP-CONFORMANCE]: For all profiles: pdfmailid:rev is integer with value 2024. This is the integer value 2024, not a canonical spelling requirement: permitted signs, zero padding and XML whitespace retain that value. RDF URI and array/structure values cannot supply the simple integer.
+
+Old #152 XMP_CREATOR:
+  #163 XMP_CREATOR [printed p84 / PDF p91 / XMP-CREATOR]: EA-PDF 9.8 requires the first dc:creator item to be recorded. dc:creator is an ordered array of creator names (person, organization or service), not a field reserved for a software product. Preserve its standard XMP type; do not infer invalidity from an email-like value. A later nonempty sequence member does not populate an empty or missing first creator item. The array must be rdf:Seq and every supplied member must be normal ProperName Text.
+
+Old #153 XMP_CREATOR_SEMANTICS:
+  #164 XMP_CREATOR_SEMANTICS [printed p84 / PDF p91 / XMP-CREATOR]: dc:creator identifies the entity primarily responsible for the resource, as an ordered array of names. EA-PDF requires its first item; neither EA-PDF nor the reviewed XMP definition requires a software-name pattern. Actual incorrect attribution requires provenance evidence; punctuation, address-like text or equality to an email sender alone is insufficient. Mailbox-like spelling or equality with an email sender is not evidence of incorrect attribution. Without independent creation provenance, report attribution as unavailable rather than assert PASS or FAIL.
+
+Old #154 XMP_PRODUCER:
+  #165 XMP_PRODUCER [printed p84 / PDF p91 / XMP-PRODUCER]: EA-PDF requires pdf:Producer to be recorded; the XMP PDF schema defines it as the name of the tool that created the PDF. No product-name grammar, version suffix or ban on address-like text is specified. The supplied field must be normal AgentName Text; URI, array and structured substitutions cannot satisfy it.
+
+Old #155 XMP_PRODUCER_SEMANTICS:
+  #166 XMP_PRODUCER_SEMANTICS [printed p84 / PDF p91 / XMP-PRODUCER]: pdf:Producer denotes the PDF creation tool. Evaluate contradictions only with reliable provenance; a lexical heuristic alone cannot establish an incorrect tool identity. Mailbox-like spelling or equality with an email sender is not evidence of incorrect attribution. Without independent creation provenance, report attribution as unavailable rather than assert PASS or FAIL.
+
+Old #156 XMP_CREATEDATE:
+  #161 XMP_CREATEDATE [printed p84 / PDF p91 / XMP-CREATEDATE]: xmp:CreateDate must be a normal XMP Date for creation of this EA-PDF. Local interpretation: use the PDF creation event, not the source email date. Reduced precision and an unknown timezone are allowed by XMP; invalid dates and URI/array values are not. This rule checks the value type, not provenance.
+
+Old #157 XMP_CREATEDATE_SEMANTICS:
+  #162 XMP_CREATEDATE_SEMANTICS [printed p84 / PDF p91 / XMP-CREATEDATE]: EA-PDF 1.0 section 9.8 identifies xmp:CreateDate as the EA-PDF file creation date. Actual attribution requires independent creation provenance: a valid timestamp, filesystem time, or equality, ordering or difference relative to source Sent cannot establish the creation event. Without such evidence report provenance unavailable; required field presence and XMP date validity remain separate checks.
+
+Old #158 XMP_TITLE:
+  #167 XMP_TITLE [printed p84 / PDF p91 / XMP-TITLE]: For all profiles: Set the dc:title x-default Text item. Localized items alone do not satisfy this recommendation; Text may be empty. Failure to follow this recommendation is not a mandatory violation.
+
+Old #159 EAPDF_CONFORMANCE_I_LAST:
+  #168 EAPDF_CONFORMANCE_I_LAST [printed p84 / PDF p91 / T15-conformance]: For all profiles: pdfmailid:conformance is lowercase text with value s si m mi c ci; i is last if present.
+
+Old #160 SOURCE_WITHOUT_XMP:
+  #170 SOURCE_WITHOUT_XMP [printed p85 / PDF p92 / XMP-ASSETS]: When non-isolated files including source email assets: Use pdfmailmeta:assets as an unordered set of one or more descriptions under Table 16; isolated retained modified assets need explicit interpretation.
+
+Old #161 ASSET_XMP:
+  #171 ASSET_XMP [printed p85 / PDF p92 / XMP-ASSETS]: When non-isolated files including source email assets: Use pdfmailmeta:assets as an unordered set of one or more descriptions under Table 16; isolated retained modified assets need explicit interpretation.
+
+Old #162 ASSET_XMP_FIELDS:
+  #172 ASSET_XMP_FIELDS [printed p85 / PDF p92 / XMP-ASSETS]: Source asset records require canonical Table 16 Filename, SizeInBytes, ContentType and Checksum fields. Text fields are normal XMP strings, not URI, array or structure values; aliases such as Format or CheckSum do not replace required properties.
+
+Old #163 ASSET_MATCH:
+  #169 ASSET_MATCH [printed p85 / PDF p92 / XMP-ASSET-IDENTITY]: When source asset descriptions are supplied: Each description describes the corresponding source asset; path-bearing XMP names and sanitized PDF names need not be literally equal, and an ambiguous match does not prove correspondence.
+
+Old #164 ASSET_SIZE_TYPE:
+  #180 ASSET_SIZE_TYPE [printed p85 / PDF p92 / T16-SizeInBytes]: Source asset SizeInBytes is a non-negative decimal integer. Signed and zero-padded lexical values are allowed; negative values, URI/array values, non-ASCII digits and Python-only underscore syntax cannot satisfy this type.
+
+Old #165 SOURCE_MIME_TYPE:
+  #175 SOURCE_MIME_TYPE [printed p85 / PDF p92 / T16-ContentType]: Each embedded Source associated file must declare its media type. This check concerns the embedded Source declaration; source-asset XMP ContentType has its own check. Bare Subtype presence and syntax are covered by the veraPDF PDF/A prerequisite. Table 17 gives common examples, not a closed list; a filename extension does not prove the actual media type.
+
+Old #166 ASSET_CONTENTTYPE:
+  #176 ASSET_CONTENTTYPE [printed p85 / PDF p92 / T16-ContentType]: Each applicable source-asset XMP record requires ContentType as normal text containing the IANA media type and required parameters. This check concerns the XMP field representation and presence. Comparison with the independently associated embedded Source and preservation of original parameters are separate checks. Table 17 gives common examples, not a closed list of permitted formats.
+
+Old #167 ASSET_NUMBERMESSAGES_TYPE:
+  #178 ASSET_NUMBERMESSAGES_TYPE [printed p85 / PDF p92 / T16-NumberMessages]: A supplied source-asset NumberMessages value must be a normal nonnegative XMP integer.
+  #179 ASSET_NUMBERMESSAGES_MATCH_RENDERED [printed p85 / PDF p92 / T16-NumberMessages]: NumberMessages must equal the successfully rendered emails attributable to that particular source-asset occurrence.
+
+Old #168 ASSET_CHECKSUM_FORM:
+  #173 ASSET_CHECKSUM_FORM [printed p85 / PDF p92 / T16-Checksum]: Each source asset record requires Checksum as normal text containing exactly 32 ASCII hexadecimal characters, either case. This check establishes representation only. Matching the actual source bytes is a separate MD5 comparison.
+
+Old #169 ASSET_MD5_MATCH:
+  #174 ASSET_MD5_MATCH [printed p85 / PDF p92 / T16-Checksum]: The source asset Checksum must equal the MD5 digest of the independently associated stored source bytes. Valid hexadecimal syntax alone does not establish a match. Unavailable or ambiguous byte association leaves this comparison unverified.
+
+Old #170 ASSET_CONTENTTYPE_GENERIC:
+  #177 ASSET_CONTENTTYPE_GENERIC [printed p85 / PDF p92 / T16-GENERIC]: When source asset ContentType: Avoid generic application/octet-stream, application/zip and text/plain; source media type absence and generic values are not the same condition.
+
+Old #171 EMAIL_XMP_CONTAINER:
+  #181 EMAIL_XMP_CONTAINER [printed p86 / PDF p93 / XMP-EMAILS]: Email metadata must use structured document-level XMP email containers in an unordered set with the required metadata namespace and prefix.
+  #57 EMAIL_XMP_CARDINALITY [printed p63 / PDF p70 / EMAIL-M-CARDINALITY]: Email XMP record count must be exactly one for s/si and at least two for m/mi.
+  #182 MESSAGE_CORE_FIELDS_SOURCE_REQUIRED [printed p86 / PDF p93 / XMP-EMAILS]: Email XMP must include each applicable nonempty original Core Field and the attachment count when the original has attachments.
+
+Old #172 MESSAGE_TO_XMP:
+  #204 MESSAGE_TO_XMP [printed p86 / PDF p93 / T18-To]: A supplied To value must be an ordered sequence of FOAF Agent containers.
+
+Old #173 MESSAGE_TO_FOAF:
+  #205 MESSAGE_TO_FOAF [printed p86 / PDF p93 / T18-To]: A supplied To value must contain an ordered sequence of FOAF Agent containers, each with required foaf:mbox and optional foaf:name or other permitted FOAF properties.
+
+Old #174 MESSAGE_RAW_TO_XMP:
+  #199 MESSAGE_RAW_TO_XMP [printed p86 / PDF p93 / T18-Raw-To]: A supplied Raw-To value must be a normal XMP free-text string rather than an RDF URI, array or structure. Empty text is permitted.
+
+Old #175 MESSAGE_FROM_XMP:
+  #187 MESSAGE_FROM_XMP [printed p86 / PDF p93 / T18-From]: A supplied From value must be an ordered sequence of FOAF Agent containers.
+
+Old #176 MESSAGE_FROM_FOAF:
+  #188 MESSAGE_FROM_FOAF [printed p86 / PDF p93 / T18-From]: A supplied From value must contain an ordered sequence of FOAF Agent containers, each with required foaf:mbox and optional foaf:name or other permitted FOAF properties.
+
+Old #177 MESSAGE_RAW_FROM_XMP:
+  #196 MESSAGE_RAW_FROM_XMP [printed p86 / PDF p93 / T18-Raw-From]: A supplied Raw-From value must be a normal XMP free-text string rather than an RDF URI, array or structure. Empty text is permitted.
+
+Old #178 MESSAGE_SENT_XMP:
+  #200 MESSAGE_SENT_XMP [printed p86 / PDF p93 / T18-Sent]: For each email in s/si/m/mi, Sent is required and has xsd:dateTime type. The creator may normalize an erroneous source date; mandatory internal presence does not depend on source availability.
+
+Old #179 MESSAGE_SENT_FORMAT:
+  #201 MESSAGE_SENT_FORMAT [printed p86 / PDF p93 / T18-Sent]: Sent is required for each applicable email and must be a valid xsd:dateTime; it is not an optional field. Sent is a normal simple value rather than an RDF URI/container. Use the XML Schema 1.0 dateTime lexical/value rules: timezone is optional, legal end-of-day and extended/negative years are permitted, and Python datetime limits are not schema limits. Instant comparison is separate from lexical validity.
+
+Old #180 MESSAGE_RAW_SENT_REQUIRED_IF_INVALID:
+  #197 MESSAGE_RAW_SENT_REQUIRED_IF_INVALID [printed p86 / PDF p93 / T18-Raw-Sent]: When s si m mi; conditional; nonempty source-field inclusion is a distinct source-dependent check: Raw-Sent: required if original date cannot be represented as valid XMP dateTime; otherwise SHOULD NOT be present; free text reflecting source date. Supplied free text must be a normal simple string, not an RDF URI or container, independently of source availability. Empty strings remain permitted by this type; conditional presence and original-source fidelity remain separate.
+
+Old #181 MESSAGE_RAW_SENT_OMIT_IF_VALID:
+  #198 MESSAGE_RAW_SENT_OMIT_IF_VALID [printed p86 / PDF p93 / T18-Raw-Sent]: When s si m mi; conditional; nonempty source-field inclusion is a distinct source-dependent check: Raw-Sent: required if original date cannot be represented as valid XMP dateTime; otherwise SHOULD NOT be present; free text reflecting source date.
+
+Old #182 MESSAGE_SUBJECT_XMP:
+  #203 MESSAGE_SUBJECT_XMP [printed p86 / PDF p93 / T18-Subject]: A supplied Subject must be a normal XMP free-text string; URI, array and structure values do not satisfy this representation.
+
+Old #183 MESSAGE_ID_XMP:
+  #192 MESSAGE_ID_XMP [printed p86 / PDF p93 / T18-Message-ID]: A supplied messageid must be a normal XMP free-text string; it is an identifier, not a FOAF mailbox.
+
+Old #184 MAIL_GUID_XMP:
+  #190 MAIL_GUID_XMP [printed p86 / PDF p93 / T18-Mail_GUID]: Each represented email requires Mail_GUID as a normal non-URI XMP simple string. No canonical UUID lexical form is required. Preserve exact Unicode text without trimming, case-folding or normalization. This check establishes presence and representation; uniqueness is checked separately.
+
+Old #185 MAIL_GUID_UNIQUE:
+  #191 MAIL_GUID_UNIQUE [printed p86 / PDF p93 / T18-Mail_GUID]: Mail_GUID must identify one email uniquely among the represented email records. Compare exact decoded Unicode strings without trimming, case-folding or normalization. Supplied-value presence and type are checked separately; an unreadable identity inventory cannot prove uniqueness.
+
+Old #186 MESSAGE_SIZE_XMP:
+  #202 MESSAGE_SIZE_XMP [printed p86 / PDF p93 / T18-SizeInBytes]: A supplied email SizeInBytes must be a normal nonnegative XMP integer; omission remains permitted by Table 18.
+
+Old #187 MESSAGE_ATTACHMENT_COUNT_XMP:
+  #193 MESSAGE_ATTACHMENT_COUNT_XMP [printed p86 / PDF p93 / T18-NumberAttachments]: A supplied NumberAttachments must be a normal nonnegative XMP integer. Independently owned attachment metadata requires its presence and a positive value, while establishing only a positive lower bound rather than the original total.
+
+Old #188 MESSAGE_CC_XMP:
+  #185 MESSAGE_CC_XMP [printed p86 / PDF p93 / T18-Cc]: A supplied Cc value must be an ordered sequence of FOAF Agent containers.
+
+Old #189 MESSAGE_CC_FOAF:
+  #186 MESSAGE_CC_FOAF [printed p86 / PDF p93 / T18-Cc]: A supplied Cc value must contain an ordered sequence of FOAF Agent containers, each with required foaf:mbox and optional foaf:name or other permitted FOAF properties.
+
+Old #190 MESSAGE_RAW_CC_XMP:
+  #195 MESSAGE_RAW_CC_XMP [printed p86 / PDF p93 / T18-Raw-Cc]: A supplied Raw-Cc value must be a normal XMP free-text string rather than an RDF URI, array or structure. Empty text is permitted.
+
+Old #191 MESSAGE_BCC_XMP:
+  #183 MESSAGE_BCC_XMP [printed p86 / PDF p93 / T18-Bcc]: A supplied Bcc value must be an ordered sequence of FOAF Agent containers.
+
+Old #192 MESSAGE_BCC_FOAF:
+  #184 MESSAGE_BCC_FOAF [printed p86 / PDF p93 / T18-Bcc]: A supplied Bcc value must contain an ordered sequence of FOAF Agent containers, each with required foaf:mbox and optional foaf:name or other permitted FOAF properties.
+
+Old #193 MESSAGE_RAW_BCC_XMP:
+  #194 MESSAGE_RAW_BCC_XMP [printed p86 / PDF p93 / T18-Raw-Bcc]: A supplied Raw-Bcc value must be a normal XMP free-text string rather than an RDF URI, array or structure. Empty text is permitted.
+
+Old #194 MESSAGE_INREPLYTO_XMP:
+  #189 MESSAGE_INREPLYTO_XMP [printed p86 / PDF p93 / T18-In-Reply-To]: A supplied In-Reply-To must be an unordered rdf:Bag of normal free-text identifiers under the recorded local interpretation; Seq/Alt, scalar or URI members do not satisfy it.
+
+Old #195 ATTACHMENT_XMP:
+  #207 ATTACHMENT_XMP_CONTAINER [printed p89 / PDF p96 / XMP-ATTACHMENT-RECORDS]: Document-level XMP must include pdfmailmeta:attachments as an unordered set of zero or more Table 19 attachment descriptions.
+  #206 ATTACHMENT_XMP_INVENTORY_RECOMMENDED [printed p89 / PDF p96 / XMP-ATTACHMENT-INVENTORY]: Document-level attachment metadata should describe all original email attachments, including those removed for policy reasons.
+
+Old #196 ATTACHMENT_XMP_FILENAME:
+  #212 ATTACHMENT_XMP_FILENAME [printed p89 / PDF p96 / T19-Filename]: Each attachment description must supply Filename as a nonempty normal XMP text string; RDF URI or array values cannot supply it.
+
+Old #197 ATTACHMENT_XMP_SIZE_PRESENT:
+  #217 ATTACHMENT_XMP_SIZE_PRESENT [printed p89 / PDF p96 / T19-SizeInBytes]: Each attachment description must supply the canonical SizeInBytes property.
+
+Old #198 ATTACHMENT_XMP_SIZE_TYPE:
+  #218 ATTACHMENT_XMP_SIZE_TYPE [printed p89 / PDF p96 / T19-SizeInBytes]: Each supplied attachment SizeInBytes must be a normal nonnegative XMP integer; zero-byte placeholders are permitted.
+
+Old #199 ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID:
+  #214 ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID [printed p89 / PDF p96 / T19-Mail_GUID]: Attachment Mail_GUID is normal text identifying the containing email and is required when Message-ID is absent. A supplied GUID must match an email GUID in document XMP; an incomplete email GUID inventory leaves correspondence unavailable.
+
+Old #200 ATTACHMENT_XMP_CONTENTTYPE:
+  #210 ATTACHMENT_XMP_CONTENTTYPE [printed p89 / PDF p96 / T19-Content-Type]: Each attachment description must supply canonical Content-Type as normal XMP free text; ContentType or Format aliases cannot supply it. Malformed media-type text is permitted.
+
+Old #201 ATTACHMENT_XMP_CONTENTTYPE_MATCH:
+  #211 ATTACHMENT_XMP_CONTENTTYPE_MATCH [printed p89 / PDF p96 / T19-Content-Type]: Attachment XMP Content-Type must faithfully preserve the original attachment media-type field, including parameters and potential original errors.
+
+Old #202 ATTACHMENT_XMP_CHECKSUM_FORM:
+  #208 ATTACHMENT_XMP_CHECKSUM_FORM [printed p89 / PDF p96 / T19-CheckSum]: Table 19 CheckSum is optional. When present it must be a normal string of exactly 32 ASCII hexadecimal characters (either case). Empty, URI, array or malformed values fail; the property remains optional when absent.
+
+Old #203 FONTS_NONE:
+  #219 FONTS_NONE [operational; no specification page]: No fonts discovered is an observation, not an EA-PDF requirement that every PDF contain fonts. Actual text/font use and the applicable PDF/A font rules determine conformance.
+
+Old #204 XMP_KEYWORDS_UNCHECKED:
+  #220 XMP_KEYWORDS_UNCHECKED [operational; no specification page]: For all profiles: XMP pdf:Keywords includes EA-PDF.
+
+Old #205 STRUCTTREE_PRESENT:
+  #221 STRUCTTREE_PRESENT [operational; no specification page]: For all profiles: Logical structure and the custom EA-PDF tag set are optional; absence alone is not an EA-PDF failure.
+
+Old #206 PDFA_XMP_UNCHECKED:
+  #222 PDFA_XMP_UNCHECKED [operational; no specification page]: When relevant underlying feature or diagnostic condition: Missing or unreadable XMP prevents identification/asset checks; report dependency failure without calling it a legitimate N/A.
+
+Old #207 EAPDF_XMP_UNCHECKED:
+  #223 EAPDF_XMP_UNCHECKED [operational; no specification page]: When relevant underlying feature or diagnostic condition: Missing or unreadable XMP prevents identification/asset checks; report dependency failure without calling it a legitimate N/A.
+
+Old #208 SOURCE_MIME_NONE:
+  #224 SOURCE_MIME_NONE [operational; no specification page]: When relevant underlying feature or diagnostic condition: Missing source MIME evidence is a diagnostic dependency of the actual embedded Subtype and asset ContentType requirements, not an independent new source format rule.
+
+Old #209 ASSET_XMP_SKIPPED:
+  #225 ASSET_XMP_SKIPPED [operational; no specification page]: When relevant underlying feature or diagnostic condition: Missing or unreadable XMP prevents identification/asset checks; report dependency failure without calling it a legitimate N/A.
+
+Old #210 MESSAGE_METADATA_SKIPPED:
+  #226 MESSAGE_METADATA_SKIPPED [operational; no specification page]: When relevant underlying feature or diagnostic condition: Unavailable source evidence prevents source comparisons, but does not waive mandatory PDF/XMP-internal checks.
+
+Old #211 OPEN:
+  #227 OPEN [operational; no specification page]: When relevant underlying feature or diagnostic condition: File readability is a validation prerequisite rather than an additional EA-PDF file-format clause.
+
+Old #212 PROFILE_RULES_SKIPPED:
+  #228 PROFILE_RULES_SKIPPED [operational; no specification page]: When relevant underlying feature or diagnostic condition: Profile-specific checks require an interpretable conformance declaration; unavailable profile prevents a complete result.
+
+Old #213 VALIDATION_INCOMPLETE:
+  #229 VALIDATION_INCOMPLETE [operational; no specification page]: When relevant underlying feature or diagnostic condition: An unevaluated applicable check cannot establish conformance; this is validation result policy, not a new document field.
+

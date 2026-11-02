@@ -1,0 +1,146 @@
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -10771,7 +10771,7 @@
+     "spec_excerpt": "When s si m mi; optional; nonempty source-field inclusion is a distinct source-dependent check: Raw-To: free text directly reflecting original To. Supplied free text must be a normal simple string, not an RDF URI or container, independently of source availability. Empty strings remain permitted by this type; conditional presence and original-source fidelity remain separate.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+-      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
++      "WARN": "{message}",
+       "N/A": "Not applied because {explanation}.",
+       "FAIL": "Supplied Raw-To does not preserve source address data or its required text type."
+     },
+@@ -10834,6 +10834,15 @@
+       "basis": "EA-PDF Table18 supplied raw address data reflects the original header; known quoted mailbox data must not be erased by display whitespace normalization.",
+       "scope": "Compare known ASCII mailbox data from original header occurrences before normalized raw-text comparison. Missing optional fields remain optional; unsupported/missing source occurrence evidence does not establish a new mailbox comparison.",
+       "limit": "Not complete raw-header byte fidelity, encoded-word legality, SMTPUTF8 or folded/obsolete syntax certification."
++    },
++    "empty_raw_text_review": {
++      "date": "2026-10-21",
++      "basis": "EA-PDF Table18: normal empty text is physically present and remains distinct from optional omission. Supplied values still reflect a matched source header; empty text cannot reflect known nonempty source text.",
++      "boundary": "Empty matching original values remain permitted. Unknown original text decoding remains unavailable, not a new value failure. Complete source normalization is not certified."
++    },
++    "optional_absence_review": {
++      "date": "2026-10-21",
++      "basis": "Table18 makes this raw property optional, without a SHOULD presence requirement for ordinary source headers. Absence is established N/A; required Core Field/FOAF source representation remains separately checked."
+     }
+   },
+   "MESSAGE_METADATA_SKIPPED": {
+@@ -11024,7 +11033,7 @@
+     "spec_excerpt": "When s si m mi; optional; nonempty source-field inclusion is a distinct source-dependent check: Raw-From: free text directly reflecting original From. Supplied free text must be a normal simple string, not an RDF URI or container, independently of source availability. Empty strings remain permitted by this type; conditional presence and original-source fidelity remain separate.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+-      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
++      "WARN": "{message}",
+       "N/A": "Not applied because {explanation}.",
+       "FAIL": "Supplied Raw-From does not preserve source address data or its required text type."
+     },
+@@ -11087,6 +11096,15 @@
+       "basis": "EA-PDF Table18 supplied raw address data reflects the original header; known quoted mailbox data must not be erased by display whitespace normalization.",
+       "scope": "Compare known ASCII mailbox data from original header occurrences before normalized raw-text comparison. Missing optional fields remain optional; unsupported/missing source occurrence evidence does not establish a new mailbox comparison.",
+       "limit": "Not complete raw-header byte fidelity, encoded-word legality, SMTPUTF8 or folded/obsolete syntax certification."
++    },
++    "empty_raw_text_review": {
++      "date": "2026-10-21",
++      "basis": "EA-PDF Table18: normal empty text is physically present and remains distinct from optional omission. Supplied values still reflect a matched source header; empty text cannot reflect known nonempty source text.",
++      "boundary": "Empty matching original values remain permitted. Unknown original text decoding remains unavailable, not a new value failure. Complete source normalization is not certified."
++    },
++    "optional_absence_review": {
++      "date": "2026-10-21",
++      "basis": "Table18 makes this raw property optional, without a SHOULD presence requirement for ordinary source headers. Absence is established N/A; required Core Field/FOAF source representation remains separately checked."
+     }
+   },
+   "MESSAGE_SENT_XMP": {
+@@ -11585,7 +11603,7 @@
+     "spec_excerpt": "When s si m mi; optional; nonempty source-field inclusion is a distinct source-dependent check: Raw-Cc: free text directly reflecting source Cc. Supplied free text must be a normal simple string, not an RDF URI or container, independently of source availability. Empty strings remain permitted by this type; conditional presence and original-source fidelity remain separate.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+-      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
++      "WARN": "{message}",
+       "N/A": "Not applied because {explanation}.",
+       "FAIL": "Supplied Raw-Cc does not preserve source address data or its required text type."
+     },
+@@ -11648,6 +11666,15 @@
+       "basis": "EA-PDF Table18 supplied raw address data reflects the original header; known quoted mailbox data must not be erased by display whitespace normalization.",
+       "scope": "Compare known ASCII mailbox data from original header occurrences before normalized raw-text comparison. Missing optional fields remain optional; unsupported/missing source occurrence evidence does not establish a new mailbox comparison.",
+       "limit": "Not complete raw-header byte fidelity, encoded-word legality, SMTPUTF8 or folded/obsolete syntax certification."
++    },
++    "empty_raw_text_review": {
++      "date": "2026-10-21",
++      "basis": "EA-PDF Table18: normal empty text is physically present and remains distinct from optional omission. Supplied values still reflect a matched source header; empty text cannot reflect known nonempty source text.",
++      "boundary": "Empty matching original values remain permitted. Unknown original text decoding remains unavailable, not a new value failure. Complete source normalization is not certified."
++    },
++    "optional_absence_review": {
++      "date": "2026-10-21",
++      "basis": "Table18 makes this raw property optional, without a SHOULD presence requirement for ordinary source headers. Absence is established N/A; required Core Field/FOAF source representation remains separately checked."
+     }
+   },
+   "MESSAGE_BCC_XMP": {
+@@ -11808,7 +11835,7 @@
+     "spec_excerpt": "When s si m mi; optional; nonempty source-field inclusion is a distinct source-dependent check: Raw-Bcc: free text directly reflecting source Bcc. Supplied free text must be a normal simple string, not an RDF URI or container, independently of source availability. Empty strings remain permitted by this type; conditional presence and original-source fidelity remain separate.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+-      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
++      "WARN": "{message}",
+       "N/A": "Not applied because {explanation}.",
+       "FAIL": "Supplied Raw-Bcc does not preserve source address data or its required text type."
+     },
+@@ -11871,6 +11898,15 @@
+       "basis": "EA-PDF Table18 supplied raw address data reflects the original header; known quoted mailbox data must not be erased by display whitespace normalization.",
+       "scope": "Compare known ASCII mailbox data from original header occurrences before normalized raw-text comparison. Missing optional fields remain optional; unsupported/missing source occurrence evidence does not establish a new mailbox comparison.",
+       "limit": "Not complete raw-header byte fidelity, encoded-word legality, SMTPUTF8 or folded/obsolete syntax certification."
++    },
++    "empty_raw_text_review": {
++      "date": "2026-10-21",
++      "basis": "EA-PDF Table18: normal empty text is physically present and remains distinct from optional omission. Supplied values still reflect a matched source header; empty text cannot reflect known nonempty source text.",
++      "boundary": "Empty matching original values remain permitted. Unknown original text decoding remains unavailable, not a new value failure. Complete source normalization is not certified."
++    },
++    "optional_absence_review": {
++      "date": "2026-10-21",
++      "basis": "Table18 makes this raw property optional, without a SHOULD presence requirement for ordinary source headers. Absence is established N/A; required Core Field/FOAF source representation remains separately checked."
+     }
+   },
+   "MESSAGE_INREPLYTO_XMP": {
+@@ -11949,8 +11985,9 @@
+     "spec_excerpt": "When s si m mi; conditional; nonempty source-field inclusion is a distinct source-dependent check: Raw-Sent: required if original date cannot be represented as valid XMP dateTime; otherwise SHOULD NOT be present; free text reflecting source date. Supplied free text must be a normal simple string, not an RDF URI or container, independently of source availability. Empty strings remain permitted by this type; conditional presence and original-source fidelity remain separate.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+-      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+-      "N/A": "Not applied because {explanation}."
++      "FAIL": "Raw-Sent is missing when required, has an invalid text type, or does not reflect the matched source date.",
++      "N/A": "Not applied because {explanation}.",
++      "WARN": "{message}"
+     },
+     "spec_excerpt_kind": "Reviewed paraphrase, not a verbatim specification quotation",
+     "requirements_review": {
+@@ -12007,6 +12044,11 @@
+         "PDFA-4F": [],
+         "PDFA-4E": []
+       }
++    },
++    "empty_raw_text_review": {
++      "date": "2026-10-21",
++      "basis": "EA-PDF Table18: normal empty text is physically present and remains distinct from optional omission. Supplied values still reflect a matched source header; empty text cannot reflect known nonempty source text.",
++      "boundary": "Empty matching original values remain permitted. Unknown original text decoding remains unavailable, not a new value failure. Complete source normalization is not certified."
+     }
+   },
+   "MESSAGE_RAW_SENT_OMIT_IF_VALID": {
+@@ -12016,7 +12058,7 @@
+     "spec_excerpt": "When s si m mi; conditional; nonempty source-field inclusion is a distinct source-dependent check: Raw-Sent: required if original date cannot be represented as valid XMP dateTime; otherwise SHOULD NOT be present; free text reflecting source date.",
+     "plain_language_template": {
+       "PASS": "Recommendation satisfied.",
+-      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
++      "WARN": "{message}",
+       "N/A": "Not applied because {explanation}."
+     },
+     "spec_excerpt_kind": "Reviewed paraphrase, not a verbatim specification quotation",
+@@ -12074,6 +12116,10 @@
+         "PDFA-4F": [],
+         "PDFA-4E": []
+       }
++    },
++    "physical_presence_review": {
++      "date": "2026-10-21",
++      "basis": "The SHOULD-not-presence recommendation counts a supplied Raw-Sent property even when its text is empty; it is independent of the provided-value fidelity check."
+     }
+   },
+   "ATTACHMENT_XMP": {

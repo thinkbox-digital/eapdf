@@ -1,0 +1,133 @@
+{
+  "input_type": "eml",
+  "creator_version": "1.6.0-beta.7",
+  "filename_policy": "Lower-case input type, input filename stem, _archive for multiple inputs, and EA-PDF profile. Single-message mailbox examples contain one extracted child.",
+  "creator_sha256": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
+  "validator_sha256": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4",
+  "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
+  "configuration_sha256": "9dd5ea95b331668c1017bc2005c5a9319e8258297e3c27b759b206801ac8e191",
+  "sources": {
+    "in/Agenda and timeline slides.eml": "c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6",
+    "in/eml_01_403.eml": "311ec37e7324327f8f216266f738fa90c7cee89c36f3f0d583d33752d60934a9"
+  },
+  "single_message_policy": "First listed input file.",
+  "archive_policy": "Every message in all listed inputs.",
+  "validation": "Standalone Java validator, bundled real PDF/A and selected ISO structure checks, including collection children; default validator limits unchanged.",
+  "parallelism": {
+    "creator_jobs": 2,
+    "creator_heap_mb": 2048,
+    "concurrent_formats": 2
+  },
+  "samples": [
+    {
+      "profile": "1s",
+      "file": "eml_Agenda_and_timeline_slides_1s.pdf",
+      "sha256": "612019ea6593c077bb54376bf5c6091442a45ea11d677d03fe5ddd503dc5bcdf",
+      "pages": 2,
+      "inputs": [
+        "in/Agenda and timeline slides.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 3.729
+    },
+    {
+      "profile": "1si",
+      "file": "eml_Agenda_and_timeline_slides_1si.pdf",
+      "sha256": "41e30d50a76cc3b367623262f6f1054d6205b99a1b499cf942a929a994837ad7",
+      "pages": 2,
+      "inputs": [
+        "in/Agenda and timeline slides.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 3.946
+    },
+    {
+      "profile": "1m",
+      "file": "eml_Agenda_and_timeline_slides_archive_1m.pdf",
+      "sha256": "c7633ea1d0632f1dae899765b4b167b3980d82be81cc4b64a8cb05da7c0635a4",
+      "pages": 5,
+      "inputs": [
+        "in/Agenda and timeline slides.eml",
+        "in/eml_01_403.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.964
+    },
+    {
+      "profile": "1mi",
+      "file": "eml_Agenda_and_timeline_slides_archive_1mi.pdf",
+      "sha256": "3009112a24f1eff66655e7511a51993a45467f675ce04bb9816bf269b9440d05",
+      "pages": 5,
+      "inputs": [
+        "in/Agenda and timeline slides.eml",
+        "in/eml_01_403.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.039
+    },
+    {
+      "profile": "1c",
+      "file": "eml_Agenda_and_timeline_slides_archive_1c.pdf",
+      "sha256": "27d66ef4a55a2336524df1be7c1b34f13b96a6eeedb6497ab7b23bb9b852f90c",
+      "pages": 1,
+      "inputs": [
+        "in/Agenda and timeline slides.eml",
+        "in/eml_01_403.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 5.148
+    },
+    {
+      "profile": "1ci",
+      "file": "eml_Agenda_and_timeline_slides_archive_1ci.pdf",
+      "sha256": "6fbb6cfe7b99cd6dd4fd67960bc3b98a05a6971b946a247c5e4a215c9fdf6e9a",
+      "pages": 1,
+      "inputs": [
+        "in/Agenda and timeline slides.eml",
+        "in/eml_01_403.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.743
+    }
+  ],
+  "sidecars": [
+    {
+      "file": "eml_Agenda_and_timeline_slides_archive_1c_index.xlsx",
+      "sha256": "c537b88489918eb33b6f003750f483d83b09b6a8b364c68b8ec73ae2b2e292fd",
+      "xlsx_package": "PASS"
+    },
+    {
+      "file": "eml_Agenda_and_timeline_slides_archive_1c_finding_aid.pdf",
+      "sha256": "27c905c02ef55aa63a7a0a3135bd360151d839c11ae0b0c5ecf3f7ab6660bea3",
+      "pdfa": "PASS"
+    },
+    {
+      "file": "eml_Agenda_and_timeline_slides_archive_1ci_index.xlsx",
+      "sha256": "374677296df85a4a8147e7617a3455dbbadd68a731e6b6529480a621ba824986",
+      "xlsx_package": "PASS"
+    },
+    {
+      "file": "eml_Agenda_and_timeline_slides_archive_1ci_finding_aid.pdf",
+      "sha256": "b43e5b02fc7f91c25c3c9146919a8eb450c4e5f1f1e13bf831bf85221b5473dc",
+      "pdfa": "PASS"
+    }
+  ]
+}

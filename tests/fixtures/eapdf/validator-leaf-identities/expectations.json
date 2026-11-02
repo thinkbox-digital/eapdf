@@ -1,0 +1,130 @@
+{
+  "authority": "EA-PDF1.0 following Table7, printedp70: every Mail_MessageID and Mail_GUID value must match a corresponding document XMP property",
+  "boundary": "Supplied canonical leaf entries are checked; neither identity key is required on a leaf. Current field typing, GUID exact matching and MessageID lexical policy are retained.",
+  "cases": [
+    {
+      "file": "leaf-guid-unrelated.pdf",
+      "sha256": "626b3fb66f6aa427fb4d11d106cd8beb34637135f7644344897924a8330471d3",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPM_EMAIL_CONTENT_SET_OWNERSHIP",
+        "DPM_MAIL_GUID_MATCH"
+      ],
+      "identity_key": "/Mail_GUID",
+      "identity_code": "DPM_MAIL_GUID_MATCH",
+      "expected_leaf_level": "FAIL",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "DPM_MAIL_GUID_MATCH"
+          ]
+        },
+        "reason": "Independent logical content ownership contradicts the email DPart ancestry; identifier presence/equality remains separate.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "leaf-messageid-unrelated.pdf",
+      "sha256": "989456d5c4af71b17d8d5235f67cdcde9629440d2001f3f43bfcb16970f1f3b8",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPM_MAIL_MESSAGEID_MATCH"
+      ],
+      "identity_key": "/Mail_MessageID",
+      "identity_code": "DPM_MAIL_MESSAGEID_MATCH",
+      "expected_leaf_level": "FAIL"
+    },
+    {
+      "file": "leaf-guid-matching.pdf",
+      "sha256": "d73f4fa82dc2b236b82406bcfd6a5d0d34750628f9379d2fa72176ec2c105ed8",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "identity_key": "/Mail_GUID",
+      "identity_code": "DPM_MAIL_GUID_MATCH",
+      "expected_leaf_level": "PASS"
+    },
+    {
+      "file": "leaf-messageid-matching.pdf",
+      "sha256": "9faf73c9c70615e6b7c3822cde652ffd18bc53dc5fd9f457ee40abe26a878f7c",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "identity_key": "/Mail_MessageID",
+      "identity_code": "DPM_MAIL_MESSAGEID_MATCH",
+      "expected_leaf_level": "PASS"
+    },
+    {
+      "file": "leaf-guid-name.pdf",
+      "sha256": "f337d07a214311d64bf0f77d7a77260c2fffb4c9659efe7b40bc1737632a5178",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPM_MAIL_GUID_MATCH"
+      ],
+      "identity_key": "/Mail_GUID",
+      "identity_code": "DPM_MAIL_GUID_MATCH",
+      "expected_leaf_level": "FAIL"
+    },
+    {
+      "file": "leaf-messageid-name.pdf",
+      "sha256": "685134a077bde704a7cf2c81d04a46a2ec2cf075933e1c436cde756c2a0134d8",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPM_MAIL_MESSAGEID_MATCH"
+      ],
+      "identity_key": "/Mail_MessageID",
+      "identity_code": "DPM_MAIL_MESSAGEID_MATCH",
+      "expected_leaf_level": "FAIL"
+    },
+    {
+      "file": "leaf-guid-unreadable.pdf",
+      "sha256": "18ac15a57114b6fa46db401f8b4cd7cfe4c0e0cb6fbf88c4bc01d63b29895896",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "identity_key": "/Mail_GUID",
+      "identity_code": "DPM_MAIL_GUID_MATCH",
+      "expected_leaf_level": "WARN"
+    },
+    {
+      "file": "leaf-messageid-unreadable.pdf",
+      "sha256": "fe46075996860f5118a5a1f7489cf44ba7939263721f975f82b61b54ac96e692",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "identity_key": "/Mail_MessageID",
+      "identity_code": "DPM_MAIL_MESSAGEID_MATCH",
+      "expected_leaf_level": "WARN"
+    },
+    {
+      "file": "leaf-guid-empty.pdf",
+      "sha256": "0148bc8571f803b2b38af109217a361a0cb133a5b189e8da0b09cabae962dc7c",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPM_EMAIL_CONTENT_SET_OWNERSHIP",
+        "DPM_MAIL_GUID_MATCH"
+      ],
+      "identity_key": "/Mail_GUID",
+      "identity_code": "DPM_MAIL_GUID_MATCH",
+      "expected_leaf_level": "FAIL",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "DPM_MAIL_GUID_MATCH"
+          ]
+        },
+        "reason": "Independent logical content ownership contradicts the email DPart ancestry; identifier presence/equality remains separate.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "leaf-messageid-empty.pdf",
+      "sha256": "ca090d51fd3079b2d6b6cbfcf90fa14b1d0eaa21606d7d8b62a50780a97a4782",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPM_MAIL_MESSAGEID_MATCH"
+      ],
+      "identity_key": "/Mail_MessageID",
+      "identity_code": "DPM_MAIL_MESSAGEID_MATCH",
+      "expected_leaf_level": "FAIL"
+    }
+  ]
+}

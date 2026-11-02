@@ -1,0 +1,238 @@
+--- a/validate_eapdf.py
++++ b/validate_eapdf.py
+@@ -2031,6 +2031,16 @@
+     visible=False
+     has_text=False
+     form_objects={}
++    paint_coverage={"structured":0,"artifact":0,"unmarked":0}
++    def record_paint():
++        if any(sequence["tag"]=="Artifact" for sequence in stack):
++            kind="artifact"
++        elif any(isinstance(sequence["mcid"],int) and not isinstance(sequence["mcid"],bool)
++                 and sequence["mcid"]>=0 for sequence in stack):
++            kind="structured"
++        else:
++            kind="unmarked"
++        paint_coverage[kind]+=1
+     for event in iter_content_instructions(page):
+         operator,operands=event["operator"],event["operands"]
+         if operator=="FORM_BEGIN":
+@@ -2075,13 +2085,19 @@
+         elif operator in ("Tj","TJ","'",'"') and text_open and text_operands_have_content(operands):
+             visible=True
+             has_text=True
++            record_paint()
+             for sequence in stack:
+                 sequence["has_text_object"]=True
+         elif operator in ("Do","INLINE IMAGE","BI","sh","S","s","f","F","f*","B","B*","b","b*"):
+             visible=True
++            target=dict_get(dict_get(event["resources"],"/XObject",None),str(operands[0]),None) if operator=="Do" and operands else None
++            # Form paint is assessed inside the form; an unmarked invocation
++            # can legitimately invoke content with its own structure MCIDs.
++            if safe_name(dict_get(target,"/Subtype",None))!="Form":
++                record_paint()
+     if stack or forms or text_open:
+         raise ValueError("Unclosed marked-content sequence or PDF text object")
+-    return {"sequences":sequences,"points":points,"visible":visible,"has_text_object":has_text,"forms":form_objects}
++    return {"sequences":sequences,"points":points,"visible":visible,"has_text_object":has_text,"forms":form_objects,"paint_coverage":paint_coverage}
+ 
+ def page_contents_nonempty(page):
+     try:
+@@ -5149,12 +5165,23 @@
+         types.update(source_body_media_types(part,depth+1))
+     return types
+ 
++def declared_content_sets_are_nonbody(pdf,nodes):
++    leaves=[node for node in nodes if node.get("start") is not None or node.get("end") is not None]
++    pages=page_objgen_map(pdf)
++    return bool(leaves) and not any(safe_name(node["dpm"].get("Mail_ContentSetType"))=="BodyRendering" for node in nodes) and all(
++        isinstance(node["dpm"].get("Mail_ContentSetType"),pikepdf.Name)
++        and page_range_from_dpart(node,pages) is not None for node in leaves)
++
+ def check_body_media_types(pdf,xroot,afiles,report):
+     sources=summarize_source_emails(afiles)
+     if xroot is None or not sources:
+         report.na("DPM_BODY_MEDIA_TYPE_MATCH_SOURCE","No inspectable source body is available for media-type comparison",{"reason":"Not applied because no readable email metadata or inspectable source body is available.","xmp_readable":xroot is not None,"inspectable_sources":len(sources)})
+         return
+     _root,_rootnode,nodes=get_dpart_nodes(pdf)
++    if declared_content_sets_are_nonbody(pdf,nodes):
++        report.na("DPM_BODY_MEDIA_TYPE_MATCH_SOURCE","No declared BodyRendering Content Set requires a body-media comparison",
++                  {"reason":"Every declared Content Set has a known non-body type and a valid page range; no BodyRendering DPart is declared."})
++        return
+     bodies=collect_body_content_sets(pdf,nodes)
+     checked=0
+     comparisons=[]
+@@ -5285,8 +5312,91 @@
+             ancestor=dict_get(ancestor,"/P",None)
+         references=text_references(field["elem"],page,set())
+         sequences.append({"page":next((page for page,has_text in references if page is not None),None),
+-                          "tag":field["type"],"has_text_object":any(has_text for page,has_text in references)})
++                          "field_objgen":field["objgen"],"tag":field["type"],"has_text_object":any(has_text for page,has_text in references)})
+     return sequences
++
++def check_tagging_recommendations(pdf,dpart_nodes,elements,report):
++    code="CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED"
++    pages=page_objgen_map(pdf)
++    scoped=set()
++    content_sets=[]
++    unresolved=[]
++    for node in dpart_nodes:
++        if node.get("start") is None and node.get("end") is None:
++            continue
++        span=page_range_from_dpart(node,pages)
++        content_sets.append({"object":node["objgen"],"type":safe_name(node["dpm"].get("Mail_ContentSetType"))})
++        if span is None:
++            unresolved.append({"object":node["objgen"],"reason":"Content Set page range is unavailable"})
++        else:
++            scoped.update(range(span[0],span[1]+1))
++    details={"strength":"SHOULD","scope":"All declared DPart Content Sets, a conservative superset of custom Content Sets",
++             "content_sets":content_sets,"pages":sorted(scoped),
++             "limits":"Syntactic content/annotation connections only; semantic equivalence and identification of every custom Content Set are not certified."}
++    object_references=set()
++    for element in elements:
++        children=dict_get(element["elem"],"/K",[])
++        for child in children if is_pdf_array(children) else [children]:
++            if safe_name(dict_get(child,"/Type",None))=="OBJR":
++                target=dict_get(child,"/Obj",None)
++                if target is not None:
++                    object_references.add(pdf_object_identity(target))
++    structure=dict_get(pdf.Root,"/StructTreeRoot",None)
++    marked=dict_get(dict_get(pdf.Root,"/MarkInfo",None),"/Marked",False) is True
++    coverage=[]
++    for number in sorted(scoped):
++        paint=analyze_page_content(pdf.pages[number-1])["paint_coverage"]
++        coverage.append(dict(page=number,**paint))
++        if paint["unmarked"] or not paint["structured"]:
++            unresolved.append({"page":number,"reason":"Unmarked paint or no structurally marked non-artifact paint",**paint})
++        for annotation in dict_get(pdf.pages[number-1].obj,"/Annots",[]):
++            if pdf_object_identity(annotation) not in object_references:
++                unresolved.append({"page":number,"object":objgen(annotation),"reason":"Annotation has no structure object reference"})
++    details["page_coverage"]=coverage
++    correspondence=[item["level"] for item in report.items if item["code"]=="STRUCTURE_CORRESPONDENCE"]
++    if structure is not None and not correspondence:
++        evidence=Report(report.path)
++        check_structure_correspondence(pdf,evidence)
++        correspondence=[item["level"] for item in evidence.items if item["code"]=="STRUCTURE_CORRESPONDENCE"]
++    connected=bool(correspondence) and set(correspondence)=={"PASS"}
++    if content_sets and scoped and structure is not None and marked and connected and not unresolved:
++        emit_if_unseen(report,"ok",code,"Declared Content Set page streams have connected structure coverage and a Tagged PDF declaration",details)
++    else:
++        details.update(assessment="unavailable" if not content_sets else "partial",unresolved=unresolved,
++                       structure_present=structure is not None,marked=marked,correspondence_verified=connected,
++                       reason="A structure root alone does not prove tagged page content; the custom subset and annotation semantics still require review.")
++        emit_if_unseen(report,"warn",code,"Tagged content coverage could not be established for every declared Content Set page",details)
++
++    code="HEADER_FIELDS_TAGGED_RECOMMENDED"
++    custom=[element for element in elements if element["type"].startswith("Mail_")]
++    if not custom:
++        emit_if_unseen(report,"na",code,"Header-tagging recommendation is conditional on custom EA-PDF tags",
++                       {"reason":"No custom EA-PDF structure tags are used; the section 9.7 custom-tag premise is absent."})
++        return
++    field_tags=[element for element in custom if element["type"] in ("Mail_FieldName","Mail_FieldValue")]
++    fields=[element for element in custom if element["type"]=="Mail_Field"]
++    text={item["field_objgen"]:item for item in structure_field_text_sequences(pdf)}
++    verified=[]
++    unresolved=[]
++    field_ids={field["objgen"] for field in fields}
++    for element in field_tags:
++        if element["parent_objgen"] not in field_ids:
++            unresolved.append({"object":element["objgen"],"reason":"Field markup has no immediate Mail_Field parent"})
++    for field in fields:
++        children=[element for element in field_tags if element["parent_objgen"]==field["objgen"]]
++        names=[element for element in children if element["type"]=="Mail_FieldName"]
++        missing=[element["objgen"] for element in children if not text.get(element["objgen"],{}).get("has_text_object")]
++        if not names or missing:
++            unresolved.append({"object":field["objgen"],"reason":"Missing rendered field-name or name/value text connection","unrendered":missing})
++        else:
++            verified.append({"object":field["objgen"],"names":len(names),
++                             "values":sum(element["type"]=="Mail_FieldValue" for element in children)})
++    # Observed field pairs cannot prove that no rendered header was omitted from
++    # tagging. That requires a source/rendered-header inventory beyond this view.
++    emit_if_unseen(report,"warn",code,"Observed header markup does not establish complete tagging of all rendered headers",
++                   {"strength":"SHOULD","assessment":"partial" if verified else "unavailable",
++                    "verified_fields":verified,"unresolved_fields":unresolved,
++                    "needed_evidence":"An inventory of all rendered header names and nonempty values, matched to their structure/content connections."})
+ 
+ def check_additional_rule_coverage(pdf, xroot, xmp_bytes, efiles, afiles, eapdf_conf, pdfa_part, report):
+     source_summary=summarize_source_email(afiles) if xroot is not None and len(flatten_email_records(xroot))<=1 else None
+@@ -5754,8 +5864,7 @@
+     struct_root=dict_get(pdf.Root,"/StructTreeRoot",None)
+     if struct_root is None:
+         check_user_property_source_values([],xroot,afiles,report)
+-        emit_if_unseen(report,"na","CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain a structure tree."})
+-        emit_if_unseen(report,"na","HEADER_FIELDS_TAGGED_RECOMMENDED","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain a structure tree with mail header tags."})
++        check_tagging_recommendations(pdf,dpart_nodes,[],report)
+         emit_if_unseen(report,"na","CUSTOM_TAG_MARKED_SEQUENCE_ONLY","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain logical structure or custom EA-PDF tags."})
+         emit_if_unseen(report,"na","CUSTOM_TAG_OPERAND_MATCH","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain logical structure or custom EA-PDF tags."})
+         emit_if_unseen(report,"na","CONTENT_SET_MAIL_CONTENTSET_TAGGED","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain logical structure or DPart content sets to compare."})
+@@ -5789,6 +5898,7 @@
+     if root_elem is not None:
+         walk_struct_elems(root_elem, elems, None,class_map=dict_get(struct_root,"/ClassMap",None))
+     check_user_property_source_values(elems,xroot,afiles,report)
++    check_tagging_recommendations(pdf,dpart_nodes,elems,report)
+     by_objgen={e["objgen"]:e for e in elems if e["objgen"] is not None}
+     custom=[e for e in elems if e["type"].startswith("Mail_")]
+     by_parent={}
+@@ -5931,17 +6041,6 @@
+                 emit_if_unseen(report,"fail",code,f"{tag} must have an appropriate PDF 1.7 role map",{"actual":actual})
+         else:
+             emit_if_unseen(report,"na",code,"Rule not applicable for this PDF",{"reason":f"Not applied because the PDF does not contain {tag} structure elements."})
+-
+-    if dict_get(pdf.Root,"/StructTreeRoot",None) is not None:
+-        emit_if_unseen(report,"ok","CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED","Logical structure / Tagged PDF is present for custom content sets",{"mail_tags":len(custom)})
+-    else:
+-        emit_if_unseen(report,"warn","CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED","Logical structure / Tagged PDF is not present for custom content sets",{"StructTreeRoot":None})
+-    if fieldnames or fieldvalues:
+-        emit_if_unseen(report,"ok","HEADER_FIELDS_TAGGED_RECOMMENDED","Header field tags are present",{"Mail_FieldName":len(fieldnames),"Mail_FieldValue":len(fieldvalues)})
+-    elif mail_profile:
+-        emit_if_unseen(report,"warn","HEADER_FIELDS_TAGGED_RECOMMENDED","Header field tags are not present in logical structure",{"Mail_FieldName":len(fieldnames),"Mail_FieldValue":len(fieldvalues)})
+-    else:
+-        emit_if_unseen(report,"na","HEADER_FIELDS_TAGGED_RECOMMENDED","Rule not applicable for this PDF",{"reason":"Not applied because header-field tagging recommendations apply only to mail profiles."})
+ 
+     def elem_has_userprop(elem, name):
+         return norm_text(userprops_by_name(elem).get(name,"")) != ""
+@@ -6106,6 +6205,7 @@
+         "has_collection": dict_get(pdf.Root,"/Collection",None) is not None,
+         "has_outlines": outlines_root is not None,
+         "content_set_count": len(leaf_nodes),
++        "known_nonbody_content_sets":declared_content_sets_are_nonbody(pdf,dpart_nodes),
+         "has_struct_tree": struct_root is not None,
+         "custom_types": custom_types,
+         "userprops_present": userprops_present,
+@@ -6145,10 +6245,13 @@
+     structure_rule=(code.startswith(("MAIL_MESSAGE_","MAIL_CONTENT","MAIL_FIELD","USERPROPS_"))
+                     or code in {"STRUCTTREE_ROOT_DOCUMENT","ROLEMAPNS_PRESENT","ROLEMAP_MAIL_TAGS",
+                                 "STRUCTURE_CORRESPONDENCE","LOGICAL_TS32005_DECLARATION",
+-                                "CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED",
+                                 "CUSTOM_TAG_MARKED_SEQUENCE_ONLY","CUSTOM_TAG_OPERAND_MATCH",
+                                 "HEADER_FIELDS_TAGGED_RECOMMENDED","CONTENT_SET_MAIL_CONTENTSET_TAGGED",
+                                 "MULTI_EMAIL_DOCUMENT_STRUCTURE"})
++    if code=="DPM_BODY_MEDIA_TYPE_MATCH_SOURCE" and ctx.get("known_nonbody_content_sets"):
++        return "All declared Content Sets have known non-body types and valid page ranges; no BodyRendering DPart is declared."
++    if code=="HEADER_FIELDS_TAGGED_RECOMMENDED" and not ctx["custom_types"]:
++        return "No custom EA-PDF tags activate the conditional header-tagging recommendation."
+     if structure_rule and not ctx["has_struct_tree"]:
+         return "The document has no optional logical structure to which this structure rule applies."
+     profile_groups={
+--- a/validator_rule_text.json
++++ b/validator_rule_text.json
+@@ -1107,8 +1107,8 @@
+     "spec_section": "EA-PDF 1.0 section 9.7, p. 74",
+     "spec_excerpt": "\"EA-PDF Creation Software SHOULD create PDF logical structure and use Tagged PDF for the content of all pages in custom Content Sets.\"",
+     "plain_language_template": {
+-      "PASS": "Recommendation satisfied.",
+-      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
++      "PASS": "{message}",
++      "WARN": "{message}",
+       "N/A": "Not applied because {explanation}."
+     }
+   },
+@@ -1185,7 +1185,7 @@
+     "spec_excerpt": "\"All header fields rendered into page content SHOULD be tagged with a Mail_FieldName and Mail_FieldValue custom EA-PDF tag.\"",
+     "plain_language_template": {
+       "PASS": "Recommendation satisfied.",
+-      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
++      "WARN": "{message}",
+       "N/A": "Not applied because {explanation}."
+     }
+   },

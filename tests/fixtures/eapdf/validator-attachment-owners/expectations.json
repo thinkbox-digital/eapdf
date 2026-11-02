@@ -1,0 +1,174 @@
+{
+  "authority": [
+    "EA-PDF Table 19: Mail_GUID identifies containing email and is optional when Message-ID is supplied.",
+    "EA-PDF Tables 7/18: email GUID mapping remains available when optional DPM Mail_MessageID is omitted.",
+    "EA-PDF 9.3: attachment annotation belongs to the owning email body, not a different email with a similar identifier."
+  ],
+  "supporting_identifier_reference": "https://www.rfc-editor.org/rfc/rfc5256.html",
+  "reference_boundary": "The IMAP threading comparison statement supports preserving identifier case; no IMAP requirements or full RFC normalization are imposed on EA-PDF.",
+  "source_sha256": "cd81afc4a605ab1297f5e055899fd3283216406960b67de194e5021803a04951",
+  "cases": [
+    {
+      "file": "valid-guid.pdf",
+      "sha256": "4f7c2f87ac138063d643dbd74035fa1eac124a8c12de187564035cbff9f40f45",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "message-id-only.pdf",
+      "sha256": "ce404e8c815d7f7ccbbed72602bae57cea6b860601e8a802ec96afaf0b4f0f3f",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "optional-dpm-id-omitted.pdf",
+      "sha256": "ad4e6b39fcba0d236d539a9c478a65bb2df0458615c79d84f63c16c63875dfca",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "message-id-only-native-alias.pdf",
+      "sha256": "0c699a0d698a025c61aa4fa5af9522f14250283bb1ac30a7202f4d3b24f2562b",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "wrong-owner.pdf",
+      "sha256": "fc1aab5ac7938e884f4ad9ce34c84862f5517594924cb919cfb7bb86ba0fa3a1",
+      "expected_failures": [
+        "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_ANNOTATIONS_PRESENT",
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "MESSAGE_ATTACHMENT_COUNT_XMP"
+          ]
+        },
+        "reason": "Removed the bundled original-attachment matching failure: a missing original association is unavailable evidence, not proof of a wrong native size/checksum or a mandatory original-byte preservation failure. Independent annotation, schema, and content failures remain. Optional attachment XMP inventory alone does not establish a source-derived NumberAttachments presence or value requirement. The supplied integer schema remains separate; mandatory source inclusion/value comparisons require bound original evidence. Existing annotation and structure failures remain.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "guid-primary-wrong-id.pdf",
+      "sha256": "edb414e5e92ec586905bc0c8fefca070ea3b937ac5e214a37cfd8406c8cdfc13",
+      "expected_failures": [
+        "ATTACHMENT_XMP_MESSAGE_ID_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ]
+        },
+        "reason": "Supplied attachment Message-ID contradicts the containing email independently of GUID association.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "source-omitted-message-id.pdf",
+      "sha256": "ca58f04fb0e742da27939e0c023c485cd4dc29dfac648d9c437f702cf086060d",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "source-omitted-missing-count.pdf",
+      "sha256": "d6ab33f513a72bb6e1d04b29e198436a9367e9b1acb842082d909f36d9047e33",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "MESSAGE_ATTACHMENT_COUNT_XMP"
+          ],
+          "expected_status": "FAIL"
+        },
+        "reason": "Optional attachment XMP inventory alone does not establish a source-derived NumberAttachments presence or value requirement. The supplied integer schema remains separate; mandatory source inclusion/value comparisons require bound original evidence. Existing annotation and structure failures remain.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "source-omitted-zero-count.pdf",
+      "sha256": "415807bb49841ff95561c8986ce430c8298782d2439c361185a242bc4d0fd93a",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "MESSAGE_ATTACHMENT_COUNT_XMP"
+          ],
+          "expected_status": "FAIL"
+        },
+        "reason": "Optional attachment XMP inventory alone does not establish a source-derived NumberAttachments presence or value requirement. The supplied integer schema remains separate; mandatory source inclusion/value comparisons require bound original evidence. Existing annotation and structure failures remain.",
+        "retained_pdf_bytes": true
+      }
+    }
+  ],
+  "parent_requirement_review": {
+    "evidence": "docs/improvement/validator-53/prior-native-census.json",
+    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
+    "retained_pdf_bytes": true,
+    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
+  }
+}

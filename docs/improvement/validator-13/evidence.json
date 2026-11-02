@@ -1,0 +1,181 @@
+{
+  "batch": "V13",
+  "authority": "validator_rule_text.json",
+  "scope": [
+    "Original versus native PDF attachment filenames",
+    "Optional checksum source-assisted association",
+    "Unknown source-omitted association remains unavailable",
+    "Zero-byte policy placeholders and integrity/visibility gates"
+  ],
+  "verification": {
+    "current_unit": {
+      "status": "PASS",
+      "run": 394,
+      "passed": 365,
+      "skipped": 29,
+      "seconds": 8.045,
+      "log": "docs/improvement/validator-13/unit-tests-final.log"
+    },
+    "prior_full_packaged_v11": {
+      "status": "PASS",
+      "run": 376,
+      "passed": 375,
+      "skipped": 1,
+      "seconds": 1401.576,
+      "log": "docs/improvement/validator-11/full-tests.log"
+    },
+    "generated_profile_tests": {
+      "status": "PASS",
+      "run": 2,
+      "passed": 2,
+      "skipped": 0,
+      "seconds": 165.367,
+      "log": "docs/improvement/validator-13/profile-tests-final.log"
+    },
+    "profiles": [
+      {
+        "mode": "normal",
+        "profile": "1s",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1si",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1m",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1mi",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1c",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1ci",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1s",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1si",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1m",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1mi",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1c",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1ci",
+        "pdfa": "PASS",
+        "eapdf": "PASS",
+        "iso": "PASS"
+      }
+    ],
+    "retained_corpus": {
+      "cases": 110,
+      "pdfa_passes": 110,
+      "exact_outcomes": 110,
+      "iso_levels": {
+        "PASS": 100,
+        "FAIL": 5,
+        "N/A": 5
+      },
+      "results": "retained-corpus-final-results.json"
+    },
+    "new_pdf_probes": {
+      "cases": 12,
+      "same_bytes_before_and_after": true,
+      "results": "corpus-results.json"
+    },
+    "cli_worker_checks": {
+      "cases": 10,
+      "results": "entry-points-final.json"
+    }
+  },
+  "acceptance_boundary": "V11 full suite predates V12/V13. V13 has current unit tests, all retained complete-pipeline cases, twelve generated profiles, and actual CLI/isolated-worker checks. No V13 full-suite result is claimed.",
+  "inputs": {
+    "snapshot": ".eapdf-verification-v13-final",
+    "manifest": "verification-inputs-final.json",
+    "capsule": "runtime-inputs-final.zip",
+    "integrity": "verification-integrity.json"
+  },
+  "before": [
+    "before-tests.log",
+    "size-before-tests.log",
+    "large-size-before.json",
+    "before-final-fixtures.json",
+    "before-final-reports"
+  ],
+  "before_after_comparison": "before-after-comparison.json",
+  "association_observations": "association-observations-final.json",
+  "initial_snapshot": ".eapdf-verification-v13",
+  "initial_corpus_status": "Interrupted after confirming the stored-size bypass; no full initial corpus PASS claimed",
+  "fixture_correction": "fixture-construction-correction.json",
+  "patch": "application-final.patch",
+  "creator": {
+    "unchanged_from_161_test_java_build": true,
+    "sha256": "272ad741590552489dfb6d096f7ee4b01035fb3faf1c76d817394c0c2ad5e16a",
+    "evidence": "../creator-iso-structure/evidence.json"
+  },
+  "inventory": {
+    "records": 301,
+    "file_records": 249,
+    "codes": 224,
+    "unmapped_mandatory_conditional_file_records": 0,
+    "open_expert_dependency_questions": 11
+  },
+  "limits": [
+    "Mapping and observed results are not implementation completeness or certification.",
+    "Source-assisted alias association reuses the existing bounded unique-source selector; no source completeness, occurrence identity or global assignment proof.",
+    "MD5 is a prescribed consistency value, not a security identity claim.",
+    "Eleven expert/dependency questions and broader ownership review remain open.",
+    "Optional official PREMIS schema remains unavailable; broader preservation B13 remains deferred."
+  ]
+}

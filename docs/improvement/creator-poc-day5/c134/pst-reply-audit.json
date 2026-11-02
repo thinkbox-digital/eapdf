@@ -1,0 +1,54 @@
+{
+  "values": [
+    {
+      "file": "in/email/test.pst",
+      "descriptor": 2099428,
+      "nativeNames": "hkucera@FTENERGY.COM\u0000",
+      "retainedReplyTo": "hkucera@FTENERGY.COM"
+    },
+    {
+      "file": "in/email/test.pst",
+      "descriptor": 2097924,
+      "nativeNames": "jimboman@bigfoot.com\u0000",
+      "retainedReplyTo": "jimboman@bigfoot.com"
+    },
+    {
+      "file": "src/test/resources/eapdf/email/attached-message.pst",
+      "descriptor": 2097188,
+      "nativeNames": "users@opennlp.apache.org",
+      "retainedReplyTo": "\u003cusers@opennlp.apache.org\u003e"
+    },
+    {
+      "file": "src/test/resources/eapdf/email/attached-message.pst",
+      "descriptor": 2097220,
+      "nativeNames": "users@opennlp.apache.org;Barry Olddog",
+      "retainedReplyTo": "\u003cusers@opennlp.apache.org\u003e, Barry Olddog \u003coldcanine@yahoo.com\u003e"
+    },
+    {
+      "file": "src/test/resources/eapdf/email/attached-message.pst",
+      "descriptor": 2097252,
+      "nativeNames": "users@opennlp.apache.org",
+      "retainedReplyTo": "\u003cusers@opennlp.apache.org\u003e"
+    },
+    {
+      "file": "src/test/resources/eapdf/email/attached-message.pst",
+      "descriptor": 2097284,
+      "nativeNames": "dev@tika.apache.org",
+      "retainedReplyTo": "\u003cdev@tika.apache.org\u003e"
+    },
+    {
+      "file": "src/test/resources/eapdf/email/attached-message.pst",
+      "descriptor": 2097316,
+      "nativeNames": "dev@tika.apache.org",
+      "retainedReplyTo": "\u003cdev@tika.apache.org\u003e"
+    },
+    {
+      "file": "src/test/resources/eapdf/email/attached-message.pst",
+      "descriptor": 2097348,
+      "nativeNames": "webinar@couchbase.com",
+      "retainedReplyTo": "\u003cwebinar@couchbase.com\u003e"
+    }
+  ],
+  "messagesIncludingAttached": 79,
+  "nativeReplyNames": 8
+}

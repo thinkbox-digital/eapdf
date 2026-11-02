@@ -1,0 +1,31 @@
+{
+  "source": "docs/reference/ISO_32000-2_sponsored-ec2.pdf",
+  "sha256": "0958d3b076f4ad3bb32c1a1aa62011f52751b58bd2e3914bc714b74a1ccc517b",
+  "scope": "Selected invoked clauses only; not a full ISO 32000-2/PDF-A audit.",
+  "details": [
+    {
+      "reference": "Table 43, printed p135",
+      "requirement": "RF is a dictionary, not the Related Files array itself. It requires EF, corresponding EF keys, Type and an indirect file specification. Each RF dictionary value is a related files array."
+    },
+    {
+      "reference": "7.11.4.2, printed pp139-140",
+      "requirement": "Related arrays contain alternating filename strings and embedded streams, with even length. Prose shorthand saying RF array does not override the table/example wrapper."
+    },
+    {
+      "reference": "Tables 44/45, printed pp138-139",
+      "requirement": "Associated embedded streams require Params and ModDate. Size is optional integer for uncompressed bytes; CheckSum is optional 16-byte MD5, not 32-byte ASCII hex."
+    },
+    {
+      "reference": "Table 159 and following text, printed pp453-455",
+      "requirement": "Folder ID is a unique nonnegative integer. Folder names are text strings; sibling folder names and file names in the same folder have case-normalized uniqueness, not blanket document-global uniqueness."
+    },
+    {
+      "reference": "After Table 159, printed p455",
+      "requirement": "Names contain 1 to 255 characters, no NULL, none of / \\ : * \" < > |, and no final period. Do not add question mark to the quoted list as an invented ISO restriction. Interpret Collection name-tree folder prefixes separately from the actual filename."
+    },
+    {
+      "reference": "14.13.2, printed pp837-838",
+      "requirement": "Object-level Source AF is legal, independent of catalog original email Source. Associated streams have typed MIME and ModDate requirements; unknown type fallback application/octet-stream is not inherently a mandatory EA-PDF failure."
+    }
+  ]
+}

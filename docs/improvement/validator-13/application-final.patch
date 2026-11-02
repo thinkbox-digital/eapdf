@@ -1,0 +1,165 @@
+--- before/validate_eapdf.py
++++ validate_eapdf.py
+@@ -2739,7 +2739,7 @@
+     return bool(re.fullmatch(token + "/" + token + r"(?:[ \t]*;[ \t]*" + token
+                              + r"[ \t]*=[ \t]*(?:" + token + "|" + quoted + r"))*[ \t]*", value))
+ 
+-def attachment_record_matches_annotation(att, annot):
++def attachment_record_matches_annotation(att, annot, association_checksum=None):
+     fileinfo=annot.get("file") or {}
+     if fileinfo.get("afrelationship")=="Source":
+         return False
+@@ -2752,7 +2752,7 @@
+     }
+     annot_names.discard("")
+     att_checksum=norm_text(att.get("CheckSum","")).lower()
+-    att_size=parse_nonneg_int_value(first_present(att,"SizeInBytes"))
++    att_size_value=first_present(att,"SizeInBytes")
+     att_ctype=str(att.get("Content-Type",""))
+     file_checksum=norm_text(fileinfo.get("md5","")).lower()
+     file_size=fileinfo.get("size")
+@@ -2769,18 +2769,51 @@
+ 
+     name_match=bool(att_name and att_name in annot_names)
+     checksum_match=bool(att_checksum and file_checksum and att_checksum==file_checksum)
+-    size_match=(att_size is not None and file_size is not None and att_size==file_size)
++    source_checksum_match=bool(association_checksum and file_checksum
++                               and association_checksum.lower()==file_checksum)
++    size_match=(file_size is not None and nonnegative_integer_equals(att_size_value,file_size))
+     ctype_match=bool(att_ctype and file_ctype and media_type_signature(att_ctype)==media_type_signature(file_ctype))
+-
+-    if att_name and not name_match:
++    empty_placeholder=(nonnegative_integer_digits(att_size_value)=="0" and file_size==0 and fileinfo.get("bytes")==b"")
++
++    # Table 19 retains the original MIME filename; PDF file-spec names can differ.
++    # A stored-payload checksum can establish the association independently.
++    if att_name and not (name_match or checksum_match or source_checksum_match or empty_placeholder):
+         return False
+     if att_checksum and not checksum_match:
+         return False
+-    if att_size is not None and not size_match:
++    if "SizeInBytes" in att and not size_match:
+         return False
+     if att_ctype and not ctype_match:
+         return False
+-    return name_match or checksum_match or (size_match and (ctype_match or not att_ctype))
++    return name_match or checksum_match or source_checksum_match or empty_placeholder or (size_match and (ctype_match or not att_ctype))
++
++def attachment_source_checksum(att,body,email_records,source_summaries):
++    """Reuse a uniquely selected owner's original payload for alias association.
++
++    This is bounded source-assisted evidence, not original-source completeness
++    or occurrence identity. Optional CheckSum absence remains permitted.
++    """
++    if "CheckSum" in att:
++        return None
++    owners=[record for record in email_records if identities_match(record,body["identity"])]
++    if not owners and len(email_records)==1 and not any(identity_fields(body["identity"]).values()):
++        owners=email_records
++    if len(owners)!=1 or (any(identity_fields(att).values()) and not identities_match(att,owners[0])):
++        return None
++    source=select_source_email(owners[0],source_summaries)
++    if source is None:
++        return None
++    filename=norm_text(att.get("Filename","")) if is_xmp_text(att.get("Filename")) else ""
++    size=parse_nonneg_int_value(att.get("SizeInBytes"))
++    candidates=[item for item in source.get("mime_attachments",source.get("attachments",[]))
++                if filename and filename==norm_text(item.get("filename","")) and size==item.get("size_in_bytes")]
++    checksums=set()
++    for item in candidates:
++        value=item.get("checksum")
++        if not isinstance(value,str) or not re.fullmatch(r"[0-9A-Fa-f]{32}",value):
++            return None
++        checksums.add(value.lower())
++    return next(iter(checksums)) if len(checksums)==1 else None
+ 
+ def source_attachment_reference(att,annot,body,source_files,email_records,source_summaries):
+     fileinfo=annot.get("file") or {}
+@@ -6491,7 +6524,8 @@
+                         if key not in reference_cache:
+                             reference_cache[key]=source_attachment_reference(att,annot,body,afiles,email_records,source_summaries)
+                         references.append((annot,reference_cache[key]))
+-                    matching=[annot for annot in body_annotations if attachment_record_matches_annotation(att, annot)]
++                    association_checksum=attachment_source_checksum(att,body,email_records,source_summaries)
++                    matching=[annot for annot in body_annotations if attachment_record_matches_annotation(att, annot,association_checksum)]
+                     good=[annot for annot in matching if annot.get("within_page_box") and annot.get("visible_ok")]
+                     if good:
+                         if all((annot.get("file") or {}).get("size")==0
+@@ -6499,6 +6533,19 @@
+                             omissions.append({"attachment":first_present(att,"Filename"),
+                                               "reason":"attachment is represented by a zero-byte placeholder"})
+                         continue
++                    if not matching and "CheckSum" not in att and not association_checksum:
++                        # Compatible size/media observations cannot prove which
++                        # original attachment an arbitrary PDF filename denotes.
++                        plausible=[annot for annot in body_annotations if annot.get("within_page_box")
++                                   and annot.get("visible_ok") and attachment_record_matches_annotation(
++                                       dict(att,Filename=""),annot)]
++                        if plausible:
++                            unavailable.append({"attachment":first_present(att,"Filename"),
++                                "reason":"A differently named visible native payload has compatible observations, but independent filename/payload association is unavailable",
++                                "candidate_annotations":[annot.get("objgen") for annot in plausible]})
++                            report.warn("VALIDATION_INCOMPLETE","Attachment filename/payload association could not be verified",{
++                                "attachment":first_present(att,"Filename"),"assessment":"unavailable"})
++                            continue
+                     detail={
+                         "attachment":first_present(att,"Filename") or "<unnamed>",
+                         "content_set_pages":[body["start_page"],body["end_page"]],
+@@ -6525,7 +6572,7 @@
+             if failures:
+                 emit_if_unseen(report,"fail","ATTACHMENT_ANNOTATIONS_PRESENT","Each XMP-declared email attachment must have a visible File Attachment annotation inside each relevant body Content Set",{"actual":failures})
+             elif unavailable:
+-                emit_if_unseen(report,"warn","ATTACHMENT_ANNOTATIONS_PRESENT","Attachment annotation applicability is unavailable because body Content Set coverage is unresolved",{"assessment":"unavailable","actual":unavailable})
++                emit_if_unseen(report,"warn","ATTACHMENT_ANNOTATIONS_PRESENT","Attachment annotation applicability or payload association is unavailable",{"assessment":"unavailable","actual":unavailable})
+             elif known_nonbody:
+                 emit_if_unseen(report,"na","ATTACHMENT_ANNOTATIONS_PRESENT","No BodyRendering Content Set activates this annotation requirement",{"reason":"All declared Content Sets have known non-body types and valid page ranges."})
+             elif omissions:
+--- before/validator_rule_text.json
++++ validator_rule_text.json
+@@ -3686,7 +3686,7 @@
+     "rule_number": 47,
+     "rule_name": "ATTACHMENT_ANNOTATIONS_PRESENT",
+     "spec_section": "EA-PDF 1.0 section 9.3 printed p65",
+-    "spec_excerpt": "Each attachment must have a visible File Attachment annotation within each applicable BodyRendering Content Set. Known absence of all BodyRendering sets is N/A; unresolved body-set applicability is unavailable evidence, not a demonstrated annotation violation.",
++    "spec_excerpt": "Each attachment must have a visible File Attachment annotation within each applicable BodyRendering Content Set. Known absence of all BodyRendering sets is N/A; unresolved body-set applicability is unavailable evidence, not a demonstrated annotation violation. Table 19 preserves the original attachment filename, while the native PDF filename may differ. Declared checksums or uniquely selected source-payload evidence may establish that association; unavailable independent association is not a demonstrated missing-annotation violation. Optional CheckSum presence is not required.",
+     "plain_language_template": {
+       "PASS": "{message}",
+       "FAIL": "Observed attachment-annotation coverage: {actual}. Expected each email attachment to be visibly represented by a File Attachment annotation in each body Content Set.",
+@@ -3714,7 +3714,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "source_and_page_content",
+-      "uncovered_assertion": "Each attachment must have a visible File Attachment annotation within each applicable BodyRendering Content Set. Known absence of all BodyRendering sets is N/A; unresolved body-set applicability is unavailable evidence, not a demonstrated annotation violation.",
++      "uncovered_assertion": "Each attachment must have a visible File Attachment annotation within each applicable BodyRendering Content Set. Known absence of all BodyRendering sets is N/A; unresolved body-set applicability is unavailable evidence, not a demonstrated annotation violation. Table 19 preserves the original attachment filename, while the native PDF filename may differ. Declared checksums or uniquely selected source-payload evidence may establish that association; unavailable independent association is not a demonstrated missing-annotation violation. Optional CheckSum presence is not required.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+@@ -25388,7 +25388,7 @@
+         },
+         "source_asset_association": {
+           "batch": "V12",
+-          "status": "Confirmed path-collision false failures repaired; focused tests pass and complete PDF acceptance is in progress.",
++          "status": "Implemented; final frozen V12 verification and its limits are recorded in linked evidence.",
+           "evidence": "docs/improvement/validator-12/README.md",
+           "scope": [
+             "Unique checksum matches take priority over filename tails in an unordered asset Bag",
+@@ -25396,6 +25396,19 @@
+             "Provable checksum and source-record cardinality failures remain failures"
+           ],
+           "boundary": "No original filename/occurrence identity proof, secure-hash identity claim, arbitrary global assignment solver or source completeness certification. Generic RDF and PDF/A checks remain upstream."
++        },
++        "attachment_filename_association": {
++          "batch": "V13",
++          "status": "Implemented; frozen source boundaries and verification outcomes are recorded in linked evidence.",
++          "evidence": "docs/improvement/validator-13/evidence.json",
++          "scope": [
++            "Original Table 19 filename versus native PDF filename",
++            "Declared or source-assisted payload checksum association",
++            "Unknown source-omitted aliases remain unavailable",
++            "Zero-byte policy placeholders and unchanged visibility/integrity gates",
++            "Stored size comparison uses decimal values without Python integer conversion limits"
++          ],
++          "boundary": "Source-assisted evidence reuses the existing bounded unique-source selector; no source completeness, occurrence identity, global assignment or cryptographic security proof. Original source filename case is not normalized away."
+         }
+       },
+       "upstream_issue_review": {

@@ -1,0 +1,27 @@
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -26716,7 +26716,7 @@
+         "PDFA-4": "Operationally use the five pinned veraPDF 1.31.18 profiles, including PDF/A-4:2020. DEP-PDFA-EDITION has a local baseline decision; equivalence to the cited ISO/DIS 19005-4:2024 is still unverified, not inferred from passing engine runs.",
+         "ISO-TS-32005": "The integrated local selection preserves all 1636 pinned upstream ISO predicates and excludes 91 PDF/UA predicates. Required execution is verified separately. It is not an officially published standalone profile or a certification of complete normative-reference coverage.",
+         "XMP-and-FOAF": "All eleven review questions have local decisions. Bag is the project interpretation for unordered In-Reply-To. Tested XMP struct/URI equivalents and FOAF Agents are retained; unexercised legal representations and complete cited-2019 edition equivalence are not certified.",
+-        "PDF-Declarations-and-ADBE-L5": "PDF Declarations 2019-09 sections 7-9, public 2024 clause-8 erratum and registry reviewed; explicit declaration schema/identifier requirements added. Adobe extension reference still requires exact edition review; EA-PDF gives BaseVersion/ExtensionLevel values directly. Tracker #12 records missing PDF/A-4 declaration schema guidance; no nonexistent artifact is made mandatory. Tracker #22 does not amend exactly integer level 5."
++        "PDF-Declarations-and-ADBE-L5": "PDF Declarations 2019-09 sections 7-9, the public 2024 clause 8 erratum and registry were reviewed. The exact Adobe supplement was retrieved from Adobe and all eight pages reviewed on 2026-10-21: Edition 2.0, June 2009, Acrobat SDK 9.1, PDF 1.7 extension level 5; SHA256 480d11af588612c378015036e6485ee405ce55ec329021e99c06961f03ea6480. Section 3.2 concerns collection D reader behavior; EA-PDF independently forbids D and requires exactly the cited extension values. Publication identification for this collection reference is resolved; complete ISO 32000-1, Adobe extension and reader coverage is not certified. Tracker #12 still records missing PDF/A-4 declaration schema guidance; no nonexistent artifact is mandatory. Tracker #22 does not amend exactly integer level 5."
+       },
+       "full_requirements_gate": "Open: finish obligation-level implementation/execution review. All eleven prior questions have explicit local decisions; cited PDF/A draft edition equivalence and broader normative-reference completeness are not certified.",
+       "custom_validator_scope": {
+@@ -27132,6 +27132,15 @@
+           "sha256": "822590775a78aafec3d07eac509f3bbd4926a89b8c45223b93cbdda7a6b9eb66",
+           "reviewed_on": "2026-10-19",
+           "conclusion": "ISO-approved erratum 374 defines the MCAF array in a named property dictionary for AF marked-content sequences. The validator reads this representation as operational evidence for uncovered EA-PDF checks; it does not add a duplicate generic ISO/PDF-A conformance assertion."
++        },
++        {
++          "id": "ADBE-EXTN-L5-200906",
++          "url": "https://www.adobe.com/content/dam/cc1/en/devnet/pdf/pdfs/adobe_supplement_iso32000_1.pdf",
++          "edition": "2.0, June 2009; Acrobat SDK 9.1",
++          "reviewed_on": "2026-10-21",
++          "sha256": "480d11af588612c378015036e6485ee405ce55ec329021e99c06961f03ea6480",
++          "conclusion": "Exact cited publication and relevant collection reference reviewed. EA-PDF independently mandates PDF 1.7 extension level 5 and prohibits Collection D; no broader inherited-standard or reader certification.",
++          "evidence": "docs/improvement/reference-review/adbe-l5/source-review.json"
+         }
+       ],
+       "continuation_checkpoint": {

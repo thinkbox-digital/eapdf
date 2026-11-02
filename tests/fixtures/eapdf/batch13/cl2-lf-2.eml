@@ -1,0 +1,9 @@
+From: Sender <sender@example.invalid>
+To: Reader <reader@example.invalid>
+Date: Fri, 16 Oct 2026 12:00:00 +0000
+Message-ID: <mailbox-b@example.invalid>
+Subject: Mailbox B
+Content-Type: text/plain; charset=UTF-8
+Content-Length: 15
+
+Body B: café.

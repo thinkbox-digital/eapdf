@@ -1,0 +1,137 @@
+--- before/validator_rule_text.json
++++ validator_rule_text.json
+@@ -146,7 +146,7 @@
+           }
+         ]
+       },
+-      "review_status": "profile mapping verified; runtime suppression not yet implemented in this requirements checkpoint"
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS."
+     }
+   },
+   "FONTS_NONE": {
+@@ -1127,7 +1127,7 @@
+           }
+         ]
+       },
+-      "review_status": "profile mapping verified; runtime suppression not yet implemented in this requirements checkpoint"
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS."
+     }
+   },
+   "FONTS_MISSING": {
+@@ -1617,7 +1617,7 @@
+           }
+         ]
+       },
+-      "review_status": "profile mapping verified; runtime suppression not yet implemented in this requirements checkpoint"
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS."
+     }
+   },
+   "FONTS_ALL_EMBEDDED": {
+@@ -2107,7 +2107,7 @@
+           }
+         ]
+       },
+-      "review_status": "profile mapping verified; runtime suppression not yet implemented in this requirements checkpoint"
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS."
+     }
+   },
+   "PDF_HEADER_VERSION_READ": {
+@@ -4158,7 +4158,7 @@
+           }
+         ]
+       },
+-      "review_status": "profile mapping verified; runtime suppression not yet implemented in this requirements checkpoint"
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS."
+     }
+   },
+   "EMBEDDED_SUBTYPE_NO_PARAMETERS": {
+@@ -4232,7 +4232,7 @@
+           }
+         ]
+       },
+-      "review_status": "profile mapping verified; runtime suppression not yet implemented in this requirements checkpoint"
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS."
+     }
+   },
+   "SOURCE_MEDIATYPE_PARAMETERS_MATCH": {
+@@ -7931,7 +7931,7 @@
+       "owner": "verapdf",
+       "reason": "Document Catalog metadata presence is explicitly checked by every selected profile. Parsing it to read EA-PDF fields is still an application prerequisite.",
+       "version": "1.31.18",
+-      "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS.",
+       "profile_rule_references": {
+         "PDFA-3A": [
+           {
+@@ -8268,7 +8268,7 @@
+       "owner": "verapdf",
+       "reason": "Document Catalog metadata presence is explicitly checked by every selected profile. Parsing it to read EA-PDF fields is still an application prerequisite.",
+       "version": "1.31.18",
+-      "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS.",
+       "profile_rule_references": {
+         "PDFA-3A": [
+           {
+@@ -8384,7 +8384,7 @@
+           }
+         ]
+       },
+-      "review_status": "profile mapping verified; runtime suppression not yet implemented in this requirements checkpoint"
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS."
+     }
+   },
+   "PDFA_XMP_UNCHECKED": {
+@@ -9202,7 +9202,7 @@
+           }
+         ]
+       },
+-      "review_status": "profile mapping verified; runtime suppression not yet implemented in this requirements checkpoint"
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS."
+     }
+   },
+   "SOURCE_WITHOUT_XMP": {
+@@ -24812,7 +24812,7 @@
+         },
+         "remaining_work": [
+           "Other requirement questions",
+-          "veraPDF routing without suppressing uncovered fragments",
++          "Review and isolate uncovered fragments of mixed rules",
+           "Metadata schema and identity repairs",
+           "Remaining unmapped requirements",
+           "Independent acceptance and subsequent creator repairs"
+@@ -24841,8 +24841,24 @@
+           "Table 11 immediate children",
+           "Mail_FieldValue immediate parent",
+           "Optional custom vocabulary",
+-          "Authoritative report text and attribution"
+-        ]
++          "Authoritative report text and attribution",
++          "Fully delegated veraPDF runtime routing for 11 rules",
++          "Reviewed per-profile web coverage visibility",
++          "Web reload of engine rule data after JSON-only edits"
++        ],
++        "ownership_routing": {
++          "date": "2026-10-19",
++          "fully_delegated_rule_count": 11,
++          "semantics": "Delegated rows are N/A in the custom report and carry the separate upstream status, reported version and reviewed profile references. No per-rule PASS is inferred.",
++          "web_visibility": "Only successful first passes matching the reviewed profile/version may hide delegated rows. Missing results, warnings, failures, unknown versions and profile-specific coverage gaps remain visible.",
++          "cache": "Web validator module reloads after an engine or authoritative JSON mtime change.",
++          "verification_evidence": "docs/improvement/validator-02-evidence.json",
++          "limits": [
++            "Mixed-rule fragment audit remains unfinished.",
++            "Existing standalone helper functions remain available as diagnostics; the normal validation pipeline delegates the reviewed 11 codes.",
++            "Source parsing needed for EA-PDF checks remains active."
++          ]
++        }
+       }
+     },
+     "validation_scope": {
+@@ -25315,7 +25331,7 @@
+           }
+         ]
+       },
+-      "review_status": "profile mapping verified; runtime suppression not yet implemented in this requirements checkpoint"
++      "review_status": "Profile mapping verified. Runtime records delegation as N/A with upstream run evidence; no duplicate custom conformance test or inferred per-rule PASS."
+     }
+   },
+   "MAIL_CONTENTSET_CHILDREN": {

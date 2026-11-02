@@ -1,0 +1,58 @@
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -2834,6 +2834,13 @@
+         "tests/test_navigation_name_types.py"
+       ],
+       "fixtures": "tests/fixtures/eapdf/validator-navigation-names/expectations.json"
++    },
++    "represented_attachment_scope_review": {
++      "date": "2026-10-22",
++      "basis": "Single-message viewer conditions use attachments of represented emails. A matched original supplies its own MIME count; unrelated retained originals do not activate the attachment branch. Supplied attachment inventory and nonzero declared counts still establish attachment presence. Unknown original ownership with no positive declaration leaves both viewer branches unavailable.",
++      "independent_failure": "A supplied viewer value forbidden under every possible attachment branch still fails, with unassigned ownership and explicit universal branch evidence.",
++      "boundary": "This does not certify source/attachment occurrence ownership, MIME grammar or complete source inventories. Creator repair remains deferred.",
++      "evidence": "docs/improvement/validator-80/evidence.json"
+     }
+   },
+   "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS": {
+@@ -2886,6 +2893,13 @@
+         "tests/test_navigation_name_types.py"
+       ],
+       "fixtures": "tests/fixtures/eapdf/validator-navigation-names/expectations.json"
++    },
++    "represented_attachment_scope_review": {
++      "date": "2026-10-22",
++      "basis": "Single-message viewer conditions use attachments of represented emails. A matched original supplies its own MIME count; unrelated retained originals do not activate the attachment branch. Supplied attachment inventory and nonzero declared counts still establish attachment presence. Unknown original ownership with no positive declaration leaves both viewer branches unavailable.",
++      "independent_failure": "A supplied viewer value forbidden under every possible attachment branch still fails, with unassigned ownership and explicit universal branch evidence.",
++      "boundary": "This does not certify source/attachment occurrence ownership, MIME grammar or complete source inventories. Creator repair remains deferred.",
++      "evidence": "docs/improvement/validator-80/evidence.json"
+     }
+   },
+   "PROFILE_PAGEMODE_MULTI": {
+@@ -2994,6 +3008,13 @@
+         "tests/test_navigation_name_types.py"
+       ],
+       "fixtures": "tests/fixtures/eapdf/validator-navigation-names/expectations.json"
++    },
++    "represented_attachment_scope_review": {
++      "date": "2026-10-22",
++      "basis": "Single-message viewer conditions use attachments of represented emails. A matched original supplies its own MIME count; unrelated retained originals do not activate the attachment branch. Supplied attachment inventory and nonzero declared counts still establish attachment presence. Unknown original ownership with no positive declaration leaves both viewer branches unavailable.",
++      "independent_failure": "A supplied viewer value forbidden under every possible attachment branch still fails, with unassigned ownership and explicit universal branch evidence.",
++      "boundary": "This does not certify source/attachment occurrence ownership, MIME grammar or complete source inventories. Creator repair remains deferred.",
++      "evidence": "docs/improvement/validator-80/evidence.json"
+     }
+   },
+   "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS": {
+@@ -3050,6 +3071,13 @@
+         "tests/test_navigation_name_types.py"
+       ],
+       "fixtures": "tests/fixtures/eapdf/validator-navigation-names/expectations.json"
++    },
++    "represented_attachment_scope_review": {
++      "date": "2026-10-22",
++      "basis": "Single-message viewer conditions use attachments of represented emails. A matched original supplies its own MIME count; unrelated retained originals do not activate the attachment branch. Supplied attachment inventory and nonzero declared counts still establish attachment presence. Unknown original ownership with no positive declaration leaves both viewer branches unavailable.",
++      "independent_failure": "A supplied viewer value forbidden under every possible attachment branch still fails, with unassigned ownership and explicit universal branch evidence.",
++      "boundary": "This does not certify source/attachment occurrence ownership, MIME grammar or complete source inventories. Creator repair remains deferred.",
++      "evidence": "docs/improvement/validator-80/evidence.json"
+     }
+   },
+   "PROFILE_NFSM_MULTI": {

@@ -1,0 +1,54 @@
+--- a/validate_eapdf.py
++++ b/validate_eapdf.py
+@@ -3786,7 +3786,7 @@
+     else:
+         report.ok("VIEWER_PREFS","ViewerPreferences present",{"ViewerPreferences":observed_pdf_value(vp)})
+         ddt=dict_get(vp,"/DisplayDocTitle",None)
+-        if bool(ddt) is True:
++        if ddt is True:
+             report.ok("DISPLAY_DOCTITLE","ViewerPreferences DisplayDocTitle is true",{"actual":observed_pdf_value(ddt)})
+         else:
+             report.fail("DISPLAY_DOCTITLE","ViewerPreferences DisplayDocTitle must be true",{"actual":observed_pdf_value(ddt)})
+@@ -4492,7 +4492,7 @@
+             report.fail("COLLECTION_SCHEMA_FIELD","Collection schema field has wrong subtype",{"field":name,"expected_subtype":subtype,"actual_subtype":actual})
+     for name,field in schema.items():
+         e=dict_get(field,"/E",None)
+-        if e is None or bool(e) is False:
++        if e is None or e is False:
+             report.ok("COLLECTION_SCHEMA_E_FALSE","Collection schema field E entry absent or false",{"field":name,"actual":observed_pdf_value(e)})
+         else:
+             report.fail("COLLECTION_SCHEMA_E_FALSE","Collection schema field E entry must be false",{"field":name,"actual":observed_pdf_value(e)})
+--- a/validator_rule_text.json
++++ b/validator_rule_text.json
+@@ -3115,6 +3115,15 @@
+         "PDFA-4F": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+         "PDFA-4E": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites."
+       }
++    },
++    "implementation_evidence": {
++      "batch": "V28",
++      "authority": "EA-PDF 9.1 printed p62",
++      "assertion": "Only the decoded PDF Boolean true satisfies DisplayDocTitle. Integer, name, text, array and dictionary truthiness cannot establish the required value.",
++      "tests": [
++        "tests/test_catalog_collection_booleans.py"
++      ],
++      "fixtures": "tests/fixtures/eapdf/validator-booleans/expectations.json"
+     }
+   },
+   "AF_RULE": {
+@@ -5049,6 +5058,15 @@
+         "PDFA-4F": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+         "PDFA-4E": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites."
+       }
++    },
++    "implementation_evidence": {
++      "batch": "V28",
++      "authority": "EA-PDF 9.5 printed p68",
++      "assertion": "A present Collection CustomField E must be the decoded PDF Boolean false, including extra custom fields. Absent/null entries retain PDF absence semantics. Zero, empty text, empty arrays and empty dictionaries are not false Booleans.",
++      "tests": [
++        "tests/test_catalog_collection_booleans.py"
++      ],
++      "fixtures": "tests/fixtures/eapdf/validator-booleans/expectations.json"
+     }
+   },
+   "COLLECTION_FILENAMES_VALID": {

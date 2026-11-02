@@ -1,0 +1,76 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -5008,6 +5008,29 @@
+         else:
+             report.warn(code,"Attribute value SHOULD NOT be truncated or modified from its owning source email",detail)
+ 
++def check_ambiguous_source_asset_values(asset,candidates,report):
++    # A universally contradicted value is invalid even without assigning an
++    # owner. Compatible or unavailable observations block that field's failure.
++    # Use only the association candidates, never values under test to pick one.
++    if not candidates:
++        return
++    observations=[{"filename":f.get("ufilename") or f.get("filename") or f.get("tree_name"),
++                   "size":f.get("size"),
++                   "media_type":f.get("reconstructed_media_type",f.get("subtype"))}
++                  for f in candidates]
++    details={"asset":asset,"source_candidates":observations,
++             "association_scope":"all_candidate_sources","unique_occurrence_identity":False}
++    size=asset.get("SizeInBytes")
++    if is_xmp_text(size) and is_nonneg_int_str(size) and all(
++            type(item["size"]) is int and item["size"]>=0
++            and not nonnegative_integer_equals(size,item["size"]) for item in observations):
++        report.fail("ASSET_SIZE_MATCH","Asset size is contradicted by every possible embedded Source",details)
++    media=asset.get("ContentType")
++    if is_xmp_text(media) and media.strip() and all(
++            isinstance(item["media_type"],str) and item["media_type"]
++            and media_type_signature(media)!=media_type_signature(item["media_type"]) for item in observations):
++        report.fail("ASSET_CONTENTTYPE_MATCH","Asset media type is contradicted by every possible embedded Source",details)
++
+ def check_asset_metadata(root_xml,efiles,afiles,eapdf_conf,report,related_assets=()):
+     if root_xml is None:
+         report.warn("ASSET_XMP_SKIPPED","Skipped asset metadata checks because XMP metadata is unavailable",{"xmp_readable":False})
+@@ -5118,6 +5141,7 @@
+                     "asset":a,"assessment":"unavailable",
+                     "candidates":[f["ufilename"] or f["filename"] or f["tree_name"] for f in candidates]})
+                 report.warn("VALIDATION_INCOMPLETE","Source asset comparisons require an unambiguous association")
++                check_ambiguous_source_asset_values(a,candidates,report)
+                 if (is_xmp_text(checksum) and re.fullmatch(r"[0-9A-Fa-f]{32}",checksum)
+                         and not any(checksum.lower()==f["md5"].lower() for f in src)):
+                     report.fail("ASSET_MD5_MATCH","Asset checksum does not match any embedded Source candidate",{
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -10099,6 +10099,16 @@
+         "PDFA-4F": [],
+         "PDFA-4E": []
+       }
++    },
++    "implementation_evidence": {
++      "batch": "V25",
++      "authority": "EA-PDF 9.8.2 Table 16 printed p85; 9.4 printed pp66-67",
++      "assertion": "A valid supplied SizeInBytes contradicted by every existing association candidate fails even when source ownership remains unavailable.",
++      "boundary": "Candidate selection/consumption is unchanged. Any compatible or unreadable field observation blocks that universal field failure. No source owner or occurrence is selected.",
++      "tests": [
++        "tests/test_ambiguous_source_assets.py"
++      ],
++      "fixtures": "tests/fixtures/eapdf/validator-ambiguous-sources/expectations.json"
+     }
+   },
+   "ASSET_CONTENTTYPE_MATCH": {
+@@ -10165,6 +10175,16 @@
+         "PDFA-4F": [],
+         "PDFA-4E": []
+       }
++    },
++    "implementation_evidence": {
++      "batch": "V25",
++      "authority": "EA-PDF 9.8.2 Table 16 printed p85; 9.4 printed pp66-67",
++      "assertion": "A valid supplied ContentType contradicted by every existing association candidate fails even when source ownership remains unavailable.",
++      "boundary": "Candidate selection/consumption is unchanged. Any compatible or unreadable field observation blocks that universal field failure. No source owner or occurrence is selected.",
++      "tests": [
++        "tests/test_ambiguous_source_assets.py"
++      ],
++      "fixtures": "tests/fixtures/eapdf/validator-ambiguous-sources/expectations.json"
+     }
+   },
+   "ASSET_XMP_SKIPPED": {

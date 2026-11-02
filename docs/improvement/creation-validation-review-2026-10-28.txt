@@ -1,0 +1,184 @@
+Creation and validation review — 2026-10-28
+
+Scope: current creator, standalone Java validator, web/Python validator, source
+preservation, signing, accessibility and retained verification evidence. Viewer
+work and distribution are outside this review. This was a source/evidence review,
+not a new complete corpus conversion, standards audit or GUI interaction run.
+No implementation or rulebook changes were made.
+
+Assessment
+
+Ordinary-input beta evidence is substantial, but a broadly reliable archival beta
+still has preservation-policy and large-file validation gaps. The full PST 24
+conversion now succeeds; that is a real improvement, not a complete independent
+validation pass. Improving the existing creation/validation path takes priority
+over adding features or cosmetic work.
+
+Recommended order
+
+1. Correct the default PST preservation mismatch. CONFIRMED CODE BEHAVIOR.
+   EapdfGui.java:193 labels the default as 'One PDF per email (s, default)'.
+   EmailToPDFA.java:339 requests embedding sources unless omission was selected.
+   PdfMailWriter.java:2126 nevertheless selects si for every PST record without
+   an explicit profile override; buildRenderHtml at line 776 then disables source
+   embedding. Thus the default choice can produce isolated output and omit original
+   message assets/native attachment payloads even though the user did not select
+   the omission choice. README documents the exception, but the GUI choice does
+   not communicate it. This is an existing policy, not a newly introduced defect.
+   Action: make the selected preservation policy and actual output agree, with a
+   real PST attachment regression. Explicit si/mi/ci omission must remain deliberate.
+   Acceptance: normal s preserves the exported message and attachment bytes, or the
+   UI explicitly and accurately offers only the supported policy. No CLI redesign.
+
+2. Make independent large-file validation finish. CONFIRMED RUNTIME LIMITATION.
+   PST 24: 34,601 emails, 65,855 pages, 1,281,462,219 output bytes; creation and
+   preservation checks finish in 1,373 seconds. Independent veraPDF checking stalls
+   under sustained memory pressure at 11,881 MiB and 16 GiB; both attempts were
+   stopped, with no independent compliance result. The prior saved PDF has about
+   8.22 million objects. The repaired PDFBox index does not change veraPDF's parser.
+   Action: profile veraPDF's retained objects/work queue, evaluate memory-bounded
+   traversal/cache options, and measure whether creator object duplication can be
+   reduced without changing output semantics. Increasing heap alone is unproven.
+   Acceptance: the completed large PDF yields a full independent report within a
+   stated resource budget, preserving the original file and its warnings.
+   Evidence: output/pst-memory-repair-2026-10-28/pst24-fixed/result.json,
+   validation-outcome.json, validation-memory-retry.json and thread traces.
+
+3. Fix validation scalability beyond veraPDF. CONFIRMED CODE; TIMING UNMEASURED.
+   MetadataChecks.java:427 scores every remaining source for each email, then scans
+   again to collect the best matches. Asset matching at lines 93-96 also scans the
+   remaining assets by name/checksum. This is quadratic work in ordinary archives;
+   resolving the veraPDF bottleneck will not remove it. Use reusable indexes while
+   preserving duplicate identities, ambiguity and contradiction checks.
+   EaPdfChecks.java:614 loads child bytes before checking the child budget at 635.
+   Identification, hashing and temporary-file writing repeatedly request whole
+   payload arrays. Enforce budgets before allocation and inspect children from disk.
+   The Java child limit is hard-coded: depth 8, 256 children, 256 MiB total child
+   bytes. Python exposes equivalent defaults through environment settings. Large
+   collections cannot receive a complete Java result under these limits today.
+   JavaValidation.java:179 retains every finding as JSON; line 46 creates the entire
+   pretty-printed report string. GUI grouping happens after this allocation.
+   Action: bounded child processing, indexed matching and streamed/compact report
+   storage, retaining per-item detail and honest incomplete results at any limits.
+
+4. Bring desktop and web limits into line with supported workloads. CONFIRMED.
+   JavaValidatorEngine.java:35 always launches its worker with -Xmx512m. Increasing
+   the GUI launch heap does not change that child limit. It waits without a job
+   deadline or stage progress, and rejects reports over 128 MiB at line 48.
+   validator_web.py:38-56 defaults to a 64 MiB request, 600-second validation/request
+   budgets, 2,048 MiB validation address space, 300-second generation budget and a
+   4 MiB per-file limit inside the Python validation worker. These are code defaults;
+   deployment overrides were not inspected. They differ greatly from successful
+   local large-PST operation. Do not remove safety bounds wholesale.
+   Action: choose/document sensible workload-aware limits, surface the applicable
+   limits before work, and provide validation stage/progress and a usable terminal
+   report on cancellation, memory failure or timeout. Keep web concurrency bounded.
+
+5. Finish the real corpus on a single current build. CONFIRMED EVIDENCE GAP.
+   There are 91 current inputs: 31 EML, 32 MSG, 11 PST, 17 MBOX. The cited 79 PASS
+   and two INCOMPLETE combine historical and repaired runs; they are not a current
+   complete run. PST 24 now converts but remains independently unvalidated.
+   PST 06, 16, 20, 22, 23 and 25 still lack a completed full rerun with the latest
+   fixes in the examined evidence. Their old failures must not be counted as fixed
+   simply because PST 24 succeeds. Earlier failures were memory/budget problems
+   or strict handling of missing source data.
+   Action: rerun those six first, one large archive at a time with four requested
+   render jobs; then reconcile the entire 91-input ledger against fixed build IDs.
+   Record conversion, PDF/A, EA-PDF, source problems and unavailable checks separately.
+   Keep source hashes, logs and Java reports. Source defects need honest marked
+   output, not fabricated data or an expectation that every case must become PASS.
+
+6. Distinguish completed conversion, incomplete source, and failed checking.
+   CONFIRMED REPORTING/PRESERVATION LIMITS.
+   PST 24 has 18,614 conversion warnings: 9,549 normalized dates, 8,992 conflicting
+   Message-IDs, 67 missing sent-date warnings and six empty-visible-text RTF bodies.
+   These are warning occurrences, not necessarily distinct damaged emails. The
+   missing-date warnings mostly concern embedded emails. All emails being rendered
+   does not establish that every required field was present in the source.
+   JavaValidation.java:101 waits for veraPDF before EA-PDF checking; line 46 writes
+   its report only at the end. The latest aborted jobs therefore produced no normal
+   findings report. Summary code at line 226 maps PDF/A ERROR to overall FAIL;
+   operational checking failures need a clear distinction from proven rule failures.
+   Action: a durable terminal report must retain why checking stopped, what was
+   checked, and whether a verdict exists. Warnings should remain accessible by email.
+   Keep the current missing-source notices and strict required-field checks.
+
+7. Keep original-source assurance separate from normalized-data consistency.
+   CONFIRMED COVERAGE LIMIT, NOT PROOF OF LOST DATA.
+   PreservationInventory checks normalized EmailRecord assets, payload hashes,
+   ownership and counts. This strongly protects assembly, but cannot independently
+   detect something the PST/MSG reader omitted before building those records.
+   PST/MBOX outputs preserve reconstructed/exported messages, not whole original
+   containers. The earlier native/visual fidelity audit covered 100 ordinary
+   messages, not the complete large PSTs. Extend independent native inventories
+   and targeted body/attachment comparisons to the repaired large inputs.
+   Two MSG source comparisons remain unavailable: DEP response has an Exchange
+   address without a recovered SMTP mailbox; test_Blammo lacks its ANSI code page.
+   Keep these limits explicit; do not invent source values to manufacture a pass.
+
+8. Validate large signed output and remaining loader paths. UNMEASURED RISK.
+   Six-profile signing evidence is positive but uses small real EML examples and
+   a test certificate. PdfSigning.java:116 and :161 still use standard PDFBox Loader,
+   unlike the repaired creation checker. Collection identification also uses it.
+   These paths may encounter the same object-stream indexing cost; a large signing
+   failure has not been demonstrated. Audit and exercise them before claiming
+   large signed-archive reliability. Preserve signature-byte coverage, integrity,
+   PDF/A and EA-PDF checks after signing. Trust, timestamps and long-term evidence
+   are documented non-goals of the current integrity signature, not implied features
+   to add without permission.
+
+9. Refresh accessibility, parity and full-build evidence. CONFIRMED EVIDENCE GAP.
+   Current build manifests match all 40 recorded creator source hashes and all
+   19 recorded validator source hashes. The bundled validator rulebook exactly
+   matches the root's 213-rule JSON. No artifact/source mismatch was found in these
+   checks; they cover recorded source entries, not every repository file.
+   Latest creator build records 40 focused tests, all passing; the earlier full
+   creator suite is historical. Latest validator records 168 tests, zero failures/
+   errors and one skip. The loader change preserves all 16,283 findings on a real
+   71-email output. That is useful evidence, not a fresh complete web/Java comparison.
+   Of 35 files in the final-source-warnings PDF/UA audit, only two still match their
+   recorded SHA-256 hashes; 33 have changed. This does not show that the new files
+   fail, only that those old reports do not validate their current bytes.
+   Action: one current full build/test pass, a refreshed selected web/Java parity
+   comparison, and PDF/UA-2 checks tied to exact accessibility-enabled output hashes.
+   Add human reading-order, headings/tables and meaningful image-description review
+   to accessibility acceptance; technical conformance cannot establish those qualities.
+
+10. Keep creator memory bounded as archives grow. CONFIRMED DESIGN LIMIT.
+    Disk-backed payload/scratch storage and four bounded render workers are real
+    improvements. Archive EmailToPDFA.runArchive still collects all EmailRecords;
+    GmailDownloadToPdf also builds a complete record list; a combined PDF retains
+    a large document object graph. Finishing one archive with an approximately
+    11.4 GiB heap does not prove arbitrary-size completion.
+    PstJobBudget applies only to a single PST of at least 128 MiB; directory/mixed
+    imports take a different budget path. Output allowance still depends on input
+    size (8x, capped at 16 GiB), which may not match PDF expansion.
+    Action: profile whole-run peak memory by stage, continue reducing retained
+    assembly state, and test low-memory/disk-full/cancel paths without destroying
+    published files. Do not change packaging profiles or split archives automatically.
+
+11. Replace conflicting status snapshots with a clear current ledger.
+    CONFIRMED DOCUMENTATION ISSUE.
+    Development Status contains historical 'still running' and 'not completed'
+    paragraphs beneath the new completed-run entry. The corpus failure document
+    also retains older states. Keep history, but clearly separate current per-input
+    outcomes from historical events and link each claim to its build and evidence.
+    README still offers tiny validator heap examples and earlier verification
+    narratives. Update these alongside runtime fixes, not as cosmetic-only work.
+
+12. Retain standards qualification and local decisions. RECORDED LIMITATION.
+    The rulebook has 213 rules and local resolutions in review-questions.md.
+    Those resolutions and pinned operational veraPDF profiles are not external
+    certification or official errata. The earlier specification audit records
+    edition/interpretation questions. Keep rule-to-code-to-test traceability and
+    versioned delegation to veraPDF, and seek external review of those decisions.
+    This review did not re-audit the entire standard or refresh upstream issue states.
+
+Recommended acceptance target
+
+The ordinary-input beta should preserve what the selected profile promises, finish
+or report an explicit reason for every current corpus input, and produce durable
+independent validation reports within documented limits. Large-file support remains
+unproven until both a large flat archive and a large collection finish end to end.
+Accessibility/signing claims should reference exact tested files and their limits.
+No new features, viewer changes or distribution work are recommended ahead of this.

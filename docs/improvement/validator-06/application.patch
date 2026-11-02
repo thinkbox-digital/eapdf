@@ -1,0 +1,196 @@
+--- /tmp/eapdf-validator06/before/validate_eapdf.py	2026-10-19 13:59:01.973727070 -0400
++++ validate_eapdf.py	2026-10-19 14:01:38.359482702 -0400
+@@ -1450,6 +1450,9 @@
+ class XmpUri(str):
+     """Keep RDF URI values distinct from XMP normal strings."""
+ 
++def is_xmp_text(value):
++    return isinstance(value,str) and not isinstance(value,XmpUri)
++
+ class XmpArray(list):
+     def __init__(self,values,kind):
+         super().__init__(values)
+@@ -1652,10 +1655,6 @@
+             continue
+         lk=k[len(NS_PDFMAILMETA)+1:] if k.startswith(NS_PDFMAILMETA+":") else k
+         out[lk]=v
+-    if "CheckSum" in out and "Checksum" not in out:
+-        out["Checksum"] = out["CheckSum"]
+-    if "Format" in out and "ContentType" not in out:
+-        out["ContentType"] = out["Format"]
+     return out
+ 
+ def normalize_attachment_record(d):
+@@ -1677,10 +1676,6 @@
+             continue
+         lk=k[len(NS_PDFMAILMETA)+1:] if k.startswith(NS_PDFMAILMETA+":") else k
+         out[lk]=v
+-    if "CheckSum" in out and "Checksum" not in out:
+-        out["Checksum"]=out["CheckSum"]
+-    if "Format" in out and "ContentType" not in out:
+-        out["ContentType"]=out["Format"]
+     return out
+ 
+ def normalize_email_record(d):
+@@ -1798,6 +1793,8 @@
+     return norm_text(value)
+ 
+ def is_nonneg_int_str(v):
++    if isinstance(v,(XmpUri,bool)) or not re.fullmatch(r"[+-]?[0-9]+",str(v).strip()):
++        return False
+     try:
+         return int(str(v).strip()) >= 0
+     except Exception:
+@@ -2615,6 +2612,11 @@
+     # Header folding is handled by the MIME parser. Whitespace inside a quoted
+     # parameter is data and must not be collapsed (nor may its case change).
+     headers["Content-Type"]=str(value or "")
++    bare=str(value or "").split(";",1)[0].strip().lower()
++    if not valid_body_media_type(bare):
++        # The email parser defaults malformed values to text/plain. A preserved
++        # malformed source field must not compare equal through that default.
++        return ("unparsed",str(value or ""))
+     parameters=[]
+     for name,item in (headers.get_params() or [])[1:]:
+         if not name:
+@@ -2645,9 +2647,9 @@
+         filename_key(fileinfo.get("tree_name","")),
+     }
+     annot_names.discard("")
+-    att_checksum=norm_text(first_present(att,"CheckSum","Checksum")).lower()
++    att_checksum=norm_text(att.get("CheckSum","")).lower()
+     att_size=parse_nonneg_int_value(first_present(att,"SizeInBytes"))
+-    att_ctype=str(first_present(att,"Content-Type","ContentType"))
++    att_ctype=str(att.get("Content-Type",""))
+     file_checksum=norm_text(fileinfo.get("md5","")).lower()
+     file_size=fileinfo.get("size")
+     declared_size=fileinfo.get("size_entry")
+@@ -2692,8 +2694,8 @@
+     summary=summaries[0]
+     filename=norm_text(first_present(att,"Filename"))
+     size=parse_nonneg_int_value(first_present(att,"SizeInBytes"))
+-    checksum=norm_text(first_present(att,"CheckSum","Checksum")).lower()
+-    content_type=norm_text(first_present(att,"Content-Type","ContentType")).split(";",1)[0].lower()
++    checksum=norm_text(att.get("CheckSum","")).lower()
++    content_type=norm_text(att.get("Content-Type","")).split(";",1)[0].lower()
+     candidates=[item for item in summary["attachments"]
+                 if (not item.get("filename") or norm_text(item["filename"])==filename)
+                 and item["size_in_bytes"]==size and (not checksum or item["checksum"]==checksum)
+@@ -2720,7 +2722,7 @@
+     candidates=[]
+     for att in attachments:
+         att_fn=normalize_path_tail(first_present(att,"Filename")).lower()
+-        att_md5=norm_text(first_present(att,"CheckSum","Checksum")).lower()
++        att_md5=norm_text(att.get("CheckSum","")).lower()
+         att_size=parse_nonneg_int_value(first_present(att,"SizeInBytes"))
+         if fn and att_fn and fn != att_fn and not (md5 and att_md5 and md5 == att_md5):
+             continue
+@@ -4603,8 +4605,10 @@
+             report.fail("ASSET_XMP","Non-isolated profile must include pdfmailmeta:assets in XMP",{"assets":assets})
+     for a in assets:
+         miss=[k for k in ("Filename","SizeInBytes","ContentType","Checksum") if not norm_text(a.get(k,""))]
++        miss=list(dict.fromkeys(miss+[k for k in ("Filename","ContentType","Checksum")
++                                     if not is_xmp_text(a.get(k))]))
+         if miss:
+-            report.fail("ASSET_XMP_FIELDS","Asset XMP record missing required fields",{"asset":a,"missing":miss})
++            report.fail("ASSET_XMP_FIELDS","Asset XMP record requires canonical fields with normal text values",{"asset":a,"missing_or_invalid":miss})
+             if "SizeInBytes" in miss:
+                 report.fail("ASSET_SIZE_TYPE","Asset XMP SizeInBytes missing",{"asset":a})
+             if "Checksum" in miss:
+@@ -4613,21 +4617,19 @@
+                 report.fail("ASSET_CONTENTTYPE","Asset XMP content type missing",{"asset":a})
+             continue
+         report.ok("ASSET_XMP_FIELDS","Asset XMP record contains required fields",{"asset":a})
+-        try:
+-            int(str(a.get("SizeInBytes","")).strip())
+-            report.ok("ASSET_SIZE_TYPE","Asset XMP SizeInBytes is integer",{"Filename":a.get("Filename"),"SizeInBytes":a.get("SizeInBytes")})
+-        except Exception:
+-            report.fail("ASSET_SIZE_TYPE","Asset XMP SizeInBytes must be integer",{"asset":a})
++        if is_nonneg_int_str(a.get("SizeInBytes","")):
++            report.ok("ASSET_SIZE_TYPE","Asset XMP SizeInBytes is a non-negative integer",{"Filename":a.get("Filename"),"SizeInBytes":a.get("SizeInBytes")})
++        else:
++            report.fail("ASSET_SIZE_TYPE","Asset XMP SizeInBytes must be a non-negative integer",{"asset":a})
+         csum=str(a.get("Checksum",""))
+         if re.fullmatch(r"[0-9A-Fa-f]{32}",csum):
+             report.ok("ASSET_CHECKSUM_FORM","Asset XMP checksum format valid",{"Filename":a.get("Filename"),"Checksum":csum})
+         else:
+             report.fail("ASSET_CHECKSUM_FORM","Asset XMP checksum must be 32 hex chars",{"asset":a})
+         ctype=norm_text(a.get("ContentType",""))
++        report.ok("ASSET_CONTENTTYPE","Asset XMP content type text is present",{"Filename":a.get("Filename"),"ContentType":ctype})
+         if ctype in GENERIC_BAD_MIME:
+             report.warn("ASSET_CONTENTTYPE_GENERIC","Asset XMP uses discouraged generic media type",{"Filename":a.get("Filename"),"ContentType":ctype})
+-        else:
+-            report.ok("ASSET_CONTENTTYPE","Asset XMP content type present",{"Filename":a.get("Filename"),"ContentType":ctype})
+         num_messages=a.get("NumberMessages","")
+         if num_messages not in ("",None):
+             if is_nonneg_int_str(num_messages):
+@@ -4772,7 +4774,7 @@
+             enriched["_source_mail_guid"] = guid_value(src_summary.get("mail_guid",""))
+             remaining.append(enriched)
+     for att in attachments:
+-        filename = norm_text(att.get("Filename",""))
++        filename = norm_text(att.get("Filename","")) if is_xmp_text(att.get("Filename")) else ""
+         if filename:
+             report.ok("ATTACHMENT_XMP_FILENAME","Attachment XMP Filename is present",{"Filename":filename})
+         else:
+@@ -4788,29 +4790,33 @@
+         else:
+             report.fail("ATTACHMENT_XMP_SIZE_PRESENT","Attachment XMP record must include SizeInBytes",{"attachment":att})
+ 
+-        ctype=first_present(att,"Content-Type","ContentType")
+-        if norm_text(ctype):
++        ctype=att.get("Content-Type","")
++        if is_xmp_text(ctype) and norm_text(ctype):
+             report.ok("ATTACHMENT_XMP_CONTENTTYPE","Attachment XMP Content-Type is present",{"Filename":att.get("Filename"),"Content-Type":ctype})
+         else:
+             report.fail("ATTACHMENT_XMP_CONTENTTYPE","Attachment XMP record must include Content-Type",{"attachment":att})
+ 
+-        checksum=first_present(att,"CheckSum","Checksum")
+-        if checksum:
+-            if re.fullmatch(r"[0-9A-Fa-f]{32}",str(checksum)):
++        checksum=att.get("CheckSum","")
++        if "CheckSum" in att:
++            if is_xmp_text(checksum) and re.fullmatch(r"[0-9A-Fa-f]{32}",checksum):
+                 report.ok("ATTACHMENT_XMP_CHECKSUM_FORM","Attachment XMP CheckSum format valid",{"Filename":att.get("Filename"),"CheckSum":str(checksum)})
+             else:
+-                report.warn("ATTACHMENT_XMP_CHECKSUM_FORM","Attachment XMP CheckSum should be 32 hex chars when present",{"attachment":att})
++                report.fail("ATTACHMENT_XMP_CHECKSUM_FORM","Attachment XMP CheckSum must be normal text containing 32 ASCII hex characters when present",{"attachment":att})
+         else:
+             report.ok("ATTACHMENT_XMP_CHECKSUM_FORM","Attachment XMP CheckSum is absent, which Table 19 permits",{"Filename":att.get("Filename")})
+-        if norm_text(att.get("Message-ID","")) or norm_text(att.get("MessageID","")):
+-            report.ok("ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID","Attachment XMP Message-ID is present, so Mail_GUID is not required",{"Filename":att.get("Filename"),"Message-ID":first_present(att,"Message-ID","MessageID")})
++        if "Message-ID" in att and not is_xmp_text(att["Message-ID"]):
++            report.fail("ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID","Supplied attachment Message-ID must be normal text; a URI or array cannot identify its email",{"attachment":att})
++        elif is_xmp_text(att.get("Message-ID")) and norm_text(att["Message-ID"]):
++            report.ok("ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID","Attachment XMP Message-ID is present, so Mail_GUID is not required",{"Filename":att.get("Filename"),"Message-ID":att["Message-ID"]})
+         elif guid_value(att.get("Mail_GUID","")):
+             report.ok("ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID","Attachment XMP Mail_GUID is present when Message-ID is absent",{"Filename":att.get("Filename"),"Mail_GUID":att.get("Mail_GUID")})
+         else:
+             report.fail("ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID","Attachment XMP record must have Mail_GUID when Message-ID is absent",{"attachment":att})
++        if not is_xmp_text(checksum):
++            checksum=""
+         if not have_source_summaries:
+             continue
+-        att_message_id = norm_text(first_present(att, "Message-ID", "MessageID"))
++        att_message_id = norm_text(att.get("Message-ID",""))
+         att_mail_guid = guid_value(att.get("Mail_GUID", ""))
+         candidate_pool = remaining
+         if att_message_id or att_mail_guid:
+@@ -4965,7 +4971,7 @@
+         id_unique=bool(message_id and sum(norm_text(first_present(other,"messageid","Message-ID"))==message_id for other in records)==1)
+         for attachment_index,(attachment,attachment_node) in enumerate(zip(attachment_records,attachment_nodes)):
+             owner_guid=guid_value(attachment.get("Mail_GUID"))
+-            owner_id=norm_text(first_present(attachment,"Message-ID","MessageID"))
++            owner_id=norm_text(attachment.get("Message-ID",""))
+             if ((guid and owner_guid==guid) or (not owner_guid and id_unique and owner_id==message_id)
+                     or (len(records)==1 and not owner_guid and not owner_id)):
+                 attachment_bag.append(deepcopy(attachment_node))
+@@ -5978,7 +5984,7 @@
+             content_type=str(asset.get("ContentType","")) if asset else ""
+         else:
+             attachment=matching_attachment_for_embedded(f, attachments, ambiguous_media_types)
+-            content_type=str(first_present(attachment,"Content-Type","ContentType")) if attachment else ""
++            content_type=str(attachment.get("Content-Type","")) if attachment else ""
+         xmp_content_type=content_type
+         reconstructed=f.get("reconstructed_media_type",subtype)
+         if ";" in content_type:

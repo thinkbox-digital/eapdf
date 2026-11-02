@@ -1,0 +1,13 @@
+{
+  "messages": 1433,
+  "unique_mail_guids": 1433,
+  "exact_original_sources": 1433,
+  "pages": 2106,
+  "content_set_page_counts": {
+    "/FrontMatter": 101,
+    "/BodyRendering": 2005
+  },
+  "container_sha256": "ac91b223f9eaeb57f7498bc08b8eb190ef4624b7c88bb5534e3fd4934ac2dfd4",
+  "pdf_sha256": "cc28bb1e8f85d3b1c0ded8df7badfacd1af0f0d949c6eed332aeec9d7ed1d474",
+  "creator_heap_bytes": 536870912
+}

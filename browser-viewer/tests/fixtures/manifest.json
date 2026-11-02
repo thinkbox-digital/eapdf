@@ -1,0 +1,8 @@
+{
+  "file": "ordinary.pdf",
+  "sha256": "c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+  "pages": 2,
+  "license": "Apache-2.0",
+  "source": "../../scripts/make-fixture.mjs",
+  "content": "Original geometric shapes and page labels; no real email data."
+}

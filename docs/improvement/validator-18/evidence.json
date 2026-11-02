@@ -1,0 +1,162 @@
+{
+  "scope": "V18 unordered, owner-scoped attachment source comparisons",
+  "recovered_thread": "01a1596d-69b2-73f0-8dc0-215b9a291ea9",
+  "verification": {
+    "unit_tests": {
+      "run": 439,
+      "passed": 404,
+      "skipped": 35,
+      "seconds": 21.573,
+      "log": "unit-tests-final.log"
+    },
+    "new_pdf_probes": {
+      "cases": 6,
+      "pdfa_passes": 6,
+      "iso_passes": 6,
+      "same_bytes_before_and_after": true,
+      "results": "before-after-comparison.json"
+    },
+    "generated_profiles": [
+      {
+        "mode": "normal",
+        "profile": "1s",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1si",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1m",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1mi",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1c",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1ci",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1s",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1si",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1m",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1mi",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1c",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1ci",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      }
+    ],
+    "custom_comparisons": {
+      "total": 156,
+      "prior_unchanged": 150,
+      "changed": 2,
+      "results": "custom-regressions.json"
+    },
+    "entry_points": {
+      "checks": 8,
+      "cli": 4,
+      "isolated_web_workers": 4,
+      "all_expected_outcomes_match": true,
+      "results": "pdf-results.json"
+    },
+    "memory_probe": {
+      "eager": {
+        "records": 200,
+        "matches": 200,
+        "peak_python_bytes": 387276,
+        "seconds": 3.3764392270004464
+      },
+      "lazy": {
+        "records": 200,
+        "matches": 200,
+        "peak_python_bytes": 51864,
+        "seconds": 1.7172400600011315
+      }
+    }
+  },
+  "inputs": {
+    "snapshot": ".eapdf-verification-v18-final",
+    "manifest": "verification-inputs-final.json",
+    "files": 675,
+    "archive": "runtime-inputs-final.zip",
+    "archive_sha256": "e28941d8c3c109fba1cfbe52b144fa27bcbd8a0b65c0e6ff5b670ee694694b76"
+  },
+  "creator": {
+    "unchanged": true,
+    "jar_sha256": "272ad741590552489dfb6d096f7ee4b01035fb3faf1c76d817394c0c2ad5e16a",
+    "new_java_build": false
+  },
+  "limits": [
+    "Eleven expert/dependency questions remain open.",
+    "Source comparisons establish compatible field assignments, not unique original occurrence identities or complete inventory coverage.",
+    "Native annotation/stream matching is unchanged; two absent-checksum controls remain INCOMPLETE.",
+    "No new Maven build or full packaged-suite acceptance is claimed. Integration/schema skips remain explicit.",
+    "The initial wrong-mount profile attempt and eager-candidate verification are retained separately; final evidence uses the final snapshot."
+  ],
+  "artifacts": {
+    "assemble-evidence.py": "b6f3838e76eaa250dee45e0530954e6bb45de7a078164c0d805e81a9b8b7f9f8",
+    "before-validate_eapdf.py": "3d4c3876ac9e9e2746f8d1feb1f5bc429fd99425c00556cedba6b80f102caaee",
+    "finalize-docs.py": "0f435a6f12b7b2f627c7033682fbfce5d3e68f4643ad5c4b46409742d8c45a8f",
+    "verify-pdfs.py": "eaaa52c75d53c7f7e55e64d4153a672fbaf087ac7fe9946f86bb9f1e9c68f03c",
+    "verify-regressions.py": "a94de7dca979c7db162f5101a72cefe543a99e7007df00274ac3e7e6f63c21c5"
+  },
+  "documentation_overlay": "documentation-overlay.json",
+  "supporting_audit_final_log": "audit-final.log",
+  "final_integrity": "Accepted runtime code, rule authority, new tests and fixture builder match the immutable final snapshot; all helper scripts parse and patch whitespace checks pass."
+}

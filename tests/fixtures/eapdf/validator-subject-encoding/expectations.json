@@ -1,0 +1,152 @@
+{
+  "authority": "EA-PDF 7.3.1 and Tables 4/18 require equivalent complete source Core Field values, subject to representation/encoding differences. RFC2047 6.3 does not require decoder repair of incorrectly formed encoded-words; unsupported recovery cannot establish equality or mismatch.",
+  "source": "https://www.rfc-editor.org/rfc/rfc2047.html#section-6.3",
+  "boundary": "Literal original text can be preserved exactly. Missing required Subject, supplied text types and known decoded source differences retain independent checks. No general header grammar, charset recovery or normalization-policy certification is claimed.",
+  "cases": [
+    {
+      "file": "malformed-q-repaired.pdf",
+      "sha256": "9edeef27b39a374d0a06214ddcf34524feb73d98b80b6a84187abdca001fdb9d",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "original_subject": "=?utf-8?Q?bad=ZZ?=",
+      "supplied_subject": "bad=ZZ",
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "malformed-b-repaired.pdf",
+      "sha256": "4317eebc8109fb975608e20442e039d0ca475cb7db2eb51630f84ebfae506c5b",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "original_subject": "=?utf-8?B?YQ?=",
+      "supplied_subject": "a",
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "unknown-charset.pdf",
+      "sha256": "3b3f5b82517e3a40726b1857a053e66c07b4ab53e61be2701ec1a830e16561a9",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "original_subject": "=?X-NO-CHARSET?Q?subject?=",
+      "supplied_subject": "subject",
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "malformed-different.pdf",
+      "sha256": "3b1bb9537e46f9bc45acc9b9f68adcbcea91bf36d689be04315d017b6dade1f1",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "original_subject": "=?utf-8?Q?bad=ZZ?=",
+      "supplied_subject": "Different",
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "malformed-literal.pdf",
+      "sha256": "44d762d470b6370a31678dde0b118ab1ddd47a43758b8dbb4b3bbe7febe0bad8",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "original_subject": "=?utf-8?Q?bad=ZZ?=",
+      "supplied_subject": "=?utf-8?Q?bad=ZZ?=",
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "valid-encoded.pdf",
+      "sha256": "aae995f4d06d5bb1fbe33bf91d3cd3ed53b4f41d4f5f8ae314fb5891449a5d52",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "original_subject": "=?utf-8?Q?caf=C3=A9?=",
+      "supplied_subject": "café",
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "valid-different.pdf",
+      "sha256": "7d14640093444244af370f2779f3f8690bd4599bc6f7cc03de673c14d76031d2",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "original_subject": "=?utf-8?Q?caf=C3=A9?=",
+      "supplied_subject": "Different",
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_SUBJECT_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Subject"
+        ]
+      }
+    },
+    {
+      "file": "supplied-malformed.pdf",
+      "sha256": "a81f68b7e1651e440158d8bc112f2b46c8aa7accef4acffaf4037e7509fa9967",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "original_subject": "bad=ZZ",
+      "supplied_subject": "=?utf-8?Q?bad=ZZ?=",
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_SUBJECT_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Subject"
+        ]
+      }
+    },
+    {
+      "file": "literal-replacement-scalar.pdf",
+      "sha256": "e5bc51daaeb347a891ff1a3c9b9471473ced55589d361f9c8f46e236009087d3",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "original_subject": "=?utf-8?B?77+9?=",
+      "supplied_subject": "�",
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "required-subject-omitted.pdf",
+      "sha256": "43d3bbcd61e790d182818d199f126ed32baf019dac070c0b631f2bf466f76370",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_CORE_FIELDS_SOURCE_REQUIRED"
+      ],
+      "original_subject": "=?utf-8?Q?bad=ZZ?=",
+      "supplied_subject": null,
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_SUBJECT_XMP"
+          ]
+        },
+        "reason": "Known nonempty original fields require corresponding Core Fields; supplied value fidelity is separate.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Subject"
+        ]
+      }
+    }
+  ]
+}

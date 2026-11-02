@@ -1,0 +1,268 @@
+{
+  "review_date": "2026-10-31",
+  "repository": "thinkbox-digital/eapdf",
+  "scope": "All open and closed issues and comments returned by the repository API: 2 open issues, 1 comment; page 2 empty. Pull requests excluded.",
+  "authority": "Discussion is reviewed against the pinned published specification; no maintainer acceptance or adopted errata is inferred.",
+  "raw_snapshot": "project-issues.json",
+  "supersedes": "docs/improvement/github-issues-1-2-review.json (historical 29 October implementation status only)",
+  "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
+  "specification_sha256": "b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae",
+  "findings": [
+    {
+      "issue": 1,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/1",
+      "topic": "DPart child arrays and parent links",
+      "rules": [
+        {
+          "code": "PAGE_DPART_PRESENT",
+          "number": 50
+        },
+        {
+          "code": "DPART_OBJECT_STRUCTURE",
+          "number": 59
+        }
+      ],
+      "decision": "Keep the array-of-arrays and correct Parent requirements. The historical sample defect is repaired in current creation code.",
+      "source": "ISO 32000-2 document parts, as required by EA-PDF sections 9.2 and 9.6.",
+      "evidence": "Java DocumentPartChecks; Python check_dpart_object_structure; DPart parent, array and page-range regressions."
+    },
+    {
+      "issue": 1,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/1",
+      "topic": "PDF/A-4 font CIDSet",
+      "rules": [],
+      "decision": "Delegate the PDF/A determination to veraPDF on the finished file. Do not infer that a proposed future standards amendment is already effective.",
+      "source": "PDF/A prerequisite; this is not a new custom EA-PDF rule.",
+      "evidence": "Current real outputs are independently checked by veraPDF. No blanket font stripping is introduced."
+    },
+    {
+      "issue": 1,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/1",
+      "topic": "Embedded-file MD5 representation",
+      "rules": [
+        {
+          "code": "EMBEDDED_MD5_MATCH",
+          "number": 76
+        },
+        {
+          "code": "EMBEDDED_MD5_BINARY_FORMAT",
+          "number": 77
+        },
+        {
+          "code": "EMBEDDED_MD5_RECOMMENDED",
+          "number": 78
+        }
+      ],
+      "decision": "Separate recommended presence, mandatory format when supplied, and actual digest agreement. PDF CheckSum is 16 binary bytes; XMP uses 32 hexadecimal characters.",
+      "source": "EA-PDF section 9.4; ISO 32000-2 embedded-file parameters.",
+      "evidence": "PdfMailWriter.setEmbeddedChecksum; both validators check binary encoding and payload digest; malformed checksum regressions."
+    },
+    {
+      "issue": 1,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/1",
+      "topic": "Tags must refer to actual content",
+      "rules": [
+        {
+          "code": "STRUCTTREE_ROOT_DOCUMENT",
+          "number": 117
+        },
+        {
+          "code": "MAIL_MESSAGE_GUID_MATCH_DPM_XMP",
+          "number": 145
+        }
+      ],
+      "decision": "Retain content, MCID, ParentTree and ownership checks. Merely having a structure tree is insufficient. A few linked tags do not establish accessibility certification.",
+      "source": "EA-PDF section 9.7 and applicable ISO/TS 32005 requirements.",
+      "evidence": "Creator PreservationRegressionTests and MarkedContentRepairTests; Python check_structure_correspondence; Java LogicalStructureChecks/PageContentChecks."
+    },
+    {
+      "issue": 2,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/2",
+      "topic": "NonFullScreenPageMode",
+      "rules": [
+        {
+          "code": "NONFULLSCREENPAGEMODE_PRESENT",
+          "number": 37
+        },
+        {
+          "code": "PROFILE_NFSM_CONTAINER",
+          "number": 39
+        },
+        {
+          "code": "PROFILE_NFSM_MULTI",
+          "number": 41
+        },
+        {
+          "code": "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS",
+          "number": 43
+        },
+        {
+          "code": "PROFILE_NFSM_SINGLE_NO_ATTACHMENTS",
+          "number": 45
+        }
+      ],
+      "decision": "Retain the published EA-PDF requirement. The concern that viewers ignore it is recorded; discussion is not an adopted deletion of the requirement. Preserve the separately labelled PDF 1.7 collection interpretation.",
+      "source": "EA-PDF section 9.1, printed pages 62–63; linked pdf-association/report-an-issue#14.",
+      "evidence": "Both validators and creator retain profile-specific settings. Existing source-review decisions distinguish PDF behaviour from EA-PDF file requirements."
+    },
+    {
+      "issue": 2,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/2",
+      "topic": "Single-page DPart may omit End",
+      "rules": [
+        {
+          "code": "DPART_OBJECT_STRUCTURE",
+          "number": 59
+        }
+      ],
+      "decision": "Accept omitted End as Start. Reject invalid ranges and follow the prescribed single-page omission.",
+      "source": "ISO 32000-2 document-part dictionary; EA-PDF section 9.6.",
+      "evidence": "Java DocumentPartChecks defaults End to Start; Python page_range_from_dpart does likewise; single-page and reversed-range tests pass."
+    },
+    {
+      "issue": 2,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/2",
+      "topic": "Document root may be role-mapped",
+      "rules": [
+        {
+          "code": "STRUCTTREE_ROOT_DOCUMENT",
+          "number": 117
+        }
+      ],
+      "decision": "Resolved: accept a single root whose resolved standard role is Document. Literal /S spelling alone must not decide the result.",
+      "source": "EA-PDF section 9.7, printed 74; ISO 32000-2 section14.8.6.2.",
+      "evidence": "Java StructureRolesTests and Python test_role_mapping_review cover transitive mapping, invalid targets, cycles and bounds. This supersedes the open item in the 29 October issue review."
+    },
+    {
+      "issue": 2,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/2",
+      "topic": "PDF 2 namespace mappings and legacy compatibility",
+      "rules": [
+        {
+          "code": "ROLEMAPNS_PRESENT",
+          "number": 116
+        },
+        {
+          "code": "ROLEMAP_MAIL_TAGS",
+          "number": 118
+        },
+        {
+          "code": "MAIL_MESSAGE_ROLEMAP_DOCUMENT",
+          "number": 126
+        }
+      ],
+      "decision": "Resolve explicit NS through RoleMapNS and implicit namespace through the applicable RoleMap. Keep the separately required legacy compatibility map; PDF 2 ignoring it for an explicitly namespaced element does not remove EA-PDF compatibility requirements.",
+      "source": "EA-PDF section 9.7 and Tables 9–10, printed 74–75; ISO 32000-2 section14.8.6.2.",
+      "evidence": "Both role resolvers test explicit NS overriding a conflicting root map. Full-map versus used-tag scope remains a labelled project interpretation, not adopted errata."
+    },
+    {
+      "issue": 2,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/2",
+      "topic": "Whether pdfmail namespace is required",
+      "rules": [
+        {
+          "code": "XMP_NS_PREFIX",
+          "number": 158
+        }
+      ],
+      "decision": "Retain all three namespace/prefix requirements. The issue claim that pdfmail is absent from the specification conflicts with the pinned document.",
+      "source": "EA-PDF section 9.8 printed 83 explicitly requires the following namespaces; Table 14 printed 84 lists pdfmail, pdfmailid and pdfmailmeta.",
+      "evidence": "Re-read the complete preceding SHALL sentence and Table 14, not only the schema sections. Both validators retain the requirement."
+    },
+    {
+      "issue": 2,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/2",
+      "topic": "Meaning and type of dc:creator",
+      "rules": [
+        {
+          "code": "XMP_CREATOR",
+          "number": 163
+        },
+        {
+          "code": "XMP_CREATOR_SEMANTICS",
+          "number": 164
+        }
+      ],
+      "decision": "Accept creator names for people, organizations or services; do not demand a software product name or reject address-like spelling. Separate first-item/type checks from provenance.",
+      "source": "EA-PDF section 9.8 printed 84; standard Dublin Core/XMP creator meaning.",
+      "evidence": "CreationProvenanceTests; both validators report unknown attribution as unavailable rather than infer it from punctuation or equality with the sender."
+    },
+    {
+      "issue": 2,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/2",
+      "topic": "Meaning of xmp:CreateDate",
+      "rules": [
+        {
+          "code": "XMP_CREATEDATE",
+          "number": 161
+        },
+        {
+          "code": "XMP_CREATEDATE_SEMANTICS",
+          "number": 162
+        }
+      ],
+      "decision": "The pinned specification expressly names the EA-PDF file creation date. Retain that meaning, but do not claim that timestamp syntax or a comparison with Sent proves the actual creation event.",
+      "source": "EA-PDF section 9.8 printed 84: creation-software obligation for EA-PDF file creation date.",
+      "evidence": "Both validators separate XMP date format from independent provenance. The comment questioning whether the SHALL exists is contradicted by the published clause."
+    },
+    {
+      "issue": 2,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/2",
+      "topic": "AttachmentList versus body annotations",
+      "rules": [
+        {
+          "code": "ATTACHMENT_ANNOTATIONS_PRESENT",
+          "number": 61
+        },
+        {
+          "code": "ATTACHMENT_ANNOTATIONS_VISIBLE_WITHIN_CROPBOX",
+          "number": 62
+        }
+      ],
+      "decision": "Retain a qualifying attachment annotation in every relevant email-body content set. An AttachmentList can be additional navigation; it does not replace the body requirement. Presence and visibility/CropBox are now independently reported.",
+      "source": "EA-PDF section 9.3 printed 65; last note explicitly leaves attachment indexes unconstrained by this requirement.",
+      "evidence": "Both validators bind annotations to the owning body set. The clipped-icon regression passes presence and fails visibility."
+    },
+    {
+      "issue": 2,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/2",
+      "topic": "Revision, ISO 32005, GUID and tag nesting",
+      "rules": [
+        {
+          "code": "MAIL_MESSAGE_CHILDREN",
+          "number": 131
+        },
+        {
+          "code": "MAIL_MESSAGE_GUID_ATTRIBUTE",
+          "number": 144
+        },
+        {
+          "code": "MAIL_MESSAGE_GUID_MATCH_DPM_XMP",
+          "number": 145
+        },
+        {
+          "code": "EAPDF_REV",
+          "number": 160
+        }
+      ],
+      "decision": "Keep revision 2024 and the applicable ISO 32005 assessment. Verify GUID on the actual owning message and correct structure ancestry, rather than accepting an identifier found somewhere else.",
+      "source": "EA-PDF Table 15 printed 84 and section 9.7; linked pdf-association/report-an-issue#21.",
+      "evidence": "Current creator/validators retain these checks. Independent ISO 32005 assessment is separate from PDF/A and custom rule coverage."
+    },
+    {
+      "issue": 2,
+      "url": "https://github.com/thinkbox-digital/eapdf/issues/2",
+      "topic": "Updated third-party sample",
+      "rules": [],
+      "decision": "The attachment URL returns HTTP 404. Its bytes could not be retrieved, so the updated sample has not been tested. Existing compare/bfo.pdf has revision 2025 and is not treated as the updated revision 2024 sample.",
+      "source": "https://github.com/user-attachments/files/26435040/out.pdf",
+      "evidence": "Historical compare/bfo.pdf and compare/uiuc.pdf were separately tested without changes. Both pass PDF/A and fail EA-PDF checks; both now pass resolved Document-root checks. Final reports retain their other failures. Neither file is represented as the unavailable updated attachment."
+    }
+  ],
+  "updated_attachment_download": {
+    "url": "https://github.com/user-attachments/files/26435040/out.pdf",
+    "result": "HTTP 404",
+    "tested": false
+  },
+  "validation_evidence": "Standalone Java 229-rule reports: output/rule-refinement-2026-10-31/evidence/java/thirdparty-229/. Both historical third-party PDFs pass PDF/A but fail EA-PDF; input hashes unchanged."
+}

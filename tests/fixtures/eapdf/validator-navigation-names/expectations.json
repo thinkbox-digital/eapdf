@@ -1,0 +1,56 @@
+{
+  "authority": "EA-PDF 9.1 printed p62; ISO 32000-2:2020 catalog PageMode and ViewerPreferences NonFullScreenPageMode name types",
+  "seed": "tests/fixtures/eapdf/validator-operands/valid.pdf",
+  "seed_sha256": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+  "boundary": "Only native navigation values change; source attachment condition and PDF/A/ISO baseline remain independent",
+  "cases": [
+    {
+      "file": "valid.pdf",
+      "sha256": "2c464b4426531037066274c9f5c375308978193e452249ce596372a12c62d3bf",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "page-text.pdf",
+      "sha256": "70606004c5b1571016b2906efa7287d962abc7d62e4bcc482e5f979bea123b77",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"
+      ]
+    },
+    {
+      "file": "nfsm-text.pdf",
+      "sha256": "07ba097646328254a51838752d2907bb02e3708d5311ed80b0d0df03b78f4edf",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS"
+      ]
+    },
+    {
+      "file": "both-text.pdf",
+      "sha256": "730e5fd87b6de6efbca8ad05a7e03e1a88dec7cfe61da56f2aa5145e09e06229",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS",
+        "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"
+      ]
+    },
+    {
+      "file": "wrong-name.pdf",
+      "sha256": "7e58f3b2825dc9159ee6896457026999cd7268e75d0b87b4d8cea0a7041e7da1",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"
+      ]
+    },
+    {
+      "file": "missing-page-mode.pdf",
+      "sha256": "f925656ec16d073723588d6eb39857eebd0acfa3e3426aa2fcedb06076891ce0",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "PAGEMODE_PRESENT",
+        "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"
+      ]
+    }
+  ]
+}

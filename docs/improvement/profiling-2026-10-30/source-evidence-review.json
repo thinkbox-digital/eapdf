@@ -1,0 +1,65 @@
+{
+  "source_headers_inspected": 48129,
+  "oversized_or_skipped_headers": 0,
+  "candidate_count": 1,
+  "candidate_size_bytes": 18669,
+  "candidate_md5": "8b07757ccbe1745981bdbea3c8435865",
+  "matching_message_id": true,
+  "matching_size": true,
+  "matching_raw_from": true,
+  "matching_raw_to": true,
+  "matching_sent_instant": true,
+  "subject_difference": [
+    {
+      "op": "insert",
+      "metadata_positions": [
+        13,
+        13
+      ],
+      "source_positions": [
+        13,
+        14
+      ],
+      "metadata_codepoints": [],
+      "source_codepoints": [
+        "0x16"
+      ]
+    },
+    {
+      "op": "insert",
+      "metadata_positions": [
+        31,
+        31
+      ],
+      "source_positions": [
+        32,
+        33
+      ],
+      "metadata_codepoints": [],
+      "source_codepoints": [
+        "0x16"
+      ]
+    }
+  ],
+  "matching_creator_warning_count": 2,
+  "explanation": "Preserved source Subject contains two U+0016 characters omitted from displayed headers and XML metadata, with an explicit creator warning. Native PST/unexported MAPI information is not embedded under the existing export policy. No decoder or source bytes were altered; preserve INCOMPLETE.",
+  "dependent_findings": [
+    "MESSAGE_SOURCE_MATCH: no uniquely acceptable supported source",
+    "MESSAGE_SOURCE_MATCH: nested candidates prevent universal outer-header contradiction",
+    "DPM_BODY_MEDIA_TYPE_MATCH_SOURCE: an unresolved source binding has no body inventory"
+  ],
+  "private_evidence": "output/performance-fixes-2026-10-30/source-evidence-review",
+  "extracted_xmp": {
+    "sha256": "3a7ef3c85ae15a945dce37b453844ec941489c9a90eb35f752ad57c7c754d481",
+    "bytes": 103574360,
+    "working_copy_removed": true
+  },
+  "candidate_af_relationship": "Source",
+  "preservation_scope_clarification": {
+    "container_omission": "Deliberate PST/MBOX policy; derived RFC 822 messages are embedded.",
+    "derivation_notice_forces_incomplete": false,
+    "creator_incomplete_trigger": "Nonempty sourceProblems, distinct from sourceDerivation provenance text.",
+    "additional_findings": "Recorded header-fidelity and unresolved source-comparison limitations.",
+    "container_embedding_pending_repair": false
+  }
+}

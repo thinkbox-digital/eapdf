@@ -1,0 +1,385 @@
+[
+  {
+    "case": "valid-s",
+    "sha256": "ab2e819f998914ddb3d60ad483b540e6442e8da368336a8f35ebbb21fa237a91",
+    "creator": "PASS",
+    "independent_input_differences": [],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "valid-si",
+    "sha256": "75ac8ab1b103e2866c3ac32ebb89b8fa890400c0f0e828c1903471b42d739760",
+    "creator": "PASS",
+    "independent_input_differences": [],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "valid-m",
+    "sha256": "263d3bc734deb33a8f633da35a650ff0bf1d8d59b60242da59423e6c0c0bc993",
+    "creator": "PASS",
+    "independent_input_differences": [],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "valid-mi",
+    "sha256": "009379314084e5a39a221d354f0af93d55a20df9fa1fafe048a78de2117ad3c1",
+    "creator": "PASS",
+    "independent_input_differences": [],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "valid-c",
+    "sha256": "51235d707ee9a38f2c6ff428f895f2435a7b98972b5f30a753dc255240bc3c8a",
+    "creator": "PASS",
+    "independent_input_differences": [],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 3,
+    "child_pdfa": "PASS",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "valid-ci",
+    "sha256": "a6a5cc65ae85d54bb7e579656c72e4000809efb244621ff07f69a24842bb4a6c",
+    "creator": "PASS",
+    "independent_input_differences": [],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 3,
+    "child_pdfa": "PASS",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "source-omitted-si",
+    "sha256": "b5756a6091aa7176ac87309ed0518657745c75383314cc4c8029a971602800f8",
+    "creator": "PASS",
+    "independent_input_differences": [],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "source-omitted-mi",
+    "sha256": "c34662a56ed512e9cfdb0069f599d471121d27e47e7a23c883446f18b3a3fa14",
+    "creator": "PASS",
+    "independent_input_differences": [],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "source-omitted-ci",
+    "sha256": "c4f361f1b062f3fb3efabe0c3cab6d29dff892d18f9e407bdd4ec04105723f6e",
+    "creator": "PASS",
+    "independent_input_differences": [],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 3,
+    "child_pdfa": "PASS",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-message-m",
+    "sha256": "66e9fada1b6c70ce472997362dee2d9d23380328a90ac67c19143cd2931dccc8",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "rendered-message-occurrences",
+      "root-message-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-message-mi",
+    "sha256": "850cebd2adc1ba1e832dff2a3d2eb7defea582662b044e7f44ab7f054e179737",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "rendered-message-occurrences",
+      "root-message-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-message-c",
+    "sha256": "70662ccbe89ee1f447be67375f5af03cbb874d3b68197e86b3a3387e57918862",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "rendered-message-occurrences",
+      "root-message-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 2,
+    "child_pdfa": "PASS",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-message-ci",
+    "sha256": "cc06a7ae7c4c2dfd7e4f3eb3b9a145d035d85ce4e67b3b0f72c20ac8c80dc641",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "rendered-message-occurrences",
+      "root-message-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 2,
+    "child_pdfa": "PASS",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-attachment-s",
+    "sha256": "1c6c2a1344955ef5a83200473dae92905dc10bec879164273a284dee363a0b9a",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "native-bytes-owner-or-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "FAIL",
+    "pdf_only_failures": [
+      "MESSAGE_ATTACHMENT_COUNT_XMP",
+      "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS",
+      "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"
+    ],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-attachment-si",
+    "sha256": "a04c37bd4d0d8f6c8416fa0ec34c0e8fc4468f3f45365d410a368daf76192a5a",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "native-bytes-owner-or-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-attachment-m",
+    "sha256": "a572c953aa427fa63b00a9c12884e900840726a39125aea68ddfe3f8e6ca1d7b",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "native-bytes-owner-or-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "FAIL",
+    "pdf_only_failures": [
+      "MESSAGE_ATTACHMENT_COUNT_XMP"
+    ],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-attachment-mi",
+    "sha256": "47103c71b32fe9fab6e7caefcef14eac02f885be04f197e30c83a64c0b8337b7",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "native-bytes-owner-or-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-attachment-c",
+    "sha256": "a67dfc0761151519b740812efcfd0d4c87f185d5c9a5d078c1ee51dcd1476538",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "native-bytes-owner-or-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "FAIL",
+    "pdf_only_failures": [
+      "COLLECTION_CHILD_VALIDATION"
+    ],
+    "child_count": 3,
+    "child_pdfa": "PASS",
+    "child_failures": [
+      "MESSAGE_ATTACHMENT_COUNT_XMP",
+      "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS",
+      "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-attachment-ci",
+    "sha256": "763b11f9da2b8e46e393bcb0a0ae29963b1ca8a8e5647e4f244dede4e26477c6",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "native-bytes-owner-or-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 3,
+    "child_pdfa": "PASS",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "changed-native-bytes",
+    "sha256": "703007a84b9905e5b3aaccdf83d410cf29beee5d8f3a9d47c8b1ed16358856d9",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "native-bytes-owner-or-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "FAIL",
+    "pdf_only_failures": [
+      "ATTACHMENT_XMP_MATCH"
+    ],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "swapped-native-owners",
+    "sha256": "c1cd6eb7069878e184fe938e54656682ebf7b18f7049636cc6a31cabc686c943",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "native-bytes-owner-or-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "FAIL",
+    "pdf_only_failures": [
+      "ATTACHMENT_XMP_MATCH"
+    ],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "reused-identical-occurrence",
+    "sha256": "6e728d019d1d5ccf88a723661544b0d19dfd108c7ca3daf0622636e8eee015b5",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "native-bytes-owner-or-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "FAIL",
+    "pdf_only_failures": [
+      "ATTACHMENT_XMP_MATCH",
+      "MESSAGE_ATTACHMENT_COUNT_XMP",
+      "STRUCTURE_CORRESPONDENCE"
+    ],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "changed-staged-bytes",
+    "sha256": "fd3b51a09cb41afdc5dd25c97d6fbde215dc2cfa2cc342f15f7cab624975132a",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "native-bytes-owner-or-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "FAIL",
+    "pdf_only_failures": [
+      "ATTACHMENT_XMP_MATCH"
+    ],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "changed-source-bytes",
+    "sha256": "b4901dda4159dd584af5c6b9f18b3c23037f14e4a4dc9e7e595c3cea386c648a",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "source-bytes"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 0,
+    "child_pdfa": "N/A",
+    "child_failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "missing-listed-child",
+    "sha256": "62f1993c759599cd735fc0e18a93564fa28b2281da4770dfd5c6e56227e9f20c",
+    "creator": "REJECT",
+    "independent_input_differences": [
+      "rendered-message-occurrences"
+    ],
+    "pdfa": "PASS",
+    "pdf_only_eapdf": "PASS",
+    "pdf_only_failures": [],
+    "child_count": 2,
+    "child_pdfa": "PASS",
+    "child_failures": [],
+    "expected_result_observed": true
+  }
+]

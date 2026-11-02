@@ -1,0 +1,54 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -7,7 +7,7 @@
+ import quopri
+ from copy import deepcopy
+ from email.header import decode_header, make_header
+-from email.errors import (HeaderDefect, FirstHeaderLineIsContinuationDefect,
++from email.errors import (HeaderDefect, HeaderParseError, FirstHeaderLineIsContinuationDefect,
+                           MisplacedEnvelopeHeaderDefect, MissingHeaderBodySeparatorDefect)
+ from datetime import datetime, timedelta, timezone
+ from calendar import monthrange
+@@ -4352,7 +4352,7 @@
+             expected=unfolded(original_values[0]) if original_values else ""
+             if not name.startswith("Mail_Raw_"):
+                 try:
+-                    expected=str(make_header(decode_header(expected)))
++                    expected=decoded_source_header(expected)
+                 except (LookupError,UnicodeError,ValueError):
+                     report.warn(code,"Attribute header decoding is unavailable",dict(detail,
+                         comparison="unavailable",reason="The original header encoding cannot be decoded."))
+@@ -4664,7 +4664,7 @@
+ def decoded_header_text(value):
+     try:
+         return clean_header_text(str(make_header(decode_header(str(value)))))
+-    except (LookupError,UnicodeError,ValueError):
++    except (LookupError,UnicodeError,ValueError,HeaderParseError):
+         return norm_text(value)
+ 
+ def email_source_match_score(record,source):
+@@ -5443,8 +5443,23 @@
+ 
+ def decoded_source_header(raw):
+     try:
++        # The standard decoder repairs some malformed payloads. Such a repair
++        # cannot establish source fidelity or select a repeated occurrence.
++        for word in re.finditer(r"=\?([^?]*)\?([^?]*)\?([^?]*)\?=",raw):
++            charset,encoding,payload=word.groups()
++            if not charset or any(char.isspace() for char in charset) or not payload or any(not 33<=ord(char)<=126 for char in payload):
++                raise ValueError("Malformed encoded-word components")
++            if encoding.upper()=="B":
++                if len(payload)%4:
++                    raise ValueError("Incomplete encoded-word base64 padding")
++                base64.b64decode(payload,validate=True)
++            elif encoding.upper()=="Q":
++                if re.search(r"=(?![0-9A-Fa-f]{2})",payload):
++                    raise ValueError("Malformed encoded-word Q escape")
++            else:
++                raise ValueError("Unsupported encoded-word transfer encoding")
+         value=str(make_header(decode_header(raw)))
+-    except (LookupError,UnicodeError,ValueError) as error:
++    except (LookupError,UnicodeError,ValueError,HeaderParseError) as error:
+         raise ValueError("Original header encoding cannot be decoded") from error
+     if "\ufffd" in value or any(0xD800<=ord(char)<=0xDFFF for char in value):
+         raise ValueError("Original header encoding cannot be decoded reliably")

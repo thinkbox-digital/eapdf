@@ -1,0 +1,74 @@
+--- V35/validate_eapdf.py
++++ V36/validate_eapdf.py
+@@ -7841,12 +7841,56 @@
+             identifiers.add(guid)
+             report.ok("MAIL_GUID_UNIQUE","Email Mail_GUID is unique within this document",{"email":index,"value":guid})
+ 
++def dpart_level_name_assessment(value):
++    """Keep Name/NMTOKEN-only and undecodable interpretations unavailable."""
++    if not isinstance(value,pikepdf.Name):
++        return "invalid","NodeNameList members must be PDF names"
++    try:
++        text=bytes(value)[1:].decode("utf-8")
++    except UnicodeError:
++        return "unavailable","Cannot assess XML spelling through the recommended UTF-8 name interpretation"
++    # XML1.0 Fifth Edition productions [4], [4a], [5] and [7]. A Name is
++    # unambiguously valid under either reading of the PDF wording 'Name token'.
++    start=r"A-Z_a-z:\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF"
++    extra=r"\-.0-9\u00B7\u0300-\u036F\u203F-\u2040"
++    if re.fullmatch(fr"[{start}][{start}{extra}]*",text):
++        return "valid",None
++    if text and re.fullmatch(fr"[{start}{extra}]+",text):
++        return "unavailable","Label is an XML NMTOKEN but not an XML Name; the PDF Name-token interpretation remains under review"
++    return "invalid","Label contains characters disallowed by both XML Name and NMTOKEN"
++
+ def check_dpart_object_structure(dpart_root,root_node,nodes,report):
+     errors=[]
++    unavailable=[]
++    root_type=dict_get(dpart_root,"/Type",None)
++    if root_type is not None and (not isinstance(root_type,pikepdf.Name) or root_type!=pikepdf.Name('/DPartRoot')):
++        errors.append({"object":"DPartRoot","key":"Type","actual":observed_pdf_value(root_type),"reason":"If supplied, Type must be the PDF name DPartRoot"})
++    record_level=dict_get(dpart_root,"/RecordLevel",None)
++    if record_level is not None and (not isinstance(record_level,int) or isinstance(record_level,bool)):
++        errors.append({"object":"DPartRoot","key":"RecordLevel","actual":observed_pdf_value(record_level),"reason":"If supplied, RecordLevel must be a PDF integer"})
++    depths={}
++    for item in nodes:
++        depths[item["objgen"]]=0 if item["parent"] is None else depths.get(objgen(item["parent"]),-1)+1
++    level_count=max(depths.values(),default=-1)+1
++    labels=dict_get(dpart_root,"/NodeNameList",None)
++    if labels is not None:
++        if not is_pdf_array(labels):
++            errors.append({"object":"DPartRoot","key":"NodeNameList","reason":"If supplied, NodeNameList must be an array of PDF names"})
++        elif len(labels)!=level_count:
++            errors.append({"object":"DPartRoot","key":"NodeNameList","actual_entries":len(labels),"expected_levels":level_count,"reason":"NodeNameList must have one entry for each actual hierarchy level"})
++        else:
++            for index,label in enumerate(labels):
++                state,reason=dpart_level_name_assessment(label)
++                detail={"key":"NodeNameList","index":index,"actual":observed_pdf_value(label),"reason":reason}
++                if state=="invalid":errors.append(detail)
++                elif state=="unavailable":unavailable.append(detail)
+     if not getattr(dpart_root,"is_indirect",False) or not getattr(root_node,"is_indirect",False):
+         errors.append("DPartRoot and DPartRootNode must be indirect objects")
+     for item in nodes:
+         node=item["node"]
++        node_type=dict_get(node,"/Type",None)
++        if node_type is not None and (not isinstance(node_type,pikepdf.Name) or node_type!=pikepdf.Name('/DPart')):
++            errors.append({"objgen":item["objgen"],"key":"Type","actual":observed_pdf_value(node_type),"reason":"If supplied, Type must be the PDF name DPart"})
+         expected_parent=item["parent"] if item["parent"] is not None else dpart_root
+         actual_parent=dict_get(node,"/Parent",None)
+         if actual_parent is None or objgen(actual_parent)!=objgen(expected_parent):
+@@ -7884,9 +7928,12 @@
+     if "DPM_NAME_TYPES" not in report.seen_codes:
+         report.ok("DPM_NAME_TYPES","Inspected DPM content-set types and subtypes use PDF names",{"nodes":len(nodes)})
+     if errors:
+-        report.fail("DPART_OBJECT_STRUCTURE","DPart object structure does not satisfy ISO 32000-2",{"errors":errors})
++        report.fail("DPART_OBJECT_STRUCTURE","DPart object structure does not satisfy ISO 32000-2",{"errors":errors,"unavailable_name_checks":unavailable})
++    elif unavailable:
++        report.warn("DPART_OBJECT_STRUCTURE","Supplied DPart hierarchy names could not be fully assessed",{"state":"unverified","assessment":"unavailable","names":unavailable})
++        report.warn("VALIDATION_INCOMPLETE","DPart hierarchy name conformance remains unavailable",{"rules":["DPART_OBJECT_STRUCTURE"],"assessment":"unavailable"})
+     else:
+-        report.ok("DPART_OBJECT_STRUCTURE","DPart parents, indirect references, and page-range structure are valid",{"DPartRoot":objgen(dpart_root),"DPartRootNode":objgen(root_node),"nodes":[{"objgen":item["objgen"],"parent":objgen(dict_get(item["node"],"/Parent",None)),"start":objgen(item["start"]),"end":objgen(item["end"]),"child_count":item["child_count"]} for item in nodes]})
++        report.ok("DPART_OBJECT_STRUCTURE","DPart parents, indirect references, page ranges and supplied optional entry types/counts are valid",{"DPartRoot":objgen(dpart_root),"DPartRootNode":objgen(root_node),"nodes":[{"objgen":item["objgen"],"parent":objgen(dict_get(item["node"],"/Parent",None)),"start":objgen(item["start"]),"end":objgen(item["end"]),"child_count":item["child_count"]} for item in nodes]})
+ 
+ class ChildValidationContext:
+     def __init__(self,include_pdfa=False):

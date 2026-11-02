@@ -1,0 +1,85 @@
+{
+  "milestone": "M0",
+  "status": "ACCEPTANCE_MET_FOR_TESTED_DESKTOP_BROWSERS",
+  "m1_started": false,
+  "node": "24.19.0",
+  "npm": "11.17.0",
+  "typescript": "5.9.3",
+  "pdfjs": "6.4.299",
+  "pdfjs_commit": "d0991a0d53f3bb3a7307e3b83f279c1d117aafb3",
+  "node_tests": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "chromium": {
+    "browser": "156.0.8078.47",
+    "executable": "/snap/chromium/current/usr/lib/chromium-browser/chrome",
+    "checks": [
+      "MV3 extension installed unpacked; background opened the viewer tab",
+      "ordinary PDF: real worker, visible page pixels, next, direct page entry, invalid page rejection and 150% zoom",
+      "invalid PDF produces a visible error; reopening recovers with no stale page",
+      "existing EA-PDF sample: visible page pixels and page navigation; no semantic classification or validation",
+      "all file operations succeeded offline; zero HTTP(S) requests and zero uncaught page errors"
+    ],
+    "eaPdf": {
+      "path": "/media/lepore/Work/thinkbox/convert/examples/eml/eml_sample_1s.pdf",
+      "sha256": "b4fb687d52613c4f49a9e26b7c41498dc4bb39b34c04bd198f0cca6c163d4d48"
+    },
+    "status": "PASS"
+  },
+  "firefox": {
+    "status": "PASS",
+    "browser": "158.0.1",
+    "driver": "0.37.1",
+    "checks": [
+      "MV3 temporary add-on installation",
+      "ordinary PDF pixels and next-page navigation",
+      "150% zoom",
+      "EA-PDF sample pixels",
+      "Firefox offline; no HTTP(S) page resources"
+    ],
+    "limits": "Temporary installation only; no signing, store review, or older-version compatibility claim."
+  },
+  "npm_audit": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 2,
+      "dev": 3,
+      "optional": 12,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 16
+    }
+  },
+  "lockfile_sha256": "b6389eedc4b9ae28f9f6f7d9be3cddd3811c967a7b500d0f30da233101b6acf8",
+  "npm_ci_preserved_lockfile": true,
+  "two_consecutive_builds_identical": true,
+  "build_info_sha256": {
+    "chromium": "3b89a94e5636cffa1b30a75a6f90b7aa5f3d02d8c91a55f3091e236c9332be4f",
+    "firefox": "7356d24d7c3ac889159323ecb0af48d6709e8f7ae120c0c9d4ef99d7aa0a9fa0"
+  },
+  "pinned_upstream_files": 203,
+  "locked_packages_including_platform_optionals": 16,
+  "font_source_sha256": "ad98b7498dc2992f7f0868f79b65ce4a720a3acdb63ab3f1f1cb6881117a5406",
+  "scope": {
+    "existing_paths_checked": 3150,
+    "tracked_paths_unchanged": true,
+    "outside_scope_observations": [
+      {
+        "path": "examples/tmp_pdf_file2717275462404108771.pdf",
+        "baseline_sha256": "93e493788cf01a48da0a4332ee1ee2630cdb8ee371cf17df8df8dc9a14edf5b1",
+        "current_sha256": null,
+        "tracked": false
+      }
+    ],
+    "note": "The pre-existing untracked temporary PDF disappeared during work. No task command wrote or removed it. It was not restored; the deleting actor is unknown."
+  }
+}

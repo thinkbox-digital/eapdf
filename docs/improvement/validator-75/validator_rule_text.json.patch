@@ -1,0 +1,15 @@
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -11173,6 +11173,12 @@
+         "PDFA-4F": [],
+         "PDFA-4E": []
+       }
++    },
++    "source_date_availability_review": {
++      "date": "2026-10-21",
++      "basis": "RFC5322 section3.3 specifies UTC for -0000 without knowing the originating local timezone and permits four-or-more-digit years. XSD dateTime permits extended years and +/-14-hour offsets. Supported RFC instants with wider numeric offsets normalize to UTC.",
++      "unavailable": "Datetime year limits and UTC conversion overflow cannot prove original date errors or require Raw-Sent. Required unperformed instant comparisons produce VALIDATION_INCOMPLETE.",
++      "boundary": "A 400-year calendar proxy identifies supported-parser range gaps only; it is never substituted into evidence or used to compare an extended original instant. Full source grammar and legacy zone normalization remain unverified."
+     }
+   },
+   "MESSAGE_SENT_FORMAT": {

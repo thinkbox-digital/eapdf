@@ -1,0 +1,346 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -23,7 +23,8 @@
+ from email.utils import parsedate_to_datetime, getaddresses, collapse_rfc2231_value
+ from urllib.parse import urlsplit, urlunsplit, parse_qs, unquote
+ import pikepdf
+-from pypdf import PdfReader
++from pypdf import PdfReader, PageObject
++from pypdf.generic import ContentStream, DecodedStreamObject, DictionaryObject, IndirectObject, NameObject
+ 
+ NS_RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ NS_DC="http://purl.org/dc/elements/1.1/"
+@@ -2354,7 +2355,69 @@
+         })
+     return out
+ 
+-def collect_page_text_analysis(path):
++def extract_scoped_field_text(reader,reference):
++    if reference.get("reason"):
++        raise ValueError(reference["reason"])
++    number=reference.get("page")
++    identity=reference.get("scope")
++    mcid=reference.get("mcid")
++    if not isinstance(mcid,int) or isinstance(mcid,bool) or mcid<0:
++        raise ValueError("Field MCID is not a nonnegative integer")
++    if not isinstance(number,int) or not 1<=number<=len(reader.pages) or not identity or not isinstance(identity[0],int) or identity[0]<=0:
++        raise ValueError("Field content scope/page is unavailable")
++    page=reader.pages[number-1]
++    scope=reader.get_object(IndirectObject(identity[0],identity[1],reader))
++    if str(scope.get("/Type"))=="/Page":
++        page_ref=page.indirect_reference
++        if (page_ref.idnum,page_ref.generation)!=tuple(identity):
++            raise ValueError("Field scope belongs to a different page")
++        stream=page.get_contents()
++        resources=page.get("/Resources")
++    elif str(scope.get("/Subtype"))=="/Form":
++        stream=scope
++        resources=scope.get("/Resources")
++        if resources is None:
++            raise ValueError("Form field has no explicit resources; inherited font mapping is not assessed")
++    else:
++        raise ValueError("Unsupported field content scope")
++    resources=resources.get_object() if hasattr(resources,"get_object") else resources
++    if not isinstance(resources,DictionaryObject):
++        raise ValueError("Field font resources are unavailable")
++    content=ContentStream(stream,reader)
++    if len(content.operations)>MAX_TREE_ITEMS:
++        raise ValueError("Excessively large field content scope")
++    stack=[]
++    selected=[]
++    for operands,operator in content.operations:
++        if operator in (b"BMC",b"BDC"):
++            properties=operands[1] if operator==b"BDC" and len(operands)>1 else None
++            if isinstance(properties,NameObject):
++                mapping=resources.get("/Properties",{})
++                mapping=mapping.get_object() if hasattr(mapping,"get_object") else mapping
++                properties=mapping.get(properties)
++            properties=properties.get_object() if hasattr(properties,"get_object") else properties
++            marked_id=properties.get("/MCID") if isinstance(properties,DictionaryObject) else None
++            stack.append(marked_id if isinstance(marked_id,int) and not isinstance(marked_id,bool) and marked_id>=0 else None)
++        elif operator==b"EMC":
++            if not stack:
++                raise ValueError("Unbalanced field marked content")
++            stack.pop()
++        if operator in (b"Tj",b"TJ",b"'",b'"',b"Do") and mcid not in stack:
++            continue
++        selected.append((operands,operator))
++    if stack:
++        raise ValueError("Unclosed field marked content")
++    projected=ContentStream(None,reader);projected.operations=selected
++    stream=DecodedStreamObject();stream.set_data(projected.get_data())
++    isolated=PageObject();isolated.update(page)
++    isolated[NameObject("/Resources")]=resources
++    isolated[NameObject("/Contents")]=stream
++    text=isolated.extract_text() or ""
++    if not text.strip() or "\ufffd" in text:
++        raise ValueError("No reliable decoded text was extracted for the field reference")
++    return text
++
++def collect_page_text_analysis(path,field_sequences=()):
+     reader=PdfReader(path)
+     pages=[]
+     for idx,page in enumerate(reader.pages, start=1):
+@@ -2372,6 +2435,27 @@
+             "urls":extract_actionable_urls(text),
+             "links":collect_link_annotations_pypdf(page),
+         })
++    cache={}
++    for field in field_sequences:
++        references=field.get("content_refs",[])
++        row={"field_objgen":field["field_objgen"],"tag":field["tag"],"content_refs":references,"text":None}
++        try:
++            if not references:
++                raise ValueError("Field has no supported content references")
++            parts=[]
++            for reference in references:
++                key=(reference.get("page"),tuple(reference.get("scope",())),reference.get("mcid"))
++                if reference.get("reason"):
++                    raise ValueError(reference["reason"])
++                if key not in cache:
++                    cache[key]=extract_scoped_field_text(reader,reference)
++                parts.append(cache[key])
++            row["text"]=" ".join(parts)
++        except ValueError as error:
++            row["reason"]=str(error)
++        if pages:
++            number=next((ref.get("page") for ref in references if isinstance(ref.get("page"),int) and 1<=ref["page"]<=len(pages)),1)
++            pages[number-1].setdefault("rendered_fields",[]).append(row)
+     return pages
+ 
+ def line_has_page_marker(line, page_num, total_pages):
+@@ -5282,12 +5366,39 @@
+     if not fields:
+         return []
+     content={}
++    locations=defaultdict(set)
++    page_numbers={pdf_object_identity(page.obj):number for number,page in enumerate(pdf.pages,start=1)}
++    stream_pages=defaultdict(set)
++    for page in pdf.pages:
++        streams=dict_get(page.obj,"/Contents",[])
++        for stream in streams if is_pdf_array(streams) else [streams]:
++            stream_pages[pdf_object_identity(stream)].add(pdf_object_identity(page.obj))
+     for number,page in enumerate(pdf.pages,start=1):
+         for sequence in analyze_page_content(page)["sequences"]:
+             if sequence["mcid"] is not None:
+                 key=(pdf_object_identity(sequence["scope"]),sequence["mcid"])
+                 content[key]=(number,sequence["has_text_object"])
+-    def text_references(element,inherited_page,seen,depth=0):
++                locations[key].add(number)
++    def resolved_reference(scope,mcid,page):
++        identity=pdf_object_identity(scope)
++        page_id=pdf_object_identity(page)
++        if identity in stream_pages:
++            aliases=stream_pages[identity]
++            if page_id in aliases:
++                identity=page_id
++            elif len(aliases)==1:
++                identity=next(iter(aliases))
++        choices=locations.get((identity,mcid),set())
++        number=page_numbers.get(page_id)
++        if number is None and len(choices)==1:
++            number=next(iter(choices))
++        ref={"page":number,"scope":identity,"mcid":mcid}
++        if not isinstance(mcid,int) or isinstance(mcid,bool) or mcid<0:
++            ref["reason"]="Field MCID is not a nonnegative integer"
++        elif number is None or number not in choices:
++            ref["reason"]="Field content is missing or ambiguous on its declared page"
++        return ref
++    def text_references(element,inherited_page,seen,resolved,depth=0):
+         visit_tree_node(element,seen,len(seen),depth,"Core Field structure")
+         page=dict_get(element,"/Pg",inherited_page)
+         children=dict_get(element,"/K",[])
+@@ -5295,11 +5406,13 @@
+         for child in children if is_pdf_array(children) else [children]:
+             if isinstance(child,int) and not isinstance(child,bool):
+                 references.append(content.get((pdf_object_identity(page),child),(None,False)))
++                resolved.append(resolved_reference(page,child,page))
+             elif dict_get(child,"/S",None) is not None:
+-                references.extend(text_references(child,page,seen,depth+1))
++                references.extend(text_references(child,page,seen,resolved,depth+1))
+             elif safe_name(dict_get(child,"/Type",None))=="MCR":
+                 scope=dict_get(child,"/Stm",dict_get(child,"/Pg",page))
+                 references.append(content.get((pdf_object_identity(scope),dict_get(child,"/MCID",None)),(None,False)))
++                resolved.append(resolved_reference(scope,dict_get(child,"/MCID",None),dict_get(child,"/Pg",page)))
+         return references
+     sequences=[]
+     for field in fields:
+@@ -5310,16 +5423,118 @@
+             visit_tree_node(ancestor,seen,len(seen),len(seen),"Core Field page inheritance")
+             page=dict_get(ancestor,"/Pg",None)
+             ancestor=dict_get(ancestor,"/P",None)
+-        references=text_references(field["elem"],page,set())
++        resolved=[]
++        references=text_references(field["elem"],page,set(),resolved)
+         sequences.append({"page":next((page for page,has_text in references if page is not None),None),
+-                          "field_objgen":field["objgen"],"tag":field["type"],"has_text_object":any(has_text for page,has_text in references)})
++                          "field_objgen":field["objgen"],"tag":field["type"],"has_text_object":any(has_text for page,has_text in references),"content_refs":resolved})
+     return sequences
+ 
+-def check_tagging_recommendations(pdf,dpart_nodes,elements,report):
++def observed_header_source_inventory(elements,page_analysis,xroot,afiles,owner_ranges=()):
++    observations={tuple(row["field_objgen"]):row for page in page_analysis or [] for row in page.get("rendered_fields",[])}
++    by_object={element["objgen"]:element for element in elements if element["objgen"]}
++    records=flatten_email_records(xroot) if xroot is not None else []
++    sources=summarize_source_emails(afiles)
++    inventory=[]
++    for field in (element for element in elements if element["type"]=="Mail_Field"):
++        item={"field_object":field["objgen"],"comparison":"unavailable","ownership":"unavailable"}
++        inventory.append(item)
++        try:
++            owner=field
++            visited=set()
++            while owner is not None and owner["type"]!="Mail_Message":
++                if owner["objgen"] in visited:
++                    owner=None;break
++                visited.add(owner["objgen"])
++                owner=by_object.get(owner["parent_objgen"])
++            if owner is None:
++                raise ValueError("No enclosing Mail_Message identifies the observed field")
++            identities=defaultdict(set)
++            for prop in parse_userproperties(owner["attrs"]):
++                name=str(dict_get(prop,"/N",""))
++                if name in ("Mail_GUID","Mail_MessageID"):
++                    value=dict_get(prop,"/V",None)
++                    if not isinstance(value,pikepdf.String):
++                        raise ValueError("Message identity is not a PDF string")
++                    identities[name].add(str(value))
++            if any(len(values)>1 for values in identities.values()):
++                raise ValueError("Enclosing message identity has conflicting values")
++            guid=next(iter(identities.get("Mail_GUID",set())),"")
++            message_id=next(iter(identities.get("Mail_MessageID",set())),"")
++            owners=[record for record in records if (guid and identity_fields(record)["Mail_GUID"]==guid) or
++                    (not guid and message_id and identity_fields(record)["Message-ID"]==message_id)]
++            if len(owners)!=1:
++                raise ValueError("Enclosing message has no unique XMP owner")
++            item["Mail_GUID"]=identity_fields(owners[0])["Mail_GUID"]
++            source=select_source_email(owners[0],sources)
++            if source is None:
++                raise ValueError("No unique inspectable retained source matches the XMP owner")
++            item.update(source=source["source_filename"],source_sha256=source["source_sha256"])
++            children=[element for element in elements if element["parent_objgen"]==field["objgen"]]
++            names=[element for element in children if element["type"]=="Mail_FieldName"]
++            values=[element for element in children if element["type"]=="Mail_FieldValue"]
++            if len(names)!=1 or len(values)>1:
++                raise ValueError("Observed field name/value fragments do not have a unique supported grouping")
++            def text(element):
++                observation=observations.get(tuple(element["objgen"]),{})
++                if observation.get("text") is None:
++                    raise ValueError(observation.get("reason","No decoded text evidence exists for the field markup"))
++                return observation["text"]
++            label=norm_text(text(names[0])).rstrip(":").strip()
++            actual=text(values[0]) if values else ""
++            item.update(name=label,value=actual)
++            if re.fullmatch(r"[!-9;-~]+",label) is None:
++                raise ValueError("Rendered label is not a supported source header name")
++            header=label.lower()
++            original=source.get("header_values",{})
++            if header=="sent" and header not in original and "date" in original:
++                header="date"
++            originals=original.get(header,[])
++            if len(originals)!=1:
++                raise ValueError("Original header is absent or repeated; no occurrence is guessed")
++            try:
++                expected=str(make_header(decode_header(originals[0])))
++            except (LookupError,UnicodeError,ValueError) as error:
++                raise ValueError("Original header encoding cannot be decoded") from error
++            item.update(source_header=header,expected=expected)
++            if not values and norm_text(expected):
++                raise ValueError("No custom value markup exists for a nonempty source header; untagged value text is not inferred")
++            equal=norm_text(actual)==norm_text(expected)
++            if not equal and header=="date":
++                left=parse_source_datetime(actual) or parse_xmp_datetime(actual)
++                right=parse_source_datetime(expected) or parse_xmp_datetime(expected)
++                if left is None or right is None:
++                    raise ValueError("Rendered date formatting cannot be compared as an instant")
++                equal=left==right
++            elif not equal and header in ("from","to","cc","bcc","sender","reply-to"):
++                def agents(value):
++                    result=getaddresses([value])
++                    if not result or any(not address or "@" not in address for name,address in result):
++                        raise ValueError("Rendered/source address formatting is not supported for comparison")
++                    return [(norm_text(name),address) for name,address in result]
++                equal=agents(actual)==agents(expected)
++            refs=[ref for element in names+values for ref in observations.get(tuple(element["objgen"]),{}).get("content_refs",[])]
++            actual_pages=sorted({ref["page"] for ref in refs if isinstance(ref.get("page"),int)})
++            owning_pages=sorted({number for span in owner_ranges
++                                 if span["identity"].get("Mail_GUID") and span["identity"]["Mail_GUID"]==item["Mail_GUID"]
++                                 for number in span["pages"]})
++            item.update(pages=actual_pages,owner_pages=owning_pages)
++            if owning_pages and actual_pages:
++                item["ownership"]="within-owner-ranges" if set(actual_pages).issubset(owning_pages) else "outside-owner-ranges"
++                if item["ownership"]=="outside-owner-ranges":
++                    equal=False
++                    item["reason"]="Field content references pages outside its enclosing message's declared DPart ranges"
++            item["comparison"]="equal" if equal else "different"
++        except ValueError as error:
++            item["reason"]=str(error)
++    return inventory
++
++def check_tagging_recommendations(pdf,dpart_nodes,elements,report,xroot=None,afiles=(),page_analysis=None):
+     code="CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED"
+     pages=page_objgen_map(pdf)
+     scoped=set()
+     content_sets=[]
++    owner_ranges=[]
++    by_node={node["objgen"]:node for node in dpart_nodes if node.get("objgen")}
+     unresolved=[]
+     for node in dpart_nodes:
+         if node.get("start") is None and node.get("end") is None:
+@@ -5330,6 +5545,7 @@
+             unresolved.append({"object":node["objgen"],"reason":"Content Set page range is unavailable"})
+         else:
+             scoped.update(range(span[0],span[1]+1))
++            owner_ranges.append({"identity":dpart_message_identity(node,by_node),"pages":list(range(span[0],span[1]+1))})
+     details={"strength":"SHOULD","scope":"All declared DPart Content Sets, a conservative superset of custom Content Sets",
+              "content_sets":content_sets,"pages":sorted(scoped),
+              "limits":"Syntactic content/annotation connections only; semantic equivalence and identification of every custom Content Set are not certified."}
+@@ -5393,9 +5609,11 @@
+                              "values":sum(element["type"]=="Mail_FieldValue" for element in children)})
+     # Observed field pairs cannot prove that no rendered header was omitted from
+     # tagging. That requires a source/rendered-header inventory beyond this view.
++    inventory=observed_header_source_inventory(elements,page_analysis,xroot,afiles,owner_ranges)
+     emit_if_unseen(report,"warn",code,"Observed header markup does not establish complete tagging of all rendered headers",
+                    {"strength":"SHOULD","assessment":"partial" if verified else "unavailable",
+-                    "verified_fields":verified,"unresolved_fields":unresolved,
++                    "verified_fields":verified,"unresolved_fields":unresolved,"rendered_header_inventory":inventory,
++                    "inventory_scope":"Observed custom Mail_Field elements only; standard-tagged, untagged and unrecognized rendered headers are not enumerated.",
+                     "needed_evidence":"An inventory of all rendered header names and nonempty values, matched to their structure/content connections."})
+ 
+ def check_additional_rule_coverage(pdf, xroot, xmp_bytes, efiles, afiles, eapdf_conf, pdfa_part, report):
+@@ -5660,15 +5878,15 @@
+     else:
+         emit_if_unseen(report,"na","TEXT_CONTENT_PDF_TEXT_OBJECTS","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain any pages with visible content."})
+ 
++    core_field_sequences=structure_field_text_sequences(pdf)
+     page_analysis_error=None
+     try:
+-        page_analysis=collect_page_text_analysis(report.path)
++        page_analysis=collect_page_text_analysis(report.path,field_sequences=core_field_sequences)
+         if len(page_analysis)!=len(pdf.pages) or [page["page"] for page in page_analysis]!=list(range(1,len(pdf.pages)+1)):
+             raise ValueError("Page-text analysis does not cover every PDF page exactly once in order")
+     except Exception as error:
+         page_analysis=None
+         page_analysis_error=f"{type(error).__name__}: {error}"
+-    core_field_sequences=structure_field_text_sequences(pdf)
+     for idx,page in enumerate(pdf.pages, start=1):
+         for seq in page_marked_content_sequences(page, {"Mail_FieldName","Mail_FieldValue"}):
+             core_field_sequences.append({"page":idx, **seq})
+@@ -5864,7 +6082,7 @@
+     struct_root=dict_get(pdf.Root,"/StructTreeRoot",None)
+     if struct_root is None:
+         check_user_property_source_values([],xroot,afiles,report)
+-        check_tagging_recommendations(pdf,dpart_nodes,[],report)
++        check_tagging_recommendations(pdf,dpart_nodes,[],report,xroot,afiles,page_analysis)
+         emit_if_unseen(report,"na","CUSTOM_TAG_MARKED_SEQUENCE_ONLY","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain logical structure or custom EA-PDF tags."})
+         emit_if_unseen(report,"na","CUSTOM_TAG_OPERAND_MATCH","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain logical structure or custom EA-PDF tags."})
+         emit_if_unseen(report,"na","CONTENT_SET_MAIL_CONTENTSET_TAGGED","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain logical structure or DPart content sets to compare."})
+@@ -5898,7 +6116,7 @@
+     if root_elem is not None:
+         walk_struct_elems(root_elem, elems, None,class_map=dict_get(struct_root,"/ClassMap",None))
+     check_user_property_source_values(elems,xroot,afiles,report)
+-    check_tagging_recommendations(pdf,dpart_nodes,elems,report)
++    check_tagging_recommendations(pdf,dpart_nodes,elems,report,xroot,afiles,page_analysis)
+     by_objgen={e["objgen"]:e for e in elems if e["objgen"] is not None}
+     custom=[e for e in elems if e["type"].startswith("Mail_")]
+     by_parent={}

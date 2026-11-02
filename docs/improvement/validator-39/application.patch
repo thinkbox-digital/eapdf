@@ -1,0 +1,550 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -6697,6 +6697,143 @@
+                     "inventory_scope":"Observed custom Mail_Field elements only; standard-tagged, untagged and unrecognized rendered headers are not enumerated.",
+                     "needed_evidence":"An inventory of all rendered header names and nonempty values, matched to their structure/content connections."})
+ 
++def message_content_dpm_guid_assessments(pdf,messages,dpart_nodes):
++    """Resolve content/DPart candidates without consulting a Mail_Message GUID."""
++    rows={item["objgen"]:{"objgen":item["objgen"],"references":[],"unavailable":[]} for item in messages}
++    work=0
++    def tick(depth=0,items=1):
++        nonlocal work
++        work+=items
++        if work>MAX_TREE_ITEMS or depth>MAX_TREE_DEPTH:
++            raise ValueError("Message content ownership exceeds configured traversal limits")
++    try:
++        page_numbers={pdf_object_identity(page.obj):number for number,page in enumerate(pdf.pages,1)}
++        page_map=page_objgen_map(pdf)
++        page_owners=defaultdict(set)
++        unknown_owner=set()
++        ancestry={}
++        for item in dpart_nodes:
++            tick()
++            parent=ancestry.get(item["parent_objgen"],(frozenset(),False)) if item["parent"] is not None else (frozenset(),False)
++            guids,unknown=parent
++            value=item["dpm"].get("Mail_GUID")
++            if item["child_count"] and value is not None:
++                tick(items=len(guids))
++                guid=guid_value(value) if isinstance(value,pikepdf.String) else ""
++                if guid:guids=guids|{guid}
++                else:unknown=True
++            ancestry[item["objgen"]]=(guids,unknown)
++            if item["child_count"]:
++                continue
++            bounds=page_range_from_dpart(item,page_map)
++            if bounds is None:
++                raise ValueError("DPart content ownership has an unresolved page range")
++            for number in range(bounds[0],bounds[1]+1):
++                tick()
++                if len(guids)==1 and not unknown:page_owners[number].update(guids)
++                else:unknown_owner.add(number)
++        locations=defaultdict(set)
++        stream_pages=defaultdict(set)
++        object_pages=defaultdict(set)
++        for number,page in enumerate(pdf.pages,1):
++            tick()
++            contents=dict_get(page.obj,"/Contents",[])
++            for stream in contents if is_pdf_array(contents) else [contents]:
++                tick()
++                if isinstance(stream,pikepdf.Stream):stream_pages[pdf_object_identity(stream)].add(pdf_object_identity(page.obj))
++            for annotation in dict_get(page.obj,"/Annots",[]):
++                tick()
++                object_pages[pdf_object_identity(annotation)].add(number)
++            try:
++                analysis=analyze_page_content(page)
++            except (ValueError,TypeError,pikepdf.PdfError):
++                continue  # A declared page alone cannot certify a content connection.
++            for identity in analysis["forms"]:
++                tick()
++                object_pages[identity].add(number)
++            for sequence in analysis["sequences"]:
++                tick()
++                mcid=sequence["mcid"]
++                if isinstance(mcid,int) and not isinstance(mcid,bool) and mcid>=0:
++                    locations[(pdf_object_identity(sequence["scope"]),mcid)].add(number)
++        for item in messages:
++            row=rows[item["objgen"]]
++            page=None
++            ancestor=item["elem"]
++            seen=set()
++            while ancestor is not None and page is None:
++                tick(len(seen))
++                identity=pdf_object_identity(ancestor)
++                if identity in seen:raise ValueError("Cyclic page inheritance for message content")
++                seen.add(identity)
++                page=dict_get(ancestor,"/Pg",None)
++                ancestor=dict_get(ancestor,"/P",None)
++            seen=set()
++            def walk(element,inherited_page,depth=0):
++                tick(depth)
++                identity=pdf_object_identity(element)
++                if identity in seen:raise ValueError("Repeated message structure content node")
++                seen.add(identity)
++                current_page=dict_get(element,"/Pg",inherited_page)
++                children=dict_get(element,"/K",[])
++                for child in children if is_pdf_array(children) else [children]:
++                    tick(depth)
++                    if isinstance(child,pikepdf.Dictionary) and dict_get(child,"/S",None) is not None:
++                        walk(child,current_page,depth+1)
++                        continue
++                    declared_page=current_page
++                    if isinstance(child,int) and not isinstance(child,bool):
++                        mcid=child;target=current_page
++                    elif safe_name(dict_get(child,"/Type",None))=="MCR":
++                        mcid=dict_get(child,"/MCID",None)
++                        declared_page=dict_get(child,"/Pg",current_page)
++                        target=dict_get(child,"/Stm",declared_page)
++                    elif safe_name(dict_get(child,"/Type",None))=="OBJR":
++                        declared_page=dict_get(child,"/Pg",current_page)
++                        choices=set(object_pages.get(pdf_object_identity(dict_get(child,"/Obj",None)),set()))
++                        target=None;mcid=None
++                    else:
++                        row["unavailable"].append({"reason":"Unsupported message content reference"})
++                        continue
++                    if target is not None:
++                        if not isinstance(mcid,int) or isinstance(mcid,bool) or mcid<0:
++                            row["unavailable"].append({"reason":"Message content MCID is unavailable"})
++                            continue
++                        scope=pdf_object_identity(target)
++                        scopes=stream_pages.get(scope,{scope})
++                        choices=set()
++                        for candidate in scopes:
++                            tick()
++                            connected=locations.get((candidate,mcid),set())
++                            tick(items=len(connected))
++                            choices.update(connected)
++                    elif safe_name(dict_get(child,"/Type",None))!="OBJR":
++                        row["unavailable"].append({"reason":"Message content scope is unavailable"})
++                        continue
++                    if declared_page is not None:
++                        number=page_numbers.get(pdf_object_identity(declared_page))
++                        choices={number} if number in choices else set()
++                    if not choices:
++                        row["unavailable"].append({"reason":"Message content has no verified page connection"})
++                        continue
++                    possible=set();unknown=False
++                    for number in choices:
++                        tick()
++                        tick(items=len(page_owners.get(number,set())))
++                        possible.update(page_owners.get(number,set()))
++                        unknown=unknown or number in unknown_owner or not page_owners.get(number)
++                    row["references"].append({"pages":sorted(choices),"dpm_guids":sorted(possible),"unknown_ownership":unknown})
++            try:
++                walk(item["elem"],page)
++            except (ValueError,TypeError,pikepdf.PdfError) as error:
++                if work>MAX_TREE_ITEMS:raise
++                row["unavailable"].append({"reason":str(error)})
++            if not row["references"]:
++                row["unavailable"].append({"reason":"No verified message content connection"})
++        return list(rows.values())
++    except (ValueError,TypeError,pikepdf.PdfError) as error:
++        return [{"objgen":item["objgen"],"references":[],"unavailable":[{"reason":str(error)}]} for item in messages]
++
+ def check_additional_rule_coverage(pdf, xroot, xmp_bytes, efiles, afiles, eapdf_conf, pdfa_part, report):
+     source_summary=summarize_source_email(afiles) if xroot is not None and len(flatten_email_records(xroot))<=1 else None
+     source_files=[f for f in afiles if f["afrelationship"]=="Source"]
+@@ -7354,26 +7491,48 @@
+     dpm_mail_guids.discard("")
+     xmp_mail_guids=xmp_value_set(xroot,"Mail_GUID")
+     guid_mismatch=[]
++    guid_unavailable=[]
++    content_guid_rows=message_content_dpm_guid_assessments(pdf,msg,dpart_nodes) if msg else []
++    content_guids={row["objgen"]:row for row in content_guid_rows}
+     for e in msg:
+         props=userprops_by_name(e)
+         mail_guid=guid_value(props.get("Mail_GUID",""))
+         if not mail_guid:
++            guid_unavailable.append({"objgen":e["objgen"],"reason":"No normal nonempty Mail_Message GUID is available to compare"})
+             continue
+         problem={}
+         if dpm_mail_guids and mail_guid not in dpm_mail_guids:
+             problem["dpm_guids"]=sorted(dpm_mail_guids)
+         if xmp_mail_guids and mail_guid not in xmp_mail_guids:
+             problem["xmp_guids"]=sorted(xmp_mail_guids)
++        content=content_guids[e["objgen"]]
++        for reference in content["references"]:
++            possible=reference["dpm_guids"]
++            if not reference["unknown_ownership"] and possible and mail_guid not in possible:
++                problem.setdefault("content_dpm_mismatches",[]).append(reference)
++            elif reference["unknown_ownership"] or not possible or len(possible)>1:
++                guid_unavailable.append({"objgen":e["objgen"],"reference":reference,
++                                         "reason":"Content does not establish one matching DPart email identity"})
++        guid_unavailable.extend(dict(detail,objgen=e["objgen"]) for detail in content["unavailable"])
+         if problem:
+             guid_mismatch.append({"objgen":e["objgen"],"Mail_GUID":mail_guid,**problem})
+     if not msg:
+         emit_if_unseen(report,"na","MAIL_MESSAGE_GUID_MATCH_DPM_XMP","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain Mail_Message structure elements."})
+-    elif not dpm_mail_guids and not xmp_mail_guids:
+-        emit_if_unseen(report,"na","MAIL_MESSAGE_GUID_MATCH_DPM_XMP","Rule not applicable for this PDF",{"reason":"Not applied because no comparable Mail_GUID values were found in DPM or XMP metadata."})
++    elif guid_mismatch:
++        emit_if_unseen(report,"fail","MAIL_MESSAGE_GUID_MATCH_DPM_XMP",
++                       "Mail_Message GUID attributes contradict DPM/XMP or their actual content owners",
++                       {"actual":guid_mismatch,"unavailable":guid_unavailable})
++    elif guid_unavailable:
++        emit_if_unseen(report,"warn","MAIL_MESSAGE_GUID_MATCH_DPM_XMP",
++                       "Mail_Message GUID consistency with its content owners remains unavailable",
++                       {"state":"unverified","assessment":"unavailable","actual":guid_unavailable})
+     else:
+-        emit_if_unseen(report,"ok" if not guid_mismatch else "fail","MAIL_MESSAGE_GUID_MATCH_DPM_XMP",
+-                       "Mail_Message Mail_GUID attributes match DPM/XMP metadata where present" if not guid_mismatch else "Mail_Message Mail_GUID attributes must match DPM/XMP metadata where present",
+-                       {"count":len(msg)} if not guid_mismatch else {"actual":guid_mismatch})
++        emit_if_unseen(report,"ok","MAIL_MESSAGE_GUID_MATCH_DPM_XMP",
++                       "Mail_Message GUID attributes match their connected DPart email identities and XMP where present",
++                       {"count":len(msg),"content_owners":content_guid_rows})
++    if guid_unavailable:
++        report.warn("VALIDATION_INCOMPLETE","Message content/GUID ownership remains unavailable",
++                    {"rules":["MAIL_MESSAGE_GUID_MATCH_DPM_XMP"],"assessment":"unavailable"})
+ 
+     for code, elems_list, tag, expected in (
+         ("MAIL_MESSAGE_ROLEMAP_DOCUMENT", msg, "Mail_Message", "Document"),
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -7578,8 +7578,8 @@
+   "MAIL_MESSAGE_GUID_MATCH_DPM_XMP": {
+     "rule_number": 128,
+     "rule_name": "MAIL_MESSAGE_GUID_MATCH_DPM_XMP",
+-    "spec_section": "EA-PDF 1.0 section 9.7 Table 13 printed p79",
+-    "spec_excerpt": "When each Mail_Message: Mail_GUID attribute is required and matches the corresponding DPM/XMP GUID where present.",
++    "spec_section": "EA-PDF 1.0 section 9.7 Table 13 printed p79; EA-PDF9.6 printed pp69-70 and9.7 printed pp77-79",
++    "spec_excerpt": "A Mail_Message Mail_GUID identifies the same email as its connected document-part content and matches DPM/XMP metadata where present. Review EA-PDF9.6/9.7, Table7 GUID precedence and Table13 email representation together: global set membership alone does not establish correspondence. Resolve content/page and DPart candidates independently of the attribute under test. A value contradicted by all available candidates fails; ambiguous or absent ownership remains unavailable.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+@@ -7597,7 +7597,8 @@
+       "scopes": [
+         "file"
+       ],
+-      "issue_ids": []
++      "issue_ids": [],
++      "content_owner_review": "V39: owner-specific consistency inferred from the combined email-representation and identifier requirements, not a verbatim additional sentence. Uses actual marked-content/OBJR locations and DPart ancestry; does not select owners by the tested GUID, structure/XMP order or a bare Pg hint. Legal shared Form candidates with uniform identity can match without invocation assignment. Unavailable references/ownership and traversal limits remain unverified; original-source fidelity is separate."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -7606,7 +7607,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "logical_structure",
+-      "uncovered_assertion": "When each Mail_Message: Mail_GUID attribute is required and matches the corresponding DPM/XMP GUID where present.",
++      "uncovered_assertion": "A Mail_Message Mail_GUID identifies the same email as its connected document-part content and matches DPM/XMP metadata where present. Review EA-PDF9.6/9.7, Table7 GUID precedence and Table13 email representation together: global set membership alone does not establish correspondence. Resolve content/page and DPart candidates independently of the attribute under test. A value contradicted by all available candidates fails; ambiguous or absent ownership remains unavailable.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+--- /dev/null
++++ after/tests/test_message_guid_content_owners.py
+@@ -0,0 +1,196 @@
++"""Message GUID consistency follows actual content, never the value being tested."""
++import unittest
++from unittest.mock import patch
++from xml.etree import ElementTree as ET
++
++import pikepdf
++from test_preservation_safety import validator as v, email_metadata
++
++
++CODE = 'MAIL_MESSAGE_GUID_MATCH_DPM_XMP'
++
++
++class MessageGuidContentOwnerTests(unittest.TestCase):
++    def document(self):
++        pdf = pikepdf.Pdf.new()
++        pages = [pdf.add_blank_page() for _ in range(2)]
++        root = pdf.make_indirect(pikepdf.Dictionary())
++        top = pdf.make_indirect(pikepdf.Dictionary(Parent=root))
++        pdf.Root.DPartRoot = root
++        root.DPartRootNode = top
++        structure = pdf.make_indirect(pikepdf.Dictionary(Type=pikepdf.Name.StructTreeRoot))
++        document = pdf.make_indirect(pikepdf.Dictionary(Type=pikepdf.Name.StructElem, S=pikepdf.Name.Document, P=structure))
++        structure.K = document
++        pdf.Root.StructTreeRoot = structure
++        messages, dparts, paragraphs = [], [], []
++        for index, (page, guid) in enumerate(zip(pages, ['one', 'two'])):
++            page.Contents = pdf.make_stream(b'/P << /MCID 0 >> BDC 0 0 m 1 1 l S EMC')
++            message_part = pdf.make_indirect(pikepdf.Dictionary(Parent=top, DPM=pikepdf.Dictionary(Mail_GUID=guid)))
++            leaf = pdf.make_indirect(pikepdf.Dictionary(Parent=message_part, Start=page.obj,
++                DPM=pikepdf.Dictionary(Mail_ContentSetType=pikepdf.Name.Other, Mail_Desc='Content')))
++            message_part.DParts = pikepdf.Array([pikepdf.Array([leaf])])
++            page.obj.DPart = leaf
++            message = pdf.make_indirect(pikepdf.Dictionary(Type=pikepdf.Name.StructElem,
++                S=pikepdf.Name('/Mail_Message'), P=document,
++                A=pikepdf.Dictionary(O=pikepdf.Name.UserProperties,
++                    P=pikepdf.Array([pikepdf.Dictionary(N='Mail_GUID', V=guid)]))))
++            paragraph = pdf.make_indirect(pikepdf.Dictionary(Type=pikepdf.Name.StructElem,
++                S=pikepdf.Name.P, P=message, Pg=page.obj, K=0))
++            message.K = paragraph
++            messages.append(message)
++            dparts.append(message_part)
++            paragraphs.append(paragraph)
++        top.DParts = pikepdf.Array([pikepdf.Array(dparts)])
++        document.K = pikepdf.Array(messages)
++        return pdf, messages, dparts, paragraphs
++
++    def check(self, pdf):
++        xroot = email_metadata([{'Mail_GUID': 'one'}, {'Mail_GUID': 'two'}])
++        report = v.Report('owner-focused.pdf')
++        v.check_additional_rule_coverage(pdf, xroot, ET.tostring(xroot), [], [], 'm', 4, report)
++        findings = [item for item in report.items if item['code'] == CODE]
++        self.assertEqual(1, len(findings))
++        return findings[0], report
++
++    def assert_unavailable(self, pdf):
++        item, report = self.check(pdf)
++        self.assertEqual('WARN', item['level'])
++        self.assertTrue(any(item['code'] == 'VALIDATION_INCOMPLETE' and item['level'] == 'WARN'
++                            for item in report.items))
++
++    def test_each_attribute_matches_its_connected_content_owner(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            self.assertEqual('PASS', self.check(pdf)[0]['level'])
++
++    def test_swapping_attributes_does_not_match_other_messages_global_guids(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            messages[0].A.P[0].V = 'two'
++            messages[1].A.P[0].V = 'one'
++            self.assertEqual('FAIL', self.check(pdf)[0]['level'])
++
++    def test_reusing_another_messages_guid_does_not_establish_ownership(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            messages[1].A.P[0].V = 'one'
++            self.assertEqual('FAIL', self.check(pdf)[0]['level'])
++
++    def test_structure_order_is_not_an_owner_assignment(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            messages[0].P.K = pikepdf.Array(list(reversed(messages)))
++            self.assertEqual('PASS', self.check(pdf)[0]['level'])
++
++    def test_absent_owner_does_not_hide_a_globally_missing_guid(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            del dparts[1].DPM.Mail_GUID
++            item, report = self.check(pdf)
++            self.assertEqual('FAIL', item['level'])
++            self.assertTrue(item['details']['unavailable'])
++
++    def test_a_missing_content_connection_does_not_certify_global_membership(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            messages[1].K = pikepdf.Array()
++            self.assert_unavailable(pdf)
++
++    def test_an_unresolved_mcid_does_not_certify_the_declared_page(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            paragraphs[1].K = 99
++            self.assert_unavailable(pdf)
++
++    def test_actual_content_spanning_another_message_contradicts_the_attribute(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            paragraphs[0].Pg = pdf.pages[1].obj
++            self.assertEqual('FAIL', self.check(pdf)[0]['level'])
++
++    def test_a_page_hint_without_content_is_not_an_owner_connection(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            messages[1].Pg = pdf.pages[1].obj
++            messages[1].K = pikepdf.Array()
++            self.assert_unavailable(pdf)
++
++    def test_ambiguous_overlapping_page_owners_are_not_selected_by_attribute(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            dparts[0].DParts[0][0].End = pdf.pages[1].obj
++            self.assert_unavailable(pdf)
++
++    def test_known_contradiction_survives_a_separate_unavailable_message(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            messages[0].A.P[0].V = 'two'
++            messages[1].K = pikepdf.Array()
++            self.assertEqual('FAIL', self.check(pdf)[0]['level'])
++
++    def test_bounded_work_cannot_become_a_complete_guid_match(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf, patch.object(v, 'MAX_TREE_ITEMS', 8):
++            elements = []
++            v.walk_struct_elems(pdf.Root.StructTreeRoot.K, elements)
++            _, _, nodes = v.get_dpart_nodes(pdf)
++            rows = v.message_content_dpm_guid_assessments(pdf,
++                [item for item in elements if item['type'] == 'Mail_Message'], nodes)
++            self.assertTrue(all(row['unavailable'] for row in rows))
++
++    def shared_form(self, pdf, paragraphs):
++        form = pdf.make_stream(b'/P << /MCID 0 >> BDC 0 0 m 1 1 l S EMC')
++        form.Type = pikepdf.Name.XObject
++        form.Subtype = pikepdf.Name.Form
++        form.BBox = pikepdf.Array([0, 0, 10, 10])
++        form.Resources = pikepdf.Dictionary()
++        for page in pdf.pages:
++            page.Resources.XObject = pikepdf.Dictionary(Shared=form)
++        pdf.pages[0].Contents = pdf.make_stream(b'/Shared Do')
++        pdf.pages[1].Contents = pdf.make_stream(b'/Shared Do /P << /MCID 1 >> BDC 0 0 m 1 1 l S EMC')
++        del paragraphs[0].Pg
++        paragraphs[0].K = pikepdf.Dictionary(Type=pikepdf.Name.MCR, Stm=form, MCID=0)
++        paragraphs[1].K = 1
++
++    def test_shared_form_owner_is_not_chosen_by_the_attribute_under_test(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            self.shared_form(pdf, paragraphs)
++            self.assert_unavailable(pdf)
++
++    def test_explicit_form_page_resolves_the_actual_invocation(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            self.shared_form(pdf, paragraphs)
++            paragraphs[0].Pg = pdf.pages[0].obj
++            self.assertEqual('PASS', self.check(pdf)[0]['level'])
++
++    def test_uniform_form_candidates_can_match_without_selecting_an_invocation(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            self.shared_form(pdf, paragraphs)
++            dparts[1].DPM.Mail_GUID = 'one'
++            messages[1].A.P[0].V = 'one'
++            self.assertEqual('PASS', self.check(pdf)[0]['level'])
++
++    def test_annotation_content_connection_resolves_its_actual_page(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            annotation = pdf.make_indirect(pikepdf.Dictionary(Type=pikepdf.Name.Annot,
++                Subtype=pikepdf.Name.Link, Rect=pikepdf.Array([0, 0, 10, 10])))
++            pdf.pages[0].obj.Annots = pikepdf.Array([annotation])
++            paragraphs[0].K = pikepdf.Dictionary(Type=pikepdf.Name.OBJR, Obj=annotation)
++            self.assertEqual('PASS', self.check(pdf)[0]['level'])
++
++    def test_annotation_page_hint_cannot_override_its_actual_location(self):
++        pdf, messages, dparts, paragraphs = self.document()
++        with pdf:
++            annotation = pdf.make_indirect(pikepdf.Dictionary(Type=pikepdf.Name.Annot,
++                Subtype=pikepdf.Name.Link, Rect=pikepdf.Array([0, 0, 10, 10])))
++            pdf.pages[0].obj.Annots = pikepdf.Array([annotation])
++            paragraphs[0].K = pikepdf.Dictionary(Type=pikepdf.Name.OBJR, Obj=annotation, Pg=pdf.pages[1].obj)
++            self.assert_unavailable(pdf)
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- /dev/null
++++ after/scripts/build_eapdf_message_owner_fixtures.py
+@@ -0,0 +1,116 @@
++"""Actual content ownership versus global GUID membership and record ordering."""
++import hashlib
++import json
++from pathlib import Path
++import sys
++from xml.etree import ElementTree as ET
++
++import pikepdf
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT))
++import validate_eapdf as v
++
++OUT = ROOT / 'tests/fixtures/eapdf/validator-message-owners'
++MULTI = ROOT / 'tests/fixtures/eapdf/validator-dpart-object-ranges/multi-ordered.pdf'
++SINGLE = ROOT / 'tests/fixtures/eapdf/validator-operands/valid.pdf'
++
++
++def structure_elements(pdf):
++    pending = [pdf.Root.StructTreeRoot.K]
++    elements = []
++    while pending:
++        element = pending.pop()
++        if not isinstance(element, pikepdf.Dictionary):
++            continue
++        elements.append(element)
++        kids = element.get('/K', [])
++        pending.extend(list(kids) if isinstance(kids, pikepdf.Array) else [kids])
++    return elements
++
++
++def guid_property(message):
++    return next(prop for prop in message.A.P if str(prop.N) == 'Mail_GUID')
++
++
++def standard_header_tags(pdf, elements):
++    fields = ('Mail_Field', 'Mail_FieldName', 'Mail_FieldValue')
++    for element in elements:
++        tag = str(element.get('/S', '')).lstrip('/')
++        if tag in fields:
++            mapped = element.NS.RoleMapNS['/' + tag]
++            element.S, element.NS = mapped[0], mapped[1]
++            if '/A' in element:
++                del element.A
++    for page in pdf.pages:
++        instructions = []
++        for instruction in pikepdf.parse_content_stream(page):
++            if str(instruction.operator) == 'BDC':
++                tag, props = instruction.operands
++                if str(tag).lstrip('/') in fields:
++                    instruction = pikepdf.ContentStreamInstruction(
++                        [pdf.Root.StructTreeRoot.RoleMap[str(tag)], props], instruction.operator)
++            instructions.append(instruction)
++        page.Contents = pdf.make_stream(pikepdf.unparse_content_stream(instructions))
++
++
++def main():
++    OUT.mkdir(parents=True, exist_ok=True)
++    cases = []
++    for name in ('valid-multi', 'valid-single', 'swapped-structure-guids', 'duplicate-structure-guid',
++                 'rotated-structure-guids', 'reversed-structure-order', 'reversed-xmp-order',
++                 'swapped-dpm-guids', 'standard-header-tags'):
++        seed = SINGLE if name == 'valid-single' else MULTI
++        with pikepdf.open(seed) as pdf:
++            elements = structure_elements(pdf)
++            messages = [e for e in elements if e.get('/S') == pikepdf.Name('/Mail_Message')]
++            values = [guid_property(e).V for e in messages]
++            if name == 'swapped-structure-guids':
++                guid_property(messages[0]).V, guid_property(messages[1]).V = values[1], values[0]
++            elif name == 'duplicate-structure-guid':
++                guid_property(messages[1]).V = values[0]
++            elif name == 'rotated-structure-guids':
++                for message, value in zip(messages, values[1:] + values[:1]):
++                    guid_property(message).V = value
++            elif name == 'reversed-structure-order':
++                parent = messages[0].P
++                parent.K = pikepdf.Array(list(reversed(list(parent.K))))
++            elif name == 'reversed-xmp-order':
++                xroot, namespaces, _ = v.parse_xmp(v.read_metadata_stream(pdf), v.Report('parse'))
++                for prefix, uri in namespaces.items():
++                    ET.register_namespace(prefix, uri)
++                bag = xroot.find('.//' + v.qn(v.NS_PDFMAILMETA, 'email') + '/' + v.qn(v.NS_RDF, 'Bag'))
++                assert bag is not None
++                bag[:] = list(reversed(list(bag)))
++                packet = ET.tostring(xroot, encoding='utf-8')
++                for prefix, uri in (('pdfmail', v.NS_PDFMAIL), ('pdfmailid', v.NS_PDFMAILID),
++                                    ('pdfmailmeta', v.NS_PDFMAILMETA)):
++                    if ('xmlns:' + prefix + '=').encode() not in packet:
++                        xroot.set('xmlns:' + prefix, uri)
++                pdf.Root.Metadata.write(ET.tostring(xroot, encoding='utf-8'))
++            elif name == 'swapped-dpm-guids':
++                _, _, nodes = v.get_dpart_nodes(pdf)
++                parts = [item['node'].DPM for item in nodes
++                         if item['child_count'] and '/Mail_GUID' in item['node'].get('/DPM', {})]
++                first, second = parts[0].Mail_GUID, parts[1].Mail_GUID
++                parts[0].Mail_GUID, parts[1].Mail_GUID = second, first
++            elif name == 'standard-header-tags':
++                standard_header_tags(pdf, elements)
++            path = OUT / (name + '.pdf')
++            pdf.save(path, static_id=True, fix_metadata_version=False)
++        failures = ['MAIL_MESSAGE_GUID_MATCH_DPM_XMP'] if name in (
++            'swapped-structure-guids', 'duplicate-structure-guid', 'rotated-structure-guids') else (
++            ['ATTACHMENT_ANNOTATIONS_PRESENT', 'MAIL_MESSAGE_GUID_MATCH_DPM_XMP']
++            if name == 'swapped-dpm-guids' else [])
++        cases.append(dict(file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
++                          expected_status='FAIL' if failures else 'PASS', expected_failures=failures))
++    (OUT / 'expectations.json').write_text(json.dumps(dict(
++        authority='EA-PDF9.6/9.7 Tables7/13: combined email representation and GUID consistency; explicitly reviewed owner correspondence inference',
++        source_files={str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in (SINGLE, MULTI)},
++        boundary='Ownership follows verified content locations and DPart ancestry, not attribute values or structure/XMP list order. Custom header field vocabulary is optional. Original-source fidelity remains separate.',
++        cases=cases), indent=2) + '\n')
++    print('Built nine message content/GUID ownership controls.')
++
++
++if __name__ == '__main__':
++    main()

@@ -1,0 +1,140 @@
+{
+  "authority": [
+    "EA-PDF 9.8 first creator item",
+    "EA-PDF Table 18 conditional NumberAttachments",
+    "EA-PDF Table 16 optional NumberMessages type",
+    "Reviewed XMP creator/producer attribution contract"
+  ],
+  "sources": {
+    "tests/fixtures/eapdf/validator-email-schema/valid.pdf": "4b012f98a93163dc1c89d4f3b1b5c98b903d9a9e8c92102f9b007371a3581315",
+    "tests/fixtures/eapdf/validator-presence/_source-no-attachments.pdf": "e61c8774111729c94e5be0af18cf2d36ce7022c30947437584432fe8ca6f99c1",
+    "tests/fixtures/eapdf/validator-xmp-records/valid.pdf": "a396ccc6c3531a5699370cd98db824e5803ddc0090d25a5da62137c75e05d210"
+  },
+  "cases": [
+    {
+      "file": "valid.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "f792b2af7e2be66fc9e624dfe24e01a765e437b2e7ebd86eda6e23ef3edcc333",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "creator-first-empty.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "XMP_CREATOR"
+      ],
+      "sha256": "8c20f1feb0ada39183daac7ddb099ee46b7b6c9bb1728bbb5369658c4649d38d",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "creator-first-whitespace.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "XMP_CREATOR"
+      ],
+      "sha256": "f3269d1b38ad06872a771669b85cc9f80ce1d8b54cd8a24b2080a2b20f4887d6",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "creator-address-name.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "def1ddea951449b10813843a27929ebbc671e439bafeec63847d4a02ed8f6707",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "producer-address-name.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "6a825671e079624516e9ef909580dd18dc6d08a65df78705e6474d07853bb8b9",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "isolated-count-absent.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "9f6acdf13da3c35efc41907fc66b4b871285f2c0a268028145b6d0f7128509f7",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "MESSAGE_ATTACHMENT_COUNT_XMP"
+          ],
+          "expected_status": "FAIL"
+        },
+        "reason": "In isolated output, optional attachment XMP inventory alone does not prove the original source attachment count; absent NumberAttachments is not a supplied integer schema failure. Bound original inclusion/value requirements remain separate. The independent structure failure remains.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "no-attachments-count-absent.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "5ab46fa14a9ea61ad9b34b9a0bfe170c598d68340dfe208dc8a57ae5cd31d134",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "asset-count-empty.pdf",
+      "expected_failures": [
+        "ASSET_NUMBERMESSAGES_TYPE",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "a88d437c091ade6a4c47140d8a174abdb9ccb39e6e25dc734e6c9498ae18d0d9",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "asset-count-negative.pdf",
+      "expected_failures": [
+        "ASSET_NUMBERMESSAGES_TYPE",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "a44b6fdf540cc125514c30f7972a6bd62b781bf784edfe2d5501ebb54e063d17",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "asset-count-uri.pdf",
+      "expected_failures": [
+        "ASSET_NUMBERMESSAGES_TYPE",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "fca668a584696bb63a5af41848809725b4c6a274d5f0eacab086f2e3f56076a9",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "asset-count-array.pdf",
+      "expected_failures": [
+        "ASSET_NUMBERMESSAGES_TYPE",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "edefed912fa4e74ec9a13c6bd3f21a3d1ef31b628a0198e6f0ab0ec7f358852c",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "asset-count-signed-zeros.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "f74248d0d18366c5f122d3f3cf92f89205b39eabffffd2f06b5aed6adb1fe310",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    }
+  ]
+}

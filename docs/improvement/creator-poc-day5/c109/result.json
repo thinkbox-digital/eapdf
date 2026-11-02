@@ -1,0 +1,27 @@
+{
+  "checkpoint": "C109",
+  "fix": "Recover stored native SMTP author address for ordinary Exchange MSG messages when the pinned parser leaves it blank. Respect represented author identity and existing parsed mailbox priority.",
+  "reproduction": "A copy of the supplied ordinary TXT-with-attachment MSG with optional transport headers omitted lost its native SMTP address before the fix. Original supplied file unchanged.",
+  "java_focused": {
+    "tests": 13,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changed_production_classes": [
+    "eapdf/MsgReader.class"
+  ],
+  "pdf_results": "pdf-results.json",
+  "references": [
+    "https://learn.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxprops/03690c3c-cdf9-48b8-ad2e-f4b681bbeb1b",
+    "https://learn.microsoft.com/en-us/office/client-developer/outlook/mapi/pidtagsentrepresentingsmtpaddress-canonical-property",
+    "https://learn.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxomsg/44b3a36c-989b-4247-9b23-85268c8f8b92"
+  ],
+  "last_full_suite": "C104:229 passes, not repeated.",
+  "jars": {
+    "emailtopdfa.jar": "97b5e49fe23425b4c71ef44d7f16e6623a3f5e51358e495df5ad727f2fd61dc2",
+    "emailtopdfa-gui.jar": "cdccb62b3250ab0e9cbaa64a635c4df9e49647fda50241f1f9de60a78312a20f"
+  },
+  "temporary_shared_staging_removed": true,
+  "continued_work": "Active until explicitly told to stop."
+}

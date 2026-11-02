@@ -1,0 +1,136 @@
+{
+  "input_type": "pst",
+  "creator_version": "1.6.0-beta.7",
+  "filename_policy": "Lower-case input type, input filename stem, _archive for multiple inputs, and EA-PDF profile. Single-message mailbox examples contain one extracted child.",
+  "creator_sha256": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
+  "validator_sha256": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4",
+  "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
+  "configuration_sha256": "9dd5ea95b331668c1017bc2005c5a9319e8258297e3c27b759b206801ac8e191",
+  "sources": {
+    "in/quality-attached-message.pst": "f2a6b1d2cad00f574e3d1c1211c4b1c854d6526caea77213adc3da92b7813ae3"
+  },
+  "single_message_policy": "First matching message child, sorted by collection name, copied unchanged from the corresponding collection.",
+  "archive_policy": "Every message in all listed inputs.",
+  "validation": "Standalone Java validator, bundled real PDF/A and selected ISO structure checks, including collection children; default validator limits unchanged.",
+  "parallelism": {
+    "creator_jobs": 2,
+    "creator_heap_mb": 2048,
+    "concurrent_formats": 2
+  },
+  "samples": [
+    {
+      "profile": "1s",
+      "file": "pst_quality-attached-message_1s.pdf",
+      "sha256": "be8e1a3d8b0759b365dec55beba336d04892f4d19beec9c578085fcf68b99fa3",
+      "pages": 2,
+      "inputs": [
+        "in/quality-attached-message.pst"
+      ],
+      "extracted_from": {
+        "collection": "pst_quality-attached-message_1c.pdf",
+        "member": "<1>FW_ First email_000001_1s.pdf",
+        "member_sha256": "be8e1a3d8b0759b365dec55beba336d04892f4d19beec9c578085fcf68b99fa3"
+      },
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 3.078
+    },
+    {
+      "profile": "1si",
+      "file": "pst_quality-attached-message_1si.pdf",
+      "sha256": "1990ca4192ba59cdcc90b71b588ab52da57f5f75be8fe3fb56ba4339c849a01b",
+      "pages": 2,
+      "inputs": [
+        "in/quality-attached-message.pst"
+      ],
+      "extracted_from": {
+        "collection": "pst_quality-attached-message_1ci.pdf",
+        "member": "<1>FW_ First email_000001_1si.pdf",
+        "member_sha256": "1990ca4192ba59cdcc90b71b588ab52da57f5f75be8fe3fb56ba4339c849a01b"
+      },
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 2.972
+    },
+    {
+      "profile": "1m",
+      "file": "pst_quality-attached-message_1m.pdf",
+      "sha256": "c232ec9796df04f5cbd7a0a096f47c228bdb95b9fbd30fee3fa150c441ace366",
+      "pages": 13,
+      "inputs": [
+        "in/quality-attached-message.pst"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 5.195
+    },
+    {
+      "profile": "1mi",
+      "file": "pst_quality-attached-message_1mi.pdf",
+      "sha256": "bd0e859945692e76fa74409a7597219d35216a165317b49f69f1f693351e7ab1",
+      "pages": 13,
+      "inputs": [
+        "in/quality-attached-message.pst"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 5.04
+    },
+    {
+      "profile": "1c",
+      "file": "pst_quality-attached-message_1c.pdf",
+      "sha256": "c9c5846e500e8ce4b7929293040ad9f5f3c336875a4100ab11f6ccb764a72be4",
+      "pages": 1,
+      "inputs": [
+        "in/quality-attached-message.pst"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 6.659
+    },
+    {
+      "profile": "1ci",
+      "file": "pst_quality-attached-message_1ci.pdf",
+      "sha256": "25d7995eae4cd00f1044497a279ed24bf6e9ce8b90ef2a8118181c3b1eae520f",
+      "pages": 1,
+      "inputs": [
+        "in/quality-attached-message.pst"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 6.444
+    }
+  ],
+  "sidecars": [
+    {
+      "file": "pst_quality-attached-message_1c_index.xlsx",
+      "sha256": "dd8447cbc38468503c6f6b65d9aa9927815a84986e29fa74c29e3515d50219d8",
+      "xlsx_package": "PASS"
+    },
+    {
+      "file": "pst_quality-attached-message_1c_finding_aid.pdf",
+      "sha256": "f552722547b56429046f10313ea5788c62a2115b5d4fbbe52549850e9d344d2b",
+      "pdfa": "PASS"
+    },
+    {
+      "file": "pst_quality-attached-message_1ci_index.xlsx",
+      "sha256": "f3563ced373ca331bb10c022b49e1a0e709b6de9c4efc4c4a53c34f79a119fec",
+      "xlsx_package": "PASS"
+    },
+    {
+      "file": "pst_quality-attached-message_1ci_finding_aid.pdf",
+      "sha256": "aef8e9d3775d225e9589c2fa38275c2ceae888ebc669420fb0b1f1917885cd15",
+      "pdfa": "PASS"
+    }
+  ]
+}

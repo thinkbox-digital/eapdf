@@ -1,0 +1,61 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -6138,7 +6138,7 @@
+     disp=(part.get_content_disposition() or "").lower()
+     ctype=(part.get_content_type() or "").lower()
+     filename=part.get_filename()
+-    if disp=="attachment" or ctype=="message/rfc822":
++    if disp=="attachment" or ctype in ("message/rfc822","message/global"):
+         return True
+     if filename and ctype not in ("text/plain","text/html"):
+         return True
+@@ -6177,7 +6177,7 @@
+                 payload=quopri.decodestring(payload)
+         else:
+             payload=message.get_payload(decode=True)
+-            if payload is None and message.get_content_type()=="message/rfc822":
++            if payload is None and message.get_content_type() in ("message/rfc822","message/global"):
+                 payload=b"".join(child.as_bytes(policy=policy.SMTP.clone(refold_source="none"))
+                                  for child in (message.get_payload() or []))
+             payload=payload or b""
+@@ -6254,7 +6254,7 @@
+             continue
+         subtype=norm_text(af.get("subtype","")).lower()
+         name=norm_text(af.get("ufilename") or af.get("filename") or af.get("tree_name","")).lower()
+-        if subtype!="message/rfc822" and not name.endswith(".eml"):
++        if subtype not in ("message/rfc822","message/global") and not name.endswith(".eml"):
+             continue
+         inspectable+=1
+         if embedded_email_has_mime_attachments(af):
+@@ -6269,7 +6269,7 @@
+             continue
+         subtype=norm_text(af.get("subtype","")).lower()
+         name=norm_text(af.get("ufilename") or af.get("filename") or af.get("tree_name","")).lower()
+-        if subtype!="message/rfc822" and not name.endswith(".eml"):
++        if subtype not in ("message/rfc822","message/global") and not name.endswith(".eml"):
+             continue
+         inspectable+=1
+         if embedded_email_has_mime_attachments(af):
+@@ -6289,7 +6289,7 @@
+             continue
+         subtype=norm_text(af.get("subtype","")).lower()
+         name=norm_text(af.get("ufilename") or af.get("filename") or af.get("tree_name","")).lower()
+-        if subtype!="message/rfc822" and not name.endswith(".eml"):
++        if subtype not in ("message/rfc822","message/global") and not name.endswith(".eml"):
+             continue
+         if "_email_summary" in af:
+             out.append(af["_email_summary"])
+@@ -6304,6 +6304,13 @@
+         raw_headers={}
+         header_occurrences=[]
+         for header_name,header_value in msg.raw_items():
++            try:
++                # BytesParser preserves original eight-bit header octets using
++                # surrogateescape. Restore valid RFC6532 UTF-8 before comparison,
++                # without guessing a charset for malformed/legacy byte values.
++                header_value=header_value.encode("utf-8","surrogateescape").decode("utf-8")
++            except UnicodeError:
++                pass
+             header=header_name.lower()
+             values=raw_headers.setdefault(header,[])
+             values.append(header_value)

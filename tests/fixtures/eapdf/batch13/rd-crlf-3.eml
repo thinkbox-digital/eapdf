@@ -1,0 +1,8 @@
+From: Sender <sender@example.invalid>
+To: Reader <reader@example.invalid>
+Date: Fri, 16 Oct 2026 12:00:00 +0000
+Message-ID: <mailbox-c@example.invalid>
+Subject: Mailbox C
+Content-Type: text/plain; charset=UTF-8
+
+Last C without final newline

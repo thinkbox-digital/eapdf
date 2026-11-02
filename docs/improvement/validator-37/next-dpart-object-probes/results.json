@@ -1,0 +1,49 @@
+[
+  {
+    "file": "docs/improvement/validator-37/next-dpart-object-probes/root-stream.pdf",
+    "sha256": "45674752086697910241bb4d3c9b65e35af4818014d6e035d72100c6e9e316d0",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-37/next-dpart-object-probes/root-node-stream.pdf",
+    "sha256": "1e23affded5fed31c4e7815eb137012543a2b9c2b91bfa9fd54d6c37661c2f43",
+    "status": "FAIL",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": [
+      "DPART_OBJECT_STRUCTURE"
+    ]
+  },
+  {
+    "file": "docs/improvement/validator-37/next-dpart-object-probes/leaf-stream.pdf",
+    "sha256": "f6ab8f95e45e0b2b7ce752e843b8c22ac3b3b5774a6b53137af5771d26840a99",
+    "status": "FAIL",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": [
+      "ATTACHMENT_ANNOTATIONS_PRESENT",
+      "DPART_OBJECT_STRUCTURE",
+      "DPM_INTERMEDIATE_COUNT_SINGLE",
+      "PAGE_DPART_PRESENT"
+    ]
+  },
+  {
+    "file": "docs/improvement/validator-37/next-dpart-object-probes/dpm-key-unreadable.pdf",
+    "sha256": "dd4b8e16ce4fce8a79296408ee247aa1b9075cca7308bdff03ba937f9db0f6cd",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-37/next-dpart-object-probes/dpm-nested-key-unreadable.pdf",
+    "sha256": "e70f1afc8a4cfdcabedda910e260aa15fe4fb5e5bf154e5d6d18978a30298f59",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  }
+]

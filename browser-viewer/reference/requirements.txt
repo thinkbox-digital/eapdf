@@ -1,0 +1,14 @@
+# Development oracle only; no Python is used or shipped by the extension.
+pikepdf==10.2.0
+jsonschema==4.24.0
+# Tested CPython 3.12.3 dependency closure. qpdf 12.4.2 is bundled by this pikepdf wheel.
+Pillow==12.0.0
+lxml==5.2.1
+packaging==24.2
+Deprecated==1.3.1
+wrapt==1.17.2
+attrs==25.1.0
+jsonschema-specifications==2025.4.1
+referencing==0.36.2
+rpds-py==0.25.1
+typing_extensions==4.12.2

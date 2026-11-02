@@ -1,0 +1,28 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -4482,13 +4482,23 @@
+                 report.fail("DPM_LEAF_REQUIRED","Leaf DPart node must contain a /DPM dictionary",{"objgen":item["objgen"]})
+             ctype=safe_name(dpm.get("Mail_ContentSetType",None))
+             desc_value=dpm.get("Mail_Desc")
+-            desc=norm_text(desc_value) if isinstance(desc_value,pikepdf.String) else ""
++            desc_unavailable=False
++            try:
++                desc=norm_text(desc_value) if isinstance(desc_value,pikepdf.String) else ""
++            except (UnicodeError,ValueError,pikepdf.PdfError):
++                desc=""
++                desc_unavailable=True
+             subtype=safe_name(dpm.get("Mail_Subtype",None))
+             if dpm.get("Mail_ContentSetType") is not None:
+                 report.ok("DPM_CONTENTSETTYPE_PRESENT","Leaf DPM node contains Mail_ContentSetType",{"objgen":item["objgen"],"type":ctype})
+             else:
+                 report.fail("DPM_CONTENTSETTYPE_PRESENT","Leaf DPM node missing Mail_ContentSetType",{"objgen":item["objgen"]})
+-            if desc:
++            if desc_unavailable:
++                report.warn("DPM_DESC_REQUIRED","DPM description text could not be decoded",
++                            {"objgen":item["objgen"],"assessment":"unavailable","actual":observed_pdf_value(desc_value)})
++                report.warn("VALIDATION_INCOMPLETE","DPM human-readable description could not be assessed",
++                            {"rules":["DPM_DESC_REQUIRED"],"assessment":"unavailable","objgen":item["objgen"]})
++            elif desc:
+                 report.ok("DPM_DESC_REQUIRED","Leaf DPM node contains Mail_Desc",{"objgen":item["objgen"],"Mail_Desc":desc})
+             else:
+                 report.fail("DPM_DESC_REQUIRED","Leaf DPM node requires Mail_Desc as a human-readable PDF text string",{"objgen":item["objgen"],"actual":observed_pdf_value(desc_value)})

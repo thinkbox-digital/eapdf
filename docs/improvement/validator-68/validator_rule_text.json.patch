@@ -1,0 +1,54 @@
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -10756,6 +10756,12 @@
+         "PDFA-4F": [],
+         "PDFA-4E": []
+       }
++    },
++    "source_mailbox_parser_review": {
++      "date": "2026-10-21",
++      "basis": "RFC5321 section4.1.2, RFC5322 sections3.2.4/3.4.1 and RFC2047 section5: parse source address structure before display-name decoding; preserve quoted local-part data and literal addr-spec tokens.",
++      "boundary": "Quoted space/quoted-pair and encoded display-name controls; full SMTPUTF8, IDNA, obsolete/folded source syntax and raw-header fidelity normalization are not certified.",
++      "smtp_parser_fallback": "Headerregistry false rejection of encoded-word-looking SMTP atoms uses an exact ASCII dot-string/DNS-label grammar fallback. Malformed domains/punctuation and HeaderParseError become a known mailbox schema failure, not a validation abort."
+     }
+   },
+   "MESSAGE_RAW_TO_XMP": {
+@@ -10996,6 +11002,12 @@
+         "PDFA-4F": [],
+         "PDFA-4E": []
+       }
++    },
++    "source_mailbox_parser_review": {
++      "date": "2026-10-21",
++      "basis": "RFC5321 section4.1.2, RFC5322 sections3.2.4/3.4.1 and RFC2047 section5: parse source address structure before display-name decoding; preserve quoted local-part data and literal addr-spec tokens.",
++      "boundary": "Quoted space/quoted-pair and encoded display-name controls; full SMTPUTF8, IDNA, obsolete/folded source syntax and raw-header fidelity normalization are not certified.",
++      "smtp_parser_fallback": "Headerregistry false rejection of encoded-word-looking SMTP atoms uses an exact ASCII dot-string/DNS-label grammar fallback. Malformed domains/punctuation and HeaderParseError become a known mailbox schema failure, not a validation abort."
+     }
+   },
+   "MESSAGE_RAW_FROM_XMP": {
+@@ -11544,6 +11556,12 @@
+         "PDFA-4F": [],
+         "PDFA-4E": []
+       }
++    },
++    "source_mailbox_parser_review": {
++      "date": "2026-10-21",
++      "basis": "RFC5321 section4.1.2, RFC5322 sections3.2.4/3.4.1 and RFC2047 section5: parse source address structure before display-name decoding; preserve quoted local-part data and literal addr-spec tokens.",
++      "boundary": "Quoted space/quoted-pair and encoded display-name controls; full SMTPUTF8, IDNA, obsolete/folded source syntax and raw-header fidelity normalization are not certified.",
++      "smtp_parser_fallback": "Headerregistry false rejection of encoded-word-looking SMTP atoms uses an exact ASCII dot-string/DNS-label grammar fallback. Malformed domains/punctuation and HeaderParseError become a known mailbox schema failure, not a validation abort."
+     }
+   },
+   "MESSAGE_RAW_CC_XMP": {
+@@ -11754,6 +11772,12 @@
+         "PDFA-4F": [],
+         "PDFA-4E": []
+       }
++    },
++    "source_mailbox_parser_review": {
++      "date": "2026-10-21",
++      "basis": "RFC5321 section4.1.2, RFC5322 sections3.2.4/3.4.1 and RFC2047 section5: parse source address structure before display-name decoding; preserve quoted local-part data and literal addr-spec tokens.",
++      "boundary": "Quoted space/quoted-pair and encoded display-name controls; full SMTPUTF8, IDNA, obsolete/folded source syntax and raw-header fidelity normalization are not certified.",
++      "smtp_parser_fallback": "Headerregistry false rejection of encoded-word-looking SMTP atoms uses an exact ASCII dot-string/DNS-label grammar fallback. Malformed domains/punctuation and HeaderParseError become a known mailbox schema failure, not a validation abort."
+     }
+   },
+   "MESSAGE_RAW_BCC_XMP": {

@@ -1,0 +1,131 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -5985,6 +5985,7 @@
+ def check_message_metadata(root_xml,afiles,eapdf_conf,report):
+     if root_xml is None:
+         return
++    report._email_source_summaries={}
+     check_xmp_record_array(root_xml,"attachments",report,"ATTACHMENT_XMP")
+     if eapdf_conf in ("c","ci"):
+         # Declared attachment records retain Table 19's required fields in containers.
+@@ -6030,6 +6031,7 @@
+                     selected=None
+         if selected is not None:
+             remaining.remove(selected)
++        report._email_source_summaries[index]=selected
+         scoped_sources=[]
+         if selected is not None:
+             for source_file in afiles:
+@@ -6038,9 +6040,12 @@
+                     scoped_source["_email_summary"]=dict(selected,mail_guid=guid)
+                     scoped_sources=[scoped_source]
+                     break
+-            report.ok("MESSAGE_SOURCE_MATCH","Email metadata is matched to one inspectable source email",{"email":index,"Mail_GUID":guid,"source":selected["source_filename"]})
++            report.ok("MESSAGE_SOURCE_MATCH","Email metadata is matched to one inspectable source email",{
++                "email":index,"Mail_GUID":guid,"source":selected["source_filename"],
++                "source_sha256":selected["source_sha256"],"source_objgen":selected["source_objgen"]})
+         elif sources or any(source.get("afrelationship")=="Source" for source in afiles):
+-            report.warn("MESSAGE_SOURCE_MATCH","Email metadata cannot be matched unambiguously to a source email",{"email":index,"Mail_GUID":guid})
++            report.warn("MESSAGE_SOURCE_MATCH","Email metadata cannot be matched unambiguously to a source email",{
++                "email":index,"Mail_GUID":guid,"source_ownership":"unassigned"})
+             report.warn("VALIDATION_INCOMPLETE","Source-header comparisons could not be completed for an email",{"email":index})
+         first_item=len(report.items)
+         check_single_message_metadata(scoped,scoped_sources,eapdf_conf,report)
+@@ -7468,6 +7473,11 @@
+ 
+ def check_additional_rule_coverage(pdf, xroot, xmp_bytes, efiles, afiles, eapdf_conf, pdfa_part, report):
+     source_summary=summarize_source_email(afiles) if xroot is not None and len(flatten_email_records(xroot))<=1 else None
++    bindings=getattr(report,"_email_source_summaries",{})
++    if len(bindings)==1:
++        # Reuse the actual scoped outcome, including an unassigned original.
++        # The first catalog Source is not an email-ownership decision.
++        source_summary=bindings.get(1)
+     source_files=[f for f in afiles if f["afrelationship"]=="Source"]
+     mail_profile=eapdf_conf in ("s","si","m","mi")
+     container_profile=eapdf_conf in ("c","ci")
+@@ -8504,9 +8514,13 @@
+     report.fail("EAPDF_XMP_UNCHECKED","Could not validate EA-PDF identification metadata because XMP metadata is missing or unreadable",details)
+     report.fail("XMP_KEYWORDS_UNCHECKED","Could not validate XMP keywords because XMP metadata is missing or unreadable",details)
+ 
+-def build_validation_context(pdf, xroot, eapdf_conf, pdfa_part, efiles, afiles):
++def build_validation_context(pdf, xroot, eapdf_conf, pdfa_part, efiles, afiles, source_bindings=None):
+     source_files=[f for f in afiles if f["afrelationship"]=="Source"]
+     source_summaries=summarize_source_emails(afiles) if xroot is not None else []
++    source_owner_unassigned=bool(source_files) and bool(source_bindings) and any(
++        source is None for source in source_bindings.values())
++    if source_bindings:
++        source_summaries=[source for source in source_bindings.values() if source is not None]
+     source_summary=source_summaries[0] if source_summaries else None
+     struct_root=dict_get(pdf.Root,"/StructTreeRoot",None)
+     outlines_root=dict_get(pdf.Root,"/Outlines",None)
+@@ -8560,6 +8574,8 @@
+         "source_has_invalid_date":any(source_date_present(source) and not source.get("sent_norm")
+                                       and not source.get("sent_normalization_unavailable") for source in source_summaries),
+         "message_properties":{key for record in records for key,value in record.items() if value},
++        "raw_address_properties":{prop for prop in ("Raw-To","Raw-From","Raw-Cc","Raw-Bcc")
++                                  if xroot is not None and message_xmp_property_present(xroot,prop)},
+         "identity_node_count":sum(item["start"] is None and item["end"] is None and any(key in item["dpm"] for key in ("Mail_GUID","Mail_MessageID")) for item in dpart_nodes),
+         "messageid_node_count":sum("Mail_MessageID" in item["dpm"] for item in dpart_nodes),
+         "rendering_node_count":sum(safe_name(item["dpm"].get("Mail_ContentSetType")) in ("BodyRendering","AttachmentRendering") for item in leaf_nodes),
+@@ -8573,6 +8589,7 @@
+         "isolated_profile": bool(eapdf_conf and eapdf_conf.endswith("i")),
+         "source_optional_profile": eapdf_conf in ("si","mi","ci"),
+         "source_file_count": len(source_files),
++        "source_owner_unassigned":source_owner_unassigned,
+         "inspectable_source": source_summary is not None,
+         "source_summary": source_summary,
+         "asset_count": len(assets),
+@@ -8668,24 +8685,27 @@
+         return "There are no Mail_Message elements whose children require inspection."
+     if code=="MAIL_CONTENTSET_CHILDREN" and "Mail_ContentSet" not in ctx["custom_types"]:
+         return "There are no Mail_ContentSet elements whose immediate children require inspection."
+-    if code in {"MESSAGE_SOURCE_MATCH","XMP_CREATEDATE_SEMANTICS"} and not ctx["inspectable_source"]:
++    source_condition_unknown=ctx.get("source_owner_unassigned",False)
++    if code in {"MESSAGE_SOURCE_MATCH","XMP_CREATEDATE_SEMANTICS"} and not ctx["inspectable_source"] and not source_condition_unknown:
+         return "No inspectable retained source is available for this source comparison."
+-    if code=="XMP_CREATEDATE_SEMANTICS" and not ctx["source_has_valid_date"]:
++    if code=="XMP_CREATEDATE_SEMANTICS" and not ctx["source_has_valid_date"] and not source_condition_unknown:
+         return "No retained source has a normalized sent date for the creation-date comparison."
+-    if code=="MESSAGE_RAW_SENT_REQUIRED_IF_INVALID" and not ctx["source_has_invalid_date"]:
++    if code=="MESSAGE_RAW_SENT_REQUIRED_IF_INVALID" and not ctx["source_has_invalid_date"] and not source_condition_unknown:
+         return "No inspected source has an unnormalizable Date header requiring Raw-Sent."
+-    if code=="MESSAGE_RAW_SENT_OMIT_IF_VALID" and not ctx["source_has_valid_date"]:
++    if code=="MESSAGE_RAW_SENT_OMIT_IF_VALID" and not ctx["source_has_valid_date"] and not source_condition_unknown:
+         return "No inspected source has a valid Date header to which this recommendation applies."
++    optional_raw_addresses={"MESSAGE_RAW_TO_XMP":"Raw-To","MESSAGE_RAW_FROM_XMP":"Raw-From",
++                            "MESSAGE_RAW_CC_XMP":"Raw-Cc","MESSAGE_RAW_BCC_XMP":"Raw-Bcc"}
++    if code in optional_raw_addresses and optional_raw_addresses[code] not in ctx.get("raw_address_properties",ctx["message_properties"]):
++        return "This optional raw address property is not supplied; unrelated original headers do not require it."
+     optional_headers={
+-        "MESSAGE_RAW_TO_XMP":("raw_to","Raw-To"), "MESSAGE_RAW_FROM_XMP":("raw_from","Raw-From"),
+-        "MESSAGE_RAW_CC_XMP":("raw_cc","Raw-Cc"), "MESSAGE_RAW_BCC_XMP":("raw_bcc","Raw-Bcc"),
+         "MESSAGE_CC_XMP":("raw_cc","Cc"), "MESSAGE_CC_FOAF":("raw_cc","Cc"),
+         "MESSAGE_BCC_XMP":("raw_bcc","Bcc"), "MESSAGE_BCC_FOAF":("raw_bcc","Bcc"),
+         "MESSAGE_INREPLYTO_XMP":("in_reply_to","In-Reply-To"),
+     }
+     if code in optional_headers:
+         source_key,xmp_key=optional_headers[code]
+-        if source_key not in ctx["source_raw_fields"] and xmp_key not in ctx["message_properties"]:
++        if source_key not in ctx["source_raw_fields"] and xmp_key not in ctx["message_properties"] and not source_condition_unknown:
+             return "Neither inspected source nor email XMP supplies this optional header."
+     if code=="XMP_MISSING" and ctx["xmp_readable"]:
+         return f"Not applied because document XMP was present and readable, so the missing-XMP failure does not apply. Context: {snapshot}."
+@@ -8716,7 +8736,7 @@
+     if code in ("MESSAGE_RAW_SENT_REQUIRED_IF_INVALID","MESSAGE_RAW_SENT_OMIT_IF_VALID","MESSAGE_TO_XMP","MESSAGE_FROM_XMP","MESSAGE_CC_XMP","MESSAGE_BCC_XMP","MESSAGE_TO_FOAF","MESSAGE_FROM_FOAF","MESSAGE_CC_FOAF","MESSAGE_BCC_FOAF","MESSAGE_RAW_TO_XMP","MESSAGE_RAW_FROM_XMP","MESSAGE_RAW_CC_XMP","MESSAGE_RAW_BCC_XMP","MESSAGE_SUBJECT_XMP","MESSAGE_INREPLYTO_XMP","MESSAGE_SIZE_XMP","MESSAGE_ATTACHMENT_COUNT_XMP","ATTACHMENT_XMP_CONTENTTYPE_MATCH"):
+         if not ctx["mail_profile"]:
+             return f"Not applied because this rule applies only to EA-PDF mail profiles s/si/m/mi, and this PDF is profile {profile_label(ctx)}. Context: {snapshot}."
+-        if not ctx["inspectable_source"]:
++        if not ctx["inspectable_source"] and not source_condition_unknown:
+             return f"Not applied because this source-to-XMP comparison needs an inspectable embedded RFC822 source email, and this PDF has {ctx['source_file_count']} Source AF file(s) but none is inspectable as RFC822 by the validator. Context: {snapshot}."
+     if code in ("ATTACHMENT_XMP_FILENAME","ATTACHMENT_XMP_SIZE_PRESENT","ATTACHMENT_XMP_SIZE_TYPE","ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID","ATTACHMENT_XMP_CONTENTTYPE","ATTACHMENT_XMP_CHECKSUM_FORM","ATTACHMENT_XMP_MATCH","ATTACHMENT_XMP_CONTENTTYPE_MATCH"):
+         if ctx["attachment_xmp_count"]==0:
+@@ -9202,7 +9222,8 @@
+     check_fonts(pdf,report)
+     source_assets={f["objgen"] for f in afiles if f["afrelationship"]=="Source"} | {f["objgen"] for f in supplements}
+     check_collection_children(efiles,eapdf_conf,report,child_context or ChildValidationContext(),depth,source_assets,related_streams)
+-    finalize_rule_matrix(report, build_validation_context(pdf, xroot, eapdf_conf, pdfa_part, efiles, afiles))
++    finalize_rule_matrix(report, build_validation_context(pdf, xroot, eapdf_conf, pdfa_part, efiles, afiles,
++                                                        getattr(report,"_email_source_summaries",None)))
+     return report
+ 
+ def validate(path,child_context=None,depth=0,source_file_sets=None,pdfa=None):

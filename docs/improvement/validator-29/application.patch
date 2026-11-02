@@ -1,0 +1,127 @@
+--- a/validate_eapdf.py
++++ b/validate_eapdf.py
+@@ -2077,7 +2077,9 @@
+                     if not is_pdf_array(arr) or len(arr)%2:
+                         raise ValueError("Malformed EmbeddedFiles name-tree entries")
+                     for index in range(0,len(arr),2):
+-                        files.append(parse_filespec(str(arr[index]),arr[index+1],source="EmbeddedFiles"))
++                        fileinfo=parse_filespec(str(arr[index]),arr[index+1],source="EmbeddedFiles")
++                        fileinfo["tree_name_is_text"]=isinstance(arr[index],pikepdf.String)
++                        files.append(fileinfo)
+                 pending.extend((child,depth+1) for child in (dict_get(node,"/Kids",[]) or []))
+     return files
+ 
+@@ -3554,12 +3556,14 @@
+             folder_id=int(folder_id)
+         except Exception:
+             folder_id=None
+-        name=norm_text(str(dict_get(cur,"/Name","")))
++        name_value=dict_get(cur,"/Name",None)
++        name=str(name_value) if isinstance(name_value,pikepdf.String) else ""
+         out.append({
+             "objgen":og,
+             "id":folder_id,
+             "parent_id":parent_id,
+             "name":name,
++            "name_is_text":isinstance(name_value,pikepdf.String),
+             "is_root":parent_id is None,
+         })
+         child=dict_get(cur,"/Child",None)
+@@ -3574,12 +3578,12 @@
+         walk_collection_folder_nodes(folders_root, out, None, set())
+     return out
+ 
+-def parse_collection_name_tree_key(key):
+-    text=norm_text(key)
+-    m=re.match(r"^<(\d+)>(.*)$", text)
++def parse_collection_name_tree_key(key,root_folder_id=0):
++    text=str(key)
++    m=re.match(r"^<([0-9]+)>(.*)$", text,re.DOTALL)
+     if m:
+         return int(m.group(1)), m.group(2)
+-    return 0, text
++    return root_folder_id, text
+ 
+ def invalid_collection_filename_reason(name):
+     if not isinstance(name, str):
+@@ -6711,17 +6715,19 @@
+         invalid=[]
+         folders=collect_collection_folders(dict_get(pdf.Root,"/Collection",None))
+         for folder in folders:
+-            reason=invalid_collection_filename_reason(folder["name"])
++            reason=(invalid_collection_filename_reason(folder["name"]) if folder["name_is_text"]
++                    else "must be a PDF text string")
+             if reason:
+                 invalid.append({"kind":"folder","name":folder["name"],"folder_id":folder["id"],"reason":reason})
+         file_names=[]
+-        for f in embedded_candidates:
+-            folder_id,file_name=parse_collection_name_tree_key(f.get("tree_name",""))
+-            file_name=norm_text(file_name)
+-            if not file_name:
+-                continue
++        root_folder_id=next((folder["id"] for folder in folders if folder["is_root"]),0)
++        # Names belong to name-tree entries. Multiple keys may reference the
++        # same file specification and still participate in naming collisions.
++        for f in efiles:
++            folder_id,file_name=parse_collection_name_tree_key(f.get("tree_name",""),root_folder_id)
+             file_names.append({"folder_id":folder_id,"name":file_name})
+-            reason=invalid_collection_filename_reason(file_name)
++            reason=(invalid_collection_filename_reason(file_name) if f.get("tree_name_is_text",True)
++                    else "must be a PDF text string")
+             if reason:
+                 invalid.append({"kind":"file","name":file_name,"folder_id":folder_id,"reason":reason})
+         casefold_dupes=[]
+@@ -6729,7 +6735,7 @@
+         for folder in folders:
+             folded=folder["name"].casefold()
+             key=(folder["parent_id"], folded)
+-            if key in seen_folders and seen_folders[key] != folder["name"]:
++            if key in seen_folders:
+                 casefold_dupes.append({"kind":"folder","parent_id":folder["parent_id"],"names":[seen_folders[key], folder["name"]]})
+             else:
+                 seen_folders[key]=folder["name"]
+@@ -6737,7 +6743,7 @@
+         for item in file_names:
+             folded=item["name"].casefold()
+             key=(item["folder_id"], folded)
+-            if key in seen_files and seen_files[key] != item["name"]:
++            if key in seen_files:
+                 casefold_dupes.append({"kind":"file","folder_id":item["folder_id"],"names":[seen_files[key], item["name"]]})
+             else:
+                 seen_files[key]=item["name"]
+--- a/validator_rule_text.json
++++ b/validator_rule_text.json
+@@ -5109,6 +5109,16 @@
+         "PDFA-4F": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+         "PDFA-4E": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites."
+       }
++    },
++    "implementation_evidence": {
++      "batch": "V29",
++      "authority": "EA-PDF 9.5 printed p68; ISO 32000-2:2020 Table 159 and following text printed pp454-455",
++      "assertion": "Check exact decoded text before any display cleanup, including empty and whitespace-only names, character length, forbidden characters and a final period. Folder names and name-tree keys must be PDF text strings. Inspect actual EmbeddedFiles entries, including aliases of one Filespec; AF-only discoveries do not invent additional collection names.",
++      "tests": [
++        "tests/test_collection_names.py"
++      ],
++      "fixtures": "tests/fixtures/eapdf/validator-collection-names/expectations.json",
++      "boundary": "Scoped name-value and uniqueness checks; not certification of the complete Collection folder graph, ID integrity or every Unicode version."
+     }
+   },
+   "COLLECTION_FILENAMES_UNIQUE_CASEFOLD": {
+@@ -5151,6 +5161,16 @@
+         "PDFA-4F": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+         "PDFA-4E": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites."
+       }
++    },
++    "implementation_evidence": {
++      "batch": "V29",
++      "authority": "EA-PDF 9.5 printed p68; ISO 32000-2:2020 Table 159 and following text printed pp454-455",
++      "assertion": "Compare exact decoded names after casefold only, within sibling-folder or file-folder scope. Identical siblings also collide. Preserve every name-tree alias even when Filespec identity is shared. Unprefixed names share the actual root folder ID with explicitly prefixed root files. Parse only ASCII folder digits and preserve filename line feeds. Distinct whitespace and different folders remain permitted.",
++      "tests": [
++        "tests/test_collection_names.py"
++      ],
++      "fixtures": "tests/fixtures/eapdf/validator-collection-names/expectations.json",
++      "boundary": "Scoped name-value and uniqueness checks; not certification of the complete Collection folder graph, ID integrity or every Unicode version."
+     }
+   },
+   "DPM_ROOTNODE_PRESENT": {

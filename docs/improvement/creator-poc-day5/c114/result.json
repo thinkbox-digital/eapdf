@@ -1,0 +1,30 @@
+{
+  "checkpoint": "C114",
+  "fix": "Apply the existing readable-plain-alternative policy after collecting MSG attachments; preserve readable HTML and embedded image bodies.",
+  "production_edit": "One existing helper call in MsgReader, before metadata finalization.",
+  "java_focused": {
+    "tests": 16,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changed_production_classes": [
+    "eapdf/MsgReader.class"
+  ],
+  "pdf_results": "pdf-results.json",
+  "ordinary_msg_preservation": {
+    "existing_messages": 30,
+    "scope": "29 ordinary IPM.Note variants in MSGReader-master plus in/email/test.MSG",
+    "body_mime_and_text_html_hashes_unchanged": true,
+    "original_msg_and_native_assets_hashes_unchanged": true,
+    "initial_count_assumption_corrected": "Included the additional top-level test.MSG; observed 30, not 29."
+  },
+  "last_full_java_suite": "C110:239 passes, not repeated.",
+  "jars": {
+    "emailtopdfa.jar": "891ec62c3a87e27199071d5789fc22f20d6a4bc442349a1d3b8ebbe55f97e7b6",
+    "emailtopdfa-gui.jar": "157749309cd6371db1e25d85d9f1c3beffe55fbfbc7eaefad039b06215b15f27"
+  },
+  "standard_samples": "C113 EML/PST samples unchanged; their creator classes are unchanged in C114.",
+  "temporary_shared_staging_removed": true,
+  "continued_work": "Active until explicitly told to stop."
+}

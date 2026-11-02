@@ -1,0 +1,114 @@
+[
+  {
+    "case": "source-order-and-unobserved",
+    "sha256": "ad0e29d5091aa75097dc1e358068de46030722285b8cea87ff3b68e23d757015",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "observed_comparisons": {
+      "equal": 10
+    },
+    "source_occurrences": 18,
+    "matched_fields": 10,
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:77457de1-0484-4c30-b2b9-17dd55a75f2f",
+      "Inventory Bravo": "uuid:05852dbd-4337-4020-8deb-e75836777edf"
+    },
+    "expected_result_observed": true
+  },
+  {
+    "case": "distinct-repeated-subject",
+    "sha256": "7f6cb751395a2abcdad866f49d8b8c0839091fa0558ec5a42499e33ddb9a84c3",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "MESSAGE_SUBJECT_XMP"
+    ],
+    "observed_comparisons": {
+      "equal": 10
+    },
+    "source_occurrences": 20,
+    "matched_fields": 10,
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:703bc151-62cc-4146-9011-43b92349e731",
+      "Inventory Bravo": "uuid:7905c8a7-feff-4f2d-89ca-1c9f0cb69701"
+    },
+    "expected_result_observed": true
+  },
+  {
+    "case": "identical-repeated-subject",
+    "sha256": "8b2fa87282256e63613859b2e5c7acadec768b594e2e8cc958dfa1f90a1875bb",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "MESSAGE_SUBJECT_XMP"
+    ],
+    "observed_comparisons": {
+      "equal": 8,
+      "unavailable": 2
+    },
+    "source_occurrences": 20,
+    "matched_fields": 8,
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:7678c800-671c-49f2-b2c9-f20b3a5eea0f",
+      "Inventory Bravo": "uuid:614f8e26-6f91-41ad-aefe-74058b175a1d"
+    },
+    "expected_result_observed": true
+  },
+  {
+    "case": "class-map-repeated-owner",
+    "sha256": "e7c3a0b0e14981e7b44a25639da569345c0a45e8bd3bd19d6ee4d6ac9292c282",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "MESSAGE_SUBJECT_XMP"
+    ],
+    "observed_comparisons": {
+      "equal": 10
+    },
+    "source_occurrences": 20,
+    "matched_fields": 10,
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:703bc151-62cc-4146-9011-43b92349e731",
+      "Inventory Bravo": "uuid:7905c8a7-feff-4f2d-89ca-1c9f0cb69701"
+    },
+    "expected_result_observed": true
+  },
+  {
+    "case": "swapped-repeated-values",
+    "sha256": "f37233c30b7551a1ca509be7fd5791e4b599a82ee7c873db97e207f618aa5c7c",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "MESSAGE_SUBJECT_XMP"
+    ],
+    "observed_comparisons": {
+      "equal": 8,
+      "unavailable": 2
+    },
+    "source_occurrences": 20,
+    "matched_fields": 8,
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:703bc151-62cc-4146-9011-43b92349e731",
+      "Inventory Bravo": "uuid:7905c8a7-feff-4f2d-89ca-1c9f0cb69701"
+    },
+    "expected_result_observed": true
+  },
+  {
+    "case": "isolated-observations-retained",
+    "sha256": "3e63ec4034f8e31a10283594496e59ccb3e3cc34f26a669824458f1acee1f8d0",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "observed_comparisons": {
+      "unavailable": 10
+    },
+    "source_occurrences": 0,
+    "matched_fields": 0,
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:4f917f0f-3473-4296-940a-c070a543ee9f",
+      "Inventory Bravo": "uuid:16207d12-cccf-464d-922d-f607109bf4d9"
+    },
+    "expected_result_observed": true
+  }
+]

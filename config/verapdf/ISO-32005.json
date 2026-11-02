@@ -1,0 +1,11 @@
+{
+  "profile": "config/verapdf/ISO-32005.xml",
+  "profile_sha256": "a2181a59dcaef27d20cc3078aa8b63e63fe528908a69f985a0b56b714c62d7a1",
+  "profile_name": "EA-PDF ISO 32005 upstream rules (veraPDF 1.31.18)",
+  "selected_rules": 1636,
+  "reported_versions": {
+    "apps": "1.31.18",
+    "core": "1.31.1",
+    "validation-model": "1.31.17"
+  }
+}

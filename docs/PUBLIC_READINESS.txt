@@ -1,0 +1,30 @@
+Fresh public repository — 2 November 2026
+
+This repository starts from an approved current-file snapshot, with new Git
+history. Previous commits, branches, tags, issues, Actions records and credentials
+were not imported. The previous repository is retained separately and privately.
+
+The owner confirmed that the email samples are public. Original inputs, regression
+fixtures, source hashes and license/attribution notices remain. Local comparison
+files, licensed ISO reference PDFs, scraped debug pages, credentials/token files
+and the superseded local Validation requirements.docx draft are excluded.
+
+Application JARs, viewer ZIPs, examples, manuals and checksums belong in Releases.
+The two project-maintained patched OpenHTMLtoPDF libraries are published through
+GitHub Packages, with matching source JARs. Verified build copies remain in source
+for builds without a GitHub token. See docs/PACKAGES.md.
+
+Before first publication, the isolated snapshot passed the Java quality gate,
+repeated-build comparisons, real-input checks and viewer unit/reading/download
+checks. Secret scans are reviewed without exposing credential values; hashes and
+fixture keyword text are not classified as credentials merely because a scanner
+flags them. This is not a claim of complete vulnerability or privacy certification.
+
+The old archive's credential revocation must be handled in the owner's Google
+account. No old Git objects or credentials are carried into this public repository.
+Do not import old branches/tags or run git push --mirror from the private archive.
+For future work, use this repository's checkout and origin remote.
+
+Historical audit documents retained here describe earlier private development.
+Their commit identifiers and run references are provenance, not public Git history.
+Current runtime limitations remain documented in DEVELOPMENT_STATUS.md.

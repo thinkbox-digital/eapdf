@@ -1,0 +1,193 @@
+{
+  "authority": [
+    "EA-PDF 7.5 printed p44: filenames may repeat and native streams may be shared",
+    "EA-PDF 9.8.4 Table 19 printed pp89-90: stored SizeInBytes and optional CheckSum"
+  ],
+  "boundary": "Only a field contradicted by every observed possible native payload fails. Association and media ambiguity remain unavailable.",
+  "seeds": {
+    "isolated-ambiguous-media.pdf": "2a5403539bdf8e47d73e948f3818268eb183c7775f36086be27c37a259d61d09",
+    "isolated-ambiguous-size.pdf": "53555ff5348cb8234b76e4ca56f992467592980497b61e3d155379122bc73aa8",
+    "isolated-distinct-payloads.pdf": "29a12037fda8257624c6946aad86f80ed722e47e4e774cad4b85a9a754169b83",
+    "isolated-equivalent.pdf": "05e3229f6e19e83e1dc86abf889e713e9d15f5bffb40c71911e8a56f0ca22b2c",
+    "isolated-wrong-media.pdf": "0003597b7083f15ed987af99fe696aed79e13474b58852b91dc3782929deb44a",
+    "isolated-wrong-size.pdf": "3f791c92dcdc22fa457023abb1b0ea27b9c0024a4721bcb97f136d5e3f603396"
+  },
+  "cases": [
+    {
+      "file": "all-sizes-wrong.pdf",
+      "sha256": "626ef7320e94b2c2af83148cef689e88cf2bbdd941193c7bc15d428f76f3dcef",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_SIZE_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ]
+        },
+        "reason": "Declared SizeInBytes is compared with the associated stored native stream, independently of original byte preservation.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "one-size-wrong.pdf",
+      "sha256": "31b5ae588535c6889c38bfc96ffd3608d58dc501487e916ee711385394ed9ec0",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_SIZE_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ]
+        },
+        "reason": "Declared SizeInBytes is compared with the associated stored native stream, independently of original byte preservation.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "distinct-sizes-impossible.pdf",
+      "sha256": "a1a546e0b9467517fd0430fee35d4e4032b4fd1771ef05ed4646888e3c9e4e2a",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_SIZE_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ]
+        },
+        "reason": "Declared SizeInBytes is compared with the associated stored native stream, independently of original byte preservation.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "distinct-sizes-compatible.pdf",
+      "sha256": "8d5f8cbf98c4be9ff2934bd3c36f204acd22b34e3b75c8d8d8ba5ed8a082b080",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "all-checksums-wrong.pdf",
+      "sha256": "d0c8157451b4fb96e24ce1f723f8972f2337c0e89f923d5d1db01c576a34e4e5",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_CHECKSUM_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ]
+        },
+        "reason": "The supplied optional CheckSum is compared with associated stored native bytes, separately from size.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "distinct-checksums-impossible.pdf",
+      "sha256": "299dc50f7882faff03cf96c9d8caea50b9b2efd13831b800cfb1ec75984780be",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_CHECKSUM_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ]
+        },
+        "reason": "The supplied optional CheckSum is compared with associated stored native bytes, separately from size.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "some-checksums-compatible.pdf",
+      "sha256": "68f0ea3ae94edcebe344f65a16d0f74c0f8804d90bbb6bb3c05cd3c24ad6a8d9",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "checksum-absent.pdf",
+      "sha256": "fa3705fa09ed6548ce48309216f012445d3218022bc741401c934800869962ec",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "placeholder-compatible.pdf",
+      "sha256": "38be98abd95b791c3a063c1ccb4f85d02b2ae395dd411ddbd3da139d2e1fdbb5",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "equivalent-control.pdf",
+      "sha256": "452b67a068933fd433f7caf0eac754aceb18aaf5cdf1273694e5d79a172f6621",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    }
+  ],
+  "parent_requirement_review": {
+    "evidence": "docs/improvement/validator-53/prior-native-census.json",
+    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
+    "retained_pdf_bytes": true,
+    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "checkpoint": "C103",
+  "fix": "Expand valid named recipient groups into individual mailbox agents; reject group syntax as a single SMTP mailbox. Keep raw group headers and exact original sources.",
+  "java_focused": {
+    "tests": 25,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changed_production_classes": [
+    "eapdf/PstReader.class",
+    "eapdf/Common.class"
+  ],
+  "before_mandatory_failures": [
+    "MESSAGE_TO_FOAF",
+    "MESSAGE_CC_FOAF"
+  ],
+  "after_mandatory_failures": [],
+  "pdf_results": "pdf-results.json",
+  "actual_cases": [
+    "grouped recipients",
+    "empty undisclosed recipient group with known Bcc",
+    "two-message archive",
+    "collection with validated children"
+  ],
+  "last_full_suite": "C97:216 passes, not repeated.",
+  "jars": {
+    "emailtopdfa.jar": "28092fa852be6f89ab2fc87875d18c24f2c6525f9dc6d889d4d3f26f5d358b46",
+    "emailtopdfa-gui.jar": "36d83e6c6f769d305cdae5cc64acc7e02c82a5a11f382335d0560c7540116c29"
+  },
+  "source_sha256": {
+    "src/main/java/eapdf/Common.java": "bc43fbe282556ac8e2ec22b47c7e0481a1fa35eb14f0f6bc428332827651b30f",
+    "src/main/java/eapdf/PstReader.java": "9ee80ef1f7139925f09cf55488dcae32f81e3146c15069521af05dc7643edb1b"
+  },
+  "temporary_shared_staging_removed": true,
+  "continued_work": "Active until explicitly told to stop."
+}

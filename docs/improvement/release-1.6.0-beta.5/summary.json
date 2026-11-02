@@ -1,0 +1,42 @@
+{
+  "version": "1.6.0-beta.5",
+  "viewer": "0.4.0-beta.2",
+  "date": "2026-10-31",
+  "tests": {
+    "creator": {
+      "tests": 366,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "validator_including_packaging": {
+      "tests": 245,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 9
+    }
+  },
+  "previous_python_verification": "1271 tests;0 failures/errors;43 skips, before version-only release changes",
+  "rules": 229,
+  "source_order": "specification page order",
+  "examples": "Previously generated beta.4 examples retained byte-for-byte; not regenerated for beta.5",
+  "manual": "Existing validated PDF/A manual; screenshots identify the earlier tested build",
+  "known_limitations": [
+    "Large PST runs excluded",
+    "Fresh Firefox runtime unavailable; package integrity passed",
+    "Two historical headerless MSG comparisons remain unavailable in Java where Python can prove recipient mismatch",
+    "Published source ambiguities retain labelled local interpretations"
+  ],
+  "artifacts": {
+    "emailtopdfa-1.6.0-beta.5.jar": "4ec6cc66e43f238d4e569fe0e275b9ccbaf6bfa587f09b5cd9b8a077042ec69c",
+    "emailtopdfa-1.6.0-beta.5-gui.jar": "541fd4026acf14e5e345a3799953495f70cb9af12652cfbc028d5df2b5d9d105",
+    "eapdf-validator-1.6.0-beta.5.jar": "269e5256e1eea10bf7b2efe1dd8af4ffa575c47f77885de7989b0e503080bd38",
+    "eapdf-viewer-0.4.0-beta.2-chromium.zip": "f31b92578933bbb5ce74eb54703a407c04375008d8028588afd7997f31529e03",
+    "eapdf-viewer-0.4.0-beta.2-firefox.zip": "06fd14846430d31efd29cbb9436f6982b6d1826690db40815be8d28f31358051",
+    "EA_PDF_Rule_Review_for_Specification_Authors.docx": "888e308db47b8749dd4e0cb8aa8c4aff1591b55e5e80a362feae1a5dac80a473",
+    "EA-PDF_User_Manual.pdf": "7d5c5f9b08d97045c7ae5d4128e11ffe14c1c90368f0f420472bcf64b80e32d1",
+    "configuration-1.6.0-beta.5.zip": "d53859abecf2578dbf9d90eefc217f123967baa26aff35b57768dedc6d1ca315",
+    "licenses-and-notices-1.6.0-beta.5.zip": "c0dcff1adc9afa0a6b06b0cd958781a29cd3c1153f146df3a50f3468d9007db0",
+    "ea-pdf-examples-1.6.0-beta.5.zip": "24c5984ca574a25f135239148197a6920ea893a513d3f15cf9b8bcfa2db6ba19"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "checkpoint": "C100",
+  "creator_version": "C99",
+  "scope": "Remaining supplied message-class MSG inputs and three existing EMLs; contacts, posts and notes excluded.",
+  "outputs_created": 26,
+  "pdfa_passes": 26,
+  "selected_iso_passes": 26,
+  "ordinary_msg_results": {
+    "checked": 23,
+    "mandatory_failures": 0
+  },
+  "eapdf_statuses": {
+    "INCOMPLETE": 23,
+    "PASS": 2,
+    "FAIL": 1
+  },
+  "retained_unresolved_failure": {
+    "source": "in/email/test4.eml",
+    "code": "MESSAGE_CC_XMP",
+    "source_from_missing_or_empty": true,
+    "source_cc_is_fully_quoted": true,
+    "assessment": "Missing sender and fully quoted Cc source remain outside the ordinary-input repair scope. Frozen validator still FAIL; not marked repaired or passed."
+  },
+  "production_changes": false,
+  "temporary_shared_staging_removed": true
+}

@@ -1,0 +1,222 @@
+{
+  "authority": "EA-PDF Table18 raw text types, conditional Raw-Sent, and original-header value meaning. Optional raw address fields have no ordinary SHOULD presence requirement.",
+  "boundary": "Empty type remains legal; matched source fidelity and physical presence are independent. Original source decoding and complete normalization remain bounded.",
+  "cases": [
+    {
+      "file": "to-empty.pdf",
+      "sha256": "5047a5d64b27d035f20fc847de727bd7f1bc0e0dfa9104d030c69c6ee12463f5",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "expected_levels": {},
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/to-exact.pdf",
+      "seed_sha256": "92e35f0dd998dd96e786bd1fc69e9e95df6ee450cd05bfe1d183a59dd25f73e8",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_RAW_TO_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Raw-To"
+        ]
+      }
+    },
+    {
+      "file": "from-empty.pdf",
+      "sha256": "3fb4f5473dd79e2aee666e767bfbc4d759e881a5ad41218c81af1df9f6279637",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "expected_levels": {},
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_RAW_FROM_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Raw-From"
+        ]
+      }
+    },
+    {
+      "file": "cc-empty.pdf",
+      "sha256": "7bad7883c18922ece91c9eac1cdcfb99b984effb5efd580ebdd53c6c97cd6089",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "expected_levels": {},
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/cc-exact.pdf",
+      "seed_sha256": "dd92cf26818f1df7d409b598d0b37ad303025d75145bace0026949b7a6465abb",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_RAW_CC_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Raw-Cc"
+        ]
+      }
+    },
+    {
+      "file": "bcc-empty.pdf",
+      "sha256": "d9d5272890caf970c6a4a69e7b05b81471c92f929e679a542b5e9f63ea763308",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "expected_levels": {},
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/bcc-exact.pdf",
+      "seed_sha256": "2936a61f29ab852595672e5d2d9bba3b691c44dce15898bd8cfff18a102449b8",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_RAW_BCC_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Raw-Bcc"
+        ]
+      }
+    },
+    {
+      "file": "sent-empty.pdf",
+      "sha256": "f91355816b5071b8a04473172dd9303878ff93637e07d337681e3b53bfe05db2",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "expected_levels": {
+        "MESSAGE_RAW_SENT_OMIT_IF_VALID": "WARN"
+      },
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Raw-Sent"
+        ]
+      }
+    },
+    {
+      "file": "from-qualified-empty.pdf",
+      "sha256": "b3be04de8a7e9d549deaae6ffdc3c1a742a8d13eab80ca278336762ef9496102",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "expected_levels": {},
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_RAW_FROM_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Raw-From"
+        ]
+      }
+    },
+    {
+      "file": "sent-attribute-empty.pdf",
+      "sha256": "8a5b88defd02962ef088ead26928a40a7915f6754d4775dc98a0b5465a5b817f",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "expected_levels": {
+        "MESSAGE_RAW_SENT_OMIT_IF_VALID": "WARN"
+      },
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Raw-Sent"
+        ]
+      }
+    },
+    {
+      "file": "from-omitted.pdf",
+      "sha256": "93e5686321b03c2c928b389e92dc6a94325e8f2068c480bcc43dc6323a41f669",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_levels": {
+        "MESSAGE_RAW_FROM_XMP": "N/A"
+      },
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "from-original-empty.pdf",
+      "sha256": "d21abbc6a2c0762806b933175343dda5ecd3960acf29376985db782b1dc12dce",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_levels": {},
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "sent-invalid-date-empty.pdf",
+      "sha256": "8d14aeb50836f9aabd3e683f44c3fe940bac834441ea3f5be4eae13c066545ed",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "expected_levels": {},
+      "seed": "tests/fixtures/eapdf/validator-coverage-branches/invalid-date-raw.pdf",
+      "seed_sha256": "a95788e1bcbcf9bcb7cca7cce4264f9d1eaf4d09d1303753818942fd92579cc5",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Raw-Sent"
+        ]
+      }
+    }
+  ]
+}

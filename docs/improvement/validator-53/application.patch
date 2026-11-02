@@ -1,0 +1,2306 @@
+--- a/validate_eapdf.py
++++ b/validate_eapdf.py
+@@ -7528,11 +7528,20 @@
+     emit_if_unseen(report,"ok" if not bad_groups else "fail","MAIL_CONTENTGROUP_NESTED_UNDER_MESSAGE",
+                    "Mail_ContentGroup elements are nested below Mail_Message" if not bad_groups else "Mail_ContentGroup elements must be nested below Mail_Message",
+                    {"count":len(cgroup)} if not bad_groups else {"actual":bad_groups})
+-    bad_sets=[e["objgen"] for e in cset if not has_ancestor_type(e,"Mail_Message")
+-              and norm_text(userprops_by_name(e).get("Mail_ContentSetType","")) != "FrontMatter"]
+-    emit_if_unseen(report,"ok" if not bad_sets else "fail","MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+-                   "Email Content Sets are nested below Mail_Message; FrontMatter may be outside emails" if not bad_sets else "Email Content Sets must be nested below Mail_Message",
+-                   {"count":len(cset)} if not bad_sets else {"actual":bad_sets})
++    bad_sets=[e["objgen"] for e in cset if not has_ancestor_type(e,"Mail_Message")]
++    if bad_sets and eapdf_conf in ("c","ci"):
++        emit_if_unseen(report,"warn","MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
++                       "Collection Content Set parent requirements remain unresolved",
++                       {"assessment":"unavailable","actual":bad_sets,"conformance":eapdf_conf,
++                        "issue_id":"SPEC-T13-CONTAINER-PARENT"})
++        report.warn("VALIDATION_INCOMPLETE","Collection Content Set nesting could not be established",
++                    {"rules":["MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"],"assessment":"unavailable",
++                     "issue_id":"SPEC-T13-CONTAINER-PARENT"})
++    else:
++        emit_if_unseen(report,"ok" if not bad_sets else "fail","MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
++                       "Content Sets are nested below Mail_Message" if not bad_sets else
++                       "Mail_ContentSet elements must be nested below Mail_Message",
++                       {"count":len(cset)} if not bad_sets else {"actual":bad_sets})
+     if not any(e["type"] in MAIL_STRUCTURE_TYPES for e in custom):
+         emit_if_unseen(report,"na","CONTENT_SET_MAIL_CONTENTSET_TAGGED","Optional EA-PDF custom tags are not used",
+                        {"reason":"Standard logical structure does not require the optional Mail_ContentSet vocabulary."})
+--- a/validator_rule_text.json
++++ b/validator_rule_text.json
+@@ -7725,7 +7725,8 @@
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed Mail_ContentSet nesting: {actual}. Expected Mail_ContentSet elements only below Mail_Message.",
+-      "N/A": "Not applied because {explanation}."
++      "N/A": "Not applied because {explanation}.",
++      "WARN": "Content Set nesting cannot be verified because the collection parent requirements conflict."
+     },
+     "spec_excerpt_kind": "Reviewed paraphrase, not a verbatim specification quotation",
+     "requirements_review": {
+@@ -7741,7 +7742,8 @@
+       ],
+       "issue_ids": [
+         "SPEC-T13-CONTAINER-PARENT"
+-      ]
++      ],
++      "parent_scope_review": "V53: Table13 does not prescribe a noncollection FrontMatter self-value exception. Determine nesting only from actual structure ancestry and reject noncollection orphan custom Mail_ContentSet elements. For c/ci orphan elements, keep SPEC-T13-CONTAINER-PARENT explicitly unresolved with WARN and VALIDATION_INCOMPLETE rather than inventing either a valid exception or a definite parent violation. A supplied, missing, padded, duplicate, wrong-typed or unreadable scalar self value cannot select parent policy. Standard Art content is outside this custom-tag predicate. No listed expert question is closed."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+--- /dev/null
++++ b/tests/test_contentset_parent_scope.py
+@@ -0,0 +1,82 @@
++"""Required noncollection nesting and unresolved collection parents are distinct."""
++import tempfile
++import unittest
++from pathlib import Path
++
++import pikepdf
++from test_preservation_safety import ROOT, validator as v
++
++CODE = 'MAIL_CONTENTSET_NESTED_UNDER_MESSAGE'
++HERE = ROOT / 'tests/fixtures/eapdf/validator-contentset-parent'
++
++
++class ContentSetParentScopeTests(unittest.TestCase):
++    def check(self, name, level, mutate=None):
++        path = HERE / (name + '.pdf')
++        if mutate is None:
++            report = v.validate(str(path))
++        else:
++            with pikepdf.open(path) as pdf:
++                document = pdf.Root.StructTreeRoot.K
++                target = next(e for e in document.K if e.get('/S') == pikepdf.Name('/Mail_ContentSet'))
++                prop = next(p for p in target.A.P if str(p.N) == 'Mail_ContentSetType')
++                mutate(target, prop)
++                with tempfile.TemporaryDirectory(prefix='.eapdf-parent-scope-', dir=ROOT) as directory:
++                    changed = Path(directory) / 'focused.pdf'
++                    pdf.save(changed, static_id=True, fix_metadata_version=False)
++                    report = v.validate(str(changed))
++        failures = {i['code'] for i in report.items if i['level'] == 'FAIL'}
++        self.assertNotIn('VALIDATION_ERROR', failures)
++        self.assertEqual({level}, {i['level'] for i in report.items if i['code'] == CODE})
++        return report
++
++    def test_nested_multi_baseline_conforms(self):
++        self.assertEqual('PASS', self.check('nested-multi', 'PASS').summary()['status'])
++
++    def test_nested_subtype_baseline_conforms(self):
++        self.assertEqual('PASS', self.check('nested-subtype', 'PASS').summary()['status'])
++
++    def test_nested_single_baseline_conforms(self):
++        self.assertEqual('PASS', self.check('nested-single', 'PASS').summary()['status'])
++
++    def test_frontmatter_value_does_not_exempt_noncollection_ancestry(self):
++        report = self.check('orphan-front-noncollection', 'FAIL')
++        self.assertEqual('FAIL', report.summary()['status'])
++
++    def test_empty_self_value_does_not_select_nesting_policy(self):
++        self.check('orphan-empty-self', 'FAIL')
++
++    def test_unreadable_self_value_does_not_abort_ancestry(self):
++        self.check('orphan-unreadable-self', 'FAIL')
++
++    def assert_collection_unavailable(self, name):
++        report = self.check(name, 'WARN')
++        self.assertNotIn(CODE, {i['code'] for i in report.items if i['level'] == 'FAIL'})
++        self.assertTrue(any(i['code'] == 'VALIDATION_INCOMPLETE' and i['level'] == 'WARN'
++                            and CODE in i['details'].get('rules', []) for i in report.items))
++        self.assertEqual('INCOMPLETE', report.summary()['status'])
++
++    def test_collection_frontmatter_does_not_invent_an_exception(self):
++        self.assert_collection_unavailable('orphan-front-collection')
++
++    def test_other_collection_value_does_not_resolve_the_open_conflict(self):
++        self.assert_collection_unavailable('orphan-other-collection')
++
++    def test_missing_optional_self_type_does_not_change_required_parent(self):
++        self.check('orphan-front-noncollection', 'FAIL', lambda target, prop: target.A.P.remove(prop))
++
++    def test_padded_frontmatter_value_does_not_exempt_parent(self):
++        self.check('orphan-front-noncollection', 'FAIL', lambda target, prop: setattr(prop, 'V', ' FrontMatter '))
++
++    def test_duplicate_self_values_cannot_select_parent_policy(self):
++        self.check('orphan-front-noncollection', 'FAIL', lambda target, prop:
++            target.A.P.insert(0, pikepdf.Dictionary(N='Mail_ContentSetType', V='Other')))
++
++    def test_wrong_self_type_retains_its_separate_failure(self):
++        report = self.check('orphan-front-noncollection', 'FAIL', lambda target, prop:
++            setattr(prop, 'V', pikepdf.Name.FrontMatter))
++        self.assertEqual({'USERPROPS_TYPE', CODE}, {i['code'] for i in report.items if i['level'] == 'FAIL'})
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- /dev/null
++++ b/scripts/build_eapdf_contentset_parent_fixtures.py
+@@ -0,0 +1,78 @@
++"""Separate required noncollection ancestry from the open collection-parent conflict."""
++import hashlib
++import json
++from pathlib import Path
++import shutil
++import sys
++
++import pikepdf
++from build_eapdf_message_owner_fixtures import structure_elements
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT))
++import validate_eapdf as v
++OUT = ROOT / 'tests/fixtures/eapdf/validator-contentset-parent'
++MULTI = ROOT / 'tests/fixtures/eapdf/validator-dpart-object-ranges/multi-ordered.pdf'
++SUBTYPE = ROOT / 'tests/fixtures/eapdf/validator-active-userproperties/owner-subtype-consistent.pdf'
++COLLECTION = ROOT / 'tests/fixtures/eapdf/validator-booleans/collection-false.pdf'
++SINGLE = ROOT / 'tests/fixtures/eapdf/validator-operands/valid.pdf'
++
++
++def nest_front(pdf):
++    """Nest both logical content and its independent DPart email ownership."""
++    document = pdf.Root.StructTreeRoot.K
++    children = list(document.K)
++    front = next(e for e in children if e.get('/S') == pikepdf.Name('/Mail_ContentSet'))
++    message = next(e for e in children if e.get('/S') == pikepdf.Name('/Mail_Message'))
++    document.K = pikepdf.Array([e for e in children if e.objgen != front.objgen])
++    existing = message.K
++    message.K = pikepdf.Array((list(existing) if isinstance(existing, pikepdf.Array) else [existing]) + [front])
++    front.P = message
++    _, _, nodes = v.get_dpart_nodes(pdf)
++    top = nodes[0]['node']
++    leaf = next(n['node'] for n in nodes if n['dpm'].get('Mail_ContentSetType') == pikepdf.Name.FrontMatter)
++    branch = next(n['node'] for n in nodes if n['parent_objgen'] == top.objgen and n['child_count'])
++    root_children = [n['node'] for n in nodes if n['parent_objgen'] == top.objgen and n['node'].objgen != leaf.objgen]
++    branch_children = [n['node'] for n in nodes if n['parent_objgen'] == branch.objgen]
++    top.DParts = pikepdf.Array([pikepdf.Array(root_children)])
++    branch.DParts = pikepdf.Array([pikepdf.Array([leaf] + branch_children)])
++    leaf.Parent = branch
++
++
++def main():
++    OUT.mkdir(parents=True, exist_ok=True)
++    cases = []
++    sources = {'nested-multi': MULTI, 'nested-subtype': SUBTYPE,
++        'orphan-front-noncollection': MULTI, 'orphan-empty-self': MULTI,
++        'orphan-unreadable-self': MULTI, 'orphan-front-collection': COLLECTION,
++        'orphan-other-collection': COLLECTION, 'nested-single': SINGLE}
++    for name, source in sources.items():
++        path = OUT / (name + '.pdf')
++        if name in ('nested-single', 'orphan-front-noncollection', 'orphan-front-collection'):
++            shutil.copyfile(source, path)
++        else:
++            with pikepdf.open(source) as pdf:
++                if name.startswith('nested-'):
++                    nest_front(pdf)
++                else:
++                    target = next(e for e in structure_elements(pdf) if e.get('/S') == pikepdf.Name('/Mail_ContentSet')
++                        and any(str(p.N) == 'Mail_ContentSetType' and str(p.V) == 'FrontMatter' for p in e.A.P))
++                    prop = next(p for p in target.A.P if str(p.N) == 'Mail_ContentSetType')
++                    prop.V = ('' if name == 'orphan-empty-self' else 'Other' if name == 'orphan-other-collection'
++                        else pikepdf.String(b'\xef\xbb\xbf\xff'))
++                pdf.save(path, static_id=True, fix_metadata_version=False)
++        collection = name.endswith('-collection') and name != 'orphan-front-noncollection'
++        status = 'PASS' if name.startswith('nested-') else 'INCOMPLETE' if collection else 'FAIL'
++        cases.append(dict(file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
++            expected_status=status, expected_failures=['MAIL_CONTENTSET_NESTED_UNDER_MESSAGE'] if status == 'FAIL' else [],
++            expected_parent_level='PASS' if status == 'PASS' else 'WARN' if collection else 'FAIL'))
++    (OUT / 'expectations.json').write_text(json.dumps(dict(
++        authority='EA9.7 Table13 Mail_ContentSet ancestry; SPEC-T13-CONTAINER-PARENT remains unresolved for c/ci',
++        source_files={str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources.values()},
++        boundary='No scalar FrontMatter exception. Noncollection ancestry is required; collection conflicts remain unavailable. Corrected positive controls nest logical content and corresponding DPart ownership together. Historical PDFs and original creator outputs are retained.',
++        cases=cases), indent=2) + '\n')
++    print('Built eight Content Set parent controls.')
++
++
++if __name__ == '__main__':
++    main()
+--- a/tests/test_userproperty_comparison_decoding.py
++++ b/tests/test_userproperty_comparison_decoding.py
+@@ -13,8 +13,8 @@
+                 else 'MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT')
+ 
+     def check(self, family, mode):
+-        seed = ('validator-dpart-object-ranges/multi-ordered.pdf' if family == 'group'
+-                else 'validator-active-userproperties/owner-subtype-consistent.pdf')
++        seed = ('validator-contentset-parent/nested-multi.pdf' if family == 'group'
++                else 'validator-contentset-parent/nested-subtype.pdf')
+         key = 'Mail_ContentSetType' if family == 'group' else 'Mail_Subtype'
+         with pikepdf.open(ROOT / 'tests/fixtures/eapdf' / seed) as pdf:
+             elements = []
+--- a/tests/test_contentset_subtype_recommendation.py
++++ b/tests/test_contentset_subtype_recommendation.py
+@@ -11,7 +11,7 @@
+ 
+ class ContentSetSubtypeRecommendationTests(unittest.TestCase):
+     def document(self):
+-        return pikepdf.open(ROOT / 'tests/fixtures/eapdf/validator-active-userproperties/owner-subtype-consistent.pdf')
++        return pikepdf.open(ROOT / 'tests/fixtures/eapdf/validator-contentset-parent/nested-subtype.pdf')
+ 
+     def sets(self, pdf):
+         elements = []
+--- a/tests/test_preservation_safety.py
++++ b/tests/test_preservation_safety.py
+@@ -283,7 +283,7 @@
+             self.assertEqual((1, 1, first.obj.objgen, first.obj.objgen), validator.page_range_from_dpart(single, pages))
+             self.assertIsNone(validator.page_range_from_dpart({"start": second.obj, "end": first.obj}, pages))
+ 
+-    def test_front_matter_is_not_required_to_be_inside_an_email(self):
++    def test_frontmatter_self_value_does_not_exempt_noncollection_parent(self):
+         for content_type in ("FrontMatter", "BodyRendering"):
+             with self.subTest(content_type=content_type), pikepdf.Pdf.new() as document:
+                 document.add_blank_page()
+@@ -296,7 +296,7 @@
+                 report = validator.Report("mock.pdf")
+                 validator.check_additional_rule_coverage(document, None, b"", [], [], "m", 4, report)
+                 failed = "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE" in failed_codes(report)
+-                self.assertEqual(content_type == "BodyRendering", failed)
++                self.assertTrue(failed)  # Table13 has no noncollection FrontMatter exception.
+ 
+     def test_namespace_uri_alone_is_not_a_valid_rolemap(self):
+         with pikepdf.Pdf.new() as document:
+--- a/tests/test_attachment_native_scope.py
++++ b/tests/test_attachment_native_scope.py
+@@ -34,10 +34,16 @@
+                 # This entry point checks the parent, not contained PDF bytes.
+                 self.assertEqual(set(case['expected_failures']) - {'COLLECTION_CHILD_VALIDATION'},
+                                  failed_codes(report), report.items)
+-                self.assertNotIn('VALIDATION_INCOMPLETE', report.seen_codes)
++                incomplete = [i for i in report.items if i['code'] == 'VALIDATION_INCOMPLETE' and i['level'] == 'WARN']
+                 if profile in ('c', 'ci'):
++                    self.assertEqual([['MAIL_CONTENTSET_NESTED_UNDER_MESSAGE']],
++                                     [i['details'].get('rules') for i in incomplete])
++                    self.assertEqual(['SPEC-T13-CONTAINER-PARENT'],
++                                     [i['details'].get('issue_id') for i in incomplete])
+                     context = v.build_validation_context(pdf, root, profile, 4, v.get_embedded_files(pdf), v.get_af_specs(pdf))
+                     self.assertIn('owning contained email', v.na_reason_for_code('ATTACHMENT_XMP_MATCH', context))
++                else:
++                    self.assertFalse(incomplete)
+ 
+     @unittest.skipUnless(os.environ.get('EAPDF_GENERATOR_CLASSPATH'), 'Set EAPDF_GENERATOR_CLASSPATH for independent PDF/A checks')
+     def test_frozen_role_corpus_including_recursive_collection_checks(self):
+@@ -46,8 +52,9 @@
+             with self.subTest(file=case['file']):
+                 result = v.validate_one(str(directory / case['file']), write_html=False)
+                 self.assertEqual('PASS', result['pdfa']['status'])
+-                self.assertEqual('PASS', result['summary']['status'])
+-                self.assertFalse([row for row in result['items'] if row['level'] == 'FAIL'])
++                self.assertEqual(case['expected_status'], result['summary']['status'])
++                self.assertEqual(set(case['expected_failures']),
++                                 {row['code'] for row in result['items'] if row['level'] == 'FAIL'})
+ 
+ 
+ if __name__ == '__main__':
+--- a/tests/fixtures/eapdf/validator-active-userproperties/expectations.json
++++ b/tests/fixtures/eapdf/validator-active-userproperties/expectations.json
+@@ -9,82 +9,108 @@
+     {
+       "file": "duplicate-guid-uniform.pdf",
+       "sha256": "4e5a29046b70bfee4717baced714617986a525e2a5dd5c9711a2de86c8cf81b6",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "duplicate-guid-wrong-first.pdf",
+       "sha256": "12e0a2aafcc7ac3a2681876c27a20f095fde8333f6b3642d9a1edd4bfacc6b75",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "duplicate-guid-wrong-last.pdf",
+       "sha256": "5444ebcb302da59e7f6693dbebfab51b41fb920dfaecc0ba2bc3725733ed99bd",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "duplicate-guid-all-wrong.pdf",
+       "sha256": "43985202218bc38f542c54913f7da44afcaeb70ed747fd6bf9c17c734ff3ab01",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "unknown-guid-first.pdf",
+       "sha256": "ef743d4a66f34aa0afdd46617dc0e11b518b60c7a5e85b304ab5479c5d24839d",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "empty-guid-first.pdf",
+       "sha256": "7e3f309b98a10a0fef3edc77f1ba22b2d5898544efca8b6700a815a1e13d9c64",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "wrong-group-first.pdf",
+       "sha256": "b8642fc763e1fe4abefd7638399cb691f4cd93e18dd70d2f6ad271fd90031a58",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT"
+-      ]
++        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "wrong-subtype-first.pdf",
+       "sha256": "dafd94180e46fdcbf3d3b5918e84610532757252280602bbd14a1db720ebd205",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "duplicate-group-uniform.pdf",
+       "sha256": "e86e9da049a8ea9cec338753913b79f945d1581efe1d3314a8fcbd35a436b1fb",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "duplicate-subtype-uniform.pdf",
+       "sha256": "59a2ffccd796cf779e7eb5462cd82330deb44c4052f5aebcf6a5650fc866e2ea",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "later-array-replacement.pdf",
+       "sha256": "99062bd3c5bcbbaad88e21c54867bac7d6f62a2c822107a691a93c8b7dd1292a",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "attribute-owner-text.pdf",
+@@ -97,28 +123,45 @@
+     {
+       "file": "wrong-owner-after-valid.pdf",
+       "sha256": "092b907f792733ee513efc2af0ec9cf1d8bbb896f36baa54bfd572703a9cf6de",
+-      "expected_status": "INCOMPLETE",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "owner-subtype-consistent.pdf",
+       "sha256": "48c59a87e795819252c3795ff605e78f4068c91fc8e6e379f9d4725c9d410d32",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "owner-subtype-foreign.pdf",
+       "sha256": "051b3430ecf0e80140bfe93a92738a9bba41bbd5bd10606447b9986a3023382d",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "owner-subtype-missing.pdf",
+       "sha256": "071beb821c93c73818601c6420bb91a5ddfef70fdac748436c9434234b14d5a5",
+-      "expected_status": "INCOMPLETE",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-ambiguous-bytes/expectations.json
++++ b/tests/fixtures/eapdf/validator-ambiguous-bytes/expectations.json
+@@ -19,9 +19,11 @@
+       "expected_status": "FAIL",
+       "expected_failures": [
+         "ATTACHMENT_XMP_MATCH",
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "one-size-wrong.pdf",
+@@ -29,9 +31,11 @@
+       "expected_status": "FAIL",
+       "expected_failures": [
+         "ATTACHMENT_XMP_MATCH",
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "distinct-sizes-impossible.pdf",
+@@ -39,18 +43,22 @@
+       "expected_status": "FAIL",
+       "expected_failures": [
+         "ATTACHMENT_XMP_MATCH",
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "distinct-sizes-compatible.pdf",
+       "sha256": "8d5f8cbf98c4be9ff2934bd3c36f204acd22b34e3b75c8d8d8ba5ed8a082b080",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "all-checksums-wrong.pdf",
+@@ -58,9 +66,11 @@
+       "expected_status": "FAIL",
+       "expected_failures": [
+         "ATTACHMENT_XMP_MATCH",
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "distinct-checksums-impossible.pdf",
+@@ -68,45 +78,61 @@
+       "expected_status": "FAIL",
+       "expected_failures": [
+         "ATTACHMENT_XMP_MATCH",
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "some-checksums-compatible.pdf",
+       "sha256": "68f0ea3ae94edcebe344f65a16d0f74c0f8804d90bbb6bb3c05cd3c24ad6a8d9",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "checksum-absent.pdf",
+       "sha256": "fa3705fa09ed6548ce48309216f012445d3218022bc741401c934800869962ec",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "placeholder-compatible.pdf",
+       "sha256": "38be98abd95b791c3a063c1ccb4f85d02b2ae395dd411ddbd3da139d2e1fdbb5",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "equivalent-control.pdf",
+       "sha256": "452b67a068933fd433f7caf0eac754aceb18aaf5cdf1273694e5d79a172f6621",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-ambiguous-media/expectations.json
++++ b/tests/fixtures/eapdf/validator-ambiguous-media/expectations.json
+@@ -20,10 +20,12 @@
+       "expected_status": "FAIL",
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
+-        "EMBEDDED_SUBTYPE_MATCH_XMP"
++        "EMBEDDED_SUBTYPE_MATCH_XMP",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "required_parameter_warning": false,
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "all-parameters-wrong.pdf",
+@@ -32,10 +34,12 @@
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
+         "EMBEDDED_SUBTYPE_MATCH_XMP",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+       ],
+       "required_parameter_warning": false,
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "distinct-types-impossible.pdf",
+@@ -43,30 +47,36 @@
+       "expected_status": "FAIL",
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
+-        "EMBEDDED_SUBTYPE_MATCH_XMP"
++        "EMBEDDED_SUBTYPE_MATCH_XMP",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "required_parameter_warning": false,
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "distinct-types-compatible.pdf",
+       "sha256": "2aa805c65c02e38819b9091b8b086e158e9aebf2cf468cf7911edae2da8f85e3",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "required_parameter_warning": false,
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "parameters-compatible.pdf",
+       "sha256": "f942fe7fb57c61ec69a0e16424e5d54d0edf239503c4e6bd40252c37e15bb354",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "required_parameter_warning": true,
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "distinct-parameters-wrong.pdf",
+@@ -75,10 +85,12 @@
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
+         "EMBEDDED_SUBTYPE_MATCH_XMP",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+       ],
+       "required_parameter_warning": false,
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "malformed-parameters-wrong.pdf",
+@@ -87,30 +99,36 @@
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
+         "EMBEDDED_SUBTYPE_MATCH_XMP",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+       ],
+       "required_parameter_warning": false,
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "malformed-parameters-compatible.pdf",
+       "sha256": "d4e3ec1ab0c68d08bf28b1591dd138b02db80737d357e573ce36e177a07d5532",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "required_parameter_warning": true,
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "legal-parameters-control.pdf",
+       "sha256": "a868827e748acaa1293d5175bd2e09faa7769ed27132a57e5d5b060b615b47d8",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "required_parameter_warning": false,
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "matching-parameters-wrong-type.pdf",
+@@ -118,10 +136,18 @@
+       "expected_status": "FAIL",
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
+-        "EMBEDDED_SUBTYPE_MATCH_XMP"
++        "EMBEDDED_SUBTYPE_MATCH_XMP",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "required_parameter_warning": true,
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-asset-ownership/expectations.json
++++ b/tests/fixtures/eapdf/validator-asset-ownership/expectations.json
+@@ -10,59 +10,70 @@
+       "file": "valid.pdf",
+       "sha256": "e7682885f75e4bd036c461c1d28b69e57c6babdbe28e1ed43a7d8636a0444bf4",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "assets-reversed.pdf",
+       "sha256": "8428582129512fd463a527fed1e4a284129de54c4b582f3024b12a6114fc1750",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "collision-forward.pdf",
+       "sha256": "08886008a20114a699a2e5992fde6f2cca518feb481d437a2ec9e2f8dca8c31e",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "collision-reversed.pdf",
+       "sha256": "3642d9338b855f77d059fd8c51741c756650084331e2404e92068c09014da6ea",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "checksum-wrong.pdf",
+       "sha256": "04aca8329b2fb6954ebb3ff289fe21c0203cabcc486a5d3ecb9cebcaab5351a0",
+       "expected_failures": [
+         "ASSET_MD5_MATCH",
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "association-ambiguous.pdf",
+       "sha256": "fd19b519225b4c8b03889801b3225f436eb3428a59c1b15ba0da661bd5eb33fc",
+       "expected_failures": [
+         "ASSET_MD5_MATCH",
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [
+@@ -70,7 +81,14 @@
+         "SOURCE_WITHOUT_XMP",
+         "VALIDATION_INCOMPLETE"
+       ],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-attachment-equivalence/expectations.json
++++ b/tests/fixtures/eapdf/validator-attachment-equivalence/expectations.json
+@@ -11,77 +11,99 @@
+       "file": "two-owners.pdf",
+       "sha256": "e98d47eb52a54b993cb7889633cacca3559945255c028d431d59dfdb6b65dc0c",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "two-owners-reversed.pdf",
+       "sha256": "125aa17b6781ad30ee3c0019b871bdff7be1852bc96c31d9cc4041b9bed540a6",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "isolated-equivalent.pdf",
+       "sha256": "05e3229f6e19e83e1dc86abf889e713e9d15f5bffb40c71911e8a56f0ca22b2c",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "isolated-wrong-size.pdf",
+       "sha256": "3f791c92dcdc22fa457023abb1b0ea27b9c0024a4721bcb97f136d5e3f603396",
+       "expected_failures": [
+         "ATTACHMENT_XMP_MATCH",
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "isolated-wrong-media.pdf",
+       "sha256": "0003597b7083f15ed987af99fe696aed79e13474b58852b91dc3782929deb44a",
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
+-        "EMBEDDED_SUBTYPE_MATCH_XMP"
++        "EMBEDDED_SUBTYPE_MATCH_XMP",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "isolated-ambiguous-size.pdf",
+       "sha256": "53555ff5348cb8234b76e4ca56f992467592980497b61e3d155379122bc73aa8",
+       "expected_failures": [
+         "ATTACHMENT_XMP_MATCH",
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "isolated-ambiguous-media.pdf",
+       "sha256": "2a5403539bdf8e47d73e948f3818268eb183c7775f36086be27c37a259d61d09",
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
+-        "EMBEDDED_SUBTYPE_MATCH_XMP"
++        "EMBEDDED_SUBTYPE_MATCH_XMP",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "isolated-distinct-payloads.pdf",
+       "sha256": "29a12037fda8257624c6946aad86f80ed722e47e4e774cad4b85a9a754169b83",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-attachment-owners/expectations.json
++++ b/tests/fixtures/eapdf/validator-attachment-owners/expectations.json
+@@ -12,41 +12,49 @@
+       "file": "valid-guid.pdf",
+       "sha256": "4f7c2f87ac138063d643dbd74035fa1eac124a8c12de187564035cbff9f40f45",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "message-id-only.pdf",
+       "sha256": "ce404e8c815d7f7ccbbed72602bae57cea6b860601e8a802ec96afaf0b4f0f3f",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "optional-dpm-id-omitted.pdf",
+       "sha256": "ad4e6b39fcba0d236d539a9c478a65bb2df0458615c79d84f63c16c63875dfca",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "message-id-only-native-alias.pdf",
+       "sha256": "0c699a0d698a025c61aa4fa5af9522f14250283bb1ac30a7202f4d3b24f2562b",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "wrong-owner.pdf",
+@@ -55,54 +63,70 @@
+         "ATTACHMENT_ANNOTATIONS_PRESENT",
+         "ATTACHMENT_XMP_MATCH",
+         "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MESSAGE_ATTACHMENT_COUNT_XMP"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "guid-primary-wrong-id.pdf",
+       "sha256": "edb414e5e92ec586905bc0c8fefca070ea3b937ac5e214a37cfd8406c8cdfc13",
+       "expected_failures": [
+         "ATTACHMENT_XMP_MATCH",
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "source-omitted-message-id.pdf",
+       "sha256": "ca58f04fb0e742da27939e0c023c485cd4dc29dfac648d9c437f702cf086060d",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "source-omitted-missing-count.pdf",
+       "sha256": "d6ab33f513a72bb6e1d04b29e198436a9367e9b1acb842082d909f36d9047e33",
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MESSAGE_ATTACHMENT_COUNT_XMP"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "source-omitted-zero-count.pdf",
+       "sha256": "415807bb49841ff95561c8986ce430c8298782d2439c361185a242bc4d0fd93a",
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MESSAGE_ATTACHMENT_COUNT_XMP"
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-attachment-scope/expectations.json
++++ b/tests/fixtures/eapdf/validator-attachment-scope/expectations.json
+@@ -15,7 +15,8 @@
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "member-name-collision-ci.pdf",
+@@ -27,7 +28,8 @@
+       ],
+       "expected_status": "FAIL",
+       "required_unavailable_codes": [],
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "alternative-name-collision.pdf",
+@@ -41,5 +43,11 @@
+       "required_unavailable_codes": [],
+       "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-booleans/expectations.json
++++ b/tests/fixtures/eapdf/validator-booleans/expectations.json
+@@ -54,14 +54,16 @@
+       "sha256": "5a199646ce05aae761445d5973322a4dcac97023520cd03e4d9a1d81381100ed",
+       "expected_status": "INCOMPLETE",
+       "expected_failures": [],
+-      "expected_pipeline_status": "PASS"
++      "expected_pipeline_status": "PASS",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "collection-absent.pdf",
+       "sha256": "a244451b75dbdd8a5dde595851a29b08a6de3772232534611117b336109ce055",
+       "expected_status": "INCOMPLETE",
+       "expected_failures": [],
+-      "expected_pipeline_status": "PASS"
++      "expected_pipeline_status": "PASS",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "collection-true.pdf",
+@@ -70,7 +72,8 @@
+       "expected_failures": [
+         "COLLECTION_SCHEMA_E_FALSE"
+       ],
+-      "expected_pipeline_status": "FAIL"
++      "expected_pipeline_status": "FAIL",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "collection-integer.pdf",
+@@ -79,7 +82,8 @@
+       "expected_failures": [
+         "COLLECTION_SCHEMA_E_FALSE"
+       ],
+-      "expected_pipeline_status": "FAIL"
++      "expected_pipeline_status": "FAIL",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "collection-string.pdf",
+@@ -88,7 +92,8 @@
+       "expected_failures": [
+         "COLLECTION_SCHEMA_E_FALSE"
+       ],
+-      "expected_pipeline_status": "FAIL"
++      "expected_pipeline_status": "FAIL",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "collection-array.pdf",
+@@ -97,7 +102,8 @@
+       "expected_failures": [
+         "COLLECTION_SCHEMA_E_FALSE"
+       ],
+-      "expected_pipeline_status": "FAIL"
++      "expected_pipeline_status": "FAIL",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "collection-dictionary.pdf",
+@@ -106,7 +112,8 @@
+       "expected_failures": [
+         "COLLECTION_SCHEMA_E_FALSE"
+       ],
+-      "expected_pipeline_status": "FAIL"
++      "expected_pipeline_status": "FAIL",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "collection-extra.pdf",
+@@ -115,7 +122,14 @@
+       "expected_failures": [
+         "COLLECTION_SCHEMA_E_FALSE"
+       ],
+-      "expected_pipeline_status": "FAIL"
++      "expected_pipeline_status": "FAIL",
++      "expected_parent_level": "WARN"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-collection-names/expectations.json
++++ b/tests/fixtures/eapdf/validator-collection-names/expectations.json
+@@ -16,7 +16,8 @@
+         "A B"
+       ],
+       "root_folder_id": 0,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "folder-identical.pdf",
+@@ -32,7 +33,8 @@
+         "same"
+       ],
+       "root_folder_id": 0,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "folder-case.pdf",
+@@ -48,7 +50,8 @@
+         "ONE"
+       ],
+       "root_folder_id": 0,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "empty-file.pdf",
+@@ -63,7 +66,8 @@
+       ],
+       "added_folder_names": [],
+       "root_folder_id": 0,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "long-file.pdf",
+@@ -78,7 +82,8 @@
+       ],
+       "added_folder_names": [],
+       "root_folder_id": 0,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "long-folder.pdf",
+@@ -93,7 +98,8 @@
+         "a                                                                                                                                                                                                                                                               "
+       ],
+       "root_folder_id": 0,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "whitespace-names.pdf",
+@@ -108,7 +114,8 @@
+         " "
+       ],
+       "root_folder_id": 0,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "shared-case-aliases.pdf",
+@@ -124,7 +131,8 @@
+       ],
+       "added_folder_names": [],
+       "root_folder_id": 0,
+-      "shared_filespec": true
++      "shared_filespec": true,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "shared-distinct-aliases.pdf",
+@@ -138,7 +146,8 @@
+       ],
+       "added_folder_names": [],
+       "root_folder_id": 0,
+-      "shared_filespec": true
++      "shared_filespec": true,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "implicit-root-alias.pdf",
+@@ -154,7 +163,8 @@
+       ],
+       "added_folder_names": [],
+       "root_folder_id": 7,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "linefeed-name.pdf",
+@@ -168,7 +178,8 @@
+       ],
+       "added_folder_names": [],
+       "root_folder_id": 0,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "nonascii-prefix.pdf",
+@@ -183,7 +194,8 @@
+       ],
+       "added_folder_names": [],
+       "root_folder_id": 0,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "numeric-folder.pdf",
+@@ -198,7 +210,8 @@
+         123
+       ],
+       "root_folder_id": 0,
+-      "shared_filespec": false
++      "shared_filespec": false,
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "different-folders.pdf",
+@@ -215,7 +228,14 @@
+         "two"
+       ],
+       "root_folder_id": 0,
+-      "shared_filespec": true
++      "shared_filespec": true,
++      "expected_parent_level": "WARN"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-comparison-decoding/expectations.json
++++ b/tests/fixtures/eapdf/validator-comparison-decoding/expectations.json
+@@ -9,54 +9,82 @@
+     {
+       "file": "group-unreadable.pdf",
+       "sha256": "74331ca15cc0fdb8392b7cec8f521c1d67ed12bdb5316e369d1c49c150e87c84",
+-      "expected_status": "INCOMPLETE",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "group-unreadable-and-wrong.pdf",
+       "sha256": "00798191b53cb69b2a6b5b3b64dfc4f690edf3b34e4af94962c7735dbcb8c60b",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT"
+-      ]
++        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "group-valid-utf8.pdf",
+       "sha256": "2d9d01e284df3cf7fece840dfdafb7057163066336fbd8b18c82a3b1f20247ca",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "group-valid-utf16.pdf",
+       "sha256": "ce2e6fecb8fa41396930b71e02a253421e81d90e10979214ac901f533c5bc7b2",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "subtype-unreadable.pdf",
+       "sha256": "5e7d3bc074a7856c49728da7fbf6733c5436b4bc4ff8f2eb63d417b057e75964",
+-      "expected_status": "INCOMPLETE",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "subtype-unreadable-and-wrong.pdf",
+       "sha256": "8b6e046bda14a9ebe48e4e5548c895fac5e141207acb822e3359771ef0facb5c",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "subtype-valid-utf8.pdf",
+       "sha256": "d0494053edfcd9390c06e315af93e98aaf6c0e40e16eced09a8727669aa53baa",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "subtype-valid-utf16.pdf",
+       "sha256": "4575bb5609af6c3f7ec442b43888fb7b643bf6cc2c11097fcd226ffa8c6dc9cd",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-content-group-types/expectations.json
++++ b/tests/fixtures/eapdf/validator-content-group-types/expectations.json
+@@ -6,68 +6,101 @@
+     {
+       "file": "matching-group.pdf",
+       "sha256": "9cdb4069edf89c5e296f2161f522f48bcd124be25c7d9ec766441b58d058673f",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "foreign-group-type.pdf",
+       "sha256": "3172a6d36202c187b754cd9f508c8db2ddd835ea208236a742186a9da61cc4fa",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT"
+-      ]
++        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "padded-group-type.pdf",
+       "sha256": "1d6eb1ab2d72b16d34eec8164859cd4c66f8b4034036ae7e5ef567100c207ab7",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT"
+-      ]
++        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "empty-group-type.pdf",
+       "sha256": "3fc7a02d211a968747dfc61ad8e66f7772e49bd87b4b63745f8ba6ec83446836",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT"
+-      ]
++        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "omitted-group-types.pdf",
+       "sha256": "23234954fa05f33c0126e5bdec41783b3d09da300b6641f334336045da4e65fb",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "unicode-group-value.pdf",
+       "sha256": "ce2e6fecb8fa41396930b71e02a253421e81d90e10979214ac901f533c5bc7b2",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "opaque-group-types.pdf",
+       "sha256": "3d54132d331600617f1579f96143d79c060c98d4e70d5c4f7c209328d03fbfe7",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "xmp-unbound-body.pdf",
+       "sha256": "8974f7b175d83df94e59401e75508cdcb09b7a66afad1b8555503e733cd095ae",
+-      "expected_status": "INCOMPLETE",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "xmp-unbound-empty.pdf",
+       "sha256": "8ad7c4c534fb7dd5a7d88e64af15a518687c881b834205f51d1aa154c68ff825",
+-      "expected_status": "INCOMPLETE",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "xmp-unbound-other.pdf",
+       "sha256": "f528c3dbc52d65fe879a943130099c1eb1273c19feca1e78470ecdfebb83efcd",
+-      "expected_status": "INCOMPLETE",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-dpart-object-ranges/expectations.json
++++ b/tests/fixtures/eapdf/validator-dpart-object-ranges/expectations.json
+@@ -46,24 +46,37 @@
+     {
+       "file": "multi-ordered.pdf",
+       "sha256": "f5a680737d64e668bade6921b2e09d9d41385ba26ed5e2453940a1f3c7370ac7",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "multi-reversed.pdf",
+       "sha256": "392011f4db81c4475451fe17d88574907ef89f107208170aedb4ce9e212c39d2",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "PAGE_DPART_PRESENT"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "multi-overlapping.pdf",
+       "sha256": "ec136dba2a4569d8046ad0307579d70114f2052d900227427349d0dde2e45c59",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "PAGE_DPART_PRESENT"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-empty-dpm-names/expectations.json
++++ b/tests/fixtures/eapdf/validator-empty-dpm-names/expectations.json
+@@ -9,62 +9,86 @@
+     {
+       "file": "empty-extension-type.pdf",
+       "sha256": "157878bbca34834cb3ca430246b40028eaf831ed1e6ef740355383522892f164",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "empty-optional-subtype.pdf",
+       "sha256": "f5ba7a0be2fd223fb765153d66d2ee14cb1bf933cad1a52edf316d0cce198a45",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "DPM_SUBTYPE_MEDIA_TYPE_NAME"
+-      ]
++        "DPM_SUBTYPE_MEDIA_TYPE_NAME",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "empty-required-subtype.pdf",
+       "sha256": "afee6537f9fed062f1a8b1a712bd0e388f4731de1317db8505f400a28340a207",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "DPM_SUBTYPE_MEDIA_TYPE_NAME"
+-      ]
++        "DPM_SUBTYPE_MEDIA_TYPE_NAME",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "missing-content-type.pdf",
+       "sha256": "8fe31a6d6adcf09580db8f23156fde7617cc7a62aec84e2ad27b91e6bbd9ed9b",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "DPM_CONTENTSETTYPE_PRESENT"
+-      ]
++        "DPM_CONTENTSETTYPE_PRESENT",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "null-content-type.pdf",
+       "sha256": "8b6ee9f89d9ab88211cafac8cd96e9d784ed380f4c97031147c05f9f84d828c7",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "DPM_CONTENTSETTYPE_PRESENT"
+-      ]
++        "DPM_CONTENTSETTYPE_PRESENT",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "missing-required-subtype.pdf",
+       "sha256": "3d21c102882d970d40bc32a0b9f5ef8845b5c5a460d08b97c2a2e694ca09fbe1",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "DPM_SUBTYPE_REQUIRED"
+-      ]
++        "DPM_SUBTYPE_REQUIRED",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "null-required-subtype.pdf",
+       "sha256": "e77be93d5b0395c1286d053b29d49a85244f4dff5c4877deca5890564b7e9790",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "DPM_SUBTYPE_REQUIRED"
+-      ]
++        "DPM_SUBTYPE_REQUIRED",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "omitted-optional-subtype.pdf",
+       "sha256": "9cdb4069edf89c5e296f2161f522f48bcd124be25c7d9ec766441b58d058673f",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-file-requirements/expectations.json
++++ b/tests/fixtures/eapdf/validator-file-requirements/expectations.json
+@@ -25,7 +25,8 @@
+       ],
+       "sha256": "64f70c2923453c7b4f2df9b8c299ae5ebb308904975bd09e88ca6a3b4b06c364",
+       "expected_status": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "associated-date-missing.pdf",
+@@ -139,5 +140,11 @@
+       "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+       "dpart_range_review": "V38: retained two leaf ranges both cover PDF page 1; see docs/improvement/validator-38/prior-range-review.json. Bytes unchanged; extension kind itself remains permitted."
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-message-owners/expectations.json
++++ b/tests/fixtures/eapdf/validator-message-owners/expectations.json
+@@ -9,8 +9,11 @@
+     {
+       "file": "valid-multi.pdf",
+       "sha256": "9cdb4069edf89c5e296f2161f522f48bcd124be25c7d9ec766441b58d058673f",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "valid-single.pdf",
+@@ -23,36 +26,48 @@
+       "sha256": "7c24a17ed427f9c417d096bbe9c94ad5c26623030bf27b6102a3215470daa632",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "duplicate-structure-guid.pdf",
+       "sha256": "3675a5d41481c59dcea5887d5e4c9e03808472b1f5a01fd1ee1dd668cd82a4c3",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "rotated-structure-guids.pdf",
+       "sha256": "92d9289cc589334b728143f969fe2255e53b83eddc64a1f752a3f1140980a020",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "reversed-structure-order.pdf",
+       "sha256": "9b9eeb270f2e4170162dcac1c4774e02abf478e71e349a5db8c0b7613064326c",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "reversed-xmp-order.pdf",
+       "sha256": "8b96c43a0ff16758831f734ff36dbad2968dfd24959cf55e8c31f931f01baa81",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "swapped-dpm-guids.pdf",
+@@ -60,14 +75,25 @@
+       "expected_status": "FAIL",
+       "expected_failures": [
+         "ATTACHMENT_ANNOTATIONS_PRESENT",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "standard-header-tags.pdf",
+       "sha256": "8e1ac756b977949611c4c39250eb72a7ee2a41f452d9b3b11b9849f119ee5b72",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-subtype-media-values/expectations.json
++++ b/tests/fixtures/eapdf/validator-subtype-media-values/expectations.json
+@@ -8,54 +8,82 @@
+     {
+       "file": "matching-quoted-spaces.pdf",
+       "sha256": "8ab8f1a202b2f031a78f6c2f9d1a7d0636e09dda723847b71d99aa37e84c7099",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "changed-quoted-spaces.pdf",
+       "sha256": "8ae9f71b4121dff013f8d3a467a4717246d6853bcdd115ad758f22f8b8bd3f2c",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "equivalent-type-case.pdf",
+       "sha256": "d503cd26dd7d10c91d6dc77b073afa6af774b9b3b6d0b7ddaeabcd970483bd29",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "equivalent-quoted-token.pdf",
+       "sha256": "10c325406a9ee566a37a8da3a3e53d3a5e0b8ea7e8e83231f601fa5bccc41f91",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "equivalent-parameter-order.pdf",
+       "sha256": "4fa317b019e60af45d8a5c0af9985612ecb3f4096283b8025c39fd83bc05bd6e",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "changed-parameter-case.pdf",
+       "sha256": "9afe75fce99f6aeb5d4b4432dd26c88e0c2d2e65d84f79e91372edb5897e0734",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+-      ]
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "matching-layout-spaces.pdf",
+       "sha256": "8db0910eae92c7e0643a7895136418f12ec502bcbe30529239449cf2f4864600",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "matching-baseline.pdf",
+       "sha256": "48c59a87e795819252c3795ff605e78f4068c91fc8e6e379f9d4725c9d410d32",
+-      "expected_status": "PASS",
+-      "expected_failures": []
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-subtype-recommendation/expectations.json
++++ b/tests/fixtures/eapdf/validator-subtype-recommendation/expectations.json
+@@ -8,60 +8,89 @@
+     {
+       "file": "all-subtypes-present.pdf",
+       "sha256": "48c59a87e795819252c3795ff605e78f4068c91fc8e6e379f9d4725c9d410d32",
+-      "expected_status": "PASS",
+-      "expected_failures": [],
+-      "expected_recommendation": "PASS"
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_recommendation": "PASS",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "body-subtype-omitted.pdf",
+       "sha256": "c17a61d221262d4bad3c70488471706b53a5a03a0b9dcd5f06c17c131d1d4fc7",
+-      "expected_status": "PASS",
+-      "expected_failures": [],
+-      "expected_recommendation": "WARN"
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_recommendation": "WARN",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "body-subtype-and-self-type-omitted.pdf",
+       "sha256": "3640731d30bf0fac2c342875f17fe870ddae4199dc3211f724a59554ed65c7eb",
+-      "expected_status": "PASS",
+-      "expected_failures": [],
+-      "expected_recommendation": "WARN"
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_recommendation": "WARN",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "frontmatter-subtype-omitted.pdf",
+       "sha256": "5cd94fa086f66998849edef845907311bc9aea080da32a1c9e87efdc99ea45b0",
+-      "expected_status": "PASS",
+-      "expected_failures": [],
+-      "expected_recommendation": "WARN"
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_recommendation": "WARN",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "all-subtypes-omitted.pdf",
+       "sha256": "e718415db869958a79f4168f282a561da6934fd4c9ee1e7e33d46db534486a3b",
+-      "expected_status": "PASS",
+-      "expected_failures": [],
+-      "expected_recommendation": "WARN"
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_recommendation": "WARN",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "all-body-properties-omitted.pdf",
+       "sha256": "32d183fe25b92e52ceb311881a2efd596e6ce4192489491d7745958e2b232e38",
+-      "expected_status": "PASS",
+-      "expected_failures": [],
+-      "expected_recommendation": "WARN"
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_recommendation": "WARN",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "empty-subtype-present.pdf",
+       "sha256": "7e3d696303dd359ffa3967f1a2385fd11d1c0fd71ff98663d7163148b53e5b4f",
+       "expected_status": "FAIL",
+       "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+       ],
+-      "expected_recommendation": "PASS"
++      "expected_recommendation": "PASS",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "unresolved-content-attributes.pdf",
+       "sha256": "83c89ac5bd1b2a8634d99aef942f43d0d0c4fb9d1f1a9d29ff9182ad3a06d968",
+-      "expected_status": "INCOMPLETE",
+-      "expected_failures": [],
+-      "expected_recommendation": "WARN"
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
++      ],
++      "expected_recommendation": "WARN",
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-unmatched-parameters/expectations.json
++++ b/tests/fixtures/eapdf/validator-unmatched-parameters/expectations.json
+@@ -13,30 +13,36 @@
+       "sha256": "a8f19b4aae788bd48763904b0b2d1c1d6f91cdbab170ec20d2cd5303a2405d96",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_parameter_level": "WARN",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "unknown-alias-malformed.pdf",
+       "sha256": "2bd39b8043e5f0b21cce17442d592f1c2441bdfe547522082389aea5b2eddf75",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_parameter_level": "WARN",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "mixed-verified-and-unknown.pdf",
+       "sha256": "e943931f012ec2d2b97f0fa0f01a3361934d75da01ca4aa049753889fb617908",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_parameter_level": "WARN",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "mixed-failure-and-unknown.pdf",
+@@ -45,50 +51,66 @@
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
+         "EMBEDDED_SUBTYPE_MATCH_XMP",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+         "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+       ],
+       "expected_parameter_level": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "checksum-known-alias.pdf",
+       "sha256": "53dd48a6aa290f7dd814cbbea010afeae511d5070bea2bcb3f345006d317bed4",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_parameter_level": "PASS",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "no-parameters-control.pdf",
+       "sha256": "9d6c2f46ed044e128b8c382bd9501be79cd96fcf01febbdd573723b677bf9fb3",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_parameter_level": "N/A",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "alternative-only-control.pdf",
+       "sha256": "14438517b6dc9dbed6eec6be08f969388ccdc6f7b9ea898eb82dc6c4a22cf163",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_parameter_level": "N/A",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     },
+     {
+       "file": "mixed-bare-and-unknown-parameters.pdf",
+       "sha256": "760d905bfcc6f71e9c9f05aef09eb24cec5466a6e2c862269bce30528fa4dd73",
+       "expected_status": "FAIL",
+       "expected_failures": [
+-        "CUSTOM_TAG_OPERAND_MATCH"
++        "CUSTOM_TAG_OPERAND_MATCH",
++        "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+       ],
+       "expected_parameter_level": "WARN",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "expected_parent_level": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }
+--- a/tests/fixtures/eapdf/validator-version-schema-names/expectations.json
++++ b/tests/fixtures/eapdf/validator-version-schema-names/expectations.json
+@@ -50,7 +50,8 @@
+       "expected_status": "INCOMPLETE",
+       "expected_pipeline_status": "PASS",
+       "expected_failures": [],
+-      "expected_pdfa_status": "PASS"
++      "expected_pdfa_status": "PASS",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "subtype-text.pdf",
+@@ -60,7 +61,8 @@
+       "expected_failures": [
+         "COLLECTION_SCHEMA_FIELD"
+       ],
+-      "expected_pdfa_status": "PASS"
++      "expected_pdfa_status": "PASS",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "subtype-slash-text.pdf",
+@@ -70,7 +72,8 @@
+       "expected_failures": [
+         "COLLECTION_SCHEMA_FIELD"
+       ],
+-      "expected_pdfa_status": "PASS"
++      "expected_pdfa_status": "PASS",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "collection-version-text.pdf",
+@@ -80,7 +83,8 @@
+       "expected_failures": [
+         "PDF_CATALOG_VERSION"
+       ],
+-      "expected_pdfa_status": "PASS"
++      "expected_pdfa_status": "PASS",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "lower-catalog-name.pdf",
+@@ -88,7 +92,8 @@
+       "expected_status": "INCOMPLETE",
+       "expected_pipeline_status": "FAIL",
+       "expected_failures": [],
+-      "expected_pdfa_status": "FAIL"
++      "expected_pdfa_status": "FAIL",
++      "expected_parent_level": "WARN"
+     },
+     {
+       "file": "earlier-catalog-name.pdf",
+@@ -108,5 +113,11 @@
+       ],
+       "expected_pdfa_status": "FAIL"
+     }
+-  ]
++  ],
++  "parent_requirement_review": {
++    "evidence": "docs/improvement/validator-53/prior-native-census.json",
++    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
++    "retained_pdf_bytes": true,
++    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
++  }
+ }

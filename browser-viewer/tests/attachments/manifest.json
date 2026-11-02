@@ -1,0 +1,148 @@
+{
+  "license": "Synthetic viewing.pdf: Apache-2.0 original content; real samples referenced in place.",
+  "reference": {
+    "pikepdf": "10.17.0",
+    "Pillow": "12.0.0"
+  },
+  "cases": [
+    {
+      "sourcePath": "tests/attachments/viewing.pdf",
+      "sha256": "b95d1b7ac32631b27251116135897488e3fec8051e8f14e66e6ea5246c2479da",
+      "attachments": [
+        {
+          "name": "two-pages.pdf",
+          "sha256": "c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+          "size": 948,
+          "pages": 2,
+          "pageWidths": [
+            320.0,
+            320.0
+          ]
+        },
+        {
+          "name": "blue.png",
+          "sha256": "75099c39545440a6048abfbe654ce828c4f6cdd256c4bd60c7d8c1f20317931a",
+          "size": 95,
+          "width": 32,
+          "height": 24,
+          "pixel": [
+            20,
+            100,
+            210
+          ]
+        },
+        {
+          "name": "blue.gif",
+          "sha256": "2e5ab06773b46f66e70bb510e5d480e41c6be21c124ca63455c1b3d8f0d612e0",
+          "size": 86,
+          "width": 32,
+          "height": 24,
+          "pixel": [
+            20,
+            100,
+            210
+          ]
+        },
+        {
+          "name": "blue.jpg",
+          "sha256": "dacebd8de2f82a3b0e99128ccbb7ff46dbf63b07b2f0a3035ae5513122e2ec70",
+          "size": 645,
+          "width": 32,
+          "height": 24,
+          "pixel": [
+            20,
+            101,
+            209
+          ]
+        },
+        {
+          "name": "plain.txt",
+          "sha256": "b7623f629db2665c94804bc6d35defa206ba356a636896b70f709c44fe737848",
+          "size": 36
+        },
+        {
+          "name": "markup.html",
+          "sha256": "18beeec12dc89b313654f3e1930fa2258a7d6c937c5d7d439be706f31227d031",
+          "size": 123
+        },
+        {
+          "name": "vector.svg",
+          "sha256": "7fee114a663838d7fe1cd0d6ee3530a02ba853fd01bc240008e9206f79bf702d",
+          "size": 137
+        },
+        {
+          "name": "empty.pdf",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "name": "broken.pdf",
+          "sha256": "d6b7a83124961a3203f30f412730249215757992f2d85cd45dbb4a171ddf8d6a",
+          "size": 15
+        },
+        {
+          "name": "binary.exe",
+          "sha256": "2bee5a75a2b317ad551b71611d57e897d9bdbdb9125ed788618415c1e881ed62",
+          "size": 19
+        },
+        {
+          "name": "huge.png",
+          "sha256": "115317a1e8baf91bac16f5e79b3282c2b0c83bb1df22c5f312270c96289a0550",
+          "size": 24
+        },
+        {
+          "name": "large.txt",
+          "sha256": "d71befc8cc7d5f7f16d19fc411c03dc8e401ba8b29f3bf2c4cc25e9d66029abd",
+          "size": 2097252
+        }
+      ]
+    },
+    {
+      "sourcePath": "tests/attachments/source/msg_sample_1s.pdf",
+      "sha256": "a0a83f40e8666fb4c2474b773c5df2045badcc7fff5e4c0ee48a7fb03f3d3962",
+      "attachments": [
+        {
+          "name": "SampleAttachment.pdf",
+          "sha256": "4845736e5fd1fe354b697901eefb9d9c3383ca98f12df5bfadab764fe6d488cd",
+          "size": 169480,
+          "pages": 4,
+          "pageWidths": [
+            595.32,
+            595.32,
+            595.32,
+            595.32
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePath": "tests/attachments/source/pst_sample_1m.pdf",
+      "sha256": "ed88838b1d7e8199c042927964071d60ac587aaaa7b5fab8f687a003891cb068",
+      "attachments": [
+        {
+          "name": "Color 72dpi.jpg",
+          "sha256": "f238be1e2ce2d3a81d528a17bec873673fc6738dcd75fdb7fc5d450fa29685b3",
+          "size": 18839,
+          "width": 346,
+          "height": 492,
+          "pixel": [
+            85,
+            70,
+            67
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePath": "tests/inspection/source-examples/eml/eml_sample_1m.pdf",
+      "sha256": "22c66e070532356788a2753601d42b5e4c7f9b81e05c759d6f7ccca81bea8510",
+      "attachments": [
+        {
+          "name": "attachment.txt",
+          "sha256": "85a7a9ae649bc25c22c2f49607d6ddd5cce0a63879bffca3980d9ab8f479c3d0",
+          "size": 22
+        }
+      ]
+    }
+  ]
+}

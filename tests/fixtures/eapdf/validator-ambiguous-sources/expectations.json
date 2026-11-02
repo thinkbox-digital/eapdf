@@ -1,0 +1,81 @@
+{
+  "authority": "EA-PDF 9.8.2 Table 16 printed p85; 9.4 printed pp66-67",
+  "seed": "tests/fixtures/eapdf/validator-operands/valid.pdf",
+  "seed_sha256": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+  "boundary": "Only universally contradicted size/media values fail; no source owner or occurrence is selected",
+  "cases": [
+    {
+      "file": "compatible.pdf",
+      "sha256": "4ff067c5a06064115e8ec90fdcf341c5877f5dedeac1c9771a1da5466eb0007a",
+      "expected_failures": [],
+      "expected_status": "INCOMPLETE",
+      "actual_source_size": 69830,
+      "actual_source_md5": "3d1850a0cfa0b59bc2a62da19198aebf"
+    },
+    {
+      "file": "wrong-size.pdf",
+      "sha256": "2f0a20980068e394453042c5b5ede5265a184cf604ac2e8dd46cdecafdebac68",
+      "expected_failures": [
+        "ASSET_SIZE_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "actual_source_size": 69830,
+      "actual_source_md5": "3d1850a0cfa0b59bc2a62da19198aebf"
+    },
+    {
+      "file": "wrong-media.pdf",
+      "sha256": "672cf53961f72b4fe5c26dabd3f5b02665c3f27f4042e30a376b70e4b82851c0",
+      "expected_failures": [
+        "ASSET_CONTENTTYPE_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "actual_source_size": 69830,
+      "actual_source_md5": "3d1850a0cfa0b59bc2a62da19198aebf"
+    },
+    {
+      "file": "wrong-size-and-media.pdf",
+      "sha256": "7dee51c903f1df0eb46c9bd2bce5ddf897bdc0924521520569a7cbc7616d58ed",
+      "expected_failures": [
+        "ASSET_CONTENTTYPE_MATCH",
+        "ASSET_SIZE_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "actual_source_size": 69830,
+      "actual_source_md5": "3d1850a0cfa0b59bc2a62da19198aebf"
+    },
+    {
+      "file": "zero-padded-size.pdf",
+      "sha256": "ea4eb92b75018b1afecdd6db93fd003074bd817211ec662db8703a411ae14897",
+      "expected_failures": [],
+      "expected_status": "INCOMPLETE",
+      "actual_source_size": 69830,
+      "actual_source_md5": "3d1850a0cfa0b59bc2a62da19198aebf"
+    },
+    {
+      "file": "compatible-parameters.pdf",
+      "sha256": "6e2bfad7fb67bd2409777495b24e0b1bb907a3fab3b4cfc20c195365beeeaea3",
+      "expected_failures": [],
+      "expected_status": "INCOMPLETE",
+      "actual_source_size": 69830,
+      "actual_source_md5": "3d1850a0cfa0b59bc2a62da19198aebf"
+    },
+    {
+      "file": "malformed-parameters.pdf",
+      "sha256": "6178a2f958c817a1cf02c9d9e1044d56890024baf17ef7ee73b8e93dc9a4fcc8",
+      "expected_failures": [
+        "ASSET_CONTENTTYPE_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "actual_source_size": 69830,
+      "actual_source_md5": "3d1850a0cfa0b59bc2a62da19198aebf"
+    },
+    {
+      "file": "unique-name.pdf",
+      "sha256": "d93d27ef32161bd98890e44117b585272988bb32b689ff90b7c628b94ae30122",
+      "expected_failures": [],
+      "expected_status": "PASS",
+      "actual_source_size": 69830,
+      "actual_source_md5": "3d1850a0cfa0b59bc2a62da19198aebf"
+    }
+  ]
+}

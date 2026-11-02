@@ -1,0 +1,15 @@
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -12889,6 +12889,12 @@
+         "PDFA-4F": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+         "PDFA-4E": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites."
+       }
++    },
++    "utf8_source_header_review": {
++      "date": "2026-10-21",
++      "basis": "RFC6532 permits direct UTF-8 header values and defines message/global; RFC6531 extends mailbox syntax. Restore valid original UTF-8 bytes from parser surrogate escapes before comparisons, without Unicode normalization or byte changes.",
++      "boundary": "Malformed/legacy charset values are not guessed. This is not complete SMTPUTF8/IDNA, normalization or malformed-source diagnostic certification.",
++      "message_global": "Recognize registered message/global sources independently of filename extension, including nested-email attachment predicates and original encoded payload extraction."
+     }
+   },
+   "STRUCTURE_CORRESPONDENCE": {

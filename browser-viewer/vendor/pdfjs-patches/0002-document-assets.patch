@@ -1,0 +1,639 @@
+--- a/src/core/catalog.js
++++ b/src/core/catalog.js
+@@ -51,6 +51,7 @@
+ import { clearGlobalCaches } from "./cleanup_helper.js";
+ import { ColorSpaceUtils } from "./colorspace_utils.js";
+ import { FileSpec } from "./file_spec.js";
++import { DocumentAssets } from "./document_assets.js";
+ import { getDocumentParts } from "./document_parts.js";
+ import { MetadataParser } from "./metadata_parser.js";
+ import { soundStreamToWav } from "./sound.js";
+@@ -164,6 +165,36 @@
+ 
+   cloneDict() {
+     return this.#catDict.clone();
++  }
++
++  async getDocumentAssets(options) {
++    this._documentAssets ??= new DocumentAssets(this, this.#catDict);
++    const result = this._documentAssets.inspect(options);
++    for (const file of result.files) {
++      for (const origin of file.origins) {
++        if (!origin.pageRef) continue;
++        try {
++          const pageRef = Ref.get(origin.pageRef.num, origin.pageRef.gen);
++          const index = await this.getPageIndex(pageRef);
++          const [, actual] = await this.getPageDict(index);
++          if (!isRefsEqual(actual, pageRef)) throw new Error("Detached page");
++          origin.pageIndex = index;
++        } catch (error) {
++          if (error instanceof MissingDataException) throw error;
++          result.diagnostics.push({
++            code: "ANNOTATION_PAGE_UNAVAILABLE",
++            locator: origin.locator,
++          });
++        }
++        delete origin.pageRef;
++      }
++    }
++    return result;
++  }
++
++  getAssociatedFileBytes(request) {
++    if (!this._documentAssets) throw new Error("Inspect document assets first");
++    return this._documentAssets.read(request);
+   }
+ 
+   getDocumentParts() {
+--- a/src/core/worker.js
++++ b/src/core/worker.js
+@@ -517,6 +517,14 @@
+ 
+     handler.on("GetDocumentParts", function () {
+       return pdfManager.ensureCatalog("getDocumentParts");
++    });
++
++    handler.on("GetDocumentAssets", function (options) {
++      return pdfManager.ensureCatalog("getDocumentAssets", [options]);
++    });
++
++    handler.on("GetAssociatedFileBytes", function (request) {
++      return pdfManager.ensureCatalog("getAssociatedFileBytes", [request]);
+     });
+ 
+     handler.on("GetOptionalContentConfig", function () {
+--- a/src/display/api.js
++++ b/src/display/api.js
+@@ -943,6 +943,16 @@
+     return this._transport.getDocumentParts();
+   }
+ 
++  /** Generic file associations, collection folders and raw metadata; no validation. */
++  getDocumentAssets(options = {}) {
++    return this._transport.getDocumentAssets(options);
++  }
++
++  /** Read a discovered file/stream pair with an enforced decoded-byte allowance. */
++  getAssociatedFileBytes(request) {
++    return this._transport.getAssociatedFileBytes(request);
++  }
++
+   /**
+    * @typedef {object} GetOptionalContentConfigParameters
+    * @property {string} [intent] - Determines the optional content groups that
+@@ -3146,5 +3156,13 @@
+     return this.messageHandler.sendWithPromise("GetDocumentParts", null);
+   }
+ 
++  getDocumentAssets(options) {
++    return this.messageHandler.sendWithPromise("GetDocumentAssets", options);
++  }
++
++  getAssociatedFileBytes(request) {
++    return this.messageHandler.sendWithPromise("GetAssociatedFileBytes", request);
++  }
++
+   getOptionalContentConfig(renderingIntent) {
+     const name = "GetOptionalContentConfig";
+--- a/src/core/decode_stream.js
++++ b/src/core/decode_stream.js
+@@ -35,6 +35,11 @@
+ 
+   pos = 0;
+ 
++  // Per-worker allocation budget also applies to normal parsing/rendering.
++  static remainingBudget = 256 * 1024 * 1024;
++  maxBufferLength = 64 * 1024 * 1024;
++  // Callers inspecting non-rendering streams may impose a lower bound.
++
+   constructor(maybeMinBufferLength) {
+     super();
+     this._rawMinBufferLength = maybeMinBufferLength || 0;
+@@ -59,6 +64,9 @@
+   }
+ 
+   ensureBuffer(requested) {
++    if (requested > this.maxBufferLength) {
++      throw new Error("Decoded stream byte limit exceeded");
++    }
+     const buffer = this.buffer;
+     if (requested <= buffer.byteLength) {
+       return buffer;
+@@ -67,7 +75,12 @@
+     while (size < requested) {
+       size *= 2;
+     }
+-    const buffer2 = new Uint8Array(size);
++    const boundedSize = Math.min(size, this.maxBufferLength);
++    if (boundedSize - buffer.byteLength > DecodeStream.remainingBudget) {
++      throw new Error("Worker decoded-stream allocation limit exceeded");
++    }
++    DecodeStream.remainingBudget -= boundedSize - buffer.byteLength;
++    const buffer2 = new Uint8Array(boundedSize);
+     buffer2.set(buffer);
+     return (this.buffer = buffer2);
+   }
+--- /dev/null
++++ b/src/core/document_assets.js
+@@ -0,0 +1,501 @@
++/* Copyright 2026 PDF.js contributors
++ * Licensed under the Apache License, Version 2.0.
++ * http://www.apache.org/licenses/LICENSE-2.0
++ */
++import { Dict, Name, Ref } from "./primitives.js";
++import { BaseStream } from "./base_stream.js";
++import { DecodeStream } from "./decode_stream.js";
++import { MissingDataException } from "./core_utils.js";
++import { stringToPDFString } from "./string_utils.js";
++
++const CEILINGS = Object.freeze({
++  maxObjects: 100000,
++  maxDepth: 64,
++  maxFiles: 2048,
++  maxMetadataBytes: 16777216,
++  maxStreamBytes: 16777216,
++});
++const locator = (raw, path) => ({
++  ref: raw instanceof Ref ? { num: raw.num, gen: raw.gen } : null,
++  path: raw instanceof Ref ? `object:${raw.num}:${raw.gen}` : path,
++});
++const hex = value =>
++  Array.from(value, c => c.charCodeAt(0).toString(16).padStart(2, "0")).join(
++    ""
++  );
++const failedDecoders = new WeakSet();
++function scalar(value) {
++  if (value === undefined) return { kind: "missing" };
++  if (value === null) return { kind: "null" };
++  if (typeof value === "string" || value instanceof Name) {
++    const raw = typeof value === "string" ? value : value.name;
++    if (raw.length > 65536) return { kind: "unavailable" };
++    return {
++      kind: typeof value === "string" ? "string" : "name",
++      value: typeof value === "string" ? stringToPDFString(raw, true) : raw,
++      bytesHex: hex(raw),
++    };
++  }
++  if (
++    typeof value === "boolean" ||
++    (typeof value === "number" && Number.isFinite(value))
++  )
++    return { kind: typeof value, value };
++  return { kind: "unsupported" };
++}
++
++function boundedBytes(stream, maximum) {
++  if (!(stream instanceof BaseStream))
++    throw new Error("Not an embedded stream");
++  if (failedDecoders.has(stream))
++    throw new Error("Previous decode failed; reopen the document to retry");
++  const filter = stream.dict?.get("Filter");
++  const filters = Array.isArray(filter) ? filter : filter ? [filter] : [];
++  const allowed = new Set([
++    "FlateDecode",
++    "Fl",
++    "LZWDecode",
++    "LZW",
++    "ASCII85Decode",
++    "A85",
++    "ASCIIHexDecode",
++    "AHx",
++    "RunLengthDecode",
++    "RL",
++    "Crypt",
++  ]);
++  if (
++    filters.length > 8 ||
++    filters.some(f => !(f instanceof Name) || !allowed.has(f.name))
++  ) {
++    throw new Error("Unsupported extraction filter");
++  }
++  if (stream.dict?.xref?.encrypt?.encryptionKey === null)
++    throw new Error("Embedded stream requires a password");
++  const limits = [],
++    seen = new Set();
++  let current = stream;
++  while (current instanceof BaseStream && !seen.has(current)) {
++    if (seen.size >= 16) throw new Error("Decode chain limit");
++    seen.add(current);
++    if (current instanceof DecodeStream) {
++      limits.push([current, current.maxBufferLength]);
++      current.maxBufferLength = Math.min(current.maxBufferLength, maximum + 1);
++    }
++    current = current.str || current.stream;
++  }
++  const position = stream.pos;
++  try {
++    stream.reset();
++    const chunks = [];
++    let count = 0;
++    while (true) {
++      const chunk = stream.getBytes(Math.min(65536, maximum + 1 - count));
++      count += chunk.length;
++      if (count > maximum)
++        throw new Error("Decoded stream byte limit exceeded");
++      if (!chunk.length) break;
++      chunks.push(chunk);
++    }
++    const bytes = new Uint8Array(count);
++    let offset = 0;
++    for (const chunk of chunks) {
++      bytes.set(chunk, offset);
++      offset += chunk.length;
++    }
++    return bytes;
++  } catch (error) {
++    if (!(error instanceof MissingDataException)) failedDecoders.add(stream);
++    throw error;
++  } finally {
++    stream.pos = position;
++    for (const [decoder, old] of limits) decoder.maxBufferLength = old;
++  }
++}
++
++class DocumentAssets {
++  constructor(catalog, root) {
++    this.catalog = catalog;
++    this.root = root;
++    this.registered = new Map();
++  }
++
++  inspect(options = {}) {
++    const limits = {};
++    for (const [key, ceiling] of Object.entries(CEILINGS)) {
++      const value = options[key] ?? ceiling;
++      if (!Number.isSafeInteger(value) || value < 1 || value > ceiling)
++        throw new Error(`Invalid ${key}`);
++      limits[key] = value;
++    }
++    const files = new Map(),
++      metadata = new Map(),
++      diagnostics = [],
++      visited = new Set();
++    const fetch = raw =>
++      raw instanceof Ref ? this.catalog.xref.fetch(raw) : raw;
++    const report = (code, loc, error) => {
++      if (error instanceof MissingDataException) throw error;
++      diagnostics.push({ code, locator: loc });
++    };
++    let visits = 0;
++    const step = (loc, depth) => {
++      if (++visits > limits.maxObjects || depth > limits.maxDepth) {
++        report("OBJECT_LIMIT", loc);
++        return false;
++      }
++      return true;
++    };
++    const add = (raw, origin) => {
++      const loc = locator(raw, origin.locator.path + "/Filespec");
++      try {
++        const spec = fetch(raw);
++        if (!(spec instanceof Dict)) {
++          report("INVALID_FILESPEC", loc);
++          return;
++        }
++        if (!files.has(loc.path)) {
++          if (files.size >= limits.maxFiles) {
++            report("FILE_LIMIT", loc);
++            return;
++          }
++          const streams = new Map(),
++            ef = spec.get("EF");
++          if (ef instanceof Dict) {
++            for (const [key, rawStream] of ef.getRawEntries()) {
++              if (streams.size >= 32) {
++                report("STREAM_COUNT_LIMIT", loc);
++                break;
++              }
++              const sloc = locator(rawStream, loc.path + "/EF/" + key);
++              if (streams.has(sloc.path)) {
++                streams.get(sloc.path).efKeys.push("/" + key);
++                continue;
++              }
++              const stream = fetch(rawStream),
++                valid = stream instanceof BaseStream;
++              const params = valid ? stream.dict.get("Params") : null;
++              streams.set(sloc.path, {
++                locator: sloc,
++                efKeys: ["/" + key],
++                state: valid ? "present" : "invalid",
++                subtype: scalar(valid ? stream.dict.get("Subtype") : undefined),
++                parameters: scalar(
++                  valid
++                    ? stream.dict.get("Mail_MediaTypeParameters")
++                    : undefined
++                ),
++                declaredSize: scalar(
++                  params instanceof Dict ? params.get("Size") : undefined
++                ),
++                declaredChecksum: scalar(
++                  params instanceof Dict ? params.get("CheckSum") : undefined
++                ),
++              });
++              if (valid)
++                this.registered.set(loc.path + "|" + sloc.path, {
++                  stream,
++                  file: spec,
++                });
++              else report("INVALID_EMBEDDED_STREAM", sloc);
++            }
++          }
++          files.set(loc.path, {
++            locator: loc,
++            filename: scalar(spec.get("F")),
++            unicodeFilename: scalar(spec.get("UF")),
++            relationship: scalar(spec.get("AFRelationship")),
++            description: scalar(spec.get("Desc")),
++            embedding:
++              ef === undefined
++                ? "missing"
++                : ef instanceof Dict && streams.size
++                  ? "present"
++                  : "invalid",
++            streams: [...streams.values()],
++            origins: [],
++          });
++        }
++        const file = files.get(loc.path);
++        if (
++          !file.origins.some(o => JSON.stringify(o) === JSON.stringify(origin))
++        )
++          file.origins.push(origin);
++      } catch (error) {
++        report("FILE_UNAVAILABLE", loc, error);
++      }
++    };
++    const origin = (kind, loc, pageIndex = null, key) => ({
++      kind,
++      locator: loc,
++      pageIndex,
++      nameTreeKey: scalar(key),
++    });
++    const names = this.root.get("Names");
++    const nameSeen = new Set();
++    const nameTree = (raw, path, depth) => {
++      const loc = locator(raw, path);
++      if (!step(loc, depth)) return;
++      try {
++        const node = fetch(raw),
++          identity = raw instanceof Ref ? loc.path : node;
++        if (nameSeen.has(identity)) {
++          report("NAME_TREE_CYCLE", loc);
++          return;
++        }
++        nameSeen.add(identity);
++        if (!(node instanceof Dict)) {
++          report("INVALID_NAME_TREE", loc);
++          return;
++        }
++        const pairs = node.get("Names"),
++          kids = node.get("Kids");
++        if (Array.isArray(pairs)) {
++          if (pairs.length % 2) report("INVALID_NAME_TREE", loc);
++          for (
++            let i = 0;
++            i + 1 < pairs.length && visits <= limits.maxObjects;
++            i += 2
++          ) {
++            if (!step(loc, depth)) break;
++            add(
++              pairs[i + 1],
++              origin(
++                "name-tree",
++                { ...loc, path: loc.path + `/Names[${i}]` },
++                null,
++                fetch(pairs[i])
++              )
++            );
++          }
++        }
++        if (Array.isArray(kids))
++          for (let i = 0; i < kids.length && visits <= limits.maxObjects; i++)
++            nameTree(kids[i], path + `/Kids[${i}]`, depth + 1);
++      } catch (error) {
++        report("NAME_TREE_UNAVAILABLE", loc, error);
++      }
++    };
++    if (names instanceof Dict && names.has("EmbeddedFiles"))
++      nameTree(names.getRaw("EmbeddedFiles"), "catalog/Names/EmbeddedFiles", 0);
++    // Resolve annotation page numbers from the page tree, never from filenames.
++    // Discovery stays synchronous; annotations' page refs are mapped below by Catalog.
++    const pending = [[this.root, "catalog", 0]];
++    let totalMetadata = 0;
++    while (pending.length && visits <= limits.maxObjects) {
++      const [raw, path, depth] = pending.pop(),
++        loc = locator(raw, path);
++      if (!step(loc, depth)) continue;
++      try {
++        const obj = fetch(raw),
++          key = raw instanceof Ref ? loc.path : obj;
++        if (
++          !(
++            obj instanceof Dict ||
++            obj instanceof BaseStream ||
++            Array.isArray(obj)
++          ) ||
++          visited.has(key)
++        )
++          continue;
++        visited.add(key);
++        const dict = obj instanceof BaseStream ? obj.dict : obj;
++        if (dict instanceof Dict) {
++          const af = dict.get("AF");
++          if (Array.isArray(af))
++            for (let i = 0; i < af.length && visits <= limits.maxObjects; i++) {
++              if (!step(loc, depth)) break;
++              add(
++                af[i],
++                origin(obj === this.root ? "catalog-af" : "object-af", {
++                  ...loc,
++                  path: loc.path + `/AF[${i}]`,
++                })
++              );
++            }
++          else if (af !== undefined) report("INVALID_AF_ARRAY", loc);
++          if (
++            dict.get("Type") instanceof Name &&
++            dict.get("Type").name === "Page"
++          ) {
++            const annots = dict.get("Annots");
++            if (Array.isArray(annots))
++              for (
++                let i = 0;
++                i < annots.length && visits <= limits.maxObjects;
++                i++
++              ) {
++                if (!step(loc, depth)) break;
++                const annot = fetch(annots[i]);
++                if (
++                  annot instanceof Dict &&
++                  annot.get("Subtype") instanceof Name &&
++                  annot.get("Subtype").name === "FileAttachment"
++                ) {
++                  const o = origin(
++                    "annotation",
++                    locator(annots[i], loc.path + `/Annots[${i}]`)
++                  );
++                  o.pageRef = loc.ref;
++                  add(annot.getRaw("FS"), o);
++                }
++              }
++          }
++          if (dict.has("Metadata")) {
++            const rawMeta = dict.getRaw("Metadata"),
++              mloc = locator(rawMeta, loc.path + "/Metadata");
++            if (!metadata.has(mloc.path)) {
++              const item = {
++                locator: mloc,
++                owners: [],
++                state: "unavailable",
++                text: null,
++              };
++              metadata.set(mloc.path, item);
++              try {
++                const data = boundedBytes(
++                  fetch(rawMeta),
++                  Math.max(
++                    0,
++                    Math.min(
++                      limits.maxMetadataBytes,
++                      limits.maxMetadataBytes * 4 - totalMetadata
++                    )
++                  )
++                );
++                totalMetadata += data.length;
++                const encoding =
++                  data[0] === 255 && data[1] === 254
++                    ? "utf-16le"
++                    : data[0] === 254 && data[1] === 255
++                      ? "utf-16be"
++                      : "utf-8";
++                item.text = new TextDecoder(encoding, { fatal: true }).decode(
++                  data
++                );
++                item.state = "present";
++              } catch (error) {
++                report("METADATA_UNAVAILABLE", mloc, error);
++              }
++            }
++            metadata.get(mloc.path).owners.push(loc);
++          }
++        }
++        const children = Array.isArray(obj)
++          ? obj.entries()
++          : dict.getRawEntries();
++        for (const [key_, child] of children) {
++          if (pending.length + visits >= limits.maxObjects) {
++            report("OBJECT_LIMIT", loc);
++            break;
++          }
++          if (
++            child instanceof Ref ||
++            child instanceof Dict ||
++            child instanceof BaseStream ||
++            Array.isArray(child)
++          ) {
++            pending.push([
++              child,
++              loc.path + (Array.isArray(obj) ? `[${key_}]` : "/" + key_),
++              depth + 1,
++            ]);
++          }
++        }
++      } catch (error) {
++        report("OBJECT_UNAVAILABLE", loc, error);
++      }
++    }
++    const collectionRaw = this.root.getRaw("Collection"),
++      collection = {
++        state: "missing",
++        locator: null,
++        view: scalar(),
++        schemaKeys: [],
++        folders: [],
++      };
++    if (collectionRaw !== undefined) {
++      collection.locator = locator(collectionRaw, "catalog/Collection");
++      collection.state = "invalid";
++      try {
++        const dict = fetch(collectionRaw);
++        if (!(dict instanceof Dict))
++          throw new Error("Not a collection dictionary");
++        collection.state = "present";
++        collection.view = scalar(dict.get("View"));
++        const schema = dict.get("Schema");
++        if (schema instanceof Dict)
++          collection.schemaKeys = Array.from(schema.getKeys())
++            .slice(0, 256)
++            .sort();
++        const seenFolders = new Set();
++        const walk = (raw, parent, path, depth) => {
++          if (raw === undefined || !step(collection.locator, depth)) return;
++          const loc = locator(raw, path),
++            obj = fetch(raw),
++            key = raw instanceof Ref ? loc.path : obj;
++          if (seenFolders.has(key)) {
++            report("FOLDER_CYCLE", loc);
++            return;
++          }
++          seenFolders.add(key);
++          if (!(obj instanceof Dict)) {
++            report("INVALID_FOLDER", loc);
++            return;
++          }
++          const folder = {
++            locator: loc,
++            parent,
++            children: [],
++            number: scalar(obj.get("ID")),
++            name: scalar(obj.get("Name")),
++          };
++          collection.folders.push(folder);
++          walk(obj.getRaw("Child"), loc.path, path + "/Child", depth + 1);
++          walk(obj.getRaw("Next"), parent, path + "/Next", depth + 1);
++        };
++        walk(
++          dict.getRaw("Folders"),
++          null,
++          collection.locator.path + "/Folders",
++          0
++        );
++        for (const folder of collection.folders)
++          folder.children = collection.folders
++            .filter(f => f.parent === folder.locator.path)
++            .map(f => f.locator.path);
++      } catch (error) {
++        report("COLLECTION_UNAVAILABLE", collection.locator, error);
++      }
++    }
++    return {
++      apiVersion: 1,
++      documentId: this.catalog.pdfManager.docId,
++      files: [...files.values()],
++      metadata: [...metadata.values()],
++      catalogMetadata: this.root.has("Metadata")
++        ? locator(this.root.getRaw("Metadata"), "catalog/Metadata")
++        : null,
++      catalogVersion: scalar(this.root.get("Version")),
++      collection,
++      diagnostics,
++      limits,
++    };
++  }
++
++  read({ documentId, fileId, streamId, maxBytes }) {
++    if (documentId !== this.catalog.pdfManager.docId)
++      throw new Error("Foreign document locator");
++    if (
++      !Number.isSafeInteger(maxBytes) ||
++      maxBytes < 0 ||
++      maxBytes > 536870912 // Per-request cap; inspection defaults stay unchanged.
++    )
++      throw new Error("Invalid extraction limit");
++    const registered = this.registered.get(fileId + "|" + streamId);
++    if (!registered)
++      throw new Error("Stream is not a discovered EF target of this file");
++    return boundedBytes(registered.stream, maxBytes);
++  }
++}
++export { DocumentAssets, boundedBytes };

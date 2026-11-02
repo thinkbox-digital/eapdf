@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-27",
+  "creator": "1.6.0-beta.1",
+  "validator": "1.6.0-beta.1",
+  "viewer": "0.3.0-beta.1",
+  "tests": {
+    "creatorClean": {
+      "tests": 302,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 23
+    },
+    "creatorPrivateCorpus": {
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "validatorClean": {
+      "tests": 164,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    "validatorDesktopSeparate": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python": {
+      "tests": 1188,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 40
+    },
+    "viewer": {
+      "typecheck": "PASS",
+      "cleanInstallChromium": "PASS",
+      "firefox": "PASS",
+      "semanticRecords": 27,
+      "hardeningChecks": 8,
+      "uiCasesPerBrowser": 13,
+      "messageSelectionsPerBrowser": 17,
+      "attachmentCasesPerBrowser": 15,
+      "cleanBuildMatchesWorkspace": true,
+      "deterministicZips": true
+    }
+  },
+  "conversion": {
+    "emlProfiles": 6,
+    "msgProfiles": 6,
+    "pstArchives": 1,
+    "mboxArchives": 1,
+    "javaValidation": "PASS",
+    "sourceHashesUnchanged": true
+  },
+  "performance": {
+    "scope": "One local 151-page PST archive, 1600x1000 viewport, devicePixelRatio 2; retained canvases at page 100, zoom 200%. Not total process memory or a general speed guarantee.",
+    "before": {
+      "readyMilliseconds": 6235,
+      "page": "100",
+      "canvasPixels": 47886408,
+      "rendered": 3,
+      "pages": 151
+    },
+    "after": {
+      "readyMilliseconds": 1602,
+      "page": "100",
+      "canvasPixels": 27574272,
+      "rendered": 2,
+      "pages": 151
+    },
+    "hashBefore": {
+      "bytes": 41943040,
+      "milliseconds": [
+        3030,
+        3037,
+        3004
+      ]
+    },
+    "hashAfter": {
+      "bytes": 41943040,
+      "milliseconds": [
+        340,
+        366,
+        332
+      ]
+    }
+  },
+  "privacy": {
+    "verifiedPreviouslyTrackedInputMoves": 40,
+    "newLocalInputsExcluded": 53
+  },
+  "limits": [
+    "Browser packages unsigned; Firefox temporary installation",
+    "Other operating systems and older browsers not verified",
+    "Native context-menu/site-permission prompt and full native file-picker interaction require manual acceptance",
+    "Accessibility acceptance and printing not verified",
+    "Viewer is not a conformance validator"
+  ]
+}

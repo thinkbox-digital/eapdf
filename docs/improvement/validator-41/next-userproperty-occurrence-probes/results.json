@@ -1,0 +1,38 @@
+[
+  {
+    "file": "docs/improvement/validator-41/next-userproperty-occurrence-probes/duplicate-guid-uniform.pdf",
+    "sha256": "4e5a29046b70bfee4717baced714617986a525e2a5dd5c9711a2de86c8cf81b6",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-41/next-userproperty-occurrence-probes/duplicate-guid-wrong-first.pdf",
+    "sha256": "12e0a2aafcc7ac3a2681876c27a20f095fde8333f6b3642d9a1edd4bfacc6b75",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-41/next-userproperty-occurrence-probes/duplicate-guid-wrong-last.pdf",
+    "sha256": "5444ebcb302da59e7f6693dbebfab51b41fb920dfaecc0ba2bc3725733ed99bd",
+    "status": "FAIL",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": [
+      "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+    ]
+  },
+  {
+    "file": "docs/improvement/validator-41/next-userproperty-occurrence-probes/duplicate-guid-all-wrong.pdf",
+    "sha256": "43985202218bc38f542c54913f7da44afcaeb70ed747fd6bf9c17c734ff3ab01",
+    "status": "FAIL",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": [
+      "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+    ]
+  }
+]

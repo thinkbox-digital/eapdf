@@ -1,0 +1,7 @@
+# V64: Empty supplied attachment GUID
+
+A supplied normal-text attachment GUID, including empty text, must match a typed email GUID when a complete inventory establishes absence. Missing GUID beside a valid Message-ID remains permitted. Wrong parent classes retain unavailable comparison; definite annotation geometry failures remain independent.
+
+Verification: 973 tests ran, 933 passed and 40 integration/schema checks were explicitly skipped. All 583 prior hashes/statuses/failure sets remain among 591 custom PDFs. Eight exact-byte controls pass PDF/A and verified ISO checks; CLI/worker agree; twelve retained creator outputs keep their known failures. Four new false passes fail, and one existing annotation failure gains an independent GUID failure.
+
+The first attribute control used invalid RDF syntax and was rejected by PDF/A. Its bytes/reports are retained in initial-invalid-attribute/. The builder now uses a legal nested rdf:Description for the attribute. The passing unit run used the executable sources and test assertions in unit-verification-inputs.json; the corrected fixture/builder and final archive are bound by verification-inputs.json. Unit tests do not consume that new corpus. Corrected final bytes passed the complete PDF/A/ISO pipeline separately. No creator source or JAR changed. Eleven project interpretations remain local; full obligation coverage and cited draft equivalence remain unverified.

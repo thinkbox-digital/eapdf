@@ -1,0 +1,147 @@
+{
+  "1s": {
+    "body_pictures": 2,
+    "retained_original_sources": 2,
+    "native_files_or_explicit_omissions": 3,
+    "pdfs_inspected": 2,
+    "assessment": [
+      {
+        "status": "INCOMPLETE",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "mandatory_failures": [],
+        "incomplete_messages": [
+          "Source-header comparisons could not be completed for an email",
+          "Some rules have no verified result or applicability decision"
+        ]
+      },
+      {
+        "status": "INCOMPLETE",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "mandatory_failures": [],
+        "incomplete_messages": [
+          "Source-header comparisons could not be completed for an email",
+          "Some rules have no verified result or applicability decision"
+        ]
+      }
+    ],
+    "staging_removed": true,
+    "all_native_attachment_bytes_exact": true
+  },
+  "1si": {
+    "body_pictures": 2,
+    "retained_original_sources": 0,
+    "native_files_or_explicit_omissions": 3,
+    "pdfs_inspected": 2,
+    "assessment": [
+      {
+        "status": "PASS",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "mandatory_failures": [],
+        "incomplete_messages": []
+      },
+      {
+        "status": "PASS",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "mandatory_failures": [],
+        "incomplete_messages": []
+      }
+    ],
+    "staging_removed": true,
+    "native_omissions_verified_empty": true
+  },
+  "1m": {
+    "body_pictures": 2,
+    "retained_original_sources": 2,
+    "native_files_or_explicit_omissions": 3,
+    "pdfs_inspected": 1,
+    "assessment": [
+      {
+        "status": "INCOMPLETE",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "mandatory_failures": [],
+        "incomplete_messages": [
+          "Source-header comparisons could not be completed for an email",
+          "Source-header comparisons could not be completed for an email",
+          "Some rules have no verified result or applicability decision"
+        ]
+      }
+    ],
+    "staging_removed": true,
+    "all_native_attachment_bytes_exact": true
+  },
+  "1mi": {
+    "body_pictures": 2,
+    "retained_original_sources": 0,
+    "native_files_or_explicit_omissions": 3,
+    "pdfs_inspected": 1,
+    "assessment": [
+      {
+        "status": "PASS",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "mandatory_failures": [],
+        "incomplete_messages": []
+      }
+    ],
+    "staging_removed": true,
+    "native_omissions_verified_empty": true
+  },
+  "1c": {
+    "body_pictures": 2,
+    "retained_original_sources": 2,
+    "native_files_or_explicit_omissions": 3,
+    "pdfs_inspected": 3,
+    "assessment": [
+      {
+        "status": "INCOMPLETE",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "mandatory_failures": [],
+        "incomplete_messages": [
+          "A contained email PDF has incomplete validation",
+          "A contained email PDF has incomplete validation"
+        ]
+      }
+    ],
+    "staging_removed": true,
+    "all_native_attachment_bytes_exact": true
+  },
+  "1ci": {
+    "body_pictures": 2,
+    "retained_original_sources": 0,
+    "native_files_or_explicit_omissions": 3,
+    "pdfs_inspected": 3,
+    "assessment": [
+      {
+        "status": "PASS",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "mandatory_failures": [],
+        "incomplete_messages": []
+      }
+    ],
+    "staging_removed": true,
+    "native_omissions_verified_empty": true
+  }
+}

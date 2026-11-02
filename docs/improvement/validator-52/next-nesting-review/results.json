@@ -1,0 +1,94 @@
+[
+  {
+    "file": "nested-multi.pdf",
+    "sha256": "6135912801f001f753b6f5b822036f10d2d69a378c28b33b89ed2cfce893c7b5",
+    "status": "PASS",
+    "failures": [],
+    "parent_levels": [
+      "PASS"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "nested-subtype.pdf",
+    "sha256": "231f97c552d20f25c44c099164926198fdeec4843669722be6a9005b96656ed5",
+    "status": "PASS",
+    "failures": [],
+    "parent_levels": [
+      "PASS"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "orphan-front-noncollection.pdf",
+    "sha256": "f5a680737d64e668bade6921b2e09d9d41385ba26ed5e2453940a1f3c7370ac7",
+    "status": "PASS",
+    "failures": [],
+    "parent_levels": [
+      "PASS"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "orphan-empty-self.pdf",
+    "sha256": "e77773ad25a606630c1bee8fce2ea6fa2e0c3f814cd00a0d93c87c9ac20e571a",
+    "status": "FAIL",
+    "failures": [
+      "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+    ],
+    "parent_levels": [
+      "FAIL"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "orphan-unreadable-self.pdf",
+    "sha256": "b2ebfd5b6690510ecec07cdb7af66c5763c8ccd7dcfc7451a38a86ae724cb769",
+    "status": "FAIL",
+    "failures": [
+      "VALIDATION_ERROR"
+    ],
+    "parent_levels": [],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "orphan-front-collection.pdf",
+    "sha256": "5a199646ce05aae761445d5973322a4dcac97023520cd03e4d9a1d81381100ed",
+    "status": "PASS",
+    "failures": [],
+    "parent_levels": [
+      "PASS"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "orphan-other-collection.pdf",
+    "sha256": "d71da01a78cf00315e9782e3b356ca7349ee11b473d2b7bdc52752db86a97e4b",
+    "status": "FAIL",
+    "failures": [
+      "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+    ],
+    "parent_levels": [
+      "FAIL"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "nested-single.pdf",
+    "sha256": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+    "status": "PASS",
+    "failures": [],
+    "parent_levels": [
+      "PASS"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  }
+]

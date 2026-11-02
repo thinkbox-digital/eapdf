@@ -1,0 +1,900 @@
+{
+  "schemaVersion": 1,
+  "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+  "source": {
+    "sha256": "e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+    "byteLength": 2136
+  },
+  "identification": {
+    "pdfHeaderVersion": {
+      "state": "present",
+      "value": "2.0",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "header",
+          "text": "2.0",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+          "objectNumber": null,
+          "generation": null,
+          "path": "header/PDF-version"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "pdfCatalogVersion": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+          "objectNumber": 1,
+          "generation": 0,
+          "path": "object:1:0"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "effectivePdfVersion": {
+      "state": "present",
+      "value": "2.0",
+      "basis": "derived",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+          "objectNumber": null,
+          "generation": null,
+          "path": "header/PDF-version"
+        }
+      ],
+      "reason": "Header version unless a valid higher catalog override exists.",
+      "candidates": []
+    },
+    "pdfaPart": {
+      "state": "present",
+      "value": "4",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "xmp-text",
+          "text": "4",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+          "objectNumber": 4,
+          "generation": 0,
+          "path": "object:4:0/{http://www.aiim.org/pdfa/ns/id/}part"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "pdfaConformance": {
+      "state": "present",
+      "value": "F",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "xmp-text",
+          "text": "F",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+          "objectNumber": 4,
+          "generation": 0,
+          "path": "object:4:0/{http://www.aiim.org/pdfa/ns/id/}conformance"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "pdfaRevision": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+          "objectNumber": 4,
+          "generation": 0,
+          "path": "object:4:0/{http://www.aiim.org/pdfa/ns/id/}rev"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "eapdfVersion": {
+      "state": "present",
+      "value": "1",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "xmp-text",
+          "text": "1",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+          "objectNumber": 4,
+          "generation": 0,
+          "path": "object:4:0/{http://www.pdfa.org/eapdf/ns/id/}version"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "eapdfRevision": {
+      "state": "present",
+      "value": "2024",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "xmp-text",
+          "text": "2024",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+          "objectNumber": 4,
+          "generation": 0,
+          "path": "object:4:0/{http://www.pdfa.org/eapdf/ns/id/}rev"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "declaredProfile": {
+      "state": "present",
+      "value": "ci",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "xmp-text",
+          "text": "ci",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+          "objectNumber": 4,
+          "generation": 0,
+          "path": "object:4:0/{http://www.pdfa.org/eapdf/ns/id/}conformance"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "validationStatus": "not-evaluated"
+  },
+  "pageCount": 1,
+  "parts": [
+    {
+      "id": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:7:0",
+      "locator": {
+        "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+        "objectNumber": 7,
+        "generation": 0,
+        "path": "object:7:0"
+      },
+      "parentId": null,
+      "declaredParent": {
+        "state": "present",
+        "value": [
+          "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:3:0"
+        ],
+        "basis": "observed",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 7,
+            "generation": 0,
+            "path": "object:7:0"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "childIds": [
+        "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:10:0"
+      ],
+      "dpm": {},
+      "startReference": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 7,
+            "generation": 0,
+            "path": "object:7:0/Start"
+          }
+        ],
+        "reason": "No value was observed.",
+        "candidates": []
+      },
+      "endReference": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 7,
+            "generation": 0,
+            "path": "object:7:0/End"
+          }
+        ],
+        "reason": "No value was observed.",
+        "candidates": []
+      },
+      "pageRange": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [],
+        "reason": "No explicit page range on this node.",
+        "candidates": []
+      },
+      "messageIds": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [],
+        "reason": "Document-wide part has no email owner.",
+        "candidates": []
+      }
+    },
+    {
+      "id": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:10:0",
+      "locator": {
+        "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+        "objectNumber": 10,
+        "generation": 0,
+        "path": "object:10:0"
+      },
+      "parentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:7:0",
+      "declaredParent": {
+        "state": "present",
+        "value": [
+          "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:7:0"
+        ],
+        "basis": "observed",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 10,
+            "generation": 0,
+            "path": "object:10:0"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "childIds": [],
+      "dpm": {
+        "Mail_ContentSetType": {
+          "state": "present",
+          "value": "FrontMatter",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "pdf-name",
+              "text": "/FrontMatter",
+              "bytesHex": "2f46726f6e744d6174746572"
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+              "objectNumber": 10,
+              "generation": 0,
+              "path": "object:10:0/DPM/Mail_ContentSetType"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        },
+        "Mail_Desc": {
+          "state": "present",
+          "value": "Container front matter",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "pdf-string",
+              "text": "Container front matter",
+              "bytesHex": "436f6e7461696e65722066726f6e74206d6174746572"
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+              "objectNumber": 10,
+              "generation": 0,
+              "path": "object:10:0/DPM/Mail_Desc"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        }
+      },
+      "startReference": {
+        "state": "present",
+        "value": [
+          "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:9:0"
+        ],
+        "basis": "observed",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 10,
+            "generation": 0,
+            "path": "object:10:0/Start"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "endReference": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 10,
+            "generation": 0,
+            "path": "object:10:0/End"
+          }
+        ],
+        "reason": "No value was observed.",
+        "candidates": []
+      },
+      "pageRange": {
+        "state": "present",
+        "value": {
+          "indexBase": 0,
+          "endInclusive": true,
+          "start": 0,
+          "end": 0
+        },
+        "basis": "derived",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 10,
+            "generation": 0,
+            "path": "object:10:0"
+          }
+        ],
+        "reason": "Page references resolved; absent End defaults to Start.",
+        "candidates": []
+      },
+      "messageIds": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [],
+        "reason": "Document-wide part has no email owner.",
+        "candidates": []
+      }
+    }
+  ],
+  "messages": [],
+  "metadataRecords": [],
+  "files": [
+    {
+      "id": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:5:0",
+      "locator": {
+        "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+        "objectNumber": 5,
+        "generation": 0,
+        "path": "object:5:0"
+      },
+      "filename": {
+        "state": "present",
+        "value": "corrupt.pdf",
+        "basis": "observed",
+        "raw": [
+          {
+            "kind": "pdf-string",
+            "text": "corrupt.pdf",
+            "bytesHex": "636f72727570742e706466"
+          }
+        ],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 5,
+            "generation": 0,
+            "path": "object:5:0/F"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "unicodeFilename": {
+        "state": "present",
+        "value": "corrupt.pdf",
+        "basis": "observed",
+        "raw": [
+          {
+            "kind": "pdf-string",
+            "text": "corrupt.pdf",
+            "bytesHex": "636f72727570742e706466"
+          }
+        ],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 5,
+            "generation": 0,
+            "path": "object:5:0/UF"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "afRelationship": {
+        "state": "present",
+        "value": "Data",
+        "basis": "observed",
+        "raw": [
+          {
+            "kind": "pdf-name",
+            "text": "/Data",
+            "bytesHex": "2f44617461"
+          }
+        ],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 5,
+            "generation": 0,
+            "path": "object:5:0/AFRelationship"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "origins": [
+        {
+          "kind": "name-tree",
+          "locator": {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": null,
+            "generation": null,
+            "path": "catalog/Names/EmbeddedFiles/Names[0]"
+          },
+          "pageIndex": null,
+          "nameTreeKey": {
+            "state": "present",
+            "value": "corrupt.pdf",
+            "basis": "observed",
+            "raw": [
+              {
+                "kind": "pdf-string",
+                "text": "corrupt.pdf",
+                "bytesHex": "636f72727570742e706466"
+              }
+            ],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": null,
+                "generation": null,
+                "path": "catalog/Names/EmbeddedFiles/Names[0]"
+              }
+            ],
+            "reason": null,
+            "candidates": []
+          }
+        }
+      ],
+      "embedding": "present",
+      "streams": [
+        {
+          "locator": {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 8,
+            "generation": 0,
+            "path": "object:8:0"
+          },
+          "efKeys": [
+            "/F",
+            "/UF"
+          ],
+          "mimeType": {
+            "state": "present",
+            "value": "application/pdf",
+            "basis": "observed",
+            "raw": [
+              {
+                "kind": "pdf-name",
+                "text": "/application/pdf",
+                "bytesHex": "2f6170706c69636174696f6e2f706466"
+              }
+            ],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": 8,
+                "generation": 0,
+                "path": "object:8:0"
+              }
+            ],
+            "reason": null,
+            "candidates": []
+          },
+          "mediaTypeParameters": {
+            "state": "missing",
+            "value": null,
+            "basis": "none",
+            "raw": [],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": 8,
+                "generation": 0,
+                "path": "object:8:0"
+              }
+            ],
+            "reason": "No value was observed.",
+            "candidates": []
+          },
+          "declaredSize": {
+            "state": "present",
+            "value": 9,
+            "basis": "observed",
+            "raw": [
+              {
+                "kind": "pdf-integer",
+                "text": "9",
+                "bytesHex": null
+              }
+            ],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": 8,
+                "generation": 0,
+                "path": "object:8:0"
+              }
+            ],
+            "reason": null,
+            "candidates": []
+          },
+          "declaredMd5": {
+            "state": "present",
+            "value": "0bf5e0887abdb43928460b20dbf0141c",
+            "basis": "observed",
+            "raw": [
+              {
+                "kind": "pdf-string",
+                "text": "\u000bõà‹z½´9(F\u000b Ûð\u0014˝",
+                "bytesHex": "0bf5e0887abdb43928460b20dbf0141c"
+              }
+            ],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": 8,
+                "generation": 0,
+                "path": "object:8:0"
+              }
+            ],
+            "reason": null,
+            "candidates": []
+          },
+          "decodedSize": {
+            "state": "present",
+            "value": 9,
+            "basis": "derived",
+            "raw": [],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": 8,
+                "generation": 0,
+                "path": "object:8:0"
+              }
+            ],
+            "reason": "Computed from decoded embedded bytes.",
+            "candidates": []
+          },
+          "computedMd5": {
+            "state": "present",
+            "value": "0bf5e0887abdb43928460b20dbf0141c",
+            "basis": "derived",
+            "raw": [],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": 8,
+                "generation": 0,
+                "path": "object:8:0"
+              }
+            ],
+            "reason": "Computed from decoded embedded bytes.",
+            "candidates": []
+          },
+          "sha256": {
+            "state": "present",
+            "value": "6d689ba9522127c0c759535f5adb7f2c8f182ac280d94eab93cb54e5ec598fa0",
+            "basis": "derived",
+            "raw": [],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": 8,
+                "generation": 0,
+                "path": "object:8:0"
+              }
+            ],
+            "reason": "Computed from decoded embedded bytes.",
+            "candidates": []
+          },
+          "extraction": "present"
+        }
+      ],
+      "roles": {
+        "state": "unavailable",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 5,
+            "generation": 0,
+            "path": "object:5:0"
+          }
+        ],
+        "reason": "Derived only from uniquely byte-matched metadata records.",
+        "candidates": []
+      },
+      "owners": {
+        "state": "unavailable",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [],
+        "reason": "No proven email ownership.",
+        "candidates": []
+      },
+      "metadataRecordIds": []
+    }
+  ],
+  "collection": {
+    "state": "present",
+    "value": {
+      "locator": {
+        "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+        "objectNumber": null,
+        "generation": null,
+        "path": "catalog/Collection"
+      },
+      "view": {
+        "state": "present",
+        "value": "T",
+        "basis": "observed",
+        "raw": [
+          {
+            "kind": "pdf-name",
+            "text": "/T",
+            "bytesHex": "2f54"
+          }
+        ],
+        "evidence": [
+          {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": null,
+            "generation": null,
+            "path": "catalog/Collection"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "schemaKeys": [],
+      "folders": [
+        {
+          "id": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:2:0",
+          "locator": {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 2,
+            "generation": 0,
+            "path": "object:2:0"
+          },
+          "folderNumber": {
+            "state": "present",
+            "value": 0,
+            "basis": "observed",
+            "raw": [
+              {
+                "kind": "pdf-integer",
+                "text": "0",
+                "bytesHex": null
+              }
+            ],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": 2,
+                "generation": 0,
+                "path": "object:2:0"
+              }
+            ],
+            "reason": null,
+            "candidates": []
+          },
+          "name": {
+            "state": "present",
+            "value": "Root",
+            "basis": "observed",
+            "raw": [
+              {
+                "kind": "pdf-string",
+                "text": "Root",
+                "bytesHex": "526f6f74"
+              }
+            ],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": 2,
+                "generation": 0,
+                "path": "object:2:0"
+              }
+            ],
+            "reason": null,
+            "candidates": []
+          },
+          "parentId": null,
+          "childIds": []
+        }
+      ],
+      "entries": [
+        {
+          "fileId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:5:0",
+          "nameTreeKey": {
+            "state": "present",
+            "value": "corrupt.pdf",
+            "basis": "observed",
+            "raw": [
+              {
+                "kind": "pdf-string",
+                "text": "corrupt.pdf",
+                "bytesHex": "636f72727570742e706466"
+              }
+            ],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": null,
+                "generation": null,
+                "path": "catalog/Names/EmbeddedFiles/Names[0]"
+              }
+            ],
+            "reason": null,
+            "candidates": []
+          },
+          "folderIds": {
+            "state": "present",
+            "value": [
+              "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:2:0"
+            ],
+            "basis": "derived",
+            "raw": [],
+            "evidence": [
+              {
+                "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+                "objectNumber": null,
+                "generation": null,
+                "path": "catalog/Names/EmbeddedFiles/Names[0]"
+              }
+            ],
+            "reason": "Folder number encoded in the name-tree key; otherwise the collection root.",
+            "candidates": []
+          }
+        }
+      ],
+      "children": [
+        {
+          "fileId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a#object:5:0",
+          "stream": {
+            "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+            "objectNumber": 8,
+            "generation": 0,
+            "path": "object:8:0"
+          },
+          "documentId": "sha256:6d689ba9522127c0c759535f5adb7f2c8f182ac280d94eab93cb54e5ec598fa0",
+          "state": "invalid",
+          "reason": "stream <in-memory PDF>: can't find startxref",
+          "inspection": null
+        }
+      ]
+    },
+    "basis": "observed",
+    "raw": [],
+    "evidence": [
+      {
+        "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+        "objectNumber": null,
+        "generation": null,
+        "path": "catalog/Collection"
+      }
+    ],
+    "reason": null,
+    "candidates": []
+  },
+  "diagnostics": [
+    {
+      "code": "COLLECTION_CHILD_UNAVAILABLE",
+      "state": "invalid",
+      "message": "stream <in-memory PDF>: can't find startxref",
+      "evidence": [
+        {
+          "documentId": "sha256:e89578ac9152ca11b245c361b9ecd239cb48890d52617869a36b53178d605f1a",
+          "objectNumber": 8,
+          "generation": 0,
+          "path": "object:8:0"
+        }
+      ]
+    }
+  ],
+  "limits": {
+    "maxFileBytes": 33554432,
+    "maxStreamBytes": 16777216,
+    "maxDecodedBytes": 67108864,
+    "maxMetadataBytes": 2097152,
+    "maxObjects": 100000,
+    "maxParts": 10000,
+    "maxTreeDepth": 64,
+    "maxChildDepth": 4,
+    "maxChildren": 32
+  },
+  "coverage": {
+    "metadata": "present",
+    "documentParts": "present",
+    "associatedFiles": "present",
+    "collection": "present",
+    "fullEmailHeaders": "not-evaluated",
+    "logicalStructure": "not-evaluated",
+    "sourceEmailParsing": "not-evaluated",
+    "contentStreamAssociations": "not-evaluated",
+    "conformance": "not-evaluated"
+  }
+}

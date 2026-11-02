@@ -1,0 +1,257 @@
+{
+  "moved": [
+    {
+      "old": "in/email/MSGReader-master/2019.10.07 Weary comments.msg",
+      "current": "in/2019.10.07 Weary comments.msg",
+      "sha256": "46c7e748056494b3e633558211360841ca26651baab3d8a050ac3e580beb0d79"
+    },
+    {
+      "old": "in/email/MSGReader-master/2019.10.08 DEP response.msg",
+      "current": "in/2019.10.08 DEP response.msg",
+      "sha256": "1f8012c2b8d64b2848f3c03618dea56b201cf9afd272ec59f2bfc66e4a5f6aba"
+    },
+    {
+      "old": "in/email/MSGReader-master/2019.10.10a additional comments and questions for DEP.msg",
+      "current": "in/2019.10.10a additional comments and questions for DEP.msg",
+      "sha256": "a3429dbc14c61b7fb87c49780b314b17e94d0ab9f5d779fa4b5a0f952c5910d5"
+    },
+    {
+      "old": "in/email/MSGReader-master/EmailWith2Attachments.msg",
+      "current": "in/EmailWith2Attachments.msg",
+      "sha256": "513a894a87de02ecbb312ada79ea19318378607bcb593ddb05ddecbade2d511f"
+    },
+    {
+      "old": "in/email/MSGReader-master/EmailWithAttachments.msg",
+      "current": "in/EmailWithAttachments.msg",
+      "sha256": "59d2f6bd9287b77bc22402b302fd4aff547363545bbf744a10b106e36ca555f2"
+    },
+    {
+      "old": "in/email/MSGReader-master/EmailWithInnerMailAndAttachments.MSG",
+      "current": "in/EmailWithInnerMailAndAttachments.MSG",
+      "sha256": "217351a4f8860921d4b3b1e7badd2d7ad29b22eddb4bb2e236118230db286cc7"
+    },
+    {
+      "old": "in/email/MSGReader-master/EmailWithMsgAttachment.msg",
+      "current": "in/EmailWithMsgAttachment.msg",
+      "sha256": "65dfb9f58cd55c4753d2690d18e4eaa34b8e36efb9fb8f578ec077c03707a329"
+    },
+    {
+      "old": "in/email/MSGReader-master/EmailWithReactions.msg",
+      "current": "in/EmailWithReactions.msg",
+      "sha256": "92d61b8207f415355fe1009411e4490bfa24f082eff4bfb58cc58e438131e0b8"
+    },
+    {
+      "old": "in/email/MSGReader-master/EmailWithSpecialCharsInSubject.msg",
+      "current": "in/EmailWithSpecialCharsInSubject.msg",
+      "sha256": "b496e842665ff430f3b1d9674f4653919732047fd759b8a809e4f686b3b0795c"
+    },
+    {
+      "old": "in/email/MSGReader-master/EmailWithSpecialCharsInSubject_2.msg",
+      "current": "in/EmailWithSpecialCharsInSubject_2.msg",
+      "sha256": "d83b198269a322048c8695d699a60b81e1f8c1d8b2b38d47712390b3992b3671"
+    },
+    {
+      "old": "in/email/MSGReader-master/HtmlSampleEmail.msg",
+      "current": "in/HtmlSampleEmail.msg",
+      "sha256": "e1e90f03ac3342522c1a61c36b082e27ffc4deb5ed492d1d214aeb3fed2c59f9"
+    },
+    {
+      "old": "in/email/MSGReader-master/HtmlSampleEmailWithAttachment.msg",
+      "current": "in/HtmlSampleEmailWithAttachment.msg",
+      "sha256": "d00c73d8e550aded13e078bf35842a3e31e01894e16bdb49355b072db9293e51"
+    },
+    {
+      "old": "in/email/MSGReader-master/RtfSampleEmail.msg",
+      "current": "in/RtfSampleEmail.msg",
+      "sha256": "935c97bb657e395bd27cf20170a73b72b4795f967876f7221539b3c053f6f032"
+    },
+    {
+      "old": "in/email/MSGReader-master/RtfSampleEmailWithAttachment.msg",
+      "current": "in/RtfSampleEmailWithAttachment.msg",
+      "sha256": "95c972bfff21e393889bf55c8eaad7c862553a577965c8f8b674b0fce5cef1d8"
+    },
+    {
+      "old": "in/email/MSGReader-master/RtfWithShortRussianString.msg",
+      "current": "in/RtfWithShortRussianString.msg",
+      "sha256": "fcf8a775cc2d70a9d8e98f08b83bb698506d069512f1bd1cf0e45db36be51824"
+    },
+    {
+      "old": "in/email/MSGReader-master/Swetlana Novikova.msg",
+      "current": "in/Swetlana Novikova.msg",
+      "sha256": "2e516c4c425aa1a08e78571a0401e3521403b3e16d78a8f5ffac35d556b0b46f"
+    },
+    {
+      "old": "in/email/MSGReader-master/TxtSampleEmail.msg",
+      "current": "in/TxtSampleEmail.msg",
+      "sha256": "13a5037e94a00bf78aa75532287a4e3f4b58230bae54c7f851010ab50a63e144"
+    },
+    {
+      "old": "in/email/MSGReader-master/TxtSampleEmailWithAttachment.msg",
+      "current": "in/TxtSampleEmailWithAttachment.msg",
+      "sha256": "16c1d79495d1eb3be668a36fd59d4f6af32f04f2e9c3800f8b26cdb09e0708ed"
+    },
+    {
+      "old": "in/email/MSGReader-master/contact-plain.msg",
+      "current": "in/contact-plain.msg",
+      "sha256": "06fcfd00e92da93d2a0b2d6a419de4f6b00e150fc607b8081cd4355f0c694c86"
+    },
+    {
+      "old": "in/email/MSGReader-master/contact-unicode.msg",
+      "current": "in/contact-unicode.msg",
+      "sha256": "6b6ac0c62c4019ee68d3adb627997f3b3cc20d21df3809d4a30a38ccb4cab8f8"
+    },
+    {
+      "old": "in/email/MSGReader-master/message.msg",
+      "current": "in/message.msg",
+      "sha256": "e85c38d49d8b22a3794434890440b2e6284f77a3882fc75872ba81e1280f57e7"
+    },
+    {
+      "old": "in/email/MSGReader-master/msgKitOut_attach.msg",
+      "current": "in/msgKitOut_attach.msg",
+      "sha256": "0af09d6bd5494fd5e2e3eb45cdd10b1723ad6c0499305830604737fb983c5e7a"
+    },
+    {
+      "old": "in/email/MSGReader-master/msgKitOut_noattach.msg",
+      "current": "in/msgKitOut_noattach.msg",
+      "sha256": "3e2421fdef89d72d2ff08e3ee25a917c54cc2954ef7938e95343fe138ee33634"
+    },
+    {
+      "old": "in/email/MSGReader-master/no-attachments.msg",
+      "current": "in/no-attachments.msg",
+      "sha256": "44f38934c6bbad9ada1b00c09149e22749609c8d5ed2e6432a8a273718ec6a88"
+    },
+    {
+      "old": "in/email/MSGReader-master/note.msg",
+      "current": "in/note.msg",
+      "sha256": "5adb511618b5d53acc8f450b79ce2f29ba504875257ada81390632dabfd8c567"
+    },
+    {
+      "old": "in/email/MSGReader-master/qwerty_1-orig.msg",
+      "current": "in/qwerty_1-orig.msg",
+      "sha256": "529efcef29dd7961746931af731eeed35a4b8b96e5e27040e24f788fe8dd596c"
+    },
+    {
+      "old": "in/email/MSGReader-master/qwerty_2-with_custom_properties.msg",
+      "current": "in/qwerty_2-with_custom_properties.msg",
+      "sha256": "fb3350dfda464e643e8216e5aab87003b024279226806a3862a9826cccc53811"
+    },
+    {
+      "old": "in/email/MSGReader-master/qwerty_3.msg",
+      "current": "in/qwerty_3.msg",
+      "sha256": "e53211eed6cf7514cc33c00732832e6e53bf16784a31e6f245a8d26211aa8f9e"
+    },
+    {
+      "old": "in/email/MSGReader-master/sediment.msg",
+      "current": "in/sediment.msg",
+      "sha256": "6aa57ab97ee88befe412e8cfb35447ad1cf5dd92bd640bb8914ce9b8cc607cdb"
+    },
+    {
+      "old": "in/email/MSGReader-master/testOut.msg",
+      "current": "in/testOut.msg",
+      "sha256": "689af290fd28a9d060db220e1b104dbd5da5565b777d6e5b8169d3802c2f3dea"
+    },
+    {
+      "old": "in/email/MSGReader-master/testOut_attach.msg",
+      "current": "in/testOut_attach.msg",
+      "sha256": "0e2ec48745ec327c60ebe0319d9c42070bb0d70c1e3a42673a49e4549c288676"
+    },
+    {
+      "old": "in/email/MSGReader-master/testOut_noattach.msg",
+      "current": "in/testOut_noattach.msg",
+      "sha256": "44f38934c6bbad9ada1b00c09149e22749609c8d5ed2e6432a8a273718ec6a88"
+    },
+    {
+      "old": "in/email/MSGReader-master/test_Blammo.msg",
+      "current": "in/test_Blammo.msg",
+      "sha256": "8d198f50a5c0cc6e60f6146c26206019ae040f476ff1db4823af9bc4a2098566"
+    },
+    {
+      "old": "in/email/MSGReader-master/test_internal.msg",
+      "current": "in/test_internal.msg",
+      "sha256": "e85c38d49d8b22a3794434890440b2e6284f77a3882fc75872ba81e1280f57e7"
+    },
+    {
+      "old": "in/email/enron.mbox",
+      "current": "in/enron.mbox",
+      "sha256": "ac91b223f9eaeb57f7498bc08b8eb190ef4624b7c88bb5534e3fd4934ac2dfd4"
+    },
+    {
+      "old": "in/email/sample.eml",
+      "current": "in/sample.eml",
+      "sha256": "e0d8979fb882d5b65ef04b81b0f98b3e5e9e86cdc10034380d348a33b5ba995b"
+    },
+    {
+      "old": "in/email/test.MSG",
+      "current": "in/test.MSG",
+      "sha256": "86522f1c47d0d76ec17d41dfe1a394b25db60032a5f82fd4987b1ced893e3277"
+    },
+    {
+      "old": "in/email/test.pst",
+      "current": "in/test.pst",
+      "sha256": "6152489de3472be6f1f840935d34b6dbf5f62b025dd015929ea9cf66eb5a5b46"
+    },
+    {
+      "old": "in/email/test3.eml",
+      "current": "in/test3.eml",
+      "sha256": "c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6"
+    },
+    {
+      "old": "in/email/test3_old.eml",
+      "current": "in/test3_old.eml",
+      "sha256": "c2c5d0c9bce5ad5c50a4d5fb2aa48a8c9aeb50b3c9372764c3d33e0748d06b1e"
+    },
+    {
+      "old": "in/email/test4.eml",
+      "current": "in/test4.eml",
+      "sha256": "06c040b7c0a3c6386ad901325a1981cc82211ac812276ffc3fc1e1c1d3b8f3d3"
+    }
+  ],
+  "removed": [
+    "in/email/MSGReader-master/not-a-MSG-file.msg",
+    "in/msg_01_HUNGARIA.MSG",
+    "in/msg_02_APPEXP.MSG",
+    "in/msg_03_LSM-J.MSG",
+    "in/msg_04_ACCOUNTQ.MSG",
+    "in/msg_05_ERRACCNT.MSG",
+    "in/msg_06_IPXRTRNM.MSG",
+    "in/msg_07_evfecbl.msg",
+    "in/msg_08_AVKMSG.MSG",
+    "in/msg_09_TBMI2.MSG",
+    "in/msg_10_smouse.msg",
+    "in/msg_11_INAMNT.MSG",
+    "in/msg_12_ACFH.MSG",
+    "in/msg_14_RBDEFINE.MSG",
+    "in/msg_15_dde41.msg",
+    "in/msg_16_TWUNIV.MSG",
+    "in/msg_17_DEVFLOPY.MSG",
+    "in/msg_18_COMMON.MSG",
+    "in/msg_19_mkandnor.msg",
+    "in/msg_20_M2ZMODEM.MSG",
+    "in/msg_21_LSM-F.MSG",
+    "in/msg_22_RSPAWN.MSG",
+    "in/msg_23_NCOPY.MSG",
+    "in/msg_24_LSM-F.MSG",
+    "in/msg_25_somk.msg",
+    "in/pst_01_Bitmap_extrude1.pst",
+    "in/pst_03_Extrude3.pst",
+    "in/pst_04_Distortion2.pst",
+    "in/pst_05_DropShadow7.pst",
+    "in/pst_07_SOBR_Blue.Pst",
+    "in/pst_08_FiT4_TrailTool.PST",
+    "in/pst_09_DropShadow11.pst",
+    "in/pst_10_FiT4_Twirl.PST",
+    "in/pst_11_Blend2.pst",
+    "in/pst_12_PRSTBuz2.PST",
+    "in/pst_13_Envelope5.pst",
+    "in/pst_15_DropShadow2.pst",
+    "in/pst_17_Large_Glow_.Pst",
+    "in/pst_18_FiT4_LiveFrame.PST",
+    "in/pst_19_Extrude6.pst"
+  ],
+  "changed": [],
+  "current_files": 95,
+  "original_candidates": 135,
+  "removed_non_email_candidates": 40,
+  "previously_excluded_files_removed": 44,
+  "content_changes_detected": 0
+}

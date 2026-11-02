@@ -1,0 +1,20 @@
+[
+  {
+    "file": "docs/improvement/validator-29/navigation-type-probes/name.pdf",
+    "sha256": "2c464b4426531037066274c9f5c375308978193e452249ce596372a12c62d3bf",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": [],
+    "pdfa_failed_rules": 0
+  },
+  {
+    "file": "docs/improvement/validator-29/navigation-type-probes/text.pdf",
+    "sha256": "16229eaae202b8362c03f79f9a764a241c2b91cc6c3f84750e1126445773d195",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": [],
+    "pdfa_failed_rules": 0
+  }
+]

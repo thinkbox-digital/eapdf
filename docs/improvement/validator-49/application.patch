@@ -1,0 +1,394 @@
+--- a/validate_eapdf.py
++++ b/validate_eapdf.py
+@@ -1979,7 +1979,11 @@
+     # ISO 32000 7.9.4: test decoded text without trimming or normalizing it.
+     # Local fields can have reduced precision; the example includes an offset
+     # after minutes. Numeric offset fields can also be omitted (default zero).
+-    match=re.fullmatch(r"D:([0-9]{4}(?:[0-9]{2}){0,5})(?:([Z+-])(?:([0-9]{2})(?:'(?:([0-9]{2})'?)?)?)?)?",str(value))
++    try:
++        text=str(value)
++    except (UnicodeError,ValueError,pikepdf.PdfError):
++        return False  # Unreadable text cannot satisfy the prescribed date grammar.
++    match=re.fullmatch(r"D:([0-9]{4}(?:[0-9]{2}){0,5})(?:([Z+-])(?:([0-9]{2})(?:'(?:([0-9]{2})'?)?)?)?)?",text)
+     if match is None:
+         return False
+     local,zone,offset_hour,offset_minute=match.groups()
+--- a/validator_rule_text.json
++++ b/validator_rule_text.json
+@@ -6479,7 +6479,7 @@
+     "rule_number": 104,
+     "rule_name": "ROLEMAP_MAIL_TAGS",
+     "spec_section": "EA-PDF 1.0 section 9.7 Table 9 printed p74,75; EA-PDF 1.0 section 9.7 Table 10 printed p75",
+-    "spec_excerpt": "For PDF/A-4 with logical structure, include the Table 9 backward-compatible RoleMap: Artifact\u2192Private, Aside\u2192Div, DocumentFragment\u2192Div, Em\u2192Span, FENote\u2192Note, Hn (n\u22657)\u2192P, Strong\u2192Span, Sub\u2192Div and Title\u2192H1 or P. When custom EA-PDF tags occur, separately apply Table 10: Mail_Message\u2192Document, Mail_ContentGroup\u2192Part, Mail_ContentSet\u2192Art, and appropriate PDF 1.7 field tags. This does not mandate using the optional custom vocabulary.",
++    "spec_excerpt": "For PDF/A-4 with logical structure, include the Table 9 backward-compatible RoleMap: Artifact→Private, Aside→Div, DocumentFragment→Div, Em→Span, FENote→Note, Hn (n≥7)→P, Strong→Span, Sub→Div and Title→H1 or P. When custom EA-PDF tags occur, separately apply Table 10: Mail_Message→Document, Mail_ContentGroup→Part, Mail_ContentSet→Art, and appropriate PDF 1.7 field tags. This does not mandate using the optional custom vocabulary.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+@@ -6522,7 +6522,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "logical_structure",
+-      "uncovered_assertion": "For PDF/A-4 with logical structure, include the Table 9 backward-compatible RoleMap: Artifact\u2192Private, Aside\u2192Div, DocumentFragment\u2192Div, Em\u2192Span, FENote\u2192Note, Hn (n\u22657)\u2192P, Strong\u2192Span, Sub\u2192Div and Title\u2192H1 or P. When custom EA-PDF tags occur, separately apply Table 10: Mail_Message\u2192Document, Mail_ContentGroup\u2192Part, Mail_ContentSet\u2192Art, and appropriate PDF 1.7 field tags. This does not mandate using the optional custom vocabulary.",
++      "uncovered_assertion": "For PDF/A-4 with logical structure, include the Table 9 backward-compatible RoleMap: Artifact→Private, Aside→Div, DocumentFragment→Div, Em→Span, FENote→Note, Hn (n≥7)→P, Strong→Span, Sub→Div and Title→H1 or P. When custom EA-PDF tags occur, separately apply Table 10: Mail_Message→Document, Mail_ContentGroup→Part, Mail_ContentSet→Art, and appropriate PDF 1.7 field tags. This does not mandate using the optional custom vocabulary.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+@@ -7037,7 +7037,8 @@
+       ],
+       "issue_ids": [],
+       "value_diagnostic_review": "V47: known V object-type violations retain their prescribed data failure even if text display decoding fails. Use the existing observed_pdf_value representation instead of str(value) in wrong-type diagnostics. Do not add new type, ASCII, source-value or matching requirements. Generic ISO UserProperties V(any) does not override the narrower EA Table12 fields. Unreadable String V paths remain separately reviewable.",
+-      "generic_property_scope_review": "V48: apply EA field-specific types to exact Table12 names and its Mail_* header namespace, retaining generic required V presence for every property. Base PDF V(any) permits unrelated extension Name/array/dictionary/stream values; the writer recommendation to prefer Text strings/numbers/Booleans is not a reader type prohibition. This combined scope/dependency interpretation supersedes the unknown-name scalar fallback. Preserve N ASCII encoding, explicit EA type/tag scope, null-as-absent and source recommendation policies. Eight actual PDF/A/ISO controls include two equivalent serialized missing/null cases; seventeen unit cases cover raw parsed null and additional generic types. Vendor semantics are not certified."
++      "generic_property_scope_review": "V48: apply EA field-specific types to exact Table12 names and its Mail_* header namespace, retaining generic required V presence for every property. Base PDF V(any) permits unrelated extension Name/array/dictionary/stream values; the writer recommendation to prefer Text strings/numbers/Booleans is not a reader type prohibition. This combined scope/dependency interpretation supersedes the unknown-name scalar fallback. Preserve N ASCII encoding, explicit EA type/tag scope, null-as-absent and source recommendation policies. Eight actual PDF/A/ISO controls include two equivalent serialized missing/null cases; seventeen unit cases cover raw parsed null and additional generic types. Vendor semantics are not certified.",
++      "date_decoding_review": "V49: ISO7.9.4 requires processed PDF-date text to match its grammar. A decoder rejection cannot satisfy this predicate and returns false, retaining the existing Mail_Sent USERPROPS_TYPE finding. Valid UTF8/UTF16 dates remain accepted. Source date recommendations already defer invalid dates to this type check. No new byte-encoding restriction or change to other String V semantics is introduced."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -18740,7 +18741,7 @@
+           "strength": "SHALL",
+           "scope": "file",
+           "applies_when": "custom tagging is used and parent occurs",
+-          "assertion": "Under the user-approved correction Mail_ContentField\u2192Mail_Field, Mail_ContentSet allows zero or more immediate Mail_Field custom children. No other Table 10 custom tag is an immediate child. Standard structure tags and unrelated extension tags are not prohibited by this row.",
++          "assertion": "Under the user-approved correction Mail_ContentField→Mail_Field, Mail_ContentSet allows zero or more immediate Mail_Field custom children. No other Table 10 custom tag is an immediate child. Standard structure tags and unrelated extension tags are not prohibited by this row.",
+           "evidence_needed": "PDF objects and XMP",
+           "candidate_rule_codes": [
+             "MAIL_CONTENTSET_CHILDREN"
+@@ -23753,7 +23754,7 @@
+             "evidence_boundary": "Use evidence_needed and applies_when; separate PDF-internal schema from original-source fidelity."
+           },
+           "plain_language": {
+-            "summary": "Missing or unreadable XMP prevents relevant checks. Report incomplete validation, not \u201cnot applicable.\u201d",
++            "summary": "Missing or unreadable XMP prevents relevant checks. Report incomplete validation, not “not applicable.”",
+             "when": "When the relevant feature or check applies",
+             "basis_sha256": "860e9e0117d2726d176f7b2bf9d22f5e5e797558f5fa53e1c53f48d7d77a03ae"
+           }
+@@ -26115,7 +26116,7 @@
+           "reviewed_requirement": "Inventory all nine rows and the Title alternative; separately verify actual coverage in the broad existing checkers.",
+           "status": "corrected_authoritative_requirement_only",
+           "implementation_changed": false,
+-          "resolution": "All nine Table 9 rows, including Hn n\u22657 and Title\u2192H1 or P, are inventoried. Corrected ROLEMAP_MAIL_TAGS to describe the entire table and distinguish Table 10 mappings. Execution coverage remains a validator-phase task."
++          "resolution": "All nine Table 9 rows, including Hn n≥7 and Title→H1 or P, are inventoried. Corrected ROLEMAP_MAIL_TAGS to describe the entire table and distinguish Table 10 mappings. Execution coverage remains a validator-phase task."
+         },
+         {
+           "id": "REQ-SOFTWARE-SCOPE",
+@@ -26895,7 +26896,7 @@
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a79.7, Table 13, printed p.79",
++              "label": "EA-PDF §9.7, Table 13, printed p.79",
+               "pdf_page": 86
+             }
+           ]
+@@ -26912,11 +26913,11 @@
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a79.6, Table 7, printed p.70",
++              "label": "EA-PDF §9.6, Table 7, printed p.70",
+               "pdf_page": 77
+             },
+             {
+-              "label": "EA-PDF \u00a79.8.3, Table 18, printed p.87",
++              "label": "EA-PDF §9.8.3, Table 18, printed p.87",
+               "pdf_page": 94
+             }
+           ]
+@@ -26933,7 +26934,7 @@
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a79.7 and Table 9, printed pp.74\u201375",
++              "label": "EA-PDF §9.7 and Table 9, printed pp.74–75",
+               "pdf_page": 81
+             },
+             {
+@@ -26958,7 +26959,7 @@
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a79.8.4 and Table 19, printed p.89",
++              "label": "EA-PDF §9.8.4 and Table 19, printed p.89",
+               "pdf_page": 96
+             }
+           ]
+@@ -26975,11 +26976,11 @@
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a77.5, printed p.44",
++              "label": "EA-PDF §7.5, printed p.44",
+               "pdf_page": 51
+             },
+             {
+-              "label": "EA-PDF \u00a77.1 introduction, printed p.23",
++              "label": "EA-PDF §7.1 introduction, printed p.23",
+               "pdf_page": 30
+             }
+           ]
+@@ -26989,17 +26990,17 @@
+           "question": "Should In-Reply-To use an unordered XMP Bag, or may it use an ordered Seq?",
+           "interim_boundary": "Require a collection of text strings. Leave the exact container type open.",
+           "title": "Order of reply identifiers",
+-          "why_it_matters": "Table 18 says \u201cunordered sequence.\u201d XMP uses different containers for unordered and ordered lists.",
++          "why_it_matters": "Table 18 says “unordered sequence.” XMP uses different containers for unordered and ordered lists.",
+           "requirement_ids": [
+             "T18-In-Reply-To"
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a79.8.3, Table 18, printed p.88",
++              "label": "EA-PDF §9.8.3, Table 18, printed p.88",
+               "pdf_page": 95
+             },
+             {
+-              "label": "Adobe XMP Part 1, \u00a77.7 array values",
++              "label": "Adobe XMP Part 1, §7.7 array values",
+               "url": "https://raw.githubusercontent.com/adobe/XMP-Toolkit-SDK/main/docs/XMPSpecificationPart1.pdf"
+             }
+           ]
+@@ -27018,7 +27019,7 @@
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a79.8.3, Table 18, printed p.86",
++              "label": "EA-PDF §9.8.3, Table 18, printed p.86",
+               "pdf_page": 93
+             },
+             {
+@@ -27034,14 +27035,14 @@
+               "url": "https://xmlns.com/foaf/spec/#term_mbox"
+             },
+             {
+-              "label": "Adobe XMP Part 1, \u00a7\u00a77.4\u20137.9",
++              "label": "Adobe XMP Part 1, §§7.4–7.9",
+               "url": "https://raw.githubusercontent.com/adobe/XMP-Toolkit-SDK/main/docs/XMPSpecificationPart1.pdf"
+             }
+           ]
+         },
+         {
+           "finding_id": "DEP-PDFA-EDITION",
+-          "question": "Which PDF/A-4 edition should we validate against: EA-PDF\u2019s cited 2024 draft or the 2020 edition used by our profiles?",
++          "question": "Which PDF/A-4 edition should we validate against: EA-PDF’s cited 2024 draft or the 2020 edition used by our profiles?",
+           "interim_boundary": "Record the actual profile and edition. Keep the difference open and use veraPDF for covered checks.",
+           "title": "Which PDF/A-4 edition applies",
+           "why_it_matters": "The cited edition and installed profile edition differ. Passing those profiles does not prove they cover every draft requirement.",
+@@ -27050,11 +27051,11 @@
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a74 references, printed p.15",
++              "label": "EA-PDF §4 references, printed p.15",
+               "pdf_page": 22
+             },
+             {
+-              "label": "EA-PDF \u00a79.1, printed p.61",
++              "label": "EA-PDF §9.1, printed p.61",
+               "pdf_page": 68
+             },
+             {
+@@ -27068,7 +27069,7 @@
+           "question": "May the catalog contain more than one original Source file, or must there be exactly one?",
+           "interim_boundary": "Keep the current at-least-one check and related-file handling. Do not silently impose an exactly-one limit.",
+           "title": "Number of original source files",
+-          "why_it_matters": "Section 9.4 combines \u201conly\u201d with \u201cat least one.\u201d Issue #14 asks which limit was intended.",
++          "why_it_matters": "Section 9.4 combines “only” with “at least one.” Issue #14 asks which limit was intended.",
+           "requirement_ids": [
+             "SOURCE-SM",
+             "CATALOG-SOURCE",
+@@ -27076,7 +27077,7 @@
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a79.4, printed p.67",
++              "label": "EA-PDF §9.4, printed p.67",
+               "pdf_page": 74
+             },
+             {
+@@ -27087,7 +27088,7 @@
+         },
+         {
+           "finding_id": "SPEC-COLLECTION-SIZE-SEMANTICS",
+-          "question": "Should collection Size show the original email\u2019s bytes or the embedded PDF\u2019s bytes?",
++          "question": "Should collection Size show the original email’s bytes or the embedded PDF’s bytes?",
+           "interim_boundary": "Keep the prescribed Size subtype. Do not claim it proves the original email size or replace it with N without a decision.",
+           "title": "What collection Size measures",
+           "why_it_matters": "EA-PDF describes original message size, but its prescribed PDF Size subtype measures the embedded file.",
+@@ -27097,11 +27098,11 @@
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a77.6, Table 5, printed p.53",
++              "label": "EA-PDF §7.6, Table 5, printed p.53",
+               "pdf_page": 60
+             },
+             {
+-              "label": "EA-PDF \u00a79.5, Table 6, printed p.68",
++              "label": "EA-PDF §9.5, Table 6, printed p.68",
+               "pdf_page": 75
+             },
+             {
+@@ -27113,7 +27114,7 @@
+         {
+           "finding_id": "SPEC-COLLECTION-MESSAGEID-LISTS",
+           "question": "Is Message-ID missing from Table 5 by mistake, since Table 6 requires it?",
+-          "interim_boundary": "Keep Table 6\u2019s explicit Message-ID requirement. Its omission from Table 5 does not make it optional.",
++          "interim_boundary": "Keep Table 6’s explicit Message-ID requirement. Its omission from Table 5 does not make it optional.",
+           "title": "Message-ID missing from Table 5",
+           "why_it_matters": "The two minimum-field lists differ. Both can be satisfied, but their intended relationship needs confirmation.",
+           "requirement_ids": [
+@@ -27122,11 +27123,11 @@
+           ],
+           "support": [
+             {
+-              "label": "EA-PDF \u00a77.6, Table 5, printed p.53",
++              "label": "EA-PDF §7.6, Table 5, printed p.53",
+               "pdf_page": 60
+             },
+             {
+-              "label": "EA-PDF \u00a79.5, Table 6, printed p.68",
++              "label": "EA-PDF §9.5, Table 6, printed p.68",
+               "pdf_page": 75
+             },
+             {
+@@ -27790,7 +27791,7 @@
+           {
+             "number": 16,
+             "url": "https://github.com/pdf-association/report-an-issue/issues/16",
+-            "title": "Spurious \u201c24T\u201d characters in the Type 2 function formula in Table 40 of ISO 32000-2 PDF when zoomed",
++            "title": "Spurious “24T” characters in the Type 2 function formula in Table 40 of ISO 32000-2 PDF when zoomed",
+             "github_state": "closed",
+             "github_state_reason": "completed",
+             "updated_at": "2026-05-27T06:26:48Z",
+@@ -28721,8 +28722,8 @@
+   "MAIL_CONTENTSET_CHILDREN": {
+     "rule_number": 220,
+     "rule_name": "MAIL_CONTENTSET_CHILDREN",
+-    "spec_section": "EA-PDF 9.7 Table 11, printed pp75\u201376; Mail_ContentField\u2192Mail_Field interpretation approved by user 2026-10-19",
+-    "spec_excerpt": "Under the user-approved correction Mail_ContentField\u2192Mail_Field, Mail_ContentSet allows zero or more immediate Mail_Field custom children. No other Table 10 custom tag is an immediate child. Standard structure tags and unrelated extension tags are not prohibited by this row.",
++    "spec_section": "EA-PDF 9.7 Table 11, printed pp75–76; Mail_ContentField→Mail_Field interpretation approved by user 2026-10-19",
++    "spec_excerpt": "Under the user-approved correction Mail_ContentField→Mail_Field, Mail_ContentSet allows zero or more immediate Mail_Field custom children. No other Table 10 custom tag is an immediate child. Standard structure tags and unrelated extension tags are not prohibited by this row.",
+     "spec_excerpt_kind": "Reviewed paraphrase with an explicit user-approved correction; not a verbatim quotation or published erratum",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+@@ -28750,7 +28751,7 @@
+       "reason": "None of the five pinned PDF/A profiles defines this EA-PDF custom-tag child vocabulary or occurrence rule.",
+       "version": "1.31.18",
+       "review_status": "User-approved interpretation; custom-only semantic constraint.",
+-      "uncovered_assertion": "Under the user-approved correction Mail_ContentField\u2192Mail_Field, Mail_ContentSet allows zero or more immediate Mail_Field custom children. No other Table 10 custom tag is an immediate child. Standard structure tags and unrelated extension tags are not prohibited by this row.",
++      "uncovered_assertion": "Under the user-approved correction Mail_ContentField→Mail_Field, Mail_ContentSet allows zero or more immediate Mail_Field custom children. No other Table 10 custom tag is an immediate child. Standard structure tags and unrelated extension tags are not prohibited by this row.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json"
+     }
+   },
+--- /dev/null
++++ b/tests/test_userproperty_date_decoding.py
+@@ -0,0 +1,77 @@
++"""A date decoder rejection is an invalid PDF date, not an operational failure."""
++import tempfile
++import unittest
++from pathlib import Path
++
++import pikepdf
++from test_preservation_safety import ROOT, validator as v
++import test_userproperty_sources as source_tests
++
++
++class UserPropertyDateDecodingTests(unittest.TestCase):
++    def bad(self, tail=False):
++        return pikepdf.String(b'\xef\xbb\xbf' + (b'D:20261021' if tail else b'') + b'\xff')
++
++    def property_report(self, tag):
++        attr = pikepdf.Dictionary(O=pikepdf.Name.UserProperties,
++            P=pikepdf.Array([pikepdf.Dictionary(N='Mail_Sent', V=self.bad())]))
++        report = v.Report('date.pdf')
++        v.check_user_properties([dict(type=tag, attrs=attr)], report)
++        self.assertEqual({'USERPROPS_TYPE'}, {i['code'] for i in report.items if i['level'] == 'FAIL'})
++
++    def test_invalid_utf8_is_not_a_date(self):
++        self.assertFalse(v.looks_like_pdf_date(self.bad()))
++
++    def test_invalid_utf8_after_date_prefix_is_not_a_date(self):
++        self.assertFalse(v.looks_like_pdf_date(self.bad(tail=True)))
++
++    def test_unreadable_message_date_reports_type_failure(self):
++        self.property_report('Mail_Message')
++
++    def test_unreadable_field_date_reports_type_failure(self):
++        self.property_report('Mail_FieldValue')
++
++    def check_source(self, descendant=False):
++        findings, _ = source_tests.UserPropertySourceTests().check(
++            [('Mail_Sent', self.bad())], descendant=descendant)
++        findings = [i for i in findings if i['details'].get('name') == 'Mail_Sent']
++        self.assertEqual(['N/A'], [i['level'] for i in findings])
++        self.assertIn('USERPROPS_TYPE', findings[0]['details']['reason'])
++
++    def test_invalid_message_date_does_not_abort_source_recommendation(self):
++        self.check_source()
++
++    def test_invalid_field_date_does_not_abort_source_recommendation(self):
++        self.check_source(descendant=True)
++
++    def test_valid_utf8_date_remains_valid(self):
++        self.assertTrue(v.looks_like_pdf_date(pikepdf.String(b'\xef\xbb\xbfD:20261021120000Z')))
++
++    def test_valid_utf16_date_remains_valid(self):
++        self.assertTrue(v.looks_like_pdf_date(pikepdf.String(b'\xfe\xff' + 'D:20261021120000Z'.encode('utf-16-be'))))
++
++    def test_readable_invalid_ascii_remains_invalid(self):
++        self.assertFalse(v.looks_like_pdf_date(pikepdf.String('not-a-date')))
++
++    def test_truncated_utf16_date_remains_invalid(self):
++        self.assertFalse(v.looks_like_pdf_date(pikepdf.String(b'\xfe\xff\x00D\x00:\x00')))
++
++    def test_fullwidth_digits_are_not_normalized(self):
++        self.assertFalse(v.looks_like_pdf_date(pikepdf.String('D:２０２６１０２１')))
++
++    def test_full_validation_reports_data_failure_without_operational_error(self):
++        with pikepdf.open(ROOT / 'tests/fixtures/eapdf/validator-operands/valid.pdf') as pdf:
++            elements = []
++            v.walk_struct_elems(pdf.Root.StructTreeRoot.K, elements)
++            message = next(e['elem'] for e in elements if e['type'] == 'Mail_Message')
++            message.A.P.append(pikepdf.Dictionary(N='Mail_Sent', V=self.bad()))
++            with tempfile.TemporaryDirectory(prefix='.eapdf-date-decode-', dir=ROOT) as directory:
++                path = Path(directory) / 'focused.pdf'
++                pdf.save(path, static_id=True, fix_metadata_version=False)
++                report = v.validate(str(path))
++        self.assertEqual({'USERPROPS_TYPE'}, {i['code'] for i in report.items if i['level'] == 'FAIL'})
++        self.assertEqual('FAIL', report.summary()['status'])
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- /dev/null
++++ b/scripts/build_eapdf_date_decoding_fixtures.py
+@@ -0,0 +1,30 @@
++"""Retain malformed/valid encoded PDF dates without changing date grammar."""
++import hashlib,json
++from pathlib import Path
++import pikepdf
++from build_eapdf_message_owner_fixtures import structure_elements
++ROOT=Path(__file__).resolve().parents[1]
++OUT=ROOT/'tests/fixtures/eapdf/validator-date-decoding'
++SEED=ROOT/'tests/fixtures/eapdf/validator-operands/valid.pdf'
++CASES={
++ 'invalid-utf8-date':b'\xef\xbb\xbf\xff',
++ 'invalid-utf8-date-tail':b'\xef\xbb\xbfD:20261021\xff',
++ 'valid-utf8-date':b'\xef\xbb\xbfD:20261021120000Z',
++ 'valid-utf16-date':b'\xfe\xff'+'D:20261021120000Z'.encode('utf-16-be'),
++ 'valid-ascii-date':b'D:20261021120000Z',
++ 'invalid-ascii-date':b'not-a-date',
++ 'truncated-utf16-date':b'\xfe\xff\x00D\x00:\x00',
++ 'fullwidth-digit-date':'D:２０２６１０２１'}
++
++def main():
++ OUT.mkdir(parents=True,exist_ok=True);rows=[]
++ for name,value in CASES.items():
++  with pikepdf.open(SEED) as pdf:
++   message=next(e for e in structure_elements(pdf) if e.get('/S')==pikepdf.Name('/Mail_Message'))
++   message.A.P.append(pikepdf.Dictionary(N='Mail_Sent',V=pikepdf.String(value)))
++   path=OUT/(name+'.pdf');pdf.save(path,static_id=True,fix_metadata_version=False)
++  legal=name.startswith('valid-')
++  rows.append(dict(file=path.name,sha256=hashlib.sha256(path.read_bytes()).hexdigest(),expected_status='PASS' if legal else 'FAIL',expected_failures=[] if legal else ['USERPROPS_TYPE']))
++ (OUT/'expectations.json').write_text(json.dumps(dict(authority='EA Table12 Mail_Sent PDF date; ISO32000-2:2020 7.9.4 processed date grammar and 7.9.2.2 Unicode text encoding',source_files={str(SEED.relative_to(ROOT)):hashlib.sha256(SEED.read_bytes()).hexdigest()},boundary='Decoder rejection fails the date predicate. Keep valid Unicode dates and existing grammar/calendar constraints. Other string semantics and complete text encoding validation remain separate.',cases=rows),indent=2)+'\n')
++ print('Built eight encoded date controls.')
++if __name__=='__main__':main()

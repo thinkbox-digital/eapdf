@@ -1,0 +1,78 @@
+{
+  "authority": [
+    "EA-PDF 9.7",
+    "PDF Declarations 2019 sections 7/8",
+    "Pinned upstream ISO 32005 inclusion predicates"
+  ],
+  "source": "tests/fixtures/eapdf/upstream-issues/valid.pdf",
+  "source_sha256": "a41491747970410a68f2fdaea57bd265dc6f698f5b6cd8f97fcaa973c05d1e3d",
+  "cases": [
+    {
+      "file": "valid.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "367477269ad440368f94f1e6b8b0eb307724f9fe9cbeabe9c53e116779c564ad",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "legacy-https-namespace.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "LOGICAL_TS32005_DECLARATION"
+      ],
+      "sha256": "e33c0f5869be2e26b17f051b6a4cd5033aad84ed34baa65841742b6d73691993",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "ordered-declarations.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "LOGICAL_TS32005_DECLARATION"
+      ],
+      "sha256": "e02dccaa2554a8373b4a06d0a04b3c1db40e2d177342d60edcee4204980400d1",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "invalid-claim-date.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "LOGICAL_TS32005_DECLARATION"
+      ],
+      "sha256": "427f8a1104704730e56daf12b168efa3a3117524eb83d8d26b86250d9a42be74",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "qualified-uri-identifier.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "bb9eaa999a53678fb480e98acbf1b927c1299a87ff3c34e6f8ff7fec17071386",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "reduced-precision-claim-date.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "241a8485620fabef44a4d20ce880fa29aa098ba3bf8a96a2afcf3ae7eee1a995",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "paragraph-in-paragraph.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "ISO32005_UPSTREAM"
+      ],
+      "sha256": "114fb37a2e95ff4e0b32e7eca6e064919e3789d07f95304cee0bc3eb2ac19e4c",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    }
+  ]
+}

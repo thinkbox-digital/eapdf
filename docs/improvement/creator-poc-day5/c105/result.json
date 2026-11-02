@@ -1,0 +1,26 @@
+{
+  "checkpoint": "C105",
+  "fix": "Share the known non-email Outlook item check between MSG and PST. Report skipped native mailbox items and exclude them from email counts; reject non-email embedded items as email reconstruction.",
+  "java_focused": {
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changed_production_classes": [
+    "eapdf/PstReader.class",
+    "eapdf/EmailToPDFA.class",
+    "eapdf/Common.class"
+  ],
+  "controlled_runtime_reproduction": "Real PST message with a controlled in-memory IPM.Contact class; former reader created RFC822 email, corrected reader rejects it; original PST unchanged.",
+  "selection_test": "Controlled contact skipped, normal message collected; inspected/skipped counts are 2/1.",
+  "ordinary_mailbox_control": "snapshot-result.json",
+  "pdf_result": "pdf-result.json",
+  "last_full_suite": "C104:229 passes, not repeated.",
+  "jars": {
+    "emailtopdfa.jar": "22cd69beb48d6613b73173489534bf562a8c75b5103c7569cbe29ca3f68eb103",
+    "emailtopdfa-gui.jar": "893156591cf179e3fd71a897797f548bf3a93f5d06f87c21fe3315247744c779"
+  },
+  "temporary_shared_staging_removed": true,
+  "continued_work": "Active until explicitly told to stop."
+}

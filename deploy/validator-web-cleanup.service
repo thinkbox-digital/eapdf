@@ -1,0 +1,10 @@
+[Unit]
+Description=Remove expired EA-PDF web results
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/media/lepore/Work/thinkbox/convert
+Environment=PATH=/media/lepore/Work/thinkbox/convert/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+ExecStart=/media/lepore/Work/thinkbox/convert/.venv/bin/python -B -c "import validator_web; validator_web.cleanup_expired_jobs()"

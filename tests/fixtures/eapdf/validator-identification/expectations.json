@@ -1,0 +1,115 @@
+{
+  "authority": [
+    "EA-PDF 9.8.1 Table 15",
+    "Reviewed XMP semantic simple-value types"
+  ],
+  "source": "tests/fixtures/eapdf/upstream-issues/valid.pdf",
+  "source_sha256": "a41491747970410a68f2fdaea57bd265dc6f698f5b6cd8f97fcaa973c05d1e3d",
+  "cases": [
+    {
+      "file": "valid.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "665ae136f6f0cd789a4980c18facf8f02b10fb898da7a094da2f73034b2e2503",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "version-signed-zeros.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "b6e0e1ccb67cc5ca1454075e7c5e9e29685331bb3de160713410a5e1b2631ea3",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "revision-zeros.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "e47f1dae7299eb480de37eeef77464a593592380b138034c839d7b1f29b7a335",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "version-uri.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EAPDF_VERSION"
+      ],
+      "sha256": "8f8832cfc2f4587195ed3c3fc1f2e27206b122ce526a48f351216ff245781a76",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "revision-array.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EAPDF_REV"
+      ],
+      "sha256": "37f3ebe65b05c299b6a1a4a9e3c57f195e9f5ce0398df5b42be3a426a7f67b8e",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "conformance-uri.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EAPDF_CONFORMANCE_VALUE"
+      ],
+      "sha256": "19c5a5f1f4829751d4c376266c4c814e680d266b7f7702b092f358b209b925b9",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "conformance-array.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EAPDF_CONFORMANCE_VALUE"
+      ],
+      "sha256": "7ee424f4f924e73315392b68d0c5e6d35e16449c40880538cb259a379e44df52",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "conformance-padded.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EAPDF_CONFORMANCE_VALUE"
+      ],
+      "sha256": "06edc860ec1498f705d1c919f8dad42569ff33c9134a9a37a8d697ba557b4ece",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "version-qualified.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "3b55208b3eee0835399eb5f420fa3246c8b5891f9fb72eff31fff0392c59aea6",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "conformance-qualified.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "5d21be226462ab3e32e072553e6a4997ec97efae4d09edb0138d56e9dba7947d",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "version-float.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EAPDF_VERSION"
+      ],
+      "sha256": "7d9c58a896966b202e6c0e681bb284c64363e0ca7e79c27e210fabb002560b30",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    }
+  ]
+}

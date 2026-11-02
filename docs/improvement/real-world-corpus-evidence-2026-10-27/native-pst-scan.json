@@ -1,0 +1,56 @@
+{
+  "files": [
+    {
+      "input": "in/pst_06_1999.pst",
+      "items_enumerated": 15856,
+      "recipient_rows_read": 38069,
+      "failures": 0,
+      "other_items": 0
+    },
+    {
+      "input": "in/pst_16_2005b_May-Jul_GovernF.pst",
+      "items_enumerated": 48129,
+      "recipient_rows_read": 73681,
+      "failures": 0,
+      "other_items": 0
+    },
+    {
+      "input": "in/pst_20_200501-06JanJun.pst",
+      "items_enumerated": 34249,
+      "recipient_rows_read": 117375,
+      "failures": 0,
+      "other_items": 0
+    },
+    {
+      "input": "in/pst_23_2005d_Nov-Dec_GovernF.pst",
+      "items_enumerated": 8205,
+      "recipient_rows_read": 21964,
+      "failures": 0,
+      "other_items": 0
+    },
+    {
+      "input": "in/pst_22_200401-06JanJun.pst",
+      "items_enumerated": 23173,
+      "recipient_rows_read": 65783,
+      "failures": 0,
+      "other_items": 0
+    },
+    {
+      "input": "in/pst_24_GovernFJan-MAr2003.pst",
+      "items_enumerated": 34601,
+      "recipient_rows_read": 58063,
+      "failures": 0,
+      "other_items": 0
+    },
+    {
+      "input": "in/pst_25_2005b_Mar-April_GovernFShiavo.pst",
+      "items_enumerated": 105034,
+      "recipient_rows_read": 205174,
+      "failures": 0,
+      "other_items": 0
+    }
+  ],
+  "items_enumerated": 269247,
+  "recipient_rows_read": 580109,
+  "scope": "Recipient-table inspection only; not complete EA-PDF conversion or attachment verification."
+}

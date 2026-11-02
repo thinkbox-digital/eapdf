@@ -1,0 +1,10 @@
+Creator and validators 1.6.0-beta.7; viewer 0.5.0-beta.5.
+
+- Clearer email/source-file ownership and input-based output filenames.
+- Viewer email search across collections, smoother navigation and reliable repeated downloads.
+- CSV finding aids include folders and attachment names/counts.
+- Refreshed examples, PDF/A user manual and distributable JARs.
+
+Requires Java 21 or later. Extract the configuration bundle beside the JARs and set the creator identity. Viewer: Chromium 156+ or Firefox 158+; manual unsigned installation.
+
+Beta software. Large PST exports were excluded from testing. Known limitations are in docs/DEVELOPMENT_STATUS.md.

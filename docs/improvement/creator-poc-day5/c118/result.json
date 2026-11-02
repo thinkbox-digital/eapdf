@@ -1,0 +1,104 @@
+{
+  "checkpoint": "C118",
+  "fix": "Remove duplicate top-margin native attachment annotations. Keep one annotation per attachment on the per-message attachment continuation, included in the same BodyRendering Content Set. Plain filename lists stay plain.",
+  "reference": "Local EA-PDF 1.0 sections 7.1.2 and 9.3, printed pages 27 and 65: rendering organization is not prescribed; the visible native annotation may appear on any page of the owning body Content Set. No hidden/transparent annotation or validation exemption added.",
+  "changed_production_classes": [
+    "eapdf/PdfMailWriter.class"
+  ],
+  "java_focused": {
+    "tests": 40,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "last_full_java": {
+    "checkpoint": "C117",
+    "counts": {
+      "tests": 250,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "standard_samples": {
+    "1s": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "incomplete": [],
+      "pdf_sha256": "e6fa09b1a609c1a8e94d2c2b33e27aa4f604359a1fb47a6215d976208ab75f3e",
+      "report_sha256": "3b2cfdfb865584db76b76ea25e76305cea88cbd2ac9db03afe377f082598ab91"
+    },
+    "1si": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "incomplete": [],
+      "pdf_sha256": "4e1a04121afc4fea0023bd1f6699459f092aa1f6357de526d1f7d0f9db449f22",
+      "report_sha256": "ade750414e8e66cc53de430eb73e32f2f96ef5d6422e4f3e457733c38628de0e"
+    },
+    "1m": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "incomplete": [],
+      "pdf_sha256": "735013f2de51bd60905a4c0c439b1da6469e27851a6c766d41bd2a80bf93e4c2",
+      "report_sha256": "c70a6730475e374170ad12c9add1152c932b79ee32bb5b84ffa5a712143df28f"
+    },
+    "1mi": {
+      "status": "INCOMPLETE",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "incomplete": [
+        "Attachment native-byte consistency could not be fully verified"
+      ],
+      "pdf_sha256": "6f85b2b865e6949df67b23b6d363bcb16c0b58f13f442fd4d70c12b5c65b6a83",
+      "report_sha256": "e10f214073e7889a024f78e5ed755686f615279713973b5122b7570199dbd8b3"
+    },
+    "1c": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "incomplete": [],
+      "pdf_sha256": "f1104c33717eef5ed4745c7ce1513456d52bf499c6adcbd0a42a6b5571de401c",
+      "report_sha256": "7620d52058afc731c0cb42493dc145f4dfd8f923aff964f7945074eee88a6cb5"
+    },
+    "1ci": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "incomplete": [],
+      "pdf_sha256": "d31fa1ea7b38e1ed4799bb0886874408454130c674a0a7a348e07533ab860f02",
+      "report_sha256": "de6caf6e5e8ec9f67fa20bf90c8a801537f239b6b412678e81a1ca5df04fe949"
+    }
+  },
+  "single_email_pixel_change_bbox_points": [
+    552,
+    18,
+    565,
+    28
+  ],
+  "single_email_text_and_page_count_unchanged": true,
+  "single_email_unique_source_and_native_payloads_unchanged": true,
+  "single_email_annotations_before": [
+    1,
+    1
+  ],
+  "single_email_annotations_after": [
+    0,
+    1
+  ],
+  "frozen_validator_changed": false,
+  "staging_removed": true,
+  "jars": {
+    "emailtopdfa.jar": "3e74106cc7af04daaee6ef392df0f041821692924e44b0d280b248c0b9f7539c",
+    "emailtopdfa-gui.jar": "49787f5374a45b707610cedad3072bd9214bc0eed148622a631cbb7738698c8d"
+  },
+  "continues": "Creator preservation work remains active until told to stop."
+}

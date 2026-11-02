@@ -1,0 +1,7 @@
+# V71: Original blank Date presence
+
+An original Date header can exist with blank/whitespace text. Source summaries now preserve that occurrence independently of its normalized string. Single-message checks, coverage fallback and final applicability use the same presence decision. A supplied blank date cannot be a valid xsd:dateTime, so Raw-Sent is required; empty normal text can preserve that original value. No Date header does not invent an error value. Existing summary dictionaries with original occurrences retain compatibility.
+
+Verification: 1012 frozen tests ran: 972 passed and 40 integration/schema checks were explicitly skipped. All 639 prior PDF hashes/statuses/failure sets remain across 647 freshly checked custom cases. Eight exact-byte controls pass real PDF/A and verified ISO checks; CLI/worker agree. Twelve retained creator outputs retain known failures. Sixteen offline browser checks pass. Two new false passes fail; present empty element, qualified and attribute alternatives pass. Absent Date remains distinct and the existing nonempty invalid-date control still fails.
+
+This does not certify complete date parsing, extended-calendar support or creation normalization policy. All creator source/JAR and CLI/debug behavior remain unchanged; the creator proposal remains deferred. The next recorded source comparison defect concerns valid direct UTF8 headers being left as parser surrogate escapes.

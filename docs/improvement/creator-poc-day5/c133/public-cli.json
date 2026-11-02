@@ -1,0 +1,15 @@
+{
+  "creator": "Delivered dist/emailtopdfa.jar C133, actual public CLI",
+  "status": "INCOMPLETE",
+  "pdfa": "PASS",
+  "selected_iso": [
+    "PASS"
+  ],
+  "mandatory_failures": [],
+  "pixels_and_text_match_direct_repaired_output": true,
+  "original_msg_exact": true,
+  "native_attachments": 2,
+  "unwanted_first_page_annotations": 0,
+  "staging_removed": true,
+  "sha256": "3086b32b3e285a6c402775e8e9cfaba4703deabfcaa1edf9301dc1199a406082"
+}

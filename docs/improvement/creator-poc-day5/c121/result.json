@@ -1,0 +1,40 @@
+{
+  "checkpoint": "C121",
+  "fix": "Use existing Common.availableArchivePath for automatically named monthly PDFs; earlier PDF and sidecar files remain unchanged. No CLI changes.",
+  "java_focused": {
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "date_suite_c120": {
+    "tests": 32,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "last_full_suite": {
+    "checkpoint": "C117",
+    "counts": {
+      "tests": 250,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "changed_production_classes_since_c118": [
+    "eapdf/Common.class",
+    "eapdf/MonthlyFilenameArchiveToPdf.class"
+  ],
+  "reproduction": "monthly-before-result.json",
+  "actual_monthly_outputs": "monthly-result.json",
+  "date_repair": "../c120/result.json",
+  "jars": {
+    "emailtopdfa.jar": "126828c573902d706af00640542ffa81ea3d09b18553f12973e4d047a75ee224",
+    "emailtopdfa-gui.jar": "34c5cf6c43e3963505bb7b81415fa6ca24c317e1f4378f9b392e44aec15edea0"
+  },
+  "samples": "Refreshed with C120; monthly-only C121 change does not affect them.",
+  "frozen_validator_changed": false,
+  "shared_staging_removed": true,
+  "continues": "Focused creator preservation work remains active until told to stop."
+}

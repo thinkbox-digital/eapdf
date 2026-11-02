@@ -1,0 +1,11 @@
+# V55: actual Art Content Set counterparts
+
+The EA 9.7 requirement includes literal Art and implicit Art through Mail_ContentSet. Counts alone cannot establish or refute their correspondence with actual Content Sets. This repair uses actual content references, unique DPart leaf ranges and Page.DPart links. Content known to cross distinct sets fails. Empty, ambiguous, contradictory, unsupported-role or bounded evidence remains unavailable. This does not certify complete logical encapsulation, outlines, all page operations or a tag-count bijection.
+
+The final frozen snapshot is `.eapdf-verification-v55-r2`: 1,309 inputs. The initial snapshot remains immutable. [Review correction](review-correction.json) records a stream-versus-dictionary error in the independent historical oracle; only two review JSON inputs changed. All runtime, test, script and PDF hashes are identical between snapshots, preserving the completed unit and pipeline receipts. The corrected custom gate rechecks all cases, retaining exact-runtime cached receipts.
+
+Verification: 843 unit passes, 40 explicit integration/schema skips, 21 focused tests, 506 custom cases, six exact-byte PDF/A and verified ISO controls, CLI plus isolated worker, and twelve fresh original creator diagnoses. All 500 historical hashes and statuses remain; four false count-only Art failures are removed, preserving independent coverage/structure failures. Seven historical Art levels are independently reassessed. The six new controls include one corrected count failure that remains INCOMPLETE for the independent role-map applicability boundary, and one cross-set Article that now FAILs.
+
+Initial standard-tag fixture conversion replaced field roles incorrectly and failed ISO; those receipts and bytes remain in V54's excluded `next-art-probes/initial-standard-conversion`. Final controls preserve the original field roles and pass both upstream checks.
+
+Standard-only role-map applicability remains a separate review. SPEC-ROLEMAPNS-SCOPE is open: PDF/A-4 namespace requirements must not receive an invented standard-only exception. All eleven listed questions and broader source/XMP/creator work remain. Original creator PDFs and JAR are unchanged and all twelve creator conformance results remain FAIL.

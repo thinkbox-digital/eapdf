@@ -1,0 +1,25 @@
+{
+  "checkpoint": "C102",
+  "fix": "Use the stored MSG submission timestamp when parser 1.16.2 getDate throws while cloning its absent transport date. Supplied transport date remains preferred.",
+  "java_focused": {
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changed_production_classes": [
+    "eapdf/MsgReader.class"
+  ],
+  "pdf_result": "pdf-result.json",
+  "original_bytes_exact": true,
+  "no_date_invented": true,
+  "initial_verification": "Corrected test expectation from internal normalized date text to the actual displayed RFC date; expected native instant remains independently checked.",
+  "last_full_suite": "C97:216 passes, not repeated.",
+  "source_sha256": "578474eafbabf51e3e2aed45b7afff830081465d34a798a7dcba7c8f714b644d",
+  "jars": {
+    "emailtopdfa.jar": "28006b5146c84aba98fae41aaeceda01979a11e02c80b448bb2cfe81df0288e5",
+    "emailtopdfa-gui.jar": "bf0bce0e7ee85b7287ef8b701180a0b22c8336b9dc59cefbeba47d64c8afb24a"
+  },
+  "temporary_shared_staging_removed": true,
+  "continued_work": "Active until explicitly told to stop."
+}

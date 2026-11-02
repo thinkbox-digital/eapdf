@@ -1,0 +1,71 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -3092,16 +3092,24 @@
+             if len(operands) < 2:
+                 continue
+             props=resolved_content_properties(operands,event["resources"])
+-            af=dict_get(props,"/AF",None)
++            # ISO 32000-2 erratum 374: /AF /resource BDC uses a property
++            # dictionary containing /MCAF, not an array as the property list.
++            af=(dict_get(props,"/MCAF",None) if opname=="BDC"
++                and safe_name(operands[0])=="AF" else None)
++            if af is None:
++                # Retain legacy /AF observations for EA-PDF evidence checks;
++                # reading them is not a generic syntax/conformance assertion.
++                af=dict_get(props,"/AF",None)
+             if af is None:
+                 continue
+             specs=af if is_pdf_array(af) else [af]
+             for spec in specs:
+                 og=objgen(spec)
+                 key=(page_num, og)
+-                if key in seen:
+-                    continue
+-                seen.add(key)
++                if og and og!=(0,0):
++                    if key in seen:
++                        continue
++                    seen.add(key)
+                 info=parse_filespec("",spec,source="MarkedContentAF")
+                 info["page"]=page_num
+                 out.append(info)
+@@ -3878,9 +3886,11 @@
+     if effective=="1.7":
+         ext=dict_get(root,"/Extensions",None)
+         adbe=dict_get(ext,"/ADBE",None) if ext is not None else None
+-        base=safe_name(dict_get(adbe,"/BaseVersion",None)) if adbe is not None else ""
++        base_value=dict_get(adbe,"/BaseVersion",None) if adbe is not None else None
++        base=safe_name(base_value)
+         level=dict_get(adbe,"/ExtensionLevel",None) if adbe is not None else None
+-        if base=="1.7" and str(level)=="5":
++        if (isinstance(base_value,pikepdf.Name) and base=="1.7"
++                and isinstance(level,int) and not isinstance(level,bool) and level==5):
+             report.ok("COLLECTION_EXTENSIONS","PDF 1.7 container has required Adobe Extension Level 5 metadata",{"BaseVersion":base,"ExtensionLevel":observed_pdf_value(level)})
+         else:
+             report.fail("COLLECTION_EXTENSIONS","PDF 1.7 container missing required Adobe Extension Level 5 metadata",{"BaseVersion":base,"ExtensionLevel":str(level)})
+@@ -5038,18 +5048,13 @@
+             report.ok("XMP_PRODUCER_SEMANTICS","EA-PDF creation software field pdf:Producer appears to identify the software that created the EA-PDF file",{"value":producer})
+ 
+     if cdate:
+-        if summary and summary.get("sent_norm"):
+-            create_dt=parse_xmp_datetime(cdate)
+-            sent_dt=parse_xmp_datetime(summary.get("sent_norm",""))
+-            if create_dt is not None and sent_dt is not None:
+-                if create_dt == sent_dt:
+-                    report.fail("XMP_CREATEDATE_SEMANTICS","EA-PDF file creation date field xmp:CreateDate matches the source email sent date instead of the EA-PDF file creation date",{"value":cdate,"source_sent":summary.get("sent_raw","")})
+-                elif create_dt < sent_dt:
+-                    report.fail("XMP_CREATEDATE_SEMANTICS","EA-PDF file creation date field xmp:CreateDate is earlier than the source email sent date",{"value":cdate,"source_sent":summary.get("sent_raw","")})
+-                else:
+-                    report.ok("XMP_CREATEDATE_SEMANTICS","EA-PDF file creation date field xmp:CreateDate appears distinct from the source email sent date",{"value":cdate,"source_sent":summary.get("sent_raw","")})
+-            else:
+-                report.warn("XMP_CREATEDATE_SEMANTICS","Could not compare EA-PDF file creation date field xmp:CreateDate to the source email sent date",{"value":cdate,"source_sent":summary.get("sent_raw","")})
++        report.warn("XMP_CREATEDATE_SEMANTICS","Creation provenance cannot be established from xmp:CreateDate and source Sent alone",{
++            "value":cdate,"source_sent":summary.get("sent_raw","") if summary else "",
++            "assessment":"unavailable",
++            "reason":"Equality, ordering or difference between the dates does not prove which resource or event the timestamp describes.",
++            "needed_evidence":"Independent evidence of the EA-PDF creation event; required field presence and PDF/A metadata validation remain separate.",
++            "upstream_issue":"https://github.com/pdf-association/report-an-issue/issues/22",
++        })
+ 
+ def check_source_media_types(afiles,eapdf_conf,report):
+     source=[f for f in afiles if f["afrelationship"]=="Source"]

@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "pdfa": "PASS",
+  "selected_iso": [
+    "PASS"
+  ],
+  "failures": [],
+  "staging_removed": true
+}

@@ -1,0 +1,18 @@
+From: Sender <sender@example.invalid>
+To: Reader <reader@example.invalid>
+Date: Fri, 16 Oct 2026 12:00:00 +0000
+Message-ID: <child-acceptance@example.invalid>
+Subject: Child acceptance
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary=child-fixture
+
+--child-fixture
+Content-Type: text/plain; charset=UTF-8
+
+Email body.
+--child-fixture
+Content-Type: text/plain; charset=UTF-8
+Content-Disposition: attachment; filename=native.txt
+
+Original native attachment bytes
+--child-fixture--

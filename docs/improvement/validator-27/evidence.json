@@ -1,0 +1,123 @@
+{
+  "scope": "V27 exact decoded source filename identity; existing association policy boundaries retained",
+  "verification": {
+    "unit_tests": {
+      "run": 545,
+      "passed": 505,
+      "skipped": 40,
+      "log": "unit-tests.log"
+    },
+    "focused_source_tests": 10,
+    "custom_comparisons": {
+      "cases": 232,
+      "prior_pdf_hashes_and_outcomes_unchanged": 224,
+      "reviewed_outcome_changes": 6,
+      "permitted_forms_now_pass": 4,
+      "invented_alias_now_incomplete": 1,
+      "genuine_media_failure_retained": 1,
+      "results": "custom-regressions.json"
+    },
+    "pdf_probes": {
+      "cases": 8,
+      "identical_bytes_before_after": true,
+      "pdfa_passes": 8,
+      "iso_passes": 8
+    },
+    "entry_points": {
+      "cli": 4,
+      "isolated_workers": 4,
+      "all_expected_outcomes": true
+    },
+    "retained_creator_profiles": {
+      "cases": 12,
+      "pdfa_passes": 12,
+      "iso_passes": 12,
+      "unchanged_operand_or_child_failures": 12,
+      "creator_acceptance": false
+    }
+  },
+  "inputs": {
+    "snapshot": ".eapdf-verification-v27",
+    "manifest": "verification-inputs.json",
+    "files": 818,
+    "runtime_archive": "runtime-inputs.zip",
+    "runtime_archive_sha256": "e129177476088c42f7946936e98ca67e59c1463325c28745395cd9267db3940d"
+  },
+  "creator": {
+    "unchanged": true,
+    "jar_sha256": "272ad741590552489dfb6d096f7ee4b01035fb3faf1c76d817394c0c2ad5e16a",
+    "new_java_build": false,
+    "reused_exact_profile_outputs": true
+  },
+  "limits": [
+    "Display cleanup is unchanged; exact raw UF/F text is used for source filename association.",
+    "Existing basename/path policy and checksum priority remain; original platform and occurrence identity are not certified.",
+    "V24 creator conformance remains failed on operands. No Java/full packaged acceptance is claimed.",
+    "Forty skips, eleven decisions and remaining shared/obligation/inventory coverage stay explicit."
+  ],
+  "artifacts": {
+    "README.md": "7fc112d02cade13ac77a2104cdfefb704b00228d3598c1ba69508f4df4efa7e5",
+    "application.patch": "86c1237b0491644ceb696d8802df9d4715f9dfab7ee582a8663024c2be506b3e",
+    "assemble-evidence.py": "820051840b7fb4e634e5731c950373a1b6457d13b6c1943b5993c6039f290e90",
+    "before-validate_eapdf.py": "7c5503b731d32431fda3fb0bd9b2f35463c5c6bc14223af40f302e3a684580e8",
+    "before-validator_rule_text.json": "13a4f0605b4aededb83b207926dac18f92941d9cf3fe7ef37bf35ae0d865cec6",
+    "custom-regressions.json": "76325a8cb6dc10e55bc176510b7c9ec766a94068927e8a576e6b7eea074a2458",
+    "custom-regressions.log": "5217e84e64eecaedfd5caaa34593a409987c4293a73f49af611f1ab6bf191366",
+    "freeze-inputs.py": "7519f81946bc76a0f13dbd8dade0b8f7829b48651049128c591577e551b34d2f",
+    "pdf-reports/accessibility-1c-retained-profile.json": "47172cb32e748b7ee254bc1d28248ef2d340107ff1ab98210acebf5feb9f14cc",
+    "pdf-reports/accessibility-1ci-retained-profile.json": "52804fafe3dc6d4f2092abb9efb90a9b0679ab694bcb9464e98954dbf46bb320",
+    "pdf-reports/accessibility-1m-retained-profile.json": "60238bad296e9de585226094433413cf37b880b689204667efbc3331ae0fcf45",
+    "pdf-reports/accessibility-1mi-retained-profile.json": "f8e86d9b878da522ca37318a84d81211f46666296ad758babd142c93ed688179",
+    "pdf-reports/accessibility-1s-retained-profile.json": "7e1f91fe0be45d36752f103d2ee0c3078fb5a9b771c46b671cf71c92896b37ad",
+    "pdf-reports/accessibility-1si-retained-profile.json": "a48262a32c7be516dc0cdff556f621654099e3085ba35fa11431c605db25cc72",
+    "pdf-reports/alias-universally-wrong-media-after.json": "7555b7aa36ee11f2eb671f70d0f6f8c326e5cecd21073e0f05124e74dc7d35d9",
+    "pdf-reports/alias-universally-wrong-media-before.json": "8e5467d22e2888a61f244eff600c4cab1e5e6920c6edfd65be53bb071ebd267b",
+    "pdf-reports/exact-double-space-after.json": "b5866042efbecadbf83c38f637cfa683be689fdbbd17d1fbee6de73bc3a6cbdd",
+    "pdf-reports/exact-double-space-before.json": "7cfaaef9d76577ee62be32b2723a788373e99398daca57d121fe5924ae96a8c6",
+    "pdf-reports/exact-double-space-cli.json": "7e08eff575f7a41a0a5236196854a67cc45c1e678e40367397d0c7929c52e5ad",
+    "pdf-reports/exact-double-space-web-worker.json": "eef15c370bde3db2420111f661dd1af04f25281c7eb7b96eadba8f64487a3c81",
+    "pdf-reports/exact-double-space.html": "a6409ca2e07404176c3319aec33e840c403c4f7ae09b61b84ac348c769b8bbb9",
+    "pdf-reports/exact-double-space.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pdf-reports/invented-alias-after.json": "f542adec3dcdde495af9daf402572e141fd49b9c784ca9a35c0d1d37429a44d2",
+    "pdf-reports/invented-alias-before.json": "fe8decefc45afaa39447aee0e17780164c6343c2ddc540c7ee2af0c6f4af705a",
+    "pdf-reports/invented-alias-cli.json": "a806c181f9fc602915e969a4a0dee51828c30608f6688c9c12e84d921effa828",
+    "pdf-reports/invented-alias-web-worker.json": "7d0f4219389b3f2941a7dfe9872e6266a10aa79b5d8ce2462e68aec6b5932482",
+    "pdf-reports/invented-alias.html": "204491d96b7cd4ef5c3f45a4af15529a15321086c8b43832eabc6fe60cd99315",
+    "pdf-reports/invented-alias.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pdf-reports/leading-trailing-after.json": "651eee6e16527b1236706ba5c97ca13aa1a2a8bec5e8cc75ba8a915549832bdd",
+    "pdf-reports/leading-trailing-before.json": "abeeb0982a3b3eda547a44c17c99e83a11ffeac333967330b2ccfd14598ddcfb",
+    "pdf-reports/normal-1c-retained-profile.json": "18b0f8b13af5018839366ae672e97ed3ae97f7491c283b646b1eb3e80b5e76a5",
+    "pdf-reports/normal-1ci-retained-profile.json": "3004213ed3a555d0efbcdf9e35c2987b8caa6803015056d2fcf99deaee2160b3",
+    "pdf-reports/normal-1m-retained-profile.json": "dd266be5314d54ca5574f64821874f31e5272536c6ba3730784a1e09aa16dd30",
+    "pdf-reports/normal-1mi-retained-profile.json": "08eaf06991dc3d48463131312cc55892845c74698d1babbe726a04386a7207a6",
+    "pdf-reports/normal-1s-retained-profile.json": "cfb82fd0ea5c4ca40987b97d92c1c21940fef677c514a792de2b98c332e08af5",
+    "pdf-reports/normal-1si-retained-profile.json": "f610d336fe3ecc785edb076ca78d7535ab7f7d7e6e904b1bef55b98c4fdbf515",
+    "pdf-reports/original-paths-after.json": "8cd6ffe91e304689b029c4e70d03e0c1daf24323a7cd4743e0c9a7e08199b279",
+    "pdf-reports/original-paths-before.json": "c069d5c1a53a93a2f4995fea995e7f6991022619996c5f4284f2bcd7d1712de9",
+    "pdf-reports/unicode-space-after.json": "d5b1d734c335692388192f1084d64da76795f4b572fa68a66f18a7f7c3d56cba",
+    "pdf-reports/unicode-space-before.json": "0141fc459cb26fb11cd8ddcdd409c8c50ebfeba5935d935f57f7bac14309b11a",
+    "pdf-reports/unique-checksum-alias-after.json": "3e965cc799842fcda70745be6292c58a61fce6d4e20ef65ce903297371fa4665",
+    "pdf-reports/unique-checksum-alias-before.json": "c4f0cfc21be9cd193af3391a4f7be32ad75310076791f5af732ad3aee7555de3",
+    "pdf-reports/unique-checksum-alias-cli.json": "eecb0debdb057f36c572812194362856e09dff48687ea8f20a76037dcb429a65",
+    "pdf-reports/unique-checksum-alias-web-worker.json": "5d5cadbdc3b787d526df0b2686261280ebfb045d37ef69f3e9441b6ddd4eb97f",
+    "pdf-reports/unique-checksum-alias.html": "7b4bb9ce1f8e2f79c41e6f2c75c08fcb04245ffdf4dbc3c5071a8ddf4f1f61e6",
+    "pdf-reports/unique-checksum-alias.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pdf-reports/wrong-size-after.json": "f9b4ac346409129bd65f3f542cb53798bf4cc206f0fcf56b955046868b9263a4",
+    "pdf-reports/wrong-size-before.json": "f9808a6576c09f1ad3a54f89c2cb6ce612e162fda4f636273aa6a1f689deeedd",
+    "pdf-reports/wrong-size-cli.json": "8988bceb04590c43d927a089929eeae30e3a415999ecdc1f5d4027c0c3c819dc",
+    "pdf-reports/wrong-size-web-worker.json": "7c829e3597ce43962708ba58bf12470cf3ab8686644670095514f1407b5a0791",
+    "pdf-reports/wrong-size.html": "2263eabd41163a63774cb7d67575000a33d3610ed511aa0a99f402066d895286",
+    "pdf-reports/wrong-size.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pdf-results.json": "d76dcd0f295db1d9cabf01f7cd74638d22c5269ee3aea17fbb96d2af473d7978",
+    "pdf-verification.log": "cb619903791ea3373ee4c673ca174076ae33a68084762a1485300dccc6028ff5",
+    "requirements-audit.log": "f02bb68322331c3e72ffb5f9dc7dcc08d3d746a2c4bb21554175e452c7d3a9cd",
+    "rule-browser.log": "791b526d134d2ed132c2486459ee8b6d0f4c2f59515accdd828dfd11bad02fa4",
+    "source-filenames-after.log": "3c15bc7ae576d0593770f813df4a055e3673596526dd3251f6e039bf6d1db928",
+    "source-filenames-before.log": "fc35359452a5179ac5b6fe090cb65b6a59f588d1c6fa76b96f216af7d165090c",
+    "unit-preflight.log": "d437eefbec516eca9365495e588472cec27625259aaa61644bccebe5d6eafd27",
+    "unit-tests.log": "5a9b7b50d351a40a386b094e9d7017b4f08563e7be5877bb5a2950d79caedce7",
+    "verification-inputs.json": "0d54aac3a29539b8bb97b1f00b3584f0ae45cd8244107a33f2275a8f6de21c54",
+    "verify-pdfs.py": "b12ce7c545d64e458e90c8d1c1180e3bad64dedf769ecf5b778c762c909613b0",
+    "verify-regressions.py": "09ee95ed97a064b052aeee278ccc4c02364f65fa36d4a5a9078f0bc77179107e"
+  }
+}

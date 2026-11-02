@@ -1,0 +1,309 @@
+[
+  {
+    "id": "dictionary-text-valid",
+    "array_form": false,
+    "mutation": null,
+    "property": "Mail_MessageID",
+    "value_kind": "string",
+    "value": "<batch01@example.invalid>",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "array-text-valid",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_MessageID",
+    "value_kind": "string",
+    "value": "<batch01@example.invalid>",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "dictionary-name-as-text",
+    "array_form": false,
+    "mutation": null,
+    "property": "Mail_MessageID",
+    "value_kind": "name",
+    "value": "Example",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "dictionary-dictionary-as-text",
+    "array_form": false,
+    "mutation": null,
+    "property": "Mail_MessageID",
+    "value_kind": "dictionary",
+    "value": null,
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "dictionary-text-as-count",
+    "array_form": false,
+    "mutation": null,
+    "property": "Mail_NumberAttachments",
+    "value_kind": "string",
+    "value": "2",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "array-name-as-text",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_MessageID",
+    "value_kind": "name",
+    "value": "Example",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "array-dictionary-as-text",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_MessageID",
+    "value_kind": "dictionary",
+    "value": null,
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "array-text-as-count",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_NumberAttachments",
+    "value_kind": "string",
+    "value": "2",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "unicode-text-valid",
+    "array_form": false,
+    "mutation": null,
+    "property": "Mail_Subject",
+    "value_kind": "string",
+    "value": "caf\u00e9",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "zero-count-valid",
+    "array_form": false,
+    "mutation": null,
+    "property": "Mail_NumberAttachments",
+    "value_kind": "integer",
+    "value": 0,
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "array-size-valid",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_SizeInBytes",
+    "value_kind": "integer",
+    "value": 330,
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "generic-real-valid",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_X_Example",
+    "value_kind": "real",
+    "value": "1.5",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "generic-integer-valid",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_X_Example",
+    "value_kind": "integer",
+    "value": -2,
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "generic-boolean-valid",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_X_Example",
+    "value_kind": "boolean",
+    "value": true,
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "generic-text-valid",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_X_Example",
+    "value_kind": "string",
+    "value": "example",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "array-as-text",
+    "array_form": false,
+    "mutation": null,
+    "property": "Mail_MessageID",
+    "value_kind": "array",
+    "value": null,
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "null-as-text",
+    "array_form": false,
+    "mutation": null,
+    "property": "Mail_MessageID",
+    "value_kind": "null",
+    "value": null,
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "boolean-as-text",
+    "array_form": false,
+    "mutation": null,
+    "property": "Mail_MessageID",
+    "value_kind": "boolean",
+    "value": false,
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "real-as-text",
+    "array_form": false,
+    "mutation": null,
+    "property": "Mail_MessageID",
+    "value_kind": "real",
+    "value": "2.5",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "real-as-count",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_NumberAttachments",
+    "value_kind": "real",
+    "value": "2.0",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "boolean-as-count",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_NumberAttachments",
+    "value_kind": "boolean",
+    "value": true,
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "negative-as-count",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_NumberAttachments",
+    "value_kind": "integer",
+    "value": -1,
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "generic-name-invalid",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_X_Example",
+    "value_kind": "name",
+    "value": "Example",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "generic-dictionary-invalid",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_X_Example",
+    "value_kind": "dictionary",
+    "value": null,
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "generic-array-invalid",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_X_Example",
+    "value_kind": "array",
+    "value": null,
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "generic-null-invalid",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_X_Example",
+    "value_kind": "null",
+    "value": null,
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "generic-header-wrong-tag",
+    "array_form": true,
+    "mutation": null,
+    "property": "Mail_X_Example",
+    "value_kind": "string",
+    "value": "example",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TAG_SCOPE"
+    ],
+    "tag": "Mail_ContentSet"
+  }
+]

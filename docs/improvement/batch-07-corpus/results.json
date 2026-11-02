@@ -1,0 +1,71 @@
+[
+  {
+    "case": "connected-custom",
+    "sha256": "21a02c524a7bf66254d172e8a6f92ef54d4364e7e8346719a3a15513980e6fd6",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "content_recommendation": "PASS",
+    "header_recommendation": "WARN",
+    "observed_field_pairs": 5,
+    "expected_result_observed": true
+  },
+  {
+    "case": "custom-untagged",
+    "sha256": "f4a39d1909eaf81c3010b123d9a70a50d4437695b9f909c232c32f0cd99c33fb",
+    "pdfa": "PASS",
+    "eapdf": "INCOMPLETE",
+    "failures": [],
+    "content_recommendation": "WARN",
+    "header_recommendation": "N/A",
+    "observed_field_pairs": 0,
+    "expected_result_observed": true
+  },
+  {
+    "case": "custom-unmarked-paint",
+    "sha256": "7bfefbe2658ee3b83d7629ab2c48612bf20a7463235353332169c515482b15da",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "content_recommendation": "WARN",
+    "header_recommendation": "WARN",
+    "observed_field_pairs": 5,
+    "expected_result_observed": true
+  },
+  {
+    "case": "standard-body",
+    "sha256": "28252977d6ebba6ac9287e25f23d4615738679b457ce3d38b507bd511c925ef6",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "content_recommendation": "PASS",
+    "header_recommendation": "WARN",
+    "observed_field_pairs": 5,
+    "expected_result_observed": true
+  },
+  {
+    "case": "header-one-pair-generic",
+    "sha256": "8405a2346dc9b321e0a543f51880615f5687d7078c8d47a2b306fd9519943007",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "content_recommendation": "PASS",
+    "header_recommendation": "WARN",
+    "observed_field_pairs": 4,
+    "expected_result_observed": true
+  },
+  {
+    "case": "header-values-only",
+    "sha256": "0e0ae677e3fb6ceee0b08004c475fc4f902f5eb4f38c6bce18c5268ba5470874",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "MAIL_FIELDVALUE_WITH_NAME",
+      "MAIL_FIELD_CHILDREN"
+    ],
+    "content_recommendation": "PASS",
+    "header_recommendation": "WARN",
+    "observed_field_pairs": 0,
+    "expected_result_observed": true
+  }
+]

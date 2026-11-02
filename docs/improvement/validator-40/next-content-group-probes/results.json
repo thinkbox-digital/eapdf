@@ -1,0 +1,22 @@
+[
+  {
+    "file": "docs/improvement/validator-40/next-content-group-probes/matching-group.pdf",
+    "sha256": "7d0d846d00ef938206c4c0d6347d8cc61767631fbd7cd5e7814ef25754ed0281",
+    "status": "FAIL",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": [
+      "MAIL_CONTENTGROUP_CHILDREN"
+    ]
+  },
+  {
+    "file": "docs/improvement/validator-40/next-content-group-probes/foreign-group-type.pdf",
+    "sha256": "d8cb8830fbd3b3f728f87460e70d47742f9e3edd02a37ce37b1117f51b425541",
+    "status": "FAIL",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": [
+      "MAIL_CONTENTGROUP_CHILDREN"
+    ]
+  }
+]

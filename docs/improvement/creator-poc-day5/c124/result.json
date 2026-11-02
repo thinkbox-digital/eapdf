@@ -1,0 +1,101 @@
+{
+  "checkpoint": "C124",
+  "reproduced_loss": "All71 supplied PST records expose native transport header blocks, but reconstructed EML exports drop non-core headers. Twenty-one lose37Received lines. Header source data was not otherwise retained.",
+  "fix": "Preserve the exact native transport header property as UTF-8 text through existing Source file-set Supplement handling. Carry attached-email header companions into the retained parent source set. Exclude source-set companions from MIME attachment construction and boundary keys. Ensure a primary Source is generated when only companions were initially present.",
+  "source_omission_policy": "Unchanged: isolated/default-PST profiles omit the retained source set. Header companions do not count as email attachments or add page annotations.",
+  "java_full": {
+    "tests": 252,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changed_production_classes": [
+    "eapdf/Common.class",
+    "eapdf/PdfMailWriter.class",
+    "eapdf/PstReader.class"
+  ],
+  "source_reconstruction_and_native_payloads": "All78 pre-existing record/content/source fingerprints exactly match before/after.",
+  "header_audit": {
+    "blocksWithReceived": 27,
+    "exactPreservedHeaderBlocks": 77,
+    "messages": 78,
+    "nativeHeaderBlocks": 77,
+    "receivedLines": 87
+  },
+  "pdf_payload_verification": {
+    "retained_archive_exact_header_blocks": 71,
+    "isolated_archive_header_blocks": 0,
+    "collection_parent_exact_header_blocks": 6,
+    "collection_children": 7,
+    "collection_children_exact_header_blocks": 6
+  },
+  "collection": {
+    "status": "PASS",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "failures": [],
+    "staging_removed": true
+  },
+  "saved_samples": {
+    "1s": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "a4fa73911964106c5b59d5963e7ced4257340009149958a5e9a3cb85e17e80c0"
+    },
+    "1si": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "8118cee8a8a59a0c09beff9132a6ce30ad6a613af689b410663f10e6ccdd146d"
+    },
+    "1m": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "b9e76c9af6f4c91d24dbe1d766a1f29a636f9d2854839f0796b4ab37e18ffbf8"
+    },
+    "1mi": {
+      "status": "INCOMPLETE",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "d75643d7a3b6906d321f3945779eee1aec15948746cd3d9e24fe6c85c09bac9d"
+    },
+    "1c": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "3f08576045cb7d4bb3f134fdc847d2f6a9ae78b5e484f0ee8e5399265278892a"
+    },
+    "1ci": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": 0,
+      "sha256": "3bac5e78126589b7189b6816886e65463183ab3c5a281c00031715755c86e278"
+    }
+  },
+  "initial_verification_adjustments": [
+    "Discarded an initial isolated prototype that did not exercise source retention. The retained direct-builder attempt exposed the existing missing-primary-Source fallback when companions exist; corrected the creator fallback.",
+    "Used the existing base text/plain embedded MIME type and UTF-8 file description; a prototype with MIME parameters was rejected rather than accepted."
+  ],
+  "frozen_validator_changed": false,
+  "jars": {
+    "emailtopdfa.jar": "95de968816dd0994c9196774aaf2e8ac10b5f8fcf880da7ea2ca47d718f4eec5",
+    "emailtopdfa-gui.jar": "6c1a9844faaaf77d3d6e824073851601d76d89b929812118d827fcaac9f208b7"
+  },
+  "known_limits": [
+    "Isolated PST1mi native attachment comparison INCOMPLETE.",
+    "C122 full large-mailbox frozen validator resource exhaustion remains recorded; not a conformance PASS.",
+    "Existing retained MSG source-comparison limit unchanged."
+  ],
+  "temporary_shared_staging_removed": true,
+  "continues": "Core creator preservation work remains active until told to stop."
+}

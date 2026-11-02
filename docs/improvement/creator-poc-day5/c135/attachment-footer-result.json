@@ -1,0 +1,9 @@
+{
+  "pdfs": 31,
+  "native_attachment_payloads_exact": 24,
+  "unexpected_note_annotations": 0,
+  "unexpected_first_page_attachment_icons": 0,
+  "footer_occurrences": 31,
+  "footers_at_original_last_page_and_geometry": true,
+  "note": "Checks existing creator behavior on actual supplied MSG inputs; no new rendering or navigation feature."
+}

@@ -1,0 +1,9 @@
+{
+  "image_streams": 1433,
+  "unique_image_payloads": 1,
+  "repeated_image_compressed_bytes": 18481392,
+  "font_program_streams": 4301,
+  "unique_font_program_payloads": 2391,
+  "repeated_font_program_compressed_bytes": 14490862,
+  "pdf_bytes": 70485490
+}

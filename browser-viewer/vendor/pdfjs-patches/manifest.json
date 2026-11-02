@@ -1,0 +1,32 @@
+{
+  "version": "6.5.438",
+  "upstreamCommit": "0a4153349dc473ba950fc17941c5ca7eda43c1de",
+  "node": "24.19.0",
+  "sourceArchiveUrl": "https://codeload.github.com/mozilla/pdf.js/tar.gz/refs/tags/v6.5.438",
+  "sourceArchiveSha256": "eead5ce4cdc7682a791cb5661de089f1f89b6679593f11d6240e20186ac051ae",
+  "upstreamFiles": {
+    "src/core/catalog.js": "70dc38a0b7826b827917fed19b4fa74c46372482eec4a5bf63e10d5317f9b2bc",
+    "src/core/worker.js": "57d917d11b84691e89f4cac5c46d87c92c805b5843416c897915664f068b349c",
+    "src/display/api.js": "073bffc379d27d396317849f465d4879a17753d5241c2c5303cc10a9ce9d1479",
+    "package-lock.json": "c5fd587a68a583172c7b63e900a8b3440b3923a79c7d8696f2765b7e24715c56",
+    "gulpfile.mjs": "00c4125b7769cafe42fb5f3112f4ef7a7d1dfeebcf8a8381b83338e7802b4102",
+    "src/core/decode_stream.js": "4cca41cc39b02c6891771a03ed32bed88b60ed9e91adf41f7ea6595ae6d1da86"
+  },
+  "localInputs": {
+    "vendor/pdfjs-patches/0001-document-parts.patch": "959bb4c4a5c9d82f7241ffc6d1bb82675d89ce7de9e5f58475c078bf90a0ccbf",
+    "vendor/pdfjs-patches/build-task.mjs": "4aab30eba5ff01eaab59b3d31644e540fa5c6b7f3b3da7c25d0dcc329c735a28",
+    "vendor/pdfjs-patches/core.test.mjs": "b2e82db3648ab99baef88900275f2ef26badf5cf6cd0e88fbba1bf9c731f2558",
+    "scripts/rebuild-pdfjs.mjs": "72295a38628fbb69560d0a8632d6b4d96e08d8f7acde586d88a326c973a45640",
+    "vendor/pdfjs-patches/0002-document-assets.patch": "a7165aa6c984a24b2730ee4a2bf745faa2930b4a614ac44c516735cfd942ac95",
+    "vendor/pdfjs-patches/assets.test.mjs": "9ec6c173fecf45a6a4ac7b0183fd517ea468e67885d29dec64088bec772cbdaf"
+  },
+  "outputs": {
+    "vendor/pdfjs-patched/pdf.mjs": "b8cd5105b3bb5d2814e9e73cdc8863a4c33557102b1eb634e7a410c1a600b730",
+    "vendor/pdfjs-patched/pdf.worker.mjs": "0719f86b87a62a2998c73841a67c00829bb274c622d59a6b6da14fcd26c3ae5f"
+  },
+  "internalEventBuildDefine": "0a475cb6-573c-46ed-869d-fa7c5839d995",
+  "patches": [
+    "vendor/pdfjs-patches/0001-document-parts.patch",
+    "vendor/pdfjs-patches/0002-document-assets.patch"
+  ]
+}

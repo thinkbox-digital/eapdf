@@ -1,0 +1,66 @@
+{
+  "authority": "EA-PDF9.1/9.4; ISO32000-2 Table43 and section7.11.4.2 RF filename/stream pairs; unavailable decoding is distinct from known missing evidence.",
+  "boundary": "RF pair Unicode decoder guards, independent metadata/stream checks and known violations; no general file-specification text-decoding or original inventory certification.",
+  "seed": "tests/fixtures/eapdf/validator-coverage-branches/rf-valid.pdf",
+  "seed_sha256": "b7ff18a3add839071c8c75878530866b545040396d4ac3a40d3dc6402d90b464",
+  "cases": [
+    {
+      "file": "unreadable-utf8.pdf",
+      "sha256": "be5c2979238fe48c2bcc1ea340f2a9502be463171e9212a1e50005ee4df3a748",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "unreadable-surrogate.pdf",
+      "sha256": "424c607cec34bb439c25e841be73bb14bd335166f029e718655efc2e1f929a38",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "unreadable-bad-pair.pdf",
+      "sha256": "07b24061f8608e95b838fe757bc708f61b35b4f312a08d6bee363cdd07463abc",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "SOURCE_FILE_SET"
+      ]
+    },
+    {
+      "file": "unreadable-revision.pdf",
+      "sha256": "0844c68b8158c454da4d89ba6b9c1841789f1aecba6012efec1788c18a9305bf",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "EAPDF_REV"
+      ]
+    },
+    {
+      "file": "valid-utf8.pdf",
+      "sha256": "6ec1c994aaa3ce069db09ea5177b6e071e887653e84300dc54fc0b7ba2c813ff",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "valid-utf16.pdf",
+      "sha256": "512f15a0ab396787b05298d5d01fe7860de21da0a38d13dd841450d07b8a3c08",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "decoded-empty.pdf",
+      "sha256": "c7ef90fd4e4aed5252d1cb8dad88721583030239e65dc12ba151493d477aafdd",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ASSET_MATCH",
+        "SOURCE_FILE_SET"
+      ]
+    },
+    {
+      "file": "wrong-name-class.pdf",
+      "sha256": "59b1e795704572760930afb20b347a430141314f1fcb801666e53c9f2cb3a605",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ASSET_MATCH",
+        "SOURCE_FILE_SET"
+      ]
+    }
+  ]
+}

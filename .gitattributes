@@ -1,0 +1,21 @@
+*.pdf binary
+*.docx binary
+*.pst binary
+*.msg binary
+*.ttf binary
+*.xlsx binary
+*.zip binary
+*.eml binary
+*.mbox binary
+*.MSG binary
+
+# Historical patches/snapshots and verbatim licenses preserve original whitespace.
+docs/improvement/** whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
+third_party_licenses/** whitespace=-blank-at-eof
+
+# Preserve the standalone validator's verbatim third-party license text.
+validator-desktop/src/main/resources/META-INF/eapdf/third-party/** whitespace=-blank-at-eol,-blank-at-eof
+
+# Checksum-controlled renderer artifacts and verbatim git-am patches.
+third_party/maven/** -text
+third_party/openhtmltopdf/patches/*.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab

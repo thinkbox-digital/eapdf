@@ -1,0 +1,69 @@
+{
+  "status": "PASS",
+  "browser": "156.0.8078.47",
+  "offline": true,
+  "remoteRequests": 0,
+  "uncaughtErrors": 0,
+  "fixtures": [
+    {
+      "id": "example-1s",
+      "inputSha256": "b4fb687d52613c4f49a9e26b7c41498dc4bb39b34c04bd198f0cca6c163d4d48",
+      "expectedSha256": "25e5ef516f95d2d679ee346c12dc731c8ca45e2ecdeb304d20abd920b66601f5",
+      "parts": 3,
+      "pages": 2,
+      "status": "PASS",
+      "diagnosticCodes": []
+    },
+    {
+      "id": "example-1m",
+      "inputSha256": "22c66e070532356788a2753601d42b5e4c7f9b81e05c759d6f7ccca81bea8510",
+      "expectedSha256": "e510e42b347c4afe7e51b30569c4d08c4244b74c61149f1ffe65d35c92ad1a63",
+      "parts": 6,
+      "pages": 5,
+      "status": "PASS",
+      "diagnosticCodes": []
+    },
+    {
+      "id": "s-invalid-page-ref",
+      "inputSha256": "9752d6b2b27f444870c8c6c9ecfe51480f381353e6688742671ebf35320d9901",
+      "expectedSha256": "bb1ef6045f942ed9d2423786d3ce1050a8e5aac8ed5a82f0e45fcf1ff7b8d17a",
+      "parts": 3,
+      "pages": 1,
+      "status": "PASS",
+      "diagnosticCodes": [
+        "INVALID_PAGE_RANGE"
+      ]
+    },
+    {
+      "id": "mi-reversed-range",
+      "inputSha256": "d570063a2856e6a99bd1127b0d3e77c0679392060b8246c279731cff44a65ff7",
+      "expectedSha256": "cb235dbbadb63200b3da81876a2165687d96c704b22b090e3e29d255e436ad0b",
+      "parts": 5,
+      "pages": 2,
+      "status": "PASS",
+      "diagnosticCodes": [
+        "INVALID_PAGE_RANGE"
+      ]
+    },
+    {
+      "id": "s-dpart-cycle",
+      "inputSha256": "e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+      "expectedSha256": "5f5101eb2135ec67a69f3517c89316ba956fc47dd163c42880d833b97468ae80",
+      "parts": 3,
+      "pages": 1,
+      "status": "PASS",
+      "diagnosticCodes": [
+        "REPEATED_DPART"
+      ]
+    },
+    {
+      "id": "ordinary",
+      "inputSha256": "c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+      "expectedSha256": "7df1fd3c74b10ba7ebfe049efa47d933f4f3531bc256591e27c66605af6fbfad",
+      "parts": 0,
+      "pages": 2,
+      "status": "PASS",
+      "diagnosticCodes": []
+    }
+  ]
+}

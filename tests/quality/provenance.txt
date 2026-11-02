@@ -1,0 +1,90 @@
+Independent source expectations and visual references — 2026-11-02
+
+The corpus manifest is reviewed test data, not output from creator readers.
+Tests must not rewrite it or update visual baselines automatically.
+
+EML: sample.eml and test3.eml are checked with Python's email parser against
+pinned source hashes, header fields, attachment hashes and selected body text.
+The original bytes must be present in the PDF. Four existing reference pages.
+
+MSG: in/EmailWith2Attachments.msg is decoded independently with olefile 0.46.
+Transport headers (007D), native subject (0037), body (1000), attachment names
+(3707/3704) and payloads (37010102) establish the manifest. Both Office document
+attachments are hashed independently. Exact MSG source bytes must be embedded.
+Two reviewed reference pages.
+
+MBOX: in/enron-sample.mbox contains two messages from in/enron.mbox. Subjects,
+addresses, dates, Message-IDs and normalized complete plain-text bodies were
+cross-checked against the full original mailbox using Python mailbox/email.
+The small sample is retained for portable CI; the large mailbox is not required
+by this gate. The PDF embeds per-message RFC822 derivatives, not the MBOX file.
+Three reviewed reference pages, including the finding aid.
+
+PST: in/quality-attached-message.pst is a symlink to the existing real fixture
+src/test/resources/eapdf/email/attached-message.pst (2,302,976 bytes).
+Independent exports used readpst 0.6.76 and pffexport 20180714 (libpff), with:
+  readpst -e -j 1 -o <empty directory> <PST>
+  pffexport -f all -d -t <export prefix> <PST>
+The compressed source-evidence/small-pst-independent-exports.tar.gz retains
+both outputs for review without rerunning either tool in CI. The source PST
+hash in corpus.json pins the inspected input. Seven top-level messages plus
+one attached email and its native DOCX are checked. Message00002 through
+Message00008 map to the manifest reference_message fields. Folder membership
+comes from libpff's native hierarchy, not readpst's output directory name.
+Thirteen reviewed reference pages, including the finding aid and attachment page.
+
+For Message00008 and its child, no transport-header date or SMTP author exists.
+Native libpff properties establish the Exchange author, recipient and timestamps;
+readpst's invented MAILER-DAEMON author is not treated as source evidence.
+The native sent times are 2020-11-26T22:18:29.446Z and 22:18:00.773Z. The
+reconstructed RFC822 Date and PDF Sent fields currently have whole seconds.
+The manifest separately records both native and derivative values. This is a
+known loss of native precision, explicitly warned by the creator and carried
+into the quality result. A PASS does not claim exact native-time preservation.
+The attached email itself is reconstructed; its DOCX bytes must match the native
+libpff export SHA-256. The original PST container is not embedded in the PDF.
+
+The initial independent check also caught base64 wrapping on message/rfc822.
+The creator now writes unencoded encapsulated bytes with binary transfer encoding
+and labels enclosing multiparts accordingly. RFC 2046 section 5.2.1 permits
+7bit, 8bit or binary, not base64, on message/rfc822:
+https://www.rfc-editor.org/rfc/rfc2046.html#section-5.2.1
+The oracle rejects the old wrapping; it does not silently decode around it.
+
+All 18 added pages were reviewed as contact sheets for layout, clipping,
+readability and missing content. Text and native bytes are checked separately.
+On the MBOX/PST finding-aid pages only the generated-at timestamp rectangle
+(46,104)-(230,116) is masked for raster comparison. Message dates, recipients,
+subjects, counts and all other content remain checked. No other page is masked.
+
+The fixtures/*_quality.pdf files are small, fixed deliberate-loss test inputs,
+created by the corrected local creator. Their metadata is NOT used to establish
+expected source facts. Fresh conversions must pass the same expectations and
+standalone Java/veraPDF validation. This sample does not establish support for
+all MSG/PST properties, all folder structures, malformed containers, large
+mailboxes, multilingual layouts, accessibility or every MIME encoding.
+
+Beta.6 update: reference pages and fixed deliberate-loss fixtures were regenerated
+with beta.6. Comparisons established unchanged pixels above the branding footer
+for EML/MBOX/PST. The MSG attachment list now follows stable parser traversal
+order rather than a hash-set order; names, byte hashes and remaining text are
+unchanged. Outlook attachment indices are not claimed as a display-order rule.
+The branding footer identifies beta.6. Source expectations remain independent
+and unchanged. New diagnostics are checked in the fresh PST job report.
+
+The legacy native-attachment ownership fixture is preserved byte-for-byte from
+commit c623da8, examples/pst/pst_sample_1mi.pdf. It contains the real GIF and
+renamed URL placeholders needed by test_attachment_owner_scope.py, which the
+new small release PST does not contain. No new export of the older mailbox was
+run. SHA-256: d0d3cab6a553faca434d7df428fc66e2dd32385f2b41972ebeab299fd2017739
+
+Frozen source-count regression: fixtures/pst_source_counts_legacy.pdf retained
+byte-for-byte from commit c623da8, examples/pst/pst_sample_1m.pdf.
+SHA-256: e91860baedc0c59475045452dc13ecc604351378d5eef9b881ed4ff1edd12f03
+Preserves deliberately incomplete transport-header source counts independently
+of the regenerated current examples.
+
+Beta.7 PST visual baseline reviewed 2026-11-02: source labels now match the
+embedded message_NN.eml filenames, and version footer advances. See
+docs/improvement/release-1.6.0-beta.7/visual-review.json. Comparison thresholds
+and masks are unchanged.

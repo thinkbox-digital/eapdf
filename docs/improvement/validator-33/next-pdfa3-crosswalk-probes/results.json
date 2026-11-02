@@ -1,0 +1,168 @@
+{
+  "file": "docs/improvement/validator-33/next-pdfa3-crosswalk-probes/candidate-3u.pdf",
+  "sha256": "d94dee365c5e29d8a60b03d0f3ce26985514bd3af2193b89a19d5b34e7f795be",
+  "status": "FAIL",
+  "pdfa": "FAIL",
+  "profile": "PDF/A-3U validation profile",
+  "iso": "N/A",
+  "pdfa_failures": [
+    {
+      "ruleStatus": "FAILED",
+      "specification": "ISO 19005-3:2012",
+      "clause": "6.8",
+      "testNumber": 4,
+      "status": "failed",
+      "failedChecks": 1,
+      "description": "The additional information provided for associated files as well as the usage requirements for associated files indicate the relationship between the embedded file and the PDF document or the part of the PDF document with which it is associated",
+      "object": "CosFileSpecification",
+      "test": "isAssociatedFile == true",
+      "checks": [
+        {
+          "status": "failed",
+          "context": "root/indirectObjects[100](55 0)/directObject[0]",
+          "errorMessage": "The file specification dictionary for an embedded file is not associated with the PDF document or any of its parts",
+          "errorArguments": []
+        }
+      ]
+    },
+    {
+      "ruleStatus": "FAILED",
+      "specification": "ISO 19005-3:2012",
+      "clause": "6.6.2.3.1",
+      "testNumber": 2,
+      "status": "failed",
+      "failedChecks": 7,
+      "description": "All properties specified in XMP form shall use either the predefined schemas defined in the XMP Specification, ISO 19005-1 or this part of ISO 19005, or any extension schemas that comply with 6.6.2.3.2",
+      "object": "XMPProperty",
+      "test": "isValueTypeCorrect == true",
+      "checks": [
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[12](http://www.pdfa.org/eapdf/ns/id/ - pdfmailid:version)",
+          "errorMessage": "XMP property does not correspond to type null",
+          "errorArguments": [
+            null
+          ]
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[13](http://www.pdfa.org/eapdf/ns/id/ - pdfmailid:rev)",
+          "errorMessage": "XMP property does not correspond to type null",
+          "errorArguments": [
+            null
+          ]
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[14](http://www.pdfa.org/eapdf/ns/id/ - pdfmailid:conformance)",
+          "errorMessage": "XMP property does not correspond to type null",
+          "errorArguments": [
+            null
+          ]
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[15](http://pdfa.org/declarations/ - pdfd:declarations)",
+          "errorMessage": "XMP property does not correspond to type null",
+          "errorArguments": [
+            null
+          ]
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[16](http://www.pdfa.org/eapdf/ns/meta/ - pdfmailmeta:email)",
+          "errorMessage": "XMP property does not correspond to type null",
+          "errorArguments": [
+            null
+          ]
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[17](http://www.pdfa.org/eapdf/ns/meta/ - pdfmailmeta:assets)",
+          "errorMessage": "XMP property does not correspond to type null",
+          "errorArguments": [
+            null
+          ]
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[18](http://www.pdfa.org/eapdf/ns/meta/ - pdfmailmeta:attachments)",
+          "errorMessage": "XMP property does not correspond to type null",
+          "errorArguments": [
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "ruleStatus": "FAILED",
+      "specification": "ISO 19005-3:2012",
+      "clause": "6.6.2.3.1",
+      "testNumber": 1,
+      "status": "failed",
+      "failedChecks": 7,
+      "description": "All properties specified in XMP form shall use either the predefined schemas defined in the XMP Specification, ISO 19005-1 or this part of ISO 19005, or any extension schemas that comply with 6.6.2.3.2",
+      "object": "XMPProperty",
+      "test": "isPredefinedInXMP2005 == true || isDefinedInMainPackage == true || isDefinedInCurrentPackage == true",
+      "checks": [
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[12](http://www.pdfa.org/eapdf/ns/id/ - pdfmailid:version)",
+          "errorMessage": "XMP property is either not predefined, or is not defined in any XMP extension schema",
+          "errorArguments": []
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[13](http://www.pdfa.org/eapdf/ns/id/ - pdfmailid:rev)",
+          "errorMessage": "XMP property is either not predefined, or is not defined in any XMP extension schema",
+          "errorArguments": []
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[14](http://www.pdfa.org/eapdf/ns/id/ - pdfmailid:conformance)",
+          "errorMessage": "XMP property is either not predefined, or is not defined in any XMP extension schema",
+          "errorArguments": []
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[15](http://pdfa.org/declarations/ - pdfd:declarations)",
+          "errorMessage": "XMP property is either not predefined, or is not defined in any XMP extension schema",
+          "errorArguments": []
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[16](http://www.pdfa.org/eapdf/ns/meta/ - pdfmailmeta:email)",
+          "errorMessage": "XMP property is either not predefined, or is not defined in any XMP extension schema",
+          "errorArguments": []
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[17](http://www.pdfa.org/eapdf/ns/meta/ - pdfmailmeta:assets)",
+          "errorMessage": "XMP property is either not predefined, or is not defined in any XMP extension schema",
+          "errorArguments": []
+        },
+        {
+          "status": "failed",
+          "context": "root/document[0]/metadata[0](275 0 obj PDMetadata)/XMPPackage[0]/Properties[18](http://www.pdfa.org/eapdf/ns/meta/ - pdfmailmeta:attachments)",
+          "errorMessage": "XMP property is either not predefined, or is not defined in any XMP extension schema",
+          "errorArguments": []
+        }
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "level": "FAIL",
+      "code": "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS",
+      "message": "PDF/mail-1{s,si} with attachments must use the required NonFullScreenPageMode",
+      "details": {
+        "profile": "s",
+        "NonFullScreenPageMode": "UseAttachments",
+        "is_pdf_name": true,
+        "expected": "UseOutlines",
+        "source_email_has_attachments": true,
+        "pdfa_part": 3
+      }
+    }
+  ]
+}

@@ -1,0 +1,514 @@
+[
+  {
+    "name": "eapdf.AdditionalSpecRuleTests",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.621"
+  },
+  {
+    "name": "eapdf.ArchiveFooterResourceTests",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.308"
+  },
+  {
+    "name": "eapdf.ArchiveStructureTests",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.001"
+  },
+  {
+    "name": "eapdf.AttachmentProfilePolicyTests",
+    "tests": "10",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "2.026"
+  },
+  {
+    "name": "eapdf.AutomaticArchiveNamingTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.941"
+  },
+  {
+    "name": "eapdf.CharacterReferencePreservationTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.134"
+  },
+  {
+    "name": "eapdf.CidUrlTests",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.013"
+  },
+  {
+    "name": "eapdf.CollectionChildAcceptanceTests",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.957"
+  },
+  {
+    "name": "eapdf.CollectionPortfolioTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.686"
+  },
+  {
+    "name": "eapdf.CreatorAccuracyTests",
+    "tests": "17",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.933"
+  },
+  {
+    "name": "eapdf.DeclarationNamespaceTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.119"
+  },
+  {
+    "name": "eapdf.DirectFindingAidTests",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.027"
+  },
+  {
+    "name": "eapdf.EmailContentRegressionTests",
+    "tests": "9",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.45"
+  },
+  {
+    "name": "eapdf.FlowedTextTests",
+    "tests": "9",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.046"
+  },
+  {
+    "name": "eapdf.GmailDownloadRecoveryTests",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.017"
+  },
+  {
+    "name": "eapdf.HeaderOperandTests",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.006"
+  },
+  {
+    "name": "eapdf.HiddenHtmlAlternativeTests",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.471"
+  },
+  {
+    "name": "eapdf.InternationalAttachmentTests",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.015"
+  },
+  {
+    "name": "eapdf.InternationalHeaderTests",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.017"
+  },
+  {
+    "name": "eapdf.InternationalSourceTypeTests",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.014"
+  },
+  {
+    "name": "eapdf.MarkedContentRepairTests",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.004"
+  },
+  {
+    "name": "eapdf.MboxFolderPreservationTests",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.147"
+  },
+  {
+    "name": "eapdf.MboxPreservationTests",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.009"
+  },
+  {
+    "name": "eapdf.MboxReadInventoryTests",
+    "tests": "7",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.176"
+  },
+  {
+    "name": "eapdf.MonthlyFilenameArchiveTests",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "3.763"
+  },
+  {
+    "name": "eapdf.MsgAddressPreservationTests",
+    "tests": "7",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.195"
+  },
+  {
+    "name": "eapdf.MsgAttachmentEncodingTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.223"
+  },
+  {
+    "name": "eapdf.MsgBodySelectionTests",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.024"
+  },
+  {
+    "name": "eapdf.MsgFilenameImageTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.137"
+  },
+  {
+    "name": "eapdf.MsgNameEncodingTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.14"
+  },
+  {
+    "name": "eapdf.MsgOfflineAlternativeTests",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.514"
+  },
+  {
+    "name": "eapdf.MsgSenderAddressTests",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.281"
+  },
+  {
+    "name": "eapdf.MsgSentDateTests",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.256"
+  },
+  {
+    "name": "eapdf.MsgTextEncodingTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.179"
+  },
+  {
+    "name": "eapdf.MsgThreadPreservationTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.127"
+  },
+  {
+    "name": "eapdf.MultipleFolderCollectionTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.044"
+  },
+  {
+    "name": "eapdf.OfflineImageAlternativeTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.172"
+  },
+  {
+    "name": "eapdf.OutlookInputKindTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.035"
+  },
+  {
+    "name": "eapdf.ParallelCpuBudgetTests",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.002"
+  },
+  {
+    "name": "eapdf.PdfAFontPolicyTests",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "5.478"
+  },
+  {
+    "name": "eapdf.PdfTextMappingTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.07"
+  },
+  {
+    "name": "eapdf.PdfWriterArchiveTests",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.16"
+  },
+  {
+    "name": "eapdf.PdfWriterSingleMessageTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.517"
+  },
+  {
+    "name": "eapdf.PreservationInventoryTests",
+    "tests": "10",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "5.552"
+  },
+  {
+    "name": "eapdf.PreservationRegressionTests",
+    "tests": "8",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.38"
+  },
+  {
+    "name": "eapdf.ProcessingLimitRepairTests",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "2.029"
+  },
+  {
+    "name": "eapdf.PstAuthorPreservationTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.11"
+  },
+  {
+    "name": "eapdf.PstBodySelectionTests",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.364"
+  },
+  {
+    "name": "eapdf.PstHeaderExportTests",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.44"
+  },
+  {
+    "name": "eapdf.PstItemSelectionTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.04"
+  },
+  {
+    "name": "eapdf.ReaderTests",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.038"
+  },
+  {
+    "name": "eapdf.RealWorldInputTests",
+    "tests": "24",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "19.577"
+  },
+  {
+    "name": "eapdf.RecipientGroupPreservationTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.095"
+  },
+  {
+    "name": "eapdf.ReleaseRegressionTests",
+    "tests": "9",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.979"
+  },
+  {
+    "name": "eapdf.RemainingPreservationTests",
+    "tests": "12",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.287"
+  },
+  {
+    "name": "eapdf.RemainingWorkflowTests",
+    "tests": "8",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.472"
+  },
+  {
+    "name": "eapdf.RuleAlignmentTests",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.57"
+  },
+  {
+    "name": "eapdf.SpecRepairTests",
+    "tests": "13",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.346"
+  },
+  {
+    "name": "eapdf.SubjectDecodingTests",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.16"
+  },
+  {
+    "name": "eapdf.SupervisedConversionTests",
+    "tests": "11",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.578"
+  },
+  {
+    "name": "eapdf.TextDecodeWarningTests",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.026"
+  },
+  {
+    "name": "eapdf.UnfixedRegressionTests",
+    "tests": "8",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "2.032"
+  },
+  {
+    "name": "eapdf.UserPropertiesArrayTests",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.012"
+  },
+  {
+    "name": "eapdf.WideEmailTableTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "3.268"
+  }
+]

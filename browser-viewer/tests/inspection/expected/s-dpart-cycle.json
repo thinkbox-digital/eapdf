@@ -1,0 +1,1231 @@
+{
+  "schemaVersion": 1,
+  "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+  "source": {
+    "sha256": "e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+    "byteLength": 2763
+  },
+  "identification": {
+    "pdfHeaderVersion": {
+      "state": "present",
+      "value": "2.0",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "header",
+          "text": "2.0",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+          "objectNumber": null,
+          "generation": null,
+          "path": "header/PDF-version"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "pdfCatalogVersion": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+          "objectNumber": 1,
+          "generation": 0,
+          "path": "object:1:0"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "effectivePdfVersion": {
+      "state": "present",
+      "value": "2.0",
+      "basis": "derived",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+          "objectNumber": null,
+          "generation": null,
+          "path": "header/PDF-version"
+        }
+      ],
+      "reason": "Header version unless a valid higher catalog override exists.",
+      "candidates": []
+    },
+    "pdfaPart": {
+      "state": "present",
+      "value": "4",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "xmp-text",
+          "text": "4",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+          "objectNumber": 3,
+          "generation": 0,
+          "path": "object:3:0/{http://www.aiim.org/pdfa/ns/id/}part"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "pdfaConformance": {
+      "state": "present",
+      "value": "F",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "xmp-text",
+          "text": "F",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+          "objectNumber": 3,
+          "generation": 0,
+          "path": "object:3:0/{http://www.aiim.org/pdfa/ns/id/}conformance"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "pdfaRevision": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+          "objectNumber": 3,
+          "generation": 0,
+          "path": "object:3:0/{http://www.aiim.org/pdfa/ns/id/}rev"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "eapdfVersion": {
+      "state": "present",
+      "value": "1",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "xmp-text",
+          "text": "1",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+          "objectNumber": 3,
+          "generation": 0,
+          "path": "object:3:0/{http://www.pdfa.org/eapdf/ns/id/}version"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "eapdfRevision": {
+      "state": "present",
+      "value": "2024",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "xmp-text",
+          "text": "2024",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+          "objectNumber": 3,
+          "generation": 0,
+          "path": "object:3:0/{http://www.pdfa.org/eapdf/ns/id/}rev"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "declaredProfile": {
+      "state": "present",
+      "value": "s",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "xmp-text",
+          "text": "s",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+          "objectNumber": 3,
+          "generation": 0,
+          "path": "object:3:0/{http://www.pdfa.org/eapdf/ns/id/}conformance"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "validationStatus": "not-evaluated"
+  },
+  "pageCount": 1,
+  "parts": [
+    {
+      "id": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:5:0",
+      "locator": {
+        "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+        "objectNumber": 5,
+        "generation": 0,
+        "path": "object:5:0"
+      },
+      "parentId": null,
+      "declaredParent": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:2:0"
+        ],
+        "basis": "observed",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 5,
+            "generation": 0,
+            "path": "object:5:0"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "childIds": [
+        "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:7:0"
+      ],
+      "dpm": {},
+      "startReference": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 5,
+            "generation": 0,
+            "path": "object:5:0/Start"
+          }
+        ],
+        "reason": "No value was observed.",
+        "candidates": []
+      },
+      "endReference": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 5,
+            "generation": 0,
+            "path": "object:5:0/End"
+          }
+        ],
+        "reason": "No value was observed.",
+        "candidates": []
+      },
+      "pageRange": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [],
+        "reason": "No explicit page range on this node.",
+        "candidates": []
+      },
+      "messageIds": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [],
+        "reason": "Document-wide part has no email owner.",
+        "candidates": []
+      }
+    },
+    {
+      "id": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:7:0",
+      "locator": {
+        "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+        "objectNumber": 7,
+        "generation": 0,
+        "path": "object:7:0"
+      },
+      "parentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:5:0",
+      "declaredParent": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:5:0"
+        ],
+        "basis": "observed",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 7,
+            "generation": 0,
+            "path": "object:7:0"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "childIds": [
+        "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:10:0"
+      ],
+      "dpm": {
+        "Mail_GUID": {
+          "state": "present",
+          "value": "guid-0",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "pdf-string",
+              "text": "guid-0",
+              "bytesHex": "677569642d30"
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 7,
+              "generation": 0,
+              "path": "object:7:0/DPM/Mail_GUID"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        },
+        "Mail_MessageID": {
+          "state": "present",
+          "value": "<message-0@example.invalid>",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "pdf-string",
+              "text": "<message-0@example.invalid>",
+              "bytesHex": "3c6d6573736167652d30406578616d706c652e696e76616c69643e"
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 7,
+              "generation": 0,
+              "path": "object:7:0/DPM/Mail_MessageID"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        }
+      },
+      "startReference": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 7,
+            "generation": 0,
+            "path": "object:7:0/Start"
+          }
+        ],
+        "reason": "No value was observed.",
+        "candidates": []
+      },
+      "endReference": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 7,
+            "generation": 0,
+            "path": "object:7:0/End"
+          }
+        ],
+        "reason": "No value was observed.",
+        "candidates": []
+      },
+      "pageRange": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [],
+        "reason": "No explicit page range on this node.",
+        "candidates": []
+      },
+      "messageIds": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/email[0]"
+        ],
+        "basis": "derived",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 7,
+            "generation": 0,
+            "path": "object:7:0"
+          }
+        ],
+        "reason": "Exact, case-sensitive declared identity matching; GUID takes precedence.",
+        "candidates": []
+      }
+    },
+    {
+      "id": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:10:0",
+      "locator": {
+        "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+        "objectNumber": 10,
+        "generation": 0,
+        "path": "object:10:0"
+      },
+      "parentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:7:0",
+      "declaredParent": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:7:0"
+        ],
+        "basis": "observed",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 10,
+            "generation": 0,
+            "path": "object:10:0"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "childIds": [],
+      "dpm": {
+        "Mail_ContentSetType": {
+          "state": "present",
+          "value": "BodyRendering",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "pdf-name",
+              "text": "/BodyRendering",
+              "bytesHex": "2f426f647952656e646572696e67"
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 10,
+              "generation": 0,
+              "path": "object:10:0/DPM/Mail_ContentSetType"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        },
+        "Mail_Desc": {
+          "state": "present",
+          "value": "Synthetic body",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "pdf-string",
+              "text": "Synthetic body",
+              "bytesHex": "53796e74686574696320626f6479"
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 10,
+              "generation": 0,
+              "path": "object:10:0/DPM/Mail_Desc"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        },
+        "Mail_Subtype": {
+          "state": "present",
+          "value": "text/plain; charset=UTF-8",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "pdf-name",
+              "text": "/text/plain; charset=UTF-8",
+              "bytesHex": "2f746578742f706c61696e3b20636861727365743d5554462d38"
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 10,
+              "generation": 0,
+              "path": "object:10:0/DPM/Mail_Subtype"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        }
+      },
+      "startReference": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:6:0"
+        ],
+        "basis": "observed",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 10,
+            "generation": 0,
+            "path": "object:10:0/Start"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "endReference": {
+        "state": "missing",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 10,
+            "generation": 0,
+            "path": "object:10:0/End"
+          }
+        ],
+        "reason": "No value was observed.",
+        "candidates": []
+      },
+      "pageRange": {
+        "state": "present",
+        "value": {
+          "indexBase": 0,
+          "endInclusive": true,
+          "start": 0,
+          "end": 0
+        },
+        "basis": "derived",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 10,
+            "generation": 0,
+            "path": "object:10:0"
+          }
+        ],
+        "reason": "Page references resolved; absent End defaults to Start.",
+        "candidates": []
+      },
+      "messageIds": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/email[0]"
+        ],
+        "basis": "derived",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 7,
+            "generation": 0,
+            "path": "object:7:0"
+          }
+        ],
+        "reason": "Exact, case-sensitive declared identity matching; GUID takes precedence.",
+        "candidates": []
+      }
+    }
+  ],
+  "messages": [
+    {
+      "id": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/email[0]",
+      "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+      "metadataRecordId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/email[0]",
+      "mailGuid": {
+        "state": "present",
+        "value": "guid-0",
+        "basis": "observed",
+        "raw": [
+          {
+            "kind": "xmp-text",
+            "text": "guid-0",
+            "bytesHex": null
+          }
+        ],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 3,
+            "generation": 0,
+            "path": "object:3:0/email[0]/Mail_GUID"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "internetMessageId": {
+        "state": "present",
+        "value": "<message-0@example.invalid>",
+        "basis": "observed",
+        "raw": [
+          {
+            "kind": "xmp-text",
+            "text": "<message-0@example.invalid>",
+            "bytesHex": null
+          }
+        ],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 3,
+            "generation": 0,
+            "path": "object:3:0/email[0]/messageid"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "partIds": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:7:0",
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:10:0"
+        ],
+        "basis": "derived",
+        "raw": [],
+        "evidence": [],
+        "reason": "Only explicitly GUID-bound DParts; collection summaries need not own outer pages.",
+        "candidates": []
+      },
+      "sourceAssetIds": {
+        "state": "not-evaluated",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [],
+        "reason": "Original email parsing is outside this reference projection.",
+        "candidates": []
+      },
+      "attachmentRecordIds": [
+        "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/attachments[0]"
+      ]
+    }
+  ],
+  "metadataRecords": [
+    {
+      "id": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/email[0]",
+      "kind": "email",
+      "locator": {
+        "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+        "objectNumber": 3,
+        "generation": 0,
+        "path": "object:3:0/email[0]"
+      },
+      "fields": {
+        "Mail_GUID": {
+          "state": "present",
+          "value": "guid-0",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "xmp-text",
+              "text": "guid-0",
+              "bytesHex": null
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 3,
+              "generation": 0,
+              "path": "object:3:0/email[0]/Mail_GUID"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        },
+        "messageid": {
+          "state": "present",
+          "value": "<message-0@example.invalid>",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "xmp-text",
+              "text": "<message-0@example.invalid>",
+              "bytesHex": null
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 3,
+              "generation": 0,
+              "path": "object:3:0/email[0]/messageid"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        }
+      },
+      "uninspectedFields": [],
+      "owners": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/email[0]"
+        ],
+        "basis": "derived",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 3,
+            "generation": 0,
+            "path": "object:3:0/email[0]"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "files": {
+        "state": "not-evaluated",
+        "value": null,
+        "basis": "none",
+        "raw": [],
+        "evidence": [],
+        "reason": "No original-source parser or sole-message association is used.",
+        "candidates": []
+      }
+    },
+    {
+      "id": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/attachments[0]",
+      "kind": "attachment",
+      "locator": {
+        "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+        "objectNumber": 3,
+        "generation": 0,
+        "path": "object:3:0/attachments[0]"
+      },
+      "fields": {
+        "CheckSum": {
+          "state": "present",
+          "value": "8c441be3b723f4c68a9b470d328915d0",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "xmp-text",
+              "text": "8c441be3b723f4c68a9b470d328915d0",
+              "bytesHex": null
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 3,
+              "generation": 0,
+              "path": "object:3:0/attachments[0]/CheckSum"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        },
+        "Content-Type": {
+          "state": "present",
+          "value": "text/plain",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "xmp-text",
+              "text": "text/plain",
+              "bytesHex": null
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 3,
+              "generation": 0,
+              "path": "object:3:0/attachments[0]/Content-Type"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        },
+        "Filename": {
+          "state": "present",
+          "value": "fixture.txt",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "xmp-text",
+              "text": "fixture.txt",
+              "bytesHex": null
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 3,
+              "generation": 0,
+              "path": "object:3:0/attachments[0]/Filename"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        },
+        "Mail_GUID": {
+          "state": "present",
+          "value": "guid-0",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "xmp-text",
+              "text": "guid-0",
+              "bytesHex": null
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 3,
+              "generation": 0,
+              "path": "object:3:0/attachments[0]/Mail_GUID"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        },
+        "SizeInBytes": {
+          "state": "present",
+          "value": "34",
+          "basis": "observed",
+          "raw": [
+            {
+              "kind": "xmp-text",
+              "text": "34",
+              "bytesHex": null
+            }
+          ],
+          "evidence": [
+            {
+              "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+              "objectNumber": 3,
+              "generation": 0,
+              "path": "object:3:0/attachments[0]/SizeInBytes"
+            }
+          ],
+          "reason": null,
+          "candidates": []
+        }
+      },
+      "uninspectedFields": [],
+      "owners": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/email[0]"
+        ],
+        "basis": "derived",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 3,
+            "generation": 0,
+            "path": "object:3:0/attachments[0]"
+          }
+        ],
+        "reason": "Exact, case-sensitive declared identity matching; GUID takes precedence.",
+        "candidates": []
+      },
+      "files": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:11:0"
+        ],
+        "basis": "derived",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 3,
+            "generation": 0,
+            "path": "object:3:0/attachments[0]"
+          }
+        ],
+        "reason": "Decoded MD5 and byte length match; duplicate physical files remain ambiguous.",
+        "candidates": []
+      }
+    }
+  ],
+  "files": [
+    {
+      "id": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:11:0",
+      "locator": {
+        "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+        "objectNumber": 11,
+        "generation": 0,
+        "path": "object:11:0"
+      },
+      "filename": {
+        "state": "present",
+        "value": "fixture.txt",
+        "basis": "observed",
+        "raw": [
+          {
+            "kind": "pdf-string",
+            "text": "fixture.txt",
+            "bytesHex": "666978747572652e747874"
+          }
+        ],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 11,
+            "generation": 0,
+            "path": "object:11:0/F"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "unicodeFilename": {
+        "state": "present",
+        "value": "fixture.txt",
+        "basis": "observed",
+        "raw": [
+          {
+            "kind": "pdf-string",
+            "text": "fixture.txt",
+            "bytesHex": "666978747572652e747874"
+          }
+        ],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 11,
+            "generation": 0,
+            "path": "object:11:0/UF"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "afRelationship": {
+        "state": "present",
+        "value": "Data",
+        "basis": "observed",
+        "raw": [
+          {
+            "kind": "pdf-name",
+            "text": "/Data",
+            "bytesHex": "2f44617461"
+          }
+        ],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 11,
+            "generation": 0,
+            "path": "object:11:0/AFRelationship"
+          }
+        ],
+        "reason": null,
+        "candidates": []
+      },
+      "origins": [
+        {
+          "kind": "annotation",
+          "locator": {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 8,
+            "generation": 0,
+            "path": "object:8:0"
+          },
+          "pageIndex": 0,
+          "nameTreeKey": {
+            "state": "missing",
+            "value": null,
+            "basis": "none",
+            "raw": [],
+            "evidence": [],
+            "reason": "No value was observed.",
+            "candidates": []
+          }
+        }
+      ],
+      "embedding": "present",
+      "streams": [
+        {
+          "locator": {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 12,
+            "generation": 0,
+            "path": "object:12:0"
+          },
+          "efKeys": [
+            "/F",
+            "/UF"
+          ],
+          "mimeType": {
+            "state": "present",
+            "value": "text/plain",
+            "basis": "observed",
+            "raw": [
+              {
+                "kind": "pdf-name",
+                "text": "/text/plain",
+                "bytesHex": "2f746578742f706c61696e"
+              }
+            ],
+            "evidence": [
+              {
+                "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+                "objectNumber": 12,
+                "generation": 0,
+                "path": "object:12:0"
+              }
+            ],
+            "reason": null,
+            "candidates": []
+          },
+          "mediaTypeParameters": {
+            "state": "missing",
+            "value": null,
+            "basis": "none",
+            "raw": [],
+            "evidence": [
+              {
+                "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+                "objectNumber": 12,
+                "generation": 0,
+                "path": "object:12:0"
+              }
+            ],
+            "reason": "No value was observed.",
+            "candidates": []
+          },
+          "declaredSize": {
+            "state": "present",
+            "value": 34,
+            "basis": "observed",
+            "raw": [
+              {
+                "kind": "pdf-integer",
+                "text": "34",
+                "bytesHex": null
+              }
+            ],
+            "evidence": [
+              {
+                "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+                "objectNumber": 12,
+                "generation": 0,
+                "path": "object:12:0"
+              }
+            ],
+            "reason": null,
+            "candidates": []
+          },
+          "declaredMd5": {
+            "state": "present",
+            "value": "8c441be3b723f4c68a9b470d328915d0",
+            "basis": "observed",
+            "raw": [
+              {
+                "kind": "pdf-string",
+                "text": "„D˙ã·#ôÆ−łG\r2›\u0015Ð",
+                "bytesHex": "8c441be3b723f4c68a9b470d328915d0"
+              }
+            ],
+            "evidence": [
+              {
+                "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+                "objectNumber": 12,
+                "generation": 0,
+                "path": "object:12:0"
+              }
+            ],
+            "reason": null,
+            "candidates": []
+          },
+          "decodedSize": {
+            "state": "present",
+            "value": 34,
+            "basis": "derived",
+            "raw": [],
+            "evidence": [
+              {
+                "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+                "objectNumber": 12,
+                "generation": 0,
+                "path": "object:12:0"
+              }
+            ],
+            "reason": "Computed from decoded embedded bytes.",
+            "candidates": []
+          },
+          "computedMd5": {
+            "state": "present",
+            "value": "8c441be3b723f4c68a9b470d328915d0",
+            "basis": "derived",
+            "raw": [],
+            "evidence": [
+              {
+                "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+                "objectNumber": 12,
+                "generation": 0,
+                "path": "object:12:0"
+              }
+            ],
+            "reason": "Computed from decoded embedded bytes.",
+            "candidates": []
+          },
+          "sha256": {
+            "state": "present",
+            "value": "6737bff4a489f1a1c07f52605b6c5825a1eecce504ba5f75e29c2322b89cda48",
+            "basis": "derived",
+            "raw": [],
+            "evidence": [
+              {
+                "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+                "objectNumber": 12,
+                "generation": 0,
+                "path": "object:12:0"
+              }
+            ],
+            "reason": "Computed from decoded embedded bytes.",
+            "candidates": []
+          },
+          "extraction": "present"
+        }
+      ],
+      "roles": {
+        "state": "present",
+        "value": [
+          "attachment"
+        ],
+        "basis": "derived",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 11,
+            "generation": 0,
+            "path": "object:11:0"
+          }
+        ],
+        "reason": "Derived only from uniquely byte-matched metadata records.",
+        "candidates": []
+      },
+      "owners": {
+        "state": "present",
+        "value": [
+          "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/email[0]"
+        ],
+        "basis": "derived",
+        "raw": [],
+        "evidence": [
+          {
+            "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+            "objectNumber": 11,
+            "generation": 0,
+            "path": "object:11:0"
+          }
+        ],
+        "reason": "Every annotation context resolves to one email; shared files can have several explicit owners.",
+        "candidates": []
+      },
+      "metadataRecordIds": [
+        "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445#object:3:0/attachments[0]"
+      ]
+    }
+  ],
+  "collection": {
+    "state": "missing",
+    "value": null,
+    "basis": "none",
+    "raw": [],
+    "evidence": [],
+    "reason": "Catalog has no Collection entry.",
+    "candidates": []
+  },
+  "diagnostics": [
+    {
+      "code": "DPART_TRAVERSAL_STOPPED",
+      "state": "invalid",
+      "message": "Repeated part or traversal budget reached.",
+      "evidence": [
+        {
+          "documentId": "sha256:e205eb4a82bfbcb728e1cd3e10922eb7e6b42105b6bf29e50ffe87754fa74445",
+          "objectNumber": 5,
+          "generation": 0,
+          "path": "object:5:0"
+        }
+      ]
+    }
+  ],
+  "limits": {
+    "maxFileBytes": 33554432,
+    "maxStreamBytes": 16777216,
+    "maxDecodedBytes": 67108864,
+    "maxMetadataBytes": 2097152,
+    "maxObjects": 100000,
+    "maxParts": 10000,
+    "maxTreeDepth": 64,
+    "maxChildDepth": 4,
+    "maxChildren": 32
+  },
+  "coverage": {
+    "metadata": "present",
+    "documentParts": "invalid",
+    "associatedFiles": "present",
+    "collection": "missing",
+    "fullEmailHeaders": "not-evaluated",
+    "logicalStructure": "not-evaluated",
+    "sourceEmailParsing": "not-evaluated",
+    "contentStreamAssociations": "not-evaluated",
+    "conformance": "not-evaluated"
+  }
+}

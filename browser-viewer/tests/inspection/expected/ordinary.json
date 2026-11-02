@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 1,
+  "documentId": "sha256:c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+  "source": {
+    "sha256": "c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+    "byteLength": 948
+  },
+  "identification": {
+    "pdfHeaderVersion": {
+      "state": "present",
+      "value": "1.4",
+      "basis": "observed",
+      "raw": [
+        {
+          "kind": "header",
+          "text": "1.4",
+          "bytesHex": null
+        }
+      ],
+      "evidence": [
+        {
+          "documentId": "sha256:c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+          "objectNumber": null,
+          "generation": null,
+          "path": "header/PDF-version"
+        }
+      ],
+      "reason": null,
+      "candidates": []
+    },
+    "pdfCatalogVersion": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+          "objectNumber": 1,
+          "generation": 0,
+          "path": "object:1:0"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "effectivePdfVersion": {
+      "state": "present",
+      "value": "1.4",
+      "basis": "derived",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+          "objectNumber": null,
+          "generation": null,
+          "path": "header/PDF-version"
+        }
+      ],
+      "reason": "Header version unless a valid higher catalog override exists.",
+      "candidates": []
+    },
+    "pdfaPart": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+          "objectNumber": null,
+          "generation": null,
+          "path": "catalog/Metadata/{http://www.aiim.org/pdfa/ns/id/}part"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "pdfaConformance": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+          "objectNumber": null,
+          "generation": null,
+          "path": "catalog/Metadata/{http://www.aiim.org/pdfa/ns/id/}conformance"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "pdfaRevision": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+          "objectNumber": null,
+          "generation": null,
+          "path": "catalog/Metadata/{http://www.aiim.org/pdfa/ns/id/}rev"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "eapdfVersion": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+          "objectNumber": null,
+          "generation": null,
+          "path": "catalog/Metadata/{http://www.pdfa.org/eapdf/ns/id/}version"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "eapdfRevision": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+          "objectNumber": null,
+          "generation": null,
+          "path": "catalog/Metadata/{http://www.pdfa.org/eapdf/ns/id/}rev"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "declaredProfile": {
+      "state": "missing",
+      "value": null,
+      "basis": "none",
+      "raw": [],
+      "evidence": [
+        {
+          "documentId": "sha256:c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9",
+          "objectNumber": null,
+          "generation": null,
+          "path": "catalog/Metadata/{http://www.pdfa.org/eapdf/ns/id/}conformance"
+        }
+      ],
+      "reason": "No value was observed.",
+      "candidates": []
+    },
+    "validationStatus": "not-evaluated"
+  },
+  "pageCount": 2,
+  "parts": [],
+  "messages": [],
+  "metadataRecords": [],
+  "files": [],
+  "collection": {
+    "state": "missing",
+    "value": null,
+    "basis": "none",
+    "raw": [],
+    "evidence": [],
+    "reason": "Catalog has no Collection entry.",
+    "candidates": []
+  },
+  "diagnostics": [],
+  "limits": {
+    "maxFileBytes": 33554432,
+    "maxStreamBytes": 16777216,
+    "maxDecodedBytes": 67108864,
+    "maxMetadataBytes": 2097152,
+    "maxObjects": 100000,
+    "maxParts": 10000,
+    "maxTreeDepth": 64,
+    "maxChildDepth": 4,
+    "maxChildren": 32
+  },
+  "coverage": {
+    "metadata": "missing",
+    "documentParts": "missing",
+    "associatedFiles": "present",
+    "collection": "missing",
+    "fullEmailHeaders": "not-evaluated",
+    "logicalStructure": "not-evaluated",
+    "sourceEmailParsing": "not-evaluated",
+    "contentStreamAssociations": "not-evaluated",
+    "conformance": "not-evaluated"
+  }
+}

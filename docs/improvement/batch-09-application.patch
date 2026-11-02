@@ -1,0 +1,269 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -7,6 +7,8 @@
+ import quopri
+ from copy import deepcopy
+ from email.header import decode_header, make_header
++from email.errors import (HeaderDefect, FirstHeaderLineIsContinuationDefect,
++                          MisplacedEnvelopeHeaderDefect, MissingHeaderBodySeparatorDefect)
+ from datetime import datetime, timedelta, timezone
+ from calendar import monthrange
+ from decimal import Decimal, InvalidOperation
+@@ -5137,8 +5139,13 @@
+         mime_attachments=attachments
+         mime_attachment_count=len(attachments)
+         raw_headers={}
++        header_occurrences=[]
+         for header_name,header_value in msg.raw_items():
+-            raw_headers.setdefault(header_name.lower(),[]).append(header_value)
++            header=header_name.lower()
++            values=raw_headers.setdefault(header,[])
++            values.append(header_value)
++            header_occurrences.append({"index":len(header_occurrences)+1,"name":header_name,
++                                       "header":header,"occurrence":len(values),"raw":header_value})
+         def raw_header(name):
+             return clean_header_text(", ".join(raw_headers.get(name.lower(),[])))
+         sent_raw=raw_header("Date")
+@@ -5173,6 +5180,11 @@
+             "sent_raw":clean_header_text(sent_raw),
+             "sent_norm":sent_norm,
+             "header_values":raw_headers,
++            "header_occurrences":header_occurrences,
++            "header_parse_defects":[type(defect).__name__ for defect in msg.defects if isinstance(defect,
++                (HeaderDefect,FirstHeaderLineIsContinuationDefect,MisplacedEnvelopeHeaderDefect,MissingHeaderBodySeparatorDefect))],
++            "other_parse_defects":[type(defect).__name__ for defect in msg.defects if not isinstance(defect,
++                (HeaderDefect,FirstHeaderLineIsContinuationDefect,MisplacedEnvelopeHeaderDefect,MissingHeaderBodySeparatorDefect))],
+             "body_media_types":sorted(source_body_media_types(msg)),
+             "attachment_count":len(attachments),
+             "mime_attachment_count":mime_attachment_count,
+@@ -5429,25 +5441,41 @@
+                           "field_objgen":field["objgen"],"tag":field["type"],"has_text_object":any(has_text for page,has_text in references),"content_refs":resolved})
+     return sequences
+ 
+-def observed_header_source_inventory(elements,page_analysis,xroot,afiles,owner_ranges=()):
+-    observations={tuple(row["field_objgen"]):row for page in page_analysis or [] for row in page.get("rendered_fields",[])}
+-    by_object={element["objgen"]:element for element in elements if element["objgen"]}
++def decoded_source_header(raw):
++    try:
++        value=str(make_header(decode_header(raw)))
++    except (LookupError,UnicodeError,ValueError) as error:
++        raise ValueError("Original header encoding cannot be decoded") from error
++    if "\ufffd" in value or any(0xD800<=ord(char)<=0xDFFF for char in value):
++        raise ValueError("Original header encoding cannot be decoded reliably")
++    return value
++
++def header_display_values_equal(header,actual,expected):
++    if norm_text(actual)==norm_text(expected):
++        return True
++    if header=="date":
++        left=parse_source_datetime(actual) or parse_xmp_datetime(actual)
++        right=parse_source_datetime(expected) or parse_xmp_datetime(expected)
++        if left is None or right is None:
++            raise ValueError("Rendered date formatting cannot be compared as an instant")
++        return left==right
++    if header in ("from","to","cc","bcc","sender","reply-to"):
++        def agents(value):
++            result=getaddresses([value])
++            if not result or any(not address or "@" not in address for name,address in result):
++                raise ValueError("Rendered/source address formatting is not supported for comparison")
++            return [(norm_text(name),address) for name,address in result]
++        return agents(actual)==agents(expected)
++    return False
++
++def message_header_source_inventories(elements,xroot,afiles):
+     records=flatten_email_records(xroot) if xroot is not None else []
+     sources=summarize_source_emails(afiles)
+-    inventory=[]
+-    for field in (element for element in elements if element["type"]=="Mail_Field"):
+-        item={"field_object":field["objgen"],"comparison":"unavailable","ownership":"unavailable"}
+-        inventory.append(item)
++    inventories=[]
++    for owner in (element for element in elements if element["type"]=="Mail_Message"):
++        item={"message_object":owner["objgen"],"assessment":"unavailable","occurrences":[]}
++        inventories.append(item)
+         try:
+-            owner=field
+-            visited=set()
+-            while owner is not None and owner["type"]!="Mail_Message":
+-                if owner["objgen"] in visited:
+-                    owner=None;break
+-                visited.add(owner["objgen"])
+-                owner=by_object.get(owner["parent_objgen"])
+-            if owner is None:
+-                raise ValueError("No enclosing Mail_Message identifies the observed field")
+             identities=defaultdict(set)
+             for prop in parse_userproperties(owner["attrs"]):
+                 name=str(dict_get(prop,"/N",""))
+@@ -5469,9 +5497,45 @@
+             if source is None:
+                 raise ValueError("No unique inspectable retained source matches the XMP owner")
+             item.update(source=source["source_filename"],source_sha256=source["source_sha256"])
++            item["parse_defects"]=source.get("header_parse_defects",[])
++            item["other_parse_defects"]=source.get("other_parse_defects",[])
++            if "header_occurrences" not in source:
++                raise ValueError("Ordered source header occurrences are unavailable")
++            for occurrence in source["header_occurrences"]:
++                row=dict(occurrence,decoded=None,matched_fields=[],candidate_fields=[])
++                try:
++                    row["decoded"]=decoded_source_header(row["raw"])
++                except ValueError as error:
++                    row["reason"]=str(error)
++                if any(0xDC80<=ord(char)<=0xDCFF for char in row["raw"]):
++                    # The parser uses surrogateescape for undecoded octets.
++                    # Preserve them without putting surrogates in UTF-8 reports.
++                    row["raw_bytes_base64"]=base64.b64encode(row["raw"].encode("utf-8","surrogateescape")).decode("ascii")
++                    row["raw"]=None
++                item["occurrences"].append(row)
++            item["assessment"]="partial" if item["parse_defects"] else "available"
++            if item["parse_defects"]:
++                item["reason"]="Source parser recovery prevents a complete header inventory"
++        except ValueError as error:
++            item["reason"]=str(error)
++    return inventories
++
++def observed_header_source_inventory(elements,page_analysis,xroot,afiles,owner_ranges=(),source_inventory=None):
++    observations={tuple(row["field_objgen"]):row for page in page_analysis or [] for row in page.get("rendered_fields",[])}
++    by_object={element["objgen"]:element for element in elements if element["objgen"]}
++    source_inventories=message_header_source_inventories(elements,xroot,afiles)
++    by_owner={item["message_object"]:item for item in source_inventories}
++    inventory=[]
++    for field in (element for element in elements if element["type"]=="Mail_Field"):
++        item={"field_object":field["objgen"],"comparison":"unavailable","ownership":"unavailable"}
++        inventory.append(item)
++        try:
++            # Preserve observations independently of retained-source availability.
+             children=[element for element in elements if element["parent_objgen"]==field["objgen"]]
+             names=[element for element in children if element["type"]=="Mail_FieldName"]
+             values=[element for element in children if element["type"]=="Mail_FieldValue"]
++            refs=[ref for element in names+values for ref in observations.get(tuple(element["objgen"]),{}).get("content_refs",[])]
++            item["pages"]=sorted({ref["page"] for ref in refs if isinstance(ref.get("page"),int)})
+             if len(names)!=1 or len(values)>1:
+                 raise ValueError("Observed field name/value fragments do not have a unique supported grouping")
+             def text(element):
+@@ -5480,52 +5544,73 @@
+                     raise ValueError(observation.get("reason","No decoded text evidence exists for the field markup"))
+                 return observation["text"]
+             label=norm_text(text(names[0])).rstrip(":").strip()
++            item["name"]=label
+             actual=text(values[0]) if values else ""
+-            item.update(name=label,value=actual)
++            item["value"]=actual
++            owner=field
++            visited=set()
++            while owner is not None and owner["type"]!="Mail_Message":
++                if owner["objgen"] in visited:
++                    owner=None;break
++                visited.add(owner["objgen"])
++                owner=by_object.get(owner["parent_objgen"])
++            if owner is None:
++                raise ValueError("No enclosing Mail_Message identifies the observed field")
++            item["message_object"]=owner["objgen"]
++            source=by_owner[owner["objgen"]]
++            if "Mail_GUID" in source:
++                item["Mail_GUID"]=source["Mail_GUID"]
++            owning_pages=sorted({number for span in owner_ranges
++                                 if span["identity"].get("Mail_GUID") and span["identity"]["Mail_GUID"]==item.get("Mail_GUID")
++                                 for number in span["pages"]})
++            item["owner_pages"]=owning_pages
++            if owning_pages and item["pages"]:
++                item["ownership"]="within-owner-ranges" if set(item["pages"]).issubset(owning_pages) else "outside-owner-ranges"
++            if source["assessment"]!="available":
++                raise ValueError(source["reason"])
++            item.update(source=source["source"],source_sha256=source["source_sha256"])
+             if re.fullmatch(r"[!-9;-~]+",label) is None:
+                 raise ValueError("Rendered label is not a supported source header name")
+             header=label.lower()
+-            original=source.get("header_values",{})
+-            if header=="sent" and header not in original and "date" in original:
++            originals=[row for row in source["occurrences"] if row["header"]==header]
++            if header=="sent" and not originals:
+                 header="date"
+-            originals=original.get(header,[])
+-            if len(originals)!=1:
+-                raise ValueError("Original header is absent or repeated; no occurrence is guessed")
+-            try:
+-                expected=str(make_header(decode_header(originals[0])))
+-            except (LookupError,UnicodeError,ValueError) as error:
+-                raise ValueError("Original header encoding cannot be decoded") from error
+-            item.update(source_header=header,expected=expected)
+-            if not values and norm_text(expected):
+-                raise ValueError("No custom value markup exists for a nonempty source header; untagged value text is not inferred")
+-            equal=norm_text(actual)==norm_text(expected)
+-            if not equal and header=="date":
+-                left=parse_source_datetime(actual) or parse_xmp_datetime(actual)
+-                right=parse_source_datetime(expected) or parse_xmp_datetime(expected)
+-                if left is None or right is None:
+-                    raise ValueError("Rendered date formatting cannot be compared as an instant")
+-                equal=left==right
+-            elif not equal and header in ("from","to","cc","bcc","sender","reply-to"):
+-                def agents(value):
+-                    result=getaddresses([value])
+-                    if not result or any(not address or "@" not in address for name,address in result):
+-                        raise ValueError("Rendered/source address formatting is not supported for comparison")
+-                    return [(norm_text(name),address) for name,address in result]
+-                equal=agents(actual)==agents(expected)
+-            refs=[ref for element in names+values for ref in observations.get(tuple(element["objgen"]),{}).get("content_refs",[])]
+-            actual_pages=sorted({ref["page"] for ref in refs if isinstance(ref.get("page"),int)})
+-            owning_pages=sorted({number for span in owner_ranges
+-                                 if span["identity"].get("Mail_GUID") and span["identity"]["Mail_GUID"]==item["Mail_GUID"]
+-                                 for number in span["pages"]})
+-            item.update(pages=actual_pages,owner_pages=owning_pages)
+-            if owning_pages and actual_pages:
+-                item["ownership"]="within-owner-ranges" if set(actual_pages).issubset(owning_pages) else "outside-owner-ranges"
+-                if item["ownership"]=="outside-owner-ranges":
+-                    equal=False
+-                    item["reason"]="Field content references pages outside its enclosing message's declared DPart ranges"
++                originals=[row for row in source["occurrences"] if row["header"]==header]
++            item.update(source_header=header,source_header_count=len(originals))
++            if not originals:
++                raise ValueError("Original header is absent; no source occurrence is inferred")
++            matches=[]
++            unknown=[]
++            for row in originals:
++                try:
++                    if row["decoded"] is None:
++                        raise ValueError(row["reason"])
++                    if not values and norm_text(row["decoded"]):
++                        raise ValueError("No custom value markup exists for a nonempty source header; untagged value text is not inferred")
++                    if header_display_values_equal(header,actual,row["decoded"]):
++                        matches.append(row)
++                        row["candidate_fields"].append(field["objgen"])
++                except ValueError as error:
++                    unknown.append((row,str(error)))
++            item["candidate_occurrences"]=[row["occurrence"] for row in matches]
++            item["unresolved_occurrences"]=[row["occurrence"] for row,reason in unknown]
++            if unknown:
++                raise ValueError(unknown[0][1])
++            if len(originals)>1 and len(matches)!=1:
++                raise ValueError("Repeated source headers have no unique supported display match; no occurrence is guessed")
++            selected=matches[0] if matches else originals[0]
++            item.update(expected=selected["decoded"],source_index=selected["index"],source_occurrence=selected["occurrence"])
++            equal=bool(matches)
++            if item["ownership"]=="outside-owner-ranges":
++                equal=False
++                item["reason"]="Field content references pages outside its enclosing message's declared DPart ranges"
+             item["comparison"]="equal" if equal else "different"
++            if equal:
++                selected["matched_fields"].append(field["objgen"])
+         except ValueError as error:
+             item["reason"]=str(error)
++    if source_inventory is not None:
++        source_inventory.extend(source_inventories)
+     return inventory
+ 
+ def check_tagging_recommendations(pdf,dpart_nodes,elements,report,xroot=None,afiles=(),page_analysis=None):
+@@ -5609,10 +5694,13 @@
+                              "values":sum(element["type"]=="Mail_FieldValue" for element in children)})
+     # Observed field pairs cannot prove that no rendered header was omitted from
+     # tagging. That requires a source/rendered-header inventory beyond this view.
+-    inventory=observed_header_source_inventory(elements,page_analysis,xroot,afiles,owner_ranges)
++    source_inventory=[]
++    inventory=observed_header_source_inventory(elements,page_analysis,xroot,afiles,owner_ranges,source_inventory)
+     emit_if_unseen(report,"warn",code,"Observed header markup does not establish complete tagging of all rendered headers",
+                    {"strength":"SHOULD","assessment":"partial" if verified else "unavailable",
+                     "verified_fields":verified,"unresolved_fields":unresolved,"rendered_header_inventory":inventory,
++                    "source_header_inventory":source_inventory,
++                    "source_inventory_scope":"Ordered parsed headers of uniquely selected retained sources for custom Mail_Message owners. Unobserved source occurrences do not establish missing tags or whether a header was rendered.",
+                     "inventory_scope":"Observed custom Mail_Field elements only; standard-tagged, untagged and unrecognized rendered headers are not enumerated.",
+                     "needed_evidence":"An inventory of all rendered header names and nonempty values, matched to their structure/content connections."})
+ 

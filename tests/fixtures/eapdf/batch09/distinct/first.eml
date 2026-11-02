@@ -1,0 +1,12 @@
+From: =?UTF-8?Q?Ren=C3=A9?= <sender@example.invalid>
+To: Reader <reader@example.invalid>
+Date: Tue, 28 Jan 2003 21:20:54 -0500
+Message-ID: <shared@example.invalid>
+Subject: Inventory Alpha
+Subject: Alternate Alpha
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+X-Project: first
+x-project: second
+
+Inventory Alpha body.

@@ -1,0 +1,119 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -7015,6 +7015,86 @@
+                     {"rules":[code],"assessment":"unavailable"})
+ 
+ 
++def check_content_set_art_usage(pdf,leaf_nodes,content_rows,report):
++    """Check each observed article's actual Content Set counterpart, not counts."""
++    code="MAIL_CONTENTSET_ART_ONLY"
++    details={"articles":len(content_rows),"content_sets":len(leaf_nodes)}
++    work=0
++    def tick(items=1):
++        nonlocal work
++        work+=items
++        if work>MAX_TREE_ITEMS:
++            raise ValueError("Art Content Set assessment exceeds configured traversal limits")
++    try:
++        if not leaf_nodes:
++            raise ValueError("DPart Content Set inventory is unavailable")
++        if any(item["code"]=="STRUCTURE_CORRESPONDENCE" and item["level"]=="FAIL" for item in report.items):
++            raise ValueError("Structure/content correspondence is invalid")
++        tick(len(pdf.pages))
++        page_map=page_objgen_map(pdf)
++        page_sets=defaultdict(set)
++        by_node={pdf_object_identity(item["node"]):number for number,item in enumerate(leaf_nodes,1)}
++        for number,item in enumerate(leaf_nodes,1):
++            tick()
++            bounds=page_range_from_dpart(item,page_map) if isinstance(item["node"],pikepdf.Dictionary) else None
++            if bounds is None:
++                raise ValueError("DPart Content Set page range is unavailable")
++            for page in range(bounds[0],bounds[1]+1):
++                tick()
++                page_sets[page].add(number)
++        verified=[]
++        bad=[]
++        unavailable=[]
++        identities=[tuple(row.get("objgen") or ()) for row in content_rows]
++        aliased=len(set(identities))!=len(identities)
++        for row in content_rows:
++            tick()
++            known=set()
++            unknown=aliased or bool(row["unavailable"]) or not row["references"]
++            for reference in ([] if row.get("role_unavailable") else row["references"]):
++                tick()
++                pages=reference["pages"]
++                choices=set()
++                reference_known=bool(pages)
++                for page in pages:
++                    tick()
++                    if not isinstance(page,int) or isinstance(page,bool) or not 1<=page<=len(pdf.pages):
++                        reference_known=False
++                        continue
++                    candidates=page_sets.get(page,set())
++                    tick(len(candidates))
++                    direct=by_node.get(pdf_object_identity(dict_get(pdf.pages[page-1].obj,"/DPart",None)))
++                    if len(candidates)!=1 or direct not in candidates:
++                        reference_known=False
++                    choices.update(candidates)
++                if reference_known and len(choices)==1:
++                    known.update(choices)
++                else:
++                    unknown=True
++            item={"tag_objgen":row["objgen"],"content_sets":sorted(known)}
++            if len(known)>1:
++                bad.append(item)
++            elif not unknown and len(known)==1:
++                verified.append(item)
++            if unknown:
++                unavailable.append(item)
++        details.update(verified_articles=verified[:25],cross_content_set_articles=bad[:25],
++                       unavailable_articles=unavailable[:25])
++        if bad:
++            report.fail(code,"Art content crosses distinct DPart Content Sets",details)
++        elif unavailable:
++            report.warn(code,"Art Content Set correspondence remains unavailable",dict(details,assessment="unavailable"))
++        else:
++            report.ok(code,"Each observed Art has content connected to one DPart Content Set",details)
++        if unavailable:
++            report.warn("VALIDATION_INCOMPLETE","Some Art Content Set counterparts remain unavailable",
++                        {"rules":[code],"assessment":"unavailable"})
++    except (ValueError,TypeError,pikepdf.PdfError) as error:
++        report.warn(code,"Art Content Set correspondence remains unavailable",dict(details,assessment="unavailable",reason=str(error)))
++        report.warn("VALIDATION_INCOMPLETE","Art Content Set counterparts could not be established",
++                    {"rules":[code],"assessment":"unavailable"})
++
++
+ def check_additional_rule_coverage(pdf, xroot, xmp_bytes, efiles, afiles, eapdf_conf, pdfa_part, report):
+     source_summary=summarize_source_email(afiles) if xroot is not None and len(flatten_email_records(xroot))<=1 else None
+     source_files=[f for f in afiles if f["afrelationship"]=="Source"]
+@@ -7672,10 +7752,25 @@
+         emit_if_unseen(report,"na","CUSTOM_TAG_MARKED_SEQUENCE_ONLY","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain custom EA-PDF structure elements."})
+ 
+     art_elems=[e for e in elems if e["type"]=="Art"]
+-    if art_elems and leaf_nodes and len(art_elems) != len(leaf_nodes):
+-        emit_if_unseen(report,"fail","MAIL_CONTENTSET_ART_ONLY","Art structure elements do not align with the DPart Content Sets",{"art_elements":len(art_elems),"content_sets":len(leaf_nodes)})
+-    elif cset or art_elems:
+-        emit_if_unseen(report,"ok","MAIL_CONTENTSET_ART_ONLY","Art structure usage is consistent with Content Set representation",{"art_elements":len(art_elems),"mail_contentset":len(cset),"content_sets":len(leaf_nodes)})
++    article_aliases=[e for e in elems if e["type"] not in ("Art","Mail_ContentSet") and rolemap.get(e["type"])=="Art"]
++    if cset or art_elems or article_aliases:
++        art_rows=structure_content_dpm_assessments(pdf,art_elems,dpart_nodes) if art_elems else []
++        art_rows.extend(content_guids[e["objgen"]] for e in cset)
++        article_nodes={e["objgen"]:e for e in art_elems+cset}
++        for index,row in enumerate(art_rows):
++            node=article_nodes[row["objgen"]]
++            namespace=dict_get(node["elem"],"/NS",None)
++            if namespace is not None:
++                uri=dict_get(namespace,"/NS",None)
++                supported=("https://pdfa.org/ns/ea-pdf/mail-1",) if node["type"]=="Mail_ContentSet" else ("http://iso.org/pdf/ssn",)
++                try:
++                    uri_text=str(uri) if isinstance(uri,pikepdf.String) else ""
++                except (UnicodeError,ValueError,pikepdf.PdfError):
++                    uri_text=""
++                if uri_text not in supported:
++                    art_rows[index]=dict(row,role_unavailable=True,unavailable=row["unavailable"]+[{"reason":"Article namespace role remains unavailable"}])
++        art_rows.extend({"objgen":e["objgen"],"references":[],"unavailable":[{"reason":"Other Art role mappings require separate resolution"}]} for e in article_aliases)
++        check_content_set_art_usage(pdf,leaf_nodes,art_rows,report)
+     else:
+         emit_if_unseen(report,"na","MAIL_CONTENTSET_ART_ONLY","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain Art or Mail_ContentSet structure elements."})
+ 

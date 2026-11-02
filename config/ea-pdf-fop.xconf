@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fop version="1.0">
+  <strict-configuration>true</strict-configuration>
+  <base>/media/lepore/Work/thinkbox/ea-pdf/EaPdf/XResources</base>
+  <font-base>/usr/share/fonts/truetype/dejavu</font-base>
+  <source-resolution>96</source-resolution>
+  <target-resolution>96</target-resolution>
+  <default-page-settings height="11in" width="8.5in"/>
+  <accessibility keep-empty-tags="false">true</accessibility>
+  <complex-scripts disabled="false"/>
+  <renderers>
+    <renderer mime="application/pdf">
+      <pdf-a-mode>PDF/A-3a</pdf-a-mode>
+      <version>1.7</version>
+      <filterList>
+        <value>null</value>
+      </filterList>
+      <filterList type="image">
+        <value>flate</value>
+        <value>ascii-85</value>
+      </filterList>
+      <output-profile>/media/lepore/Work/thinkbox/ea-pdf/EaPdf/XResources/sRGB2014.icc</output-profile>
+      <fonts>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf">
+          <font-triplet name="serif" weight="normal" style="normal"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf">
+          <font-triplet name="serif" weight="normal" style="italic"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf">
+          <font-triplet name="serif" weight="bold" style="normal"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf">
+          <font-triplet name="serif" weight="bold" style="italic"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf">
+          <font-triplet name="sans-serif" weight="normal" style="normal"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf">
+          <font-triplet name="sans-serif" weight="normal" style="italic"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf">
+          <font-triplet name="sans-serif" weight="bold" style="normal"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf">
+          <font-triplet name="sans-serif" weight="bold" style="italic"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf">
+          <font-triplet name="monospace" weight="normal" style="normal"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Oblique.ttf">
+          <font-triplet name="monospace" weight="normal" style="italic"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf">
+          <font-triplet name="monospace" weight="bold" style="normal"/>
+        </font>
+        <font embed-url="/usr/share/fonts/truetype/dejavu/DejaVuSansMono-BoldOblique.ttf">
+          <font-triplet name="monospace" weight="bold" style="italic"/>
+        </font>
+      </fonts>
+    </renderer>
+  </renderers>
+</fop>

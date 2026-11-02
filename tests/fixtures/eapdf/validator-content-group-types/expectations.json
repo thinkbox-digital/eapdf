@@ -1,0 +1,99 @@
+{
+  "authority": "EA-PDF9.7 Table13 conditional Content Group type correspondence; Table12 string representation of DPM name values",
+  "seed_sha256": "f5a680737d64e668bade6921b2e09d9d41385ba26ed5e2453940a1f3c7370ac7",
+  "boundary": "Actual content identifies corresponding DPart data. Absence remains a recommendation; empty supplied values still compare. Opaque extension names preserve characters; external extension/source semantics are not certified. Candidate XMP fields lack a reviewed group binding and remain unverified.",
+  "cases": [
+    {
+      "file": "matching-group.pdf",
+      "sha256": "9cdb4069edf89c5e296f2161f522f48bcd124be25c7d9ec766441b58d058673f",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "foreign-group-type.pdf",
+      "sha256": "3172a6d36202c187b754cd9f508c8db2ddd835ea208236a742186a9da61cc4fa",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT"
+      ],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "padded-group-type.pdf",
+      "sha256": "1d6eb1ab2d72b16d34eec8164859cd4c66f8b4034036ae7e5ef567100c207ab7",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT"
+      ],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "empty-group-type.pdf",
+      "sha256": "3fc7a02d211a968747dfc61ad8e66f7772e49bd87b4b63745f8ba6ec83446836",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT"
+      ],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "omitted-group-types.pdf",
+      "sha256": "23234954fa05f33c0126e5bdec41783b3d09da300b6641f334336045da4e65fb",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "unicode-group-value.pdf",
+      "sha256": "ce2e6fecb8fa41396930b71e02a253421e81d90e10979214ac901f533c5bc7b2",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "opaque-group-types.pdf",
+      "sha256": "3d54132d331600617f1579f96143d79c060c98d4e70d5c4f7c209328d03fbfe7",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "xmp-unbound-body.pdf",
+      "sha256": "8974f7b175d83df94e59401e75508cdcb09b7a66afad1b8555503e733cd095ae",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "xmp-unbound-empty.pdf",
+      "sha256": "8ad7c4c534fb7dd5a7d88e64af15a518687c881b834205f51d1aa154c68ff825",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "xmp-unbound-other.pdf",
+      "sha256": "f528c3dbc52d65fe879a943130099c1eb1273c19feca1e78470ecdfebb83efcd",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    }
+  ],
+  "parent_requirement_review": {
+    "evidence": "docs/improvement/validator-53/prior-native-census.json",
+    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
+    "retained_pdf_bytes": true,
+    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
+  }
+}

@@ -1,0 +1,9 @@
+# V83: Child operational errors leave validation incomplete
+
+An exception staging or executing a collection child check supplies no child-conformance finding. The validator records the unavailable check and keeps the parent INCOMPLETE. Actual invalid/corrupt child findings and independently invalid parents retain FAIL. Results already obtained before a cleanup exception keep their findings and may be cached; an attempt with no result is never cached as a success.
+
+The exact four independently accepted normal/accessibility c/ci PDFs are checked with a regular file where the staging directory should be. The old implementation reports a child failure; the corrected implementation reports INCOMPLETE. No PDF bytes are changed. Ten focused regressions also cover worker/write exceptions, cache/retry behavior, cleanup after a returned failure, resource limits and actual invalid children.
+
+Verification: 1136 unit tests (1096 passes, 40 skips); 756 fresh custom cases with all prior hashes/statuses/failure sets unchanged; four separate native operational custom controls; ten normal child-status pipelines and four staging-failure pipelines pass parent PDF/A/ISO with exact expected EA-PDF outcomes; real CLI and web-worker fault-injection checks; twelve retained creator failures; sixteen offline browser checks. See [evidence.json](evidence.json).
+
+The web-worker fault is introduced immediately before actual process launch by placing a regular file at its configured child-staging path. Worker commands, engine execution and result handling remain real. Upstream PDF/A engine ERROR policy is unchanged. This does not certify every operational failure mode, all obligation coverage, original inventory completeness or creator acceptance. A separate malformed Subject comparison proof is retained for the next review.

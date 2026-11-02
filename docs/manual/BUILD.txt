@@ -1,0 +1,76 @@
+EA-PDF user manual: editing, building and screenshots
+
+The deliverable is ../EA-PDF_User_Manual.pdf (ordinary PDF/A-2b, not EA-PDF).
+user-manual.html is the editable, offline-readable source.
+../EA-PDF_User_Manual.pdfa-validation.json records bundled veraPDF verification.
+verapdf-cli-validation.json records an additional veraPDF CLI Docker check.
+build-receipt.json records input/artifact hashes. No private mailbox was used.
+
+Build from the repository root with Java 21 and requirements-docs.txt installed:
+
+python3 -B scripts/manual/build_manual.py \
+  --creator-jar /path/to/emailtopdfa.jar \
+  --validator-jar /path/to/eapdf-validator.jar
+
+The defaults select root dist JARs. The beta.7 edition uses the released JARs.
+The exact tested JAR hashes are
+in build-receipt.json. The PDF builder uses embedded repository fonts, the system
+DejaVuSans-Bold.ttf (select another location with --bold-font), repository sRGB
+ICC, PDFBox/XMPBox, and the validator JAR's veraPDF engine. All intermediate
+layout/classes are private temporary files removed on success or failure.
+The same checked source/assets produced a byte-identical second PDF.
+
+To refresh screenshots, first build the application JARs and browser viewer.
+Do not substitute mocked UI or change a validation result for a screenshot.
+Use only the fictional inputs prepared below; Gmail is shown before login.
+CaptureScreenshots prints actual rendered Swing windows. capture-browser.mjs
+loads the real extension into a fresh offline Chromium context and uses the real
+loopback web workbench. The corrected capture uses the 512 MiB Python parser
+allowance and separate bounded 4096 MiB Docker-client allowance. Earlier capture
+resource failures remain in their original audit evidence. No failure was edited
+into a success. Native page screenshots show
+application content only. They are not demonstrations of store approval or a
+completed Gmail account export.
+
+Reproduction sketch (Linux, repository root; substitute candidate JAR paths):
+
+python3 -B scripts/manual/prepare_capture.py
+javac -cp "CREATOR_GUI.jar:VALIDATOR.jar" -d /tmp/eapdf-user-manual \
+  scripts/manual/CaptureScreenshots.java
+EAPDF_CONFIG=/tmp/eapdf-user-manual/config.json java -Xmx2g \
+  -cp "/tmp/eapdf-user-manual:CREATOR_GUI.jar:VALIDATOR.jar" \
+  eapdf.CaptureScreenshots creator /tmp/eapdf-user-manual docs/manual/screenshots
+
+Copy the actual generated 1m PDF from /tmp/eapdf-user-manual/converted to
+/tmp/eapdf-user-manual/manual_1m.pdf. Make the collection with:
+
+EAPDF_CONFIG=/tmp/eapdf-user-manual/config.json java -Xmx1g -jar CREATOR.jar \
+  --jobs 2 --archive-profile c \
+  --archive-output /tmp/eapdf-user-manual/manual_1c.pdf \
+  --out /tmp/eapdf-user-manual/converted /tmp/eapdf-user-manual/emails
+java -Xmx1g -cp "/tmp/eapdf-user-manual:CREATOR_GUI.jar:VALIDATOR.jar" \
+  eapdf.CaptureScreenshots validator /tmp/eapdf-user-manual docs/manual/screenshots
+CHROMIUM_PATH=/path/to/chromium MANUAL_PYTHON=/path/to/python \
+  MANUAL_CREATOR_JAR=/path/to/CREATOR.jar \
+  node scripts/manual/capture-browser.mjs
+
+Set MANUAL_CREATOR_JAR to the tested creator when preparing a new edition. Python must have
+requirements-web.txt installed without unrelated user-site packages injected.
+The real web PDF/A check also needs working Docker and its configured image.
+The capture records its own web-job tokens, stops its loopback server and removes
+only those jobs/registry records. It retains no uploaded private content.
+
+The first captured MIME boundary was generated normally; future fixture creation
+uses a fixed boundary to make the demonstration input reproducible. The visible
+fictional message content is unchanged. Captured PDFs need not be included in the
+manual; retain their hashes and checks in the private/local audit record.
+
+After recapture, rebuild the PDF, verify PDF/A again, render pages for layout
+inspection and check bookmarks/contents links. Remove only task-owned temporary
+capture/build directories after retaining needed evidence. Never delete unrelated
+/tmp files. Keep the editable HTML, screenshots, build scripts, font/license
+references and verification report with this documentation.
+
+Set MANUAL_VIEWER_ONLY=1 to refresh only the viewer screenshots and CSV check.
+The beta.7 edition retains creator/validator screenshots from beta.6 and refreshes
+all viewer screenshots using viewer 0.5.0-beta.5 and fictional email.

@@ -1,0 +1,85 @@
+{
+  "authority": "EA-PDF Table18 original header meaning; unavailable original decoding cannot prove a text mismatch. Supplied FOAF and independently readable source predicates remain mandatory.",
+  "boundary": "Undecodable octets are retained internally and escaped for diagnostics; no charset guessing or general malformed encoded-word repair certification.",
+  "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+  "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+  "cases": [
+    {
+      "file": "from-unknown.pdf",
+      "sha256": "b7d8310c111b3ac00adb5863d90d0170d90385a929ed65c0b8bbcf88000aa49f",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "to-unknown.pdf",
+      "sha256": "6d644bbd2537fda5a765679757de900d8364b6b332569438bbddfed6fa21aa06",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "cc-unknown.pdf",
+      "sha256": "3e3e491f5aedcfb9cfe81b1d5a6d06918c33c3acc3aa08172d5118b4eefd4308",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "bcc-unknown.pdf",
+      "sha256": "3454a2afaa5ed7f7227e27a767e6eebc16ebbc806e8e71e609a6ca881269a33b",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "subject-unknown.pdf",
+      "sha256": "c3e411a322911a082000c522d402571ebf9c5c637085bad61e5b8d145922162f",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "reply-unknown.pdf",
+      "sha256": "51e170b17fc3f708d4db7499b2b3241b84f28cd8f3685ff88beeb715e9a07b0d",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "identifier-unknown.pdf",
+      "sha256": "0ef104fbd391bade2913b1a94e8e7035c189faee6ed50b4675abb838540f5f53",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "independent-mismatch.pdf",
+      "sha256": "9282b429dcfe693b3ccbc73a7cec17a71a1dcf5034a4b5aa6ac8502297fcc0d9",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_FROM_FOAF"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "From"
+        ]
+      }
+    },
+    {
+      "file": "bad-xmp-mailbox.pdf",
+      "sha256": "8b9c4b48130965f5af2175c6073b2dda696de16ee40e010dcabc786ff7636ce8",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_FROM_FOAF"
+      ]
+    },
+    {
+      "file": "known-utf8.pdf",
+      "sha256": "28b12b68e1b587098049316618e2c376d93856b6264b284e9d6f7b9fc4fd82a0",
+      "expected_status": "PASS",
+      "expected_failures": []
+    }
+  ]
+}

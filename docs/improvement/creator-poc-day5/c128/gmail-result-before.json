@@ -1,0 +1,26 @@
+{
+  "exit_code": 0,
+  "read_only": true,
+  "credential_originals_unchanged": true,
+  "messages": 20,
+  "downloads": 20,
+  "label_assignments": 57,
+  "multiple_label_messages": 20,
+  "unique_children": 20,
+  "exact_original_emails": 20,
+  "exact_native_payloads": 7,
+  "verified_collection_assignments": 23,
+  "calendar_messages": 2,
+  "actual_label_name_mapping_checked": true,
+  "status": "FAIL",
+  "pdfa": "PASS",
+  "selected_iso": [
+    "PASS"
+  ],
+  "mandatory_failure_codes": [
+    "COLLECTION_CHILD_VALIDATION",
+    "COLLECTION_CHILD_VALIDATION",
+    "COLLECTION_CHILD_VALIDATION"
+  ],
+  "staging_removed": true
+}

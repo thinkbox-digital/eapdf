@@ -1,0 +1,811 @@
+{
+  "created_utc": "2026-10-18T12:18:37.704152+00:00",
+  "scope": "Partial register through batches 01\u201312. Normalized writer input reconciliation, recursive final-child consistency, bounded header/UserProperties checks and reviewed applicability. Original reader/input completeness, complete independent publication/sidecar acceptance and standards coverage remain open.",
+  "sources": {
+    "docs/reference/EA-PDF-v1.pdf": {
+      "sha256": "b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae",
+      "edition": "EA-PDF 1.0 published 2025, metadata rev 2024"
+    },
+    "docs/reference/ISO_32000-2_sponsored-ec2.pdf": {
+      "sha256": "0958d3b076f4ad3bb32c1a1aa62011f52751b58bd2e3914bc714b74a1ccc517b",
+      "edition": "ISO 32000-2:2020 sponsored EC2; later applicable errata review pending"
+    },
+    "Adobe PDF 32000-1:2008": {
+      "url": "https://raw.githubusercontent.com/adobe/dc-acrobat-sdk-docs/master/docs/standards/pdfstandards/pdf/PDF32000_2008.pdf",
+      "sha256": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff",
+      "edition": "Official Adobe archive, 2008; date clause reviewed in B03. Temporary local download, reproducible from URL."
+    }
+  },
+  "additional_reference_needed": {
+    "name": "ISO/TS 32005:2023",
+    "source": "https://pdfa.org/sponsored-standards/",
+    "status": "Official sponsored bundle/resource links lead to a personalized webstore checkout. No complete local copy in docs/reference or Downloads. Public clause 7 errata reviewed separately; full normative inclusion-rule review remains pending.",
+    "reviewed_on": "2026-10-18",
+    "review_notes": "batch-06-standards-review.md"
+  },
+  "requirements": [
+    {
+      "id": "PDF2-A-ARRAY",
+      "reference": "ISO 32000-2:2020, Table 355 and 14.7.6.1 / 14.7.6.3",
+      "strength": "SHALL / permitted representation",
+      "applies_when": "A structure element supplies /A as an attribute object or array, optionally with revision integers.",
+      "validator": "parse_userproperties; check_additional_rule_coverage; build_validation_context",
+      "creator": "PdfMailWriter.ensureUserPropertiesAttribute; addStringUserProperty",
+      "tests": [
+        "ArrayApplicabilityTests.test_user_property_dictionary_and_pdf_array_have_equal_results",
+        "ArrayApplicabilityTests.test_structure_root_and_attribute_arrays_preserve_context",
+        "UserPropertiesArrayTests"
+      ],
+      "fixtures": [
+        "dictionary-valid",
+        "array-valid"
+      ],
+      "status": "Verified for dictionary/single-owner array forms and revision 0; broader attribute resolution remains unreviewed."
+    },
+    {
+      "id": "EA1-9.7-ROOT",
+      "reference": "EA-PDF 1.0, 9.7; STRUCTTREE_ROOT_DOCUMENT (96)",
+      "strength": "SHALL",
+      "applies_when": "Logical structure is present. /K is one Document dictionary or an array containing exactly that one dictionary.",
+      "validator": "check_logical_structure; check_additional_rule_coverage; build_validation_context",
+      "creator": "PdfCreationValidator.validateStructureRoot",
+      "tests": [
+        "ArrayApplicabilityTests.test_structure_root_and_attribute_arrays_preserve_context",
+        "AdditionalSpecRuleTests.rootArraysRequireExactlyOneDocumentDictionary",
+        "AdditionalSpecRulesTests.test_structure_root_dictionary_or_exactly_one_document_array"
+      ],
+      "fixtures": [
+        "dictionary-valid",
+        "array-valid"
+      ],
+      "status": "Existing cardinality gate retained; additional/context traversals now recognize the same array form."
+    },
+    {
+      "id": "EA1-9.7-T12-N",
+      "reference": "EA-PDF 1.0, 9.7, Table 12; USERPROPS_NAME_ASCII (114)",
+      "strength": "SHALL",
+      "applies_when": "An EA-PDF custom tag declares UserProperties entries.",
+      "validator": "check_user_properties",
+      "creator": "PdfMailWriter.addStringUserProperty",
+      "tests": [
+        "ArrayApplicabilityTests.test_user_property_dictionary_and_pdf_array_have_equal_results",
+        "UserPropertyTypeTests.test_names_require_ascii_pdf_strings",
+        "UserPropertyTypeTests.test_missing_name_and_value_fail"
+      ],
+      "fixtures": [
+        "dictionary-valid",
+        "array-valid",
+        "dictionary-nonascii-name",
+        "array-nonascii-name"
+      ],
+      "status": "Verified for actual ASCII/non-ASCII PDF strings, including non-ASCII whitespace, and rejection of PDF-name/numeric/missing names in dictionary and array forms. B05 effective UserProperties resolution is reviewed separately; generic namespace inheritance remains open."
+    },
+    {
+      "id": "EA1-9.7-T12-V",
+      "reference": "EA-PDF 1.0, 9.7, Table 12; USERPROPS_TYPE (115)",
+      "strength": "SHALL",
+      "applies_when": "A declared user property has a value constrained by Table 12.",
+      "validator": "check_user_properties; userprop_value_kind",
+      "creator": "PdfMailWriter.addStringUserProperty",
+      "tests": [
+        "ArrayApplicabilityTests.test_user_property_dictionary_and_pdf_array_have_equal_results",
+        "UserPropertyTypeTests.test_string_fields_require_pdf_strings",
+        "UserPropertyTypeTests.test_stream_is_not_a_string",
+        "UserPropertyTypeTests.test_creator_generated_type_fixture_corpus"
+      ],
+      "fixtures": [
+        "dictionary-valid",
+        "array-valid",
+        "dictionary-wrong-value-type",
+        "array-wrong-value-type",
+        "batch02/dictionary-text-valid",
+        "batch02/array-text-valid",
+        "batch02/unicode-text-valid",
+        "batch02/dictionary-name-as-text",
+        "batch02/array-name-as-text",
+        "batch02/dictionary-dictionary-as-text",
+        "batch02/array-dictionary-as-text"
+      ],
+      "status": "Object types repaired in B02. B03 adds Mail_Sent PDF-date syntax/calendar/timezone checking. Bounded source-value comparisons and effective UserProperties resolution are covered by the B04/B05 records; full source associations remain open."
+    },
+    {
+      "id": "EA1-9.7-T12-SCOPE",
+      "reference": "EA-PDF 1.0, 9.7, Table 12; USERPROPS_TAG_SCOPE (116)",
+      "strength": "SHALL",
+      "applies_when": "A known custom UserProperties entry occurs on an EA-PDF tag.",
+      "validator": "check_user_properties",
+      "creator": "PdfMailWriter.addMessageUserProperties and logical-structure builders",
+      "tests": [
+        "ArrayApplicabilityTests.test_user_property_dictionary_and_pdf_array_have_equal_results",
+        "UserPropertyTypeTests.test_generic_header_scope_matches_table12"
+      ],
+      "fixtures": [
+        "dictionary-valid",
+        "array-valid",
+        "batch02/generic-header-wrong-tag"
+      ],
+      "status": "Known-field scope retained. Generic Mail_* email headers explicitly restricted to Mail_Message/Mail_FieldName/Mail_FieldValue; all six custom tags tested in dictionary/array forms. B05 covers bounded effective UserProperties class/direct resolution; generic namespace inheritance remains open."
+    },
+    {
+      "id": "EA1-9.8.4-T19",
+      "reference": "EA-PDF 1.0, 9.8.4, Table 19; attachment record required fields",
+      "strength": "SHALL for supplied structured records; recording source attachment descriptions is SHOULD",
+      "applies_when": "The document declares attachment XMP records, including c/ci containers.",
+      "validator": "check_message_metadata; validate_attachment_records",
+      "creator": "PdfMailWriter XMP attachment builders",
+      "tests": [
+        "ArrayApplicabilityTests.test_declared_container_attachment_records_are_checked"
+      ],
+      "fixtures": [],
+      "status": "Schema invocation repaired for c/ci. Native-payload/source comparison stays with owning email children. Wider record-shape/type audit is pending."
+    },
+    {
+      "id": "APP-RULE-EXECUTION",
+      "reference": "Approved improvement plan, priority 1; application assurance policy",
+      "strength": "Application requirement, not an additional EA-PDF normative clause",
+      "applies_when": "A full validation or displayed result matrix is completed.",
+      "validator": "na_reason_for_code; finalize_rule_matrix; validator_web.collapse_items",
+      "creator": "Independent acceptance of exact output is planned in priority 5",
+      "tests": [
+        "ArrayApplicabilityTests.test_unperformed_applicable_check_is_incomplete",
+        "ArrayApplicabilityTests.test_unknown_rule_does_not_become_not_applicable",
+        "ArrayApplicabilityTests.test_existing_failure_survives_incomplete_check",
+        "ArrayApplicabilityTests.test_inapplicable_source_rule_remains_na",
+        "RuleReportTests.test_web_does_not_label_unreported_checks_not_applicable",
+        "RuleReportTests.test_creator_generated_rule_fixture_corpus",
+        "GeneratedProfileIntegrationTests.test_all_six_profiles_and_nested_email_attachment",
+        "AccessibilityProfileTests.test_semantic_content_and_annotations_survive_all_profiles"
+      ],
+      "fixtures": [
+        "dictionary-valid",
+        "array-valid"
+      ],
+      "status": "Fail-closed completion retained. Six-profile and accessibility tests now reject INCOMPLETE when independent PDF/A passes, including child results. Existing explicit N/A branches/recommendations still need full review."
+    },
+    {
+      "id": "EA1-9.7-OPTIONAL-STRUCTURE",
+      "reference": "EA-PDF 1.0, 9.7, conditional logical-structure requirements",
+      "strength": "Conditional SHALL; no blanket requirement to add optional logical structure",
+      "applies_when": "Structure-specific checks apply when logical structure is present. Required mail XMP remains applicable to s/si/m/mi even without tags or original sources.",
+      "validator": "na_reason_for_code; finalize_rule_matrix",
+      "creator": "Fixture transformation removes optional structure, markers and declaration while retaining painted content and embedded source.",
+      "tests": [
+        "ArrayApplicabilityTests.test_optional_structure_absence_does_not_make_tag_checks_unperformed",
+        "ArrayApplicabilityTests.test_required_sent_checks_are_not_skipped_for_isolated_sources",
+        "RuleReportTests.test_creator_generated_rule_fixture_corpus"
+      ],
+      "fixtures": [
+        "untagged-valid"
+      ],
+      "status": "Verified by the legal untagged corpus case and isolated/container Sent boundary regression. B07 distinguishes the recommendation to create tagged Content Sets from structural requirements conditional on an existing tree."
+    },
+    {
+      "id": "EA1-9.7-T12-COUNTS",
+      "reference": "EA-PDF 1.0, 9.7, Table 12; USERPROPS_TYPE (115)",
+      "strength": "SHALL",
+      "applies_when": "Mail_SizeInBytes or Mail_NumberAttachments is declared.",
+      "validator": "check_user_properties; userprop_value_kind",
+      "creator": "Current creator does not emit these optional attributes.",
+      "tests": [
+        "UserPropertyTypeTests.test_count_fields_require_nonnegative_pdf_integers",
+        "UserPropertyTypeTests.test_creator_generated_type_fixture_corpus"
+      ],
+      "fixtures": [
+        "batch02/zero-count-valid",
+        "batch02/array-size-valid",
+        "batch02/dictionary-text-as-count",
+        "batch02/array-text-as-count",
+        "batch02/real-as-count",
+        "batch02/boolean-as-count",
+        "batch02/negative-as-count"
+      ],
+      "status": "Actual nonnegative PDF integers required; numeric strings, integral/nonintegral reals, names, Booleans, dictionaries and null/missing entries rejected. Large positive integer covered by unit regression."
+    },
+    {
+      "id": "EA1-9.7-T12-GENERIC",
+      "reference": "EA-PDF 1.0, 9.7, Table 12; generic other email header fields; USERPROPS_TYPE (115)",
+      "strength": "SHALL",
+      "applies_when": "An additional Mail_* email header user property is declared.",
+      "validator": "check_user_properties; userprop_value_kind",
+      "creator": "Current creator emits only its known string attributes.",
+      "tests": [
+        "UserPropertyTypeTests.test_generic_header_values_allow_real_numbers_but_reject_objects",
+        "UserPropertyTypeTests.test_generic_header_scope_matches_table12",
+        "UserPropertyTypeTests.test_creator_generated_type_fixture_corpus"
+      ],
+      "fixtures": [
+        "batch02/generic-real-valid",
+        "batch02/generic-integer-valid",
+        "batch02/generic-boolean-valid",
+        "batch02/generic-text-valid",
+        "batch02/generic-name-invalid",
+        "batch02/generic-dictionary-invalid",
+        "batch02/generic-array-invalid",
+        "batch02/generic-null-invalid"
+      ],
+      "status": "String/integer/real/Boolean values accepted; names, arrays, dictionaries, streams and null/missing rejected. Scope checked by EA1-9.7-T12-SCOPE."
+    },
+    {
+      "id": "APP-ABSENT-EMBEDDED-PARAMETERS",
+      "reference": "ISO 32000-2:2020 Table 45; application rule applicability",
+      "strength": "Conditional parameter checks; no new obligation to embed files or supply optional parameters",
+      "applies_when": "Stream/size/checksum checks need an embedded file candidate; binary CheckSum form needs a declared CheckSum.",
+      "validator": "build_validation_context; na_reason_for_code",
+      "creator": "Isolated children may omit embedded source/native files.",
+      "tests": [
+        "ApplicabilityEdgeTests.test_no_embedded_files_make_payload_diagnostics_inapplicable",
+        "ApplicabilityEdgeTests.test_optional_checksum_form_requires_a_declared_checksum",
+        "GeneratedProfileIntegrationTests.test_all_six_profiles_and_nested_email_attachment",
+        "AccessibilityProfileTests.test_semantic_content_and_annotations_survive_all_profiles"
+      ],
+      "fixtures": [
+        "Six-profile integration: attachment-free isolated collection children"
+      ],
+      "status": "Explicit N/A only when no candidate/declared parameter exists. Omitted checks remain INCOMPLETE when the relevant object exists."
+    },
+    {
+      "id": "EA1-9.8.3-RAW-ABSENCE",
+      "reference": "EA-PDF 1.0, 9.8.3 Table 18; Raw-To and Raw-From",
+      "strength": "Optional fields; source comparison when available",
+      "applies_when": "An inspected source header or email XMP supplies the corresponding raw header.",
+      "validator": "na_reason_for_code; check_message_metadata; check_source_field_values",
+      "creator": "Source emails may lack To or From; absent optional headers are not invented.",
+      "tests": [
+        "ApplicabilityEdgeTests.test_absent_raw_to_from_are_na_only_if_source_and_xmp_both_lack_them",
+        "GeneratedProfileIntegrationTests.test_all_six_profiles_and_nested_email_attachment"
+      ],
+      "fixtures": [
+        "Six-profile integration: source email without optional headers"
+      ],
+      "status": "Explicit N/A only when both inspected source and XMP lack the header. Existing source-present checks retained; a suppressed applicable check stays INCOMPLETE."
+    },
+    {
+      "id": "EA1-9.7-T12-PDF-DATE",
+      "reference": "EA-PDF 1.0 9.7 Table 12; ISO 32000-1:2008 / ISO 32000-2:2020 7.9.4 and PDF 2.0 notes 1\u20133; current date errata issue 251",
+      "strength": "SHALL for declared Mail_Sent UserProperties",
+      "applies_when": "Mail_Sent is supplied on Mail_Message or Mail_FieldValue.",
+      "validator": "check_user_properties; looks_like_pdf_date",
+      "creator": "Current creator does not emit optional Mail_Sent UserProperties. XMP Sent and document date writers remain distinct and unchanged.",
+      "tests": [
+        "UserPropertyDateTests.test_valid_calendar_and_reduced_precision",
+        "UserPropertyDateTests.test_valid_timezone_forms_and_legacy_apostrophe",
+        "UserPropertyDateTests.test_invalid_syntax_is_not_normalized_into_a_date",
+        "UserPropertyDateTests.test_invalid_calendar_time_and_offset_ranges",
+        "UserPropertyDateTests.test_date_requires_pdf_string_and_reports_date_expectation",
+        "UserPropertyDateTests.test_decoded_utf16_and_hex_strings_are_dates",
+        "UserPropertyDateTests.test_raw_date_and_unrelated_text_remain_text",
+        "UserPropertyDateTests.test_creator_generated_date_fixture_corpus"
+      ],
+      "fixtures": [
+        "batch03/dictionary-full-valid",
+        "batch03/array-full-valid",
+        "batch03/year-only-valid",
+        "batch03/leap-date-valid",
+        "batch03/minute-offset-valid",
+        "batch03/legacy-offset-valid",
+        "batch03/z-zero-offset-valid",
+        "batch03/max-offset-valid",
+        "batch03/utf16-date-valid",
+        "batch03/dictionary-not-a-date",
+        "batch03/array-not-a-date",
+        "batch03/xmp-date-invalid",
+        "batch03/raw-email-date-invalid",
+        "batch03/missing-prefix-invalid",
+        "batch03/whitespace-invalid",
+        "batch03/nonleap-day-invalid",
+        "batch03/century-day-invalid",
+        "batch03/month-day-invalid",
+        "batch03/hour-invalid",
+        "batch03/second-invalid",
+        "batch03/offset-hour-invalid",
+        "batch03/offset-minute-invalid",
+        "batch03/z-nonzero-invalid",
+        "batch03/offset-apostrophe-invalid",
+        "batch03/unicode-digits-invalid"
+      ],
+      "status": "Verified by focused tests, 25 independently PDF/A-valid date fixtures and final packaged acceptance. Bounded interpretation recorded in batch-03-date-review.md; source/XMP equality and other PDF date fields remain outside this repair."
+    },
+    {
+      "id": "EA1-9.7-VALUES-UNMODIFIED",
+      "reference": "EA-PDF 1.0 9.7, p.77, recommendation after Table 12; USERPROPS_VALUES_UNMODIFIED (113)",
+      "strength": "SHOULD NOT truncate or modify; mismatches are recommendations (WARN), not mandatory failures",
+      "applies_when": "Declared source-derived mail UserProperties can be compared with an inspectable retained source belonging to their enclosing message.",
+      "validator": "check_user_property_source_values; summarize_source_emails.header_values; existing select_source_email",
+      "creator": "Current GUID/Message-ID/content-property writers inspected; no creator change required by the exercised cases.",
+      "tests": [
+        "UserPropertySourceTests.test_matching_properties_pass_in_dictionary_and_array_forms",
+        "UserPropertySourceTests.test_modified_or_truncated_values_warn_without_failing_conformance",
+        "UserPropertySourceTests.test_nearest_message_guid_controls_duplicate_message_id_ownership",
+        "UserPropertySourceTests.test_raw_and_decoded_values_and_internal_spaces_are_distinct",
+        "UserPropertySourceTests.test_custom_header_scalar_values_and_missing_header",
+        "UserPropertySourceTests.test_no_retained_or_inspectable_source_is_explicitly_na",
+        "UserPropertySourceTests.test_unresolved_owner_or_source_does_not_claim_a_pass",
+        "UserPropertySourceTests.test_repeated_header_is_unavailable_and_folded_raw_header_is_preserved",
+        "UserPropertySourceTests.test_reduced_date_precision_preserves_pdf_default_values",
+        "UserPropertySourceTests.test_creator_generated_source_fixture_corpus"
+      ],
+      "fixtures": [
+        "batch04/creator-values-unchanged",
+        "batch04/dictionary-subject-unchanged",
+        "batch04/array-subject-unchanged",
+        "batch04/decoded-from-unchanged",
+        "batch04/raw-from-unchanged",
+        "batch04/same-instant-date",
+        "batch04/native-count-unchanged",
+        "batch04/custom-header-unchanged",
+        "batch04/dictionary-subject-truncated",
+        "batch04/array-subject-truncated",
+        "batch04/another-message-subject",
+        "batch04/raw-decoded-mixup",
+        "batch04/date-changed",
+        "batch04/date-truncated",
+        "batch04/native-count-changed",
+        "batch04/custom-header-changed",
+        "batch04/isolated-comparison-unavailable"
+      ],
+      "status": "Verified by focused tests, exact final-run 17-case corpus and packaged acceptance. Bounded ownership/header/date/scalar interpretation is recorded in batch-04-source-review.md. Full source associations remain open. B05 separately records effective UserProperties resolution. B10 rejects supported complete encoded-word payloads that require decoder repair and handles expected HeaderParseError locally. Decoded recommendations share that boundary; raw comparisons remain literal. See batch-10-header-decoding-review.md."
+    },
+    {
+      "id": "ISO2-14.7.6-EFFECTIVE-USERPROPERTIES",
+      "reference": "ISO 32000-2:2020 Table 355, Tables 360\u2013362, 14.7.6.1\u2013.4; current clause 14 errata; EA-PDF 9.7",
+      "strength": "Underlying PDF attribute resolution; no new EA-PDF rule invented",
+      "applies_when": "Logical structure elements have direct A attributes or C class names.",
+      "validator": "structure_attribute_objects; walk_struct_elems; parse_userproperties; shared by checks and applicability context",
+      "creator": "ensureUserPropertiesAttribute; classUserProperties; addStringUserProperty copy shared dictionaries/arrays before local updates",
+      "tests": [
+        "EffectiveUserPropertiesTests",
+        "UserPropertiesArrayTests"
+      ],
+      "fixtures": [
+        "batch05/class-dictionary",
+        "batch05/class-array",
+        "batch05/class-revision",
+        "batch05/classes-later",
+        "batch05/direct-override",
+        "batch05/direct-later",
+        "batch05/direct-revisions",
+        "batch05/missing-class",
+        "batch05/class-bad",
+        "batch05/class-array-bad",
+        "batch05/classes-bad",
+        "batch05/direct-bad",
+        "batch05/direct-last-bad",
+        "batch05/classes-replace-p",
+        "batch05/direct-replace-p",
+        "batch05/direct-empty-p",
+        "batch05/class-subject-unchanged",
+        "batch05/class-subject-changed"
+      ],
+      "status": "Verified by focused regressions, 18 PDF/A-valid fixtures, packaged acceptance and saved samples. General namespace inheritance and complete structure validation remain outside this bounded repair."
+    },
+    {
+      "id": "EA1-9.3-PAGE-CONTEXT",
+      "reference": "EA-PDF 1.0 9.3, printed p.65; rules 48\u201349",
+      "strength": "SHOULD",
+      "applies_when": "Any PDF pages exist; text context inference is a bounded heuristic.",
+      "validator": "check_additional_rule_coverage page_analysis coverage and context assessment",
+      "creator": "Unchanged; no creator defect inferred.",
+      "tests": [
+        "RecommendationApplicabilityTests.test_extraction_exception_cannot_make_page_rules_na",
+        "RecommendationApplicabilityTests.test_incomplete_or_repeated_page_analysis_cannot_prove_absence",
+        "RecommendationApplicabilityTests.test_true_zero_pages_are_distinct_from_missing_extraction_results",
+        "RecommendationApplicabilityTests.test_unidentified_context_is_unavailable_instead_of_na",
+        "RecommendationApplicabilityTests.test_partial_context_does_not_pass_all_page_text_recommendation"
+      ],
+      "fixtures": [
+        "batch06/tagged-none",
+        "batch06/untagged-none",
+        "batch06/tagged-exception",
+        "batch06/untagged-exception",
+        "batch06/tagged-empty-analysis",
+        "batch06/untagged-empty-analysis"
+      ],
+      "status": "Verified by focused regressions, exact packaged assessment corpus and final acceptance. Complete engine coverage required; inference remains heuristic, partial/unavailable manual assessment warns."
+    },
+    {
+      "id": "EA1-9.3-ACTIONABLE-LINKS",
+      "reference": "EA-PDF 1.0 9.3, printed p.66; rule 52",
+      "strength": "SHOULD",
+      "applies_when": "Source URLs are intended to be actionable; validator inspects extracted URL candidates and PDF annotations.",
+      "validator": "check_additional_rule_coverage; collect_page_text_analysis; url_has_matching_annotation",
+      "creator": "Unchanged.",
+      "tests": [
+        "RecommendationApplicabilityTests.test_extraction_exception_cannot_make_page_rules_na",
+        "RecommendationApplicabilityTests.test_incomplete_or_repeated_page_analysis_cannot_prove_absence"
+      ],
+      "fixtures": [
+        "batch06/tagged-exception",
+        "batch06/untagged-exception",
+        "batch06/tagged-empty-analysis",
+        "batch06/untagged-empty-analysis"
+      ],
+      "status": "Verified by focused regressions, exact packaged assessment corpus and final acceptance. Failed extraction is incomplete. Successful no-candidate extraction retains bounded N/A; source-intent/image-only completeness remains open."
+    },
+    {
+      "id": "EA1-9.3-UNSPECIFIED-COLOR",
+      "reference": "EA-PDF 1.0 9.3, printed p.65; rule 50",
+      "strength": "SHOULD",
+      "applies_when": "Source email color content is unspecified; assess against original color declarations and conversion policy.",
+      "validator": "check_additional_rule_coverage explicit unavailable recommendation warning",
+      "creator": "No color defect established; unchanged.",
+      "tests": [
+        "RecommendationApplicabilityTests.test_missing_source_policy_evidence_is_not_nonapplicability"
+      ],
+      "fixtures": [
+        "batch06/tagged-none",
+        "batch06/untagged-none"
+      ],
+      "status": "Unavailable assessment WARN; source/policy comparison is not implemented. No conformance failure alleged; independent PDF/A color checks remain separate."
+    },
+    {
+      "id": "EA1-9.3-PRESERVED-RENDERED-ASSETS",
+      "reference": "EA-PDF 1.0 9.3, printed p.66; rules 53\u201354",
+      "strength": "Conditional SHOULD",
+      "applies_when": "Source assets needed for rendering are also individually preserved. Expected AFRelationship is Source and association with the appropriate rendering object.",
+      "validator": "check_additional_rule_coverage explicit unavailable recommendation warnings",
+      "creator": "No preservation/association defect established; unchanged.",
+      "tests": [
+        "RecommendationApplicabilityTests.test_missing_source_policy_evidence_is_not_nonapplicability"
+      ],
+      "fixtures": [
+        "batch06/tagged-none",
+        "batch06/untagged-none"
+      ],
+      "status": "Unavailable assessment WARN; missing inventory/policy does not establish a false premise. Source/rendered-asset inventory and object mapping are still unimplemented."
+    },
+    {
+      "id": "EA1-9.7-SOURCE-LOGICAL-EQUIVALENCE",
+      "reference": "EA-PDF 1.0 9.7, printed p.74; rule 99",
+      "strength": "SHOULD",
+      "applies_when": "Original source semantics are available to reproduce in PDF; absence of PDF structure alone does not waive a recommendation to create equivalent structure.",
+      "validator": "check_additional_rule_coverage; na_reason_for_code no absent-tree shortcut for equivalence",
+      "creator": "No semantic defect established; unchanged.",
+      "tests": [
+        "RecommendationApplicabilityTests.test_missing_source_policy_evidence_is_not_nonapplicability",
+        "RecommendationApplicabilityTests.test_unavailable_logical_equivalence_cannot_be_skipped_as_absent_structure"
+      ],
+      "fixtures": [
+        "batch06/tagged-none",
+        "batch06/untagged-none"
+      ],
+      "status": "Unavailable assessment WARN; original-source/PDF semantic comparison remains unimplemented. No mandatory tagging obligation is invented."
+    },
+    {
+      "id": "APP-RECOMMENDATION-EXECUTION",
+      "reference": "Improvement plan priority 1; assurance policy distinct from EA-PDF normative strength",
+      "strength": "Application requirement",
+      "applies_when": "A validator operation needed for assessment fails or returns incomplete page coverage.",
+      "validator": "check_additional_rule_coverage page extraction exception/coverage checks; Report.summary",
+      "creator": "Unchanged.",
+      "tests": [
+        "RecommendationApplicabilityTests.test_extraction_exception_cannot_make_page_rules_na",
+        "RecommendationApplicabilityTests.test_incomplete_or_repeated_page_analysis_cannot_prove_absence",
+        "RecommendationApplicabilityTests.test_web_warning_text_explains_unavailable_assessment",
+        "RecommendationApplicabilityTests.test_creator_generated_recommendation_assessments"
+      ],
+      "fixtures": [
+        "batch06/tagged-exception",
+        "batch06/untagged-exception",
+        "batch06/tagged-empty-analysis",
+        "batch06/untagged-empty-analysis"
+      ],
+      "status": "Verified by focused regressions, exact packaged assessment corpus and final acceptance. Engine failure gives unverified WARN plus VALIDATION_INCOMPLETE; documented unavailable source/manual recommendations remain WARN without mandatory failure."
+    },
+    {
+      "id": "EA1-9.7-CUSTOM-CONTENT-TAGGING",
+      "reference": "EA-PDF 1.0 9.7 printed p.74; 9.2 and 9.6 Table 8; rule 100",
+      "strength": "SHOULD",
+      "applies_when": "Custom Content Sets are included. All declared DPart page ranges are used as a conservative superset because DPM types do not definitively enumerate every custom set.",
+      "validator": "check_tagging_recommendations; analyze_page_content.paint_coverage; check_structure_correspondence",
+      "creator": "Unchanged; no creator tagging defect inferred from unavailable semantics.",
+      "tests": [
+        "TaggingRecommendationTests.test_absent_structure_does_not_waive_custom_content_set_recommendation",
+        "TaggingRecommendationTests.test_structure_root_without_tagged_content_cannot_pass",
+        "TaggingRecommendationTests.test_paint_coverage_distinguishes_artifacts_and_unmarked_paint",
+        "TaggingRecommendationTests.test_form_invocation_uses_inner_marking_for_coverage",
+        "TaggingRecommendationTests.test_annotation_without_object_reference_does_not_pass_page_coverage",
+        "TaggingRecommendationTests.test_markinfo_and_content_correspondence_are_both_needed",
+        "TaggingRecommendationTests.test_suppressed_custom_set_check_cannot_be_skipped_for_absent_structure",
+        "TaggingRecommendationTests.test_creator_generated_tagging_corpus"
+      ],
+      "fixtures": [
+        "batch07/connected-custom",
+        "batch07/custom-untagged",
+        "batch07/custom-unmarked-paint",
+        "batch07/standard-body"
+      ],
+      "status": "Verified by focused regressions, exact packaged corpus and final acceptance. Positive evidence is syntactic stream/annotation coverage with MarkInfo and correspondence, not full accessibility/semantic proof or a definition of every custom Content Set."
+    },
+    {
+      "id": "EA1-9.7-RENDERED-HEADER-TAGGING",
+      "reference": "EA-PDF 1.0 9.7 printed p.76, conditional custom-tag bullets; rule 107",
+      "strength": "Conditional SHOULD",
+      "applies_when": "Custom EA-PDF tags are used and header fields are rendered into page content; purely standard tagging does not activate the custom-tag premise.",
+      "validator": "check_tagging_recommendations; structure_field_text_sequences field identity; na_reason_for_code",
+      "creator": "Unchanged; five source-header pairs in the fixture independently establish observed counts.",
+      "tests": [
+        "TaggingRecommendationTests.test_standard_tags_do_not_activate_custom_header_recommendation",
+        "TaggingRecommendationTests.test_field_value_alone_is_not_sufficient_header_evidence",
+        "TaggingRecommendationTests.test_unrendered_field_name_is_not_sufficient_header_evidence",
+        "TaggingRecommendationTests.test_observed_pairs_do_not_prove_all_rendered_headers_were_tagged",
+        "TaggingRecommendationTests.test_observed_name_with_no_rendered_value_does_not_invent_a_value_obligation",
+        "TaggingRecommendationTests.test_suppressed_header_check_is_na_when_no_custom_tags_are_used",
+        "TaggingRecommendationTests.test_creator_generated_tagging_corpus"
+      ],
+      "fixtures": [
+        "batch07/standard-body",
+        "batch07/header-one-pair-generic",
+        "batch07/header-values-only"
+      ],
+      "status": "Verified by focused regressions, exact packaged corpus and final acceptance. Observed names/values require immediate Mail_Field ownership and text connections. Complete rendered-header inventory is not implemented: partial/unavailable WARN remains, while missing required names fail separately. B08 compares observed custom pairs with their owning sources; standard-tagged, untagged and unrecognized rendered headers remain outside the inventory."
+    },
+    {
+      "id": "APP-KNOWN-NONBODY-APPLICABILITY",
+      "reference": "EA-PDF 1.0 9.6 Table 8, conditional BodyRendering media type; DPM_BODY_MEDIA_TYPE_MATCH_SOURCE applicability",
+      "strength": "Conditional comparison/application assurance; no new normative obligation",
+      "applies_when": "Body media comparison requires a declared BodyRendering target. N/A only for a nonempty, typed, valid declared range inventory with no BodyRendering anywhere in DPM.",
+      "validator": "declared_content_sets_are_nonbody; check_body_media_types; build_validation_context; na_reason_for_code",
+      "creator": "Unchanged; extension-valued Content Set fixture exposed the incorrect incomplete comparison.",
+      "tests": [
+        "TaggingRecommendationTests.test_declared_nonbody_ranges_make_body_media_comparison_inapplicable",
+        "TaggingRecommendationTests.test_unknown_or_unresolved_body_ranges_remain_incomplete",
+        "TaggingRecommendationTests.test_creator_generated_tagging_corpus"
+      ],
+      "fixtures": [
+        "batch07/connected-custom",
+        "batch07/custom-untagged",
+        "batch07/custom-unmarked-paint"
+      ],
+      "status": "Verified by focused regressions, exact packaged corpus and final acceptance. Missing types, bad ranges or unresolved declared bodies remain incomplete. Untagged custom-only Core Field evidence remains incomplete independently."
+    },
+    {
+      "id": "APP-OBSERVED-HEADER-TEXT",
+      "reference": "EA-PDF 1.0 9.7 printed p.76, rule 107 evidence; 7.3 rendering choices; RFC 5322 2.2 and RFC 2047 6.2",
+      "strength": "Bounded application evidence under conditional SHOULD; no new mandatory equality rule",
+      "applies_when": "An observed custom Mail_Field has a unique immediate name/value grouping and supported page/Form MCID references.",
+      "validator": "structure_field_text_sequences.content_refs; extract_scoped_field_text; collect_page_text_analysis.rendered_fields; observed_header_source_inventory",
+      "creator": "Unchanged; two independently authored messages establish five displayed fields each.",
+      "tests": [
+        "RenderedHeaderInventoryTests.test_decoded_scope_text_excludes_unrelated_body_text",
+        "RenderedHeaderInventoryTests.test_owning_guid_controls_duplicate_message_id_comparison",
+        "RenderedHeaderInventoryTests.test_missing_guid_cannot_choose_between_duplicate_message_ids",
+        "RenderedHeaderInventoryTests.test_unique_xmp_owner_and_retained_source_are_required",
+        "RenderedHeaderInventoryTests.test_matching_decoded_and_folded_header_text_is_observed_equal",
+        "RenderedHeaderInventoryTests.test_ambiguous_repeated_headers_and_unknown_labels_are_unavailable",
+        "RenderedHeaderInventoryTests.test_equivalent_date_instant_and_mailbox_formatting",
+        "RenderedHeaderInventoryTests.test_form_without_resources_does_not_borrow_an_unrelated_font_map",
+        "RenderedHeaderInventoryTests.test_same_mcid_on_another_page_cannot_supply_field_text",
+        "RenderedHeaderInventoryTests.test_reused_form_requires_an_unambiguous_page",
+        "RenderedHeaderInventoryTests.test_empty_field_cannot_borrow_matching_body_text",
+        "RenderedHeaderInventoryTests.test_conflicting_owner_identity_is_unavailable",
+        "RenderedHeaderInventoryTests.test_boolean_mcid_is_not_integer_one",
+        "RenderedHeaderInventoryTests.test_creator_generated_inventory_corpus"
+      ],
+      "fixtures": [
+        "batch08/observed-fields-match",
+        "batch08/subject-content-swapped"
+      ],
+      "status": "Scoped decoded text, strict MCIDs and explicit unavailable evidence. See batch-08-latest-evidence.json for acceptance. Not a complete rendered-header or visual/accessibility inventory; rule 107 remains partial WARN."
+    },
+    {
+      "id": "APP-OBSERVED-HEADER-OWNERSHIP",
+      "reference": "EA-PDF 1.0 9.6 message DPM / 9.7 custom structure; application assurance for rule 107",
+      "strength": "Diagnostic evidence, not an additional normative failure condition",
+      "applies_when": "Observed custom fields have a resolvable enclosing message, unique XMP owner and inspectable uniquely selected retained source.",
+      "validator": "observed_header_source_inventory; effective owner attributes; existing select_source_email; DPart owner ranges",
+      "creator": "Unchanged; fixture messages share Message-ID but have distinct GUIDs and subjects.",
+      "tests": [
+        "RenderedHeaderInventoryTests.test_owning_guid_controls_duplicate_message_id_comparison",
+        "RenderedHeaderInventoryTests.test_missing_guid_cannot_choose_between_duplicate_message_ids",
+        "RenderedHeaderInventoryTests.test_unique_xmp_owner_and_retained_source_are_required",
+        "RenderedHeaderInventoryTests.test_ambiguous_repeated_headers_and_unknown_labels_are_unavailable",
+        "RenderedHeaderInventoryTests.test_conflicting_owner_identity_is_unavailable",
+        "RenderedHeaderInventoryTests.test_creator_generated_inventory_corpus"
+      ],
+      "fixtures": [
+        "batch08/duplicate-id-missing-guid",
+        "batch08/isolated-sources-unavailable",
+        "batch08/wrong-enclosing-guid",
+        "batch08/class-map-owner",
+        "batch08/subject-content-swapped"
+      ],
+      "status": "Owner identity precedes source matching; field text never chooses an owner. Known out-of-owner pages are diagnostic differences. Missing/ambiguous ownership, repeated headers and unsupported mappings stay unavailable. Existing source matcher reused; all XMP/source associations are not certified. Acceptance recorded in batch-08-latest-evidence.json. B09 supports unique repeated-value matches; ambiguous or unsupported occurrences remain unavailable."
+    },
+    {
+      "id": "APP-SOURCE-HEADER-OCCURRENCES",
+      "reference": "EA-PDF 1.0 7.3 / 9.7 rule 107 evidence; RFC 5322 2.2 and 3.6",
+      "strength": "Application evidence supporting a conditional SHOULD; no obligation to render every source header",
+      "applies_when": "A custom Mail_Message resolves to one XMP owner and a uniquely selected inspectable retained RFC 822 source.",
+      "validator": "summarize_source_emails.header_occurrences/header_parse_defects; message_header_source_inventories; check_tagging_recommendations details",
+      "creator": "Unchanged accepted B08 artifact. Six authored files independently define source order, names and repeated values.",
+      "tests": [
+        "HeaderOccurrenceTests.test_source_occurrences_preserve_order_case_folding_and_body_boundary",
+        "HeaderOccurrenceTests.test_unobserved_source_headers_are_not_claimed_missing_or_unrendered",
+        "HeaderOccurrenceTests.test_owner_without_custom_fields_still_has_a_source_inventory",
+        "HeaderOccurrenceTests.test_folded_source_raw_and_decoded_display_stay_distinct",
+        "HeaderOccurrenceTests.test_parser_recovery_cannot_prove_a_complete_source_header_inventory",
+        "HeaderOccurrenceTests.test_undecodable_raw_octets_remain_explicitly_unavailable",
+        "HeaderOccurrenceTests.test_body_boundary_defect_does_not_hide_intact_header_occurrences",
+        "HeaderOccurrenceTests.test_creator_generated_occurrence_corpus"
+      ],
+      "fixtures": [
+        "batch09/source-order-and-unobserved",
+        "batch09/distinct-repeated-subject",
+        "batch09/identical-repeated-subject"
+      ],
+      "status": "Parsed top-level header order, name case, raw parsed values, per-name occurrence ordinals and source hashes retained. Decoder failures remain visible and parser recovery makes the inventory partial. Unmatched source headers do not establish missing rendering or tagging. Full syntax/byte-level header reconstruction and all source associations remain open; acceptance recorded in batch-09-latest-evidence.json. MIME body defects remain separate from header recovery; an intact header inventory stays available without certifying body integrity. Undecodable raw octets use explicit base64 with raw=null so both HTML renderers retain valid UTF-8; decoded comparison remains unavailable. B10 rejects supported complete encoded-word payloads that require decoder repair and handles expected HeaderParseError locally. Decoded recommendations share that boundary; raw comparisons remain literal. See batch-10-header-decoding-review.md."
+    },
+    {
+      "id": "APP-HEADER-OCCURRENCE-MAPPING",
+      "reference": "EA-PDF 1.0 9.7 conditional header recommendation; bounded application assurance",
+      "strength": "Diagnostic evidence only; no new mandatory failure rule",
+      "applies_when": "An observed custom field has supported text and a recognized source label after enclosing message/source ownership is fixed.",
+      "validator": "observed_header_source_inventory; header_display_values_equal; decoded_source_header",
+      "creator": "Unchanged; malformed duplicate-Subject probes preserve the existing MESSAGE_SUBJECT_XMP failure, confirmed independently with the B08 validator.",
+      "tests": [
+        "HeaderOccurrenceTests.test_source_occurrences_preserve_order_case_folding_and_body_boundary",
+        "HeaderOccurrenceTests.test_distinct_repeated_values_identify_one_source_occurrence",
+        "HeaderOccurrenceTests.test_identical_or_normalized_candidates_do_not_get_an_arbitrary_ordinal",
+        "HeaderOccurrenceTests.test_no_matching_repeated_value_does_not_guess_a_modified_occurrence",
+        "HeaderOccurrenceTests.test_undecodable_candidate_prevents_unique_match_claim",
+        "HeaderOccurrenceTests.test_unobserved_source_headers_are_not_claimed_missing_or_unrendered",
+        "HeaderOccurrenceTests.test_owner_without_custom_fields_still_has_a_source_inventory",
+        "HeaderOccurrenceTests.test_missing_source_retains_observed_text_and_page_evidence",
+        "HeaderOccurrenceTests.test_folded_source_raw_and_decoded_display_stay_distinct",
+        "HeaderOccurrenceTests.test_parser_recovery_cannot_prove_a_complete_source_header_inventory",
+        "HeaderOccurrenceTests.test_undecodable_raw_octets_remain_explicitly_unavailable",
+        "HeaderOccurrenceTests.test_body_boundary_defect_does_not_hide_intact_header_occurrences",
+        "HeaderOccurrenceTests.test_creator_generated_occurrence_corpus"
+      ],
+      "fixtures": [
+        "batch09/distinct-repeated-subject",
+        "batch09/identical-repeated-subject",
+        "batch09/class-map-repeated-owner",
+        "batch09/swapped-repeated-values",
+        "batch09/isolated-observations-retained"
+      ],
+      "status": "One supported equal candidate identifies a repeated source occurrence. Multiple equal candidates, unsupported decoding/formatting and zero matching repeated values stay unavailable. Observed text/page evidence survives optional source absence. Occurrence associations do not prove unique rendering, complete header tagging, source fidelity or semantic order. Rule 107 remains partial WARN; B04 attribute/raw-fidelity behavior stays separate. B10 rejects supported complete encoded-word payloads that require decoder repair and handles expected HeaderParseError locally. Decoded recommendations share that boundary; raw comparisons remain literal. See batch-10-header-decoding-review.md."
+    },
+    {
+      "id": "APP-ENCODED-SOURCE-FAILURES",
+      "reference": "EA-PDF 1.0 9.7 recommendation evidence under rules 107/113; RFC 2047 2, 4 and 6.2; RFC 2045 6.8; Python 3.12 email/base64 exception behavior",
+      "strength": "Application assurance; no additional mandatory PDF or source-syntax rule",
+      "applies_when": "A retained source header contributes to decoded fidelity or observed occurrence comparisons.",
+      "validator": "decoded_source_header; check_user_property_source_values; message_header_source_inventories; decoded_header_text expected parser-error fallback",
+      "creator": "Unchanged B08 artifact. Six authored source pairs retain valid core fields and valid/malformed optional encoded headers.",
+      "tests": [
+        "EncodedHeaderSafetyTests.test_supported_valid_encoded_words_keep_their_display_values",
+        "EncodedHeaderSafetyTests.test_malformed_encoded_payloads_are_explicitly_unavailable",
+        "EncodedHeaderSafetyTests.test_bad_unobserved_header_does_not_truncate_later_occurrences",
+        "EncodedHeaderSafetyTests.test_bad_repeated_candidate_cannot_select_a_supported_match",
+        "EncodedHeaderSafetyTests.test_silent_repairs_cannot_prove_attribute_fidelity",
+        "EncodedHeaderSafetyTests.test_raw_attribute_comparison_preserves_malformed_encoded_text",
+        "EncodedHeaderSafetyTests.test_unexpected_decoder_engine_errors_are_not_reclassified_as_bad_source",
+        "EncodedHeaderSafetyTests.test_expected_parser_exception_uses_the_source_unavailable_boundary",
+        "EncodedHeaderSafetyTests.test_creator_generated_encoding_corpus"
+      ],
+      "fixtures": [
+        "batch10/valid-encoded-property",
+        "batch10/bad-source-only",
+        "batch10/invalid-base64-alphabet",
+        "batch10/incomplete-base64-padding",
+        "batch10/invalid-q-escape",
+        "batch10/isolated-bad-source-omitted"
+      ],
+      "status": "Expected parser errors and malformed supported B/Q payloads remain unavailable per occurrence/comparison; unrelated later headers and checks continue. Raw attribute fidelity stays literal, and unexpected engine errors propagate. B09 baseline reproduces the source-only VALIDATION_ERROR; final acceptance recorded in batch-10-latest-evidence.json. This does not certify all RFC syntax/placement, IANA charset validity, incomplete delimiters, word/line limits or original eight-bit interpretation."
+    },
+    {
+      "id": "APP-FINAL-COLLECTION-CHILDREN",
+      "reference": "EA-PDF 1.0 section 7.6, printed pages 49\u201350; collection members remain EA-PDFs, including recursive containers. Existing COLLECTION_CHILD_VALIDATION rule.",
+      "strength": "Application acceptance assurance supporting the collection requirement; no new normative rule or nesting limit.",
+      "applies_when": "The creator accepts the final serialized bytes of c/ci outputs containing non-source EA-PDF members.",
+      "validator": "Existing Python check_collection_children remains unchanged; independent corpus uses validate_one for parent and children.",
+      "creator": "PdfCreationValidator.validate / validateContainedFiles recursively check reopened child bytes through the existing Common.writePdfAtomically acceptance gate. Shared eight-level nesting, configured message-count and expanded-output-byte bounds fail closed.",
+      "tests": [
+        "CollectionChildAcceptanceTests.damagedSerializedChildrenCannotReplaceAnExistingCollection",
+        "CollectionChildAcceptanceTests.finalCollectionValidationIncludesGrandchildren",
+        "CollectionChildAcceptanceTests.excessiveNestingIsRejectedBeforeStackExhaustion",
+        "CollectionChildAcceptanceTests.nestedChildrenShareCountAndExpandedByteBudgets"
+      ],
+      "fixtures": [
+        "batch11/valid-c",
+        "batch11/valid-ci",
+        "batch11/missing-sent-c",
+        "batch11/missing-sent-ci",
+        "batch11/missing-dpart-c",
+        "batch11/missing-dpart-ci",
+        "batch11/bad-attachment-checksum-c",
+        "batch11/bad-attachment-checksum-ci"
+      ],
+      "status": "B11 verified: 142 Java passes, 249 Python run/248 pass/one optional PREMIS skip, twelve profile reports PASS, eight corpus parents/children PDF/A PASS with two EA-PDF PASS/six exact child failures. See batch-11-latest-evidence.json. Creator consistency subset only; original-input completeness, all metadata cardinality/ownership, complete EA-PDF/PDF-A gates and sidecar conformance remain open."
+    },
+    {
+      "id": "APP-NORMALIZED-INPUT-INVENTORY",
+      "reference": "EA-PDF 1.0 sections 7.2, 7.5, 7.6, 9.4, 9.8.3 and 9.8.4; application reconciliation against expected normalized inputs.",
+      "strength": "Application preservation assurance; no additional mandatory PDF-only rule.",
+      "applies_when": "Current single-message/archive/collection writer entry points receive normalized records before rendering, across s/si/m/mi/c/ci.",
+      "validator": "Independent pikepdf input reconciliation in verify_eapdf_input_inventory_fixtures.py; PDF-only Python validator unchanged.",
+      "creator": "PreservationInventory.capture and Reconciliation via PdfCreationValidator, Common.writePdfAtomically and the three current PdfMailWriter entry points. Immutable stream SHA-256/length, per-GUID occurrence consumption and named collection-member evidence.",
+      "tests": [
+        "PreservationInventoryTests.intactAllSixProfilesMatchExpectedInputs",
+        "PreservationInventoryTests.missingMessageAndItsMetadataCannotDisappearTogether",
+        "PreservationInventoryTests.missingAttachmentAndItsMetadataCannotDisappearTogether",
+        "PreservationInventoryTests.changedPayloadWithConsistentNewPdfMetadataIsRejected",
+        "PreservationInventoryTests.sameFilenamePayloadsCannotBeSwappedBetweenOwners",
+        "PreservationInventoryTests.identicalOccurrencesCannotReuseOneAnnotation",
+        "PreservationInventoryTests.snapshotHashesStagedPayloadBytesBeforeTheyChange",
+        "PreservationInventoryTests.changedRetainedSourceWithUpdatedChecksumsIsRejected",
+        "PreservationInventoryTests.isolatedOutputsDoNotRequireRetainedSources",
+        "PreservationInventoryTests.missingCollectionChildCannotHideBehindParentMetadataOrOrphanObjects"
+      ],
+      "fixtures": [
+        "batch12/valid-s",
+        "batch12/valid-si",
+        "batch12/valid-m",
+        "batch12/valid-mi",
+        "batch12/valid-c",
+        "batch12/valid-ci",
+        "batch12/source-omitted-si",
+        "batch12/source-omitted-mi",
+        "batch12/source-omitted-ci",
+        "batch12/missing-message-m",
+        "batch12/missing-message-mi",
+        "batch12/missing-message-c",
+        "batch12/missing-message-ci",
+        "batch12/missing-attachment-s",
+        "batch12/missing-attachment-si",
+        "batch12/missing-attachment-m",
+        "batch12/missing-attachment-mi",
+        "batch12/missing-attachment-c",
+        "batch12/missing-attachment-ci",
+        "batch12/changed-native-bytes",
+        "batch12/swapped-native-owners",
+        "batch12/reused-identical-occurrence",
+        "batch12/changed-staged-bytes",
+        "batch12/changed-source-bytes",
+        "batch12/missing-listed-child"
+      ],
+      "status": "B12 verified: 152 Java passes; 249 Python run/248 pass/one optional PREMIS skip; twelve profile reports PASS; 25 corpus candidates and 21 children PDF/A PASS with nine accepts/sixteen exact inventory rejects. Nine rejected candidates still PASS PDF-only EA-PDF. Writer-entry boundary only; reader/dispatch completeness, all XMP/source associations, reconstruction provenance and independent publication/sidecar acceptance remain open."
+    }
+  ],
+  "review_checkpoint": "Authoritative rules: validator_rule_text.json has 219 numbered descriptions and 297 supporting requirement/guidance review records. All 46 sections/19 tables have dispositions. Eight description/documentation findings corrected and one RF interpretation resolved; 19 findings remain open. Twenty-one focused regressions pass. Checking logic and creator code unchanged; legacy repair records are historical evidence, not another rule authority.",
+  "reviewed_errata": {
+    "pdf_date_clause": {
+      "url": "https://pdf-issues.pdfa.org/32000-2-2020/clause07.html#7.9.4",
+      "reviewed_on": "2026-10-18",
+      "scope": "Date clause only, including issue 251 clarification. This does not complete the full standards errata review."
+    },
+    "structure_attributes": {
+      "url": "https://pdf-issues.pdfa.org/32000-2-2020/clause14.html#14.7.6.1",
+      "reviewed_on": "2026-10-18",
+      "scope": "Table 355 and 14.7.6.1\u2013.2 only. Remaining applicable errata review is open."
+    },
+    "ts32005_clause7": {
+      "url": "https://pdf-issues.pdfa.org/32005-2023/clause07.html",
+      "reviewed_on": "2026-10-18",
+      "scope": "Public Table 5 corrections including issue 440 only. No full ISO/TS 32005 copy, normative inclusion-rule implementation or complete errata claim."
+    }
+  },
+  "current_priority": "Audit authoritative validator_rule_text.json only for uncovered EA-PDF requirements after checking actual veraPDF profile coverage. Delegate covered standards, retain stronger EA-PDF extras, then improve validator routing/logic and creator afterward.",
+  "specification_audit": {
+    "status": "Authoritative descriptions updated; complete accuracy/coverage gate remains open.",
+    "entry_point": "validator_rule_text.json",
+    "inventory": "docs/improvement/specification-audit/requirements.json",
+    "clause_inventory": "docs/improvement/specification-audit/clause-inventory.json",
+    "rule_crosswalk": "docs/improvement/specification-audit/rule-crosswalk.json",
+    "findings": "docs/improvement/specification-audit/findings.json",
+    "local_pdf_pages": 97,
+    "numbered_sections": 46,
+    "tables": 19,
+    "requirement_and_guidance_records": 297,
+    "current_rule_codes_linked": 219,
+    "open_findings": 19,
+    "resolved_requirement_findings": 9,
+    "legacy_register_role": "The 31 records below retain historical scoped repair/test evidence; they are not the whole-specification inventory.",
+    "validator_or_creator_behavior_changed": false,
+    "authoritative_rule_document": "validator_rule_text.json",
+    "rule_description_records": 219,
+    "rule_descriptions_updated": true,
+    "custom_scope": "Only requirements not covered by veraPDF; validation_scope in authoritative JSON controls the reviewed boundary, runtime routing still pending."
+  }
+}

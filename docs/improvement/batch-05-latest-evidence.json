@@ -1,0 +1,499 @@
+{
+  "recorded_utc": "2026-10-18T17:02:53.441531+00:00",
+  "status": "Batch 05 verified; overall improvement plan incomplete.",
+  "scope": "Effective UserProperties from C ClassMap then A, whole-P array-order precedence, revisions as currency, creator local copies.",
+  "source_sha256": {
+    "validate_eapdf.py": "0e4b95e0000a3d87946a55308f631a81ae9d7d305fde801f84163d7753363ed5",
+    "src/main/java/eapdf/PdfMailWriter.java": "ff1fd0803cb4280f4a35e95899b7b391a329128aab0ad7940d2853219df2ae07",
+    "src/test/java/eapdf/UserPropertiesArrayTests.java": "9df7a5524fdd664695c720367d2f99a55a01edaded5a77b971d1eb0b6530169c",
+    "scripts/build_eapdf_rule_fixtures.py": "6d0b2d72b7dbce9d26fdc3c05a01983eddbc45a215ab350731cb29919103d3c4",
+    "tests/test_effective_userproperties.py": "22e194ccd98d83c5c8e5b8dd015b0d2396b0befab7f84d1a4995bc3346dde48e",
+    "tests/fixtures/eapdf/batch05/cases.json": "eefc5b611303ba96dacfb64c669d71fd47589f9e17e4513133647854288b1ef1",
+    "tests/fixtures/eapdf/batch05/source.eml": "9a4347c8f7dc917227eaa3529ca9bf7ca8f6dfbc2b812d0a67a1f40de01cfb5f",
+    "tests/test_preservation_safety.py": "27721ae6bf6c7d27ada56b39498f0f35f308b83064b357d18e1535db86719bfe",
+    "tests/test_first_five_fixes.py": "848e4900fd18c0bc1bb8c1d01f9565edd67e598081a84ef6657960ef09ee17ee",
+    "tests/test_validator_correctness.py": "5269278eb2fe425ee351ea3af762d8846679e214e027303c738accba52d10f23",
+    "tests/test_generated_profiles.py": "c135aa58f72dabf0631d7895e1cfedc7b0505e8575e0a4ffb672b4cd21907e6b",
+    "tests/test_dpart_diagnostics.py": "437c6428ae6ffa07b7dbcb6b20c043bb3a38819eac092bee07bd3b352a6b02c5",
+    "tests/test_source_attachment_references.py": "3256bcb4192c09b8e20434caf592cc975c1ab2c518d142fc4ed63b9329913295",
+    "tests/test_remaining_workflow.py": "ba34a13204c0e241f9844b44f8a38f4a24706e86b6c2f202ba61b28c169f333b",
+    "tests/test_accessibility_profiles.py": "19b304ab28cbff110d666f800902b6c26951879b4fd16d25ef05dce917aa5075",
+    "tests/test_creator_accuracy.py": "35aa1fb1a3c9571d88d45255f007304b7e5d0dd3fc3de1110a9aff1b6b7db3a1",
+    "tests/test_validator_completion.py": "ed76383763049f489e019b32aa99ef934ba699b95d906ed765ae1da47691f336",
+    "tests/test_report_observed_values.py": "5140ddba2c33ff69c764fe6779e0b40f7d1253a8de7408263a58d0dd9bffe915",
+    "tests/test_spec_repairs.py": "3aeaa7774309fa6388e85eec0b240582cacbca579059cccecc8a42b3362b0910",
+    "tests/test_spec_repair_integration.py": "230e6e08efa02b35ea1aac779c8b6d0a476118db20b3c803dd84f53980d37aff",
+    "tests/test_followup_security.py": "703f661936c980429119389bfebb6cd9301d457466611579ca74039bd225bcfb",
+    "tests/test_supervised_conversion.py": "8fa2e5220c0af07ad30215ce3b775876060df48e4fea1d31e1e4d8cfaa5172bc",
+    "tests/test_additional_spec_rules.py": "f5e6bb7824be4df733218c3c5f7684ab6c62c35fa4c556bce3ec49e6bcddd155",
+    "tests/test_array_applicability.py": "722be660da12c98190682d3740fc8bd0cc7fd660b6e78671da02ba68e0c31114",
+    "tests/test_userproperty_types.py": "b334e6b11c339ca489fe91da246632b73f3444843cdab14f5add4378cab077fd",
+    "tests/test_applicability_edges.py": "70507212f019ceec8772e6777bc9bf8b032ced3841484015c7b485250c70c5d8",
+    "tests/test_userproperty_dates.py": "6ec78e573a5c8163911248a3ab4bf4eb19806e9a119e8cfe3806c0a822f5fe03",
+    "tests/test_userproperty_sources.py": "dfd93ed143184bcc8a0b541e1e526c8c6d5a770e93cb20453544f1824ceeedcd"
+  },
+  "build_sha256": {
+    "/tmp/eapdf-improvement-batch05/build/emailtopdfa-1.4.0.jar": "5ba9530866cd4e26d522ff5f1b7e005483edc87db3fbd55c14c2875faeee21d4",
+    "/tmp/eapdf-improvement-batch05/build/emailtopdfa-1.4.0-gui.jar": "97b4e62d9eeb68d301198ff277e2bb1c0df73b4e40d07b18946e514c4e30afe5"
+  },
+  "python": {
+    "run": 188,
+    "passed": 187,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 411.999,
+    "skip_reason": "Optional official PREMIS XSD not configured."
+  },
+  "java": {
+    "tests": 138,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "corpus": [
+    {
+      "case": "class-dictionary",
+      "sha256": "6376b5f5bf12c115ee92d294631fc936a5c2cc5c485bd27be79e9162719af239",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "class-array",
+      "sha256": "085fd548f002fab577c5876f232de43b096a77a73e2afe5598852365f9cee1f7",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "class-revision",
+      "sha256": "804333f681a249c214f5228921920ff09b06f0ba666e97de08b3e45352187ea0",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "classes-later",
+      "sha256": "969f640dbc2c69d9bd2c6bce28b9983d28f6e7127ee79fc02381a19d84af7fcb",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "direct-override",
+      "sha256": "5c50d4560eee2f602acf008d428514ff772ddd43a0e67fe64dc13effadff0b2b",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "direct-later",
+      "sha256": "02595b54ae5d8a58e000430c18c6dfa3d24a032e143278a41d32ed7cd9a0c1b7",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "direct-revisions",
+      "sha256": "53239abb35d6cfe3dcd3acee6ca948210b6afba3a8a33c3ac02cdaa80e6b566a",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "missing-class",
+      "sha256": "5ea086c9ac65d2e717fb7ccc1fd33d8b43cb2d2b751084da0a3c785011c82cae",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "class-bad",
+      "sha256": "70ff0dee9c1f805eb30a5149f4f323735cb7fc6411791393d7cdb0f7855b6226",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "class-array-bad",
+      "sha256": "0c4e86a550952d066517a63aafe46d95b335d7b6e0d2acb7fc8b46297d224064",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "classes-bad",
+      "sha256": "fac0724ce1f5db3914e292aaae6bcc969763301aed849920c2052a7cb71dd45b",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "direct-bad",
+      "sha256": "80358119253553f3d4cec6f0f211c014f3b3fec8d6b1052da42822f6c06a5f4b",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "direct-last-bad",
+      "sha256": "7a004ffc66917e9acf79999e08ac40899b007dd1a3cfe93f503ae8fd13001d6f",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "classes-replace-p",
+      "sha256": "4a4c645b16db28c973fa5f001c0f2c184cbe44ae81cf646dba4135ee59ea2b7d",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "MAIL_MESSAGE_GUID_ATTRIBUTE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "direct-replace-p",
+      "sha256": "bf0e384f051ffe0a9be051b24cf8ec2a8b40ae85b7422518b893b8ab8223c25f",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "MAIL_MESSAGE_GUID_ATTRIBUTE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "direct-empty-p",
+      "sha256": "b614840563456d7f1c3a0635d84fdea02adb5c8df7b002e611376422e25b2144",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "MAIL_MESSAGE_GUID_ATTRIBUTE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "class-subject-unchanged",
+      "sha256": "444cedf7eae4b732004ea0fe54799ad5f44e081c4c8f5a9cb7286e352d05a93f",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "class-subject-changed",
+      "sha256": "d510ab698102e4a519596c8a05f88541276a55f896902e4dd26535517a4c153a",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    }
+  ],
+  "profiles": [
+    {
+      "report": "docs/improvement/batch-05-profile-reports/1c.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 3
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/1ci.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 3
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/1m.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/1mi.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/1s.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/1si.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/accessibility/1c.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 2
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/accessibility/1ci.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 2
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/accessibility/1m.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/accessibility/1mi.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/accessibility/1s.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-05-profile-reports/accessibility/1si.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    }
+  ],
+  "saved_profiles": [
+    {
+      "report": "docs/improvement/batch-05-saved-reports/sample_1c.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 1
+    },
+    {
+      "report": "docs/improvement/batch-05-saved-reports/sample_1ci.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 1
+    },
+    {
+      "report": "docs/improvement/batch-05-saved-reports/sample_1m.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-05-saved-reports/sample_1mi.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-05-saved-reports/sample_1s.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-05-saved-reports/sample_1si.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    }
+  ],
+  "saved_examples_sha256": {
+    "examples/sample_1s.pdf": "7c5d18adbad17d97fa28f8daf89b440fc33da79bad28ab46220b7de42bb3e238",
+    "examples/sample_1si.pdf": "d5e4fbd1f41d4ded75551bcd2ddd043650c38b1bf8ebc455a00a4a6f3c4ccf1d",
+    "examples/sample_1m.pdf": "300b5e8e36f8fa84312e22ffad1864e715bc5c12e5b38b7e27c580a7d03f27eb",
+    "examples/sample_1mi.pdf": "4e4dbedfb0ee2776bdcb78244b10e2f47c6b2364891d01d7154bf1ec2144ac8a",
+    "examples/sample_1c.pdf": "7b1c1b1449658bb80f7533c8e6247c66908f5a007d94f7ac3e4ec2dca92431c0",
+    "examples/sample_1c_index.xlsx": "767dfd61ee2bd7048d725a8ccdd740eff472ea7fe7ba2120de338809c7eaaaeb",
+    "examples/sample_1c_finding_aid.pdf": "6f11730fbbfe73ad07a37ddc4de0747faab1ac88165056a55867dc4e3f0240ee",
+    "examples/sample_1ci.pdf": "aa2cf87612ed4068eb855aea952edd912c3ed27adfaeb525c1007233a0f67922",
+    "examples/sample_1ci_index.xlsx": "904ceb633ef3b8b350e3e6b52280321a9678f87f6f51ae19081569b26ef33294",
+    "examples/sample_1ci_finding_aid.pdf": "3172711f417294966b79fdf0cd867c8c99db3d2382c6f9300c8b6a5512132678"
+  },
+  "commands": {
+    "build": "mvn -o -Deapdf.build.directory=/tmp/eapdf-improvement-batch05/build package",
+    "acceptance": "env -u PYTHONPATH EAPDF_GENERATOR_CLASSPATH=/tmp/eapdf-improvement-batch05/build/emailtopdfa-1.4.0.jar EAPDF_INTEGRATION_REPORT_DIR=/tmp/eapdf-improvement-batch05/final-integration python3 -B -m unittest discover -s tests -v",
+    "corpus": "env -u PYTHONPATH EAPDF_GENERATOR_CLASSPATH=/tmp/eapdf-improvement-batch05/build/emailtopdfa-1.4.0.jar EAPDF_RULE_FIXTURE_SET=batch05 python3 -B scripts/build_eapdf_rule_fixtures.py",
+    "samples": "env -u PYTHONPATH EAPDF_GENERATOR_CLASSPATH=/tmp/eapdf-improvement-batch05/build/emailtopdfa-1.4.0.jar EAPDF_SAMPLE_REPORT_DIR=/tmp/eapdf-improvement-batch05/samples python3 -B scripts/regenerate_email_samples.py"
+  },
+  "baseline": "docs/improvement/batch-05-baseline.json",
+  "frozen_inputs": "docs/improvement/batch-05-verification-inputs.json",
+  "normative_review": "docs/improvement/batch-05-attribute-review.md",
+  "corpus_origin": "Exact final packaged attribute-corpus copied from final-integration; standalone corpus log also retained.",
+  "limitations": [
+    "Bounded UserProperties resolution, not general namespace/attribute inheritance or complete PDF structure validation.",
+    "Full standards register, ISO/TS 32005/applicable errata and explicit N/A review remain incomplete.",
+    "Broader source inventory/ownership and arbitrary header semantics remain open.",
+    "Optional PREMIS schema skipped; no external certification, commit or deployment."
+  ],
+  "durable_artifacts": {
+    "docs/improvement/batch-05-corpus/config.json": "e995f0d8f72463627fa0debb54f534c15cf5ad26ec001be802dadd6d7bb8e9c7",
+    "docs/improvement/batch-05-corpus/generation.log": "9a5305e76e2523870b3e0fc0a4baa45b0e2ab19236f233a3d3e5dad1ed18b0e9",
+    "docs/improvement/batch-05-corpus/class-dictionary.html": "80c1256d4d399f7d42b0a3c90af3d3792e999072455969a8b1c01a1a66ccd67a",
+    "docs/improvement/batch-05-corpus/class-dictionary.json": "bb1148aaeb254d8eebe13179bc5ae33a692e99bcf3a79677e7b670847bc7c787",
+    "docs/improvement/batch-05-corpus/class-array.html": "673bf1078758d46420c1e8bfb9ca611f0c86006ea73542cbc96064a6b6bcf992",
+    "docs/improvement/batch-05-corpus/class-array.json": "7b79afb5b38a04cef414fc87426bcd6a95e0f0ffcffa487e3514d694bb459da0",
+    "docs/improvement/batch-05-corpus/class-revision.html": "ff632a61397445a31230ae8ddd95c30658526b3509a20144a5db438c5c079ef5",
+    "docs/improvement/batch-05-corpus/class-revision.json": "8398c2e24b531a27126c219fc3bab5285b1605feb35aad75f8ea78cd25a6becf",
+    "docs/improvement/batch-05-corpus/classes-later.html": "9c638911932326932e3b56c54a5e47e1ead4874d2947e193d599d20107e1b507",
+    "docs/improvement/batch-05-corpus/classes-later.json": "cf9d53ade87a5c18ac44118de9277b003f233b810f3695420faf69fa864d5cfb",
+    "docs/improvement/batch-05-corpus/direct-override.html": "5459f83786e40b075497ab9473a77cb7ec032da21164e1ca0290bc08c3e46d1a",
+    "docs/improvement/batch-05-corpus/direct-override.json": "1448def0866f8094fefc3302a0c26fff8e9323582cf9df62e9c0958b9cbbe2ec",
+    "docs/improvement/batch-05-corpus/direct-later.html": "95dc30b7eeeffbeaa138d0f445fef1c47ef3f7b14b7c2577c1370b2ba8b20c83",
+    "docs/improvement/batch-05-corpus/direct-later.json": "f270398521054c7bd9dd1b1c0bace3f9c225bead0682f9b7664846355d46616b",
+    "docs/improvement/batch-05-corpus/direct-revisions.html": "ff1809dd31ab8157ac06fe035f95824c600b27dde4f03519b5a36efe0dcf6f69",
+    "docs/improvement/batch-05-corpus/direct-revisions.json": "fb98a96eb143bc350f38611bc40854d29ca4b5527d78f7cc156c7d0d5d5a9874",
+    "docs/improvement/batch-05-corpus/missing-class.html": "7e0a7d40297fa916a69acf38b875f9735f116086af58ce94d27a73429b0828b7",
+    "docs/improvement/batch-05-corpus/missing-class.json": "6bc92d2e836f03854bbcc47d5a8a5dddbddf1b0e38092b89ea81f5786ae4fa29",
+    "docs/improvement/batch-05-corpus/class-bad.html": "48d263ea9004bfcbd77e874a9cc034aa79a08c0c741bf0d9e47f9992d14b8c81",
+    "docs/improvement/batch-05-corpus/class-bad.json": "38d8ee81a265b0eb9d77f979a2db7b0abb3d90711e48f7b41b75170d401e3809",
+    "docs/improvement/batch-05-corpus/class-array-bad.html": "9662122ef254bec2e7b5409ed87679b6c4b79ac558b86626b6bdf27fc878c5f3",
+    "docs/improvement/batch-05-corpus/class-array-bad.json": "1d7292c93fab672a39de264953c630f9d9a7b5302f58d1f56fe11cccf60ca452",
+    "docs/improvement/batch-05-corpus/classes-bad.html": "8044981a0d6e91c165f2de05c4b0fe51fc8df8fcd27ac1a5d98690b7422bc892",
+    "docs/improvement/batch-05-corpus/classes-bad.json": "e16f9865b001d0de8beb1cac980ae0a6ec2a857ee68c2d4807ffd1ac58d95603",
+    "docs/improvement/batch-05-corpus/direct-bad.html": "079ee0f115c1b5b671a2546808e42eebf95a52cfc4868d101130b3b25a9f6fcb",
+    "docs/improvement/batch-05-corpus/direct-bad.json": "afbcf444e8eb8b825dd5d240aef7131ef3106dbd1e73c963ba1a5318ad2370f5",
+    "docs/improvement/batch-05-corpus/direct-last-bad.html": "2421cc2ab8988591a05750c549ba7e50285e6fd36b958aea8129afcc1deecf0b",
+    "docs/improvement/batch-05-corpus/direct-last-bad.json": "00e5f008f187ac75adcaaf0ed6c4f1ec8919950f106b856db8bc7159e467900c",
+    "docs/improvement/batch-05-corpus/classes-replace-p.html": "b6956ebcd2ff3d0e3b1b0f73713cb114332e8e09b779d594213b00927eba2c68",
+    "docs/improvement/batch-05-corpus/classes-replace-p.json": "6f32178da8b49b693a985fbb7514e1685f4a845efbda518a9d5f0819e7b65ad1",
+    "docs/improvement/batch-05-corpus/direct-replace-p.html": "a4001b75ceef917948fcf0c016e8b7e88c6115c8d63db917ad53b60a8e531ba0",
+    "docs/improvement/batch-05-corpus/direct-replace-p.json": "f20352f7d8b3c9038839118aecdbc07efdb31180aab2987936a703001b2eb3b5",
+    "docs/improvement/batch-05-corpus/direct-empty-p.html": "7ef815476cfa1352b18202f8f0cb4d6fed1df85298e6c3d9a054ea9397fb9a87",
+    "docs/improvement/batch-05-corpus/direct-empty-p.json": "c9f8f26ee00dcb0736756312f9996ff4f36a4346de4b1fb9d19f67ce6c7e3507",
+    "docs/improvement/batch-05-corpus/class-dictionary.pdf": "6376b5f5bf12c115ee92d294631fc936a5c2cc5c485bd27be79e9162719af239",
+    "docs/improvement/batch-05-corpus/class-array.pdf": "085fd548f002fab577c5876f232de43b096a77a73e2afe5598852365f9cee1f7",
+    "docs/improvement/batch-05-corpus/class-revision.pdf": "804333f681a249c214f5228921920ff09b06f0ba666e97de08b3e45352187ea0",
+    "docs/improvement/batch-05-corpus/classes-later.pdf": "969f640dbc2c69d9bd2c6bce28b9983d28f6e7127ee79fc02381a19d84af7fcb",
+    "docs/improvement/batch-05-corpus/direct-override.pdf": "5c50d4560eee2f602acf008d428514ff772ddd43a0e67fe64dc13effadff0b2b",
+    "docs/improvement/batch-05-corpus/direct-later.pdf": "02595b54ae5d8a58e000430c18c6dfa3d24a032e143278a41d32ed7cd9a0c1b7",
+    "docs/improvement/batch-05-corpus/direct-revisions.pdf": "53239abb35d6cfe3dcd3acee6ca948210b6afba3a8a33c3ac02cdaa80e6b566a",
+    "docs/improvement/batch-05-corpus/missing-class.pdf": "5ea086c9ac65d2e717fb7ccc1fd33d8b43cb2d2b751084da0a3c785011c82cae",
+    "docs/improvement/batch-05-corpus/class-bad.pdf": "70ff0dee9c1f805eb30a5149f4f323735cb7fc6411791393d7cdb0f7855b6226",
+    "docs/improvement/batch-05-corpus/class-array-bad.pdf": "0c4e86a550952d066517a63aafe46d95b335d7b6e0d2acb7fc8b46297d224064",
+    "docs/improvement/batch-05-corpus/classes-bad.pdf": "fac0724ce1f5db3914e292aaae6bcc969763301aed849920c2052a7cb71dd45b",
+    "docs/improvement/batch-05-corpus/direct-bad.pdf": "80358119253553f3d4cec6f0f211c014f3b3fec8d6b1052da42822f6c06a5f4b",
+    "docs/improvement/batch-05-corpus/direct-last-bad.pdf": "7a004ffc66917e9acf79999e08ac40899b007dd1a3cfe93f503ae8fd13001d6f",
+    "docs/improvement/batch-05-corpus/classes-replace-p.pdf": "4a4c645b16db28c973fa5f001c0f2c184cbe44ae81cf646dba4135ee59ea2b7d",
+    "docs/improvement/batch-05-corpus/direct-replace-p.pdf": "bf0e384f051ffe0a9be051b24cf8ec2a8b40ae85b7422518b893b8ab8223c25f",
+    "docs/improvement/batch-05-corpus/direct-empty-p.pdf": "b614840563456d7f1c3a0635d84fdea02adb5c8df7b002e611376422e25b2144",
+    "docs/improvement/batch-05-corpus/class-subject-unchanged.pdf": "444cedf7eae4b732004ea0fe54799ad5f44e081c4c8f5a9cb7286e352d05a93f",
+    "docs/improvement/batch-05-corpus/class-subject-unchanged.html": "bcf31303e83f3190ee07a85ee45d548424d9d9c8fe666ada991091b1295dc023",
+    "docs/improvement/batch-05-corpus/class-subject-unchanged.json": "1cd302bdeb6a1aebe997417b30ee0c7ea2a651b362cd8918aacd3a6f10ab3ee1",
+    "docs/improvement/batch-05-corpus/class-subject-changed.pdf": "d510ab698102e4a519596c8a05f88541276a55f896902e4dd26535517a4c153a",
+    "docs/improvement/batch-05-corpus/class-subject-changed.html": "7a7a313cd9e04c168d078cafa6760288ad78666dcb28ea9468fc4b9191650df6",
+    "docs/improvement/batch-05-corpus/class-subject-changed.json": "29e2980d2185fcbc5aba41b63d0350f9f8b6f1b47f649f078a1ca75ef748d134",
+    "docs/improvement/batch-05-corpus/results.json": "3425a9527fc1209263fbbe9f38aa441dc7de9616207ef2048cdc0577e7a91ca6",
+    "docs/improvement/batch-05-corpus/seed/EA-PDF attribute fixture_000001.pdf": "90581547c42761c3ae95083c20767d2899a42f847f7b2d2516413944d6675a81",
+    "docs/improvement/batch-05-corpus/seed/logs/EA-PDF attribute fixture_000001.log": "ce3f20d883ab2b6ace1728545c54c4862be033875721e18b1c5698137928deda",
+    "docs/improvement/batch-05-profile-reports/1c.json": "1f9f3a63630608777987e633ddbc3f2cd6066f54d781c6c7beff68e54caef238",
+    "docs/improvement/batch-05-profile-reports/1c.html": "20d179e1a44ba9d2af4e360018b575112e695550c33784304a8c1c59804ac668",
+    "docs/improvement/batch-05-profile-reports/1c.log": "4fc17719241498460309993aaf95cf32d19eda2d220ddace8b71584365edd1c5",
+    "docs/improvement/batch-05-profile-reports/1ci.json": "422fe8925b89987178bbcce4b6bb1127a51ca6d3e53762806e12d0d8c423608b",
+    "docs/improvement/batch-05-profile-reports/1ci.html": "a39a67a19167152da3ff2b3b7ba81716e9c87f0694d1be47acea09460ae62a23",
+    "docs/improvement/batch-05-profile-reports/1ci.log": "a907978779275c88006f6a274c3f4e97af4656051e457af0532c64e491463594",
+    "docs/improvement/batch-05-profile-reports/1m.json": "e2044a0df2016b2c05a1dbf168baa3a2aa8ce863b219eafbd3a2adedfcdfed0d",
+    "docs/improvement/batch-05-profile-reports/1m.html": "acd4466b97f9036bb80e84f336c626e9ba1bf9953dafdeb3643e85642a18cf6a",
+    "docs/improvement/batch-05-profile-reports/1m.log": "6abe3e1506e00a1c2c870921a5c1d264b53a9795f3bebd1df3eb22b3f1546e30",
+    "docs/improvement/batch-05-profile-reports/1mi.json": "a5575c2392897bd52de7fa3c085a333b563f24348b13e711951d22cc203e3994",
+    "docs/improvement/batch-05-profile-reports/1mi.html": "ae0d763ad08ff3602e13f07f351476e400b7f9aa2175eee91a75d2368e9d319e",
+    "docs/improvement/batch-05-profile-reports/1mi.log": "b8819c5a8a0958b2fc0968135aaffea8221647de2815c6865efc064131f1d396",
+    "docs/improvement/batch-05-profile-reports/1s.json": "274a7c636867e25c3979a531f5942d529e89ed42b40f5f6eaaddeaf96c26c65f",
+    "docs/improvement/batch-05-profile-reports/1s.html": "2b44334c4bb26806bab18f3fa5a5baa59ae651ece24c7534d2ec68703d2b04c2",
+    "docs/improvement/batch-05-profile-reports/1s.log": "9f9bd2147b0a45d825681b8d05cf617e3eb720bb60a23a219be737c83a50ea89",
+    "docs/improvement/batch-05-profile-reports/1si.json": "bc900dfa9c9e2518aa876d43f4c404824cb7906e9266180144956e75ada917b7",
+    "docs/improvement/batch-05-profile-reports/1si.html": "4f6e63a463c75243e3f74dc92be05f59ee1acb79fd370505aa95cb8f6516ba5b",
+    "docs/improvement/batch-05-profile-reports/1si.log": "b45ec16b77f4e60684e739d0b74721a1357704375a44a04e87752d6eddfcd9e2",
+    "docs/improvement/batch-05-profile-reports/accessibility/1c.json": "7ddea7bedd35862a2468c4a58879dd6deb0b297c3fe84b1ea054fc157649fab0",
+    "docs/improvement/batch-05-profile-reports/accessibility/1c.html": "0f8fafc2f517cb0480904865ce24e416c10c0425955c763833c5e4ea74c4b272",
+    "docs/improvement/batch-05-profile-reports/accessibility/1c.log": "7b565874deefcd2ec4a187a844876207281ab2c5b686f17bec9a3bad83768ec6",
+    "docs/improvement/batch-05-profile-reports/accessibility/1ci.json": "2b4d42c0fcd212cb804dcbe943c2a87ed17344eabd1cc1f9e09794e6deed6e78",
+    "docs/improvement/batch-05-profile-reports/accessibility/1ci.html": "ffc1983c41cd70b093467f03c1037b8ab9377a5c23fc5d0c3cb5312c9c6c4239",
+    "docs/improvement/batch-05-profile-reports/accessibility/1ci.log": "f4f39bdcefea2a273267dd1f322b1ffb6e7398307cd2fa12a5720eb737f1f145",
+    "docs/improvement/batch-05-profile-reports/accessibility/1m.json": "326351f11ef00b15bf530aa614912c9c5dbd69523dbdb98b1bc2a881350f6b51",
+    "docs/improvement/batch-05-profile-reports/accessibility/1m.html": "51c6dd0ac8c8afd4372fa4bc3ff5bb77ad02ae2a3092e27e875e7f9bdf0fb35b",
+    "docs/improvement/batch-05-profile-reports/accessibility/1m.log": "bc59a90900bcbbd88f914611e44686533c19310181245827471bf3bf02270b18",
+    "docs/improvement/batch-05-profile-reports/accessibility/1mi.json": "91f82851ed2193d105541487373f32a54d623c57905f352180cc2428cc5c5f00",
+    "docs/improvement/batch-05-profile-reports/accessibility/1mi.html": "a8a0005fcc184b11f2ee9443b255f7af7842853b758d5a42eef0a9c8d29f5c0d",
+    "docs/improvement/batch-05-profile-reports/accessibility/1mi.log": "4dbc6d6d7fb628a114145cb9c346b13743e50b7a1f73d1940b0ea17207315cf2",
+    "docs/improvement/batch-05-profile-reports/accessibility/1s.json": "2bd2f8ace2764c934656b8aa9f555ebbde4d0df5d7355d9c8094e7836b9a90d2",
+    "docs/improvement/batch-05-profile-reports/accessibility/1s.html": "229888fd74ab8f2fb58d0415f28870bae3b50590b6dee7684ddedc72ab561cf4",
+    "docs/improvement/batch-05-profile-reports/accessibility/1s.log": "1c8e0254ced98c87e6fdf4f116e78f3aae3aca4768aa0ffd1c9b0952cbe54175",
+    "docs/improvement/batch-05-profile-reports/accessibility/1si.json": "8427e73f59d21180e6fa646270661206673e1e39c01bda8372de421ee249a7dd",
+    "docs/improvement/batch-05-profile-reports/accessibility/1si.html": "09878c671dfcca13aa635258be59cbf496dd3eae65d73f5488e36b6cd8b39267",
+    "docs/improvement/batch-05-profile-reports/accessibility/1si.log": "b45619b68165003e6bfc63d95a3c8e0cd9893aa1c90ea837018b5f6d778cac0e",
+    "docs/improvement/batch-05-saved-reports/sample_1ci_finding_aid-pdfa.json": "76fc04924061a7e712cbae146e667fcc714ba329ad6e37034c418839e838d4c2",
+    "docs/improvement/batch-05-saved-reports/sample_1ci.json": "c09627d21b17ca5774d6598016831614bba94f779cb419c2701ab94f2dc6b841",
+    "docs/improvement/batch-05-saved-reports/sample_1ci.html": "fd35d69f19bbb207f874680f160f897624b74cb095537e5fd83a63b407e02dbd",
+    "docs/improvement/batch-05-saved-reports/sample_1ci.log": "ee85742227753f6ccaeabab20e9023b4d6222d39ee24bdcb70542cce8e79d6e6",
+    "docs/improvement/batch-05-saved-reports/sample_1c_finding_aid-pdfa.json": "0ec5bf9ea2a3e13af2f36a1a14be50fe755ba6d984c6bc29808c615229acbbc1",
+    "docs/improvement/batch-05-saved-reports/sample_1c.json": "e40d421ed2c196b19388bad5238436e836876c6834f93df7319b5f1bc6ac6088",
+    "docs/improvement/batch-05-saved-reports/sample_1c.html": "c21b9d6463f928d0656d9f262c49abcd2a1be3bb9fd553384a15029629e4f843",
+    "docs/improvement/batch-05-saved-reports/sample_1c.log": "0e6d82181a6c514a781e73174dc2dbfafa6c6bdb659d8363a57d297c04da218b",
+    "docs/improvement/batch-05-saved-reports/sample_1mi.json": "0f68c9836846cc6aac0029c6ca01925bc16562f8bc0bac62b6ba7ce9bf57f9d0",
+    "docs/improvement/batch-05-saved-reports/sample_1mi.html": "38002cd917192a52628746829bada59add4c9d9d2293f25f749d1342c14dd463",
+    "docs/improvement/batch-05-saved-reports/sample_1mi.log": "a2269a7c1ac6fa1f605ce6a22175567326758982a919b1fa6346c9d835e93b33",
+    "docs/improvement/batch-05-saved-reports/sample_1m.json": "80c1b1b092a06a668b714306a29ad8123d293520d113547b02cf14a939385e50",
+    "docs/improvement/batch-05-saved-reports/sample_1m.html": "f16554e5385fa1c87274c64312df880a7d3a36dd6af7a011013bbe11b7031401",
+    "docs/improvement/batch-05-saved-reports/sample_1m.log": "e28501a79efe4e66759ce399634f1207892b788de7ac58ac8ce6a12f56e255d3",
+    "docs/improvement/batch-05-saved-reports/sample_1si.json": "1baa6fde19169e058f6cb10c0413b4475aaf2de4c9a2c56dd849e92242e2a65f",
+    "docs/improvement/batch-05-saved-reports/sample_1si.html": "d6719b3a3e2afdacf5299f15243f2a44bea7ff43ad7ede1e8d7f365143f78f9e",
+    "docs/improvement/batch-05-saved-reports/sample_1si.log": "c54b928f426d1eac65e157c6a64ba3fb1231ccfa3e110d417c9ae83e0c91462a",
+    "docs/improvement/batch-05-saved-reports/sample_1s.json": "2d5c96f7add3d355b31b4dafa74de8487c44f66875f2f782f0ef0ab3fcf78bfe",
+    "docs/improvement/batch-05-saved-reports/sample_1s.html": "d4c47c27388949ff4de78f784a41424b1b7cc437d89385684b9df83da63868b3",
+    "docs/improvement/batch-05-saved-reports/sample_1s.log": "c7e047b38ff23ca4a5ed77f22bd16f386419276d919f33d38c729a2126382125"
+  },
+  "audit_logs": {
+    "docs/improvement/batch-05-python-before.log": "55b772c781502d702ce2a84fb42bb8f9d7b1b7df1d34e42a51b7bb470767264b",
+    "docs/improvement/batch-05-java-before.log": "c45ae358ec7c4965650021fc97ef8cfa279ad668e02130e48c7792161b12cdae",
+    "docs/improvement/batch-05-python-focused.log": "0055398cbda23e9de7f7b34133e6766c569ef97cc764c23ca2d814dfcbf9e53c",
+    "docs/improvement/batch-05-java-focused.log": "ac089b093ea77290428e593abbfeb3fbfe8172a34f61fd1774f8a1ba1cb18580",
+    "docs/improvement/batch-05-build.log": "f58abbdf0d25db14092a6f557642407ac37b8abf6ee40554edb3531a4ea1301c",
+    "docs/improvement/batch-05-python-resumed-focused.log": "e93011fd8041d137b06785adfda779922593aeba29a3a7bc5a10b38a6e959f24",
+    "docs/improvement/batch-05-build-final.log": "df5ef45fd0bec45e760be5eb5f34e7ab29b71a8658b049adb7fbb0af1ea389c1",
+    "docs/improvement/batch-05-corpus-initial-failure.log": "e13daa6d4720a87477159ada3b4ab63d8458664dc04949df7c386d89cf05e173",
+    "docs/improvement/batch-05-corpus.log": "0596eaafe33b7a36d62e47d071b99e7ed037c63c55b450829c222dc90096af79",
+    "docs/improvement/batch-05-python-acceptance.log": "bbe2d7d82711de16cc169ca3ebf422fbb48a3427f8e6d65e9e5ddbf180057345",
+    "docs/improvement/batch-05-samples.log": "79e9dab8f81afc778d0cab2ba3488a2b3442c4f7ad9a8f014296a265c4ce42ad"
+  },
+  "documentation_sha256": {
+    "docs/EA_PDF_WORK_LOG.md": "80cb735b91c45b896cc8c0b7b41767663a3d51aa458eba4412dfd2bf3cc32166",
+    "docs/DEVELOPMENT_STATUS.md": "0ff0f894d2efde64d3269c998ff660993d4166f4d9259740c769069076da6b56",
+    "docs/EA_PDF_IMPROVEMENT_PLAN.md": "75cad07d09316b37b8c45bc62c564ff1148369da382b43a1c955cb746375021a",
+    "docs/VALIDATOR_COVERAGE.md": "9962524f0cbde6e929872f1c3ae497e63406cab4e9671c57136e0c7612a219c9",
+    "docs/VALIDATION_RESULTS.md": "301cb69f072f05081231ab46d2fde0f6c1f7be1c94c7e7e4683f8e63f0549548",
+    "docs/CHANGELOG.md": "9b2386d95f67db634ad2b82ebdd18a418cb19a0a999556f52bd99634fb8892fa",
+    "fixed.md": "f4456abcf703327eedf901c42bf6a2db3553ca44cb24da225702199eeedc1fea",
+    "unfixed.md": "eea4a3e5bb1cafd1f71012176ecdbad7fd74d4ea37653ab2f842c8299e0a351e",
+    "docs/improvement/requirements.json": "ce578fa52673f19602de85f4f3e8269ec83c7d15c1db6c7b7b59ac446efa8aa9",
+    "docs/improvement/known-next-gaps.json": "0b7098859aa498cc720a5932963906b1f17de67dcd653044aa40988bd0e90f87",
+    "docs/improvement/batch-05-attribute-review.md": "d132a1cbf355986e570a5ca113b2935c50f054d7d33cf64a3e5c4c0471e42ee0"
+  }
+}

@@ -1,0 +1,181 @@
+{
+  "status": "PASS",
+  "scope": "Linux Java builds, small real EML/MSG/MBOX/PST fidelity/visual acceptance, Java EA-PDF/veraPDF validation",
+  "excluded": [
+    "RealWorldInputTests: optional local corpus includes large PST scans",
+    "GUI runtime tests",
+    "Cross-platform runtime certification"
+  ],
+  "steps": [
+    {
+      "name": "oracle-tests",
+      "exit_code": 0
+    },
+    {
+      "name": "creator",
+      "exit_code": 0
+    },
+    {
+      "name": "creator-repeat",
+      "exit_code": 0
+    },
+    {
+      "name": "validator",
+      "exit_code": 0
+    },
+    {
+      "name": "validator-repeat",
+      "exit_code": 0
+    },
+    {
+      "name": "conversion-quality",
+      "exit_code": 0
+    }
+  ],
+  "tests": {
+    "creator": {
+      "tests": 357,
+      "failures": 0,
+      "errors": 0,
+      "skipped": [
+        "eapdf.MsgAddressPreservationTests.suppliedOutlookMessageRetainsItsTransportRecipientOrder",
+        "eapdf.MsgSentDateTests.suppliedNativeSubmissionFractionSurvivesIntoXmpExactly",
+        "eapdf.MsgThreadPreservationTests.suppliedTransportFieldsKeepPriorityWhileMissingFieldsAreRecovered",
+        "eapdf.MsgThreadPreservationTests.suppliedOutlookReplyRetainsItsNativeThreadFields"
+      ]
+    },
+    "validator": {
+      "tests": 244,
+      "failures": 0,
+      "errors": 0,
+      "skipped": [
+        "eapdf.OutlookSourceTests.nativeCorePreservesTheStoredSubmissionInstantAndDoesNotClaimHeaders",
+        "eapdf.OutlookSourceTests.nestedMessagesHaveContentEvidenceAndCidIsNotAlwaysInline",
+        "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[1]",
+        "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[2]",
+        "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[3]",
+        "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[4]",
+        "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[5]",
+        "eapdf.OutlookSourceTests.unknownRecipientTypeAndDifferentRepresentedAuthorRemainUnknown",
+        "eapdf.ValidatorDesktopSmokeTests.windowValidatesARealFileAndStopsASecondRunWithoutLeavingWorkFiles"
+      ]
+    }
+  },
+  "artifacts": {
+    "emailtopdfa-1.6.0-beta.5.jar": "f993849542081a10bc7d9832ab91db7d601751d9af71ebd520b3fac00d08ba80",
+    "emailtopdfa-1.6.0-beta.5-gui.jar": "fca76d8a3dd96c7b18b27c28c63c28d17402d762201245080f693cdc05ee0000",
+    "eapdf-validator.jar": "f27e52a8f531d6824fb73bfdaf4c20ec0e19bc7150d5fba3bb58fa4cdf2c4935"
+  },
+  "conversions": {
+    "status": "PASS",
+    "scope": "Pinned real EML, MSG, MBOX and small PST fidelity, visual checks and standalone Java validation",
+    "cases": [
+      {
+        "input": "in/sample.eml",
+        "source_sha256": "e0d8979fb882d5b65ef04b81b0f98b3e5e9e86cdc10034380d348a33b5ba995b",
+        "pdf_sha256": "2cb043d0350d4cfc66b23ea6772c7f34e0d7e00fc1359924ca6b5c7884125d7d",
+        "pages": 2,
+        "message_count": 1,
+        "known_limitations": [],
+        "source_representation": "Original source bytes embedded",
+        "status": "PASS",
+        "validation_report": "sample/validation.json",
+        "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21"
+      },
+      {
+        "input": "in/test3.eml",
+        "source_sha256": "c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6",
+        "pdf_sha256": "e04b2ddea92c0bb920115dd6c59b987ba73e3363b3be10e6de2aeb3a5e10d6e6",
+        "pages": 2,
+        "message_count": 1,
+        "known_limitations": [],
+        "source_representation": "Original source bytes embedded",
+        "status": "PASS",
+        "validation_report": "test3/validation.json",
+        "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21"
+      },
+      {
+        "input": "in/EmailWith2Attachments.msg",
+        "source_sha256": "513a894a87de02ecbb312ada79ea19318378607bcb593ddb05ddecbade2d511f",
+        "pdf_sha256": "2b23c093188d176f14538e7dcfbe15e9aac2198a300871fea8363e4236e99651",
+        "pages": 2,
+        "message_count": 1,
+        "known_limitations": [],
+        "source_representation": "Original source bytes embedded",
+        "status": "PASS",
+        "validation_report": "EmailWith2Attachments/validation.json",
+        "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21"
+      },
+      {
+        "input": "in/enron-sample.mbox",
+        "source_sha256": "370c41998013037bed444887b5cfe560ef74607db401f1ecbb80bf76df12251c",
+        "pdf_sha256": "59e88e455e9cdbeb2fa82dd0411b01203118fe44af12afcacdd866aa07e26d9f",
+        "pages": 3,
+        "message_count": 2,
+        "known_limitations": [],
+        "source_representation": "Per-message RFC822 derivatives; original MBOX container is not embedded",
+        "status": "PASS",
+        "validation_report": "enron-sample/validation.json",
+        "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21"
+      },
+      {
+        "input": "in/quality-attached-message.pst",
+        "source_sha256": "f2a6b1d2cad00f574e3d1c1211c4b1c854d6526caea77213adc3da92b7813ae3",
+        "pdf_sha256": "e0fd3e23678b9b246a0ea28c2908cbeadba17d075fd40b65c9a90d3ef5127578",
+        "pages": 13,
+        "message_count": 7,
+        "known_limitations": [
+          "Native sent-time fractions .446s (parent) and .773s (attached email) are lost when reconstructed to RFC822. Exact native values are recorded in native_sent; sent checks the whole-second derivative, not exact native timestamp preservation."
+        ],
+        "source_representation": "Reconstructed per-message RFC822 derivatives; original PST container is not embedded",
+        "status": "PASS",
+        "validation_report": "quality-attached-message/validation.json",
+        "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21"
+      }
+    ]
+  },
+  "oracle_tests": {
+    "tests": 19,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changes": [
+    "Independent MSG/MBOX/small-PST source expectations and per-message output checks added to the existing EML gate",
+    "Fixed reconstructed attached-message MIME wrapping, retaining raw nested bytes instead of base64 on message/rfc822",
+    "Report native PST sent-time fractional precision loss explicitly",
+    "22 reviewed reference pages; only finding-aid generation timestamps masked"
+  ],
+  "limits": [
+    "Known PST fractional-second loss remains, recorded explicitly in the manifest and results",
+    "Original PST/MBOX containers are not embedded; their per-message sources are derivatives",
+    "Small Linux acceptance corpus only; no large PST conversion, GUI acceptance or cross-platform certification",
+    "Local unreleased changes; dist and published releases unchanged"
+  ],
+  "evidence_directory": "output/format-quality-2026-11-02/release-gate-verified",
+  "retained_sources": {
+    "tests/quality/source-evidence/small-pst-independent-exports.tar.gz": "b21c9c216f9e8b9625a4cd032bf0b4120407d11626bcdcf81327d59003c21334"
+  },
+  "fixture_sha256": {
+    "tests/quality/fixtures/msg_quality.pdf": "119c05a43e7cbec5cb1ced3dee239c8cf6e44a6dcdb747b73f65c354123ff629",
+    "tests/quality/fixtures/mbox_quality.pdf": "59cce6b9aa1a108c5aa8c7a9fefef1538d2f0a02d9c7d448efeaf212d34c1a5d",
+    "tests/quality/fixtures/pst_quality.pdf": "4d996eb8c08e37ee09916b577f1d77bcd4d578085631071ac92ec8900420fc68"
+  },
+  "superseded_artifacts_removed": [
+    {
+      "path": "output/payload-quality-2026-11-02/release-gate/artifacts/emailtopdfa-1.6.0-beta.5.jar",
+      "bytes": 49355652,
+      "sha256": "78a9e2aac9536fdcbf2d451aa8e3c510e449bb8dea6417e278ec685b0be069fb"
+    },
+    {
+      "path": "output/payload-quality-2026-11-02/release-gate/artifacts/eapdf-validator.jar",
+      "bytes": 28842645,
+      "sha256": "f27e52a8f531d6824fb73bfdaf4c20ec0e19bc7150d5fba3bb58fa4cdf2c4935"
+    },
+    {
+      "path": "output/payload-quality-2026-11-02/release-gate/artifacts/emailtopdfa-1.6.0-beta.5-gui.jar",
+      "bytes": 49355646,
+      "sha256": "930caaea7537d96660e6715f4166218dc3c5f4410cff5d2a189b1405bd9e6915"
+    }
+  ]
+}

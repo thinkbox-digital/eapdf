@@ -1,0 +1,122 @@
+{
+  "checkpoint": "C128",
+  "real_creator_failure": "Three unique child PDFs in a real 20-email Gmail collection fail PDF/A because rendered FEFF values appear in font ToUnicode maps. Parent PDF/A alone passes; complete child validation exposes the failure.",
+  "pdfa_rule": {
+    "specification": "ISO 19005-4:2020",
+    "clause": "6.2.10.7",
+    "testNumber": 1,
+    "description": "If a ToUnicode CMap is present, the Unicode values specified there shall all be greater than zero (0), but not equal to either U+FEFF or U+FFFE"
+  },
+  "fix": "Normalize FEFF to semantically equivalent U+2060 WORD JOINER only in HTML body text nodes and generated PDFBox text drawing/measurement. Preserve source emails, model body/header values and metadata. Use existing fonts; no dependency or CLI change.",
+  "warning_fix": "Carry unsupported/encrypted rendering notices with body choices and publish them only when selected. Mixed unsupported sections and genuinely unsupported bodies still warn. A controlled standard invitation demonstrates the discarded-alternative false warning; the two real Gmail calendar sections remain correctly reported.",
+  "focused_java": {
+    "tests": 33,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "last_full_java_suite": {
+    "checkpoint": "C124",
+    "passes": 252
+  },
+  "changed_production_classes": [
+    "eapdf/BodyChoice.class",
+    "eapdf/EmlReader.class",
+    "eapdf/FontSupport$1.class",
+    "eapdf/FontSupport$2.class",
+    "eapdf/FontSupport$BodyFont.class",
+    "eapdf/FontSupport.class",
+    "eapdf/PdfMailWriter.class"
+  ],
+  "gmail_before": {
+    "exit_code": 0,
+    "read_only": true,
+    "credential_originals_unchanged": true,
+    "messages": 20,
+    "downloads": 20,
+    "label_assignments": 57,
+    "multiple_label_messages": 20,
+    "unique_children": 20,
+    "exact_original_emails": 20,
+    "exact_native_payloads": 7,
+    "verified_collection_assignments": 23,
+    "calendar_messages": 2,
+    "actual_label_name_mapping_checked": true,
+    "status": "FAIL",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failure_codes": [
+      "COLLECTION_CHILD_VALIDATION",
+      "COLLECTION_CHILD_VALIDATION",
+      "COLLECTION_CHILD_VALIDATION"
+    ],
+    "staging_removed": true
+  },
+  "gmail_after": {
+    "exit_code": 0,
+    "read_only": true,
+    "credential_originals_unchanged": true,
+    "messages": 20,
+    "downloads": 20,
+    "label_assignments": 57,
+    "multiple_label_messages": 20,
+    "unique_children": 20,
+    "exact_original_emails": 20,
+    "exact_native_payloads": 7,
+    "verified_collection_assignments": 23,
+    "calendar_messages": 2,
+    "actual_label_name_mapping_checked": true,
+    "status": "PASS",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failure_codes": [],
+    "staging_removed": true
+  },
+  "gmail_comparison": {
+    "same_selected_emails_and_download_checksums": true,
+    "same_core_header_body_source_native_asset_fingerprints": 20,
+    "identical_child_page_pixels": 20,
+    "identical_child_text_except_equivalent_word_joiner": 20,
+    "remaining_forbidden_feff_cmaps": 0,
+    "genuine_calendar_section_warnings_retained": 2,
+    "temporary_credential_directories_removed": true,
+    "resume_verification_adjustment": "Temporary credential-copy paths create two independent resume scopes. Both selections and all download checksums were independently verified identical."
+  },
+  "public_invitation": {
+    "before_pdfa": "FAIL",
+    "after_status": "PASS",
+    "after_pdfa": "PASS",
+    "after_selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failure_codes": [],
+    "source_exact": true,
+    "pixels_unchanged": true,
+    "unused_calendar_alternative_warning_removed": true,
+    "staging_removed": true
+  },
+  "unicode_reference": "https://www.unicode.org/faq/utf_bom.html",
+  "privacy": "Full Gmail PDFs, source checkpoints, account label names and validation logs remain in the ignored private output/gmail-live-review/c128-all folder, directories 0700/files 0600. Public evidence contains counts and generic rule descriptions only. Gmail access read-only; original credential files unchanged; temporary credential copies removed.",
+  "verification_adjustments": [
+    "Native payloads live in their page FileAttachment annotations under the existing policy, rather than the catalog AF array or embedded-file name tree. Independent payload checking was corrected to inspect the annotations; all seven original PNGs match. No attachment-storage code was changed.",
+    "Temporary credential-copy paths create two resume scopes. Generation itself succeeded; an initial one-manifest harness assumption failed. Verified both selections and every downloaded checksum identical before the exact source/pixel comparison.",
+    "The real calendar warnings refer to mixed unsupported calendar sections and remain valid. The false discarded-alternative warning is reproduced and fixed in the public standard invitation; no calendar rendering feature was added."
+  ],
+  "saved_samples": "Six existing C124 samples and alias retain their checked bytes; no refresh claimed.",
+  "frozen_validator_changed": false,
+  "temporary_shared_staging_removed": true,
+  "jars": {
+    "emailtopdfa.jar": "a4d2243ad342752114a9ea6e3c9af4084f50e3390062ef817bcd70e54023e108",
+    "emailtopdfa-gui.jar": "590ff12c21c0a02344e0fd9d4c41d7cf0aa77ccb5ba7f626da85b291005032ae"
+  },
+  "known_limits": [
+    "Calendar data is retained in original sources but calendar-only/selected unsupported sections are not rendered and still warn.",
+    "Retained MSG source comparison INCOMPLETE remains.",
+    "Isolated PST attachment comparison INCOMPLETE remains.",
+    "C122 large whole-file frozen validation remains uncompleted/FAIL at existing resource limits."
+  ]
+}

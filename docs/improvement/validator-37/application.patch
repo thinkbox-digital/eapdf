@@ -1,0 +1,395 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -7859,9 +7859,78 @@
+         return "unavailable","Label is an XML NMTOKEN but not an XML Name; the PDF Name-token interpretation remains under review"
+     return "invalid","Label contains characters disallowed by both XML Name and NMTOKEN"
+ 
++def inspect_dpm_value_graph(dpm,state):
++    """Inspect each reachable data container once, with bounded work and no tree policy."""
++    errors=[]
++    name_errors=[]
++    unavailable=[]
++    frames=[(iter([(None,dpm)]),False,[],0)]
++    while frames:
++        iterator,dictionary_entry,parent_path,depth=frames[-1]
++        try:
++            key,value=next(iterator)
++        except StopIteration:
++            frames.pop()
++            continue
++        except (UnicodeError,ValueError,pikepdf.PdfError):
++            unavailable.append({"path":parent_path,"reason":"DPM dictionary entries could not be decoded"})
++            state["unavailable_values"]=True
++            frames.pop()
++            continue
++        if state["items"]>=MAX_TREE_ITEMS or depth>MAX_TREE_DEPTH:
++            unavailable.append({"path":parent_path,"reason":"DPM value traversal exceeded configured depth/item limits"})
++            state["limited"]=True
++            state["unavailable_values"]=True
++            break
++        state["items"]+=1
++        if dictionary_entry and value is None:
++            continue  # Null dictionary entries are absent, unlike null array items.
++        path=parent_path
++        if key is not None:
++            try:
++                display=str(key).encode("utf-8","backslashreplace").decode("utf-8") if dictionary_entry else key
++            except UnicodeError:
++                display="<undecodable key>"
++            path=parent_path+[display]
++        if dictionary_entry:
++            try:
++                name=key if isinstance(key,pikepdf.Name) else pikepdf.Name(key)
++                status,reason=dpart_level_name_assessment(name)
++            except (UnicodeError,TypeError,ValueError):
++                status,reason="unavailable","DPM key spelling could not be assessed"
++            detail={"path":path,"reason":reason}
++            if status=="invalid":errors.append(detail)
++            elif status=="unavailable":unavailable.append(detail)
++        if isinstance(value,pikepdf.Stream) or value is None:
++            errors.append({"path":path,"actual_type":"stream" if value is not None else "null",
++                           "reason":"DPM values cannot be streams or null array members"})
++        elif isinstance(value,pikepdf.Dictionary) or is_pdf_array(value):
++            identity=pdf_object_identity(value)
++            if identity in state["seen"]:
++                continue
++            # Keep direct wrappers alive so their Python identities cannot be reused.
++            state["seen"][identity]=value
++            try:
++                entries=iter(value.items()) if isinstance(value,pikepdf.Dictionary) else iter(enumerate(value))
++                frames.append((entries,isinstance(value,pikepdf.Dictionary),path,depth+1))
++            except (UnicodeError,ValueError,pikepdf.PdfError):
++                unavailable.append({"path":path,"reason":"DPM container entries could not be decoded"})
++                state["unavailable_values"]=True
++        elif isinstance(value,pikepdf.Name):
++            try:
++                bytes(value)[1:].decode("utf-8")
++            except UnicodeError:
++                name_errors.append({"path":path,"actual":observed_pdf_value(value),
++                                    "reason":"DPM name values must have valid decoded UTF-8"})
++        elif not isinstance(value,(pikepdf.String,bool,int,float,Decimal)):
++            errors.append({"path":path,"actual_type":type(value).__name__,"reason":"Unsupported DPM value type"})
++    return errors,name_errors,unavailable
++
+ def check_dpart_object_structure(dpart_root,root_node,nodes,report):
+     errors=[]
+     unavailable=[]
++    dpm_unavailable=[]
++    dpm_state={"seen":{},"items":0,"limited":False,"unavailable_values":False}
+     root_type=dict_get(dpart_root,"/Type",None)
+     if root_type is not None and (not isinstance(root_type,pikepdf.Name) or root_type!=pikepdf.Name('/DPartRoot')):
+         errors.append({"object":"DPartRoot","key":"Type","actual":observed_pdf_value(root_type),"reason":"If supplied, Type must be the PDF name DPartRoot"})
+@@ -7872,6 +7941,9 @@
+     for item in nodes:
+         depths[item["objgen"]]=0 if item["parent"] is None else depths.get(objgen(item["parent"]),-1)+1
+     level_count=max(depths.values(),default=-1)+1
++    if isinstance(record_level,int) and not isinstance(record_level,bool) and nodes and not 0<=record_level<level_count:
++        errors.append({"object":"DPartRoot","key":"RecordLevel","actual":record_level,"levels":level_count,
++                       "reason":"RecordLevel must identify an actual zero-based hierarchy level"})
+     labels=dict_get(dpart_root,"/NodeNameList",None)
+     if labels is not None:
+         if not is_pdf_array(labels):
+@@ -7911,8 +7983,18 @@
+             errors.append({"objgen":item["objgen"],"reason":"Leaf DPart requires Start"})
+         elif item["end"] is not None and objgen(item["start"])==objgen(item["end"]):
+             errors.append({"objgen":item["objgen"],"reason":"Single-page DPart must omit End"})
++        if dict_get(node,"/Metadata",None) is not None:
++            errors.append({"objgen":item["objgen"],"key":"Metadata",
++                           "reason":"Published Table409 correction prohibits XMP metadata streams in DPart dictionaries"})
+         dpm=item["dpm"]
+-        if dict_get(node,"/DPM",None) is not None and not isinstance(dict_get(node,"/DPM"),pikepdf.Dictionary):
++        raw_dpm=dict_get(node,"/DPM",None)
++        if isinstance(raw_dpm,pikepdf.Dictionary) and not dpm_state["limited"]:
++            value_errors,name_errors,value_unavailable=inspect_dpm_value_graph(raw_dpm,dpm_state)
++            errors.extend(dict(problem,objgen=item["objgen"]) for problem in value_errors)
++            dpm_unavailable.extend(dict(problem,objgen=item["objgen"]) for problem in value_unavailable)
++            for problem in name_errors:
++                report.fail("DPM_NAME_TYPES","DPM name value must contain valid decoded UTF-8",dict(problem,objgen=item["objgen"]))
++        if raw_dpm is not None and not isinstance(raw_dpm,pikepdf.Dictionary):
+             errors.append({"objgen":item["objgen"],"reason":"DPM must be a dictionary"})
+         for key in ("Mail_ContentSetType","Mail_Subtype"):
+             if key not in dpm:
+@@ -7926,14 +8008,18 @@
+             if not valid:
+                 report.fail("DPM_NAME_TYPES","DPM content set type and subtype must be PDF names with valid decoded UTF-8",{"objgen":item["objgen"],"key":key,"value":observed_pdf_value(dpm[key])})
+     if "DPM_NAME_TYPES" not in report.seen_codes:
+-        report.ok("DPM_NAME_TYPES","Inspected DPM content-set types and subtypes use PDF names",{"nodes":len(nodes)})
++        if dpm_state["unavailable_values"]:
++            report.warn("DPM_NAME_TYPES","Some DPM name values could not be inspected",{"state":"unverified","assessment":"unavailable"})
++        else:
++            report.ok("DPM_NAME_TYPES","Inspected DPM names contain valid UTF-8 and required type/subtype fields use names",{"nodes":len(nodes)})
+     if errors:
+-        report.fail("DPART_OBJECT_STRUCTURE","DPart object structure does not satisfy ISO 32000-2",{"errors":errors,"unavailable_name_checks":unavailable})
+-    elif unavailable:
+-        report.warn("DPART_OBJECT_STRUCTURE","Supplied DPart hierarchy names could not be fully assessed",{"state":"unverified","assessment":"unavailable","names":unavailable})
+-        report.warn("VALIDATION_INCOMPLETE","DPart hierarchy name conformance remains unavailable",{"rules":["DPART_OBJECT_STRUCTURE"],"assessment":"unavailable"})
++        report.fail("DPART_OBJECT_STRUCTURE","DPart object structure does not satisfy ISO 32000-2",{"errors":errors,"unavailable_name_checks":unavailable,"unavailable_dpm_checks":dpm_unavailable})
++    elif unavailable or dpm_unavailable:
++        report.warn("DPART_OBJECT_STRUCTURE","DPart hierarchy/metadata conformance could not be fully assessed",{"state":"unverified","assessment":"unavailable","names":unavailable,"dpm":dpm_unavailable})
+     else:
+         report.ok("DPART_OBJECT_STRUCTURE","DPart parents, indirect references, page ranges and supplied optional entry types/counts are valid",{"DPartRoot":objgen(dpart_root),"DPartRootNode":objgen(root_node),"nodes":[{"objgen":item["objgen"],"parent":objgen(dict_get(item["node"],"/Parent",None)),"start":objgen(item["start"]),"end":objgen(item["end"]),"child_count":item["child_count"]} for item in nodes]})
++    if unavailable or dpm_unavailable:
++        report.warn("VALIDATION_INCOMPLETE","DPart hierarchy or DPM conformance remains unavailable",{"rules":["DPART_OBJECT_STRUCTURE"],"assessment":"unavailable"})
+ 
+ class ChildValidationContext:
+     def __init__(self,include_pdfa=False):
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -14708,7 +14708,8 @@
+           "evidence_needed": "PDF objects and XMP",
+           "candidate_rule_codes": [
+             "DPM_ROOTNODE_PRESENT",
+-            "DPART_OBJECT_STRUCTURE"
++            "DPART_OBJECT_STRUCTURE",
++            "DPM_NAME_TYPES"
+           ],
+           "requirement_review": "reviewed_local_EA_PDF_text",
+           "implementation_status": "not_verified_by_this_audit",
+@@ -28224,9 +28225,9 @@
+       "WARN": "Assessment unavailable or partial: {explanation}.",
+       "N/A": "Not applied because {explanation}."
+     },
+-    "spec_excerpt": "DPart objects and their parent/child/page-range relationships must follow the inherited PDF DPart structure and cover all EA-PDF pages. Supplied Type entries retain their prescribed PDF name values, RecordLevel retains integer type, and NodeNameList has a PDF name for each actual hierarchy level. Optional entries may be omitted. Definite XML spelling errors fail; unresolved Name/NMTOKEN or decoding evidence remains unavailable.",
++    "spec_excerpt": "DPart hierarchy and page relationships follow ISO 32000-2. Optional Type, RecordLevel and NodeNameList retain prescribed types; a supplied RecordLevel identifies an actual zero-based level. The published Table409 correction prohibits DPart Metadata streams. DPM dictionaries and nested containers contain only permitted value classes, and dictionary keys satisfy the XML name-token constraint. Definite violations fail; unresolved spelling/decoding and bounded traversal remain unavailable.",
+     "spec_excerpt_kind": "Reviewed paraphrase, not a verbatim specification quotation",
+-    "spec_section": "EA-PDF 9.6 printed p69; ISO 32000-2 DPart structure; ISO32000-2:2020 Tables408/409; XML1.0 Fifth Edition productions4/4a/5/7",
++    "spec_section": "EA-PDF 9.6 printed p69; ISO 32000-2 DPart structure; ISO32000-2:2020 Tables408/409; XML1.0 Fifth Edition productions4/4a/5/7; ISO32000-2:2020 14.12.4.2 and industry-approved clause14 corrections, accessed2026-10-20",
+     "requirements_review": {
+       "status": "Requirement wording reviewed against pinned local EA-PDF; open interpretations/dependencies remain; implementation not certified.",
+       "requirement_ids": [
+@@ -28240,7 +28241,8 @@
+         "file"
+       ],
+       "issue_ids": [],
+-      "optional_entry_review": "V36: inherited optional entry types/counts reviewed against Tables408/409 and published clause14 errata. RecordLevel meaning/range and the full DPart metadata errata remain separate. XML Names are accepted; XML NMTOKEN-only or undecodable labels remain explicitly unavailable pending interpretation review."
++      "optional_entry_review": "V36/V37: supplied optional entry types/counts and actual RecordLevel bounds; PDF/VT-only presence is not required. Definite XML spelling errors fail; unresolved Name/NMTOKEN spelling remains unavailable.",
++      "metadata_value_review": "V37: published correction basis; recursive permitted classes and UTF-8 name values; null dictionary entries are absent, null array items are disallowed. Shared/cyclic data containers are inspected once without imposing DPart tree rules. XML Name/NMTOKEN-only key spelling and traversal limits remain unavailable."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -28249,7 +28251,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "document_parts",
+-      "uncovered_assertion": "DPart objects and their parent/child/page-range relationships must follow the inherited PDF DPart structure and cover all EA-PDF pages. Supplied Type entries retain their prescribed PDF name values, RecordLevel retains integer type, and NodeNameList has a PDF name for each actual hierarchy level. Optional entries may be omitted. Definite XML spelling errors fail; unresolved Name/NMTOKEN or decoding evidence remains unavailable.",
++      "uncovered_assertion": "DPart hierarchy and page relationships follow ISO 32000-2. Optional Type, RecordLevel and NodeNameList retain prescribed types; a supplied RecordLevel identifies an actual zero-based level. The published Table409 correction prohibits DPart Metadata streams. DPM dictionaries and nested containers contain only permitted value classes, and dictionary keys satisfy the XML name-token constraint. Definite violations fail; unresolved spelling/decoding and bounded traversal remain unavailable.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+@@ -28269,14 +28271,15 @@
+       "WARN": "Assessment unavailable or partial: {explanation}.",
+       "N/A": "Not applied because {explanation}."
+     },
+-    "spec_excerpt": "Required Mail_ContentSetType and conditional Mail_Subtype values are PDF names with valid UTF-8 after name-escape decoding (ISO-approved erratum 86). Other Content Set names are allowed; this is not a closed enumeration.",
++    "spec_excerpt": "Required Mail_ContentSetType and conditional Mail_Subtype values are PDF names. Every name value in DPM data, including nested arrays/dictionaries and extension fields, contains valid UTF-8 after PDF name-escape decoding under the published 14.12.4.2 correction. Name values need not be XML tokens. Content Set names remain an open set.",
+     "spec_excerpt_kind": "Reviewed paraphrase, not a verbatim specification quotation",
+-    "spec_section": "EA-PDF 9.6 Table 8, printed pp70-71",
++    "spec_section": "EA-PDF 9.6 Table 8, printed pp70-71; ISO32000-2:2020 14.12.4.2 and industry-approved clause14 corrections, accessed2026-10-20",
+     "requirements_review": {
+       "status": "Scoped V05 predicate repair; see docs/improvement/validator-05/evidence.json. Broader ownership/dependency coverage remains open.",
+       "requirement_ids": [
+         "T8-TYPE",
+-        "T8-SUBTYPE"
++        "T8-SUBTYPE",
++        "DPM-ROOT-STRUCTURE"
+       ],
+       "strengths": [
+         "SHALL"
+@@ -28284,7 +28287,8 @@
+       "scopes": [
+         "file"
+       ],
+-      "issue_ids": []
++      "issue_ids": [],
++      "metadata_value_review": "V37: published correction basis; recursive permitted classes and UTF-8 name values; null dictionary entries are absent, null array items are disallowed. Shared/cyclic data containers are inspected once without imposing DPart tree rules. XML Name/NMTOKEN-only key spelling and traversal limits remain unavailable."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -28293,7 +28297,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "document_parts",
+-      "uncovered_assertion": "Required Mail_ContentSetType and conditional Mail_Subtype values are PDF names with valid UTF-8 after name-escape decoding (ISO-approved erratum 86). Other Content Set names are allowed; this is not a closed enumeration.",
++      "uncovered_assertion": "Required Mail_ContentSetType and conditional Mail_Subtype values are PDF names. Every name value in DPM data, including nested arrays/dictionaries and extension fields, contains valid UTF-8 after PDF name-escape decoding under the published 14.12.4.2 correction. Name values need not be XML tokens. Content Set names remain an open set.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+--- /dev/null
++++ after/tests/test_dpart_metadata_values.py
+@@ -0,0 +1,107 @@
++"""Inherited DPM data types, key spelling, name UTF8 and corrected DPart Metadata policy."""
++from decimal import Decimal
++import unittest
++from unittest.mock import patch
++import pikepdf
++from test_preservation_safety import validator as v, failed_codes
++import test_dpart_optional_entry_types as fixtures
++
++
++class DpartMetadataValueTests(unittest.TestCase):
++    def document(self):
++        pdf,root,node,leaf=fixtures.DpartOptionalEntryTests().document()
++        leaf.DPM=pikepdf.Dictionary(Mail_ContentSetType=pikepdf.Name.BodyRendering,Mail_Subtype=pikepdf.Name('/text/plain'))
++        return pdf,root,node,leaf
++    def check(self,pdf):
++        root,node,nodes=v.get_dpart_nodes(pdf);report=v.Report('dpm-data.pdf')
++        v.check_dpart_object_structure(root,node,nodes,report);return report
++
++    def test_record_level_must_identify_an_actual_level(self):
++        for value,invalid in [(-1,True),(2,True),(100,True),(0,False),(1,False)]:
++            with self.subTest(value=value):
++                pdf,root,node,leaf=self.document()
++                with pdf:
++                    root.RecordLevel=value
++                    self.assertEqual(invalid,'DPART_OBJECT_STRUCTURE' in failed_codes(self.check(pdf)))
++
++    def test_corrected_metadata_entry_does_not_carry_streams_or_other_values(self):
++        for stream in (True,False):
++            pdf,root,node,leaf=self.document()
++            with pdf:
++                leaf.Metadata=pdf.make_stream(b'<metadata/>') if stream else pikepdf.String('metadata')
++                self.assertIn('DPART_OBJECT_STRUCTURE',failed_codes(self.check(pdf)))
++
++    def test_dpm_stream_values_fail_at_every_depth(self):
++        for where in ('direct','dictionary','array'):
++            pdf,root,node,leaf=self.document()
++            with pdf:
++                stream=pdf.make_stream(b'policy')
++                leaf.DPM.VendorPolicy=stream if where=='direct' else pikepdf.Dictionary(Data=stream) if where=='dictionary' else pikepdf.Array([stream])
++                self.assertIn('DPART_OBJECT_STRUCTURE',failed_codes(self.check(pdf)))
++
++    def test_null_array_members_are_not_permitted_dpm_values(self):
++        pdf,root,node,leaf=self.document()
++        with pdf:
++            leaf.DPM.VendorPolicy=pikepdf.Array([None])
++            self.assertIn('DPART_OBJECT_STRUCTURE',failed_codes(self.check(pdf)))
++
++    def test_dictionary_null_values_are_omitted_even_when_the_key_would_not_be_a_token(self):
++        pdf,root,node,leaf=self.document()
++        with pdf:
++            leaf.DPM.VendorPolicy=pikepdf.Object.parse(b'<< /bad#20key null /Enabled true >>')
++            self.assertFalse(failed_codes(self.check(pdf)))
++
++    def test_all_name_values_require_utf8_including_unknown_and_nested_fields(self):
++        for where in ('direct','dictionary','array'):
++            pdf,root,node,leaf=self.document()
++            with pdf:
++                bad=pikepdf.Object.parse(b'/#ff')
++                leaf.DPM.VendorPolicy=bad if where=='direct' else pikepdf.Dictionary(Flag=bad) if where=='dictionary' else pikepdf.Array([bad])
++                self.assertIn('DPM_NAME_TYPES',failed_codes(self.check(pdf)))
++
++    def test_name_values_need_not_be_xml_tokens(self):
++        pdf,root,node,leaf=self.document()
++        with pdf:
++            leaf.DPM.VendorPolicy=pikepdf.Name('/flag value/中文')
++            self.assertFalse(failed_codes(self.check(pdf)))
++
++    def test_dictionary_keys_are_checked_recursively(self):
++        for nested in (False,True):
++            pdf,root,node,leaf=self.document()
++            with pdf:
++                target=pikepdf.Dictionary() if nested else leaf.DPM
++                target['/bad key']='value'
++                if nested:leaf.DPM.VendorPolicy=target
++                self.assertIn('DPART_OBJECT_STRUCTURE',failed_codes(self.check(pdf)))
++
++    def test_unresolved_key_spelling_stays_incomplete(self):
++        pdf,root,node,leaf=self.document()
++        with pdf:
++            leaf.DPM['/1Vendor']='value'
++            report=self.check(pdf)
++            self.assertFalse(failed_codes(report))
++            self.assertEqual('INCOMPLETE',report.summary()['status'])
++
++    def test_shared_and_cyclic_data_dictionaries_are_not_invented_tree_violations(self):
++        pdf,root,node,leaf=self.document()
++        with pdf:
++            shared=pdf.make_indirect(pikepdf.Dictionary(Enabled=True));shared.Self=shared
++            leaf.DPM.VendorA=shared;leaf.DPM.VendorB=shared
++            self.assertFalse(failed_codes(self.check(pdf)))
++
++    def test_value_traversal_limits_remain_incomplete(self):
++        for setting,value in [('MAX_TREE_ITEMS',5),('MAX_TREE_DEPTH',1)]:
++            pdf,root,node,leaf=self.document()
++            with pdf,patch.object(v,setting,value):
++                leaf.DPM.VendorPolicy=pikepdf.Dictionary(Data=pikepdf.Array(list(range(20))))
++                report=self.check(pdf)
++                self.assertFalse(failed_codes(report))
++                self.assertEqual('INCOMPLETE',report.summary()['status'])
++
++    def test_permitted_extension_values_preserve_their_types_and_names(self):
++        pdf,root,node,leaf=self.document()
++        with pdf:
++            leaf.DPM.VendorPolicy=pikepdf.Array([True,42,Decimal('1.25'),pikepdf.String('policy'),pikepdf.Name('/flag value'),pikepdf.Dictionary(Enabled=False)])
++            self.assertFalse(failed_codes(self.check(pdf)))
++
++if __name__=='__main__':unittest.main()
+--- /dev/null
++++ after/scripts/build_eapdf_dpart_metadata_fixtures.py
+@@ -0,0 +1,66 @@
++"""Reviewed inherited DPart metadata constraints and permitted extension controls."""
++import hashlib
++import json
++from decimal import Decimal
++from pathlib import Path
++import sys
++
++import pikepdf
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT))
++import validate_eapdf as v
++
++OUT = ROOT / 'tests/fixtures/eapdf/validator-dpart-metadata'
++SEED = ROOT / 'tests/fixtures/eapdf/validator-operands/valid.pdf'
++
++
++def main():
++    OUT.mkdir(parents=True, exist_ok=True)
++    invalid = ('record-negative', 'record-outside', 'metadata-stream', 'dpm-stream',
++               'dpm-nested-stream', 'dpm-array-stream', 'dpm-array-null',
++               'dpm-value-name-utf8', 'dpm-key-space', 'dpm-nested-key-space')
++    unavailable = ('dpm-key-nmtoken', 'dpm-nested-key-nmtoken')
++    cases = []
++    for name in invalid + unavailable + ('valid', 'permitted-values', 'dictionary-null', 'shared-cycle'):
++        with pikepdf.Pdf.open(SEED) as pdf:
++            root, node, nodes = v.get_dpart_nodes(pdf)
++            leaf = nodes[-1]['node']
++            if name == 'record-negative': root.RecordLevel = -1
++            elif name == 'record-outside': root.RecordLevel = 100
++            elif name == 'metadata-stream': leaf.Metadata = pdf.Root.Metadata
++            elif name == 'dpm-stream': leaf.DPM.VendorPolicy = pdf.make_stream(b'policy')
++            elif name == 'dpm-nested-stream': leaf.DPM.VendorPolicy = pikepdf.Dictionary(Data=pdf.make_stream(b'policy'))
++            elif name == 'dpm-array-stream': leaf.DPM.VendorPolicy = pikepdf.Array([pdf.make_stream(b'policy')])
++            elif name == 'dpm-array-null': leaf.DPM.VendorPolicy = pikepdf.Array([None])
++            elif name == 'dpm-value-name-utf8': leaf.DPM.VendorPolicy = pikepdf.Object.parse(b'/#ff')
++            elif name == 'dpm-key-space': leaf.DPM['/bad key'] = 'value'
++            elif name == 'dpm-nested-key-space': leaf.DPM.VendorPolicy = pikepdf.Dictionary({'/bad key': 'value'})
++            elif name == 'dpm-key-nmtoken': leaf.DPM['/1Vendor'] = 'value'
++            elif name == 'dpm-nested-key-nmtoken': leaf.DPM.VendorPolicy = pikepdf.Dictionary({'/1Field': 'value'})
++            elif name == 'permitted-values':
++                leaf.DPM.VendorPolicy = pikepdf.Array([True, 42, Decimal('1.25'), pikepdf.String('policy'),
++                    pikepdf.Name('/flag value/中文'), pikepdf.Dictionary(Enabled=False)])
++            elif name == 'dictionary-null':
++                leaf.DPM.VendorPolicy = pikepdf.Object.parse(b'<< /bad#20key null /Enabled true >>')
++            elif name == 'shared-cycle':
++                shared = pdf.make_indirect(pikepdf.Dictionary(Enabled=True))
++                shared.Self = shared
++                leaf.DPM.VendorA = shared
++                leaf.DPM.VendorB = shared
++            path = OUT / (name + '.pdf')
++            pdf.save(path, static_id=True, fix_metadata_version=False)
++        failures = ['DPM_NAME_TYPES' if name == 'dpm-value-name-utf8' else 'DPART_OBJECT_STRUCTURE'] if name in invalid else []
++        cases.append(dict(file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
++            expected_status='FAIL' if name in invalid else 'INCOMPLETE' if name in unavailable else 'PASS',
++            expected_failures=failures))
++    (OUT / 'expectations.json').write_text(json.dumps(dict(
++        authority='ISO32000-2:2020 Tables408/409 and 14.12.4.2 with industry-approved clause14 corrections accessed2026-10-20; XML1.0 Fifth Edition',
++        seed_sha256=hashlib.sha256(SEED.read_bytes()).hexdigest(),
++        boundary='Dictionary nulls are absent. Shared/cyclic data containers are allowed. Name values require UTF-8, not XML spelling; NMTOKEN-only dictionary key spelling remains unavailable.',
++        cases=cases), indent=2) + '\n')
++    print('Built sixteen DPart metadata controls.')
++
++
++if __name__ == '__main__':
++    main()

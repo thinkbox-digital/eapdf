@@ -1,0 +1,19 @@
+{
+  "status": "STOPPED_BY_USER",
+  "recorded_utc": "2026-10-30T20:11:32.652384+00:00",
+  "interrupted": true,
+  "last_stage": "Checking ISO 32005",
+  "last_sample_seconds": 6962.24,
+  "peak_rss_bytes": 22494183424,
+  "pdfa_status": "PASS",
+  "pdfa_assertions": 201183288,
+  "iso32005_status": "INTERRUPTED",
+  "eapdf_status": "NOT_RUN",
+  "final_acceptance": "NOT_COMPLETED",
+  "scratch_removed": true,
+  "validator_sha256": "85253bc826f21c3f723a50947707c89f64ee5ec4632fd888bbe0b54d2d132e13",
+  "source_sha256_at_launch": "fa3318a0b45aa16cff2d27e7723000963bfd26594c5c0d6b07b8ecb0c7eaac17",
+  "pdf_sha256_at_launch": "74b2abbc80c38bea56db19bc476379a7f51a6103e571c1a9e66695eca022272b",
+  "source_pdf_hashes_rechecked_after_stop": false,
+  "private_evidence": "output/performance-fixes-2026-10-30/followup-largest-141310"
+}

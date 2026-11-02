@@ -1,0 +1,71 @@
+{
+  "authority": "EA-PDF1.0 Table7 exact Mail_GUID/Mail_MessageID entries and V35 unrelated DPM extension scope",
+  "boundary": "Generic extension aliases are retained as data and do not identify an email for EA predicates. Canonical fields and readable contradictions retain their behavior.",
+  "cases": [
+    {
+      "file": "leaf-message-dash-id.pdf",
+      "sha256": "6ec64aabf1c653a70e456d046d884703c171f8f2e648c0beb7d919130f35777d",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "leaf-message-id.pdf",
+      "sha256": "d2ccdec4a5271e87c469cb8471f5a1c8214a6c85396b550912797384a95571a9",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "leaf-lower-messageid.pdf",
+      "sha256": "9d6170020f4baba8a1946546b53afa3ca06dba6979a65dd10bdb65ec69f02069",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "leaf-generic-name.pdf",
+      "sha256": "b51694f7521bc99c4cb2319723b22a69758db4df627a0f155729d0d0a38cbc18",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "leaf-generic-array.pdf",
+      "sha256": "bf90ab8cfe327de745023e228b78bd5dd2a76b37a73981684fca9d8e74de1d14",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "intermediate-generic-aliases.pdf",
+      "sha256": "d39813ba8fe69898e402ebc74d99d89c3cc98edf53c30c7bee0552f8526791bf",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "nested-vendor-alias.pdf",
+      "sha256": "df0cdec2229b9dacabf7e22ce9f9924ab2ec017bdb5e771e1b0bc42de41a7190",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "canonical-guid-mismatch.pdf",
+      "sha256": "f95d56b2c999dcee81e9511f6db15f175b3280407f78accb30237e2423b9def9",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "DPM_EMAIL_CONTENT_SET_OWNERSHIP",
+        "DPM_MAIL_GUID_MATCH",
+        "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_ANNOTATIONS_PRESENT",
+            "DPM_MAIL_GUID_MATCH",
+            "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+          ]
+        },
+        "reason": "Independent logical content ownership contradicts the email DPart ancestry; identifier presence/equality remains separate.",
+        "retained_pdf_bytes": true
+      }
+    }
+  ]
+}

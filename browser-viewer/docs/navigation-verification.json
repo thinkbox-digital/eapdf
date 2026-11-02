@@ -1,0 +1,651 @@
+{
+  "version": "0.2.0-beta.1",
+  "date": "2026-10-27",
+  "status": "PASS within documented local beta scope",
+  "packages": {
+    "version": "0.2.0-beta.1",
+    "status": "local beta; unsigned; not published",
+    "builds": {
+      "chromium": {
+        "file": "eapdf-viewer-0.2.0-beta.1-chromium.zip",
+        "sha256": "5eacc44454ce9f524699119960a92289a8a1379c8cd6b062365adcfaa2278130",
+        "bytes": 5757496
+      },
+      "firefox": {
+        "file": "eapdf-viewer-0.2.0-beta.1-firefox.zip",
+        "sha256": "7f65a6c02fe15b92c6c0860ea064ee77a4b5296354ce70b36fec218f43bd05e6",
+        "bytes": 5757574
+      }
+    }
+  },
+  "sourceReproduction": {
+    "focusedTests": 14,
+    "upstreamSpecs": 73,
+    "secondBuildByteIdentical": true,
+    "manifestSha256": "82974ae63a112b44cc14970d427fd2d2baf9c62d88eb52a04e532a74bad6b560",
+    "outputs": {
+      "vendor/pdfjs-patched/pdf.mjs": "c785831b4bdc861eac236acbc4867cd1704c58ea90eab740eb087ba1396a4672",
+      "vendor/pdfjs-patched/pdf.worker.mjs": "1089a6d4665bc72e4672780c237f256f0b44fe56e5c307c86334bda10e217f95"
+    }
+  },
+  "packageReproduction": "Two complete package builds produced identical ZIP hashes.",
+  "reports": {
+    "navigation-chromium": {
+      "sha256": "4583bebb207b8fb953c4add06e6026034408f901846a194377d2bbfcab283fca",
+      "result": {
+        "status": "PASS",
+        "browser": "156.0.8078.47",
+        "navigation": [
+          {
+            "case": "rotated-selectable-text-alignment",
+            "status": "PASS"
+          },
+          {
+            "case": "40-MiB-local-file",
+            "status": "PASS"
+          },
+          {
+            "case": "20-MiB-embedded-PDF",
+            "status": "PASS"
+          },
+          {
+            "case": "seven-annotation-only-PDF-levels-and-return",
+            "status": "PASS"
+          },
+          {
+            "case": "71-message-real-PST-collection-lazy-open",
+            "status": "PASS",
+            "sourceSha256": "2b7866bbe7c31608b70aacaa856a5e41e15dd15bf22adc6293852daf4567e3c2"
+          }
+        ]
+      }
+    },
+    "navigation-firefox": {
+      "sha256": "c3d88679fa0b7d49b6a3aa54fd346a40191fdb3e1b5fc85dc4d2d0d87ae1071d",
+      "result": {
+        "status": "PASS",
+        "browser": "158.0.1",
+        "navigation": [
+          {
+            "case": "rotated-selectable-text-alignment",
+            "status": "PASS"
+          },
+          {
+            "case": "40-MiB-local-file",
+            "status": "PASS"
+          },
+          {
+            "case": "20-MiB-embedded-PDF",
+            "status": "PASS"
+          },
+          {
+            "case": "seven-annotation-only-PDF-levels-and-return",
+            "status": "PASS"
+          },
+          {
+            "case": "71-message-real-PST-collection-lazy-open",
+            "status": "PASS",
+            "sourceSha256": "2b7866bbe7c31608b70aacaa856a5e41e15dd15bf22adc6293852daf4567e3c2"
+          }
+        ]
+      }
+    },
+    "m5-chromium": {
+      "sha256": "a644e3d95d29f47c768081bd2ca63728af874ad496f3821fa25e5b9ec4e97994",
+      "result": {
+        "status": "PASS",
+        "browser": "156.0.8078.47",
+        "results": [
+          {
+            "id": "example-1s",
+            "messagesSelected": 1,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "example-1si",
+            "messagesSelected": 1,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "example-1m",
+            "messagesSelected": 2,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "example-1mi",
+            "messagesSelected": 2,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "example-1c",
+            "messagesSelected": 2,
+            "verifiedDownloads": 3,
+            "status": "PASS"
+          },
+          {
+            "id": "example-1ci",
+            "messagesSelected": 2,
+            "verifiedDownloads": 3,
+            "status": "PASS"
+          },
+          {
+            "id": "c-nested-mixed",
+            "messagesSelected": 3,
+            "verifiedDownloads": 4,
+            "status": "PASS"
+          },
+          {
+            "id": "ci-corrupt-child",
+            "messagesSelected": 0,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "m-duplicate-guid",
+            "messagesSelected": 2,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "s-missing-stream",
+            "messagesSelected": 1,
+            "verifiedDownloads": 0,
+            "status": "PASS"
+          },
+          {
+            "id": "s-invalid-page-ref",
+            "messagesSelected": 1,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "c-folder-cycle",
+            "messagesSelected": 0,
+            "verifiedDownloads": 0,
+            "status": "PASS"
+          },
+          {
+            "id": "search-cancel-reopen",
+            "status": "PASS"
+          }
+        ],
+        "httpRequests": 0,
+        "pageErrors": 0,
+        "cancellation": "PASS"
+      }
+    },
+    "m5-firefox": {
+      "sha256": "ae209c53df01d8e9cbfc8adc7f4b412ea075dbaaf6114be455ae8fe4dad48314",
+      "result": {
+        "status": "PASS",
+        "browser": "158.0.1",
+        "driver": "0.37.1",
+        "results": [
+          {
+            "id": "example-1s",
+            "messagesSelected": 1,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "example-1si",
+            "messagesSelected": 1,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "example-1m",
+            "messagesSelected": 2,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "example-1mi",
+            "messagesSelected": 2,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "example-1c",
+            "messagesSelected": 2,
+            "verifiedDownloads": 3,
+            "status": "PASS"
+          },
+          {
+            "id": "example-1ci",
+            "messagesSelected": 2,
+            "verifiedDownloads": 3,
+            "status": "PASS"
+          },
+          {
+            "id": "c-nested-mixed",
+            "messagesSelected": 3,
+            "verifiedDownloads": 4,
+            "status": "PASS"
+          },
+          {
+            "id": "ci-corrupt-child",
+            "messagesSelected": 0,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "m-duplicate-guid",
+            "messagesSelected": 2,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "s-missing-stream",
+            "messagesSelected": 1,
+            "verifiedDownloads": 0,
+            "status": "PASS"
+          },
+          {
+            "id": "s-invalid-page-ref",
+            "messagesSelected": 1,
+            "verifiedDownloads": 1,
+            "status": "PASS"
+          },
+          {
+            "id": "c-folder-cycle",
+            "messagesSelected": 0,
+            "verifiedDownloads": 0,
+            "status": "PASS"
+          },
+          {
+            "id": "search-cancel-reopen",
+            "status": "PASS"
+          }
+        ]
+      }
+    },
+    "beta-attachments-chromium": {
+      "sha256": "5f2408d3a18c234456fb46994fa99a7fdc4607390a13cbfcd8c20889b7514ba4",
+      "result": {
+        "status": "PASS",
+        "browser": "156.0.8078.47",
+        "attachments": [
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "two-pages.pdf",
+            "status": "PASS",
+            "sha256": "c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "blue.png",
+            "status": "PASS",
+            "sha256": "75099c39545440a6048abfbe654ce828c4f6cdd256c4bd60c7d8c1f20317931a"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "blue.gif",
+            "status": "PASS",
+            "sha256": "2e5ab06773b46f66e70bb510e5d480e41c6be21c124ca63455c1b3d8f0d612e0"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "blue.jpg",
+            "status": "PASS",
+            "sha256": "dacebd8de2f82a3b0e99128ccbb7ff46dbf63b07b2f0a3035ae5513122e2ec70"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "plain.txt",
+            "status": "PASS",
+            "sha256": "b7623f629db2665c94804bc6d35defa206ba356a636896b70f709c44fe737848"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "markup.html",
+            "status": "PASS",
+            "sha256": "18beeec12dc89b313654f3e1930fa2258a7d6c937c5d7d439be706f31227d031"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "vector.svg",
+            "status": "PASS",
+            "sha256": "7fee114a663838d7fe1cd0d6ee3530a02ba853fd01bc240008e9206f79bf702d"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "empty.pdf",
+            "status": "PASS",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "broken.pdf",
+            "status": "PASS",
+            "sha256": "d6b7a83124961a3203f30f412730249215757992f2d85cd45dbb4a171ddf8d6a"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "binary.exe",
+            "status": "PASS",
+            "sha256": "2bee5a75a2b317ad551b71611d57e897d9bdbdb9125ed788618415c1e881ed62"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "huge.png",
+            "status": "PASS",
+            "sha256": "115317a1e8baf91bac16f5e79b3282c2b0c83bb1df22c5f312270c96289a0550"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "large.txt",
+            "status": "PASS",
+            "sha256": "d71befc8cc7d5f7f16d19fc411c03dc8e401ba8b29f3bf2c4cc25e9d66029abd"
+          },
+          {
+            "sourcePath": "../examples/msg/msg_sample_1s.pdf",
+            "name": "SampleAttachment.pdf",
+            "status": "PASS",
+            "sha256": "4845736e5fd1fe354b697901eefb9d9c3383ca98f12df5bfadab764fe6d488cd"
+          },
+          {
+            "sourcePath": "../examples/pst/pst_sample_1m.pdf",
+            "name": "Color 72dpi.jpg",
+            "status": "PASS",
+            "sha256": "f238be1e2ce2d3a81d528a17bec873673fc6738dcd75fdb7fc5d450fa29685b3"
+          },
+          {
+            "sourcePath": "../examples/eml/eml_sample_1m.pdf",
+            "name": "attachment.txt",
+            "status": "PASS",
+            "sha256": "85a7a9ae649bc25c22c2f49607d6ddd5cce0a63879bffca3980d9ab8f479c3d0"
+          }
+        ]
+      }
+    },
+    "beta-attachments-firefox": {
+      "sha256": "4f1fd553a04a5ff2ac3e7145db83072e2ebe6c2e06b2229b78bc51c6617cf77d",
+      "result": {
+        "status": "PASS",
+        "browser": "158.0.1",
+        "attachments": [
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "two-pages.pdf",
+            "status": "PASS",
+            "sha256": "c50f5aa1a2a6e50fe32908ede439cdc42ea93efadbd7a25874fd12b0943faad9"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "blue.png",
+            "status": "PASS",
+            "sha256": "75099c39545440a6048abfbe654ce828c4f6cdd256c4bd60c7d8c1f20317931a"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "blue.gif",
+            "status": "PASS",
+            "sha256": "2e5ab06773b46f66e70bb510e5d480e41c6be21c124ca63455c1b3d8f0d612e0"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "blue.jpg",
+            "status": "PASS",
+            "sha256": "dacebd8de2f82a3b0e99128ccbb7ff46dbf63b07b2f0a3035ae5513122e2ec70"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "plain.txt",
+            "status": "PASS",
+            "sha256": "b7623f629db2665c94804bc6d35defa206ba356a636896b70f709c44fe737848"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "markup.html",
+            "status": "PASS",
+            "sha256": "18beeec12dc89b313654f3e1930fa2258a7d6c937c5d7d439be706f31227d031"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "vector.svg",
+            "status": "PASS",
+            "sha256": "7fee114a663838d7fe1cd0d6ee3530a02ba853fd01bc240008e9206f79bf702d"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "empty.pdf",
+            "status": "PASS",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "broken.pdf",
+            "status": "PASS",
+            "sha256": "d6b7a83124961a3203f30f412730249215757992f2d85cd45dbb4a171ddf8d6a"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "binary.exe",
+            "status": "PASS",
+            "sha256": "2bee5a75a2b317ad551b71611d57e897d9bdbdb9125ed788618415c1e881ed62"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "huge.png",
+            "status": "PASS",
+            "sha256": "115317a1e8baf91bac16f5e79b3282c2b0c83bb1df22c5f312270c96289a0550"
+          },
+          {
+            "sourcePath": "tests/attachments/viewing.pdf",
+            "name": "large.txt",
+            "status": "PASS",
+            "sha256": "d71befc8cc7d5f7f16d19fc411c03dc8e401ba8b29f3bf2c4cc25e9d66029abd"
+          },
+          {
+            "sourcePath": "../examples/msg/msg_sample_1s.pdf",
+            "name": "SampleAttachment.pdf",
+            "status": "PASS",
+            "sha256": "4845736e5fd1fe354b697901eefb9d9c3383ca98f12df5bfadab764fe6d488cd"
+          },
+          {
+            "sourcePath": "../examples/pst/pst_sample_1m.pdf",
+            "name": "Color 72dpi.jpg",
+            "status": "PASS",
+            "sha256": "f238be1e2ce2d3a81d528a17bec873673fc6738dcd75fdb7fc5d450fa29685b3"
+          },
+          {
+            "sourcePath": "../examples/eml/eml_sample_1m.pdf",
+            "name": "attachment.txt",
+            "status": "PASS",
+            "sha256": "85a7a9ae649bc25c22c2f49607d6ddd5cce0a63879bffca3980d9ab8f479c3d0"
+          }
+        ]
+      }
+    },
+    "beta-hardening": {
+      "sha256": "64de892275f5bea66d1d839f5ee6deec088368d7d055aacf20b062f9d436c684",
+      "result": {
+        "status": "PASS",
+        "browser": "156.0.8078.47",
+        "results": [
+          {
+            "name": "decoded-byte-limit",
+            "status": "PASS"
+          },
+          {
+            "name": "child-depth-limit",
+            "status": "PASS"
+          },
+          {
+            "name": "child-count-limit",
+            "status": "PASS"
+          },
+          {
+            "name": "cancel-pending-worker-and-hash",
+            "status": "PASS"
+          },
+          {
+            "name": "worker-timeout",
+            "status": "PASS"
+          },
+          {
+            "name": "third-party-bfo",
+            "status": "PASS",
+            "sourceSha256": "cf7e3669ad5994439a999e3ad37f02503fe05755fe8c5fc74d091f9695114efb",
+            "pages": 3,
+            "messages": 1,
+            "files": 2,
+            "limit": "No BodyRendering DPart in supplied file; metadata and manual pages available, no guessed body destination."
+          },
+          {
+            "name": "xmp-external-entity-rejected",
+            "status": "PASS"
+          },
+          {
+            "name": "linked-opening-needs-explicit-action",
+            "status": "PASS"
+          }
+        ],
+        "httpRequests": 0,
+        "pageErrors": 0
+      }
+    },
+    "semantic-smoke": {
+      "sha256": "a44a6c4258870624a33380baa49143ddbd49b0c18235c2a54f8074429a4eb963",
+      "result": {
+        "status": "PASS",
+        "fixtures": [
+          {
+            "id": "example-1s",
+            "status": "PASS"
+          },
+          {
+            "id": "example-1si",
+            "status": "PASS"
+          },
+          {
+            "id": "example-1m",
+            "status": "PASS"
+          },
+          {
+            "id": "example-1mi",
+            "status": "PASS"
+          },
+          {
+            "id": "example-1c",
+            "status": "PASS"
+          },
+          {
+            "id": "example-1ci",
+            "status": "PASS"
+          },
+          {
+            "id": "c-folder-cycle",
+            "status": "PASS"
+          },
+          {
+            "id": "c-nested-mixed",
+            "status": "PASS"
+          },
+          {
+            "id": "ci-corrupt-child",
+            "status": "PASS"
+          },
+          {
+            "id": "m-duplicate-guid",
+            "status": "PASS"
+          },
+          {
+            "id": "mi-reversed-range",
+            "status": "PASS"
+          },
+          {
+            "id": "s-bad-checksum",
+            "status": "PASS"
+          },
+          {
+            "id": "s-conflicting-profile",
+            "status": "PASS"
+          },
+          {
+            "id": "s-dpart-cycle",
+            "status": "PASS"
+          },
+          {
+            "id": "s-duplicate-files",
+            "status": "PASS"
+          },
+          {
+            "id": "s-invalid-page-ref",
+            "status": "PASS"
+          },
+          {
+            "id": "s-malformed-xmp",
+            "status": "PASS"
+          },
+          {
+            "id": "s-missing-guid",
+            "status": "PASS"
+          },
+          {
+            "id": "s-missing-stream",
+            "status": "PASS"
+          },
+          {
+            "id": "s-object-af-only",
+            "status": "PASS"
+          },
+          {
+            "id": "s-two-streams",
+            "status": "PASS"
+          },
+          {
+            "id": "s-unknown-profile",
+            "status": "PASS"
+          },
+          {
+            "id": "s-uri-guid",
+            "status": "PASS"
+          },
+          {
+            "id": "si-name-guid",
+            "status": "PASS"
+          },
+          {
+            "id": "existing-reversed-order",
+            "status": "PASS"
+          },
+          {
+            "id": "existing-uri-checksum",
+            "status": "PASS"
+          },
+          {
+            "id": "ordinary",
+            "status": "PASS"
+          }
+        ]
+      }
+    }
+  },
+  "buildInfoSha256": {
+    "chromium": "977331f954275cb8c6cebc43fba2c799ccae8ade1b9546e127516fd0bb3e386a",
+    "firefox": "ab6d13de3fb6785ce4e7c44b0d57043730c5ce9a389b24c1d4a0a61b58a827de"
+  },
+  "logs": {
+    "final-chromium.log": "fb32a4cd81c41ec76e26fd56d70113044fcfc35076c896a78ad9154111d5399a",
+    "final-firefox.log": "44b33bb8ead2a247f71fad1829b0f6b9b403004d2df00ee08b4f7c328a12f9d7",
+    "final-hardening.log": "0c7a2d641ef3ac1628af0adecd70c535a1867b5c8afb0c84a0fdf9d355c81d79",
+    "final-semantic.log": "4e0fb10a871993728b0e48141f74131136ef3fe07f3f2818e28de34d36c5337c",
+    "package-repeat.log": "05e9ece4f3f5e74c27043b995e4d3ee68355884801496f6ef889183027549b9f",
+    "package.log": "05e9ece4f3f5e74c27043b995e4d3ee68355884801496f6ef889183027549b9f",
+    "pdfjs-build.log": "2ffe3571f661e7033a3453abaad3c7b16b1d2ffe0cb8e45ed531836b75895bcd",
+    "pdfjs-reproduction.log": "adce2a2123f7f4ff11842faf0add916e07721fd19d0115608af0f701a0348a27"
+  },
+  "notVerified": [
+    "Native browser context-menu clicks and optional host-permission prompt acceptance",
+    "Other operating systems and older browsers",
+    "Store signing/publication",
+    "Complete accessibility acceptance",
+    "Unlimited file size or process-wide memory guarantee"
+  ]
+}

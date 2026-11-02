@@ -1,0 +1,18 @@
+{
+  "file": "examples/mbox/mbox_missing_sent_date_1s.pdf",
+  "sha256": "12d1fabc256f741200708c115b18ecf0a04814203929e6a48d625759af69e1fa",
+  "creator_sha256": "3937dcb3dfe5dfc154c3cbb95ea5f0f2917b02c2ae5ff64bfd624dda0046aed5",
+  "validator_sha256": "8065f67a7985d718211e477f2c05196ff99d254196e7ade890595bdabfb40083",
+  "source": "in/Drafts.mbox",
+  "source_sha256": "a88b209b42ca8fc7e66b1984b884ae81b607ee8a6b0f5aa1d2f9afad3feb860e",
+  "source_unchanged": true,
+  "pst_descriptor": null,
+  "pdfa": "PASS",
+  "eapdf": "FAIL",
+  "pdfua2_machine": "NOT_RERUN_FOR_THIS_REVISION",
+  "human_accessibility_review": false,
+  "report": "output/release-1.6.0-beta.2/source-problems/mbox_Drafts_1s.java.json",
+  "scope": "Deliberately incomplete source example; not a passing EA-PDF example.",
+  "creator_version": "1.6.0-beta.2",
+  "created": "2026-10-29"
+}

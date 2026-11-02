@@ -1,0 +1,1768 @@
+[
+  {
+    "file": "normal-1c-valid.pdf",
+    "members": [
+      {
+        "filename": "Attached email_000003_1s.pdf",
+        "original_sha256": "e8d6bff80db44ab3b09178a2c0cde01a873cb688e4db8e0198fc5e711b697bf7",
+        "sha256": "9ad1008e2b4f0d7dcdf4a6e062e03e74f77913ec31df35073860a377d0686221",
+        "size": 57777,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "valid"
+      },
+      {
+        "filename": "Second message_000002_1s.pdf",
+        "original_sha256": "23a1920b084288e8c784c80c3789d8e64b9ad6582a4a8b397b14addb941d1957",
+        "sha256": "726f44fca563e3f59b9c90ce6f4fe8041445b2ca60733f0f2d501ebcd73d60ff",
+        "size": 44644,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrected-original"
+      },
+      {
+        "filename": "message 1_000001_1s.pdf",
+        "original_sha256": "9e229f25bdb87d494f0ff460bb893d44771f5a511ddcb5a63893ae3156f6efcb",
+        "sha256": "f74de2ad6554181e5b7b69003acd67d6ff566e07f2c89fecc84dbac11d71a9be",
+        "size": 42446,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          }
+        ],
+        "replacement": "corrected-original"
+      }
+    ]
+  },
+  {
+    "file": "normal-1c-incomplete.pdf",
+    "members": [
+      {
+        "filename": "Attached email_000003_1s.pdf",
+        "original_sha256": "e8d6bff80db44ab3b09178a2c0cde01a873cb688e4db8e0198fc5e711b697bf7",
+        "sha256": "b1f5dc339ebbdee290479ebd9eceab4c550c6617d2888518ec9aaf47e395e862",
+        "size": 143018,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "incomplete"
+      },
+      {
+        "filename": "Second message_000002_1s.pdf",
+        "original_sha256": "23a1920b084288e8c784c80c3789d8e64b9ad6582a4a8b397b14addb941d1957",
+        "sha256": "726f44fca563e3f59b9c90ce6f4fe8041445b2ca60733f0f2d501ebcd73d60ff",
+        "size": 44644,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrected-original"
+      },
+      {
+        "filename": "message 1_000001_1s.pdf",
+        "original_sha256": "9e229f25bdb87d494f0ff460bb893d44771f5a511ddcb5a63893ae3156f6efcb",
+        "sha256": "f74de2ad6554181e5b7b69003acd67d6ff566e07f2c89fecc84dbac11d71a9be",
+        "size": 42446,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          }
+        ],
+        "replacement": "corrected-original"
+      }
+    ]
+  },
+  {
+    "file": "normal-1c-failed.pdf",
+    "members": [
+      {
+        "filename": "Attached email_000003_1s.pdf",
+        "original_sha256": "e8d6bff80db44ab3b09178a2c0cde01a873cb688e4db8e0198fc5e711b697bf7",
+        "sha256": "0566f1b75ac59c26d710211d2253b78303a7f7dc211c2886eba9492587b40c25",
+        "size": 143022,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "failed"
+      },
+      {
+        "filename": "Second message_000002_1s.pdf",
+        "original_sha256": "23a1920b084288e8c784c80c3789d8e64b9ad6582a4a8b397b14addb941d1957",
+        "sha256": "726f44fca563e3f59b9c90ce6f4fe8041445b2ca60733f0f2d501ebcd73d60ff",
+        "size": 44644,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrected-original"
+      },
+      {
+        "filename": "message 1_000001_1s.pdf",
+        "original_sha256": "9e229f25bdb87d494f0ff460bb893d44771f5a511ddcb5a63893ae3156f6efcb",
+        "sha256": "f74de2ad6554181e5b7b69003acd67d6ff566e07f2c89fecc84dbac11d71a9be",
+        "size": 42446,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          }
+        ],
+        "replacement": "corrected-original"
+      }
+    ]
+  },
+  {
+    "file": "normal-1c-corrupt.pdf",
+    "members": [
+      {
+        "filename": "Attached email_000003_1s.pdf",
+        "original_sha256": "e8d6bff80db44ab3b09178a2c0cde01a873cb688e4db8e0198fc5e711b697bf7",
+        "sha256": "194b67bc535206bb5d1b684729aac326f2d5c87c138d1b723cdb167ae434a3d9",
+        "size": 33,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrupt"
+      },
+      {
+        "filename": "Second message_000002_1s.pdf",
+        "original_sha256": "23a1920b084288e8c784c80c3789d8e64b9ad6582a4a8b397b14addb941d1957",
+        "sha256": "726f44fca563e3f59b9c90ce6f4fe8041445b2ca60733f0f2d501ebcd73d60ff",
+        "size": 44644,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrected-original"
+      },
+      {
+        "filename": "message 1_000001_1s.pdf",
+        "original_sha256": "9e229f25bdb87d494f0ff460bb893d44771f5a511ddcb5a63893ae3156f6efcb",
+        "sha256": "f74de2ad6554181e5b7b69003acd67d6ff566e07f2c89fecc84dbac11d71a9be",
+        "size": 42446,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          }
+        ],
+        "replacement": "corrected-original"
+      }
+    ]
+  },
+  {
+    "file": "normal-1ci-valid.pdf",
+    "members": [
+      {
+        "filename": "Attached email_000003_1si.pdf",
+        "original_sha256": "5c39b01f4dd4cf0562ae5717ae054657fe498e00bb024ddbdf5413a8da67448e",
+        "sha256": "1b9e5f5ce2715090a867487f153222c5a63098207614769e49db0bfb60d02656",
+        "size": 33237,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "valid"
+      },
+      {
+        "filename": "Second message_000002_1si.pdf",
+        "original_sha256": "b58ecf4aa4492c2275597cf41b808d6c7c4732f7bc7a7ba55419591600ce09e7",
+        "sha256": "d1abce4a321fc35575cdd1e15b9e6acba9f9703101bd84e1b0f06ec6b802bc77",
+        "size": 20116,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrected-original"
+      },
+      {
+        "filename": "message 1_000001_1si.pdf",
+        "original_sha256": "00cfa502ba90a0c1e7fc46871ab2649328b1eb69ab9b4259d0c059fa716d73a0",
+        "sha256": "e3f54dc80538c15e2e851fe6dc37eb1a6106e0214b08450ed1d0dbd9907fb469",
+        "size": 17823,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          }
+        ],
+        "replacement": "corrected-original"
+      }
+    ]
+  },
+  {
+    "file": "normal-1ci-incomplete.pdf",
+    "members": [
+      {
+        "filename": "Attached email_000003_1si.pdf",
+        "original_sha256": "5c39b01f4dd4cf0562ae5717ae054657fe498e00bb024ddbdf5413a8da67448e",
+        "sha256": "b1f5dc339ebbdee290479ebd9eceab4c550c6617d2888518ec9aaf47e395e862",
+        "size": 143018,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "incomplete"
+      },
+      {
+        "filename": "Second message_000002_1si.pdf",
+        "original_sha256": "b58ecf4aa4492c2275597cf41b808d6c7c4732f7bc7a7ba55419591600ce09e7",
+        "sha256": "d1abce4a321fc35575cdd1e15b9e6acba9f9703101bd84e1b0f06ec6b802bc77",
+        "size": 20116,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrected-original"
+      },
+      {
+        "filename": "message 1_000001_1si.pdf",
+        "original_sha256": "00cfa502ba90a0c1e7fc46871ab2649328b1eb69ab9b4259d0c059fa716d73a0",
+        "sha256": "e3f54dc80538c15e2e851fe6dc37eb1a6106e0214b08450ed1d0dbd9907fb469",
+        "size": 17823,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          }
+        ],
+        "replacement": "corrected-original"
+      }
+    ]
+  },
+  {
+    "file": "normal-1ci-failed.pdf",
+    "members": [
+      {
+        "filename": "Attached email_000003_1si.pdf",
+        "original_sha256": "5c39b01f4dd4cf0562ae5717ae054657fe498e00bb024ddbdf5413a8da67448e",
+        "sha256": "0566f1b75ac59c26d710211d2253b78303a7f7dc211c2886eba9492587b40c25",
+        "size": 143022,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "failed"
+      },
+      {
+        "filename": "Second message_000002_1si.pdf",
+        "original_sha256": "b58ecf4aa4492c2275597cf41b808d6c7c4732f7bc7a7ba55419591600ce09e7",
+        "sha256": "d1abce4a321fc35575cdd1e15b9e6acba9f9703101bd84e1b0f06ec6b802bc77",
+        "size": 20116,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrected-original"
+      },
+      {
+        "filename": "message 1_000001_1si.pdf",
+        "original_sha256": "00cfa502ba90a0c1e7fc46871ab2649328b1eb69ab9b4259d0c059fa716d73a0",
+        "sha256": "e3f54dc80538c15e2e851fe6dc37eb1a6106e0214b08450ed1d0dbd9907fb469",
+        "size": 17823,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          }
+        ],
+        "replacement": "corrected-original"
+      }
+    ]
+  },
+  {
+    "file": "normal-1ci-corrupt.pdf",
+    "members": [
+      {
+        "filename": "Attached email_000003_1si.pdf",
+        "original_sha256": "5c39b01f4dd4cf0562ae5717ae054657fe498e00bb024ddbdf5413a8da67448e",
+        "sha256": "194b67bc535206bb5d1b684729aac326f2d5c87c138d1b723cdb167ae434a3d9",
+        "size": 33,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrupt"
+      },
+      {
+        "filename": "Second message_000002_1si.pdf",
+        "original_sha256": "b58ecf4aa4492c2275597cf41b808d6c7c4732f7bc7a7ba55419591600ce09e7",
+        "sha256": "d1abce4a321fc35575cdd1e15b9e6acba9f9703101bd84e1b0f06ec6b802bc77",
+        "size": 20116,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrected-original"
+      },
+      {
+        "filename": "message 1_000001_1si.pdf",
+        "original_sha256": "00cfa502ba90a0c1e7fc46871ab2649328b1eb69ab9b4259d0c059fa716d73a0",
+        "sha256": "e3f54dc80538c15e2e851fe6dc37eb1a6106e0214b08450ed1d0dbd9907fb469",
+        "size": 17823,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          }
+        ],
+        "replacement": "corrected-original"
+      }
+    ]
+  },
+  {
+    "file": "accessibility-1c-valid.pdf",
+    "members": [
+      {
+        "filename": "Accessible message_000002_1s.pdf",
+        "original_sha256": "28cf914f78b209ef88f70e9e2218e6d9bce21e9401274c91af68dac104cfd690",
+        "sha256": "eef736e04f0d45d283b2694835b297684b1bd2c9f9bb719ef4daaf36b7ee7eb4",
+        "size": 58724,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "valid"
+      },
+      {
+        "filename": "Second message_000001_1s.pdf",
+        "original_sha256": "788720279f0bef342b4d5027ce2177e442d0915e9bc8b564f34d66e1f6c25347",
+        "sha256": "3d0273776c1620002a804edd9e54ecc6f5ef429cca4b005dcc146c39e4915109",
+        "size": 42874,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrected-original"
+      }
+    ]
+  },
+  {
+    "file": "accessibility-1ci-valid.pdf",
+    "members": [
+      {
+        "filename": "Accessible message_000002_1si.pdf",
+        "original_sha256": "7fad0542c14ebc86b1d783ff57276ab10783ff2db0027cf09e794c7f8598b32e",
+        "sha256": "f97ffb4fe79a5c95e47d27027bac36b5235d4613c4da4524f88af9afc64c9d61",
+        "size": 55740,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 8,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 9,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "valid"
+      },
+      {
+        "filename": "Second message_000001_1si.pdf",
+        "original_sha256": "a30aa8a9b81c6a1b7794baa263188505a9ee9c904c5bf46dcb719288f78b94a1",
+        "sha256": "37d61cf2e2a7071acc9f8d58df2e43c8e50659a372b09fc01a034e41b279548b",
+        "size": 39967,
+        "operand_changes": [
+          {
+            "page": 1,
+            "mcid": 0,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 1,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 2,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 3,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 4,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 5,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          },
+          {
+            "page": 1,
+            "mcid": 6,
+            "before": "/Span",
+            "after": "Mail_FieldName"
+          },
+          {
+            "page": 1,
+            "mcid": 7,
+            "before": "/Span",
+            "after": "Mail_FieldValue"
+          }
+        ],
+        "replacement": "corrected-original"
+      }
+    ]
+  }
+]

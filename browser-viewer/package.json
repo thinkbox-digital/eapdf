@@ -1,0 +1,40 @@
+{
+  "name": "eapdf-browser-viewer",
+  "version": "0.5.0-beta.5",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": "24.19.0",
+    "npm": "11.17.0"
+  },
+  "packageManager": "npm@11.17.0",
+  "scripts": {
+    "check": "tsc --noEmit && node scripts/inspection-contract.mjs --check",
+    "test:m1": "node --test tests/inspection-contract.test.mjs && python3 -B -m unittest discover -s reference -p 'test_*.py' -v",
+    "fixtures:check": "python3 -B reference/fixtures.py",
+    "build": "node scripts/build.mjs",
+    "build:pdfjs": "node scripts/rebuild-pdfjs.mjs",
+    "verify:pdfjs": "node scripts/pdfjs-patch.mjs",
+    "test:m2": "npm run build && node --test tests/document-parts.test.mjs && npm run test:parts",
+    "test:parts": "node scripts/document-parts-smoke.mjs",
+    "test": "npm run build && node --test tests/*.test.mjs && npm run test:browser && npm run test:parts && npm run test:ui && npm run test:reading && npm run test:downloads",
+    "test:browser": "node scripts/browser-smoke.mjs",
+    "test:firefox": "node scripts/firefox-smoke.mjs",
+    "verify:licenses": "node scripts/licenses.mjs",
+    "test:assets": "node scripts/assets-smoke.mjs",
+    "test:ui": "node scripts/ui-smoke.mjs",
+    "test:semantics": "node scripts/semantic-smoke.mjs",
+    "test:beta": "node scripts/beta-smoke.mjs",
+    "package:beta": "npm run build && python3 scripts/package-beta.py",
+    "test:downloads": "node scripts/download-smoke.mjs",
+    "test:reading": "node scripts/reading-improvements-smoke.mjs"
+  },
+  "dependencies": {
+    "pdfjs-dist": "6.5.438"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "checkpoint": "C104",
+  "fix": "Recognize known non-email Outlook item classes during MSG input detection. Skip them explicitly in directory conversion; reject direct non-email inputs. Preserve ordinary, meeting/report and legacy message classes.",
+  "before": "One email plus one contact yielded two EA-PDF emails.",
+  "after": {
+    "exit_code": 0,
+    "published_pdfs": 1,
+    "contact_skipped_reported": true,
+    "accepted_only_email": true,
+    "converted_only_email": true
+  },
+  "java_focused": {
+    "tests": 23,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "java_full": {
+    "tests": 229,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changed_production_classes": [
+    "eapdf/EmailToPDFA.class"
+  ],
+  "pdf_result": "pdf-result.json",
+  "jars": {
+    "emailtopdfa.jar": "31ea749a7bd72b77c4874d6592a5b25425d82c9d805d5c52c58cb775e8ebd513",
+    "emailtopdfa-gui.jar": "251871d12a817ba41b19b04f4479c2bb6c9a73c615a996530fb48ce90272aacf"
+  },
+  "source_sha256": "414b33686961fd60bba792fbb5f5c782f84613a946dc250f3e247cb2325e40cc",
+  "temporary_shared_staging_removed": true,
+  "continued_work": "Active until explicitly told to stop."
+}

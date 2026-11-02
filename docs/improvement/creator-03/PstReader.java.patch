@@ -1,0 +1,14 @@
+--- before/src/main/java/eapdf/PstReader.java
++++ after/src/main/java/eapdf/PstReader.java
+@@ -150,8 +150,9 @@
+   static void populatePstHeadersAndRecipients(PSTMessage m, EmailRecord r) throws Exception {
+     String headers = Common.nz(m.getTransportMessageHeaders());
+     if (headers.isBlank()) return;
+-    Session s = Session.getInstance(new Properties());
+-    try (ByteArrayInputStream in = new ByteArrayInputStream((headers + "\r\n\r\n").getBytes(StandardCharsets.UTF_8))) {
++    byte[] rawHeaders = (headers + "\r\n\r\n").getBytes(StandardCharsets.UTF_8);
++    Session s = EmlReader.mimeSession(rawHeaders);
++    try (ByteArrayInputStream in = new ByteArrayInputStream(rawHeaders)) {
+       MimeMessage mm = new MimeMessage(s, in);
+       r.rawFrom = Common.header1(mm, "From");
+       r.rawTo = Common.header1(mm, "To");

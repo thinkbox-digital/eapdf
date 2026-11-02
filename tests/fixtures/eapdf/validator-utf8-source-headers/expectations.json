@@ -1,0 +1,102 @@
+{
+  "authority": [
+    "EA-PDF Table18 original header and FOAF field values",
+    "RFC6532 sections3.1/3.2/3.7",
+    "RFC6531 section3.3"
+  ],
+  "boundary": "Lossless restoration of valid UTF-8 bytes, not complete internationalization, IDNA, legacy charset detection or malformed-source handling.",
+  "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+  "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+  "cases": [
+    {
+      "file": "from-utf8.pdf",
+      "sha256": "40acc33142ba2ac6cf47379b9a524c1dadb0f4e591322d4e51108648a41dbf71",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "to-utf8.pdf",
+      "sha256": "ae23ab0812786f955d2f65228b20aa3dc5fa75065e89da09083e9e96e5fce6e6",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "cc-utf8.pdf",
+      "sha256": "afa09906341fc200aa132a81f5ef925d9b75b4aece2ce8eaa6116ee3007ec65b",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "bcc-utf8.pdf",
+      "sha256": "becb97d71cb151d1484cfb286557d3c6c10b53499af9eb4541f88276d2a885e1",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "subject-utf8.pdf",
+      "sha256": "359e20a9d9c6dfbc85e4c3ad1421c3d0dda3fce0f33368fe24678edd3fffbea5",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "quoted-utf8.pdf",
+      "sha256": "314a8265ee3888b94bce39aec98592f5cdf02129b63effb287d29961d0aae09a",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "domain-utf8.pdf",
+      "sha256": "583e2c2a8753b97434389c8f90d3a45a4c15f590524b06d35b359827e469d5c0",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "different-local.pdf",
+      "sha256": "95ff547654317d77d2a134decf60c95f57c44817a654fb2ca176e885ab793ac3",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_FROM_FOAF"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "From"
+        ]
+      }
+    },
+    {
+      "file": "global-no-eml-name.pdf",
+      "sha256": "964115fc3ffa6a4bbf80f76148aae24e621965c9665f17ba9b7ad52a692dfcd7",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "global-no-eml-wrong.pdf",
+      "sha256": "284759d6cf7cc5152779d1dafb54598f52ee4655928ad0054e11f94a69ef661c",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_FROM_FOAF"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "From"
+        ]
+      }
+    }
+  ]
+}

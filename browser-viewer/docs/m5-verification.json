@@ -1,0 +1,207 @@
+{
+  "milestone": "M5",
+  "date": "2026-10-27",
+  "status": "ACCEPTANCE_MET",
+  "m6_started": false,
+  "nodeTests": {
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0
+  },
+  "semanticRecords": 27,
+  "dpartComparisons": 6,
+  "frozenFixtureHashesVerified": 27,
+  "sourceSha256": {
+    "src/viewer.ts": "5b557d4bed6310b0467f941e5aa582e69369a128b2168a03b249cf8e37b7f4cb",
+    "src/viewer.html": "c7b324eac5bf741fc66fc197394e597520902cf71aa7e56e888a72781beac261",
+    "src/viewer.css": "793ae58da476377f7aec0674dbfe6db9cd23ce27577de5e31351a27900f02338",
+    "src/navigation.ts": "4a9933ff6b44ad4e21e146d79630e6dada115dbe4d2e922384f382d46610c5c5",
+    "src/extension/manifest.json": "400857bda9412c9ab4b54a0a094755f090fa11e36c57a41662e1c5f691894fed",
+    "scripts/ui-checks.mjs": "7c3d07a2ad92b9ec591156bab5d355002793a46889ef187a159dfefaad7d1cbd",
+    "scripts/ui-smoke.mjs": "4bf5b10cbfd046b8fe06b4d1379593b4b6aba2c6190ed52ccecde1881526e1a2",
+    "scripts/firefox-smoke.mjs": "4ec2d582b4315a66f389bc89a4878f5706485ce9377535f21cc5339e3bd744fa",
+    "tests/navigation.test.mjs": "b528e30bff439a13daf5de339096b8ff410f3e3d3f489cf4ce2705ee26c8caee",
+    "package.json": "86713afd2d6001553d0b2a4549ac9f88157983d0868a040aa18a45642ac8c0ab",
+    "package-lock.json": "b6389eedc4b9ae28f9f6f7d9be3cddd3811c967a7b500d0f30da233101b6acf8",
+    "src/inspection-session.ts": "c5d093751cbd657172533ed4a7d679c2c1383f692b0f6bdf82999f1d5f54a140",
+    "src/domain/interpret.ts": "4cac3d07512d2269a58359dccae90ad8578c8c9cd6c99d93ec2c945bdf4659cd",
+    "src/domain/xmp.ts": "c6e2a15ba5984712310039192dd89669339d2c176bde45c269a3082af11970b4",
+    "vendor/pdfjs-patches/manifest.json": "169da9d32b60344727ec8c944248fa397694b6d298461743b85eebf4ad5dffc8",
+    "tests/inspection/manifest.json": "f90d8fcf3fe11f1293847c3abe6823549292ca2e05d39a8cdf2415ae6913047d"
+  },
+  "buildInfoSha256": {
+    "chromium": "3e391da083967f8d533f89221a1c31fa62bb89755d0fabf6c5157ed90a2cb044",
+    "firefox": "5a9402d4e28e3b049b43bebb2f93f3100b90d599ae4d26178d1fd66ffa16f3ff"
+  },
+  "browsers": {
+    "chromium": {
+      "status": "PASS",
+      "browser": "156.0.8078.47",
+      "results": [
+        {
+          "id": "example-1s",
+          "messagesSelected": 1,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "example-1si",
+          "messagesSelected": 1,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "example-1m",
+          "messagesSelected": 2,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "example-1mi",
+          "messagesSelected": 2,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "example-1c",
+          "messagesSelected": 4,
+          "verifiedDownloads": 3,
+          "status": "PASS"
+        },
+        {
+          "id": "example-1ci",
+          "messagesSelected": 4,
+          "verifiedDownloads": 3,
+          "status": "PASS"
+        },
+        {
+          "id": "c-nested-mixed",
+          "messagesSelected": 3,
+          "verifiedDownloads": 4,
+          "status": "PASS"
+        },
+        {
+          "id": "ci-corrupt-child",
+          "messagesSelected": 0,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "m-duplicate-guid",
+          "messagesSelected": 2,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "s-missing-stream",
+          "messagesSelected": 1,
+          "verifiedDownloads": 0,
+          "status": "PASS"
+        },
+        {
+          "id": "s-invalid-page-ref",
+          "messagesSelected": 1,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "c-folder-cycle",
+          "messagesSelected": 0,
+          "verifiedDownloads": 0,
+          "status": "PASS"
+        },
+        {
+          "id": "search-cancel-reopen",
+          "status": "PASS"
+        }
+      ],
+      "httpRequests": 0,
+      "pageErrors": 0,
+      "cancellation": "PASS"
+    },
+    "firefox": {
+      "status": "PASS",
+      "browser": "158.0.1",
+      "driver": "0.37.1",
+      "results": [
+        {
+          "id": "example-1s",
+          "messagesSelected": 1,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "example-1si",
+          "messagesSelected": 1,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "example-1m",
+          "messagesSelected": 2,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "example-1mi",
+          "messagesSelected": 2,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "example-1c",
+          "messagesSelected": 4,
+          "verifiedDownloads": 3,
+          "status": "PASS"
+        },
+        {
+          "id": "example-1ci",
+          "messagesSelected": 4,
+          "verifiedDownloads": 3,
+          "status": "PASS"
+        },
+        {
+          "id": "c-nested-mixed",
+          "messagesSelected": 3,
+          "verifiedDownloads": 4,
+          "status": "PASS"
+        },
+        {
+          "id": "ci-corrupt-child",
+          "messagesSelected": 0,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "m-duplicate-guid",
+          "messagesSelected": 2,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "s-missing-stream",
+          "messagesSelected": 1,
+          "verifiedDownloads": 0,
+          "status": "PASS"
+        },
+        {
+          "id": "s-invalid-page-ref",
+          "messagesSelected": 1,
+          "verifiedDownloads": 1,
+          "status": "PASS"
+        },
+        {
+          "id": "c-folder-cycle",
+          "messagesSelected": 0,
+          "verifiedDownloads": 0,
+          "status": "PASS"
+        },
+        {
+          "id": "search-cancel-reopen",
+          "status": "PASS"
+        }
+      ]
+    }
+  },
+  "limits": "M5 is not security/release certification; see m5-results.md."
+}

@@ -1,0 +1,75 @@
+{
+  "checkpoint": "C131",
+  "creator_checkpoint": "C130",
+  "kind": "Read-only full-mailbox assessment, no creator or validator source changes.",
+  "creation": {
+    "exit_code": 0,
+    "seconds": 147.46,
+    "creator_heap_bytes": 536870912,
+    "creator_checkpoint": "C130",
+    "output_bytes": 70485490
+  },
+  "preservation": {
+    "messages": 1433,
+    "unique_mail_guids": 1433,
+    "exact_original_sources": 1433,
+    "pages": 2106,
+    "content_set_page_counts": {
+      "/FrontMatter": 101,
+      "/BodyRendering": 2005
+    },
+    "container_sha256": "ac91b223f9eaeb57f7498bc08b8eb190ef4624b7c88bb5534e3fd4934ac2dfd4",
+    "pdf_sha256": "cc28bb1e8f85d3b1c0ded8df7badfacd1af0f0d949c6eed332aeec9d7ed1d474",
+    "creator_heap_bytes": 536870912
+  },
+  "validation": {
+    "status": "PASS",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failure_counts": {},
+    "incomplete_counts": {},
+    "seconds": 605.74,
+    "default_inspection_limits": {
+      "tree_items": 100000,
+      "tree_depth": 256
+    },
+    "trusted_run_inspection_limits": {
+      "tree_items": 10000000,
+      "tree_depth": 8192
+    },
+    "external_heap_mb": 2048,
+    "upstream_timeout_seconds": 300,
+    "validator_rules_and_profile_hashes_unchanged": {
+      "validate_eapdf.py": "d92491a69cf55d4a9c86bfe1aeeab2728992c42f8f25363eb264141c62137840",
+      "validator_rule_text.json": "76f1ca6a64b31472eb8f3c4d2f1616d39add897992dd61100e02fd78ed1b2d08",
+      "config/verapdf/ISO-32005.xml": "a2181a59dcaef27d20cc3078aa8b63e63fe528908a69f985a0b56b714c62d7a1"
+    },
+    "rule_total": 225,
+    "assessment": "Trusted bundled mailbox with explicitly expanded operational budgets; no claim that default limits suffice.",
+    "staging_removed": true,
+    "upstream_heap_overrides": [
+      {
+        "replacements": 1,
+        "old_heap_mb": 512,
+        "new_heap_mb": 2048
+      },
+      {
+        "replacements": 1,
+        "old_heap_mb": 512,
+        "new_heap_mb": 2048
+      }
+    ]
+  },
+  "default_limit_failure_retained": "C122 full assessment remains FAIL/uncompleted. C131 passes only with explicitly expanded trusted-input budgets; no default-limit pass is claimed.",
+  "resource_findings": {
+    "image_streams": 1433,
+    "unique_image_payloads": 1,
+    "repeated_image_compressed_bytes": 18481392,
+    "font_program_streams": 4301,
+    "unique_font_program_payloads": 2391,
+    "repeated_font_program_compressed_bytes": 14490862,
+    "pdf_bytes": 70485490
+  }
+}

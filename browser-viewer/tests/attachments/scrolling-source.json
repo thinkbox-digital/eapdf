@@ -1,0 +1,8 @@
+{
+  "source": "source/pst_sample_1c.pdf",
+  "sourceSha256": "f44114ddc8be4f473f5be4ab17a4adbc1e3875240d796b223e94b70f58ae4b2d",
+  "member": "Power Mart '01 - Register online for your FREE exhibition pass!_000001_1s.pdf",
+  "extracted": "source/pst_first_message_legacy.pdf",
+  "sha256": "df2eca67e2288d72fa0d905557b0c7f7d93ad04a089bcf99cbc3ac06bd764226",
+  "purpose": "Byte-exact existing five-page real email retained for scrolling regression; no conversion or document rewriting."
+}

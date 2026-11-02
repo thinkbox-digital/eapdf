@@ -1,0 +1,10 @@
+{
+  "contact-unicode.msg": {
+    "source": "git HEAD:in/contact-unicode.msg",
+    "sha256": "6b6ac0c62c4019ee68d3adb627997f3b3cc20d21df3809d4a30a38ccb4cab8f8"
+  },
+  "note.msg": {
+    "source": "git HEAD:in/note.msg",
+    "sha256": "5adb511618b5d53acc8f450b79ce2f29ba504875257ada81390632dabfd8c567"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "checkpoint": "C108",
+  "fix": "Hidden inline HTML text no longer blocks an existing readable plain alternative when remote images are unavailable. CSS display priority and visible overrides are respected conservatively.",
+  "java_focused": {
+    "tests": 28,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changed_production_classes": [
+    "eapdf/EmlReader.class",
+    "eapdf/EmailStyles.class",
+    "eapdf/EmailStyles$1.class"
+  ],
+  "pdf_results": "pdf-results.json",
+  "original_source_bytes_exact": true,
+  "last_full_suite": "C104:229 passes, not repeated.",
+  "jars": {
+    "emailtopdfa.jar": "35d2f185769a178f1ececd71fada6042bc71dcdeafaa1146ba44d0e71a6d947f",
+    "emailtopdfa-gui.jar": "5a9f94046c9e40cc5359ba066c7b31527eb841a3ea2f37af3928ab7521eba01a"
+  },
+  "temporary_shared_staging_removed": true,
+  "continued_work": "Active until explicitly told to stop."
+}

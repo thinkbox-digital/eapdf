@@ -1,0 +1,69 @@
+{
+  "authority": [
+    "EA-PDF 9.6 Tables 7/8; text string and name types",
+    "EA-PDF 9: features not constrained may occur; unrelated extension keys allowed",
+    "ISO-approved erratum 86: decoded DPM name values use valid UTF-8"
+  ],
+  "source": "tests/fixtures/eapdf/upstream-issues/valid.pdf",
+  "source_sha256": "a41491747970410a68f2fdaea57bd265dc6f698f5b6cd8f97fcaa973c05d1e3d",
+  "cases": [
+    {
+      "file": "valid.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "869289182782089f00e36368729240dadb141d27ea167a2aded6ff1d627a8440",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "description-number.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "DPM_DESC_REQUIRED"
+      ],
+      "sha256": "50586c253124fc4a069ce9162c6acc5afd82694c12eada0e8862116448828c53",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "description-name.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "DPM_DESC_REQUIRED"
+      ],
+      "sha256": "86fc09ed77c4dc54b1e4dedb667604ff300c4d76972036d2b8845186d8a59b96",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "description-utf16.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "249491688b07be2294f9e806054e88fa786b9df252b5a9460bb1f4570d26a898",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "extension-key.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "b68cbeda0878201bbf7d6342de64011fbf381603dcb65a768d11c69fb344c8df",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "invalid-utf8-name.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "DPM_NAME_TYPES"
+      ],
+      "sha256": "2408e0ec3551d31ae2f81d22e67c90551012d70753bb3af7bcb118324338d572",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "presence_review": "V44 independent actual Name/byte proof: docs/improvement/validator-44/prior-presence-review.json"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+From sender@example.com Mon Jan 06 10:00:00 2020
+From: Integration Sender <sender@example.com>
+To: Integration Recipient <recipient@example.com>
+Date: Mon, 06 Jan 2020 10:00:00 +0000
+Message-ID: <patched-renderer-table@example.com>
+Subject: Patched renderer table and Unicode edge case
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="eapdf-table"
+
+--eapdf-table
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Table and Unicode
+Item Value
+Résumé 42
+office affine efficient café naïve Ελληνικά 日本語
+--eapdf-table
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+<html lang="en"><head><title>Table and Unicode</title></head><body>
+<h1>Table and Unicode</h1>
+<table><caption>Values</caption><thead><tr><th scope="col">Item</th><th scope="col">Value</th></tr></thead>
+<tbody><tr><th scope="row">Résumé</th><td>42</td></tr></tbody></table>
+<p style="letter-spacing:-0.25px">office affine efficient café naïve Ελληνικά 日本語</p>
+</body></html>
+--eapdf-table--
+
+From sender@example.com Mon Jan 06 10:01:00 2020
+From: Integration Sender <sender@example.com>
+To: Integration Recipient <recipient@example.com>
+Date: Mon, 06 Jan 2020 10:00:00 +0000
+Message-ID: <patched-renderer-table-second@example.com>
+Subject: Second patched renderer table
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="eapdf-table"
+
+--eapdf-table
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Table and Unicode
+Item Value
+Résumé 42
+office affine efficient café naïve Ελληνικά 日本語
+--eapdf-table
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+<html lang="en"><head><title>Table and Unicode</title></head><body>
+<h1>Table and Unicode</h1>
+<table><caption>Values</caption><thead><tr><th scope="col">Item</th><th scope="col">Value</th></tr></thead>
+<tbody><tr><th scope="row">Résumé</th><td>42</td></tr></tbody></table>
+<p style="letter-spacing:-0.25px">office affine efficient café naïve Ελληνικά 日本語</p>
+</body></html>
+--eapdf-table--
+

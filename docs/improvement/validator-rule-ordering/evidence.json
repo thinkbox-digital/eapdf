@@ -1,0 +1,131 @@
+{
+  "date_utc": "2026-10-24T17:56:12.762620+00:00",
+  "task": "Upstream-only rule removal, specification ordering and duplicate GUI grouping",
+  "artifact": {
+    "path": "dist/eapdf-validator.jar",
+    "sha256": "77d8d42537d48654b1885d180905fa302d0fefaceca9f6af49f31d5dcbc78d72",
+    "bytes": 21095079
+  },
+  "active_rules": 213,
+  "upstream_rule_entries_removed": [
+    "OUTPUT_INTENT",
+    "FONTS_EMBEDDED",
+    "FONTS_MISSING",
+    "FONTS_ALL_EMBEDDED",
+    "EMBEDDED_SUBTYPE_PRESENT",
+    "EMBEDDED_SUBTYPE_NO_PARAMETERS",
+    "XMP_PRESENT",
+    "XMP_MISSING",
+    "XMP_PARSE",
+    "PDFA3_EAPDF_XMP_EXTENSION_SCHEMA",
+    "XMP_UTF8",
+    "ISO32005_UPSTREAM"
+  ],
+  "runtime_rule_bytes": 128311,
+  "java_tests": {
+    "tests": 79,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "python_tests": {
+    "tests": 1161,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 40
+  },
+  "corpus_before_after": {
+    "parents": 808,
+    "children": 67,
+    "changed_reports_after_expected_changes": 0,
+    "verified_rule_numbers": 365626,
+    "expected_changes": "Remove 11 delegated rows; renumber active rules; adjust rule totals and result counts. Sort findings and referenced rule-code lists; normalize random child paths. ISO pipeline rows and all other findings, details, statuses and upstream results retained.",
+    "differences": []
+  },
+  "gui_screenshot_input": {
+    "input": "/media/lepore/Work/sample_1c.pdf",
+    "status": "FAIL",
+    "raw_findings": 1679,
+    "groups": 230,
+    "grouped_occurrences": 1679,
+    "embedded_stream_count": 73
+  },
+  "standalone": {
+    "artifact_sha256": "77d8d42537d48654b1885d180905fa302d0fefaceca9f6af49f31d5dcbc78d72",
+    "only_jar_in_working_directory": true,
+    "path": "/unavailable",
+    "exit_code": 2,
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "ea_failures": 0,
+    "overall": "INCOMPLETE",
+    "active_rules": 213,
+    "runtime_rules_exact": true,
+    "specification_references_exact": true,
+    "review_file_not_bundled": true
+  },
+  "specification_audit": {
+    "source_sha256": "b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae",
+    "obligations": 301,
+    "mandatory_file_obligations_accounted_for": true,
+    "dispositions": {
+      "active_rule_mapping": 244,
+      "permission_guidance_or_scope_statement": 20,
+      "upstream_only": 5,
+      "creation_definition_or_process_obligation": 15,
+      "software_behavior_outside_pdf_file_validation": 17
+    },
+    "evidence": "coverage.json",
+    "implementation_completeness_verified": false
+  },
+  "retained_profile_provenance": {
+    "profiles": 5,
+    "predicates": 630,
+    "source": "Pinned profile XML verified directly against retained SHA-256 manifest; current derived cache not required."
+  },
+  "java_web_parity_complete": false,
+  "overall_pass_enabled": false,
+  "creator_changed": false,
+  "source_hashes": {
+    "config/verapdf/ISO-32005.json": "6bdd077d49c5ac1d86cc769e9a4dae2e1049ee8796fa82a7cb2ae33c230e7ea2",
+    "config/verapdf/ISO-32005.xml": "a2181a59dcaef27d20cc3078aa8b63e63fe528908a69f985a0b56b714c62d7a1",
+    "scripts/audit_eapdf_rule_registry.py": "40d3a96441d06850dc82fb3d57eb330baa4c0769c6259b9e945c7c2a33604967",
+    "scripts/build_eapdf_review_document.py": "0d843fa4fe0945d4e276eff643668e28370f607e82ed4231c73381695a3d8e25",
+    "scripts/eapdf_rule_review.py": "1ab7e263be8a44fa94a6fe8fbc269ac3182956abe69f35a9061bbcfde5f13172",
+    "validate_eapdf.py": "b98575a62304c9bbb80ab50aed06b441dfcff1367a7592c4b610779fba90ad98",
+    "validator-desktop/README.md": "f6280b4d02499f6407b024683ee4ab5f72b765dfdd1f6948282be6c5cb1c18fc",
+    "validator-desktop/pom.xml": "298d1261cbe4ecd9d8a3a5db08f68f1f364cdbfec77830983bec61791a1af4dd",
+    "validator-desktop/src/main/java/eapdf/AttachmentChecks.java": "bb5b3db750b08b2160ce558c8df5febe9851afa6bd09f9bc7d8fcf2fc8801e4b",
+    "validator-desktop/src/main/java/eapdf/DocumentPartChecks.java": "3bb13e7fe5d1dd446a09cb90ce2e455656a1699e9874cf2b3bd78b65c73de434",
+    "validator-desktop/src/main/java/eapdf/EaPdfChecks.java": "b774b6b0ef253038c9cac8a575baa6a4d9ec0b4bf3978a658680c6b55f3e33c4",
+    "validator-desktop/src/main/java/eapdf/JavaValidation.java": "70591318f3de30dda27a3571e5b6c64be97664ea4ac4bc4c05ebfa24228d1c7f",
+    "validator-desktop/src/main/java/eapdf/JavaValidatorEngine.java": "d62ee4e55391ee04a58e551841c506bad8e7afdfbc665e04d0946613a84809df",
+    "validator-desktop/src/main/java/eapdf/LogicalStructureChecks.java": "e65677e6ceaa2a9d3223fb42e34f908399b6fc680a0137667a75ef7b496f2c7a",
+    "validator-desktop/src/main/java/eapdf/MailboxChecks.java": "65e5a38b4284680c47e6d8382e24f5d1c6976e11ade2d0dff901cec4a2e48aad",
+    "validator-desktop/src/main/java/eapdf/MarkedFileAssociations.java": "aa819de587e2b54a9b1a3e8372343b5c3ec955f4febf3efaa4a241a564a4707d",
+    "validator-desktop/src/main/java/eapdf/MetadataChecks.java": "8ac143931a914a315376495827347b7e291074f204a60c29bece44830d73d2bf",
+    "validator-desktop/src/main/java/eapdf/PageContentChecks.java": "eafea91eeec5338e439f9b3741f5865cb34d286d9ff88f7a012d3783d6d162f9",
+    "validator-desktop/src/main/java/eapdf/SourceHeaders.java": "3ca98849cf45427c4c05e47671f3a2909cf63a56c888d3ff315790e764eaa8f5",
+    "validator-desktop/src/main/java/eapdf/SpecificationReferences.java": "8d83afad875a62e64c6b7be5ec287bb7e7b98085c9df81f59ebda0a683ba5991",
+    "validator-desktop/src/main/java/eapdf/UnicodeCasefold.java": "311f2fa89ac2b9febeab6a79d8622ffe049bd176582ca6edbf9946d69d26ace4",
+    "validator-desktop/src/main/java/eapdf/ValidatorGui.java": "34e53403df010b9c1825c223cae6d241a1756f8ae7c14e41ac7ab814b4229517",
+    "validator-desktop/src/main/resources/META-INF/eapdf/third-party/MPL-2.0.txt": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+    "validator-desktop/src/main/resources/validator/specification-references.json": "83bc837e72e683c8459d6cb592e21df7108ac50d69d339c2e5da7432450e7a64",
+    "validator-desktop/src/main/resources/validator/unicode-casefold.json": "2e3238edae62cafaefc5fe984b3f044153f12db1bde42f799ccff54e6850671f",
+    "validator-desktop/src/test/java/eapdf/ComparisonRegressionTests.java": "55f856beb2a45f431b7399acc7a643036506385f37ba46b0d5c9e5b78671775d",
+    "validator-desktop/src/test/java/eapdf/JavaValidationTests.java": "ad2bf39db97ae7c147ca4b3d5b9c2600c015ce4031716ac44b04f87b90a7fd04",
+    "validator-desktop/src/test/java/eapdf/SpecificationReferencesTests.java": "c863169de49dd146d793070e488f82e99490ca2098a2a47b7386dd117b854010",
+    "validator-desktop/src/test/java/eapdf/ValidatorComparisonRunner.java": "89efc110bce1e18441ee1ba98b6808192fb521ef2c8c5b76a3ef495cc4129f07",
+    "validator-desktop/src/test/java/eapdf/ValidatorDesktopSmokeTests.java": "6172a947d1bd7af7a3a8e810adfad6104485f0bd5c6f9cf3148e204eb77c3c39",
+    "validator-desktop/src/test/java/eapdf/ValidatorGuiTests.java": "0097362519167f9bfa92c918dce09734ec9c2ce3acc62e9b6c1dfd11f0c1464b",
+    "validator-desktop/src/test/java/eapdf/WebParityRegressionTests.java": "260d79d3d89c6af7aa41bd930c5ac357f4348c15e25074a6243b700163fa4b64",
+    "validator-desktop/tools/build_spec_references.py": "e81b95b9a6fe3500f9fb6d2d7dbd15829c5a0fb547017c62875bd256040e0f25",
+    "validator_rule_text.json": "5dd90edcf6671cf9adb35a183345db9cbc9edbfc23683dcdf3b42e2a045695af",
+    "validator_web.py": "7cc7219aceae2f41eaf90b9ed4e0495f08b700e1c8cf6f4a7e8cc569e591f403"
+  },
+  "protected_hashes": {
+    "config/verapdf/ISO-32005.xml": "a2181a59dcaef27d20cc3078aa8b63e63fe528908a69f985a0b56b714c62d7a1",
+    "output/Agenda and timeline slides_000001.pdf": "60df01947e5bf63561ec6b5f5b91eac9f5395c04ab7e17ee1473d1d2b37b4fd7",
+    "output/bfo.pdf": "cf7e3669ad5994439a999e3ad37f02503fe05755fe8c5fc74d091f9695114efb"
+  }
+}

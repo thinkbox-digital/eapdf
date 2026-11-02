@@ -1,0 +1,246 @@
+--- a/validate_eapdf.py
++++ b/validate_eapdf.py
+@@ -7568,18 +7568,41 @@
+         emit_if_unseen(report,"na","MULTI_EMAIL_DOCUMENT_STRUCTURE","Rule not applicable for this PDF",{"reason":"Not applied because this rule applies only to multi-message profiles."})
+ 
+     guid_missing=[]
++    guid_presence_unavailable=[]
+     for e in msg:
+-        values=userprop_occurrences(e,"Mail_GUID")
+-        if any(value is not None and (not isinstance(value,pikepdf.String) or str(value)!="")
+-               for _,value in values):
+-            continue
+-        guid_missing.append(e["objgen"])
++        present=False
++        unreadable=False
++        for _,value in userprop_occurrences(e,"Mail_GUID"):
++            if value is None:
++                continue
++            if not isinstance(value,pikepdf.String):
++                present=True  # The separate type check rejects wrong object classes.
++                break
++            try:
++                if str(value)!="":
++                    present=True
++                    break
++            except (UnicodeError,ValueError,pikepdf.PdfError):
++                unreadable=True
++        if not present:
++            (guid_presence_unavailable if unreadable else guid_missing).append(e["objgen"])
+     if msg:
+-        emit_if_unseen(report,"ok" if not guid_missing else "fail","MAIL_MESSAGE_GUID_ATTRIBUTE",
+-                       "Mail_Message elements carry Mail_GUID attributes" if not guid_missing else "Mail_Message elements must carry Mail_GUID attributes",
+-                       {"count":len(msg)} if not guid_missing else {"actual":guid_missing})
++        if guid_missing:
++            emit_if_unseen(report,"fail","MAIL_MESSAGE_GUID_ATTRIBUTE",
++                           "Mail_Message elements must carry Mail_GUID attributes",
++                           {"actual":guid_missing,"unavailable":guid_presence_unavailable})
++        elif guid_presence_unavailable:
++            emit_if_unseen(report,"warn","MAIL_MESSAGE_GUID_ATTRIBUTE",
++                           "Required Mail_GUID text presence remains unavailable",
++                           {"assessment":"unavailable","actual":guid_presence_unavailable})
++        else:
++            emit_if_unseen(report,"ok","MAIL_MESSAGE_GUID_ATTRIBUTE",
++                           "Mail_Message elements carry Mail_GUID attributes",{"count":len(msg)})
+     else:
+         emit_if_unseen(report,"na","MAIL_MESSAGE_GUID_ATTRIBUTE","Rule not applicable for this PDF",{"reason":"Not applied because the PDF does not contain Mail_Message structure elements."})
++    if guid_presence_unavailable:
++        report.warn("VALIDATION_INCOMPLETE","Required message GUID text could not be decoded",
++                    {"rules":["MAIL_MESSAGE_GUID_ATTRIBUTE"],"assessment":"unavailable"})
+     dpm_mail_guids={guid_value(item["dpm"].get("Mail_GUID","")) for item in dpart_nodes}
+     dpm_mail_guids.discard("")
+     xmp_mail_guids=xmp_value_set(xroot,"Mail_GUID")
+@@ -7607,7 +7630,13 @@
+                 guid_unavailable.append({"objgen":e["objgen"],"property_number":number,
+                                          "reason":"GUID property is not a PDF string; see USERPROPS_TYPE"})
+                 continue
+-            mail_guid=str(value)
++            try:
++                mail_guid=str(value)
++            except (UnicodeError,ValueError,pikepdf.PdfError):
++                guid_unavailable.append({"objgen":e["objgen"],"property_number":number,
++                                         "reason":"GUID text cannot be decoded",
++                                         "value":observed_pdf_value(value)})
++                continue
+             problem={}
+             if dpm_mail_guids and mail_guid not in dpm_mail_guids:
+                 problem.update(dpm_guids=dpm_guid_sample,dpm_guid_count=len(dpm_mail_guids))
+--- a/validator_rule_text.json
++++ b/validator_rule_text.json
+@@ -7566,7 +7566,8 @@
+       ],
+       "issue_ids": [],
+       "attribute_name_review": "V40: exact decoded N name lookup is distinct from the raw ASCII-string encoding constraint. Escapes/hexadecimal syntax are resolved by the PDF parser. Unrelated extensions and Unicode V values remain permitted; no PDF CLI/debug behavior changes.",
+-      "active_property_review": "V42: every dictionary in the selected active P array is an individual property. No within-array last-value priority or duplicate-name ban is introduced. Only the PDF name UserProperties identifies this owner; text aliases cannot activate or replace its P array. Preserve typed/unavailable distinctions, exact N names and earlier value comparison policies. Property numbers are 1-based positions in the active P array. Other scalar consumers, subtype formatting policy, original-source fidelity and existing expert interpretations remain separate."
++      "active_property_review": "V42: every dictionary in the selected active P array is an individual property. No within-array last-value priority or duplicate-name ban is introduced. Only the PDF name UserProperties identifies this owner; text aliases cannot activate or replace its P array. Preserve typed/unavailable distinctions, exact N names and earlier value comparison policies. Property numbers are 1-based positions in the active P array. Other scalar consumers, subtype formatting policy, original-source fidelity and existing expert interpretations remain separate.",
++      "guid_decoding_review": "V50: required presence and correspondence retain separate guarded text decoding. When unreadable active String V data prevents a mandatory assessment, record unavailable evidence and VALIDATION_INCOMPLETE without asserting absence, identity or a new encoding prohibition. A readable nonempty companion can establish presence; every supplied occurrence still requires matching. Readable mismatches fail even alongside unknown occurrences. Actual object-class checks, empty text, Unicode identities and whole-array replacement remain separate."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -7610,7 +7611,8 @@
+       ],
+       "issue_ids": [],
+       "content_owner_review": "V39: owner-specific consistency inferred from the combined email-representation and identifier requirements, not a verbatim additional sentence. Uses actual marked-content/OBJR locations and DPart ancestry; does not select owners by the tested GUID, structure/XMP order or a bare Pg hint. Legal shared Form candidates with uniform identity can match without invocation assignment. Unavailable references/ownership and traversal limits remain unverified; original-source fidelity is separate.",
+-      "active_property_review": "V42: every dictionary in the selected active P array is an individual property. No within-array last-value priority or duplicate-name ban is introduced. Only the PDF name UserProperties identifies this owner; text aliases cannot activate or replace its P array. Preserve typed/unavailable distinctions, exact N names and earlier value comparison policies. Property numbers are 1-based positions in the active P array. Other scalar consumers, subtype formatting policy, original-source fidelity and existing expert interpretations remain separate."
++      "active_property_review": "V42: every dictionary in the selected active P array is an individual property. No within-array last-value priority or duplicate-name ban is introduced. Only the PDF name UserProperties identifies this owner; text aliases cannot activate or replace its P array. Preserve typed/unavailable distinctions, exact N names and earlier value comparison policies. Property numbers are 1-based positions in the active P array. Other scalar consumers, subtype formatting policy, original-source fidelity and existing expert interpretations remain separate.",
++      "guid_decoding_review": "V50: required presence and correspondence retain separate guarded text decoding. When unreadable active String V data prevents a mandatory assessment, record unavailable evidence and VALIDATION_INCOMPLETE without asserting absence, identity or a new encoding prohibition. A readable nonempty companion can establish presence; every supplied occurrence still requires matching. Readable mismatches fail even alongside unknown occurrences. Actual object-class checks, empty text, Unicode identities and whole-array replacement remain separate."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+--- /dev/null
++++ b/tests/test_userproperty_guid_decoding.py
+@@ -0,0 +1,117 @@
++"""Unreadable GUID evidence stays unavailable without hiding readable mismatches."""
++import tempfile
++import unittest
++from pathlib import Path
++
++import pikepdf
++from test_preservation_safety import ROOT, validator as v
++
++
++class UserPropertyGuidDecodingTests(unittest.TestCase):
++    def check(self, mode):
++        with pikepdf.open(ROOT / 'tests/fixtures/eapdf/validator-operands/valid.pdf') as pdf:
++            elements = []
++            v.walk_struct_elems(pdf.Root.StructTreeRoot.K, elements)
++            message = next(e['elem'] for e in elements if e['type'] == 'Mail_Message')
++            prop = next(p for p in message.A.P if str(p.N) == 'Mail_GUID')
++            original = str(prop.V)
++            bad = pikepdf.Dictionary(N='Mail_GUID', V=pikepdf.String(b'\xef\xbb\xbf\xff'))
++            if mode == 'bad':
++                prop.V = bad.V
++            elif mode == 'before':
++                message.A.P.insert(0, bad)
++            elif mode == 'after':
++                message.A.P.append(bad)
++            elif mode in ('wrong-before', 'wrong-after'):
++                prop.V = 'known-wrong-guid'
++                if mode == 'wrong-before':
++                    message.A.P.insert(0, bad)
++                else:
++                    message.A.P.append(bad)
++            elif mode == 'utf8':
++                prop.V = pikepdf.String(b'\xef\xbb\xbf' + original.encode())
++            elif mode == 'utf16':
++                prop.V = pikepdf.String(b'\xfe\xff' + original.encode('utf-16-be'))
++            elif mode == 'empty':
++                prop.V = pikepdf.String(b'\xef\xbb\xbf')
++            elif mode == 'wrong-type':
++                prop.V = pikepdf.Name('/WrongType')
++            elif mode == 'inactive':
++                message.A = pikepdf.Array([pikepdf.Dictionary(O=pikepdf.Name.UserProperties,
++                    P=pikepdf.Array([bad])), message.A])
++            with tempfile.TemporaryDirectory(prefix='.eapdf-guid-decode-', dir=ROOT) as directory:
++                path = Path(directory) / 'focused.pdf'
++                pdf.save(path, static_id=True, fix_metadata_version=False)
++                report = v.validate(str(path))
++        self.assertNotIn('VALIDATION_ERROR', {i['code'] for i in report.items if i['level'] == 'FAIL'})
++        return report
++
++    def levels(self, report, code):
++        return {i['level'] for i in report.items if i['code'] == code}
++
++    def test_unreadable_required_guid_presence_is_unavailable(self):
++        report = self.check('bad')
++        self.assertEqual({'WARN'}, self.levels(report, 'MAIL_MESSAGE_GUID_ATTRIBUTE'))
++        self.assertEqual('INCOMPLETE', report.summary()['status'])
++
++    def test_unreadable_guid_match_is_unavailable(self):
++        report = self.check('bad')
++        self.assertEqual({'WARN'}, self.levels(report, 'MAIL_MESSAGE_GUID_MATCH_DPM_XMP'))
++        self.assertEqual({'WARN'}, self.levels(report, 'VALIDATION_INCOMPLETE'))
++        self.assertEqual({'PASS'}, self.levels(report, 'USERPROPS_TYPE'))
++
++    def test_unreadable_before_valid_does_not_hide_unavailable_occurrence(self):
++        report = self.check('before')
++        self.assertEqual({'PASS'}, self.levels(report, 'MAIL_MESSAGE_GUID_ATTRIBUTE'))
++        self.assertEqual({'WARN'}, self.levels(report, 'MAIL_MESSAGE_GUID_MATCH_DPM_XMP'))
++        self.assertEqual('INCOMPLETE', report.summary()['status'])
++
++    def test_unreadable_after_valid_does_not_hide_unavailable_occurrence(self):
++        report = self.check('after')
++        self.assertEqual({'PASS'}, self.levels(report, 'MAIL_MESSAGE_GUID_ATTRIBUTE'))
++        self.assertEqual({'WARN'}, self.levels(report, 'MAIL_MESSAGE_GUID_MATCH_DPM_XMP'))
++        self.assertEqual('INCOMPLETE', report.summary()['status'])
++
++    def check_mismatch(self, mode):
++        report = self.check(mode)
++        self.assertEqual({'FAIL'}, self.levels(report, 'MAIL_MESSAGE_GUID_MATCH_DPM_XMP'))
++        self.assertEqual({'WARN'}, self.levels(report, 'VALIDATION_INCOMPLETE'))
++        self.assertEqual('FAIL', report.summary()['status'])
++
++    def test_unreadable_before_mismatch_preserves_definite_failure(self):
++        self.check_mismatch('wrong-before')
++
++    def test_unreadable_after_mismatch_preserves_definite_failure(self):
++        self.check_mismatch('wrong-after')
++
++    def test_valid_utf8_guid_matches(self):
++        self.assertEqual('PASS', self.check('utf8').summary()['status'])
++
++    def test_valid_utf16_guid_matches(self):
++        self.assertEqual('PASS', self.check('utf16').summary()['status'])
++
++    def test_decoded_empty_guid_remains_missing(self):
++        report = self.check('empty')
++        self.assertEqual({'FAIL'}, self.levels(report, 'MAIL_MESSAGE_GUID_ATTRIBUTE'))
++        self.assertEqual('FAIL', report.summary()['status'])
++
++    def test_wrong_pdf_type_retains_type_failure(self):
++        report = self.check('wrong-type')
++        self.assertEqual({'FAIL'}, {i['level'] for i in report.items
++            if i['code'] == 'USERPROPS_TYPE' and i['details'].get('name') == 'Mail_GUID'})
++        self.assertEqual('FAIL', report.summary()['status'])
++
++    def test_replaced_unreadable_array_remains_inactive(self):
++        self.assertEqual('PASS', self.check('inactive').summary()['status'])
++
++    def test_unreadable_identity_cannot_establish_source_owner(self):
++        report = self.check('before')
++        findings = [i for i in report.items if i['code'] == 'USERPROPS_VALUES_UNMODIFIED']
++        self.assertTrue(findings)
++        self.assertFalse(any(i['level'] == 'FAIL' for i in findings))
++        self.assertTrue(all(i['level'] == 'N/A' or (i.get('details') or {}).get('comparison') == 'unavailable'
++                            for i in findings))
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- /dev/null
++++ b/scripts/build_eapdf_guid_decoding_fixtures.py
+@@ -0,0 +1,34 @@
++"""Retain GUID uncertainty, duplicate occurrences and definite mismatches."""
++import hashlib,json
++from pathlib import Path
++import pikepdf
++from build_eapdf_message_owner_fixtures import structure_elements,guid_property
++ROOT=Path(__file__).resolve().parents[1]
++OUT=ROOT/'tests/fixtures/eapdf/validator-guid-decoding'
++SEED=ROOT/'tests/fixtures/eapdf/validator-operands/valid.pdf'
++def main():
++ OUT.mkdir(parents=True,exist_ok=True)
++ rows=[]
++ for name in ('unreadable-guid','unreadable-guid-before-valid','unreadable-guid-after-valid','unreadable-guid-and-wrong',
++              'valid-utf8-guid','valid-utf16-guid','empty-utf8-guid','wrong-name-guid'):
++  with pikepdf.open(SEED) as pdf:
++   message=next(e for e in structure_elements(pdf) if e.get('/S')==pikepdf.Name('/Mail_Message'))
++   prop=guid_property(message);original=str(prop.V);bad=pikepdf.String(b'\xef\xbb\xbf\xff')
++   if name=='unreadable-guid':prop.V=bad
++   elif name=='unreadable-guid-before-valid':message.A.P.insert(0,pikepdf.Dictionary(N='Mail_GUID',V=bad))
++   elif name=='unreadable-guid-after-valid':message.A.P.append(pikepdf.Dictionary(N='Mail_GUID',V=bad))
++   elif name=='unreadable-guid-and-wrong':
++    prop.V=bad;message.A.P.append(pikepdf.Dictionary(N='Mail_GUID',V='known-wrong-guid'))
++   elif name=='valid-utf8-guid':prop.V=pikepdf.String(b'\xef\xbb\xbf'+original.encode())
++   elif name=='valid-utf16-guid':prop.V=pikepdf.String(b'\xfe\xff'+original.encode('utf-16-be'))
++   elif name=='empty-utf8-guid':prop.V=pikepdf.String(b'\xef\xbb\xbf')
++   else:prop.V=pikepdf.Name('/WrongType')
++   path=OUT/(name+'.pdf');pdf.save(path,static_id=True,fix_metadata_version=False)
++  incomplete=name in ('unreadable-guid','unreadable-guid-before-valid','unreadable-guid-after-valid')
++  legal=name in ('valid-utf8-guid','valid-utf16-guid')
++  failures=[] if incomplete or legal else ['USERPROPS_TYPE'] if name=='wrong-name-guid' else ['MAIL_MESSAGE_GUID_MATCH_DPM_XMP'] if name=='unreadable-guid-and-wrong' else ['MAIL_MESSAGE_GUID_ATTRIBUTE','MAIL_MESSAGE_GUID_MATCH_DPM_XMP']
++  rows.append(dict(file=path.name,sha256=hashlib.sha256(path.read_bytes()).hexdigest(),expected_status='INCOMPLETE' if incomplete else 'PASS' if legal else 'FAIL',expected_failures=failures))
++ (OUT/'expectations.json').write_text(json.dumps(dict(authority='EA Table13 required Mail_GUID and correspondence; Table12 string; V39/V42 owner and occurrence review',source_files={str(SEED.relative_to(ROOT)):hashlib.sha256(SEED.read_bytes()).hexdigest()},boundary='Unreadable GUID identity remains unavailable, never invented or treated as a definite mismatch. Readable companion presence and definite mismatches remain independent. No new UUID or encoding prohibition is introduced.',cases=rows),indent=2)+'\n')
++ print('Built eight GUID decoding controls.')
++
++if __name__=='__main__':main()

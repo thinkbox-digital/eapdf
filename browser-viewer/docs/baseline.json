@@ -1,0 +1,10 @@
+{
+  "head": "b73d3fd5144f5e1a3e204342551fc1f63dcbdc88",
+  "plan_sha256": "65a8c8ff34414fcb06ef8f649c6e42b8eea98d4e7660bb4105a7ff5a94e07240",
+  "node": "24.19.0",
+  "npm": "11.17.0",
+  "ordinary_fixture": "New original two-page PDF, Apache-2.0",
+  "ea_pdf_sample": "examples/eml/eml_sample_1s.pdf",
+  "ea_pdf_sha256": "b4fb687d52613c4f49a9e26b7c41498dc4bb39b34c04bd198f0cca6c163d4d48",
+  "existing_paths_snapshotted": 3150
+}

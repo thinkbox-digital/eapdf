@@ -1,0 +1,97 @@
+[
+  {
+    "case": "observed-fields-match",
+    "sha256": "31e9c8aee55198989a3a9e0ec807328e7ae566e6c8a08084e776bb679e4cc6c4",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "observed_comparisons": {
+      "equal": 10
+    },
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:cc8a156f-2523-4e1f-9c06-e9b4f7bc7b6a",
+      "Inventory Bravo": "uuid:ac6eaa5b-905a-4908-97e4-20aaac2a7112"
+    },
+    "expected_result_observed": true
+  },
+  {
+    "case": "subject-content-swapped",
+    "sha256": "215ba24b1ebeb7803783bbc5c8919788ee819c7515d8f6afedca66a6d88976a6",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "observed_comparisons": {
+      "equal": 8,
+      "different": 2
+    },
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:cc8a156f-2523-4e1f-9c06-e9b4f7bc7b6a",
+      "Inventory Bravo": "uuid:ac6eaa5b-905a-4908-97e4-20aaac2a7112"
+    },
+    "expected_result_observed": true
+  },
+  {
+    "case": "duplicate-id-missing-guid",
+    "sha256": "bd8ed0a4cb2ead714f52b76ab9b050cfdfc02071b6048aee8a5ecd39976080f5",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "MAIL_MESSAGE_GUID_ATTRIBUTE"
+    ],
+    "observed_comparisons": {
+      "unavailable": 5,
+      "equal": 5
+    },
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:cc8a156f-2523-4e1f-9c06-e9b4f7bc7b6a",
+      "Inventory Bravo": "uuid:ac6eaa5b-905a-4908-97e4-20aaac2a7112"
+    },
+    "expected_result_observed": true
+  },
+  {
+    "case": "isolated-sources-unavailable",
+    "sha256": "82be21c79568af422086e9022b518886e8f5b1f00a462ad7ddf95a91eb142e4a",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "observed_comparisons": {
+      "unavailable": 10
+    },
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:2c8d6729-6a4c-4553-b668-e2f97f5c69e2",
+      "Inventory Bravo": "uuid:1813ff13-fc35-4ed4-a060-668ec588d23a"
+    },
+    "expected_result_observed": true
+  },
+  {
+    "case": "wrong-enclosing-guid",
+    "sha256": "7a49cd95baac9e5e276c4d725d5f1e7a511a5cf9aef0fa1cc0150d587534f650",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "observed_comparisons": {
+      "different": 5,
+      "equal": 5
+    },
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:cc8a156f-2523-4e1f-9c06-e9b4f7bc7b6a",
+      "Inventory Bravo": "uuid:ac6eaa5b-905a-4908-97e4-20aaac2a7112"
+    },
+    "expected_result_observed": true
+  },
+  {
+    "case": "class-map-owner",
+    "sha256": "bd79dafd6a1e7382e147e36884911ba5e84ca9dae1fc744e372dc6999f8980ad",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "observed_comparisons": {
+      "equal": 10
+    },
+    "oracle_guids": {
+      "Inventory Alpha": "uuid:cc8a156f-2523-4e1f-9c06-e9b4f7bc7b6a",
+      "Inventory Bravo": "uuid:ac6eaa5b-905a-4908-97e4-20aaac2a7112"
+    },
+    "expected_result_observed": true
+  }
+]

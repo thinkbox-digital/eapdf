@@ -1,0 +1,29 @@
+[Unit]
+Description=EA-PDF Validator Web App
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/media/lepore/Work/thinkbox/convert
+Environment=PORT=8876
+Environment=HOST=127.0.0.1
+Environment=VALIDATOR_MAX_CONTENT_LENGTH=67108864
+Environment=VALIDATOR_REQUIRE_AUTH=1
+Environment=VALIDATOR_AUTH_FILE=/etc/ea-pdf-validator/users.json
+Environment=VALIDATOR_ALLOWED_HOSTS=thinkbox.digital,www.thinkbox.digital
+Environment=VALIDATOR_TRUSTED_PROXIES=127.0.0.1/32
+Environment=VALIDATOR_RETENTION_SECONDS=86400
+Environment=PATH=/media/lepore/Work/thinkbox/convert/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+ExecStart=/media/lepore/Work/thinkbox/convert/.venv/bin/gunicorn --workers 2 --threads 4 --timeout 660 --bind 127.0.0.1:8876 validator_web:app
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

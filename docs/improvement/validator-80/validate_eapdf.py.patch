@@ -1,0 +1,109 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -4380,6 +4380,25 @@
+         report.na("EMBEDDED_MEDIATYPE_RECONSTRUCTION","No readable embedded streams require media-type reconstruction",{"reason":"No embedded file stream was available; required stream presence is evaluated separately."})
+     return efiles,afiles
+ 
++def represented_email_attachment_presence(root_xml,afiles,source_bindings=None):
++    """Known attachment presence, or None when the represented original is unknown."""
++    if root_xml is not None:
++        if flatten_attachments(root_xml) or any(
++                is_nonneg_int_str(record.get("NumberAttachments","")) and
++                nonnegative_integer_digits(record["NumberAttachments"])!="0"
++                for record in flatten_email_records(root_xml)):
++            return True
++    if source_bindings:
++        if any(source is not None and source.get("mime_attachment_count",source.get("attachment_count",0))>0
++               for source in source_bindings.values()):
++            return True
++        if any(source is None for source in source_bindings.values()) and any(
++                file.get("afrelationship")=="Source" for file in afiles):
++            return None
++        return False
++    _inspectable,with_attachments=source_email_mime_attachment_expectation(afiles)
++    return with_attachments>0
++
+ def check_profile_rules(pdf,efiles,afiles,eapdf_conf,pdfa_part,report,root_xml=None):
+     if not eapdf_conf:
+         report.warn("PROFILE_RULES_SKIPPED","Skipped EA-PDF profile-specific checks because XMP profile declaration is unavailable",{"profile":eapdf_conf})
+@@ -4395,16 +4414,8 @@
+     nfsm_is_name=isinstance(nfsm_value,pikepdf.Name)
+     non_source=[f for f in efiles if f["afrelationship"]!="Source"]
+     has_non_source_embeds=len(non_source)>0
+-    _inspectable_sources, sources_with_attachments = source_email_mime_attachment_expectation(afiles)
+-    has_email_attachments = sources_with_attachments > 0
+-    if not has_email_attachments and root_xml is not None:
+-        xmp_attachments = flatten_attachments(root_xml)
+-        if xmp_attachments:
+-            has_email_attachments = True
+-        else:
+-            number_attachments = first_message_xmp_value(root_xml,"NumberAttachments","Mail_NumberAttachments")
+-            if is_nonneg_int_str(number_attachments):
+-                has_email_attachments = nonnegative_integer_digits(number_attachments) != "0"
++    has_email_attachments=represented_email_attachment_presence(
++        root_xml,afiles,getattr(report,"_email_source_summaries",None))
+     if eapdf_conf in ("m","mi"):
+         if page_mode_is_name and page_mode=="UseOutlines": report.ok("PROFILE_PAGEMODE_MULTI","Profile PageMode correct",{"profile":eapdf_conf,"PageMode":page_mode,"is_pdf_name":page_mode_is_name})
+         else: report.fail("PROFILE_PAGEMODE_MULTI","PDF/mail-1{m,mi} must use PageMode UseOutlines",{"profile":eapdf_conf,"PageMode":page_mode,"is_pdf_name":page_mode_is_name})
+@@ -4420,6 +4431,24 @@
+         else:
+             report.fail("PROFILE_COLLECTION","PDF/mail-1{c,ci} should have Collection dictionary",{"Collection":None})
+     elif eapdf_conf in ("s","si"):
++        if has_email_attachments is None:
++            for field,value,is_name,codes,allowed in (
++                    ("PageMode",page_mode,page_mode_is_name,
++                     ("PROFILE_PAGEMODE_SINGLE_NO_ATTACHMENTS","PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"),
++                     {"UseOutlines","UseAttachments"}),
++                    ("NonFullScreenPageMode",nfsm,nfsm_is_name,
++                     ("PROFILE_NFSM_SINGLE_NO_ATTACHMENTS","PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS"),
++                     {"UseOutlines"} if pdfa_part==3 else {"UseOutlines","UseAttachments"})):
++                invalid=not is_name or value not in allowed
++                for code in codes:
++                    emit=report.fail if invalid else report.warn
++                    emit(code,"Viewer mode violates every possible attachment branch" if invalid else
++                         "Viewer attachment condition is unavailable without a matched original",{
++                             field:value,"is_pdf_name":is_name,"source_ownership":"unassigned",
++                             "assessment":"all_branches_contradicted" if invalid else "unavailable",
++                             "possible_values":sorted(allowed)})
++            report.warn("VALIDATION_INCOMPLETE","Single-message viewer attachment conditions could not be established")
++            return
+         use_attachments = has_email_attachments
+         expected_pm="UseAttachments" if use_attachments else "UseOutlines"
+         if use_attachments:
+@@ -8549,9 +8578,7 @@
+     attachments=flatten_attachments(xroot) if xroot is not None else []
+     records=flatten_email_records(xroot) if xroot is not None else []
+     fonts=collect_all_fonts(pdf)
+-    _inspectable, sources_with_attachments=source_email_mime_attachment_expectation(afiles)
+-    has_email_attachments=bool(attachments or sources_with_attachments or any(
+-        is_nonneg_int_str(record.get("NumberAttachments", "")) and nonnegative_integer_digits(record["NumberAttachments"])!="0" for record in records))
++    has_email_attachments=represented_email_attachment_presence(xroot,afiles,source_bindings)
+     embedded_candidates=embedded_file_candidates(pdf,efiles,afiles)
+     info_object=dict_get(pdf.trailer,"/Info",None)
+     info_keys=({safe_name(key) for key in info_object.keys() if dict_get(info_object,key,None) is not None} if isinstance(info_object,pikepdf.Dictionary)
+@@ -8657,7 +8684,8 @@
+             return f"This rule does not apply to profile {profile_label(ctx)}. Context: {snapshot}."
+     if code in {"PROFILE_PAGEMODE_SINGLE_NO_ATTACHMENTS","PROFILE_NFSM_SINGLE_NO_ATTACHMENTS",
+                 "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS","PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS"}:
+-        if ctx["eapdf_conf"] and (not ctx["single_message_profile"] or (code.endswith("_WITH_ATTACHMENTS") != ctx["has_email_attachments"])):
++        if ctx["eapdf_conf"] and (not ctx["single_message_profile"] or
++                (ctx["has_email_attachments"] is not None and code.endswith("_WITH_ATTACHMENTS") != ctx["has_email_attachments"])):
+             return f"This single-message attachment branch does not apply to this profile and attachment count. Context: {snapshot}."
+     if code=="COLLECTION_EXTENSIONS" and (ctx["pdf_version"]=="2.0" or ctx["catalog_version"]=="2.0"):
+         return "The Adobe collection extension is required only for PDF 1.7, not PDF 2.0."
+@@ -9205,7 +9233,6 @@
+     related_streams,supplements=check_source_file_sets(pdf,xroot,afiles,report,source_file_sets)
+     check_collection_content(pdf,efiles,afiles,eapdf_conf,report,related_streams,supplements)
+     check_catalog_rules(pdf,report,eapdf_conf,efiles,afiles,xroot)
+-    check_profile_rules(pdf,efiles,afiles,eapdf_conf,pdfa_part,report,xroot)
+     check_collection_rules(pdf,eapdf_conf,report)
+     check_dpart_and_content_sets(pdf,xroot,eapdf_conf,report,outline_pages)
+     check_logical_structure(pdf,eapdf_conf,report)
+@@ -9216,6 +9243,7 @@
+     check_asset_metadata(xroot,efiles,afiles,eapdf_conf,report,related_assets)
+     check_required_email_metadata(xroot,eapdf_conf,report)
+     check_message_metadata(xroot,afiles,eapdf_conf,report)
++    check_profile_rules(pdf,efiles,afiles,eapdf_conf,pdfa_part,report,xroot)
+     check_standard_xmp_semantics(xroot,afiles,report)
+     check_source_media_types(afiles,eapdf_conf,report)
+     check_additional_rule_coverage(pdf, xroot, xmp_bytes, efiles, afiles, eapdf_conf, pdfa_part, report)

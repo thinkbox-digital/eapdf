@@ -1,0 +1,19 @@
+{
+  "java": {
+    "tests": 23,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "agenda": "EA-PDF/PDF-A-4f/selected upstream ISO32005 PASS",
+  "sections": [
+    "BodyRendering",
+    "AttachmentList"
+  ],
+  "bookmarks": [
+    "Agenda and timeline slides",
+    "Body",
+    "Attachments"
+  ],
+  "original_pdfs_unchanged": true
+}

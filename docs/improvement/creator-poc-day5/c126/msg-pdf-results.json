@@ -1,0 +1,59 @@
+[
+  {
+    "source_filename": "2019.10.08 DEP response.msg",
+    "pdf": "msg-after/2019.10.08 DEP response__RE_ Application of Jeffry Spinney, 126 Golden Ridge Road, Alna_000001.pdf",
+    "source_sha256": "1f8012c2b8d64b2848f3c03618dea56b201cf9afd272ec59f2bfc66e4a5f6aba",
+    "native_reply_in_xmp": [
+      "<CAO928xwjCa3X=zFA9kKYLwwqeVHVtEjnZo-N+SNLyV1SQYfFRA@mail.gmail.com>"
+    ],
+    "source_exact": true,
+    "rendering_pixels_and_text_unchanged": true,
+    "validation": {
+      "status": "INCOMPLETE",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "failures": [],
+      "staging_removed": true
+    }
+  },
+  {
+    "source_filename": "message.msg",
+    "pdf": "msg-after/message__Re_ test internal_000002.pdf",
+    "source_sha256": "e85c38d49d8b22a3794434890440b2e6284f77a3882fc75872ba81e1280f57e7",
+    "native_reply_in_xmp": [
+      "<MIxJm8Y--3-0@tutao.onmicrosoft.com>"
+    ],
+    "source_exact": true,
+    "rendering_pixels_and_text_unchanged": true,
+    "validation": {
+      "status": "INCOMPLETE",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "failures": [],
+      "staging_removed": true
+    }
+  },
+  {
+    "source_filename": "test_internal.msg",
+    "pdf": "msg-after/test_internal__Re_ test internal_000003.pdf",
+    "source_sha256": "e85c38d49d8b22a3794434890440b2e6284f77a3882fc75872ba81e1280f57e7",
+    "native_reply_in_xmp": [
+      "<MIxJm8Y--3-0@tutao.onmicrosoft.com>"
+    ],
+    "source_exact": true,
+    "rendering_pixels_and_text_unchanged": true,
+    "validation": {
+      "status": "INCOMPLETE",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "failures": [],
+      "staging_removed": true
+    }
+  }
+]

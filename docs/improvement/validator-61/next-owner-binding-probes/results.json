@@ -1,0 +1,210 @@
+[
+  {
+    "file": "unknown-owner-guid.pdf",
+    "sha256": "e121f830a12ee52a0084f78905b9d8ac0b22f9094caf42bbb6f9b216ee16c792",
+    "status": "FAIL",
+    "failures": [
+      {
+        "level": "FAIL",
+        "code": "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "message": "Each XMP-declared email attachment must have a visible File Attachment annotation inside each relevant body Content Set",
+        "details": {
+          "actual": [
+            {
+              "attachment": "Lean Six Sigma Kickoff Meeting.pptx",
+              "reason": "no matching BodyRendering content set was identified from DPM",
+              "identity": {
+                "Mail_GUID": "unknown-owner",
+                "Message-ID": ""
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "annotation": [
+      {
+        "level": "FAIL",
+        "code": "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "message": "Each XMP-declared email attachment must have a visible File Attachment annotation inside each relevant body Content Set",
+        "details": {
+          "actual": [
+            {
+              "attachment": "Lean Six Sigma Kickoff Meeting.pptx",
+              "reason": "no matching BodyRendering content set was identified from DPM",
+              "identity": {
+                "Mail_GUID": "unknown-owner",
+                "Message-ID": ""
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "file": "duplicate-owner-guid.pdf",
+    "sha256": "10fd1bbfa61d7860e1dd2ada4e6faebc16a1f429944eaa786b34a872253f2f5f",
+    "status": "FAIL",
+    "failures": [
+      {
+        "level": "FAIL",
+        "code": "EMAIL_XMP_CONTAINER",
+        "message": "Email metadata cardinality does not match the declared profile",
+        "details": {
+          "count": 2
+        }
+      },
+      {
+        "level": "FAIL",
+        "code": "MAIL_GUID_UNIQUE",
+        "message": "Mail_GUID must uniquely identify an email",
+        "details": {
+          "email": 2,
+          "value": "uuid:9eb11ef2-89e3-4143-8a53-edb7ea8e8e99"
+        }
+      }
+    ],
+    "annotation": [
+      {
+        "level": "PASS",
+        "code": "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "message": "XMP-declared email attachments are represented by visible File Attachment annotations in each relevant body Content Set",
+        "details": {
+          "attachments": 1,
+          "body_content_sets": 1,
+          "annotations": 2,
+          "attachment_records": [
+            {
+              "Filename": "Lean Six Sigma Kickoff Meeting.pptx",
+              "SizeInBytes": "49338",
+              "Content-Type": "application/octet-stream;\n\t name=\"Lean Six Sigma Kickoff Meeting.pptx\"",
+              "CheckSum": "c0dd123ac17a66c1b42ba8898896858b",
+              "Mail_GUID": "uuid:9eb11ef2-89e3-4143-8a53-edb7ea8e8e99",
+              "Description": "Original email attachment"
+            }
+          ],
+          "annotation_values": [
+            {
+              "page": 1,
+              "filename": "test3.eml",
+              "rect": [
+                112.65,
+                487.2375,
+                120.9,
+                493.2375
+              ],
+              "page_box": [
+                0.0,
+                0.0,
+                612.0,
+                792.0
+              ],
+              "within_page_box": true,
+              "visible_ok": true,
+              "flags": 4
+            },
+            {
+              "page": 2,
+              "filename": "Lean Six Sigma Kickoff Meeting.pptx",
+              "rect": [
+                46.8,
+                698.2,
+                59.8,
+                708.2
+              ],
+              "page_box": [
+                0.0,
+                0.0,
+                612.0,
+                792.0
+              ],
+              "within_page_box": true,
+              "visible_ok": true,
+              "flags": 4
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "file": "conflicting-owner-aliases.pdf",
+    "sha256": "20c3cb6524095a56aff145eb71ab77531c5d92b279c6de45a1a5a253b7e9ce59",
+    "status": "FAIL",
+    "failures": [
+      {
+        "level": "FAIL",
+        "code": "MESSAGE_ID_XMP",
+        "message": "Message-ID aliases contain conflicting identifiers",
+        "details": {
+          "email": 1,
+          "Message-ID": "different-owner",
+          "messageid": "4CA45768.ARCH2D2.A2D2P1.100.1316735.1.8D7E.1"
+        }
+      }
+    ],
+    "annotation": [
+      {
+        "level": "PASS",
+        "code": "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "message": "XMP-declared email attachments are represented by visible File Attachment annotations in each relevant body Content Set",
+        "details": {
+          "attachments": 1,
+          "body_content_sets": 1,
+          "annotations": 2,
+          "attachment_records": [
+            {
+              "Filename": "Lean Six Sigma Kickoff Meeting.pptx",
+              "SizeInBytes": "49338",
+              "Content-Type": "application/octet-stream;\n\t name=\"Lean Six Sigma Kickoff Meeting.pptx\"",
+              "CheckSum": "c0dd123ac17a66c1b42ba8898896858b",
+              "Mail_GUID": "uuid:9eb11ef2-89e3-4143-8a53-edb7ea8e8e99",
+              "Description": "Original email attachment"
+            }
+          ],
+          "annotation_values": [
+            {
+              "page": 1,
+              "filename": "test3.eml",
+              "rect": [
+                112.65,
+                487.2375,
+                120.9,
+                493.2375
+              ],
+              "page_box": [
+                0.0,
+                0.0,
+                612.0,
+                792.0
+              ],
+              "within_page_box": true,
+              "visible_ok": true,
+              "flags": 4
+            },
+            {
+              "page": 2,
+              "filename": "Lean Six Sigma Kickoff Meeting.pptx",
+              "rect": [
+                46.8,
+                698.2,
+                59.8,
+                708.2
+              ],
+              "page_box": [
+                0.0,
+                0.0,
+                612.0,
+                792.0
+              ],
+              "within_page_box": true,
+              "visible_ok": true,
+              "flags": 4
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

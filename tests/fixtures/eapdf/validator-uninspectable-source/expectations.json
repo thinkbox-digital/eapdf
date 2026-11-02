@@ -1,0 +1,149 @@
+{
+  "authority": "Source comparisons require an inspectable matched original. Isolated omission is permitted; additional independent originals can contain unrendered data.",
+  "boundary": "Stored MSG properties can prove field contradictions; full header and external original-inventory completeness remain unavailable.",
+  "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+  "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+  "original": "in/email/MSGReader-master/msgKitOut_noattach.msg",
+  "original_sha256": "3e2421fdef89d72d2ff08e3ee25a917c54cc2954ef7938e95343fe138ee33634",
+  "cases": [
+    {
+      "file": "msg-s.pdf",
+      "sha256": "2ce542ba1dfbc2ef6cc5a97cb8afa9132e7fb1414dcab2d09edfb6a3e2442cbe",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_SUBJECT_XMP",
+            "MESSAGE_ATTACHMENT_COUNT_XMP",
+            "MESSAGE_SENT_XMP",
+            "MESSAGE_FROM_FOAF",
+            "MESSAGE_TO_FOAF",
+            "ATTACHMENT_XMP_MATCH",
+            "MESSAGE_ID_XMP",
+            "MESSAGE_RAW_TO_XMP",
+            "MESSAGE_RAW_FROM_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "From",
+          "NumberAttachments",
+          "Raw-From",
+          "Raw-To",
+          "Sent",
+          "Subject",
+          "To",
+          "messageid"
+        ]
+      }
+    },
+    {
+      "file": "msg-si.pdf",
+      "sha256": "6ee20da2c8da000c70740e1ce6e1f1bd18e2109f0adab8eb8bc2f1b6402b395d",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_SUBJECT_XMP",
+            "MESSAGE_ATTACHMENT_COUNT_XMP",
+            "MESSAGE_SENT_XMP",
+            "MESSAGE_FROM_FOAF",
+            "MESSAGE_TO_FOAF",
+            "ATTACHMENT_XMP_MATCH",
+            "MESSAGE_ID_XMP",
+            "MESSAGE_RAW_TO_XMP",
+            "MESSAGE_RAW_FROM_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "From",
+          "NumberAttachments",
+          "Raw-From",
+          "Raw-To",
+          "Sent",
+          "Subject",
+          "To",
+          "messageid"
+        ]
+      }
+    },
+    {
+      "file": "opaque-s.pdf",
+      "sha256": "d3022d019eec823f239f9811b2c1056eb276983594c8ad745c26b7ca1f31216a",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "msg-bad-xmp.pdf",
+      "sha256": "9480abea11b87889f5da306c4d3f645d4273839c34d43844cd6e3f7ccc70d0bc",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_FROM_FOAF",
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_SUBJECT_XMP",
+            "MESSAGE_ATTACHMENT_COUNT_XMP",
+            "MESSAGE_SENT_XMP",
+            "MESSAGE_FROM_FOAF",
+            "MESSAGE_TO_FOAF",
+            "ATTACHMENT_XMP_MATCH",
+            "MESSAGE_ID_XMP",
+            "MESSAGE_RAW_TO_XMP",
+            "MESSAGE_RAW_FROM_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "From",
+          "NumberAttachments",
+          "Raw-From",
+          "Raw-To",
+          "Sent",
+          "Subject",
+          "To",
+          "messageid"
+        ]
+      }
+    },
+    {
+      "file": "isolated-omitted.pdf",
+      "sha256": "7704ffb25179de81722162275bab5a25d731aa8a2e94e6d283da8753adedd56f",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "known-source.pdf",
+      "sha256": "5a8d55e7eacee0a0317a83c62faef55c0e7e61de5854abe3b7ce6540f5b0ca08",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "extra-unknown.pdf",
+      "sha256": "fc3c8bd900279b351f70ff11bb08d5fd44db51889a8f54bab6a2d5c6b41fc3d5",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "opaque-si.pdf",
+      "sha256": "b4625eca8a0b7138bab5f3ae20ef90ce135c483c50126e06fc903986d3b05d5c",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    }
+  ]
+}

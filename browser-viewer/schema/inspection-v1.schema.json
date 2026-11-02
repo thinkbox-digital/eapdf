@@ -1,0 +1,1598 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:thinkbox:eapdf:inspection:1",
+  "title": "EA-PDF read-only inspection v1",
+  "description": "Extraction observations, not validation verdicts. See docs/inspection-schema.md.",
+  "$ref": "#/$defs/InspectionResult",
+  "$defs": {
+    "InspectionState": {
+      "enum": [
+        "present",
+        "missing",
+        "invalid",
+        "ambiguous",
+        "unsupported",
+        "unavailable",
+        "not-evaluated"
+      ]
+    },
+    "ObjectLocator": {
+      "type": "object",
+      "properties": {
+        "documentId": {
+          "type": "string"
+        },
+        "objectNumber": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "documentId",
+        "objectNumber",
+        "generation",
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "RawValue": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "pdf-string",
+            "pdf-name",
+            "pdf-integer",
+            "pdf-boolean",
+            "pdf-real",
+            "pdf-array",
+            "pdf-dictionary",
+            "pdf-stream",
+            "pdf-null",
+            "xmp-text",
+            "xmp-attribute",
+            "xmp-structure",
+            "header"
+          ]
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bytesHex": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(?:[0-9a-f]{2})*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "text",
+        "bytesHex"
+      ],
+      "additionalProperties": false
+    },
+    "TextObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "present"
+            },
+            "value": {
+              "type": "string"
+            },
+            "basis": {
+              "enum": [
+                "observed",
+                "derived",
+                "inferred"
+              ]
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "missing",
+                "invalid",
+                "ambiguous",
+                "unsupported",
+                "unavailable",
+                "not-evaluated"
+              ]
+            },
+            "value": {
+              "type": "null"
+            },
+            "basis": {
+              "const": "none"
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "DeclaredProfile": {
+      "enum": [
+        "s",
+        "si",
+        "m",
+        "mi",
+        "c",
+        "ci"
+      ]
+    },
+    "ProfileObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "present"
+            },
+            "value": {
+              "$ref": "#/$defs/DeclaredProfile"
+            },
+            "basis": {
+              "enum": [
+                "observed",
+                "derived",
+                "inferred"
+              ]
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "missing",
+                "invalid",
+                "ambiguous",
+                "unsupported",
+                "unavailable",
+                "not-evaluated"
+              ]
+            },
+            "value": {
+              "type": "null"
+            },
+            "basis": {
+              "const": "none"
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "NumberObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "present"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "basis": {
+              "enum": [
+                "observed",
+                "derived",
+                "inferred"
+              ]
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "missing",
+                "invalid",
+                "ambiguous",
+                "unsupported",
+                "unavailable",
+                "not-evaluated"
+              ]
+            },
+            "value": {
+              "type": "null"
+            },
+            "basis": {
+              "const": "none"
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "LinksObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "present"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "basis": {
+              "enum": [
+                "observed",
+                "derived",
+                "inferred"
+              ]
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "missing",
+                "invalid",
+                "ambiguous",
+                "unsupported",
+                "unavailable",
+                "not-evaluated"
+              ]
+            },
+            "value": {
+              "type": "null"
+            },
+            "basis": {
+              "const": "none"
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "PageRange": {
+      "type": "object",
+      "properties": {
+        "indexBase": {
+          "const": 0
+        },
+        "endInclusive": {
+          "const": true
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "indexBase",
+        "endInclusive",
+        "start",
+        "end"
+      ],
+      "additionalProperties": false
+    },
+    "PageRangeObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "present"
+            },
+            "value": {
+              "$ref": "#/$defs/PageRange"
+            },
+            "basis": {
+              "enum": [
+                "observed",
+                "derived",
+                "inferred"
+              ]
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PageRange"
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "missing",
+                "invalid",
+                "ambiguous",
+                "unsupported",
+                "unavailable",
+                "not-evaluated"
+              ]
+            },
+            "value": {
+              "type": "null"
+            },
+            "basis": {
+              "const": "none"
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PageRange"
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "InspectionDiagnostic": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/InspectionState"
+        },
+        "message": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ObjectLocator"
+          }
+        }
+      },
+      "required": [
+        "code",
+        "state",
+        "message",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "InspectionLimits": {
+      "type": "object",
+      "properties": {
+        "maxFileBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxStreamBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxDecodedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxMetadataBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxObjects": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxParts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxTreeDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxChildDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxChildren": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "maxFileBytes",
+        "maxStreamBytes",
+        "maxDecodedBytes",
+        "maxMetadataBytes",
+        "maxObjects",
+        "maxParts",
+        "maxTreeDepth",
+        "maxChildDepth",
+        "maxChildren"
+      ],
+      "additionalProperties": false
+    },
+    "Identification": {
+      "type": "object",
+      "properties": {
+        "pdfHeaderVersion": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "pdfCatalogVersion": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "effectivePdfVersion": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "pdfaPart": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "pdfaConformance": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "pdfaRevision": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "eapdfVersion": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "eapdfRevision": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "declaredProfile": {
+          "$ref": "#/$defs/ProfileObservation"
+        },
+        "validationStatus": {
+          "const": "not-evaluated"
+        }
+      },
+      "required": [
+        "pdfHeaderVersion",
+        "pdfCatalogVersion",
+        "effectivePdfVersion",
+        "pdfaPart",
+        "pdfaConformance",
+        "pdfaRevision",
+        "eapdfVersion",
+        "eapdfRevision",
+        "declaredProfile",
+        "validationStatus"
+      ],
+      "additionalProperties": false
+    },
+    "MetadataRecord": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "email",
+            "source-asset",
+            "attachment"
+          ]
+        },
+        "locator": {
+          "$ref": "#/$defs/ObjectLocator"
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/TextObservation"
+          }
+        },
+        "uninspectedFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owners": {
+          "$ref": "#/$defs/LinksObservation"
+        },
+        "files": {
+          "$ref": "#/$defs/LinksObservation"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "locator",
+        "fields",
+        "uninspectedFields",
+        "owners",
+        "files"
+      ],
+      "additionalProperties": false
+    },
+    "DocumentPart": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "locator": {
+          "$ref": "#/$defs/ObjectLocator"
+        },
+        "parentId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "declaredParent": {
+          "$ref": "#/$defs/LinksObservation"
+        },
+        "childIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dpm": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/TextObservation"
+          }
+        },
+        "startReference": {
+          "$ref": "#/$defs/LinksObservation"
+        },
+        "endReference": {
+          "$ref": "#/$defs/LinksObservation"
+        },
+        "pageRange": {
+          "$ref": "#/$defs/PageRangeObservation"
+        },
+        "messageIds": {
+          "$ref": "#/$defs/LinksObservation"
+        }
+      },
+      "required": [
+        "id",
+        "locator",
+        "parentId",
+        "declaredParent",
+        "childIds",
+        "dpm",
+        "startReference",
+        "endReference",
+        "pageRange",
+        "messageIds"
+      ],
+      "additionalProperties": false
+    },
+    "MailMessage": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "documentId": {
+          "type": "string"
+        },
+        "metadataRecordId": {
+          "type": "string"
+        },
+        "mailGuid": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "internetMessageId": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "partIds": {
+          "$ref": "#/$defs/LinksObservation"
+        },
+        "sourceAssetIds": {
+          "$ref": "#/$defs/LinksObservation"
+        },
+        "attachmentRecordIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "documentId",
+        "metadataRecordId",
+        "mailGuid",
+        "internetMessageId",
+        "partIds",
+        "sourceAssetIds",
+        "attachmentRecordIds"
+      ],
+      "additionalProperties": false
+    },
+    "AssociationOrigin": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "catalog-af",
+            "object-af",
+            "name-tree",
+            "annotation"
+          ]
+        },
+        "locator": {
+          "$ref": "#/$defs/ObjectLocator"
+        },
+        "pageIndex": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nameTreeKey": {
+          "$ref": "#/$defs/TextObservation"
+        }
+      },
+      "required": [
+        "kind",
+        "locator",
+        "pageIndex",
+        "nameTreeKey"
+      ],
+      "additionalProperties": false
+    },
+    "EmbeddedStream": {
+      "type": "object",
+      "properties": {
+        "locator": {
+          "$ref": "#/$defs/ObjectLocator"
+        },
+        "efKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mimeType": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "mediaTypeParameters": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "declaredSize": {
+          "$ref": "#/$defs/NumberObservation"
+        },
+        "declaredMd5": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "decodedSize": {
+          "$ref": "#/$defs/NumberObservation"
+        },
+        "computedMd5": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "sha256": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "extraction": {
+          "$ref": "#/$defs/InspectionState"
+        }
+      },
+      "required": [
+        "locator",
+        "efKeys",
+        "mimeType",
+        "mediaTypeParameters",
+        "declaredSize",
+        "declaredMd5",
+        "decodedSize",
+        "computedMd5",
+        "sha256",
+        "extraction"
+      ],
+      "additionalProperties": false
+    },
+    "AssociatedFile": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "locator": {
+          "$ref": "#/$defs/ObjectLocator"
+        },
+        "filename": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "unicodeFilename": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "afRelationship": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "origins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AssociationOrigin"
+          }
+        },
+        "embedding": {
+          "$ref": "#/$defs/InspectionState"
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EmbeddedStream"
+          }
+        },
+        "roles": {
+          "$ref": "#/$defs/LinksObservation"
+        },
+        "owners": {
+          "$ref": "#/$defs/LinksObservation"
+        },
+        "metadataRecordIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "locator",
+        "filename",
+        "unicodeFilename",
+        "afRelationship",
+        "origins",
+        "embedding",
+        "streams",
+        "roles",
+        "owners",
+        "metadataRecordIds"
+      ],
+      "additionalProperties": false
+    },
+    "CollectionFolder": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "locator": {
+          "$ref": "#/$defs/ObjectLocator"
+        },
+        "folderNumber": {
+          "$ref": "#/$defs/NumberObservation"
+        },
+        "name": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "parentId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "childIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "locator",
+        "folderNumber",
+        "name",
+        "parentId",
+        "childIds"
+      ],
+      "additionalProperties": false
+    },
+    "ChildDocument": {
+      "type": "object",
+      "properties": {
+        "fileId": {
+          "type": "string"
+        },
+        "stream": {
+          "$ref": "#/$defs/ObjectLocator"
+        },
+        "documentId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/InspectionState"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inspection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InspectionResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fileId",
+        "stream",
+        "documentId",
+        "state",
+        "reason",
+        "inspection"
+      ],
+      "additionalProperties": false
+    },
+    "CollectionEntry": {
+      "type": "object",
+      "properties": {
+        "fileId": {
+          "type": "string"
+        },
+        "nameTreeKey": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "folderIds": {
+          "$ref": "#/$defs/LinksObservation"
+        }
+      },
+      "required": [
+        "fileId",
+        "nameTreeKey",
+        "folderIds"
+      ],
+      "additionalProperties": false
+    },
+    "CollectionNode": {
+      "type": "object",
+      "properties": {
+        "locator": {
+          "$ref": "#/$defs/ObjectLocator"
+        },
+        "view": {
+          "$ref": "#/$defs/TextObservation"
+        },
+        "schemaKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CollectionFolder"
+          }
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CollectionEntry"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChildDocument"
+          }
+        }
+      },
+      "required": [
+        "locator",
+        "view",
+        "schemaKeys",
+        "folders",
+        "entries",
+        "children"
+      ],
+      "additionalProperties": false
+    },
+    "CollectionObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "present"
+            },
+            "value": {
+              "$ref": "#/$defs/CollectionNode"
+            },
+            "basis": {
+              "enum": [
+                "observed",
+                "derived",
+                "inferred"
+              ]
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CollectionNode"
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "missing",
+                "invalid",
+                "ambiguous",
+                "unsupported",
+                "unavailable",
+                "not-evaluated"
+              ]
+            },
+            "value": {
+              "type": "null"
+            },
+            "basis": {
+              "const": "none"
+            },
+            "raw": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawValue"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ObjectLocator"
+              }
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CollectionNode"
+              }
+            }
+          },
+          "required": [
+            "state",
+            "value",
+            "basis",
+            "raw",
+            "evidence",
+            "reason",
+            "candidates"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "InspectionResult": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "documentId": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "sha256",
+            "byteLength"
+          ],
+          "additionalProperties": false
+        },
+        "identification": {
+          "$ref": "#/$defs/Identification"
+        },
+        "pageCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocumentPart"
+          }
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MailMessage"
+          }
+        },
+        "metadataRecords": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MetadataRecord"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AssociatedFile"
+          }
+        },
+        "collection": {
+          "$ref": "#/$defs/CollectionObservation"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InspectionDiagnostic"
+          }
+        },
+        "limits": {
+          "$ref": "#/$defs/InspectionLimits"
+        },
+        "coverage": {
+          "type": "object",
+          "properties": {
+            "metadata": {
+              "$ref": "#/$defs/InspectionState"
+            },
+            "documentParts": {
+              "$ref": "#/$defs/InspectionState"
+            },
+            "associatedFiles": {
+              "$ref": "#/$defs/InspectionState"
+            },
+            "collection": {
+              "$ref": "#/$defs/InspectionState"
+            },
+            "fullEmailHeaders": {
+              "const": "not-evaluated"
+            },
+            "logicalStructure": {
+              "const": "not-evaluated"
+            },
+            "sourceEmailParsing": {
+              "const": "not-evaluated"
+            },
+            "contentStreamAssociations": {
+              "const": "not-evaluated"
+            },
+            "conformance": {
+              "const": "not-evaluated"
+            }
+          },
+          "required": [
+            "metadata",
+            "documentParts",
+            "associatedFiles",
+            "collection",
+            "fullEmailHeaders",
+            "logicalStructure",
+            "sourceEmailParsing",
+            "contentStreamAssociations",
+            "conformance"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "documentId",
+        "source",
+        "identification",
+        "pageCount",
+        "parts",
+        "messages",
+        "metadataRecords",
+        "files",
+        "collection",
+        "diagnostics",
+        "limits",
+        "coverage"
+      ],
+      "additionalProperties": false
+    },
+    "ExtractionRequest": {
+      "type": "object",
+      "properties": {
+        "documentId": {
+          "type": "string"
+        },
+        "fileId": {
+          "type": "string"
+        },
+        "stream": {
+          "$ref": "#/$defs/ObjectLocator"
+        },
+        "maxBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "documentId",
+        "fileId",
+        "stream",
+        "maxBytes"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,66 @@
+[
+  {
+    "key": "Title",
+    "file": "docs/improvement/validator-34/next-info-type-probes/title.pdf",
+    "sha256": "e5d63b4d3ab945054139eb22e62e8c65443c7293475e5adb53658c2ad4e5c6cd",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "failures": []
+  },
+  {
+    "key": "Subject",
+    "file": "docs/improvement/validator-34/next-info-type-probes/subject.pdf",
+    "sha256": "99cd2ec7f18a90c7c4205dce260e6f8b59f3c849df1162125f653de95c7ca0d5",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "failures": []
+  },
+  {
+    "key": "Author",
+    "file": "docs/improvement/validator-34/next-info-type-probes/author.pdf",
+    "sha256": "36240b46601c481887d2d90df9c9e9a934f0e1af01dfe2d6b31ef51fbbab8d3a",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "failures": []
+  },
+  {
+    "key": "Creator",
+    "file": "docs/improvement/validator-34/next-info-type-probes/creator.pdf",
+    "sha256": "6f1d309e73881f053a0f36bdcdbd4f8785166c727566e5ac01faac21f65b2302",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "failures": []
+  },
+  {
+    "key": "Producer",
+    "file": "docs/improvement/validator-34/next-info-type-probes/producer.pdf",
+    "sha256": "8734d1b0e3fbd908be3aee0c41407d41d07d4501d2fe52ce2291cbe4174cefa6",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "failures": []
+  },
+  {
+    "key": "Keywords",
+    "file": "docs/improvement/validator-34/next-info-type-probes/keywords.pdf",
+    "sha256": "6073141e30369273e59a43d00d145bce75c7799e2fa7c1302eb429e05540e2f9",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "failures": []
+  },
+  {
+    "key": "CreationDate",
+    "file": "docs/improvement/validator-34/next-info-type-probes/creationdate.pdf",
+    "sha256": "a926d9e09c9792b2a4ae2de317897e10939f608daf7c39979686393160562380",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "failures": []
+  },
+  {
+    "key": "ModDate",
+    "file": "docs/improvement/validator-34/next-info-type-probes/moddate.pdf",
+    "sha256": "30dca2a4d8ddb77ff0d79b52c22751cf8d2c10dff0b81a0c6444bf67211e2dc5",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "failures": []
+  }
+]

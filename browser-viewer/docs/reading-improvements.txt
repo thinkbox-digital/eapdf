@@ -1,0 +1,98 @@
+Release note: 0.5.0-beta.5 packages the implementation below for GitHub release
+1.6.0-beta.7. It has no functional changes from beta.4. Current release checks
+are in docs/improvement/release-1.6.0-beta.7/summary.json. Historical local
+publication statements below describe the beta.4 checkpoint.
+
+EA-PDF viewer 0.5.0-beta.4 — viewing-focused demonstration
+2026-11-02
+
+Scope
+
+The demonstration focuses on reading emails, browsing folders, searching, zooming,
+viewing/downloading files and exporting a finding aid. Printing, user-controlled
+rotation, custom keyboard navigation/shortcuts and the redundant Email Details
+pane have been removed from the UI and associated implementation. Native browser
+controls remain. PDF pages still respect their own stored orientation.
+
+File ownership
+
+Ownership is automatic. Explicit DPart /AF and annotation associations identify
+owning emails; single-email document scope and metadata bindings provide further
+information. For older files, bounded source/transport-header inspection can match
+a unique Message-ID. There is no manual source-finding step. File cards identify
+the containing PDF and link their owning emails. Missing or ambiguous document
+evidence produces a document error, not an invented owner.
+
+The creator writes DPart file links for single-email and multi-email PDFs,
+including collection children. Shared supporting files retain every message
+owner. Source filenames printed on archive pages are chosen before rendering
+and match the actual embedded names. The real seven-email PST sample has seven
+source emails and six transport-header files correctly associated; source bytes
+remain unchanged. Existing root collection source copies can use header matching.
+
+Finding aid
+
+CSV columns: PDF, Folder paths, From, To, Cc, Bcc, Subject, Sent, Message-ID,
+Attachment count, Attachment names. Mail GUID is omitted. Collection folders come
+from the PDF's folder hierarchy, not from filename guesses. Multiple memberships
+are listed on separate lines in one cell; nested paths are retained. Folder names
+containing slashes or backslashes are escaped. Missing counts stay blank, while
+recorded zero counts stay zero. Missing names are explicitly marked.
+
+Attachment names describe email metadata. In isolated ci files, names do not
+imply that original attachment bytes are embedded. Invalid counts, ambiguous
+ownership, unreadable folder trees and conflicting metadata prevent a misleading
+complete export. Spreadsheet formulas are neutralized. Export covers the selected
+PDF and its children, with existing work limits and cancellation.
+
+Reading and recovery
+
+PDF.js 6.5.438 retains the two existing generic patches. Pages render on demand;
+text remains selectable and searchable. Fit modes, collapsible panels, internal
+bookmarks/links and bounded collection text search remain. HTML/SVG/email previews
+are inert text. Passwords are not persisted. External PDF actions stay disabled.
+Reopen PDF appears after an operation error; it closes workers, clears caches
+and work budgets, and reopens the original PDF at the beginning. No PDF is changed.
+
+Verification and remaining work
+
+Current unit, independent interpretation, Chromium and Firefox results are in
+output/viewer-file-ownership and docs/improvement/viewer-file-ownership/summary.json.
+Both c and ci CSV downloads are exercised in the browser with real PST examples.
+The real MBOX archive and individual-message conversions pass the Java validator,
+including PDF/A. All 24 renamed examples and eight PDF/A finding-aid sidecars were
+regenerated and validated. Large PSTs were excluded; original inputs are unchanged.
+Historical signed/accessibility/failing examples are retained separately as fixtures.
+
+Collection email search and downloads — beta.4
+
+Find emails now indexes metadata in unopened collection members using a separate,
+bounded BrowserSession. Only metadata is retained after its workers close. The
+index is reused while typing and reset when the root PDF closes. Results retain
+exact file/stream/message identities, including repeated filenames. Collection
+summary records are excluded to avoid duplicate results. Limits are 1,000 PDFs,
+100,000 email rows and 8 million retained text characters, in addition to existing
+session byte/depth/worker limits. Unreadable files, metadata or exhausted limits
+are reported as incomplete. The input is debounced; stale query results are ignored.
+
+Sidebar row measurements now use prefix sums with logarithmic updates/lookups,
+instead of scanning every measured row on each position lookup. This reduces the
+work as users scroll through large lists. No end-to-end speedup is claimed without
+benchmarking. Existing bounded row mounting remains.
+
+The download failure was reproduced in one Chromium tab. An isolated anchor test
+accepted 10 of 15 rapid downloads, versus all 15 with 1.1-second spacing. Shared
+production download handling now spaces requests across the file panel, previews
+and CSV export. Queued requests check cancellation before dispatch. Closing a PDF
+or preview no longer immediately revokes a URL still being accepted by the browser;
+URLs expire after 60 seconds. Browser acceptance and final disk saving remain under
+browser/user control; the UI does not claim byte delivery from an anchor click.
+
+The full Chromium workflow passes in one tab with no test-side download delay or
+fresh-tab workaround. A dedicated burst test verifies all 16 requested downloads
+byte-for-byte, plus cancellation and queue recovery. Chromium and Firefox reading
+checks find and open previously unopened c/ci email members. 38 Node tests pass.
+Firefox emits its known native shutdown warning after passing checks. Full Firefox
+attachment/security suites and large-file performance benchmarks were not rerun.
+Evidence is retained in output/viewer-next-2026-11-02. Packages are local, unsigned
+and unpublished. Printing, rotation tools and custom shortcuts remain out of scope.

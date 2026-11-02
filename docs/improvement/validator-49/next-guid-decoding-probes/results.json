@@ -1,0 +1,79 @@
+[
+  {
+    "file": "unreadable-guid.pdf",
+    "sha256": "2ac6efdfbe40b7fa69124acb1d9389b059a0dd445f81323a3fb74992a8919651",
+    "status": "FAIL",
+    "failures": [
+      "VALIDATION_ERROR"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "unreadable-guid-before-valid.pdf",
+    "sha256": "08307bab65227a5e64800f6c64fda16d6e333018574da2cebc8418c81a31122f",
+    "status": "FAIL",
+    "failures": [
+      "VALIDATION_ERROR"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "unreadable-guid-after-valid.pdf",
+    "sha256": "9d287e6b919353b952592a4abf933dfea18455f59e2ff84b2aa3c91d0dfedba7",
+    "status": "FAIL",
+    "failures": [
+      "VALIDATION_ERROR"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "unreadable-guid-and-wrong.pdf",
+    "sha256": "4a76e74c43c74ae6e0fcf4fc93ae4f92e0622e24e89bb2b45a2af21f5674b225",
+    "status": "FAIL",
+    "failures": [
+      "VALIDATION_ERROR"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "valid-utf8-guid.pdf",
+    "sha256": "9ba8a016b8fc605516a26bf30db840b877b46a5be0d76b0e9d995e1f66848389",
+    "status": "PASS",
+    "failures": [],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "valid-utf16-guid.pdf",
+    "sha256": "01da2c3a845948c648bd01461ad75493c3ed2d3a7365f8c6d68b35825cf32336",
+    "status": "PASS",
+    "failures": [],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "empty-utf8-guid.pdf",
+    "sha256": "c953c66e4003aa627c19102b76c206d09519f35fe75c963af55daf6fd01639c9",
+    "status": "FAIL",
+    "failures": [
+      "MAIL_MESSAGE_GUID_ATTRIBUTE",
+      "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "wrong-name-guid.pdf",
+    "sha256": "50ad43d511e3a022b90146ad34129afe7bba6f5a13f3a3f2526b63d1ce86531b",
+    "status": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  }
+]

@@ -1,0 +1,1434 @@
+{
+  "date": "2026-10-27",
+  "scope": "Specification reexamination implementation and bounded regression evidence",
+  "active_rules": 213,
+  "inventory_records": 301,
+  "questions_and_assumptions": 52,
+  "changed_rules": [
+    {
+      "number": 5,
+      "code": "CONTENT_SET_COUNT"
+    },
+    {
+      "number": 10,
+      "code": "PAGE_CONTEXT_PRESENT_RECOMMENDED"
+    },
+    {
+      "number": 11,
+      "code": "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED"
+    },
+    {
+      "number": 14,
+      "code": "ATTACHMENT_XMP_MATCH"
+    },
+    {
+      "number": 35,
+      "code": "PAGEMODE_PRESENT"
+    },
+    {
+      "number": 36,
+      "code": "NONFULLSCREENPAGEMODE_PRESENT"
+    },
+    {
+      "number": 44,
+      "code": "PROFILE_NFSM_CONTAINER"
+    },
+    {
+      "number": 45,
+      "code": "VIEWER_PREFS"
+    },
+    {
+      "number": 51,
+      "code": "CONTENT_SET_NONBLANK"
+    },
+    {
+      "number": 52,
+      "code": "PAGE_COUNT"
+    },
+    {
+      "number": 58,
+      "code": "TEXT_CONTENT_PDF_TEXT_OBJECTS"
+    },
+    {
+      "number": 60,
+      "code": "PAGE_CONTEXT_TEXT_OBJECTS_RECOMMENDED"
+    },
+    {
+      "number": 61,
+      "code": "UNSPECIFIED_COLOR_SRGB_ASSUMED"
+    },
+    {
+      "number": 62,
+      "code": "ACTIONABLE_URLS_LINK_ANNOTATIONS"
+    },
+    {
+      "number": 63,
+      "code": "REFERENCED_ASSETS_AS_ASSOCIATED_FILES"
+    },
+    {
+      "number": 64,
+      "code": "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT"
+    },
+    {
+      "number": 68,
+      "code": "EMBEDDED_SUBTYPE_MATCH_XMP"
+    },
+    {
+      "number": 69,
+      "code": "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+    },
+    {
+      "number": 70,
+      "code": "EMBEDDED_MEDIATYPE_RECONSTRUCTION"
+    },
+    {
+      "number": 103,
+      "code": "DPM_BODY_MEDIA_TYPE_MATCH_SOURCE"
+    },
+    {
+      "number": 109,
+      "code": "ROLEMAP_MAIL_TAGS"
+    },
+    {
+      "number": 128,
+      "code": "USERPROPS_VALUES_UNMODIFIED"
+    },
+    {
+      "number": 140,
+      "code": "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"
+    },
+    {
+      "number": 156,
+      "code": "XMP_CREATEDATE"
+    },
+    {
+      "number": 157,
+      "code": "XMP_CREATEDATE_SEMANTICS"
+    },
+    {
+      "number": 167,
+      "code": "ASSET_NUMBERMESSAGES_TYPE"
+    }
+  ],
+  "source_sha256": {
+    "EA_PDF_Rule_Review_for_Specification_Authors.docx": "b553315d2a94c8c690fe90c6f8518c116f5f209790b7c5192ee11c6be64753a7",
+    "docs/improvement/specification-audit/validator-rule-review.json": "d8e70d67325c064a4a68404a3cca06c169cc9b992cc846533b36ad3f8c1aa19d",
+    "docs/reference/EA-PDF-v1.pdf": "b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae",
+    "docs/reference/ISO_32000-2_sponsored-ec2.pdf": "0958d3b076f4ad3bb32c1a1aa62011f52751b58bd2e3914bc714b74a1ccc517b",
+    "pom.xml": "cdd4b03c910e11c278a472897905e86ab61be8de062cd0f073f0ad819e9060ea",
+    "scripts/build_eapdf_contentset_parent_fixtures.py": "8d903ec277a0743ce9aa19478d6028470c651c5244f9764bc94f8ed5524bf0b4",
+    "scripts/build_eapdf_header_inventory_fixtures.py": "79577606e85452e2bd0a607a28ff01d0a1ad3bdf1ae1a5106d4d8fd358b80911",
+    "scripts/build_eapdf_header_occurrence_fixtures.py": "5b69367ede72ab9255c396ec89ab3270fa12f4e7e82bf8f9b23d99536f8ed3c4",
+    "scripts/build_eapdf_requirements_audit.py": "983e4e9aadb66ee5b61ca6b10d3001eb70ea472f8fc38fc6eb35fa490d6383d4",
+    "scripts/build_eapdf_review_document.py": "20c7f1a5dc00e7a2f3092daf0fffce593df96c7ec5e8ee8db8687c47349b52f3",
+    "scripts/build_eapdf_rule_fixtures.py": "aca54ceaa385bbdb3ba3c9d762b5907eafce15669f484f6baed5a9b22fbea98e",
+    "scripts/sync_eapdf_author_review.py": "918262a0df31f897dcdd563033c2120943330e94c87456f4491408220851b7d2",
+    "src/main/java/eapdf/PdfDocumentParts.java": "3e0520d79c768dfed35f6e3199b820dc2189ce1e3af11b7c1d92038921b5acc0",
+    "src/main/java/eapdf/PdfMailWriter.java": "7e8c4778e7c9ea84fd5f0e4a468de8bc18c4b08b8ebea64cdb9ab68cfab5744a",
+    "src/test/java/eapdf/ArchiveStructureTests.java": "199947f9bf95f91859dcf377e41b032d41ffca832024c84fe6e5bf682b98323a",
+    "tests/fixtures/eapdf/batch05/cases.json": "dbd6581a34901b2383170b405d6df0a8aee0e9aea3ca8907b665fba110f4ffb5",
+    "tests/fixtures/eapdf/batch07/cases.json": "961679d327a0462b649f4cc404fbb39fa291546abc5839c91f73a584ac8132c6",
+    "tests/fixtures/eapdf/batch08/cases.json": "98996f5d33576afd90415c533c410a2a5a715efaae163a1d904eeed4c5528339",
+    "tests/fixtures/eapdf/batch09/cases.json": "9f65187d5926f0e399e9aab7c5bfb87434c83c0e23386d1d1a997250d612b043",
+    "tests/fixtures/eapdf/validator-active-userproperties/expectations.json": "65b1725ecd387bc84ff340633b3051854fc89e91b93842bbeacad409003ca04e",
+    "tests/fixtures/eapdf/validator-ambiguous-bytes/expectations.json": "6f5b9693654b4a7a7119d6e303e47bea5b6e8e03ad2bda4e52e692c5154518a4",
+    "tests/fixtures/eapdf/validator-ambiguous-media/expectations.json": "79270c31e8b519519de100ab6a73acc9fd9ce3c98e94e01d747f756b796ee6e5",
+    "tests/fixtures/eapdf/validator-asset-ownership/expectations.json": "4182a58a2ca7c5e24e1bc8f3ad07b746a4d46e584f95fe057f7930c731e863ad",
+    "tests/fixtures/eapdf/validator-attachment-equivalence/expectations.json": "c7b4579a90c4a763c743e29942f9831cf9b959a6008ff3cd097a988416d841ca",
+    "tests/fixtures/eapdf/validator-attachment-owners/expectations.json": "28ab924cf8ab118f182f7f0a722bc92f1ee52193a1e434140445f6adb1ae5e99",
+    "tests/fixtures/eapdf/validator-comparison-decoding/expectations.json": "188cb64a7105a207a4ac5bbc0bc7e8344431cd1d94036ef0c192bc00194b9fc5",
+    "tests/fixtures/eapdf/validator-content-group-types/expectations.json": "3f8dc268436737ffb8da9999cf2d88dd07a6ccd70260bdeb62cbbf97ba8ab4b1",
+    "tests/fixtures/eapdf/validator-contentset-parent/expectations.json": "fec00875c2bb33e4ecaa57cfb22818cfcba564a7fca0231169e8f7cb835cd663",
+    "tests/fixtures/eapdf/validator-dpart-object-ranges/expectations.json": "9f44a5116afbc8718df441e3690ce98b4251d7d92b00212d5fd05a6427b2b7b8",
+    "tests/fixtures/eapdf/validator-empty-dpm-names/expectations.json": "78ad39ac828123976453bb3709d1bd0e3c70d826554d6e322f952fe631e0df8a",
+    "tests/fixtures/eapdf/validator-message-owners/expectations.json": "5b4053c1c96e77688716986ace7a50780162bd838b5344fbc6285f5ec473a91e",
+    "tests/fixtures/eapdf/validator-subtype-media-values/expectations.json": "c58e9b331099d80a974ba8698fc1e744bb6f081c40ed82b5422534728b3fb6d1",
+    "tests/fixtures/eapdf/validator-subtype-recommendation/expectations.json": "4514ad6eb699413442208eaaee90224dc6b02be808abdecf1b724746878d4f84",
+    "tests/fixtures/eapdf/validator-unmatched-parameters/expectations.json": "360215d5d99e0c78386541fdb82fa634cfbb5e30d9590d6f8a65d90af0279f8b",
+    "tests/test_contentset_parent_scope.py": "44a11eb6908c2ddb9cb711cdf0aa2f7fdaf68cb7fac3c9256c25f220a20e2ca5",
+    "tests/test_navigation_name_types.py": "ddab578a452301ce73f89048e5566d9af7566559a3439060d152d29f2deb220b",
+    "tests/test_preservation_safety.py": "0dc7309dd9ac3a2c1da3c81dc23bed9782cac9a2345d0f6c592b386e30b2b5f5",
+    "tests/test_userproperty_dates.py": "69a04ca5e8866f7488063c4c8f3bc8845a0d9672ce842636d32feaf314e44edf",
+    "tests/test_userproperty_types.py": "3f8daa0a2a408b8e232be7580091f7a6654fb9702f5fb98bed1c696ce325e487",
+    "validate_eapdf.py": "f790992b7506b16c4ab9639fed4ed0b691cb053811ee7a719db90baaf458c79a",
+    "validator-desktop/pom.xml": "96198830ad1771462a49da3035b4a7344863fa028b993145392b9aedf31ab7ed",
+    "validator-desktop/src/main/java/eapdf/EaPdfChecks.java": "3602b1d0e98211e100c3b5dab01304a45637c1de0746de030bbd356a5b83081d",
+    "validator-desktop/src/main/java/eapdf/JavaValidation.java": "f62f65de8fffaa4d6e22799931f28ebc5c9c1d4ae031b8814f597e43841d007e",
+    "validator-desktop/src/main/java/eapdf/LogicalStructureChecks.java": "8be52d8774f69213e5f39ae4c2b1482cb05705672d93731da53eb37cade8fbd1",
+    "validator-desktop/src/main/java/eapdf/PageContentChecks.java": "1c26f33d092e277938c24792ac938cdfb0901bafb414adc15c96ce891c1c7d72",
+    "validator-desktop/src/main/resources/validator/specification-references.json": "0d241d9f1409c3f8c49aa893a86bec7efe03eff18c5cae0b08c0b107dfb46cc7",
+    "validator-desktop/src/test/java/eapdf/ReexaminationTests.java": "cc41cc8d5340486eda16ff1557da327d35c07b90ef9ac463f4f9d0921965d111",
+    "validator_rule_text.json": "d06686fa52506827453cb8732c215348f02dec7ac813d28e97aefc4a5a623700"
+  },
+  "java_tests": {
+    "creator": {
+      "tests": 277,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "standalone_validator": {
+      "tests": 156,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    }
+  },
+  "python_tests": {
+    "modules": 118,
+    "tests": 1186,
+    "passed": 1185,
+    "skipped": 1,
+    "final_failed_modules": [],
+    "method": "Complete module run followed by targeted reruns; initial failures retained in per-module evidence.",
+    "modules_results": [
+      {
+        "module": "test_accessibility_profiles",
+        "tests": 1,
+        "skipped": 0,
+        "seconds": 137.01,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_active_userproperty_occurrences",
+        "tests": 17,
+        "skipped": 0,
+        "seconds": 1.13,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_additional_spec_rules",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 1.07,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_ambiguous_attachment_bytes",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 127.72,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_ambiguous_attachment_media",
+        "tests": 11,
+        "skipped": 0,
+        "seconds": 130.02,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_ambiguous_source_assets",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 6.15,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_ambiguous_source_headers",
+        "tests": 13,
+        "skipped": 0,
+        "seconds": 1.17,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_applicability_edges",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 1.08,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_array_applicability",
+        "tests": 11,
+        "skipped": 0,
+        "seconds": 82.22,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_asset_ownership",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 76.8,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_equivalent_comparisons",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 114.38,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_filenames",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 165.71,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_guid_owner_evidence",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 1.23,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_identity_schema",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 116.58,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_name_evidence",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 119.69,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_native_scope",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 58.27,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_occurrences",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 70.41,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_owner_messageid",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 8.05,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_owner_routing",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 116.77,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_owner_scope",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 9.53,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_attachment_streams",
+        "tests": 13,
+        "skipped": 0,
+        "seconds": 136.71,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_blank_source_date",
+        "tests": 6,
+        "skipped": 0,
+        "seconds": 1.17,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_catalog_collection_booleans",
+        "tests": 6,
+        "skipped": 0,
+        "seconds": 1.28,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_catalog_collection_name_types",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 1.02,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_child_operational_failures",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 5.06,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_collection_names",
+        "tests": 13,
+        "skipped": 0,
+        "seconds": 1.28,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_content_group_owner_types",
+        "tests": 17,
+        "skipped": 0,
+        "seconds": 1.32,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_contentset_art_usage",
+        "tests": 21,
+        "skipped": 0,
+        "seconds": 1.32,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_contentset_parent_scope",
+        "tests": 16,
+        "skipped": 0,
+        "seconds": 16.7,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_contentset_subtype_media_values",
+        "tests": 14,
+        "skipped": 0,
+        "seconds": 1.32,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_contentset_subtype_owners",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 1.23,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_contentset_subtype_recommendation",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 10.47,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_contentset_tag_coverage",
+        "tests": 17,
+        "skipped": 0,
+        "seconds": 1.37,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_coverage_branch_fixtures",
+        "tests": 1,
+        "skipped": 0,
+        "seconds": 7.42,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_coverage_exit_metadata",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 1.22,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_creator_accuracy",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 43.32,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_custom_tag_operands",
+        "tests": 18,
+        "skipped": 0,
+        "seconds": 4.03,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_declaration_schema",
+        "tests": 6,
+        "skipped": 0,
+        "seconds": 1.17,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_docinfo_crosswalk",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 1.07,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_docinfo_pdf_types",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 1.22,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_dpart_diagnostics",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 1.22,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_dpart_metadata_values",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 1.28,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_dpart_object_ranges",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 1.24,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_dpart_optional_entry_types",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 1.13,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_dpm_description_decoding",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 1.27,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_dpm_empty_names",
+        "tests": 13,
+        "skipped": 0,
+        "seconds": 4.87,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_dpm_extension_identity",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 4.77,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_dpm_guid_decoding",
+        "tests": 18,
+        "skipped": 0,
+        "seconds": 5.04,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_dpm_messageid_decoding",
+        "tests": 15,
+        "skipped": 0,
+        "seconds": 1.28,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_dpm_schema",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 1.37,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_effective_userproperties",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 130.24,
+        "initial_exit_code": 1,
+        "final_exit_code": 0,
+        "passing_rerun_log": "final-effective-recheck.log"
+      },
+      {
+        "module": "test_email_record_schema",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 116.03,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_empty_raw_header_values",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 0.97,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_encoded_header_safety",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 80.51,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_filename_alternatives",
+        "tests": 11,
+        "skipped": 0,
+        "seconds": 5.68,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_first_five_fixes",
+        "tests": 13,
+        "skipped": 0,
+        "seconds": 2.38,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_foaf_mailbox_uris",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 1.07,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_followup_security",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 1.77,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_generated_profiles",
+        "tests": 1,
+        "skipped": 0,
+        "seconds": 165.75,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_generic_userproperty_scope",
+        "tests": 17,
+        "skipped": 0,
+        "seconds": 11.06,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_header_occurrences",
+        "tests": 14,
+        "skipped": 0,
+        "seconds": 42.7,
+        "initial_exit_code": 1,
+        "final_exit_code": 0,
+        "passing_rerun_log": "final-fixture-rechecks.log"
+      },
+      {
+        "module": "test_identification_schema",
+        "tests": 5,
+        "skipped": 0,
+        "seconds": 135.23,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_iso32005_upstream",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 83.55,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_local_review_decisions",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 1.53,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_media_parameter_preservation",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 113.81,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_message_guid_content_owners",
+        "tests": 18,
+        "skipped": 0,
+        "seconds": 4.28,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_navigation_name_types",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 1.07,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_nested_source_scope",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 5.54,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_nonsmtp_source_availability",
+        "tests": 13,
+        "skipped": 0,
+        "seconds": 1.82,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_outlook_sources",
+        "tests": 13,
+        "skipped": 0,
+        "seconds": 1.22,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_presence_provenance",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 128.56,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_preservation_safety",
+        "tests": 29,
+        "skipped": 0,
+        "seconds": 1.77,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_profile_source_scope",
+        "tests": 11,
+        "skipped": 0,
+        "seconds": 4.54,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_raw_address_mailbox_data",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 1.07,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_recommendation_applicability",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 55.32,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_recommendation_source_scope",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 3.43,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_remaining_file_requirements",
+        "tests": 20,
+        "skipped": 0,
+        "seconds": 169.22,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_remaining_workflow",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 1.22,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_rendered_header_inventory",
+        "tests": 14,
+        "skipped": 0,
+        "seconds": 30.17,
+        "initial_exit_code": 1,
+        "final_exit_code": 0,
+        "passing_rerun_log": "final-fixture-rechecks.log"
+      },
+      {
+        "module": "test_report_observed_values",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 1.08,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_required_xmp_metadata_types",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 1.08,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_rf_filename_decoding",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 1.29,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_rule_registry_split",
+        "tests": 3,
+        "skipped": 0,
+        "seconds": 0.27,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_sample_regeneration",
+        "tests": 6,
+        "skipped": 0,
+        "seconds": 0.77,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_source_attachment_references",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 1.17,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_source_date_availability",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 1.12,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_source_fidelity",
+        "tests": 2,
+        "skipped": 0,
+        "seconds": 1.02,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_source_filename_identity",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 5.99,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_source_mailbox_data",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 1.27,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_source_parameter_evidence",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 9.56,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_source_scope_coverage",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 10.28,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_spec_repair_integration",
+        "tests": 4,
+        "skipped": 1,
+        "seconds": 267.67,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_spec_repairs",
+        "tests": 7,
+        "skipped": 0,
+        "seconds": 1.17,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_subject_encoding_availability",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 7.63,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_supervised_conversion",
+        "tests": 4,
+        "skipped": 0,
+        "seconds": 33.18,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_tagging_recommendations",
+        "tests": 16,
+        "skipped": 0,
+        "seconds": 61.23,
+        "initial_exit_code": 1,
+        "final_exit_code": 0,
+        "passing_rerun_log": "final-fixture-rechecks.log"
+      },
+      {
+        "module": "test_undecodable_source_headers",
+        "tests": 13,
+        "skipped": 0,
+        "seconds": 1.22,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_uninspectable_source_headers",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 1.87,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_unmatched_attachment_parameters",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 115.46,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_upstream_eapdf_issues",
+        "tests": 9,
+        "skipped": 0,
+        "seconds": 1.07,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_userproperty_ascii_names",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 1.22,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_userproperty_comparison_decoding",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 22.64,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_userproperty_date_decoding",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 1.82,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_userproperty_dates",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 241.29,
+        "initial_exit_code": 1,
+        "final_exit_code": 0,
+        "passing_rerun_log": "final-date-type-rechecks.log"
+      },
+      {
+        "module": "test_userproperty_guid_decoding",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 8.67,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_userproperty_name_decoding",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 9.14,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_userproperty_source_text_decoding",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 1.37,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_userproperty_sources",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 196.21,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_userproperty_types",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 241.26,
+        "initial_exit_code": 1,
+        "final_exit_code": 0,
+        "passing_rerun_log": "final-date-type-rechecks.log"
+      },
+      {
+        "module": "test_userproperty_value_diagnostics",
+        "tests": 14,
+        "skipped": 0,
+        "seconds": 9.68,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_utf8_source_headers",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 1.3,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_validator_completion",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 1.17,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_validator_correctness",
+        "tests": 29,
+        "skipped": 0,
+        "seconds": 1.57,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_validator_ownership",
+        "tests": 10,
+        "skipped": 0,
+        "seconds": 5.64,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_validator_requirements_improvements",
+        "tests": 13,
+        "skipped": 0,
+        "seconds": 1.18,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_xmp_default_title",
+        "tests": 8,
+        "skipped": 0,
+        "seconds": 1.07,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_xmp_identity",
+        "tests": 18,
+        "skipped": 0,
+        "seconds": 0.97,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      },
+      {
+        "module": "test_xmp_record_schema",
+        "tests": 12,
+        "skipped": 0,
+        "seconds": 141.02,
+        "initial_exit_code": 0,
+        "final_exit_code": 0
+      }
+    ]
+  },
+  "targeted_reruns": {
+    "final-effective-recheck.log": {
+      "tests": 8,
+      "result": "PASS"
+    },
+    "final-fixture-rechecks.log": {
+      "tests": 60,
+      "result": "58 passed; two date/type Docker staging failures, both subsequently rerun successfully",
+      "fully_passing_modules": [
+        "test_header_occurrences",
+        "test_rendered_header_inventory",
+        "test_tagging_recommendations"
+      ]
+    },
+    "final-date-type-rechecks.log": {
+      "tests": 16,
+      "result": "PASS"
+    }
+  },
+  "acceptance": [
+    {
+      "profile": "s",
+      "pdf_sha256": "4c4ac7b8e52f91049acdb1eca1b43db28515b7518bcc978063a8de88ca986536",
+      "python_status": "PASS",
+      "java_status": "PASS",
+      "python_pdfa": "PASS",
+      "java_pdfa": "PASS",
+      "rule_differences": {},
+      "python_failures": [],
+      "java_failures": []
+    },
+    {
+      "profile": "si",
+      "pdf_sha256": "178bd8bcb42f1583ab9bb4f42802f5794371ff8c542b9c787c794b2a5df75b68",
+      "python_status": "PASS",
+      "java_status": "PASS",
+      "python_pdfa": "PASS",
+      "java_pdfa": "PASS",
+      "rule_differences": {},
+      "python_failures": [],
+      "java_failures": []
+    },
+    {
+      "profile": "m",
+      "pdf_sha256": "2c7440d9c7f65f3e29dbd04e2d342d65221404c088394cb656d20f6e8c415a7c",
+      "python_status": "PASS",
+      "java_status": "PASS",
+      "python_pdfa": "PASS",
+      "java_pdfa": "PASS",
+      "rule_differences": {},
+      "python_failures": [],
+      "java_failures": []
+    },
+    {
+      "profile": "mi",
+      "pdf_sha256": "b3f9b9a9003ada276ac9906c5efad007854863a5fe73d6e51b2b28864e9d9004",
+      "python_status": "PASS",
+      "java_status": "PASS",
+      "python_pdfa": "PASS",
+      "java_pdfa": "PASS",
+      "rule_differences": {},
+      "python_failures": [],
+      "java_failures": []
+    },
+    {
+      "profile": "c",
+      "pdf_sha256": "0a84691ec2e0f19ef877c5586c8ed71dc257f26b7090a2245b6796b7e9458f52",
+      "python_status": "PASS",
+      "java_status": "PASS",
+      "python_pdfa": "PASS",
+      "java_pdfa": "PASS",
+      "rule_differences": {},
+      "python_failures": [],
+      "java_failures": []
+    },
+    {
+      "profile": "ci",
+      "pdf_sha256": "b2319766f1c46bb5dec62c0fb10d9dc682520310047ac0173d4a28d817508f57",
+      "python_status": "PASS",
+      "java_status": "PASS",
+      "python_pdfa": "PASS",
+      "java_pdfa": "PASS",
+      "rule_differences": {},
+      "python_failures": [],
+      "java_failures": []
+    }
+  ],
+  "matching_profile_rule_outcomes": 1278,
+  "retained_fixture_expectations": {
+    "changed_pdfs": [
+      "tests/fixtures/eapdf/validator-active-userproperties/duplicate-guid-uniform.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/duplicate-guid-wrong-first.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/duplicate-guid-wrong-last.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/duplicate-guid-all-wrong.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/unknown-guid-first.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/empty-guid-first.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/wrong-group-first.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/wrong-subtype-first.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/duplicate-group-uniform.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/duplicate-subtype-uniform.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/later-array-replacement.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/wrong-owner-after-valid.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/owner-subtype-consistent.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/owner-subtype-foreign.pdf",
+      "tests/fixtures/eapdf/validator-active-userproperties/owner-subtype-missing.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-bytes/all-sizes-wrong.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-bytes/one-size-wrong.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-bytes/distinct-sizes-impossible.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-bytes/distinct-sizes-compatible.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-bytes/all-checksums-wrong.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-bytes/distinct-checksums-impossible.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-bytes/some-checksums-compatible.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-bytes/checksum-absent.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-bytes/placeholder-compatible.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-bytes/equivalent-control.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-media/one-type-wrong.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-media/all-parameters-wrong.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-media/distinct-types-impossible.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-media/distinct-types-compatible.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-media/parameters-compatible.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-media/distinct-parameters-wrong.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-media/malformed-parameters-wrong.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-media/malformed-parameters-compatible.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-media/legal-parameters-control.pdf",
+      "tests/fixtures/eapdf/validator-ambiguous-media/matching-parameters-wrong-type.pdf",
+      "tests/fixtures/eapdf/validator-asset-ownership/valid.pdf",
+      "tests/fixtures/eapdf/validator-asset-ownership/assets-reversed.pdf",
+      "tests/fixtures/eapdf/validator-asset-ownership/collision-forward.pdf",
+      "tests/fixtures/eapdf/validator-asset-ownership/collision-reversed.pdf",
+      "tests/fixtures/eapdf/validator-asset-ownership/checksum-wrong.pdf",
+      "tests/fixtures/eapdf/validator-asset-ownership/association-ambiguous.pdf",
+      "tests/fixtures/eapdf/validator-attachment-equivalence/two-owners.pdf",
+      "tests/fixtures/eapdf/validator-attachment-equivalence/two-owners-reversed.pdf",
+      "tests/fixtures/eapdf/validator-attachment-equivalence/isolated-equivalent.pdf",
+      "tests/fixtures/eapdf/validator-attachment-equivalence/isolated-wrong-size.pdf",
+      "tests/fixtures/eapdf/validator-attachment-equivalence/isolated-wrong-media.pdf",
+      "tests/fixtures/eapdf/validator-attachment-equivalence/isolated-ambiguous-size.pdf",
+      "tests/fixtures/eapdf/validator-attachment-equivalence/isolated-ambiguous-media.pdf",
+      "tests/fixtures/eapdf/validator-attachment-equivalence/isolated-distinct-payloads.pdf",
+      "tests/fixtures/eapdf/validator-attachment-owners/valid-guid.pdf",
+      "tests/fixtures/eapdf/validator-attachment-owners/message-id-only.pdf",
+      "tests/fixtures/eapdf/validator-attachment-owners/optional-dpm-id-omitted.pdf",
+      "tests/fixtures/eapdf/validator-attachment-owners/message-id-only-native-alias.pdf",
+      "tests/fixtures/eapdf/validator-attachment-owners/wrong-owner.pdf",
+      "tests/fixtures/eapdf/validator-attachment-owners/guid-primary-wrong-id.pdf",
+      "tests/fixtures/eapdf/validator-attachment-owners/source-omitted-message-id.pdf",
+      "tests/fixtures/eapdf/validator-attachment-owners/source-omitted-missing-count.pdf",
+      "tests/fixtures/eapdf/validator-attachment-owners/source-omitted-zero-count.pdf",
+      "tests/fixtures/eapdf/validator-comparison-decoding/group-unreadable.pdf",
+      "tests/fixtures/eapdf/validator-comparison-decoding/group-unreadable-and-wrong.pdf",
+      "tests/fixtures/eapdf/validator-comparison-decoding/group-valid-utf8.pdf",
+      "tests/fixtures/eapdf/validator-comparison-decoding/group-valid-utf16.pdf",
+      "tests/fixtures/eapdf/validator-comparison-decoding/subtype-unreadable.pdf",
+      "tests/fixtures/eapdf/validator-comparison-decoding/subtype-unreadable-and-wrong.pdf",
+      "tests/fixtures/eapdf/validator-comparison-decoding/subtype-valid-utf8.pdf",
+      "tests/fixtures/eapdf/validator-comparison-decoding/subtype-valid-utf16.pdf",
+      "tests/fixtures/eapdf/validator-content-group-types/matching-group.pdf",
+      "tests/fixtures/eapdf/validator-content-group-types/foreign-group-type.pdf",
+      "tests/fixtures/eapdf/validator-content-group-types/padded-group-type.pdf",
+      "tests/fixtures/eapdf/validator-content-group-types/empty-group-type.pdf",
+      "tests/fixtures/eapdf/validator-content-group-types/omitted-group-types.pdf",
+      "tests/fixtures/eapdf/validator-content-group-types/unicode-group-value.pdf",
+      "tests/fixtures/eapdf/validator-content-group-types/opaque-group-types.pdf",
+      "tests/fixtures/eapdf/validator-content-group-types/xmp-unbound-body.pdf",
+      "tests/fixtures/eapdf/validator-content-group-types/xmp-unbound-empty.pdf",
+      "tests/fixtures/eapdf/validator-content-group-types/xmp-unbound-other.pdf",
+      "tests/fixtures/eapdf/validator-contentset-parent/orphan-front-noncollection.pdf",
+      "tests/fixtures/eapdf/validator-contentset-parent/orphan-empty-self.pdf",
+      "tests/fixtures/eapdf/validator-contentset-parent/orphan-unreadable-self.pdf",
+      "tests/fixtures/eapdf/validator-dpart-object-ranges/multi-ordered.pdf",
+      "tests/fixtures/eapdf/validator-dpart-object-ranges/multi-reversed.pdf",
+      "tests/fixtures/eapdf/validator-dpart-object-ranges/multi-overlapping.pdf",
+      "tests/fixtures/eapdf/validator-empty-dpm-names/empty-extension-type.pdf",
+      "tests/fixtures/eapdf/validator-empty-dpm-names/empty-optional-subtype.pdf",
+      "tests/fixtures/eapdf/validator-empty-dpm-names/empty-required-subtype.pdf",
+      "tests/fixtures/eapdf/validator-empty-dpm-names/missing-content-type.pdf",
+      "tests/fixtures/eapdf/validator-empty-dpm-names/null-content-type.pdf",
+      "tests/fixtures/eapdf/validator-empty-dpm-names/missing-required-subtype.pdf",
+      "tests/fixtures/eapdf/validator-empty-dpm-names/null-required-subtype.pdf",
+      "tests/fixtures/eapdf/validator-empty-dpm-names/omitted-optional-subtype.pdf",
+      "tests/fixtures/eapdf/validator-message-owners/valid-multi.pdf",
+      "tests/fixtures/eapdf/validator-message-owners/swapped-structure-guids.pdf",
+      "tests/fixtures/eapdf/validator-message-owners/duplicate-structure-guid.pdf",
+      "tests/fixtures/eapdf/validator-message-owners/rotated-structure-guids.pdf",
+      "tests/fixtures/eapdf/validator-message-owners/reversed-structure-order.pdf",
+      "tests/fixtures/eapdf/validator-message-owners/reversed-xmp-order.pdf",
+      "tests/fixtures/eapdf/validator-message-owners/swapped-dpm-guids.pdf",
+      "tests/fixtures/eapdf/validator-message-owners/standard-header-tags.pdf",
+      "tests/fixtures/eapdf/validator-subtype-media-values/matching-quoted-spaces.pdf",
+      "tests/fixtures/eapdf/validator-subtype-media-values/changed-quoted-spaces.pdf",
+      "tests/fixtures/eapdf/validator-subtype-media-values/equivalent-type-case.pdf",
+      "tests/fixtures/eapdf/validator-subtype-media-values/equivalent-quoted-token.pdf",
+      "tests/fixtures/eapdf/validator-subtype-media-values/equivalent-parameter-order.pdf",
+      "tests/fixtures/eapdf/validator-subtype-media-values/changed-parameter-case.pdf",
+      "tests/fixtures/eapdf/validator-subtype-media-values/matching-layout-spaces.pdf",
+      "tests/fixtures/eapdf/validator-subtype-media-values/matching-baseline.pdf",
+      "tests/fixtures/eapdf/validator-subtype-recommendation/all-subtypes-present.pdf",
+      "tests/fixtures/eapdf/validator-subtype-recommendation/body-subtype-omitted.pdf",
+      "tests/fixtures/eapdf/validator-subtype-recommendation/body-subtype-and-self-type-omitted.pdf",
+      "tests/fixtures/eapdf/validator-subtype-recommendation/frontmatter-subtype-omitted.pdf",
+      "tests/fixtures/eapdf/validator-subtype-recommendation/all-subtypes-omitted.pdf",
+      "tests/fixtures/eapdf/validator-subtype-recommendation/all-body-properties-omitted.pdf",
+      "tests/fixtures/eapdf/validator-subtype-recommendation/empty-subtype-present.pdf",
+      "tests/fixtures/eapdf/validator-subtype-recommendation/unresolved-content-attributes.pdf",
+      "tests/fixtures/eapdf/validator-unmatched-parameters/unknown-alias-parameters.pdf",
+      "tests/fixtures/eapdf/validator-unmatched-parameters/unknown-alias-malformed.pdf",
+      "tests/fixtures/eapdf/validator-unmatched-parameters/mixed-verified-and-unknown.pdf",
+      "tests/fixtures/eapdf/validator-unmatched-parameters/mixed-failure-and-unknown.pdf",
+      "tests/fixtures/eapdf/validator-unmatched-parameters/checksum-known-alias.pdf",
+      "tests/fixtures/eapdf/validator-unmatched-parameters/no-parameters-control.pdf",
+      "tests/fixtures/eapdf/validator-unmatched-parameters/alternative-only-control.pdf",
+      "tests/fixtures/eapdf/validator-unmatched-parameters/mixed-bare-and-unknown-parameters.pdf"
+    ],
+    "pdf_hashes_unchanged": true,
+    "removed_failure": "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE only where independently proved document-wide content permits it",
+    "other_failure_differences": []
+  },
+  "registry": {
+    "source": "docs/reference/EA-PDF-v1.pdf",
+    "source_sha256": "b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae",
+    "active_rules": 213,
+    "retired_upstream_rules": [
+      "OUTPUT_INTENT",
+      "FONTS_EMBEDDED",
+      "FONTS_MISSING",
+      "FONTS_ALL_EMBEDDED",
+      "EMBEDDED_SUBTYPE_PRESENT",
+      "EMBEDDED_SUBTYPE_NO_PARAMETERS",
+      "XMP_PRESENT",
+      "XMP_MISSING",
+      "XMP_PARSE",
+      "PDFA3_EAPDF_XMP_EXTENSION_SCHEMA",
+      "XMP_UTF8",
+      "ISO32005_UPSTREAM"
+    ],
+    "reviewed_obligations": 301,
+    "specification_order_verified": true,
+    "mandatory_file_obligations_accounted_for": true,
+    "implementation_completeness_verified": false,
+    "dispositions": {
+      "active_rule_mapping": 244,
+      "permission_guidance_or_scope_statement": 20,
+      "upstream_only": 5,
+      "creation_definition_or_process_obligation": 15,
+      "software_behavior_outside_pdf_file_validation": 17
+    }
+  },
+  "word_review": {
+    "document": "EA_PDF_Rule_Review_for_Specification_Authors.docx",
+    "document_sha256": "b553315d2a94c8c690fe90c6f8518c116f5f209790b7c5192ee11c6be64753a7",
+    "json_rule_count": 213,
+    "document_rule_count": 213,
+    "rule_code_and_number_order_exact": true,
+    "rule_assertions_exact": true,
+    "source_quotations_unchanged": true,
+    "source_tables_unchanged": 125,
+    "source_images_unchanged": 28,
+    "reexamination_decisions": 52,
+    "input_hashes_match": true,
+    "normative_or_implementation_completeness_certified": false,
+    "render_check": "passed",
+    "rendered_pages": 267,
+    "rendered_pdf_sha256": "d2486c065e231cead39c4ae482785181032ebde01f2211feddf48bc1839848bf",
+    "blank_pages": [],
+    "blank_page_check": "Body text and actually displayed images, excluding headers and footers",
+    "rendered_input_hashes_match": true,
+    "visual_checks": [
+      "Rule 140 and its source exhibits",
+      "Appendix D questions and assumptions",
+      "Image-only source-table pages",
+      "Removed empty table spacer before Rule 135"
+    ],
+    "render_tool": "LibreOffice PDF export; PyMuPDF body-content checks and visual inspection"
+  },
+  "local_artifacts": {
+    "dist/eapdf-validator.jar": "f6a735578fc75c0216944c0c79e670afc3b50cac87e830cb930628bf74dedb9b",
+    "dist/emailtopdfa-gui.jar": "a768dd60a1a971ce270d1063c91208efa18492db3026ba342ff8eb8b9bfb6130",
+    "dist/emailtopdfa.jar": "cd5fd3d0b6fcf326ae6893cc7c34a3e48fbf4ad2484a6d5f1d090d7b93312519"
+  },
+  "report_sha256": "e88e4a3042d8166b46ff4e50a1e450d7765a7bd0fb9bdd36113a7af47e9356a8",
+  "verification_log_sha256": {
+    "final-python-progress.log": "0cccbd19f54ddbe648800da203d462ce387b7a6c215adb22f9425724bce969f2",
+    "final-effective-recheck.log": "6340e726ac0826656168045a47ebfe0037f0bf807f9eca868212fd9b430f8875",
+    "final-fixture-rechecks.log": "b538295c302a2b8529bbb1a99063a4342c4c77bc0165c11eb445fc5d2fe42178",
+    "final-date-type-rechecks.log": "e8aff5b94b37b2ba7c9c5c38c281a7424cf2ee67143c1a5956ce5c65a1c625b8",
+    "final-acceptance.log": "5627ca91618e45526018b4120eeb5d6602dbded0f1fc78b3cffd12abaf412df6",
+    "creator-final.log": "59a5d885ead3a93b7f296347e25c5921588c67c05fdd840ee317de966b9121ce",
+    "validator-final.log": "2198a26bd738b1d9006673d56e7712434155c414d535d8d75bf00a00ae4defc4"
+  },
+  "limits": [
+    "Local interpretations do not amend the published specification.",
+    "Semantic NumberMessages counting and attachment-rendering fidelity are not proved by type or body-media checks.",
+    "Creator-only preservation evidence is bounded to inspected sources and exercised tests.",
+    "The earlier 808-PDF/875-report comparison is historical; current fresh cross-engine acceptance covers six profiles.",
+    "Optional GUI smoke and official PREMIS XSD tests were not enabled."
+  ],
+  "all_runtime_rule_ids_present_in_each_acceptance_report": true
+}

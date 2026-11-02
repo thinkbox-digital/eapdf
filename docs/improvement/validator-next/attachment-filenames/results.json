@@ -1,0 +1,23 @@
+[
+  {
+    "file": "valid.pdf",
+    "original_filename": "Lean Six Sigma Kickoff Meeting.pptx",
+    "pdfa": "PASS",
+    "status": "PASS",
+    "failures": []
+  },
+  {
+    "file": "stored-name-differs.pdf",
+    "original_filename": "Lean Six Sigma Kickoff Meeting.pptx",
+    "pdfa": "PASS",
+    "status": "PASS",
+    "failures": []
+  },
+  {
+    "file": "stored-name-no-checksum.pdf",
+    "original_filename": "Lean Six Sigma Kickoff Meeting.pptx",
+    "pdfa": "PASS",
+    "status": "PASS",
+    "failures": []
+  }
+]

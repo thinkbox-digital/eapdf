@@ -1,0 +1,73 @@
+{
+  "authority": "EA9.7 Table13 Mail_ContentSet ancestry; SPEC-T13-CONTAINER-PARENT remains unresolved for c/ci",
+  "source_files": {
+    "tests/fixtures/eapdf/validator-dpart-object-ranges/multi-ordered.pdf": "f5a680737d64e668bade6921b2e09d9d41385ba26ed5e2453940a1f3c7370ac7",
+    "tests/fixtures/eapdf/validator-active-userproperties/owner-subtype-consistent.pdf": "48c59a87e795819252c3795ff605e78f4068c91fc8e6e379f9d4725c9d410d32",
+    "tests/fixtures/eapdf/validator-booleans/collection-false.pdf": "5a199646ce05aae761445d5973322a4dcac97023520cd03e4d9a1d81381100ed",
+    "tests/fixtures/eapdf/validator-operands/valid.pdf": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7"
+  },
+  "boundary": "No scalar FrontMatter exception. Noncollection ancestry is required; collection conflicts remain unavailable. Corrected positive controls nest logical content and corresponding DPart ownership together. Historical PDFs and original creator outputs are retained.",
+  "cases": [
+    {
+      "file": "nested-multi.pdf",
+      "sha256": "6135912801f001f753b6f5b822036f10d2d69a378c28b33b89ed2cfce893c7b5",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS"
+    },
+    {
+      "file": "nested-subtype.pdf",
+      "sha256": "231f97c552d20f25c44c099164926198fdeec4843669722be6a9005b96656ed5",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS"
+    },
+    {
+      "file": "orphan-front-noncollection.pdf",
+      "sha256": "f5a680737d64e668bade6921b2e09d9d41385ba26ed5e2453940a1f3c7370ac7",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "orphan-empty-self.pdf",
+      "sha256": "e77773ad25a606630c1bee8fce2ea6fa2e0c3f814cd00a0d93c87c9ac20e571a",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "orphan-unreadable-self.pdf",
+      "sha256": "b2ebfd5b6690510ecec07cdb7af66c5763c8ccd7dcfc7451a38a86ae724cb769",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "orphan-front-collection.pdf",
+      "sha256": "5a199646ce05aae761445d5973322a4dcac97023520cd03e4d9a1d81381100ed",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "orphan-other-collection.pdf",
+      "sha256": "d71da01a78cf00315e9782e3b356ca7349ee11b473d2b7bdc52752db86a97e4b",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "nested-single.pdf",
+      "sha256": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS"
+    }
+  ]
+}

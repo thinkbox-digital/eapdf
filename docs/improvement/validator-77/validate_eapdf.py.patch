@@ -1,0 +1,90 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -5910,6 +5910,60 @@
+         if parse_nonneg_int_value(record.get(field))!=expected:
+             report.fail(code,"Email metadata count or size differs from the matched source email",{"field":field,"xmp":record.get(field),"source":expected})
+ 
++def source_header_candidate_failures(root_xml,record,source_file,eapdf_conf,path):
++    source=summarize_source_email([source_file])
++    candidate=Report(path)
++    check_single_message_metadata(root_xml,[source_file],eapdf_conf,candidate)
++    check_source_field_values(record,source,candidate)
++    unavailable={item["code"] for item in candidate.items if item["level"]=="WARN" and
++                 ((item.get("details") or {}).get("assessment")=="unavailable"
++                  or "unavailable" in item["message"].lower()
++                  or item["code"] in {"MESSAGE_TO_FOAF","MESSAGE_FROM_FOAF","MESSAGE_CC_FOAF","MESSAGE_BCC_FOAF"})}
++    for prop in ("TO","FROM","CC","BCC"):
++        if "MESSAGE_"+prop+"_FOAF" in unavailable:
++            unavailable.add("MESSAGE_"+prop+"_XMP")
++    return [item for item in candidate.items if item["level"]=="FAIL"
++            and item["code"].startswith("MESSAGE_") and item["code"] not in unavailable
++            and item["code"] not in {"MESSAGE_ATTACHMENT_COUNT_XMP","MESSAGE_SOURCE_MATCH"}]
++
++def check_ambiguous_source_header_values(root_xml,record,afiles,eapdf_conf,report):
++    """Reject field contradictions shared by every possible original.
++
++    Do not use the fields under test to select an owner or exclude candidates.
++    An unsupported original or recovered header inventory blocks this proof.
++    """
++    files=[source for source in afiles if source.get("afrelationship")=="Source"]
++    sources=summarize_source_emails(files)
++    if not sources or len(sources)!=len(files) or any(source.get("header_parse_defects") for source in sources):
++        return
++    work=getattr(report,"_source_header_candidate_checks",0)+len(files)
++    if work>MAX_TREE_ITEMS:
++        report.warn("VALIDATION_INCOMPLETE","Ambiguous source-header comparisons exceeded the configured item limit",{
++            "candidate_count":len(files),"limit":MAX_TREE_ITEMS})
++        return
++    report._source_header_candidate_checks=work
++    candidate_failures=[]
++    candidate_reports=[]
++    for source_file in files:
++        source=summarize_source_email([source_file])
++        failures=source_header_candidate_failures(root_xml,record,source_file,eapdf_conf,report.path)
++        candidate_failures.append({item["code"] for item in failures})
++        candidate_reports.append((source,failures))
++    common=set.intersection(*candidate_failures)
++    if not common and all(candidate_failures):
++        report.fail("MESSAGE_SOURCE_MATCH","No inspectable original satisfies the supplied email Core Fields",{
++            "candidate_count":len(sources),"source_ownership":"unassigned",
++            "candidates":[{"source":source.get("source_filename"),"sha256":source.get("source_sha256"),"findings":candidate}
++                          for source,candidate in candidate_reports]})
++    for code in sorted(common):
++        if any(item["code"]==code and item["level"]=="FAIL" for item in report.items):
++            continue
++        report.fail(code,"Email metadata is contradicted by every inspectable original source",{
++            "candidate_count":len(sources),"source_ownership":"unassigned",
++            "candidates":[{"source":source.get("source_filename"),"sha256":source.get("source_sha256"),
++                           "findings":[item for item in candidate if item["code"]==code]}
++                          for source,candidate in candidate_reports]})
++
+ def check_message_metadata(root_xml,afiles,eapdf_conf,report):
+     if root_xml is None:
+         return
+@@ -5945,6 +5999,17 @@
+                 attachment_bag.append(deepcopy(attachment_node))
+                 assigned_attachments.add(attachment_index)
+         selected=select_source_email(record,remaining)
++        if selected is not None and sum(source.get("afrelationship")=="Source" for source in afiles)>1:
++            # Scored header values are a tentative match, not independent
++            # ownership evidence for a contradictory field under test.
++            chosen=next((source for source in afiles if source.get("_email_summary") is selected),None)
++            work=getattr(report,"_source_header_candidate_checks",0)+1
++            if chosen is None or work>MAX_TREE_ITEMS:
++                selected=None
++            else:
++                report._source_header_candidate_checks=work
++                if source_header_candidate_failures(scoped,record,chosen,eapdf_conf,report.path):
++                    selected=None
+         if selected is not None:
+             remaining.remove(selected)
+         scoped_sources=[]
+@@ -5963,6 +6028,8 @@
+         check_single_message_metadata(scoped,scoped_sources,eapdf_conf,report)
+         if selected is not None:
+             check_source_field_values(record,selected,report)
++        elif sources:
++            check_ambiguous_source_header_values(scoped,record,afiles,eapdf_conf,report)
+         for item in report.items[first_item:]:
+             item["details"]=dict(item.get("details") or {},email=index,Mail_GUID=guid)
+     unassigned=[attachment for index,attachment in enumerate(attachment_records) if index not in assigned_attachments]

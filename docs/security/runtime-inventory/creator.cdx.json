@@ -1,0 +1,1795 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "EA-PDF creator",
+      "version": "1.6.0-beta.7"
+    },
+    "properties": [
+      {
+        "name": "eapdf:scope",
+        "value": "Resolved runtime dependency inventory; licensing/advisory review is separate. Local patches are recorded by source and artifact hashes."
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "group": "com.adobe.xmp",
+      "name": "xmpcore",
+      "version": "6.1.11",
+      "purl": "pkg:maven/com.adobe.xmp/xmpcore@6.1.11",
+      "bom-ref": "pkg:maven/com.adobe.xmp/xmpcore@6.1.11",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8f7033c579b99fa0d9d6ddcb9448875b5e4b577c350002278ce46997d678b737"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The BSD 3-Clause License (BSD3)",
+            "url": "https://opensource.org/licenses/BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.beetstra.jutf7",
+      "name": "jutf7",
+      "version": "1.0.0",
+      "purl": "pkg:maven/com.beetstra.jutf7/jutf7@1.0.0",
+      "bom-ref": "pkg:maven/com.beetstra.jutf7/jutf7@1.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f8b2ed901526e9dd9bcd15ce0f5d312de0efda7c63fbe918672d080236dc04bc"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT license",
+            "url": "LICENSE.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.drewnoakes",
+      "name": "metadata-extractor",
+      "version": "2.19.0",
+      "purl": "pkg:maven/com.drewnoakes/metadata-extractor@2.19.0",
+      "bom-ref": "pkg:maven/com.drewnoakes/metadata-extractor@2.19.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e51bb454ed08ea2bfcc3ad147d088ad1aa73a999e0072563f8ae50021a2fcadb"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.github.bbottema",
+      "name": "rtf-to-html",
+      "version": "2.0.3",
+      "purl": "pkg:maven/com.github.bbottema/rtf-to-html@2.0.3",
+      "bom-ref": "pkg:maven/com.github.bbottema/rtf-to-html@2.0.3",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d7257f4cd11ab28408ac8cb119e0e431b8857806b27b7d649ff20d0c8875477b"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.github.virtuald",
+      "name": "curvesapi",
+      "version": "1.08",
+      "purl": "pkg:maven/com.github.virtuald/curvesapi@1.08",
+      "bom-ref": "pkg:maven/com.github.virtuald/curvesapi@1.08",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ad95b08b8bbf9d7d17e5e00814898fa23324f32bc5b62f1a37801e6a56ce0079"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD License",
+            "url": "http://opensource.org/licenses/BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.api-client",
+      "name": "google-api-client",
+      "version": "2.9.1",
+      "purl": "pkg:maven/com.google.api-client/google-api-client@2.9.1",
+      "bom-ref": "pkg:maven/com.google.api-client/google-api-client@2.9.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5c2b0f9bb64e16cb6c9708a782f78b2e303c85aacf96f7169229f138c20caf94"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.apis",
+      "name": "google-api-services-gmail",
+      "version": "v1-rev20261005-2.0.0",
+      "purl": "pkg:maven/com.google.apis/google-api-services-gmail@v1-rev20261005-2.0.0",
+      "bom-ref": "pkg:maven/com.google.apis/google-api-services-gmail@v1-rev20261005-2.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8ee91aa643b9e03e6f297434a7f534c899dfc207ac978f5e093709c60d1a5c8a"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.auth",
+      "name": "google-auth-library-credentials",
+      "version": "1.30.0",
+      "purl": "pkg:maven/com.google.auth/google-auth-library-credentials@1.30.0",
+      "bom-ref": "pkg:maven/com.google.auth/google-auth-library-credentials@1.30.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8ba819243516fc5d90dce89476f8d46e4e4a685b2aaac79dc4be205540bb66de"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD New license",
+            "url": "http://opensource.org/licenses/BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.auth",
+      "name": "google-auth-library-oauth2-http",
+      "version": "1.30.0",
+      "purl": "pkg:maven/com.google.auth/google-auth-library-oauth2-http@1.30.0",
+      "bom-ref": "pkg:maven/com.google.auth/google-auth-library-oauth2-http@1.30.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ebb097c88bcd836a2d9b752ca12faec141e0592a284f3beda5b9608ae58b9991"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD New license",
+            "url": "http://opensource.org/licenses/BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.auto.value",
+      "name": "auto-value-annotations",
+      "version": "1.11.0",
+      "purl": "pkg:maven/com.google.auto.value/auto-value-annotations@1.11.0",
+      "bom-ref": "pkg:maven/com.google.auto.value/auto-value-annotations@1.11.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5a055ce4255333b3346e1a8703da5bf8ff049532286fdcd31712d624abe111dd"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.code.findbugs",
+      "name": "jsr305",
+      "version": "3.0.2",
+      "purl": "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+      "bom-ref": "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.code.gson",
+      "name": "gson",
+      "version": "2.14.0",
+      "purl": "pkg:maven/com.google.code.gson/gson@2.14.0",
+      "bom-ref": "pkg:maven/com.google.code.gson/gson@2.14.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2cbd119bf1961c28788310963dc80ba65f58cdeec1dd139c8bdb1240faa2c36f"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.errorprone",
+      "name": "error_prone_annotations",
+      "version": "2.36.0",
+      "purl": "pkg:maven/com.google.errorprone/error_prone_annotations@2.36.0",
+      "bom-ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.36.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "77440e270b0bc9a249903c5a076c36a722c4886ca4f42675f2903a1c53ed61a5"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.guava",
+      "name": "failureaccess",
+      "version": "1.0.2",
+      "purl": "pkg:maven/com.google.guava/failureaccess@1.0.2",
+      "bom-ref": "pkg:maven/com.google.guava/failureaccess@1.0.2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8a8f81cf9b359e3f6dfa691a1e776985c061ef2f223c9b2c80753e1b458e8064"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.guava",
+      "name": "guava",
+      "version": "33.1.0-jre",
+      "purl": "pkg:maven/com.google.guava/guava@33.1.0-jre",
+      "bom-ref": "pkg:maven/com.google.guava/guava@33.1.0-jre",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "346aec0eb8c8987360c8a264e70ff10c2fba760446eb27e8ab07e78e787a75fe"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.guava",
+      "name": "listenablefuture",
+      "version": "9999.0-empty-to-avoid-conflict-with-guava",
+      "purl": "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+      "bom-ref": "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b372a037d4230aa57fbeffdef30fd6123f9c0c2db85d0aced00c91b974f33f99"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.http-client",
+      "name": "google-http-client-apache-v2",
+      "version": "2.2.0",
+      "purl": "pkg:maven/com.google.http-client/google-http-client-apache-v2@2.2.0",
+      "bom-ref": "pkg:maven/com.google.http-client/google-http-client-apache-v2@2.2.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "aa62efa466a08426bfdf1dfac22b76738075057aa09f44324a569585a92c1441"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.http-client",
+      "name": "google-http-client-gson",
+      "version": "2.2.0",
+      "purl": "pkg:maven/com.google.http-client/google-http-client-gson@2.2.0",
+      "bom-ref": "pkg:maven/com.google.http-client/google-http-client-gson@2.2.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3242dc7e91d355d118a355c5d586271bedfeb84c3f2f6fa2f3b9b42503a4dc59"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.http-client",
+      "name": "google-http-client",
+      "version": "2.2.0",
+      "purl": "pkg:maven/com.google.http-client/google-http-client@2.2.0",
+      "bom-ref": "pkg:maven/com.google.http-client/google-http-client@2.2.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "36cea7079c550aeb12fa7366a1ae65d503eaf15bcfc4f50124fde2a8f784e568"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.j2objc",
+      "name": "j2objc-annotations",
+      "version": "3.0.0",
+      "purl": "pkg:maven/com.google.j2objc/j2objc-annotations@3.0.0",
+      "bom-ref": "pkg:maven/com.google.j2objc/j2objc-annotations@3.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "88241573467ddca44ffd4d74aa04c2bbfd11bf7c17e0c342c94c9de7a70a7c64"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.oauth-client",
+      "name": "google-oauth-client-java6",
+      "version": "1.39.0",
+      "purl": "pkg:maven/com.google.oauth-client/google-oauth-client-java6@1.39.0",
+      "bom-ref": "pkg:maven/com.google.oauth-client/google-oauth-client-java6@1.39.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "292aca022c47aeae2baac705fd15ee2cbf01eb24ca9726d9a41539733ffe03f9"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.oauth-client",
+      "name": "google-oauth-client-jetty",
+      "version": "1.39.0",
+      "purl": "pkg:maven/com.google.oauth-client/google-oauth-client-jetty@1.39.0",
+      "bom-ref": "pkg:maven/com.google.oauth-client/google-oauth-client-jetty@1.39.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "150f30d261ab17e162c9f41a851462e0e05da50cbbf31bfabc9e6f216baf31b2"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.google.oauth-client",
+      "name": "google-oauth-client",
+      "version": "1.39.0",
+      "purl": "pkg:maven/com.google.oauth-client/google-oauth-client@1.39.0",
+      "bom-ref": "pkg:maven/com.google.oauth-client/google-oauth-client@1.39.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "27fc61ee2d526e33d31350b5ea383091c0879345e261f9b2e6fcc97a20c86f88"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.pff",
+      "name": "java-libpst",
+      "version": "0.9.3",
+      "purl": "pkg:maven/com.pff/java-libpst@0.9.3",
+      "bom-ref": "pkg:maven/com.pff/java-libpst@0.9.3",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "039cd61635ded94dba67f909d3b1763e13f9c23d02f9750eb6259af10e1dabdb"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "com.zaxxer",
+      "name": "SparseBitSet",
+      "version": "1.3",
+      "purl": "pkg:maven/com.zaxxer/SparseBitSet@1.3",
+      "bom-ref": "pkg:maven/com.zaxxer/SparseBitSet@1.3",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f76b85adb0c00721ae267b7cfde4da7f71d3121cc2160c9fc00c0c89f8c53c8a"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "commons-codec",
+      "name": "commons-codec",
+      "version": "1.20.0",
+      "purl": "pkg:maven/commons-codec/commons-codec@1.20.0",
+      "bom-ref": "pkg:maven/commons-codec/commons-codec@1.20.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6af66595f9f6a7bb58ce66518d6888d40b547c366d2262f06676eee19528ff66"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "commons-io",
+      "name": "commons-io",
+      "version": "2.21.0",
+      "purl": "pkg:maven/commons-io/commons-io@2.21.0",
+      "bom-ref": "pkg:maven/commons-io/commons-io@2.21.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "7d643a2afea8b058b762aa6fb90e5b256f6c729739f8b3784c3370ddc609e88d"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "commons-logging",
+      "name": "commons-logging",
+      "version": "1.4.0",
+      "purl": "pkg:maven/commons-logging/commons-logging@1.4.0",
+      "bom-ref": "pkg:maven/commons-logging/commons-logging@1.4.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d175dbd751dd782a63bde28c7a039520e971f25e84b79c19b8435edc3603e0dc"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "de.rototor.pdfbox",
+      "name": "graphics2d",
+      "version": "3.0.1",
+      "purl": "pkg:maven/de.rototor.pdfbox/graphics2d@3.0.1",
+      "bom-ref": "pkg:maven/de.rototor.pdfbox/graphics2d@3.0.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4849aaa6f536d75dea1b835a71086702216787036f42716adfad438c6e7928c0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "io.github.openhtmltopdf",
+      "name": "openhtmltopdf-core",
+      "version": "1.1.105-eapdf.1",
+      "purl": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-core@1.1.105-eapdf.1",
+      "bom-ref": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-core@1.1.105-eapdf.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0397f32c488e13ea9cd360d45a295fec96f5b23ebdd27310ccef68d6c60a04d2"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "GNU Lesser General Public License (LGPL), version 2.1 or later",
+            "url": "http://www.gnu.org/licenses/lgpl.html"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "io.github.openhtmltopdf",
+      "name": "openhtmltopdf-pdfbox",
+      "version": "1.1.105-eapdf.1",
+      "purl": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-pdfbox@1.1.105-eapdf.1",
+      "bom-ref": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-pdfbox@1.1.105-eapdf.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "22a275c7106a19e1561c0dd724a9d67041a22a70ebc52e0ed7b55bbabba8a768"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "GNU Lesser General Public License (LGPL), version 2.1 or later",
+            "url": "http://www.gnu.org/licenses/lgpl.html"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "io.grpc",
+      "name": "grpc-api",
+      "version": "1.70.0",
+      "purl": "pkg:maven/io.grpc/grpc-api@1.70.0",
+      "bom-ref": "pkg:maven/io.grpc/grpc-api@1.70.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "45faf2ac1bf2791e8fdabce53684a86b62c99b84cba26fb13a5ba3f4abf80d6c"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache 2.0",
+            "url": "https://opensource.org/licenses/Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "io.grpc",
+      "name": "grpc-context",
+      "version": "1.70.0",
+      "purl": "pkg:maven/io.grpc/grpc-context@1.70.0",
+      "bom-ref": "pkg:maven/io.grpc/grpc-context@1.70.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "eb2824831c0ac03e741efda86b141aa863a481ebc4aaf5a5c1f13a481dbb40ff"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache 2.0",
+            "url": "https://opensource.org/licenses/Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "io.opencensus",
+      "name": "opencensus-api",
+      "version": "0.31.1",
+      "purl": "pkg:maven/io.opencensus/opencensus-api@0.31.1",
+      "bom-ref": "pkg:maven/io.opencensus/opencensus-api@0.31.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f1474d47f4b6b001558ad27b952e35eda5cc7146788877fc52938c6eba24b382"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "io.opencensus",
+      "name": "opencensus-contrib-http-util",
+      "version": "0.31.1",
+      "purl": "pkg:maven/io.opencensus/opencensus-contrib-http-util@0.31.1",
+      "bom-ref": "pkg:maven/io.opencensus/opencensus-contrib-http-util@0.31.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3ea995b55a4068be22989b70cc29a4d788c2d328d1d50613a7a9afd13fdd2d0a"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "jakarta.activation",
+      "name": "jakarta.activation-api",
+      "version": "2.1.4",
+      "purl": "pkg:maven/jakarta.activation/jakarta.activation-api@2.1.4",
+      "bom-ref": "pkg:maven/jakarta.activation/jakarta.activation-api@2.1.4",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c9db52100ce6c8aac95cc39075f95720d2e561b11f8051b81c121ad4effd7004"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "EDL 1.0",
+            "url": "http://www.eclipse.org/org/documents/edl-v10.php"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "jakarta.mail",
+      "name": "jakarta.mail-api",
+      "version": "2.1.5",
+      "purl": "pkg:maven/jakarta.mail/jakarta.mail-api@2.1.5",
+      "bom-ref": "pkg:maven/jakarta.mail/jakarta.mail-api@2.1.5",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "aa493753acb7a8c45ba8f4c9cf1230a74e20237056dd5b5c8bc86c583e8cfa0e"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "EPL 2.0",
+            "url": "http://www.eclipse.org/legal/epl-2.0"
+          }
+        },
+        {
+          "license": {
+            "name": "GPL2 w/ CPE",
+            "url": "https://www.gnu.org/software/classpath/license.html"
+          }
+        },
+        {
+          "license": {
+            "name": "EDL 1.0",
+            "url": "http://www.eclipse.org/org/documents/edl-v10.php"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.commons",
+      "name": "commons-collections4",
+      "version": "4.5.0",
+      "purl": "pkg:maven/org.apache.commons/commons-collections4@4.5.0",
+      "bom-ref": "pkg:maven/org.apache.commons/commons-collections4@4.5.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "00f93263c267be201b8ae521b44a7137271b16688435340bf629db1bac0a5845"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.commons",
+      "name": "commons-compress",
+      "version": "1.28.0",
+      "purl": "pkg:maven/org.apache.commons/commons-compress@1.28.0",
+      "bom-ref": "pkg:maven/org.apache.commons/commons-compress@1.28.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e1522945218456f3649a39bc4afd70ce4bd466221519dba7d378f2141a4642ca"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.commons",
+      "name": "commons-lang3",
+      "version": "3.18.0",
+      "purl": "pkg:maven/org.apache.commons/commons-lang3@3.18.0",
+      "bom-ref": "pkg:maven/org.apache.commons/commons-lang3@3.18.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4eeeae8d20c078abb64b015ec158add383ac581571cddc45c68f0c9ae0230720"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.commons",
+      "name": "commons-math3",
+      "version": "3.6.1",
+      "purl": "pkg:maven/org.apache.commons/commons-math3@3.6.1",
+      "bom-ref": "pkg:maven/org.apache.commons/commons-math3@3.6.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1e56d7b058d28b65abd256b8458e3885b674c1d588fa43cd7d1cbb9c7ef2b308"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.httpcomponents",
+      "name": "httpclient",
+      "version": "4.5.14",
+      "purl": "pkg:maven/org.apache.httpcomponents/httpclient@4.5.14",
+      "bom-ref": "pkg:maven/org.apache.httpcomponents/httpclient@4.5.14",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c8bc7e1c51a6d4ce72f40d2ebbabf1c4b68bfe76e732104b04381b493478e9d6"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.httpcomponents",
+      "name": "httpcore",
+      "version": "4.4.16",
+      "purl": "pkg:maven/org.apache.httpcomponents/httpcore@4.4.16",
+      "bom-ref": "pkg:maven/org.apache.httpcomponents/httpcore@4.4.16",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6c9b3dd142a09dc468e23ad39aad6f75a0f2b85125104469f026e52a474e464f"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.logging.log4j",
+      "name": "log4j-api",
+      "version": "2.24.3",
+      "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.24.3",
+      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-api@2.24.3",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5b4a0a0cd0e751ded431c162442bdbdd53328d1f8bb2bae5fc1bbeee0f66d80f"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.pdfbox",
+      "name": "fontbox",
+      "version": "3.0.8",
+      "purl": "pkg:maven/org.apache.pdfbox/fontbox@3.0.8",
+      "bom-ref": "pkg:maven/org.apache.pdfbox/fontbox@3.0.8",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a1915c24e3edbe0ecec93896dfbf6d41427810b663ade97bd4e8bae86ec3fdab"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.pdfbox",
+      "name": "pdfbox-io",
+      "version": "3.0.8",
+      "purl": "pkg:maven/org.apache.pdfbox/pdfbox-io@3.0.8",
+      "bom-ref": "pkg:maven/org.apache.pdfbox/pdfbox-io@3.0.8",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "36a0e04001010b4c764857817412b96339930b19755e728959805cc0352061b2"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.pdfbox",
+      "name": "pdfbox",
+      "version": "3.0.8",
+      "purl": "pkg:maven/org.apache.pdfbox/pdfbox@3.0.8",
+      "bom-ref": "pkg:maven/org.apache.pdfbox/pdfbox@3.0.8",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "97647cfbde61ebcfc06b4cf8c9b0ffcaaee073396eceb4a7f6836a9b9128903c"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.pdfbox",
+      "name": "xmpbox",
+      "version": "3.0.8",
+      "purl": "pkg:maven/org.apache.pdfbox/xmpbox@3.0.8",
+      "bom-ref": "pkg:maven/org.apache.pdfbox/xmpbox@3.0.8",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f044d2e316e57714a0adf272ad8abf4a863b8978fd17dc5b86dcfa8135469b10"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache-2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.poi",
+      "name": "poi-ooxml-lite",
+      "version": "5.5.1",
+      "purl": "pkg:maven/org.apache.poi/poi-ooxml-lite@5.5.1",
+      "bom-ref": "pkg:maven/org.apache.poi/poi-ooxml-lite@5.5.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e6e37adeb6d6ee8b40ec491ad955d934d8f99827ab050f105b18286e59b1d9e7"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.poi",
+      "name": "poi-ooxml",
+      "version": "5.5.1",
+      "purl": "pkg:maven/org.apache.poi/poi-ooxml@5.5.1",
+      "bom-ref": "pkg:maven/org.apache.poi/poi-ooxml@5.5.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "bd7be2fdfe3fd2c1684fa813351c2798fd636b44f6236e0674500d4f8ff1c2f9"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.poi",
+      "name": "poi-scratchpad",
+      "version": "5.5.1",
+      "purl": "pkg:maven/org.apache.poi/poi-scratchpad@5.5.1",
+      "bom-ref": "pkg:maven/org.apache.poi/poi-scratchpad@5.5.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "24c3f407eff517432d5cfd5628b6b8a091f94c1dbb7481384599b5a0fbeedeb9"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.poi",
+      "name": "poi",
+      "version": "5.5.1",
+      "purl": "pkg:maven/org.apache.poi/poi@5.5.1",
+      "bom-ref": "pkg:maven/org.apache.poi/poi@5.5.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6c52e876ca75775a11b56e4b36a7541f682827f56406725fcd87560b792ee3d8"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Apache License, Version 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.apache.xmlbeans",
+      "name": "xmlbeans",
+      "version": "5.3.0",
+      "purl": "pkg:maven/org.apache.xmlbeans/xmlbeans@5.3.0",
+      "bom-ref": "pkg:maven/org.apache.xmlbeans/xmlbeans@5.3.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6cc69da3b4d35b83c5e477cd4daba204e44109833e34af2b9a8a2c8788289917"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        },
+        {
+          "name": "eapdf:license-evidence",
+          "value": "xmlbeans-5.3.0.jar!/META-INF/LICENSE.txt"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.bouncycastle",
+      "name": "bcpkix-jdk18on",
+      "version": "1.86",
+      "purl": "pkg:maven/org.bouncycastle/bcpkix-jdk18on@1.86",
+      "bom-ref": "pkg:maven/org.bouncycastle/bcpkix-jdk18on@1.86",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8d8b41a4b149bdae8d331f059a578870954d1e3ff29f8269a9eb3ee19a7e4ef7"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        },
+        {
+          "name": "eapdf:license-evidence",
+          "value": "bcpkix-jdk18on-1.86.jar!/META-INF/LICENSE.md"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.bouncycastle",
+      "name": "bcprov-jdk18on",
+      "version": "1.86",
+      "purl": "pkg:maven/org.bouncycastle/bcprov-jdk18on@1.86",
+      "bom-ref": "pkg:maven/org.bouncycastle/bcprov-jdk18on@1.86",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2af190b300cbb0b35e248ccf5f4a06b6072030aeb3da7a98ec73abe5b4cb371f"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        },
+        {
+          "name": "eapdf:license-evidence",
+          "value": "bcprov-jdk18on-1.86.jar!/META-INF/LICENSE.md"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.bouncycastle",
+      "name": "bcutil-jdk18on",
+      "version": "1.86",
+      "purl": "pkg:maven/org.bouncycastle/bcutil-jdk18on@1.86",
+      "bom-ref": "pkg:maven/org.bouncycastle/bcutil-jdk18on@1.86",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1c268e15f785aafb1e4670d8d6e5f856f69475e96c162dadcd1ff9b350e9139f"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        },
+        {
+          "name": "eapdf:license-evidence",
+          "value": "bcutil-jdk18on-1.86.jar!/META-INF/LICENSE.md"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.checkerframework",
+      "name": "checker-qual",
+      "version": "3.42.0",
+      "purl": "pkg:maven/org.checkerframework/checker-qual@3.42.0",
+      "bom-ref": "pkg:maven/org.checkerframework/checker-qual@3.42.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ccaedd33af0b7894d9f2f3b644f4d19e43928e32902e61ac4d10777830f5aac7"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The MIT License",
+            "url": "http://opensource.org/licenses/MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.eclipse.angus",
+      "name": "angus-activation",
+      "version": "2.0.3",
+      "purl": "pkg:maven/org.eclipse.angus/angus-activation@2.0.3",
+      "bom-ref": "pkg:maven/org.eclipse.angus/angus-activation@2.0.3",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a6bd35c538cf90fff941ad6258c40c08fca0b5c9c3f536c657114f27ce0527a7"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "EDL 1.0",
+            "url": "http://www.eclipse.org/org/documents/edl-v10.php"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.eclipse.angus",
+      "name": "angus-mail",
+      "version": "2.0.5",
+      "purl": "pkg:maven/org.eclipse.angus/angus-mail@2.0.5",
+      "bom-ref": "pkg:maven/org.eclipse.angus/angus-mail@2.0.5",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b4d8c30d35f455def6c7a05fe595a1e62ea2b80cac3efec1e9ccf4118b23168a"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "EPL 2.0",
+            "url": "http://www.eclipse.org/legal/epl-2.0"
+          }
+        },
+        {
+          "license": {
+            "name": "GPL2 w/ CPE",
+            "url": "https://www.gnu.org/software/classpath/license.html"
+          }
+        },
+        {
+          "license": {
+            "name": "EDL 1.0",
+            "url": "http://www.eclipse.org/org/documents/edl-v10.php"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.jsoup",
+      "name": "jsoup",
+      "version": "1.23.2",
+      "purl": "pkg:maven/org.jsoup/jsoup@1.23.2",
+      "bom-ref": "pkg:maven/org.jsoup/jsoup@1.23.2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e9d8c856856680427f096d156f02a414289985c930998fcb519ce5be39b42003"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The MIT License",
+            "url": "https://jsoup.org/license"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.simplejavamail",
+      "name": "outlook-message-parser",
+      "version": "1.16.2",
+      "purl": "pkg:maven/org.simplejavamail/outlook-message-parser@1.16.2",
+      "bom-ref": "pkg:maven/org.simplejavamail/outlook-message-parser@1.16.2",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9806f725975bce9b2e436839e318d7bb32b1449cc615c42d26ffa2bdb2b75114"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache Software License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "group": "org.slf4j",
+      "name": "slf4j-api",
+      "version": "2.0.7",
+      "purl": "pkg:maven/org.slf4j/slf4j-api@2.0.7",
+      "bom-ref": "pkg:maven/org.slf4j/slf4j-api@2.0.7",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5d6298b93a1905c32cda6478808ac14c2d4a47e91535e53c41f7feeb85d946f4"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT License",
+            "url": "http://www.opensource.org/licenses/mit-license.php"
+          }
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "name": "emailtopdfa.jar",
+      "bom-ref": "artifact:emailtopdfa.jar",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9"
+        }
+      ]
+    }
+  ]
+}

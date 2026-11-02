@@ -1,0 +1,73 @@
+--- before/EmlReader.java
++++ after/EmlReader.java
+@@ -2,6 +2,8 @@
+ import jakarta.mail.*;
+ import jakarta.mail.internet.MimeMessage;
+ import jakarta.mail.internet.ContentType;
++import jakarta.mail.internet.MimeBodyPart;
++import jakarta.mail.internet.MimeUtility;
+ import java.io.*;
+ import java.nio.ByteBuffer;
+ import java.nio.charset.CharacterCodingException;
+@@ -215,6 +217,10 @@
+   static void extractBodyChoiceInto(Part p, BodyChoice out, EmailRecord r, boolean debug, String indent) throws Exception {
+     if (Part.ATTACHMENT.equalsIgnoreCase(safeDisposition(p))) {
+       if (debug) Common.dbg(r, indent + "skip attachment part");
++      return;
++    }
++    if (p instanceof BodyPart && (p.isMimeType("message/rfc822") || p.isMimeType("message/global"))) {
++      if (debug) Common.dbg(r, indent + "skip attached message part");
+       return;
+     }
+     String mime = Common.baseMimeType(p.getContentType());
+@@ -321,6 +327,26 @@
+     collectRfc822AssociatedFiles(p, out, r, debug, new int[]{0});
+   }
+ 
++  static byte[] attachedMessageBytes(Part part, String sourcePath) throws Exception {
++    InputStream raw;
++    String encoding;
++    if (part instanceof MimeBodyPart body) {
++      encoding = body.getEncoding();
++      raw = body.getRawInputStream();
++    } else if (part instanceof MimeMessage message) {
++      encoding = message.getEncoding();
++      raw = message.getRawInputStream();
++    } else {
++      try (InputStream input = part.getInputStream()) {
++        return ProcessingLimits.read(input, sourcePath);
++      }
++    }
++    try (InputStream stored = raw;
++         InputStream decoded = encoding == null ? stored : MimeUtility.decode(stored, encoding)) {
++      return ProcessingLimits.read(decoded, sourcePath);
++    }
++  }
++
+   static void collectRfc822AssociatedFiles(Part p, List<AssociatedFile> out, EmailRecord r, boolean debug, int[] seq) throws Exception {
+     if (p.isMimeType("multipart/*")) {
+       Multipart mp = (Multipart)p.getContent();
+@@ -328,18 +354,17 @@
+       return;
+     }
+ 
+-    if (p.isMimeType("message/rfc822")) {
++    if (p.isMimeType("message/rfc822") || p.isMimeType("message/global")) {
+       AssociatedFile attachedMessage = new AssociatedFile();
+       attachedMessage.filename = safeFileName(p);
+       if (attachedMessage.filename.isBlank()) attachedMessage.filename = "attached_message_" + String.format("%03d", ++seq[0]) + ".eml";
+-      attachedMessage.mime = "message/rfc822";
++      attachedMessage.mime = Common.baseMimeType(p.getContentType());
+       attachedMessage.rawContentType = p.getContentType();
+       attachedMessage.afRelationship = "Data";
+       attachedMessage.emailAttachment = true;
+-      attachedMessage.description = "Complete attached RFC 822 message; parent email: " + Common.nz(r.messageId);
+-      try (InputStream input = p.getInputStream()) {
+-        attachedMessage.bytes = ProcessingLimits.read(input, r.sourcePath);
+-      }
++      attachedMessage.description = "Complete attached " + (p.isMimeType("message/global") ? "international" : "RFC 822")
++          + " message; parent email: " + Common.nz(r.messageId);
++      attachedMessage.bytes = attachedMessageBytes(p, r.sourcePath);
+       attachedMessage.checksumMd5 = Common.md5Hex(attachedMessage.bytes);
+       attachedMessage.checksumSha256 = Common.sha256Hex(attachedMessage.bytes);
+       out.add(attachedMessage);

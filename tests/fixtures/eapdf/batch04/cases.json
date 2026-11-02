@@ -1,0 +1,138 @@
+[
+  {
+    "id": "creator-values-unchanged",
+    "property": null,
+    "value": null,
+    "expected_recommendation": "PASS",
+    "array_form": false,
+    "profile": "m"
+  },
+  {
+    "id": "dictionary-subject-unchanged",
+    "property": "Mail_Subject",
+    "value": "Source Alpha",
+    "expected_recommendation": "PASS",
+    "array_form": false,
+    "profile": "m"
+  },
+  {
+    "id": "array-subject-unchanged",
+    "property": "Mail_Subject",
+    "value": "Source Alpha",
+    "expected_recommendation": "PASS",
+    "array_form": true,
+    "profile": "m"
+  },
+  {
+    "id": "decoded-from-unchanged",
+    "property": "Mail_From",
+    "value": "Fixture Author <author@example.invalid>",
+    "expected_recommendation": "PASS",
+    "array_form": false,
+    "profile": "m"
+  },
+  {
+    "id": "raw-from-unchanged",
+    "property": "Mail_Raw_From",
+    "value": "=?UTF-8?Q?Fixture_Author?= <author@example.invalid>",
+    "expected_recommendation": "PASS",
+    "array_form": true,
+    "profile": "m"
+  },
+  {
+    "id": "same-instant-date",
+    "property": "Mail_Sent",
+    "value": "D:20030129022054Z",
+    "expected_recommendation": "PASS",
+    "array_form": false,
+    "profile": "m"
+  },
+  {
+    "id": "native-count-unchanged",
+    "property": "Mail_NumberAttachments",
+    "value": 0,
+    "expected_recommendation": "PASS",
+    "array_form": true,
+    "profile": "m"
+  },
+  {
+    "id": "custom-header-unchanged",
+    "property": "Mail_X-Project",
+    "value": "original",
+    "expected_recommendation": "PASS",
+    "array_form": false,
+    "profile": "m"
+  },
+  {
+    "id": "dictionary-subject-truncated",
+    "property": "Mail_Subject",
+    "value": "Source",
+    "expected_recommendation": "WARN",
+    "array_form": false,
+    "profile": "m"
+  },
+  {
+    "id": "array-subject-truncated",
+    "property": "Mail_Subject",
+    "value": "Source",
+    "expected_recommendation": "WARN",
+    "array_form": true,
+    "profile": "m"
+  },
+  {
+    "id": "another-message-subject",
+    "property": "Mail_Subject",
+    "value": "Source Bravo",
+    "expected_recommendation": "WARN",
+    "array_form": true,
+    "profile": "m"
+  },
+  {
+    "id": "raw-decoded-mixup",
+    "property": "Mail_Raw_From",
+    "value": "Fixture Author <author@example.invalid>",
+    "expected_recommendation": "WARN",
+    "array_form": false,
+    "profile": "m"
+  },
+  {
+    "id": "date-changed",
+    "property": "Mail_Sent",
+    "value": "D:20030129022055Z",
+    "expected_recommendation": "WARN",
+    "array_form": true,
+    "profile": "m"
+  },
+  {
+    "id": "date-truncated",
+    "property": "Mail_Sent",
+    "value": "D:2003",
+    "expected_recommendation": "WARN",
+    "array_form": false,
+    "profile": "m"
+  },
+  {
+    "id": "native-count-changed",
+    "property": "Mail_NumberAttachments",
+    "value": 2,
+    "expected_recommendation": "WARN",
+    "array_form": false,
+    "profile": "m"
+  },
+  {
+    "id": "custom-header-changed",
+    "property": "Mail_X-Project",
+    "value": "modified",
+    "expected_recommendation": "WARN",
+    "array_form": true,
+    "profile": "m"
+  },
+  {
+    "id": "isolated-comparison-unavailable",
+    "property": "Mail_Subject",
+    "value": "Source Alpha",
+    "expected_recommendation": "N/A",
+    "array_form": true,
+    "profile": "mi"
+  }
+]

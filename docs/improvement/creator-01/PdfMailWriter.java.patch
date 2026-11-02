@@ -1,0 +1,48 @@
+--- before/src/main/java/eapdf/PdfMailWriter.java
++++ after/src/main/java/eapdf/PdfMailWriter.java
+@@ -2252,9 +2252,9 @@
+ static void addArchiveDPartStructure(PDDocument doc, List<MessageSegment> segments, int findingAidPages) throws Exception {
+   if (doc.getNumberOfPages() == 0 || segments.isEmpty()) return;
+   PdfDocumentParts parts = new PdfDocumentParts(doc);
+-  if (findingAidPages > 0) parts.addFrontMatter(0, findingAidPages - 1, "Archive finding aid");
+   for (MessageSegment segment : segments) {
+-    parts.addMessage(segment.record, segment.startPage - 1, segment.endPage - 1);
++    parts.addMessage(segment.record, segment.startPage - 1, segment.endPage - 1,
++        segment == segments.getFirst() ? findingAidPages : 0);
+   }
+ }
+ 
+@@ -2536,15 +2536,17 @@
+   tree.setItem(COSName.ROLE_MAP, roles);
+   COSDictionary root = structElem("Document", tree, doc.getPage(0));
+   COSArray children = new COSArray();
+-  if (findingAidPages > 0) {
+-    COSDictionary front = structElem("Mail_ContentSet", root, doc.getPage(0));
+-    addStringUserProperty(front, "Mail_ContentSetType", "FrontMatter");
+-    SemanticStructure.attach(doc, tree, front, null, 0, findingAidPages - 1);
+-    children.add(PdfDocumentParts.indirect(doc, front));
+-  }
+   for (MessageSegment segment : segments) {
+     COSDictionary message = structElem("Mail_Message", root, doc.getPage(segment.startPage - 1));
+     addMessageUserProperties(message, segment.record);
++    COSArray content = new COSArray();
++    if (findingAidPages > 0 && segment == segments.getFirst()) {
++      // Keep the finding aid under the same email owner in both structure trees.
++      COSDictionary front = structElem("Mail_ContentSet", message, doc.getPage(0));
++      addStringUserProperty(front, "Mail_ContentSetType", "FrontMatter");
++      SemanticStructure.attach(doc, tree, front, null, 0, findingAidPages - 1);
++      content.add(PdfDocumentParts.indirect(doc, front));
++    }
+     COSDictionary group = structElem("Mail_ContentGroup", message, doc.getPage(segment.startPage - 1));
+     addStringUserProperty(group, "Mail_ContentSetType", "BodyRendering");
+     COSDictionary contentSet = structElem("Mail_ContentSet", group, doc.getPage(segment.startPage - 1));
+@@ -2552,7 +2554,8 @@
+     addStringUserProperty(contentSet, "Mail_Subtype", Common.contentSetSubtype(segment.record));
+     SemanticStructure.attach(doc, tree, contentSet, segment.semanticTree, segment.startPage - 1, segment.endPage - 1);
+     group.setItem(COSName.K, PdfDocumentParts.indirect(doc, contentSet));
+-    message.setItem(COSName.K, PdfDocumentParts.indirect(doc, group));
++    content.add(PdfDocumentParts.indirect(doc, group));
++    message.setItem(COSName.K, content.size() == 1 ? content.get(0) : content);
+     children.add(PdfDocumentParts.indirect(doc, message));
+   }
+   root.setItem(COSName.K, children);

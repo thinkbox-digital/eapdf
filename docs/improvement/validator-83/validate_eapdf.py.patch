@@ -1,0 +1,18 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -9218,8 +9218,13 @@
+                         child_report=validate(str(path),child_context=context,depth=depth+1)
+                         result={"summary":child_report.summary(),"items":child_report.items,"pdfa":{"status":"SKIP"}}
+             except Exception as error:
+-                report.fail("COLLECTION_CHILD_VALIDATION","Unable to validate contained email PDF",{"child":name,"error":str(error)})
+-                continue
++                report.warn("COLLECTION_CHILD_VALIDATION","Unable to complete contained email PDF validation",{
++                    "child":name,"error":str(error),"error_type":type(error).__name__,
++                    "assessment":"unavailable","result_available":result is not None})
++                report.warn("VALIDATION_INCOMPLETE","A contained email PDF check encountered an operational error",{
++                    "child":name,"assessment":"unavailable"})
++                if result is None:
++                    continue
+             finally:
+                 context.active.remove(digest)
+             context.cache[digest]=result

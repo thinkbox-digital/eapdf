@@ -1,0 +1,72 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -5983,6 +5983,15 @@
+     sources=summarize_source_emails(files)
+     if not sources or len(sources)!=len(files) or any(source.get("header_parse_defects") for source in sources):
+         return
++    incomplete=[source for source in sources if source.get("uninspected_email_candidates")]
++    if incomplete:
++        report.warn("MESSAGE_SOURCE_MATCH","Known nested mail candidates or mailbox envelopes have not been inspected",{
++            "assessment":"unavailable","source_ownership":"unassigned",
++            "candidate_universe":"incomplete","sources":[{
++                "source":source.get("source_filename"),"sha256":source.get("source_sha256"),
++                "uninspected":source["uninspected_email_candidates"]} for source in incomplete]})
++        report.warn("VALIDATION_INCOMPLETE","Outer email headers cannot establish a universal original-source contradiction")
++        return
+     work=getattr(report,"_source_header_candidate_checks",0)+len(files)
+     if work>MAX_TREE_ITEMS:
+         report.warn("VALIDATION_INCOMPLETE","Ambiguous source-header comparisons exceeded the configured item limit",{
+@@ -6047,7 +6056,8 @@
+                 attachment_bag.append(deepcopy(attachment_node))
+                 assigned_attachments.add(attachment_index)
+         selected=select_source_email(record,remaining)
+-        if selected is not None and sum(source.get("afrelationship")=="Source" for source in afiles)>1:
++        if selected is not None and (sum(source.get("afrelationship")=="Source" for source in afiles)>1
++                                     or selected.get("uninspected_email_candidates")):
+             # Scored header values are a tentative match, not independent
+             # ownership evidence for a contradictory field under test.
+             chosen=next((source for source in afiles if source.get("_email_summary") is selected),None)
+@@ -6455,6 +6465,16 @@
+         attachments=summarize_email_attachments(msg,af["bytes"])
+         mime_attachments=attachments
+         mime_attachment_count=len(attachments)
++        uninspected_email_candidates=[]
++        if msg.get_unixfrom():
++            uninspected_email_candidates.append({"kind":"mailbox_envelope"})
++        for attachment in attachments:
++            media=media_type_signature(attachment.get("content_type",""))[0]
++            filename=attachment.get("original_filename",attachment.get("filename",""))
++            if media in {"message/rfc822","message/global","application/mbox","application/vnd.ms-outlook"} or filename.lower().endswith(
++                    (".eml",".msg",".mbox",".mbx",".pst",".ost",".nsf")):
++                uninspected_email_candidates.append({"kind":"mail_attachment","filename":filename,
++                                                     "content_type":attachment.get("content_type","")})
+         raw_headers={}
+         header_occurrences=[]
+         for header_name,header_value in msg.raw_items():
+@@ -6524,6 +6544,7 @@
+                 (HeaderDefect,FirstHeaderLineIsContinuationDefect,MisplacedEnvelopeHeaderDefect,MissingHeaderBodySeparatorDefect))],
+             "other_parse_defects":[type(defect).__name__ for defect in msg.defects if not isinstance(defect,
+                 (HeaderDefect,FirstHeaderLineIsContinuationDefect,MisplacedEnvelopeHeaderDefect,MissingHeaderBodySeparatorDefect))],
++            "uninspected_email_candidates":uninspected_email_candidates,
+             "body_media_types":sorted(source_body_media_types(msg)),
+             "attachment_count":len(attachments),
+             "mime_attachment_count":mime_attachment_count,
+@@ -6695,6 +6716,7 @@
+ 
+ def check_body_media_types(pdf,xroot,afiles,report):
+     sources=summarize_source_emails(afiles)
++    bindings=getattr(report,"_email_source_summaries",{})
+     if xroot is None or not sources:
+         report.na("DPM_BODY_MEDIA_TYPE_MATCH_SOURCE","No inspectable source body is available for media-type comparison",{"reason":"Not applied because no readable email metadata or inspectable source body is available.","xmp_readable":xroot is not None,"inspectable_sources":len(sources)})
+         return
+@@ -6708,8 +6730,8 @@
+     comparisons=[]
+     unresolved=[]
+     failures=[]
+-    for record in flatten_email_records(xroot):
+-        source=select_source_email(record,sources)
++    for index,record in enumerate(flatten_email_records(xroot),1):
++        source=bindings.get(index) if bindings else select_source_email(record,sources)
+         expected=set(source.get("body_media_types",[])) if source else set()
+         relevant=[body for body in bodies if identities_match(record,body["identity"])]
+         if not expected or not relevant:

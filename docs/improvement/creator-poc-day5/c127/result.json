@@ -1,0 +1,72 @@
+{
+  "checkpoint": "C127",
+  "demonstrated_loss": "The supplied attached-message PST has a normal reply whose native References property is absent from its transport header block. The reader omitted that property from the reconstructed email source.",
+  "fix": "Recover absent References with a small typed accessor to java-libpst protected string decoding for native 0x1039. Existing transport references keep priority. Existing MIME reconstruction preserves the restored value; no new XMP fields or controls.",
+  "focused_java": {
+    "tests": 32,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "last_full_java_suite": {
+    "checkpoint": "C124",
+    "passes": 252
+  },
+  "changed_production_classes": [
+    "eapdf/PstReader.class"
+  ],
+  "added_library_accessor": [
+    "com/pff/EaPdfPstProperties.class"
+  ],
+  "source_and_pdf_checks": {
+    "records": 78,
+    "unchanged_headers_body_native_assets": 78,
+    "unchanged_exports": 77,
+    "corrected_export_index": 78,
+    "only_export_change": "One exact native References header restored; all remaining export bytes identical.",
+    "reply_original_source_in_pdf_exact": true,
+    "reply_pixels_and_text_unchanged": true,
+    "collection_children": 7,
+    "corrected_child_exact": 1,
+    "validation": {
+      "single": {
+        "status": "PASS",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "failures": [],
+        "staging_removed": true
+      },
+      "collection": {
+        "status": "PASS",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "failures": [],
+        "staging_removed": true
+      }
+    }
+  },
+  "native_thread_fields_after": {
+    "missingFields": [],
+    "nativeInReplyTo": 4,
+    "messagesIncludingAttached": 79,
+    "nativeReferences": 4
+  },
+  "initial_verification_adjustment": "The first snapshot included the deliberately changed reconstructed Source in its native-asset fingerprint. The comparison now separates that Source and verifies it changes by exactly one header line; native attachments and source companions are checked unchanged. No additional production change was required.",
+  "jars": {
+    "emailtopdfa.jar": "7dd01c61a17f84cd3c52ac0dd7682247519622e286f46c838dafe93b614e3689",
+    "emailtopdfa-gui.jar": "3905f6caad287251feb70e56af3daa2842d70a4182b4ae2997628a6bd7ae1f40"
+  },
+  "saved_samples": "Six C124 samples and alias retain identical checked bytes; their supplied inputs are unchanged by this repair.",
+  "frozen_validator_changed": false,
+  "temporary_shared_staging_removed": true,
+  "native_property_reference": "https://learn.microsoft.com/en-us/office/client-developer/outlook/mapi/pidtaginternetreferences-canonical-property",
+  "known_limits": [
+    "Retained MSG comparison remains INCOMPLETE.",
+    "Isolated PST attachment comparison remains INCOMPLETE.",
+    "Large C122 whole-file frozen validation remains uncompleted/FAIL at existing resource limits."
+  ]
+}

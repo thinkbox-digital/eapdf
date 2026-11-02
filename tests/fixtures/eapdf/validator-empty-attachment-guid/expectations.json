@@ -1,0 +1,77 @@
+{
+  "authority": "EA-PDF1.0 Table19 p90: supplied GUID reflects containing email generated GUID; optional omission does not permit a supplied nonmatching value. Empty element, attribute and qualified simple text retain presence.",
+  "cases": [
+    {
+      "file": "empty-element.pdf",
+      "sha256": "cdaeae9a92c1982ea80a9806df3e268cb9ad3b2dd618c9984e6bfd5fa2f3b5a3",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID"
+      ]
+    },
+    {
+      "file": "empty-attribute.pdf",
+      "sha256": "8f67735addb6ef18264147a6f2363b9036c4c11701457e5277b59df85533b14c",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID"
+      ]
+    },
+    {
+      "file": "qualified-empty.pdf",
+      "sha256": "9637d4075a42d52e31b4518075e2f25e7898155f4e8c2d213b27b5d4dace9c29",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID"
+      ]
+    },
+    {
+      "file": "absent-guid.pdf",
+      "sha256": "fac321d06b5e420d3efe4714079eca6b5fc45d5afebd4c00edaa111144ef32ca",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "matching-guid.pdf",
+      "sha256": "66690987caa69e1cd195e0fd793d73bdfe6fb47a07d993ba77b7611a85fb5e4b",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "uri-guid.pdf",
+      "sha256": "47aa03410525d9ac0c3c105cf40ae981cdb0e66adf6127e3f1b5495d79ec0bed",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID"
+      ]
+    },
+    {
+      "file": "empty-outside.pdf",
+      "sha256": "637b8c11c711592d09a0e38cd51aeda11e4e6e6897215fc8c43824d04fd766ab",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_ANNOTATIONS_VISIBLE_WITHIN_CROPBOX",
+        "ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_ANNOTATIONS_PRESENT",
+            "ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID"
+          ]
+        },
+        "reason": "An existing annotation is hidden or outside the page CropBox; its presence is checked separately.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "empty-header-only.pdf",
+      "sha256": "4659dfffa6259bdb9678a66861cfd185248dd760a87dca829da418bc13b30465",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "authority": "validator_rule_text.json",
+  "authority_sha256": "627de293fd1004511c4a68badd5ca1e587549b9628e2e2fe6270ca6c2e0ebe8f",
+  "rule_descriptions": 219,
+  "review_records": 297,
+  "open_findings": 19,
+  "resolved_requirement_findings": 9,
+  "focused_python_tests_passed": 21,
+  "runtime_input_changes_since_audit_baseline": [
+    "validator_rule_text.json"
+  ],
+  "validator_checking_logic_unchanged": true,
+  "creator_sources_unchanged": true,
+  "full_requirements_gate": "OPEN",
+  "documentation_sha256": {
+    "docs/EA_PDF_WORK_LOG.md": "fb1933fd336eab3b26f9fdf64b8f60de6c1846c06b4ac5d8cb2dc21937d2d1b7",
+    "docs/EA_PDF_IMPROVEMENT_PLAN.md": "5bb4892fedb263cc1dd5e507b2335229d9872d5fae294cacafb6595414ad0a1b",
+    "docs/DEVELOPMENT_STATUS.md": "a86ce47067ea7440be45d57e1eb7544450112a63504bf7ec4760394063cc3c8c",
+    "docs/VALIDATION_REQUIREMENTS.md": "dbc031c3ca3efc50bf673b6d5180ee1df76f01977c88b14e6b8293b236574b76",
+    "docs/VALIDATOR_COVERAGE.md": "3fa1cb4b525756222253edbacc570334ac0682e4287a630a510cb52a813314e6",
+    "docs/improvement/requirements.json": "79f2e8ee5e3661fcd2c58c5ab0fcf84ffbccd43bf9ed7a45d5509b64d47a4df3",
+    "docs/improvement/known-next-gaps.json": "cdedbf78b54814f44fc8da51a674c6a30558aefb9ecac759c1948237f08cc2d6",
+    "unfixed.md": "9fb06582c7111ab0f07ffcffa0315a2cf8e9aeac95f5e05ca141245b57a073ab"
+  },
+  "verification_log_sha256": "3ff80a562b256958549b4bad3db237c003aa69a9de144edae0cd4f3fdea85b46"
+}

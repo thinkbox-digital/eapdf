@@ -1,0 +1,16 @@
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -12925,6 +12925,13 @@
+       "basis": "A source owner is not established by fields under test when that tentative source contradicts the record. Check every retained possible original for universal field contradictions or a Core Field tuple that no source can satisfy.",
+       "availability": "Unknown formats or recovered source header inventories block the universal proof. Per-field unavailable comparisons cannot contribute a definite contradiction. Compatible or unknown candidates retain unassigned ownership and incompleteness. Previously consumed occurrences are not excluded from this proof.",
+       "boundary": "Bounded by the configured item limit; only established header/size predicates are used. No complete source grammar, charset policy, independent provenance, occurrence assignment or attachment ownership is inferred."
++    },
++    "nonsmtp_availability_review": {
++      "date": "2026-10-21",
++      "basis": "The V61 FOAF decision permits exact raw preservation or an unavailable-normalization outcome for non-SMTP original tokens. Such tokens cannot establish a missing SMTP Agent or a normalized-mailbox count contradiction.",
++      "independent_checks": "Known SMTP presence, understood known-only mailbox comparisons, supplied FOAF syntax and supplied raw fidelity retain their own predicates. Additional SMTP entries that could derive from non-SMTP tokens require independent normalization evidence.",
++      "fallback": "Coverage fallback uses only reliably decoded SMTP source agents for mandatory SMTP presence; independent malformed XMP does not invent a source mailbox.",
++      "boundary": "No directory lookup, invented SMTP mailbox, complete source grammar or complete mixed-address normalization is inferred."
+     }
+   },
+   "STRUCTURE_CORRESPONDENCE": {

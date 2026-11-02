@@ -1,0 +1,7 @@
+# V68: Structured source mailbox data
+
+Source address lists are parsed before display-name decoding. Quoted local-part spaces and escaped data are preserved; encoded display commas cannot create extra addresses, and encoded-word-looking address atoms stay literal. The headerregistry false rejection of a literal SMTP atom uses an independent ASCII dot-string/DNS-label fallback. HeaderParseError and other expected address parser failures remain local mailbox schema failures.
+
+Verification: 989 frozen tests ran: 949 passed, 40 integration/schema checks explicitly skipped. All 611 prior hashes/statuses/failure sets remain across 621 freshly executed custom cases. Ten exact-byte controls pass real PDF/A and verified ISO checks. CLI/worker agree; twelve retained creator outputs retain their known failures. Sixteen offline browser checks pass. Six new false comparison failures become PASS, two false mailbox matches fail, and two parser aborts become specific schema failures.
+
+Primary sources and bounded interpretations are recorded in source-review.json. V67 changed source/dependency metadata only; the exact before runtime is the unchanged V66 snapshot. Full SMTPUTF8, IDNA, obsolete/folded source syntax and raw-header fidelity normalization are not certified. The next saved Raw-From counterexample is separate from these FOAF comparisons. All creator source hashes remain unchanged and the creator proposal is deferred.

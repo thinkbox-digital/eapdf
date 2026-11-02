@@ -1,0 +1,42 @@
+[
+  {
+    "file": "source.pdf",
+    "source_asset_filenames": [
+      "message_01.eml",
+      "message_02.eml"
+    ],
+    "pdfa": "PASS",
+    "status": "PASS",
+    "failures": []
+  },
+  {
+    "file": "reversed-bag.pdf",
+    "source_asset_filenames": [
+      "message_01.eml",
+      "message_02.eml"
+    ],
+    "pdfa": "PASS",
+    "status": "PASS",
+    "failures": []
+  },
+  {
+    "file": "collision-forward.pdf",
+    "source_asset_filenames": [
+      "message_01.eml",
+      "message_02.eml"
+    ],
+    "pdfa": "PASS",
+    "status": "PASS",
+    "failures": []
+  },
+  {
+    "file": "collision-reversed.pdf",
+    "source_asset_filenames": [
+      "message_01.eml",
+      "message_02.eml"
+    ],
+    "pdfa": "PASS",
+    "status": "PASS",
+    "failures": []
+  }
+]

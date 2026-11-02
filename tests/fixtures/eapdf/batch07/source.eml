@@ -1,0 +1,9 @@
+From: Fixture Author <author@example.invalid>
+To: Fixture Reader <reader@example.invalid>
+Date: Tue, 28 Jan 2003 21:20:54 -0500
+Message-ID: <batch01@example.invalid>
+Subject: EA-PDF attribute fixture
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+A small message for reviewing structure attributes and rule execution.

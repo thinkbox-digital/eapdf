@@ -1,0 +1,106 @@
+[
+  {
+    "name": "eapdf.AssociationTraversalTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.006"
+  },
+  {
+    "name": "eapdf.AttachmentOwnerScopeTests",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.592"
+  },
+  {
+    "name": "eapdf.ComparisonRegressionTests",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.194"
+  },
+  {
+    "name": "eapdf.JavaValidationTests",
+    "tests": "13",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.779"
+  },
+  {
+    "name": "eapdf.OutlookSourceTests",
+    "tests": "26",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.236"
+  },
+  {
+    "name": "eapdf.ReexaminationTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.51"
+  },
+  {
+    "name": "eapdf.RuleAlignmentTests",
+    "tests": "14",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "23.966"
+  },
+  {
+    "name": "eapdf.RuleApplicabilityTests",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.021"
+  },
+  {
+    "name": "eapdf.SourceFidelityTests",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.022"
+  },
+  {
+    "name": "eapdf.SpecificationReferencesTests",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.025"
+  },
+  {
+    "name": "eapdf.ValidatorDesktopSmokeTests",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "1",
+    "time": "0.0"
+  },
+  {
+    "name": "eapdf.ValidatorGuiTests",
+    "tests": "8",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.041"
+  },
+  {
+    "name": "eapdf.WebParityRegressionTests",
+    "tests": "78",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "14.722"
+  }
+]

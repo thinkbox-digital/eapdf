@@ -1,0 +1,50 @@
+{
+  "thread": "01a16350-a8e5-77f0-8683-0552b5d55dee",
+  "date": "2026-10-22",
+  "boundary": "Recovered prior executions; tests were not rerun during acceptance recovery.",
+  "frozen_and_archived_files_verified": 1783,
+  "custom_pdf_hashes_verified": 774,
+  "prior_outcomes_retained": 766,
+  "pipeline_reports_verified": 26,
+  "allowed_live_documentation_differences": {
+    "docs/EA_PDF_IMPROVEMENT_PLAN.md": {
+      "frozen_sha256": "6c03a719ee40f60e223dc7d2c9f848a1031d529abd1d21e6c0135ade96f2d43f",
+      "current_sha256": "dd8e01f30beba5905721bbbc6f5828453280c9146c5ed9582c5f046ea11d2b47"
+    },
+    "docs/EA_PDF_WORK_LOG.md": {
+      "frozen_sha256": "c4fdc43fc8e80c99ced1ba165786b3f15cdb2f049f4512e4aaf6086adabde7d2",
+      "current_sha256": "aac36762b94e3326d2674c08445baa0c1408873cac0bb99e869b44935f240f10"
+    },
+    "docs/improvement/specification-audit/artifact-hashes.json": {
+      "frozen_sha256": "c6d67d0b30b1d85fb3a4a9eba10a61d57ae5c43f4d4022639bbc1dcd316a98fe",
+      "current_sha256": "b4d940949085310c236bc1ded46eaa57f97c2a833d99442ce2b009def3f19723"
+    },
+    "docs/improvement/specification-audit/rule-browser.html": {
+      "frozen_sha256": "97699e0fc0e71b187f714a7c84aa8fc2769e67544712affef8878d6a7e301cd2",
+      "current_sha256": "d8e1c6013041f821109c20e829af59135d4b6d529ac4c4e25f37de36d586532c"
+    },
+    "docs/improvement/specification-audit/rule-browser.json": {
+      "frozen_sha256": "8968542231ef9bd43ccde1def9e7c50178659c264c8db86f1491103b37e5e240",
+      "current_sha256": "8aa28799e912e9c5a012c21ca430ae7c50ecbcbbd3719fd01827cfea226f7106"
+    },
+    "docs/improvement/specification-audit/rule-crosswalk.json": {
+      "frozen_sha256": "a0cb3012675b697dae8fb7a37bbe2bcf01b448034d17c006c1dd44f1ff8e48a5",
+      "current_sha256": "0a5cf8faf6eb800c3cb92698d3b7f16749c50b02a9a4f90d9d3d177b59bbd94c"
+    },
+    "docs/improvement/specification-audit/sources.json": {
+      "frozen_sha256": "49b711dbd83a73a3257312032c2583448f69eff59484e687d6fde8451fd0d390",
+      "current_sha256": "169c5ae3e99f1f7d5b4773e6904f0ae3c2bef29b7590ede7e8854d68b0f0ca58"
+    }
+  },
+  "unchanged_runtime_rules_tests_and_creator": true,
+  "receipts": {
+    "verification-inputs.json": "c665ae105868c0710e14302699f560a4272304af434a309e7ef58b8b54ad0fc8",
+    "runtime-inputs.zip": "6ef6c0d127c73911205e1f6cb0fa7c6ad722d518d50c09534de4342a49943eea",
+    "unit-tests.log": "6774679278008a07c1da2f3d1926cfdd6d4df05964c39823a4b85fcd6e30af56",
+    "focused-tests.log": "be01ab5ab594a3734b9b884f62f21471dbea69a648c170ddb06955bdfc28c2f1",
+    "custom-regressions.json": "103086a713161d1e135b5b8303cec2b66847f28e9e7d34500359c7dd39e95f41",
+    "pdf-results.json": "274c40335a5cbb85763e277fcdd8d126e79a72f613bbbf8ee754458b0a114495",
+    "browser-tests.log": "49bdd9d72396f3a0d68826a36970a13c6354bbeba7d787c8009b8ac466b68055"
+  },
+  "browser_receipt_sha256": "4755bfc16f16890087eeef41a22b73ecb7b844f8b470fea2ef07167cc78c9934"
+}

@@ -1,0 +1,11 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -3233,7 +3233,7 @@
+             return {"Mail_GUID":"","Message-ID":""}
+         ident={"Mail_GUID":guid,"Message-ID":""}
+         try:
+-            ident["Message-ID"]=norm_text(first_present(dpm,"Message-ID","MessageID","messageid","Mail_MessageID"))
++            ident["Message-ID"]=norm_text(first_present(dpm,"Mail_MessageID"))
+         except (UnicodeError,ValueError,pikepdf.PdfError):
+             # A readable GUID retains precedence. An unreadable local identity
+             # cannot justify falling back to an enclosing email identity.

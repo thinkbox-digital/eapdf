@@ -1,0 +1,26 @@
+{
+  "original_public_cli_failure": "Java heap space at PdfCreationValidator.documentDictionaries while archive writer remained on stack",
+  "debugger": "Standalone JDK jdb; IDE configurations require Make into protected target; no IDE breakpoints or sessions created",
+  "paused_at": "Common.java:282 before PdfCreationValidator.validate",
+  "call_path": [
+    "Common.lambda$writePdfAtomically$2",
+    "OutputTransaction.lambda$write$1",
+    "Common.writeAtomically",
+    "OutputTransaction.write",
+    "Common.writePdfAtomically",
+    "PdfMailWriter.writeEaPdfArchive",
+    "MemoryArchiveProbe.main"
+  ],
+  "observed_heap_limit_bytes": 536870912,
+  "observed_heap_used_bytes": 496991184,
+  "writer_archive_closed": false,
+  "writer_archive_object_id": 5602,
+  "message_segments": 1433,
+  "archive_pages": 2106,
+  "finding_aid_pages": 101,
+  "serialized_pdf_bytes": 70485505,
+  "debugger_stopped": true,
+  "standalone_final_checks": "PASS under unchanged 512 MB heap",
+  "standalone_observed_used_heap_bytes": 388330752,
+  "temporary_debugger_workspace_removed": true
+}

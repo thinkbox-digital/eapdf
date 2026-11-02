@@ -1,0 +1,27 @@
+{
+  "messages": 1433,
+  "unique_mail_guids": 1433,
+  "exact_sources": 1433,
+  "pages": 2106,
+  "content_set_page_counts": {
+    "/FrontMatter": 101,
+    "/BodyRendering": 2005
+  },
+  "container_sha256": "ac91b223f9eaeb57f7498bc08b8eb190ef4624b7c88bb5534e3fd4934ac2dfd4",
+  "pdf_sha256": "e53fb6c5452246b6032ac7512091eda7d575daa697264c95324aeca3493bae3c",
+  "frozen_validator_changed": false,
+  "trusted_local_inspection_budget": 10000000,
+  "status": "FAIL",
+  "pdfa": "FAIL",
+  "selected_iso": [
+    "N/A"
+  ],
+  "mandatory_failures": [
+    {
+      "code": "VALIDATION_ERROR",
+      "message": "Unable to complete PDF validation"
+    }
+  ],
+  "incomplete": [],
+  "staging_removed": true
+}

@@ -1,0 +1,128 @@
+{
+  "authority": "EA-PDF 9.1 printed p61 / 9.5 Table 6 printed p68; ISO 32000-2:2020 Table 29 printed p99 and Table 155 printed p451",
+  "seeds": {
+    "tests/fixtures/eapdf/validator-operands/valid.pdf": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+    "tests/fixtures/eapdf/validator-booleans/collection-false.pdf": "5a199646ce05aae761445d5973322a4dcac97023520cd03e4d9a1d81381100ed"
+  },
+  "boundary": "Only native Version/Subtype values change; PDF 2.0 header retained except the explicit 1.6-header control; Collection child PDF/A is skipped in custom-only runs",
+  "cases": [
+    {
+      "file": "valid-version.pdf",
+      "sha256": "2c464b4426531037066274c9f5c375308978193e452249ce596372a12c62d3bf",
+      "expected_status": "PASS",
+      "expected_pipeline_status": "PASS",
+      "expected_failures": [],
+      "expected_pdfa_status": "PASS"
+    },
+    {
+      "file": "catalog-text.pdf",
+      "sha256": "0315dc4d8fdbc1652eb56af2073f6c780bb3a5d92fb0b7f559bb466004cbacff",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "PDF_CATALOG_VERSION"
+      ],
+      "expected_pdfa_status": "PASS"
+    },
+    {
+      "file": "catalog-slash-text.pdf",
+      "sha256": "17ee426b2182ca48f3061b832e7539f9eee65e305563df8db5c315c1fc897183",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "PDF_CATALOG_VERSION"
+      ],
+      "expected_pdfa_status": "PASS"
+    },
+    {
+      "file": "catalog-empty-text.pdf",
+      "sha256": "926a9e97606ce924e810599fcfc8168779163f4d9a4d5c50c64333ea1b4c02f8",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "PDF_CATALOG_VERSION"
+      ],
+      "expected_pdfa_status": "PASS"
+    },
+    {
+      "file": "valid-schema.pdf",
+      "sha256": "6562a1b8614e097940b9e81da3818ca6a6231c4b5c6359288856269ae205e2a8",
+      "expected_status": "INCOMPLETE",
+      "expected_pipeline_status": "PASS",
+      "expected_failures": [],
+      "expected_pdfa_status": "PASS",
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "subtype-text.pdf",
+      "sha256": "60c9d27532dc81715e9c3690ad9d2a7ccabf6cb9cbeec3c2067cb726e3d15bb9",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_SCHEMA_FIELD"
+      ],
+      "expected_pdfa_status": "PASS",
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "subtype-slash-text.pdf",
+      "sha256": "2aa71caf5b813caa43340b2b794d11a51dd0c203f83ebc9bac1e9381b2080884",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_SCHEMA_FIELD"
+      ],
+      "expected_pdfa_status": "PASS",
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "collection-version-text.pdf",
+      "sha256": "42132009fb394f22e1ff9f47c665ac0b387d3237f3d10ec6f41b8d2e1cb12ab4",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "PDF_CATALOG_VERSION"
+      ],
+      "expected_pdfa_status": "PASS",
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "lower-catalog-name.pdf",
+      "sha256": "e9066068f2514e68911505d34f3d541db50140e4752ed11c9f7b5b225995b002",
+      "expected_status": "INCOMPLETE",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [],
+      "expected_pdfa_status": "FAIL",
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "earlier-catalog-name.pdf",
+      "sha256": "e55e60856c6adfc580ed77d7ad4dfa6c583825ed4957e41190be8f13f6a43c4d",
+      "expected_status": "PASS",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [],
+      "expected_pdfa_status": "FAIL"
+    },
+    {
+      "file": "header-1.6.pdf",
+      "sha256": "e9f2456f7f0b0b4a69a77a4dd3c178dd5c38400ff1c58b12568524858b89b964",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "PDF_HEADER_VERSION_READ"
+      ],
+      "expected_pdfa_status": "FAIL"
+    }
+  ],
+  "parent_requirement_review": {
+    "evidence": "docs/improvement/validator-53/prior-native-census.json",
+    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
+    "retained_pdf_bytes": true,
+    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
+  }
+}

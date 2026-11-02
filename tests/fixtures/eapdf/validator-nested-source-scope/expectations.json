@@ -1,0 +1,102 @@
+{
+  "authority": "EA-PDF 7.2: retained originals can contain additional unrendered email data. A top-level-only inspection cannot contradict every original when known nested mail candidates or mailbox envelopes remain uninspected.",
+  "boundary": "No nested ownership assignment, reserialization, full mailbox enumeration or arbitrary archive-content discovery is claimed. A consistent outer original and ordinary non-mail attachments retain independent checks.",
+  "cases": [
+    {
+      "file": "nested-rfc822.pdf",
+      "sha256": "fd222e95db48c839e6d138de5859f30ba1d62c9480123b82c856ebd8c2c8d737",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "nested-global.pdf",
+      "sha256": "bacd2522df9be3635ce2802b5d60fd2b8eb1078443f97db2e102cc2c41f37bc4",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "nested-eml-octet.pdf",
+      "sha256": "07be890b94de7579b46dcf8fa2f4c381c363f620062a274f2676f3f17c9e03d2",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "nested-msg.pdf",
+      "sha256": "e0cfd09175191187eef85c5f21356ce334d3159ca24ca7ef8f73ce4d8c9e7cb0",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "tentative-outer.pdf",
+      "sha256": "17e64c5d8b34d562d426b778bff189e14c9c7482cfa461d55b1cbf088c716cf0",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "mbox-envelope.pdf",
+      "sha256": "c9d9720ff79ed0704eefb7f92f1f52801647dcc9a60fcbf6db216ae209fd7104",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296"
+    },
+    {
+      "file": "outer-consistent.pdf",
+      "sha256": "4bd4bfd23b0a6523ee66a5ae5b6fca5cafb68c0e26281f9952854df3e3ad4bc3",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ASSET_NUMBERMESSAGES_MATCH_RENDERED"
+      ],
+      "seed": "tests/fixtures/eapdf/validator-profile-source-scope/plain-positive.pdf",
+      "seed_sha256": "30c6efa38ada279c2566ad46be94fb6190af4c1eb1e5fbfcdd2a9607d0b8002d",
+      "refinement_2026_10_31": {
+        "previous_status": "PASS",
+        "previous_failures": [],
+        "reason": "The retained fixture declares an incorrect rendered-message count. The newly implemented Table 16 semantic check rejects it; source bytes and unrelated scoped findings are unchanged."
+      },
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ASSET_NUMBERMESSAGES_TYPE"
+          ]
+        },
+        "reason": "The integer NumberMessages differs from independently bound rendered emails; integer schema is separate.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "ordinary-binary-wrong-to.pdf",
+      "sha256": "aa423bd272435145e35f68453fad08c21d92eccc57596f1c0984400389c17ade",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+      "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_TO_FOAF"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "To"
+        ]
+      }
+    }
+  ]
+}

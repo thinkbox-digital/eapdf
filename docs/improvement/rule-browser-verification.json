@@ -1,0 +1,27 @@
+{
+  "artifact": "docs/improvement/specification-audit/rule-browser.html",
+  "sha256": "14195991616e0773a0502ac94f4d295b6131683ea4484fffeea7371e404b7955",
+  "bytes": 21975249,
+  "browser": "Playwright Chromium, offline context",
+  "checks": [
+    "Default: all 278 file/creation/inherited/definition/guidance records; all 97 original pages",
+    "All 301 plain summaries and 229 check definitions embedded, with full rule wording retained",
+    "Shared parameter source clause exposes three separately numbered type, presence and original-value predicates",
+    "All 249 file records; no unmapped mandatory/conditional file records",
+    "Rule search aligns original PDF page 68 and highlights the full two-line PDF-version paragraph",
+    "Original Table 11 typo retained and highlighted beside the approved Mail_Field interpretation",
+    "Exact Mail_GUID table row, source excerpt and derived requirement agree",
+    "Simple rules state the requirement once, omit all-profile boilerplate and keep source/check links",
+    "Scrolling rule rows updates the selected requirement, source page and highlights",
+    "Scrolling original specification selects and aligns the corresponding Mail_GUID rule",
+    "Synchronization off keeps the original pane position when selecting other rules",
+    "Next/previous buttons and J/K keyboard navigation",
+    "Pinned profile evidence downloads from the standalone page without a network request",
+    "Eleven project decisions have sources and rationale; source/rule jumps work; resolved decisions are not labeled open",
+    "Embedded PDF download exactly matches the pinned source SHA-256",
+    "390px mobile layout keeps both panes usable without horizontal overflow",
+    "No JavaScript errors or external network requests; browser context offline throughout"
+  ],
+  "javascript_errors": [],
+  "external_requests": []
+}

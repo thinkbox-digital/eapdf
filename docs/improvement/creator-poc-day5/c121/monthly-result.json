@@ -1,0 +1,61 @@
+{
+  "s": {
+    "original_outputs_unchanged": true,
+    "pdfs": [
+      "2026-10_1s.pdf",
+      "2026-10_1s_2.pdf"
+    ],
+    "exact_source_counts": [
+      1,
+      1
+    ],
+    "first": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "mandatory_failure_codes": [],
+      "sha256": "1dad4927d2e26f9830532008692300f3ee77317abdc2d824c4154dacd756556b"
+    },
+    "second": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "mandatory_failure_codes": [],
+      "sha256": "f3a2b1fa237043c7815eff91a6b63a6012ffe68685d230c86eac53a86767ccdf"
+    }
+  },
+  "m": {
+    "original_outputs_unchanged": true,
+    "pdfs": [
+      "2026-10_1m.pdf",
+      "2026-10_1m_2.pdf"
+    ],
+    "exact_source_counts": [
+      2,
+      2
+    ],
+    "first": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "mandatory_failure_codes": [],
+      "sha256": "e4d3548fe0aa949d692d0fb0398453f34db349a4d8e61ad0c723271c7e12af5f"
+    },
+    "second": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "mandatory_failure_codes": [],
+      "sha256": "df581818daab7c42b1cbe47e59fc16012b5b8e345efca2674b7c877f8b9094d7"
+    }
+  },
+  "staging_removed": true
+}

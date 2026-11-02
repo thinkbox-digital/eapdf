@@ -1,0 +1,143 @@
+{
+  "scope": "V19 equivalent attachment byte/media comparisons without owner assignment",
+  "verification": {
+    "unit_tests": {
+      "run": 448,
+      "passed": 412,
+      "skipped": 36,
+      "seconds": 27.292,
+      "log": "unit-tests.log"
+    },
+    "new_pdf_probes": {
+      "cases": 8,
+      "pdfa_passes": 8,
+      "iso_passes": 8,
+      "same_bytes_before_and_after": true,
+      "results": "before-after-comparison.json"
+    },
+    "generated_profiles": [
+      {
+        "mode": "normal",
+        "profile": "1s",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1si",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1m",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1mi",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1c",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1ci",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1s",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1si",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1m",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1mi",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1c",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1ci",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      }
+    ],
+    "custom_comparisons": {
+      "total": 164,
+      "prior_unchanged": 156,
+      "changed": 5,
+      "results": "custom-regressions.json"
+    },
+    "entry_points": {
+      "checks": 8,
+      "cli": 4,
+      "isolated_web_workers": 4,
+      "all_expected_outcomes_match": true,
+      "results": "pdf-results.json"
+    }
+  },
+  "inputs": {
+    "snapshot": ".eapdf-verification-v19",
+    "manifest": "verification-inputs.json",
+    "files": 691,
+    "archive": "runtime-inputs-final.zip",
+    "archive_sha256": "4a0f445d788bdabfbe1fe9e5a05072b20d0504b6e3b93a6647553ce549fc7d73"
+  },
+  "creator": {
+    "unchanged": true,
+    "jar_sha256": "272ad741590552489dfb6d096f7ee4b01035fb3faf1c76d817394c0c2ad5e16a",
+    "new_java_build": false
+  },
+  "limits": [
+    "Eleven expert/dependency questions remain open.",
+    "Equivalent comparison fields do not establish unique owner/occurrence identities or complete inventory coverage.",
+    "Different/invalid expectations and different stored observations remain unavailable.",
+    "No new Maven build or full packaged-suite acceptance is claimed. Integration/schema skips remain explicit."
+  ],
+  "artifacts": {
+    "assemble-evidence.py": "55e83fb53d753c17d8ca4ffe4c7f423791533b73f17a9c7206d467ffa8e4b333",
+    "before-validate_eapdf.py": "e06ffea30f022a310dbfbc769fb0f29c23790c23d1bf6ff3063697e921561f04",
+    "finalize-docs.py": "fa92f5f17d874b13657b29f9cf68be4dd184a46bebbb749cbfc88cca7efd5e9b",
+    "verify-pdfs.py": "de0f1cd911c52296d781bc0d86d12bb62c8f55bf3df3e5dcfdb732a7fd19fe64",
+    "verify-regressions.py": "9be795028c219fd4c74673aac185f183c453b283ce6c8453115e210cefeb3981"
+  }
+}

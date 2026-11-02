@@ -1,0 +1,143 @@
+{
+  "recorded_at_utc": "2026-10-19T03:34:35.265988+00:00",
+  "authority": "validator_rule_text.json",
+  "work_scope": "Requirements accuracy, ownership and generated expert review; runtime improvements deferred under the requirements-first gate",
+  "thread_recovered": "01a15104-70de-74f2-8302-143eb2a4ea2f",
+  "focused_tests": {
+    "command": "env -u PYTHONPATH python3 -B (unittest discovery for test_validator_completion.py, test_additional_spec_rules.py, test_spec_repairs.py, test_report_observed_values.py)",
+    "run": 30,
+    "pass": 30,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "log": "continuation-focused-tests.log"
+  },
+  "environment": {
+    "python": "3.12.3",
+    "pikepdf": "10.17.0",
+    "pypdf": "6.21.0"
+  },
+  "initial_test_attempts": "PYTHONNOUSERSITE=1 isolated system Python could not import pikepdf; successful run used the available user-installed project dependencies. Initial logs retained in /tmp/eapdf-requirements-continuation/.",
+  "generation": {
+    "command": "python3 -B scripts/build_eapdf_requirements_audit.py",
+    "exit_status": 0,
+    "log": "continuation-generation.log",
+    "checks": [
+      "All 219 code ownership dispositions",
+      "301 uniquely identified records",
+      "46 sections and all 19 tables",
+      "Complete forward/reverse rule links",
+      "All five pinned XML profile hashes and index pairs",
+      "Every claimed upstream rule reference",
+      "Nine open findings exactly matched by nine expert questions"
+    ]
+  },
+  "integrity_probes": {
+    "invented_profile_rule_rejected": true,
+    "undispositioned_candidate_rejected": true
+  },
+  "document": {
+    "file": "expert-review.html",
+    "rule_articles": 219,
+    "unique_anchors": 538,
+    "resolved_internal_links": 795
+  },
+  "unchanged_runtime_sources": {
+    "validator": {
+      "before": "e0ba5f61daacf16c1afd411244830a3b38962442cc7940e87725412461fac584",
+      "after": "e0ba5f61daacf16c1afd411244830a3b38962442cc7940e87725412461fac584"
+    },
+    "java_files_checked": 28,
+    "java_sha256": {
+      "src/main/java/eapdf/Common.java": "b56919c130d4061450e784388d0c5017f6edd2e5928d144a258183447b70802d",
+      "src/main/java/eapdf/ConversionSupervisor.java": "a46c510d09fd00bd4a9108cfd5630d2a7345e8191c0621e9be9019cc7b7b3de2",
+      "src/main/java/eapdf/EapdfConfig.java": "13bb68283ed7e31d05735c5543cb46a1e6bc87a53106280a1c667f36d6ada5e5",
+      "src/main/java/eapdf/EapdfGui.java": "71e49d4a6c7d4192e1f7eeb3600edfd7edb72ee4ae597626c70ec3770631413d",
+      "src/main/java/eapdf/EmailStyles.java": "029e6399f0587db307dceb331c7871aa5b26b20870e8d6db1156ea4cb40e65ca",
+      "src/main/java/eapdf/EmailToPDFA.java": "5f9e01e320ae6c921e5069cc730dcc9b4789a79b5ce65a14e2597f6e19943639",
+      "src/main/java/eapdf/EmlReader.java": "2ddc4ff3f34aa5498251d66e6e181be413c7c10ad610f5ed513c22643a6b6ff5",
+      "src/main/java/eapdf/FontSupport.java": "906fdcba605309a0fec265a2a82e1b3b5181890c8ad6a195b142b4d695a298a6",
+      "src/main/java/eapdf/GmailDownloadToPdf.java": "18fc6011cdcbfd4367dd5b08c74fbe567f2e391e55779534dde4b7bc38d86688",
+      "src/main/java/eapdf/GmailResumeStore.java": "cd7badb79a835e85da695433d19f151fbc0483f50a5d578b5dae574ef31c8a9b",
+      "src/main/java/eapdf/MboxParser.java": "cbb09f053baacfb18305585b6972d4488b6b0b5705586b37e3f6b16e94a231ef",
+      "src/main/java/eapdf/MboxReadInventory.java": "26c0278f75a9cf5e22e0b684da237080bc47f2cbdd4af4e8a76a21d7c2d6bf8b",
+      "src/main/java/eapdf/MboxReader.java": "fed8c3d74a7772456de8cd51af8e15a414404341c24b9dbf4473efa25cd6db69",
+      "src/main/java/eapdf/Models.java": "db7e84f1f2465e095cfba511b1460a285eee27c39c9948e318707ed40957bbc2",
+      "src/main/java/eapdf/MonthlyFilenameArchiveToPdf.java": "4d51a24cfcc7bcf71edcbf3f572446d17ba2fd3d707220f61e8a8dfa93168abb",
+      "src/main/java/eapdf/MsgReader.java": "f704fa83cb9343446b07ca550fa8a0765abe2f4bcf8ecac2f8834e59ae56fee2",
+      "src/main/java/eapdf/OutputTransaction.java": "82879efd9badd7a62d531b0e8072a94dfe41d37cd3627b833ef1bec1c22f8366",
+      "src/main/java/eapdf/PayloadStore.java": "3b4f8ea0929f1797b452f689e7f51f378674f9ead280eb16ad9e6f643501d529",
+      "src/main/java/eapdf/PdfCollectionSupport.java": "bcd49a89c6c1ca807bd5795cc0118fffe3a564c36dd340927a90b85c7a03374f",
+      "src/main/java/eapdf/PdfCreationValidator.java": "598cb6593b3bd6c7d62a9f6133d29f6314ef5ab54b600ef114437a4148db2534",
+      "src/main/java/eapdf/PdfDocumentParts.java": "17503218b79317e1a9d9eaef78d79204e1c48da9bb9108bb4f49946dfd228b6b",
+      "src/main/java/eapdf/PdfFindingAidSupport.java": "ec414290783378fc07ccf08a6a589ff87afda358259c8513458cc7e4bdcff09f",
+      "src/main/java/eapdf/PdfMailWriter.java": "130dd8cc763cc44ee2ba821dc336de60a65b3659451d7c50545eabcd0c18645f",
+      "src/main/java/eapdf/PremisBuilder.java": "e5d848d4ae7f0c23fe432edd1486ece38429974187ddbec8849f6d7187e16483",
+      "src/main/java/eapdf/PreservationInventory.java": "eca5b5ea9e3974baa02e86fe1247729d6d1ffbfd666853dc7d1e9d9296896217",
+      "src/main/java/eapdf/ProcessingLimits.java": "cb6d6423ab10644a4c3410aaab5544567f855231bdd16a1d44e953fd06caa667",
+      "src/main/java/eapdf/PstReader.java": "4cc7eac91368c0845e1cafc669f7cc44496f6e6b2276420e81c7016dbd4778ce",
+      "src/main/java/eapdf/SemanticStructure.java": "a4d13cd6133754515bc134e1b8553f163d3c572534ad2e1c8b01dabdf2ba2393"
+    }
+  },
+  "changed_authored_inputs": {
+    "validator_rule_text.json": {
+      "before": "79c2374ae5713154c07a4d4ac661a4deed93140a9ee73630732caf415772c01b",
+      "after": "cc7a3965cb92175d5b0ca634e1d753ade6fad4e088f46cc00da72bc76b26a650"
+    },
+    "scripts/build_eapdf_requirements_audit.py": {
+      "before": "00cc6ed75aa56128b307c9554d9305cc39855c6aa83054cf354bfe70cf6ba83c",
+      "after": "097120c4c5b8768f64daeab03ede93bfe15035de1c7ba6972758fc8207167903"
+    }
+  },
+  "ownership_counts": {
+    "retain_custom_eapdf_requirement": 137,
+    "delegate_to_verapdf": 11,
+    "operational_only": 11,
+    "split_custom_and_verapdf": 59,
+    "split_custom_declaration_and_external_structure": 1
+  },
+  "remaining_open_questions": [
+    "SPEC-T11-UNDEFINED-TAG",
+    "SPEC-T13-CONTAINER-PARENT",
+    "SPEC-MESSAGEID-CASE",
+    "SPEC-ROLEMAPNS-SCOPE",
+    "SPEC-ATTACHMENT-SET-PRESENCE",
+    "REQ-ANNOTATION-CONTENTS",
+    "SPEC-INREPLYTO-ARRAY",
+    "REQ-FOAF-REPRESENTATION",
+    "DEP-PDFA-EDITION"
+  ],
+  "unmapped_mandatory_or_conditional_file_records": [
+    "MEDIATYPE-RECONSTRUCTION",
+    "ASSOCIATED-MODDATE",
+    "T8-NO-AttachmentRendering",
+    "T8-NO-BodyRendering",
+    "T8-NO-EmailHeaderRendering",
+    "T8-NO-RawEmailRendering",
+    "T11-Mail_ContentSet"
+  ],
+  "no_full_suite_or_maven_build": true,
+  "no_sample_regeneration": true,
+  "no_runtime_or_creator_fix_claimed": true,
+  "no_commit_deployment_or_external_communication": true,
+  "ephemeral_dependency_downloads": [
+    {
+      "url": "https://raw.githubusercontent.com/adobe/XMP-Toolkit-SDK/main/docs/XMPSpecificationPart1.pdf",
+      "status": "retrieved",
+      "sha256": "e0056b9d5c29d4d21eda1856cf947b54cee3013944638a9871aed7d67a949090",
+      "local_evidence": "/tmp/eapdf-requirements-continuation/adobe-xmp-part1.pdf"
+    },
+    {
+      "url": "https://pdfa.org/download-area/specifications/PDF-Declarations.pdf",
+      "status": "HTTP403; reviewed with web tool",
+      "sha256": null,
+      "local_evidence": null
+    },
+    {
+      "url": "https://xmlns.com/foaf/spec/",
+      "status": "retrieved",
+      "sha256": "0deb5bab58fb495f1f8b920d758f2365375eb252d9d827d6a39a400bf91451cf",
+      "local_evidence": "/tmp/eapdf-requirements-continuation/foaf.html"
+    }
+  ]
+}

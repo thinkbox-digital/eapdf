@@ -1,0 +1,78 @@
+{
+  "authority": [
+    "EA-PDF 9.8.4: attachments are an unordered set",
+    "Table 19: CheckSum is optional; SizeInBytes can be zero for removed attachments"
+  ],
+  "scope": "Source field consistency; matching does not prove unique attachment occurrence identity or a complete original inventory.",
+  "source_sha256": "4e55588722bb951bf834f773fa04b6cacd9ad3fbd1f5f12198dd623fcfc28327",
+  "cases": [
+    {
+      "file": "control.pdf",
+      "sha256": "9814652ffc81b3a9a4e989b8980515a88b7499e31649da31596e1ac0ca1616a9",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "placeholder-first.pdf",
+      "sha256": "d4a9998f869d98dad904067c13aa3e143a7ef7926da6b05408fd59ab9be30afc",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "retained-first.pdf",
+      "sha256": "73e4fe5a87ca46ed77f5ddbd7175c1ca2e52517a22f461a34da3a9f8e72bc5e2",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "placeholder-empty-checksum.pdf",
+      "sha256": "07dca51205ae46da7a0133e19bcd2752d18dbcb339bd64ba2b9c68daf95a5974",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "retained-first-empty-checksum.pdf",
+      "sha256": "17423e7b565decdbba500882cf20624ade66776661e2dca7b98e1941408818b6",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "wrong-retained-size.pdf",
+      "sha256": "d429a7973bb5b5302b939a8a0929419cedef2422771a456b80332d8d65581cb3",
+      "expected_failures": [
+        "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "ATTACHMENT_XMP_SIZE_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_ANNOTATIONS_PRESENT",
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ]
+        },
+        "reason": "Declared SizeInBytes is compared with the associated stored native stream, independently of original byte preservation.",
+        "retained_pdf_bytes": true
+      }
+    }
+  ]
+}

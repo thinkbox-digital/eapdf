@@ -1,0 +1,17 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -8549,11 +8549,11 @@
+     attachments_by_owner=defaultdict(list)
+     # Table 19's GUID is the containing email's generated GUID. Establish a
+     # complete typed inventory before proving that a referenced owner is absent.
+-    email_guids={guid_value(record.get("Mail_GUID")) for record in records}
++    email_guids={guid_value(record.get("Mail_GUID")) for record in records}-{''}
+     guid_inventory_complete=bool(records) and all(guid_value(record.get("Mail_GUID")) for record in records)
+     for attachment in attachment_records:
+-        guid=guid_value(attachment.get("Mail_GUID"))
+-        if not guid or guid in email_guids:
++        guid=attachment.get("Mail_GUID")
++        if not is_xmp_text(guid) or guid in email_guids:
+             continue
+         details={"Filename":attachment.get("Filename"),"Mail_GUID":guid,
+                  "known_email_guids":sorted(email_guids-{''}),"complete_guid_inventory":guid_inventory_complete}

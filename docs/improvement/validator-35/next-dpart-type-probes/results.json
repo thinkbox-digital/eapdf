@@ -1,0 +1,66 @@
+[
+  {
+    "file": "docs/improvement/validator-35/next-dpart-type-probes/root-type-text.pdf",
+    "sha256": "bd028fd4cec09586a672768838cf8d4c4a3131275272ec08b22221184f12a334",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-35/next-dpart-type-probes/node-type-text.pdf",
+    "sha256": "e35f9d304ed1e42ad62c19a6b83e080deadfa64dc9553b05dcba226f4c39450f",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-35/next-dpart-type-probes/root-type-wrong.pdf",
+    "sha256": "bc0eed6d5a5f219034555fb41c4904b2bf2298a334564bd1710ca7ef7c9d1281",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-35/next-dpart-type-probes/node-type-wrong.pdf",
+    "sha256": "a0c294f79b66ed9e53df0f39de57ea41eb26246c857f9e0906362498d4cbfb76",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-35/next-dpart-type-probes/record-level-boolean.pdf",
+    "sha256": "38191e7d6ec118fb972fc464a7deedc3dccb4472b132f0549bf6079cdb8fd4db",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-35/next-dpart-type-probes/node-names-text.pdf",
+    "sha256": "fd6f49ae6bbe3a52bd1f9baa9a3bd75ed4a2294eb35f842d807beec27e97ae7b",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-35/next-dpart-type-probes/node-names-count.pdf",
+    "sha256": "a706e528dfbf5322fbf3db245cd2026ca3542791cdeb67bd998e5565f748eeb6",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-35/next-dpart-type-probes/node-name-xmlbad.pdf",
+    "sha256": "2320cd58063a8e64955aeb52c13817a691dabe9a0fb4b669503daa04e1bd999b",
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  }
+]

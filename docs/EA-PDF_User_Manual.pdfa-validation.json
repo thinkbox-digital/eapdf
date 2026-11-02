@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "profile": "PDF/A-2B validation profile",
+  "checks": 33124,
+  "failed_rules": 0,
+  "job_end_status": "normal",
+  "findings": []
+}

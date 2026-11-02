@@ -1,0 +1,200 @@
+{
+  "batch": "V05",
+  "date": "2026-10-19",
+  "authority": "validator_rule_text.json",
+  "tests": {
+    "unit": {
+      "run": 330,
+      "passed": 308,
+      "skipped": 22
+    },
+    "focused": {
+      "run": 8,
+      "passed": 8
+    },
+    "profile_integration": {
+      "run": 2,
+      "passed": 2
+    }
+  },
+  "profiles": [
+    {
+      "mode": "normal",
+      "profile": "1s",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "normal",
+      "profile": "1si",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "normal",
+      "profile": "1m",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "normal",
+      "profile": "1mi",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "normal",
+      "profile": "1c",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "normal",
+      "profile": "1ci",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1s",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1si",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1m",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1mi",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1c",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1ci",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    }
+  ],
+  "corpus": [
+    {
+      "file": "description-name.pdf",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "DPM_DESC_REQUIRED"
+      ]
+    },
+    {
+      "file": "description-number.pdf",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "DPM_DESC_REQUIRED"
+      ]
+    },
+    {
+      "file": "description-utf16.pdf",
+      "pdfa": "PASS",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "file": "extension-key.pdf",
+      "pdfa": "PASS",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "file": "invalid-utf8-name.pdf",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "DPM_CONTENTSETTYPE_PRESENT",
+        "DPM_NAME_TYPES"
+      ]
+    },
+    {
+      "file": "valid.pdf",
+      "pdfa": "PASS",
+      "status": "PASS",
+      "failures": []
+    }
+  ],
+  "runtime_entry_points": [
+    {
+      "file": "extension-key.pdf",
+      "entry": "cli",
+      "pdfa": "PASS",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "file": "extension-key.pdf",
+      "entry": "web-worker",
+      "pdfa": "PASS",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "file": "description-number.pdf",
+      "entry": "cli",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "DPM_DESC_REQUIRED"
+      ]
+    },
+    {
+      "file": "description-number.pdf",
+      "entry": "web-worker",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "DPM_DESC_REQUIRED"
+      ]
+    },
+    {
+      "file": "invalid-utf8-name.pdf",
+      "entry": "cli",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "DPM_CONTENTSETTYPE_PRESENT",
+        "DPM_NAME_TYPES"
+      ]
+    },
+    {
+      "file": "invalid-utf8-name.pdf",
+      "entry": "web-worker",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "DPM_CONTENTSETTYPE_PRESENT",
+        "DPM_NAME_TYPES"
+      ]
+    }
+  ],
+  "boundary": "Final DPM guard verified by all unit tests, twelve final-source profile reports, six PDF/A-valid probes and six actual CLI/web-worker checks. V04 full packaged suite is historical; no new full 330-test packaged-suite claim. Final runtime, JSON and DPM test/fixture hashes match verification-inputs.json.",
+  "limits": [
+    "Nested arbitrary DPM values and complete per-email ownership remain open.",
+    "Canonical XMP asset/attachment field schema remains next work.",
+    "Eleven specification/dependency questions and mixed-rule/standalone ISO/TS boundaries remain.",
+    "No Java/creator change, fresh Maven build, CLI change or sample regeneration."
+  ]
+}

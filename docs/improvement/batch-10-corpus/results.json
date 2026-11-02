@@ -1,0 +1,86 @@
+[
+  {
+    "case": "valid-encoded-property",
+    "sha256": "a0edd9867768fdf5d2b38d2104e0c5ed6b0388ab63b9d260c18443c1a955d527",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "recommendation": "PASS",
+    "decode_errors": 0,
+    "observed_comparisons": {
+      "equal": 10
+    },
+    "source_occurrences": 18,
+    "expected_result_observed": true
+  },
+  {
+    "case": "bad-source-only",
+    "sha256": "e07799c8d9e468a02879eb4a58f6088c4a8e85e20ac781e1c2bc1151d301784f",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "recommendation": "PASS",
+    "decode_errors": 1,
+    "observed_comparisons": {
+      "equal": 10
+    },
+    "source_occurrences": 18,
+    "expected_result_observed": true
+  },
+  {
+    "case": "invalid-base64-alphabet",
+    "sha256": "dc2b1910bacd4da91f46392adab935c0c2e01c9360b399c53719e4666a24b8d9",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "recommendation": "WARN",
+    "decode_errors": 1,
+    "observed_comparisons": {
+      "equal": 10
+    },
+    "source_occurrences": 18,
+    "expected_result_observed": true
+  },
+  {
+    "case": "incomplete-base64-padding",
+    "sha256": "5c1e31cb8180d302c331a378084c6a624b1a83e9f12368706130a4256221572b",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "recommendation": "WARN",
+    "decode_errors": 1,
+    "observed_comparisons": {
+      "equal": 10
+    },
+    "source_occurrences": 18,
+    "expected_result_observed": true
+  },
+  {
+    "case": "invalid-q-escape",
+    "sha256": "53b150d4731f6c115b867a004be6429da332e54cac3004780674e26229835b22",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "recommendation": "WARN",
+    "decode_errors": 1,
+    "observed_comparisons": {
+      "equal": 10
+    },
+    "source_occurrences": 18,
+    "expected_result_observed": true
+  },
+  {
+    "case": "isolated-bad-source-omitted",
+    "sha256": "1a53df76f96237a9e64459964192721c74861052127fca91ff9f452d66f18517",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "recommendation": "N/A",
+    "decode_errors": 0,
+    "observed_comparisons": {
+      "unavailable": 10
+    },
+    "source_occurrences": 0,
+    "expected_result_observed": true
+  }
+]

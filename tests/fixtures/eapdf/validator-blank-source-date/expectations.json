@@ -1,0 +1,62 @@
+{
+  "authority": "EA-PDF Table18: a supplied blank original Date value cannot be a valid xsd:dateTime, so Raw-Sent is required and may preserve the blank as present empty text.",
+  "boundary": "A physically absent Date header is distinguished from an explicit blank/whitespace value. This is not a complete date parser or normalization-policy certification.",
+  "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+  "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+  "cases": [
+    {
+      "file": "blank-no-raw.pdf",
+      "sha256": "ed6c5042abc79b7c99796a758533f423e4cd545967e7154bedf77a39907a1d7f",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID"
+      ]
+    },
+    {
+      "file": "blank-empty-raw.pdf",
+      "sha256": "145ea89cde170f56064c9c03ee7eb29f8f5dff2657df955b9fbe8190bc20c280",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "blank-qualified-raw.pdf",
+      "sha256": "2065c65dff57231f5f7b69fc45689c8660f3596997ecf33f8403a67174541176",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "blank-attribute-raw.pdf",
+      "sha256": "f99d27bccc7764bf4e82c5b0a94e99665be47b73cf6eb85fb427a92b8022010c",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "whitespace-no-raw.pdf",
+      "sha256": "16b53aac6227197d17db853d4ef66f75458b36649535ee9e2a2439641d50fa4a",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID"
+      ]
+    },
+    {
+      "file": "whitespace-empty-raw.pdf",
+      "sha256": "008eaaeb4b8d397c8a93e8195a936067a4bb60c754ad5eee9b81407fafc12a3e",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "absent-no-raw.pdf",
+      "sha256": "fbf072d899b495a39f742421d338084311cd1058687999fc06e308233e3b9dfb",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "invalid-no-raw.pdf",
+      "sha256": "1ce0f34cb55b3aa339fac442d694e1f29a4b8e7cc897d8df386fbe2d50c8105d",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID"
+      ]
+    }
+  ]
+}

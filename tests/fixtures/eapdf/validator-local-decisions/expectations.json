@@ -1,0 +1,61 @@
+{
+  "authority": "User-authorized project interpretations 2026-10-21; EA-PDF7.5 and Table18. Contents uses PDF text, not nonempty text. Unordered reply IDs use Bag.",
+  "cases": [
+    {
+      "file": "contents-missing.pdf",
+      "sha256": "11ccfd98a57365c85840bcb6dd8dd2ec1b6d5142de39c14e6a66aa240f9d3183",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ANNOTATION_CONTENTS_REQUIRED"
+      ]
+    },
+    {
+      "file": "contents-name.pdf",
+      "sha256": "cdc026073f234b14cd5aa2b0ad22b76655c8a92402b555818db6dd0ccf9d9965",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ANNOTATION_CONTENTS_REQUIRED"
+      ]
+    },
+    {
+      "file": "contents-empty.pdf",
+      "sha256": "c5d0367329032d47c188e4b2137943c26935633b022bed99eb1b7b96370a3032",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "contents-unicode.pdf",
+      "sha256": "52c814f67fa83d9cf0c22c621076fc0f892a62f065f11dadb51ed48dc5602676",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "contents-unreadable.pdf",
+      "sha256": "19e3193ee33080ff58eadb8d29348d6b103fd130ec641b5e07373050f524281c",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "reply-bag.pdf",
+      "sha256": "7e47f497c1883c76c3aa21d42c29888b0b0b13a738675efa719b4986b0b8537b",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "reply-seq.pdf",
+      "sha256": "dd7a0f2b33b96c4fa3fdee1f3372129e6db5be66d7be3d7f5e0fb85c07fe93be",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_INREPLYTO_XMP"
+      ]
+    },
+    {
+      "file": "reply-alt.pdf",
+      "sha256": "1abf73cde98de22e407723d3c3130fdcb9148823262b78063ecdcec154dd46a3",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_INREPLYTO_XMP"
+      ]
+    }
+  ]
+}

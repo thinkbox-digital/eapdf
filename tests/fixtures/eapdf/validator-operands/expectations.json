@@ -1,0 +1,46 @@
+{
+  "authority": "EA-PDF 9.7 printed p75; independent page/MCID inspection",
+  "seed": "tests/fixtures/eapdf/validator-table11/valid.pdf",
+  "seed_sha256": "a41491747970410a68f2fdaea57bd265dc6f698f5b6cd8f97fcaa973c05d1e3d",
+  "cases": [
+    {
+      "file": "valid.pdf",
+      "sha256": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_operand_level": "PASS"
+    },
+    {
+      "file": "swapped.pdf",
+      "sha256": "e684fbc958b84c8f6ca8088edc24d09692e5bed0f4922868bc894876aad2476f",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_operand_level": "FAIL"
+    },
+    {
+      "file": "standard-operand.pdf",
+      "sha256": "a4636907a14ec4324a139b7e159c7a816a3960f4a77c09b123f7abc48ce12669",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_operand_level": "FAIL"
+    },
+    {
+      "file": "named-properties.pdf",
+      "sha256": "609e0c9b34533c3666fad4605dd02d2007dc835c08ad7f72905f7ef1eb42fa54",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_operand_level": "PASS"
+    },
+    {
+      "file": "standard-only.pdf",
+      "sha256": "b3c5a12b449888160fc155046f1ad710950500ccce2ad31f054d582cf7edb570",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "expected_operand_level": "N/A"
+    }
+  ]
+}

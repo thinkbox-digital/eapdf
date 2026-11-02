@@ -1,0 +1,13 @@
+{
+  "nativeReferences": 4,
+  "missingFields": [
+    {
+      "descriptor": 2097380,
+      "value": "\u003c3148510c2360443396a78d35e0888de9@pf.gov.br\u003e",
+      "input": "src/test/resources/eapdf/email/attached-message.pst",
+      "field": "References"
+    }
+  ],
+  "nativeInReplyTo": 4,
+  "messagesIncludingAttached": 79
+}

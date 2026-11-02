@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-22",
+  "task": "Complete interrupted sample regeneration",
+  "recovered_thread": "01a1639b-9e54-7d31-a00e-430b757d4006",
+  "creator_checkpoint": "C01",
+  "creator_jar": "/tmp/eapdf-creator-c01-samples-build/emailtopdfa-1.4.0.jar",
+  "creator_jar_sha256": "9d88cf47a1273b52bd6afdb0874b8771843c6754acf41c8c570109df1611aa8d",
+  "java": {
+    "tests": 165,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "validator_baseline": "V85",
+  "validator_unchanged": true,
+  "publication": "All six samples regenerated; two PST archive results remain INCOMPLETE.",
+  "profiles": [
+    {
+      "profile": "1s",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "iso": "PASS",
+      "incomplete_reasons": {}
+    },
+    {
+      "profile": "1si",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "iso": "PASS",
+      "incomplete_reasons": {}
+    },
+    {
+      "profile": "1m",
+      "status": "INCOMPLETE",
+      "pdfa": "PASS",
+      "iso": "PASS",
+      "incomplete_reasons": {
+        "Non-SMTP source address preservation could not be verified": 130,
+        "Some Content Set tag counterparts remain unavailable": 1,
+        "Some Art Content Set counterparts remain unavailable": 1,
+        "Message content/GUID ownership remains unavailable": 1,
+        "Content Group type correspondence remains unavailable": 1,
+        "Some active subtype properties could not be compared": 1
+      }
+    },
+    {
+      "profile": "1mi",
+      "status": "INCOMPLETE",
+      "pdfa": "PASS",
+      "iso": "PASS",
+      "incomplete_reasons": {
+        "Attachment native-byte consistency could not be fully verified": 1,
+        "Some Content Set tag counterparts remain unavailable": 1,
+        "Some Art Content Set counterparts remain unavailable": 1,
+        "Message content/GUID ownership remains unavailable": 1,
+        "Content Group type correspondence remains unavailable": 1,
+        "Some active subtype properties could not be compared": 1
+      }
+    },
+    {
+      "profile": "1c",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "iso": "PASS",
+      "incomplete_reasons": {}
+    },
+    {
+      "profile": "1ci",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "iso": "PASS",
+      "incomplete_reasons": {}
+    }
+  ],
+  "collection_children": [
+    {
+      "child": "Agenda and timeline slides_000001_1s.pdf",
+      "sha256": "0df5bbd4db5649e9b0722e4c9a2cc0efcc981aade54b04525332319407393d48",
+      "status": "PASS",
+      "pdfa_status": "PASS"
+    },
+    {
+      "child": "Agenda and timeline slides_000001_1si.pdf",
+      "sha256": "c093a06056b5081ec3220c5d28190362274d69aa59d5fda7707b21b1abe764fe",
+      "status": "PASS",
+      "pdfa_status": "PASS"
+    }
+  ],
+  "source_preservation": [
+    {
+      "profile": "1s",
+      "sources": 1,
+      "payloads_identical": true
+    },
+    {
+      "profile": "1si",
+      "sources": 0,
+      "payloads_identical": true
+    },
+    {
+      "profile": "1m",
+      "sources": 71,
+      "payloads_identical": true
+    },
+    {
+      "profile": "1mi",
+      "sources": 0,
+      "payloads_identical": true
+    },
+    {
+      "profile": "1c",
+      "sources": 1,
+      "payloads_identical": true
+    },
+    {
+      "profile": "1ci",
+      "sources": 0,
+      "payloads_identical": true
+    }
+  ],
+  "published": {
+    "examples/sample_1s.pdf": "08471ae5c502262dec3cc5547ae89eb33f00c0e677baea7f37e9fcc82f791211",
+    "output/sample_1s.pdf": "08471ae5c502262dec3cc5547ae89eb33f00c0e677baea7f37e9fcc82f791211",
+    "examples/sample_1si.pdf": "414d70c40eee606c7d451d3438ab89d11ca13feb5181af5b63e76f27bf08b6e8",
+    "examples/sample_1m.pdf": "5a9b2c27f1df16cc95b6b1294f9cded2e68af12e8e2a410cedc5c31608410be5",
+    "examples/sample_1mi.pdf": "953913b0943703ac07a2f708ce757fc59444de8a8fb7545fb3b2175ad122334b",
+    "examples/sample_1c.pdf": "8cbb766e3381dec7b52a4a63332737a65ffc11709c4f3b148d96a7217757364f",
+    "examples/sample_1c_finding_aid.pdf": "d1dee0ad864a0c27828278bf71e7be08ee25d6037f8a9790fa2877d30fd7c7ed",
+    "examples/sample_1c_index.xlsx": "0acd325f5d4ca1edd5de21fb11ec09ea46359afec077e6a072dc6fdf292247f9",
+    "examples/sample_1ci.pdf": "0827df2f771f284246fbf014805ccd50f0fff62b85226edf09d798e37a9c74ef",
+    "examples/sample_1ci_finding_aid.pdf": "5c3372652c651e325f2f790f47f7f8624c5bd38d6d1874b1a12494fc9df845d5",
+    "examples/sample_1ci_index.xlsx": "c2d2a992b23f639171dff11a860662e1322f3d6ddd330858cc3442328ccc8a6e"
+  },
+  "standard_regeneration": "Unchanged strict PASS gate stopped at 1m; failed receipt retained in resumed/.",
+  "review": "Explicit publication of user-requested regenerated examples with honest INCOMPLETE archive reports. No validator result was altered; this is not full archive acceptance."
+}

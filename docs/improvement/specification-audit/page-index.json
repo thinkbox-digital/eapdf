@@ -1,0 +1,1450 @@
+[
+  {
+    "pdf_page": 1,
+    "printed_page": null,
+    "text_sha256": "9c10048789713b859787e65f8b4ff67d535d83bfcbfb8771337d4a487d3207f9",
+    "requirement_ids": [],
+    "clause_sections": [],
+    "classification": "front matter"
+  },
+  {
+    "pdf_page": 2,
+    "printed_page": null,
+    "text_sha256": "742a8fb965ec5e1145bb971c1ad38f947cfb8030a2044423b1c9374ad5543052",
+    "requirement_ids": [],
+    "clause_sections": [],
+    "classification": "front matter"
+  },
+  {
+    "pdf_page": 3,
+    "printed_page": null,
+    "text_sha256": "5076f11dd92e47262a5e225eca037a5b801d769e13df4eb486e43b39b64d7c18",
+    "requirement_ids": [],
+    "clause_sections": [],
+    "classification": "front matter"
+  },
+  {
+    "pdf_page": 4,
+    "printed_page": null,
+    "text_sha256": "45d48a717ba11239caac5883ce30f610ece3190d330210c9d66eb37978fb89f9",
+    "requirement_ids": [],
+    "clause_sections": [],
+    "classification": "front matter"
+  },
+  {
+    "pdf_page": 5,
+    "printed_page": null,
+    "text_sha256": "5c586c095ef7bcaefcddf17df46b6ff900eef2704d78cb720504b563d844b620",
+    "requirement_ids": [],
+    "clause_sections": [],
+    "classification": "front matter"
+  },
+  {
+    "pdf_page": 6,
+    "printed_page": null,
+    "text_sha256": "adee6d57f94f36a0569f57262292a01b63c7bf15a8c4ff0bed107f5560c82a3c",
+    "requirement_ids": [],
+    "clause_sections": [],
+    "classification": "front matter"
+  },
+  {
+    "pdf_page": 7,
+    "printed_page": null,
+    "text_sha256": "b3c94b274770eaac4015780c3cf26c946e4dc8e55620b5ea392c1cf60c59b80e",
+    "requirement_ids": [],
+    "clause_sections": [],
+    "classification": "front matter"
+  },
+  {
+    "pdf_page": 8,
+    "printed_page": 1,
+    "text_sha256": "55c11f400bdd245a87d6140c50c3dbb00feb2d375706ace00a21605c9c54c0af",
+    "requirement_ids": [],
+    "clause_sections": [
+      "1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 9,
+    "printed_page": 2,
+    "text_sha256": "872b2f4389b77a3249e955993bc1ebde731a8867b2c32e23a9d40cf726bcd628",
+    "requirement_ids": [],
+    "clause_sections": [
+      "2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 10,
+    "printed_page": 3,
+    "text_sha256": "3cf493cb52310c67ff8afe548804ce9ddd8738d2f123c7303ac794c091806c0e",
+    "requirement_ids": [],
+    "clause_sections": [
+      "2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 11,
+    "printed_page": 4,
+    "text_sha256": "6f173024e9816bb28a6e01fe79990d988731bf74eabd249722a833c5345ee9bb",
+    "requirement_ids": [],
+    "clause_sections": [
+      "3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 12,
+    "printed_page": 5,
+    "text_sha256": "abd714521c16c1888f58824b23f3ceca5e3e4c26c1739fe08fb505b077a14e78",
+    "requirement_ids": [],
+    "clause_sections": [
+      "3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 13,
+    "printed_page": 6,
+    "text_sha256": "26613b0d118b1ca122ba891b261784ee47b5668f8858367d26afe3bd68c02d26",
+    "requirement_ids": [],
+    "clause_sections": [
+      "3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 14,
+    "printed_page": 7,
+    "text_sha256": "63b5e46a47b3727d402543a1536975ddb8be839a0999daafac321903ab6f986e",
+    "requirement_ids": [
+      "PROFILE-ISOLATION",
+      "T1-s",
+      "T1-m",
+      "T1-c",
+      "T1-i"
+    ],
+    "clause_sections": [
+      "3",
+      "3.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 15,
+    "printed_page": 8,
+    "text_sha256": "61345c0d50fec83dd8bd664cd36b921f25580ff06ecc200e48599d836036f2de",
+    "requirement_ids": [
+      "T2-s",
+      "T2-si",
+      "T2-m",
+      "T2-mi",
+      "T2-c",
+      "T2-ci"
+    ],
+    "clause_sections": [
+      "3.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 16,
+    "printed_page": 9,
+    "text_sha256": "4619918905cad36bfc92e2a6e4477c47c30dcf59d92648eb6b2adb4fe9dffead",
+    "requirement_ids": [
+      "T2-s",
+      "T2-si",
+      "T2-m",
+      "T2-mi",
+      "T2-c",
+      "T2-ci"
+    ],
+    "clause_sections": [
+      "3.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 17,
+    "printed_page": 10,
+    "text_sha256": "f4efccf6df55cad1b43c2f72489f479fb6a6fea503849b3abbadad9413b02acb",
+    "requirement_ids": [
+      "T2-s",
+      "T2-si",
+      "T2-m",
+      "T2-mi",
+      "T2-c",
+      "T2-ci"
+    ],
+    "clause_sections": [
+      "3.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 18,
+    "printed_page": 11,
+    "text_sha256": "56460dfc1a00af8800ad31d4af3959843d9845fb2f357bb3afe6118331eb3365",
+    "requirement_ids": [
+      "T2-s",
+      "T2-si",
+      "T2-m",
+      "T2-mi",
+      "T2-c",
+      "T2-ci"
+    ],
+    "clause_sections": [
+      "3.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 19,
+    "printed_page": 12,
+    "text_sha256": "db115a333b1fb3c7de18ed3cd371cd847d96d2003b67ead4587b4f24a1d1140b",
+    "requirement_ids": [],
+    "clause_sections": [
+      "3.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 20,
+    "printed_page": 13,
+    "text_sha256": "39109985726998006194337c471e9c666e1337db645628196496cf2555dae527",
+    "requirement_ids": [],
+    "clause_sections": [
+      "3.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 21,
+    "printed_page": 14,
+    "text_sha256": "bbbfbd7360c5a5b49020d690b043c2fee9f1fe8345b6a388fe6774cfeeacf3d7",
+    "requirement_ids": [],
+    "clause_sections": [
+      "3.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 22,
+    "printed_page": 15,
+    "text_sha256": "10232932795575fd833a5d2777fa4db5ab1f6fafad21aa832e717354483593bb",
+    "requirement_ids": [],
+    "clause_sections": [
+      "4"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 23,
+    "printed_page": 16,
+    "text_sha256": "902db781954b183e2cf9e705a2ddd6e5dedfcb97e8f4dbd8ba9f90294d148219",
+    "requirement_ids": [],
+    "clause_sections": [
+      "4"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 24,
+    "printed_page": 17,
+    "text_sha256": "91ed759b18172e5f0d3454f34728ca81890de4dff7912a2c4ac94af5a159ba90",
+    "requirement_ids": [],
+    "clause_sections": [
+      "4"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 25,
+    "printed_page": 18,
+    "text_sha256": "0def4f2995d435bdb1a5cccc7f87cba68166fb4ecf699e79f64fd14d6199befa",
+    "requirement_ids": [],
+    "clause_sections": [
+      "5"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 26,
+    "printed_page": 19,
+    "text_sha256": "499bcbb0a9173a16e3fd716ee883c09c9040afd4af8e9d2908cc781dd43ea705",
+    "requirement_ids": [
+      "CONTENTSET-CONSECUTIVE"
+    ],
+    "clause_sections": [
+      "5"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 27,
+    "printed_page": 20,
+    "text_sha256": "599b728dd44161d5802d771de74bad900eea12b5a71b34fd47c806f1db73e526",
+    "requirement_ids": [],
+    "clause_sections": [
+      "5"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 28,
+    "printed_page": 21,
+    "text_sha256": "b36bc2ca14674ab1e17bee163f99fbfc804b7e5e802fe4c6f7b887698793dfee",
+    "requirement_ids": [
+      "SCOPE-PREMIS"
+    ],
+    "clause_sections": [
+      "5"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 29,
+    "printed_page": 22,
+    "text_sha256": "0837bb773046f417bda18865219fb060fc49324d182e21893ea21e7eefd7f04e",
+    "requirement_ids": [
+      "SCOPE-POLICY"
+    ],
+    "clause_sections": [
+      "6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 30,
+    "printed_page": 23,
+    "text_sha256": "a499697ed88fb23c847223b8429041c6e13e6b77c2efe0f6390122765c6b1899",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7",
+      "7.1",
+      "7.1.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 31,
+    "printed_page": 24,
+    "text_sha256": "7ef9ffcc0b4336edacf28da07a31f33240a3dae82a012dd8f30e75fcb7661e35",
+    "requirement_ids": [
+      "XMP-UTF8"
+    ],
+    "clause_sections": [
+      "7.1.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 32,
+    "printed_page": 25,
+    "text_sha256": "9a23de5b5ddf00b984ab7d1e94247dedbe5e26ed19b7ad42e312c11c2277e2f9",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.1.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 33,
+    "printed_page": 26,
+    "text_sha256": "c7a7d81fea18eac76fcf73077190c42a50b32e0e14a0144e87a798b44465fb73",
+    "requirement_ids": [
+      "DECLARATIONS-PUBLIC",
+      "XMP-EXTRA"
+    ],
+    "clause_sections": [
+      "7.1.1",
+      "7.1.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 34,
+    "printed_page": 27,
+    "text_sha256": "5e17a31db508db315f9cb0a88bed953421cb700c0de60f4c016771c978f52b69",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.1.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 35,
+    "printed_page": 28,
+    "text_sha256": "1aaddda94edb01cdecb08f8482a27646d9ba659f9173618fc081f36d84fe79bc",
+    "requirement_ids": [
+      "T3-EXAMPLE"
+    ],
+    "clause_sections": [
+      "7.1.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 36,
+    "printed_page": 29,
+    "text_sha256": "0ba7a4353087492ffd9fa40d2261175562cd8f4246061c7934c0c5ec0856e216",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.1.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 37,
+    "printed_page": 30,
+    "text_sha256": "f3513f3c3bd3f2e262d80b35fde5d36c4a17af352fb0074a1bfa242ac45d4421",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.1.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 38,
+    "printed_page": 31,
+    "text_sha256": "a776529a4ce4ed4cc1cbe005413bb27de5df370e9c740ec53b3984f33310d0dd",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.1.2",
+      "7.1.3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 39,
+    "printed_page": 32,
+    "text_sha256": "e6b4ca7fe60fcaf2b5f0bf4566cfe278b68042b04f0040f327f6bc398ed183f3",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.1.3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 40,
+    "printed_page": 33,
+    "text_sha256": "8557d35a25ad2e99269ac1a4c2cb7a6232fbfe53423e5259c8c1b0ad5a771a84",
+    "requirement_ids": [
+      "EMBEDDED-DEDUP"
+    ],
+    "clause_sections": [
+      "7.1.3",
+      "7.1.4"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 41,
+    "printed_page": 34,
+    "text_sha256": "45cacc922f5cb164653a31e67af8b1447688b06965699cbd49c37d7a11abf5a5",
+    "requirement_ids": [
+      "SOURCE-DIRECT-RAW",
+      "SOURCE-PREPROCESS-POLICY",
+      "SOURCE-PROVENANCE"
+    ],
+    "clause_sections": [
+      "7.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 42,
+    "printed_page": 35,
+    "text_sha256": "bf444f9ef3181fea3c02e8f90b287eb02cbc3eed1593c2f59d24e6c47b836422",
+    "requirement_ids": [
+      "SOURCE-PREPROCESS-POLICY",
+      "SOURCE-COVERAGE"
+    ],
+    "clause_sections": [
+      "7.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 43,
+    "printed_page": 36,
+    "text_sha256": "e4c7be01d9f44286f15323f28b7a7dc5d3dc0b2f9a0360b0e0794fb8e8a0b806",
+    "requirement_ids": [
+      "HEADER-SOURCE-EQUIVALENCE"
+    ],
+    "clause_sections": [
+      "7.2",
+      "7.3",
+      "7.3.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 44,
+    "printed_page": 37,
+    "text_sha256": "96e5b0b3ea29449bbe1b1f6ea282889cd71a4badfc4a73f6ed0d56435d88b040",
+    "requirement_ids": [
+      "CORE-VISIBLE-RENDERING",
+      "T4-To",
+      "T4-From",
+      "T4-Sent",
+      "T4-Raw-Sent",
+      "T4-Subject",
+      "T4-Message-ID",
+      "T4-Cc",
+      "T4-Bcc",
+      "T4-In-Reply-To",
+      "T4-Content-Type",
+      "T4-Mail_GUID",
+      "T4-Original-message-size",
+      "T4-Number-of-attachments"
+    ],
+    "clause_sections": [
+      "7.3.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 45,
+    "printed_page": 38,
+    "text_sha256": "0b9c3986a9cf5bb0fcad92daaa5ec393109c1dde6322b256e61b632fcae679b8",
+    "requirement_ids": [
+      "HEADER-VISIBLE-DISTINCTION"
+    ],
+    "clause_sections": [
+      "7.3.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 46,
+    "printed_page": 39,
+    "text_sha256": "acc6846c7c56e05bcb9c87928c19d94b43fb34907b0fbd8d9fa2147f00f45dc0",
+    "requirement_ids": [
+      "PAGE-LABELS"
+    ],
+    "clause_sections": [
+      "7.3.1",
+      "7.3.2",
+      "7.4",
+      "7.4.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 47,
+    "printed_page": 40,
+    "text_sha256": "0a42bd5927bd2da232f00179c9d92c6df814b7dbb66821a99e0e8b9858aa9620",
+    "requirement_ids": [
+      "RICH-TAGGING",
+      "PAGE-LABELS"
+    ],
+    "clause_sections": [
+      "7.4.1",
+      "7.4.2",
+      "7.4.2.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 48,
+    "printed_page": 41,
+    "text_sha256": "04bcbcc6fc0182ce3a5bbe0e65102cd4322e2a0e02b44738ae9db6987a776059",
+    "requirement_ids": [
+      "IMAGE-XOBJECTS"
+    ],
+    "clause_sections": [
+      "7.4.2.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 49,
+    "printed_page": 42,
+    "text_sha256": "9d6fa0cfc7eee69db748bc8dee5541618651922e76fa5e667e82b5b3a87d1ce0",
+    "requirement_ids": [
+      "FONT-REUSE"
+    ],
+    "clause_sections": [
+      "7.4.2.1",
+      "7.4.3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 50,
+    "printed_page": 43,
+    "text_sha256": "31944f77758089156ee0a1f2d0b4cf767a39cba5de0602c4d2a680eac52ae448",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.4.3",
+      "7.4.4",
+      "7.5"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 51,
+    "printed_page": 44,
+    "text_sha256": "bc76f40b68be4bf87f4843f7dbf03cd4e61cd9272c377544a4fc03a256df4ade",
+    "requirement_ids": [
+      "ANNOTATION-CONTENTS",
+      "ASSOCIATED-MODDATE",
+      "ATTACHMENT-ZERO",
+      "ATTACHMENT-BYTES",
+      "ATTACHMENT-ALTERNATIVE"
+    ],
+    "clause_sections": [
+      "7.5"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 52,
+    "printed_page": 45,
+    "text_sha256": "5b577e374300f1ee43cbac31f3bf064d5a0c7e604dec566d919748e80f411a6a",
+    "requirement_ids": [
+      "ATTACHMENT-ALTERNATIVE"
+    ],
+    "clause_sections": [
+      "7.5"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 53,
+    "printed_page": 46,
+    "text_sha256": "9c2530d07c65f1ad16d3d348c6e5cd6532a53f62d8e935ed519879c46229093a",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.5",
+      "7.5.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 54,
+    "printed_page": 47,
+    "text_sha256": "9ee59426a2104c0e21fde2381995f90e7c11f0d34376ef4fc85388853536efe2",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.5.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 55,
+    "printed_page": 48,
+    "text_sha256": "2eec7a2250c4d5b5b7d54f5014b570e8c00329f9a44da8ef30dc6e6320f1b7a8",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.5.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 56,
+    "printed_page": 49,
+    "text_sha256": "caf8e6f4861a8bbfd42b6b834b70e4ff09f556adf585e4f7a10cfe774f31c307",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 57,
+    "printed_page": 50,
+    "text_sha256": "bf444b0f65f99669849b3acbf6c5f7d53e2b55f49adae2e94fc05e2ab7bf464e",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 58,
+    "printed_page": 51,
+    "text_sha256": "487c2977e188bcca3c8ea2f28814c87310855e9f70ef69b7f44ad3668cc12a58",
+    "requirement_ids": [
+      "CONTAINER-FOLDERS",
+      "CONTAINER-RECURSION"
+    ],
+    "clause_sections": [
+      "7.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 59,
+    "printed_page": 52,
+    "text_sha256": "339a844ab6708bf502e683397688032fe8111c1fc69b0e8efd999a461c8b0872",
+    "requirement_ids": [
+      "CONTAINER-FOLDERS",
+      "CONTAINER-RECURSION"
+    ],
+    "clause_sections": [
+      "7.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 60,
+    "printed_page": 53,
+    "text_sha256": "59e53a450ef077e963d552ca9524c6bdcd8214dcd1050e4df7885f96335ffce3",
+    "requirement_ids": [
+      "T5-To",
+      "T5-From",
+      "T5-Sent",
+      "T5-Subject",
+      "T5-Cc",
+      "T5-Bcc",
+      "T5-Size",
+      "T5-Attachments"
+    ],
+    "clause_sections": [
+      "7.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 61,
+    "printed_page": 54,
+    "text_sha256": "3b3e2c8c60c7d45f22227706c05d36cc3d544823eade0e2ae64c387b7097664d",
+    "requirement_ids": [
+      "CONTAINER-FOLDERS",
+      "CONTAINER-MEMBERS"
+    ],
+    "clause_sections": [
+      "7.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 62,
+    "printed_page": 55,
+    "text_sha256": "66ddf7bdc69278781f40098ee5cf27da42842505e8b8c73414ae73d02b85d776",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 63,
+    "printed_page": 56,
+    "text_sha256": "d460d3cf3cc96da18f4382850ce8502e2b176c8675ed513f83eeea8d2d092cc5",
+    "requirement_ids": [],
+    "clause_sections": [
+      "7.7",
+      "7.7.1",
+      "7.7.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 64,
+    "printed_page": 57,
+    "text_sha256": "42d027c5c1526cf8d503c375948301235f0b7c451dcba2610cb6b75f33736745",
+    "requirement_ids": [
+      "FILESPEC-DESCRIPTION",
+      "WORKFLOW-PROFILE",
+      "OUTLINE-HIERARCHY"
+    ],
+    "clause_sections": [
+      "7.7.2",
+      "7.7.3",
+      "7.8"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 65,
+    "printed_page": 58,
+    "text_sha256": "7fcd68e0deba0888f0d7a5fcd3a98171e3226c3c1e89c6ccb2204cf990fd74b5",
+    "requirement_ids": [
+      "WORKFLOW-PROFILE"
+    ],
+    "clause_sections": [
+      "7.8"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 66,
+    "printed_page": 59,
+    "text_sha256": "f6af3c2379db15fa577bd0f526e7ed7f76dfc9f8a78804f261446aaf99054bb8",
+    "requirement_ids": [
+      "SOFTWARE-RENDER",
+      "SOFTWARE-ANNOTATION-AP",
+      "SOFTWARE-CONFORMANCE-INDICATION",
+      "SOFTWARE-FUTURE-PROFILE",
+      "SOFTWARE-INVALID-NAMES",
+      "SOFTWARE-READONLY",
+      "SOFTWARE-INITIAL-VIEW",
+      "SOFTWARE-OUTLINES",
+      "SOFTWARE-EXTRACT-EMBEDDED",
+      "SOFTWARE-DESCRIPTIONS",
+      "SOFTWARE-ATTACHMENT-INTERACTION",
+      "SOFTWARE-CONTENTS",
+      "SOFTWARE-EXPLICIT-LINKS",
+      "SOFTWARE-COLLECTIONS",
+      "SOFTWARE-XMP",
+      "SOFTWARE-EXTRACT-OBJECTS",
+      "SOFTWARE-NO-AUTO-URL"
+    ],
+    "clause_sections": [
+      "8"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 67,
+    "printed_page": 60,
+    "text_sha256": "d9442b02bc575e4c4aa9991cf6a43fd5e00f7e60c2c34e9e8a369f23bd6499d9",
+    "requirement_ids": [
+      "SOFTWARE-RENDER",
+      "SOFTWARE-ANNOTATION-AP",
+      "SOFTWARE-CONFORMANCE-INDICATION",
+      "SOFTWARE-FUTURE-PROFILE",
+      "SOFTWARE-INVALID-NAMES",
+      "SOFTWARE-READONLY",
+      "SOFTWARE-INITIAL-VIEW",
+      "SOFTWARE-OUTLINES",
+      "SOFTWARE-EXTRACT-EMBEDDED",
+      "SOFTWARE-DESCRIPTIONS",
+      "SOFTWARE-ATTACHMENT-INTERACTION",
+      "SOFTWARE-CONTENTS",
+      "SOFTWARE-EXPLICIT-LINKS",
+      "SOFTWARE-COLLECTIONS",
+      "SOFTWARE-XMP",
+      "SOFTWARE-EXTRACT-OBJECTS",
+      "SOFTWARE-NO-AUTO-URL"
+    ],
+    "clause_sections": [
+      "8"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 68,
+    "printed_page": 61,
+    "text_sha256": "05169de9879244c9f0ecd3bcf287b27af2b52ac3308c1c6683302c576de49e3e",
+    "requirement_ids": [
+      "PDF-VERSION",
+      "PDFA-BASELINE",
+      "INFO-PRESENT",
+      "INFO-XMP-CROSSWALK",
+      "UNMENTIONED-PDF-FEATURES",
+      "EA-CUSTOM-KEY-PREFIX",
+      "PDF-FONT-EMBEDDING",
+      "PDF-OUTPUTINTENT",
+      "PDF-EMBEDDED-STREAM",
+      "PDF-XMP-WELLFORMED",
+      "PDF-STRUCTURE-LINKS"
+    ],
+    "clause_sections": [
+      "9",
+      "9.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 69,
+    "printed_page": 62,
+    "text_sha256": "fb35d3a4a568d4b3ec5395f2dd26d5aa36fd374f4ff7f31e7622a9c3e326bda4",
+    "requirement_ids": [
+      "CATALOG-NO-PIECEINFO",
+      "KEYWORDS-XMP",
+      "KEYWORDS-INFO",
+      "NAV-S-NOATT",
+      "NAV-S-ATT",
+      "NAV-M",
+      "NAV-C",
+      "NAV-TITLE",
+      "CATALOG-SOURCE",
+      "SOURCE-FILESET"
+    ],
+    "clause_sections": [
+      "9.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 70,
+    "printed_page": 63,
+    "text_sha256": "d71ed249b97cea60e02747f891287d05246f8299a39d3c9dc1adcc28979c3dd2",
+    "requirement_ids": [
+      "SOURCE-FILESET",
+      "NAV-OUTLINES",
+      "DPM-ROOT",
+      "CONTENTSET-EXISTS",
+      "CONTENTSET-OUTLINE",
+      "EMAIL-S-CARDINALITY",
+      "EMAIL-M-CARDINALITY"
+    ],
+    "clause_sections": [
+      "9.1",
+      "9.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 71,
+    "printed_page": 64,
+    "text_sha256": "c4fd304d2a77e7694bbd3367e584bd4979d57620a5b4b68f14779dae85ee5ed0",
+    "requirement_ids": [
+      "CONTENTSET-OUTLINE",
+      "CONTENTSET-ADDITIONAL",
+      "DPM-ALL-PAGES",
+      "TEXT-SOURCE",
+      "TEXT-CORE"
+    ],
+    "clause_sections": [
+      "9.2",
+      "9.3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 72,
+    "printed_page": 65,
+    "text_sha256": "51a6f933b3d0f862b08f13db7fd9e13b34012331de819373dc6cfeb9979eec44",
+    "requirement_ids": [
+      "TEXT-CORE",
+      "ATTACHMENT-ANNOT-EACH-BODY",
+      "PAGE-CONTEXT",
+      "PAGE-CONTEXT-TEXT",
+      "COLOR-SRGB"
+    ],
+    "clause_sections": [
+      "9.3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 73,
+    "printed_page": 66,
+    "text_sha256": "97e5217e5a93fd87b2c422bc32f696bff8d2de85a5eacb333b1584e68f68ef69",
+    "requirement_ids": [
+      "URL-LINK",
+      "ASSET-AF",
+      "ASSET-OBJECT-ASSOCIATION",
+      "AF-NAMETREE",
+      "FILESPEC-NO-PATH",
+      "EMBEDDED-SUBTYPE",
+      "EMBEDDED-SUBTYPE-PARAMS",
+      "EMBEDDED-PARAMS",
+      "MEDIATYPE-RECONSTRUCTION"
+    ],
+    "clause_sections": [
+      "9.3",
+      "9.4"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 74,
+    "printed_page": 67,
+    "text_sha256": "a2a431e828385f101341be46c1d6ad285a65c460d8dd2727af2d3cc0291e8433",
+    "requirement_ids": [
+      "MEDIATYPE-RECONSTRUCTION",
+      "MEDIATYPE-GENERIC",
+      "SOURCE-SM",
+      "SOURCE-XMP-SIZE-TYPE",
+      "EMBEDDED-SIZE-RECOMMEND",
+      "EMBEDDED-MD5-RECOMMEND",
+      "COLLECTION-REQUIRED",
+      "COLLECTION-FORBIDDEN"
+    ],
+    "clause_sections": [
+      "9.4",
+      "9.5"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 75,
+    "printed_page": 68,
+    "text_sha256": "eb2ac3b7b2fafcb97ed4d1b4648ac2ea4908e12878f7580387aaafef30452bc6",
+    "requirement_ids": [
+      "COLLECTION-EXTENSION",
+      "COLLECTION-NO-DEFAULT",
+      "COLLECTION-NO-HIDDEN",
+      "COLLECTION-NAVIGATOR",
+      "COLLECTION-NAMES",
+      "COLLECTION-SCHEMA",
+      "COLLECTION-NO-EDIT",
+      "T6-To",
+      "T6-From",
+      "T6-Sent",
+      "T6-Subject",
+      "T6-Message-ID",
+      "T6-Cc",
+      "T6-Bcc",
+      "T6-Size",
+      "T6-Attachments"
+    ],
+    "clause_sections": [
+      "9.5"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 76,
+    "printed_page": 69,
+    "text_sha256": "687b24be279f0109da68dccced5e7093df512777b1f31165a5f4313244893ebb",
+    "requirement_ids": [
+      "COLLECTION-DISPLAY-FLEXIBILITY",
+      "DPM-ROOT-STRUCTURE",
+      "DPM-PREFIX",
+      "DPM-EMAIL-OWNERSHIP"
+    ],
+    "clause_sections": [
+      "9.5",
+      "9.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 77,
+    "printed_page": 70,
+    "text_sha256": "e11fc531f9e944bad753572741e40da6438646cca4c2b26a50208c8aed29c8d8",
+    "requirement_ids": [
+      "DPM-S-CARDINALITY",
+      "DPM-M-CARDINALITY",
+      "DPM-C-NO-EMAIL",
+      "DPM-IDENTIFIER-MATCH",
+      "DPM-LEAF",
+      "T7-Mail_MessageID",
+      "T7-Mail_GUID",
+      "T8-NO-AttachmentList",
+      "T8-NO-AttachmentRendering",
+      "T8-NO-BodyRendering",
+      "T8-NO-EmailHeaderRendering",
+      "T8-NO-RawEmailRendering",
+      "T8-TYPE",
+      "T8-FRONTMATTER",
+      "T8-SUBTYPE",
+      "T8-DESC",
+      "T8-OTHER-VALUES"
+    ],
+    "clause_sections": [
+      "9.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 78,
+    "printed_page": 71,
+    "text_sha256": "63b6ced9686c9d4425b3b17b0e8ee98253532db1e07b8b22fad4a67deb4ee7d4",
+    "requirement_ids": [
+      "T8-NO-AttachmentList",
+      "T8-NO-AttachmentRendering",
+      "T8-NO-BodyRendering",
+      "T8-NO-EmailHeaderRendering",
+      "T8-NO-RawEmailRendering",
+      "T8-TYPE",
+      "T8-FRONTMATTER",
+      "T8-SUBTYPE",
+      "T8-DESC",
+      "T8-OTHER-VALUES"
+    ],
+    "clause_sections": [
+      "9.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 79,
+    "printed_page": 72,
+    "text_sha256": "60eeaf64166398c42364ab7e11cf8f4393c32a18c0438349ff2254e45b8f19b8",
+    "requirement_ids": [],
+    "clause_sections": [
+      "9.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 80,
+    "printed_page": 73,
+    "text_sha256": "fbbf93a116c8e7ff47676130b94b6488e171bb8768a0a46ea0b67915dba88a1d",
+    "requirement_ids": [],
+    "clause_sections": [
+      "9.6"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 81,
+    "printed_page": 74,
+    "text_sha256": "fc85c70d5ae78233b6c4e836eb2c6f5da4aa3319b2cecff1d83ae61c22861253",
+    "requirement_ids": [
+      "TAGGING-OPTIONAL",
+      "TAGGING-EQUIVALENCE",
+      "TAGGING-CUSTOM-CONTENT",
+      "TAGGING-ROOT",
+      "TAGGING-NAMESPACE",
+      "TS32005-CONFORMANCE",
+      "TS32005-DECLARATION",
+      "T9-Artifact",
+      "T9-Aside",
+      "T9-DocumentFragment",
+      "T9-Em",
+      "T9-FENote",
+      "T9-Hn-n>=7",
+      "T9-Strong",
+      "T9-Sub",
+      "T9-Title",
+      "DECLARATION-SCHEMA",
+      "DECLARATION-IDENTIFIER",
+      "DECLARATION-OPTIONAL-CLAIM-DATA",
+      "DECLARATION-SCOPE"
+    ],
+    "clause_sections": [
+      "9.6",
+      "9.7"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 82,
+    "printed_page": 75,
+    "text_sha256": "a6a310cd31d0920cf1ce2ce2b4ff15225f62ef0a8f1f00b6324de45eee43bcc8",
+    "requirement_ids": [
+      "TAGGING-SEQUENCES",
+      "TAGGING-OPERAND",
+      "T9-Artifact",
+      "T9-Aside",
+      "T9-DocumentFragment",
+      "T9-Em",
+      "T9-FENote",
+      "T9-Hn-n>=7",
+      "T9-Strong",
+      "T9-Sub",
+      "T9-Title",
+      "T10-Mail_Message",
+      "T10-Mail_ContentGroup",
+      "T10-Mail_ContentSet",
+      "T10-Mail_Field",
+      "T10-Mail_FieldName",
+      "T10-Mail_FieldValue",
+      "T11-Mail_Message",
+      "T11-Mail_ContentGroup",
+      "T11-Mail_ContentSet",
+      "T11-Mail_Field"
+    ],
+    "clause_sections": [
+      "9.7"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 83,
+    "printed_page": 76,
+    "text_sha256": "cdc852f403303cc8bb0770452f24905692340f0609b8d59c849b12165d1a6c0f",
+    "requirement_ids": [
+      "TAGGING-MESSAGE-NONEMPTY",
+      "TAGGING-CONTENTSET-COVERAGE",
+      "TAGGING-HEADERS",
+      "TAGGING-FIELDVALUE",
+      "USERPROPS-NAME",
+      "T11-Mail_Message",
+      "T11-Mail_ContentGroup",
+      "T11-Mail_ContentSet",
+      "T11-Mail_Field"
+    ],
+    "clause_sections": [
+      "9.7"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 84,
+    "printed_page": 77,
+    "text_sha256": "4785caafa48e97e246fc1006b9253f10f2cd901d5820018f56d04cea46f7b122",
+    "requirement_ids": [
+      "USERPROPS-NAME",
+      "USERPROPS-FIDELITY",
+      "TAGGING-ART",
+      "T12-Mail_MessageID",
+      "T12-Mail_GUID",
+      "T12-Mail_ContentSetType",
+      "T12-Mail_Subtype",
+      "T12-Mail_To",
+      "T12-Mail_Raw_To",
+      "T12-Mail_From",
+      "T12-Mail_Raw_From",
+      "T12-Mail_Sent",
+      "T12-Mail_Raw_Sent",
+      "T12-Mail_Subject",
+      "T12-Mail_SizeInBytes",
+      "T12-Mail_NumberAttachments",
+      "T12-Mail_Cc",
+      "T12-Mail_Raw_Cc",
+      "T12-Mail_Bcc",
+      "T12-Mail_Raw_Bcc",
+      "T12-Mail_InReplyTo",
+      "T12-Mail_..."
+    ],
+    "clause_sections": [
+      "9.7"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 85,
+    "printed_page": 78,
+    "text_sha256": "58a140b986d8cc441233888a019d06d9150b224bc10f8118735d68304e149653",
+    "requirement_ids": [
+      "TAGGING-M-DOCUMENT"
+    ],
+    "clause_sections": [
+      "9.7"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 86,
+    "printed_page": 79,
+    "text_sha256": "97316d9e0a22fc4e464778933eb6585b71a5115575f9a39d51647dabbeb8014c",
+    "requirement_ids": [
+      "T13-MESSAGE-S",
+      "T13-MESSAGE-M",
+      "T13-MESSAGE-C",
+      "T13-MESSAGE-GUID",
+      "T13-GROUP-PARENT",
+      "T13-GROUP-TYPE",
+      "T13-GROUP-TYPE-MATCH",
+      "T13-SET-COUNT",
+      "T13-SET-PARENT",
+      "T13-SET-SUBTYPE",
+      "T13-SET-SUBTYPE-MATCH",
+      "T13-PROFILE-Mail_Field",
+      "T13-NEST-Mail_Field",
+      "T13-PROFILE-Mail_FieldName",
+      "T13-NEST-Mail_FieldName",
+      "T13-PROFILE-Mail_FieldValue",
+      "T13-NEST-Mail_FieldValue"
+    ],
+    "clause_sections": [
+      "9.7"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 87,
+    "printed_page": 80,
+    "text_sha256": "bdbe273e6560bd1b3b5d1751b23fcf8b2347bb95bef917a388e9a4dbc9da61c0",
+    "requirement_ids": [],
+    "clause_sections": [
+      "9.7"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 88,
+    "printed_page": 81,
+    "text_sha256": "721e46ef570f5fefb9b7e6c309bbd585d382c172e9eebaeed694b0c4718b5223",
+    "requirement_ids": [],
+    "clause_sections": [
+      "9.7"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 89,
+    "printed_page": 82,
+    "text_sha256": "079eedd4a5c2e1219a998678ee4f3c7af575c1cebfd516d9fb4cdf8088c6b59c",
+    "requirement_ids": [],
+    "clause_sections": [
+      "9.7"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 90,
+    "printed_page": 83,
+    "text_sha256": "fcce4dba38c780a073a492ac54354018adf1e98fc913f8bbe32006f0134ba51c",
+    "requirement_ids": [
+      "XMP-CONFORMANCE",
+      "XMP-NAMESPACES"
+    ],
+    "clause_sections": [
+      "9.7",
+      "9.8"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 91,
+    "printed_page": 84,
+    "text_sha256": "f00a0ec3892835f49ff105e781d3d534fdbfb5abefa0a2cf0e23fc21cac16f60",
+    "requirement_ids": [
+      "XMP-NAMESPACES",
+      "XMP-CREATOR",
+      "XMP-PRODUCER",
+      "XMP-CREATEDATE",
+      "XMP-TITLE",
+      "XMP-PDFA3-EXTENSIONS",
+      "T14-pdfmail",
+      "T14-pdfmailid",
+      "T14-pdfmailmeta",
+      "T15-version",
+      "T15-rev",
+      "T15-conformance"
+    ],
+    "clause_sections": [
+      "9.8",
+      "9.8.1"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 92,
+    "printed_page": 85,
+    "text_sha256": "0e64237cadb8540acdc19b843f98a8f3bf926ff295237de4654cddd82555289f",
+    "requirement_ids": [
+      "XMP-ASSETS",
+      "XMP-ASSET-IDENTITY",
+      "T16-Filename",
+      "T16-SizeInBytes",
+      "T16-ContentType",
+      "T16-NumberMessages",
+      "T16-Checksum",
+      "T16-GENERIC"
+    ],
+    "clause_sections": [
+      "9.8.2"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 93,
+    "printed_page": 86,
+    "text_sha256": "d2d879c5edb8ccd260d0ca2266354cb1148fe7cebc5a552ff9c88cec7c672439",
+    "requirement_ids": [
+      "XMP-EMAILS",
+      "XMP-ADDITIONAL-HEADERS",
+      "T17-EML",
+      "T17-MSG",
+      "T17-MBOX",
+      "T17-OST-PST",
+      "T17-NSF",
+      "T18-To",
+      "T18-Raw-To",
+      "T18-From",
+      "T18-Raw-From",
+      "T18-Sent",
+      "T18-Raw-Sent",
+      "T18-Subject",
+      "T18-Message-ID",
+      "T18-Mail_GUID",
+      "T18-SizeInBytes",
+      "T18-NumberAttachments",
+      "T18-Cc",
+      "T18-Raw-Cc",
+      "T18-Bcc",
+      "T18-Raw-Bcc",
+      "T18-In-Reply-To"
+    ],
+    "clause_sections": [
+      "9.8.2",
+      "9.8.3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 94,
+    "printed_page": 87,
+    "text_sha256": "629124c78d3b6587207a5b775f3876e049409c3b17c6a8596ba1295dc5ecab9a",
+    "requirement_ids": [
+      "T18-To",
+      "T18-Raw-To",
+      "T18-From",
+      "T18-Raw-From",
+      "T18-Sent",
+      "T18-Raw-Sent",
+      "T18-Subject",
+      "T18-Message-ID",
+      "T18-Mail_GUID",
+      "T18-SizeInBytes",
+      "T18-NumberAttachments",
+      "T18-Cc",
+      "T18-Raw-Cc",
+      "T18-Bcc",
+      "T18-Raw-Bcc",
+      "T18-In-Reply-To"
+    ],
+    "clause_sections": [
+      "9.8.3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 95,
+    "printed_page": 88,
+    "text_sha256": "367c325f24818eef71ccc924e509c3867e03912c0616f801fca65ee7dbc5df8b",
+    "requirement_ids": [
+      "T18-To",
+      "T18-Raw-To",
+      "T18-From",
+      "T18-Raw-From",
+      "T18-Sent",
+      "T18-Raw-Sent",
+      "T18-Subject",
+      "T18-Message-ID",
+      "T18-Mail_GUID",
+      "T18-SizeInBytes",
+      "T18-NumberAttachments",
+      "T18-Cc",
+      "T18-Raw-Cc",
+      "T18-Bcc",
+      "T18-Raw-Bcc",
+      "T18-In-Reply-To"
+    ],
+    "clause_sections": [
+      "9.8.3"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 96,
+    "printed_page": 89,
+    "text_sha256": "4110c6baeb1bda9383881c78aa68da69417c517b5c85d46a3e10f99ff80fe6d7",
+    "requirement_ids": [
+      "XMP-ATTACHMENT-INVENTORY",
+      "XMP-ATTACHMENT-RECORDS",
+      "T19-Filename",
+      "T19-SizeInBytes",
+      "T19-Message-ID",
+      "T19-Mail_GUID",
+      "T19-Content-Type",
+      "T19-CheckSum"
+    ],
+    "clause_sections": [
+      "9.8.3",
+      "9.8.4"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  },
+  {
+    "pdf_page": 97,
+    "printed_page": 90,
+    "text_sha256": "24fd04f8d13af674c09c79228ef8dc02591c2c4acee38be63632cd76c9c39fb2",
+    "requirement_ids": [
+      "T19-Filename",
+      "T19-SizeInBytes",
+      "T19-Message-ID",
+      "T19-Mail_GUID",
+      "T19-Content-Type",
+      "T19-CheckSum"
+    ],
+    "clause_sections": [
+      "9.8.4"
+    ],
+    "classification": "Local text reviewed; interpretations/dependencies remain open"
+  }
+]

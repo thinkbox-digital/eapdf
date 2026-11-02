@@ -1,0 +1,862 @@
+{
+  "date": "2026-10-17",
+  "scope": "Requested collection-root finding-aid EA-PDF with nested XLSX; complete tests, regenerated six supported email profiles, exact extracted auxiliary examples. Automated evidence, not exhaustive ISO certification.",
+  "priorEvidence": "docs/reimplementation/development-status-evidence.json",
+  "implementationChanges": [
+    "scripts/regenerate_email_samples.py",
+    "src/main/java/eapdf/PdfFindingAidSupport.java",
+    "src/main/java/eapdf/PdfMailWriter.java",
+    "src/test/java/eapdf/AdditionalSpecRuleTests.java",
+    "src/test/java/eapdf/CollectionPortfolioTests.java",
+    "tests/test_generated_profiles.py",
+    "tests/test_supervised_conversion.py",
+    "validator_rule_text.json"
+  ],
+  "contracts": {
+    "findingAid": "Generated index is an explicitly labelled RFC 822 message rendered as PDF/mail-1s, with its own preserved source and native XLSX attachment. It is not original archived correspondence and is not sent. Reserved sender finding-aid@eapdf.invalid.",
+    "collection": "Finding-aid EA-PDF is a root Supplement, never a source-set companion or an exception to rule 218. All EA-PDF children receive recursive validation.",
+    "isolation": "ci may include the generated s auxiliary; original archived message children remain si.",
+    "settings": "pdfEnabled controls optional finding aids; embedPdfInCollections requests root PDF; embedExcel requests XLSX inside it and implies the PDF; excelEnabled independently requests external XLSX. Container PREMIS stays sidecar-only.",
+    "samples": "Four auxiliary examples are exact extracted nested PDF/XLSX copies; six supported primary samples and existing single-message alias regenerated. Legacy social samples have no supported generators and remain historical.",
+    "limits": "Generated source/body/PDF consume existing message/body/rendering/output/page limits. No new CLI arguments or relaxed validation rules."
+  },
+  "artifacts": [
+    {
+      "path": "/tmp/eapdf-nested-finding-aid-20261017/build/emailtopdfa-1.4.0-gui.jar",
+      "sha256": "1ffe736d38e5ef8ce881dad2fbc9b384c72b00488ca4d0f7dcd8467a2da6cefd"
+    },
+    {
+      "path": "/tmp/eapdf-nested-finding-aid-20261017/build/emailtopdfa-1.4.0.jar",
+      "sha256": "c7da90d28d466168586f4a4208bf5c540dc24d0797319018817d3481bdcc06e7"
+    }
+  ],
+  "java": {
+    "tests": 130,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "log": "/tmp/eapdf-nested-finding-aid-build.log"
+  },
+  "python": {
+    "tests": 140,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 207.543,
+    "log": "/tmp/eapdf-nested-finding-aid-acceptance.log"
+  },
+  "reportsDirectory": "/tmp/eapdf-nested-finding-aid-20261017",
+  "reports": [
+    {
+      "path": "acceptance/1c.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/1ci.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/1m.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/1mi.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/1s.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/1si.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/accessibility/1c.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/accessibility/1ci.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/accessibility/1m.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/accessibility/1mi.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/accessibility/1s.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/accessibility/1si.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/accuracy/1s.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/accuracy/1si.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/accuracy/invalid-date.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/mailboxes/attached-message.pst.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/mailboxes/sample.mbox.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/premis/1c.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/premis/1ci.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/premis/1m.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/premis/1mi.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/premis/1s.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/premis/1si.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/spec-repairs-l9we91_3/probes/body_parameters/validation.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/spec-repairs-l9we91_3/probes/colon:source/validation.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/spec-repairs-l9we91_3/probes/image_only/validation.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/spec-repairs-l9we91_3/probes/image_with_text/validation.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "acceptance/spec-repairs-l9we91_3/probes/missing-subject/validation.json",
+      "status": "FAIL",
+      "pdfa": "PASS",
+      "failures": [
+        "MESSAGE_SUBJECT_XMP",
+        "MESSAGE_SUBJECT_XMP"
+      ]
+    },
+    {
+      "path": "acceptance/spec-repairs-l9we91_3/probes/nfsm/validation.json",
+      "status": "FAIL",
+      "pdfa": "PASS",
+      "failures": [
+        "PROFILE_NFSM_SINGLE_NO_ATTACHMENTS"
+      ]
+    },
+    {
+      "path": "acceptance/spec-repairs-l9we91_3/probes/premis/validation.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "samples/sample_1c.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "samples/sample_1ci.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "samples/sample_1m.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "samples/sample_1mi.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "samples/sample_1s.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    },
+    {
+      "path": "samples/sample_1si.json",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": []
+    }
+  ],
+  "overallStatusCounts": {
+    "PASS": 34,
+    "FAIL": 2
+  },
+  "pdfaReportCount": 36,
+  "recursiveChildChecks": 32,
+  "children": [
+    {
+      "container": "acceptance/1c.json",
+      "child": "1c_finding_aid.pdf",
+      "sha256": "3cd46be7ff78a487b5dcecd72f0450c977f165a0a6b2d04ee8a88b22ee7267bf",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/1c.json",
+      "child": "Attached email_000003_1s.pdf",
+      "sha256": "b2fef1215ef9c8e5398ea4b117d43e71f538d3ecf853a7ce3688828cd3752a4b",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/1c.json",
+      "child": "Second message_000002_1s.pdf",
+      "sha256": "13557c90a677141c2f66a9d9315532eb28da270ac8ce9a2eaa501765f1ee48e5",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/1c.json",
+      "child": "message 1_000001_1s.pdf",
+      "sha256": "6acef343fb14a7cbed0d0bb76e3f4a060a1a5da701287c48edc0aeadf7be7979",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/1ci.json",
+      "child": "1ci_finding_aid.pdf",
+      "sha256": "99ae6c1c09e5fd96646d20f77ff839d927144fe9e896b045570debed19a92699",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/1ci.json",
+      "child": "Attached email_000003_1si.pdf",
+      "sha256": "7138e4d2295c0d00f41e300fb859ba0e3621aa48bc3c30611f57b66c19183217",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/1ci.json",
+      "child": "Second message_000002_1si.pdf",
+      "sha256": "071817c88379cc9de076ea02de76fe901dacec5dd4fcf1b0801a79efc1004e04",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/1ci.json",
+      "child": "message 1_000001_1si.pdf",
+      "sha256": "576a1c27980bda8208e07e2cf300d14d9c4c979188122b465b778f245a31298b",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/accessibility/1c.json",
+      "child": "1c_finding_aid.pdf",
+      "sha256": "bb05a61a1843114950c71bd8534a267fff8beb6386787220dfcb46c5382464e9",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/accessibility/1c.json",
+      "child": "Accessible message_000002_1s.pdf",
+      "sha256": "108f20c4543a2595d3a7779cf9a72ceb310eae3cd90f502aed850e5849530494",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/accessibility/1c.json",
+      "child": "Second message_000001_1s.pdf",
+      "sha256": "3bdbd9499bd0c65ec523587e875316788c96fbc68e7604cf82ef9861f1002b75",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/accessibility/1ci.json",
+      "child": "1ci_finding_aid.pdf",
+      "sha256": "700db8f6b816ea99ad4a9c17b3e575e2a42643ee3193e2af1777dc0cc068e8a3",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/accessibility/1ci.json",
+      "child": "Accessible message_000002_1si.pdf",
+      "sha256": "2bc07e697babae21f04d645b0e3d2e4fcd75c2102266ef9bf0e35f0470a930b9",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/accessibility/1ci.json",
+      "child": "Second message_000001_1si.pdf",
+      "sha256": "b984ac4484aac80c2149300d8ed289e5be962cb001086d8061977550ec08f447",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/mailboxes/attached-message.pst.json",
+      "child": "FW_ First email_000001_1s.pdf",
+      "sha256": "53ce184c35b8adbbf4d06df8156612092fe73157ffc7d15982ac196a23271883",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/mailboxes/attached-message.pst.json",
+      "child": "Feature Generators_000006_1s.pdf",
+      "sha256": "6a796141ede5bbc306cf7858ae823d6de9279a9d3e7b2e4945403e1695ef1c97",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/mailboxes/attached-message.pst.json",
+      "child": "Re_ Feature Generators_000004_1s.pdf",
+      "sha256": "9ab5dd72e704c0acd3e079a299541a0a52ce2dd2c70fdd5b570bd4a3c3ce8b15",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/mailboxes/attached-message.pst.json",
+      "child": "Re_ init tokenizer fails_ _Bad type in putfield_putstatic__000005_1s.pdf",
+      "sha256": "10d36003806d412de29989579aea642bc3b13ffec8f7308a17dd533affc25599",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/mailboxes/attached-message.pst.json",
+      "child": "[WEBINAR] - _Introducing Couchbase Server 2.5__000007_1s.pdf",
+      "sha256": "02904394533c6bb77af877b6e0f2937d4f9d069db31f7533c416aa25de2f8f51",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/mailboxes/attached-message.pst.json",
+      "child": "[jira] [Commented] (TIKA-1250) Process loops infintely processing a CHM file_000003_1s.pdf",
+      "sha256": "10f3b0960d788e46365584f1d88c99b244545856a866737e038c9c6e679a86aa",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/mailboxes/attached-message.pst.json",
+      "child": "[jira] [Resolved] (TIKA-1249) Vcard files detection_000002_1s.pdf",
+      "sha256": "6f27711f8764e0d4dc5effdb678c7c202b55a117fc2019a23526e4b723f7bbc8",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/mailboxes/sample.mbox.json",
+      "child": "12_28 Power VaR_000002_1s.pdf",
+      "sha256": "ea84e48369aad79fab2722664e2193079955679779946690b515bb5234faa72e",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/mailboxes/sample.mbox.json",
+      "child": "release to production of scheduling forward obs. report_000001_1s.pdf",
+      "sha256": "d6d432df71509537b731401b356abfde7727dfdf58ee66f66b4225f1346c5fb3",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/premis/1c.json",
+      "child": "Message 1_000002_1s.pdf",
+      "sha256": "21de6cdf3502554e388117725814970014fed3497cbc0ca251acbf9b355dbc3f",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/premis/1c.json",
+      "child": "Message 2_000001_1s.pdf",
+      "sha256": "83fb19bbe5e348e372344ee600f01574726a8b04ab22c88e6df01f0dd2b6017f",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/premis/1ci.json",
+      "child": "Message 1_000002_1si.pdf",
+      "sha256": "07df8fd571e770a0c8abf2c558d08d9dc7e75675dc12f323d86f3f5674c9fd02",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/premis/1ci.json",
+      "child": "Message 2_000001_1si.pdf",
+      "sha256": "5d3ca69509aeac93015ba265fef65cdf6d8e26b73a2098c612269c5fd544d2ea",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "acceptance/spec-repairs-l9we91_3/probes/colon:source/validation.json",
+      "child": "colon_source_000001_1s.pdf",
+      "sha256": "06ededfdba31b8a0aecc6403b16ec19da08369930fb4cfa6b4ef9dc7610311bf",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "samples/sample_1c.json",
+      "child": "Agenda and timeline slides_000001_1s.pdf",
+      "sha256": "1967a801445ea8737e2ccd5632b8e7492ab48b38f2c13c55364f0622179e7300",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "samples/sample_1c.json",
+      "child": "sample_1c_finding_aid.pdf",
+      "sha256": "b37bb9b4350838350138b23cdcfa17efcf1940e7f52f23fa1ff520348ac33dc3",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "samples/sample_1ci.json",
+      "child": "Agenda and timeline slides_000001_1si.pdf",
+      "sha256": "7567528178552bbace5bafdc8b547b32eddd15ba9acf8d7112977853d4189832",
+      "status": "PASS",
+      "pdfa": "PASS"
+    },
+    {
+      "container": "samples/sample_1ci.json",
+      "child": "sample_1ci_finding_aid.pdf",
+      "sha256": "7e53d085751680061aedae1f13b65bc0146ef38a3d775d4349d658a131759538",
+      "status": "PASS",
+      "pdfa": "PASS"
+    }
+  ],
+  "premisSchema": {
+    "passed": 10,
+    "checks": [
+      "1s/sidecar",
+      "1s/Message 1_000001_premis.xml",
+      "1si/sidecar",
+      "1m/sidecar",
+      "1m/colon:archive_premis.xml",
+      "1mi/sidecar",
+      "1c/sidecar",
+      "1c/Message 1_000002_1s.pdf/Message 1_000002_1s_premis.xml",
+      "1c/Message 2_000001_1s.pdf/Message 2_000001_1s_premis.xml",
+      "1ci/sidecar"
+    ],
+    "schemaSha256": "03b8a77a20b32b882ad799e12262671d07ad18210c60233f4e613a1289491cba"
+  },
+  "samples": [
+    {
+      "path": "examples/sample_1c.pdf",
+      "sha256": "37f178afa7bb3f4d429d5cbb38a86f94362330d87e8718bd459f512d96a16e07"
+    },
+    {
+      "path": "examples/sample_1c_finding_aid.pdf",
+      "sha256": "b37bb9b4350838350138b23cdcfa17efcf1940e7f52f23fa1ff520348ac33dc3"
+    },
+    {
+      "path": "examples/sample_1c_index.xlsx",
+      "sha256": "d46fab4a4b2d421be240b32ef0fad1a3527b904d5cb2de67d3c663758dd6cef5"
+    },
+    {
+      "path": "examples/sample_1ci.pdf",
+      "sha256": "7c1a4ecaac64ec16b010309aa4a0dab8c35db8247f6ca2a598f328e43495c842"
+    },
+    {
+      "path": "examples/sample_1ci_finding_aid.pdf",
+      "sha256": "7e53d085751680061aedae1f13b65bc0146ef38a3d775d4349d658a131759538"
+    },
+    {
+      "path": "examples/sample_1ci_index.xlsx",
+      "sha256": "6602ef240804485099546a6f12fbfa5be03780a6a1ce9b3d97fe118f6f0b2458"
+    },
+    {
+      "path": "examples/sample_1m.pdf",
+      "sha256": "53f3f002b4ecff56065197955a2237fdf02461688f8e29ec941a0062e8bf4dfc"
+    },
+    {
+      "path": "examples/sample_1mi.pdf",
+      "sha256": "8778330b00b954eced3dda8605f46122c62bbee240955e646b1ed5cb58517029"
+    },
+    {
+      "path": "examples/sample_1s.pdf",
+      "sha256": "787aa71aa39fc664f6767f6c5393a0b921cfefc0b563f0b96b2c38317644f854"
+    },
+    {
+      "path": "examples/sample_1si.pdf",
+      "sha256": "180b1eada5c92a3a629435ca2dcb77b89aca39eda408eebc6d6e03ac630689b1"
+    }
+  ],
+  "sampleRegenerationLog": "/tmp/eapdf-nested-finding-aid-samples.log",
+  "sampleAlias": {
+    "path": "output/sample_1s.pdf",
+    "sha256": "787aa71aa39fc664f6767f6c5393a0b921cfefc0b563f0b96b2c38317644f854"
+  },
+  "nestingChecks": [
+    {
+      "profile": "1c",
+      "rootFilename": "sample_1c_finding_aid.pdf",
+      "relationship": "Supplement",
+      "findingAidProfile": "1s",
+      "spreadsheet": "sample_1c_index.xlsx",
+      "spreadsheetBytes": 3676,
+      "generatedSourceLabelVerified": true,
+      "extractedExamplesIdentical": true,
+      "topLevelSpreadsheets": 0
+    },
+    {
+      "profile": "1ci",
+      "rootFilename": "sample_1ci_finding_aid.pdf",
+      "relationship": "Supplement",
+      "findingAidProfile": "1s",
+      "spreadsheet": "sample_1ci_index.xlsx",
+      "spreadsheetBytes": 3678,
+      "generatedSourceLabelVerified": true,
+      "extractedExamplesIdentical": true,
+      "topLevelSpreadsheets": 0
+    }
+  ],
+  "sourceSnapshot": [
+    {
+      "path": "config/eapdf_config.json",
+      "sha256": "f0fc89a04bec5c508dbb1f860188afeb4113657a3bc83e60f42228fc10de4fbf"
+    },
+    {
+      "path": "pom.xml",
+      "sha256": "5a9e353dfe432baea9c60b721569ab152f894645bf57703bdc69a3cff0fd410d"
+    },
+    {
+      "path": "scripts/regenerate_email_samples.py",
+      "sha256": "9d5fcca0cbbad0c94bd8265f051c4eb420d1f2fddee8a20c081028452f08ae19"
+    },
+    {
+      "path": "src/main/java/eapdf/Common.java",
+      "sha256": "96cd5b270705a358ca3e613114a505c9212c32e1314ff7dc810d96c266894c9b"
+    },
+    {
+      "path": "src/main/java/eapdf/ConversionSupervisor.java",
+      "sha256": "a46c510d09fd00bd4a9108cfd5630d2a7345e8191c0621e9be9019cc7b7b3de2"
+    },
+    {
+      "path": "src/main/java/eapdf/EapdfConfig.java",
+      "sha256": "13bb68283ed7e31d05735c5543cb46a1e6bc87a53106280a1c667f36d6ada5e5"
+    },
+    {
+      "path": "src/main/java/eapdf/EapdfGui.java",
+      "sha256": "71e49d4a6c7d4192e1f7eeb3600edfd7edb72ee4ae597626c70ec3770631413d"
+    },
+    {
+      "path": "src/main/java/eapdf/EmailStyles.java",
+      "sha256": "029e6399f0587db307dceb331c7871aa5b26b20870e8d6db1156ea4cb40e65ca"
+    },
+    {
+      "path": "src/main/java/eapdf/EmailToPDFA.java",
+      "sha256": "5f9e01e320ae6c921e5069cc730dcc9b4789a79b5ce65a14e2597f6e19943639"
+    },
+    {
+      "path": "src/main/java/eapdf/EmlReader.java",
+      "sha256": "2ddc4ff3f34aa5498251d66e6e181be413c7c10ad610f5ed513c22643a6b6ff5"
+    },
+    {
+      "path": "src/main/java/eapdf/FontSupport.java",
+      "sha256": "906fdcba605309a0fec265a2a82e1b3b5181890c8ad6a195b142b4d695a298a6"
+    },
+    {
+      "path": "src/main/java/eapdf/GmailDownloadToPdf.java",
+      "sha256": "18fc6011cdcbfd4367dd5b08c74fbe567f2e391e55779534dde4b7bc38d86688"
+    },
+    {
+      "path": "src/main/java/eapdf/GmailResumeStore.java",
+      "sha256": "cd7badb79a835e85da695433d19f151fbc0483f50a5d578b5dae574ef31c8a9b"
+    },
+    {
+      "path": "src/main/java/eapdf/MboxParser.java",
+      "sha256": "40d305f70fcd8dac572b8a327fa166ad857dc305b69bf1a30c61e524752e3df7"
+    },
+    {
+      "path": "src/main/java/eapdf/MboxReader.java",
+      "sha256": "48878e466b0349a2cf49157b048541b4be34864e93c1dde6488ded31aa263e2a"
+    },
+    {
+      "path": "src/main/java/eapdf/Models.java",
+      "sha256": "008356c5e60f492a5472fb99a2ecec1982dd46379208a1a68e636e1714b09376"
+    },
+    {
+      "path": "src/main/java/eapdf/MonthlyFilenameArchiveToPdf.java",
+      "sha256": "4d51a24cfcc7bcf71edcbf3f572446d17ba2fd3d707220f61e8a8dfa93168abb"
+    },
+    {
+      "path": "src/main/java/eapdf/MsgReader.java",
+      "sha256": "f704fa83cb9343446b07ca550fa8a0765abe2f4bcf8ecac2f8834e59ae56fee2"
+    },
+    {
+      "path": "src/main/java/eapdf/OutputTransaction.java",
+      "sha256": "82879efd9badd7a62d531b0e8072a94dfe41d37cd3627b833ef1bec1c22f8366"
+    },
+    {
+      "path": "src/main/java/eapdf/PayloadStore.java",
+      "sha256": "3b4f8ea0929f1797b452f689e7f51f378674f9ead280eb16ad9e6f643501d529"
+    },
+    {
+      "path": "src/main/java/eapdf/PdfCollectionSupport.java",
+      "sha256": "bcd49a89c6c1ca807bd5795cc0118fffe3a564c36dd340927a90b85c7a03374f"
+    },
+    {
+      "path": "src/main/java/eapdf/PdfCreationValidator.java",
+      "sha256": "4405e3ae765999a16f2bf88a73a8905fbf49d0d468e2d8b4059b2cd3ede2798d"
+    },
+    {
+      "path": "src/main/java/eapdf/PdfDocumentParts.java",
+      "sha256": "17503218b79317e1a9d9eaef78d79204e1c48da9bb9108bb4f49946dfd228b6b"
+    },
+    {
+      "path": "src/main/java/eapdf/PdfFindingAidSupport.java",
+      "sha256": "5c0e9ac6c600524824e09ad6ee3e13a013b501404db2571926972988db580873"
+    },
+    {
+      "path": "src/main/java/eapdf/PdfMailWriter.java",
+      "sha256": "b26e47162efcb59948975de3e6f932e0336276d3e4b07b20fdfd082c8ef903aa"
+    },
+    {
+      "path": "src/main/java/eapdf/PremisBuilder.java",
+      "sha256": "e5d848d4ae7f0c23fe432edd1486ece38429974187ddbec8849f6d7187e16483"
+    },
+    {
+      "path": "src/main/java/eapdf/ProcessingLimits.java",
+      "sha256": "d852c36fcd6091fbcd42e4e8f5bf5fa8df3316aeb2e3b2bfaa50f1993bd7bbfe"
+    },
+    {
+      "path": "src/main/java/eapdf/PstReader.java",
+      "sha256": "4cc7eac91368c0845e1cafc669f7cc44496f6e6b2276420e81c7016dbd4778ce"
+    },
+    {
+      "path": "src/main/java/eapdf/SemanticStructure.java",
+      "sha256": "a4d13cd6133754515bc134e1b8553f163d3c572534ad2e1c8b01dabdf2ba2393"
+    },
+    {
+      "path": "src/test/java/eapdf/AdditionalSpecRuleTests.java",
+      "sha256": "7b84d46b273337227151f9e78360e8667db1a02fdefb7209bc6e77db2b3cb01c"
+    },
+    {
+      "path": "src/test/java/eapdf/AttachmentProfilePolicyTests.java",
+      "sha256": "f8e5e702e865d5e985374ebcd051be1c90e1b7f3143b14a36fb2db8bacf4c0bb"
+    },
+    {
+      "path": "src/test/java/eapdf/CollectionPortfolioTests.java",
+      "sha256": "68930509c82f7367c72f1b4ba75b9e45a240045e977e479dc8883cfa657da946"
+    },
+    {
+      "path": "src/test/java/eapdf/CreatorAccuracyTests.java",
+      "sha256": "a1d39f01d30c6f19e1a240bc157950bd1dc77413be43a540dd9afd64724de402"
+    },
+    {
+      "path": "src/test/java/eapdf/EmailContentRegressionTests.java",
+      "sha256": "6d039be6cd65c19e97d124389a3e13a9b6e0d2ff5622e03ee5f8e2e1ff4be736"
+    },
+    {
+      "path": "src/test/java/eapdf/GmailDownloadRecoveryTests.java",
+      "sha256": "8fceb0f1a86a7053c8a5d0b2a9afab34d8189831a0e17a510a23d8aa6ff996e0"
+    },
+    {
+      "path": "src/test/java/eapdf/MboxPreservationTests.java",
+      "sha256": "be368dcd8269aac6a09b3f162b3ec00e867fa4aaafde4ffe7521debca8eecce1"
+    },
+    {
+      "path": "src/test/java/eapdf/MonthlyFilenameArchiveTests.java",
+      "sha256": "b672b1e8f2b3573baab56fb433ad95eda823fdd26c7801b5ea4bb2f5d9883741"
+    },
+    {
+      "path": "src/test/java/eapdf/PdfWriterArchiveTests.java",
+      "sha256": "17f84467683d8ce8cd9a0e1388b3de89ad72bec2018feb4815e70c335fe652ab"
+    },
+    {
+      "path": "src/test/java/eapdf/PdfWriterSingleMessageTests.java",
+      "sha256": "1dc7efccaede5d1f1d8c36aca061b0a8b6dc16a12f323b0fa923593a1af42bf1"
+    },
+    {
+      "path": "src/test/java/eapdf/PreservationRegressionTests.java",
+      "sha256": "e8797f22c4e1db0d2608c83e36f2edf5470dcbfc6f030a59d45357cbbf05ddda"
+    },
+    {
+      "path": "src/test/java/eapdf/ProcessingLimitRepairTests.java",
+      "sha256": "dc161b7bcaa74952c581776a726504f1926ccc4c18219cf1a0399f3e955cdc03"
+    },
+    {
+      "path": "src/test/java/eapdf/ReaderTests.java",
+      "sha256": "6744010826645153058c3867d850409be401b5a783b76127c50eefeb4e10fe25"
+    },
+    {
+      "path": "src/test/java/eapdf/ReleaseRegressionTests.java",
+      "sha256": "c2985d2f265ed6c75fbc3835621e93696c06f6f93768a49624fedf534f4278fa"
+    },
+    {
+      "path": "src/test/java/eapdf/RemainingPreservationTests.java",
+      "sha256": "302aa7f90c1a3e1fe3a2319613a29292fd006f43e6efe41f938b2cc393dcd338"
+    },
+    {
+      "path": "src/test/java/eapdf/RemainingWorkflowTests.java",
+      "sha256": "2d345474178deced42c08bbe0948e460eb414f6311f74686f18cee5fc389cd44"
+    },
+    {
+      "path": "src/test/java/eapdf/SpecRepairTests.java",
+      "sha256": "a9b5e4830d6e1783dc292dbada5389bdce8190f7dd670ced3db93ed8854199a3"
+    },
+    {
+      "path": "src/test/java/eapdf/SupervisedConversionTests.java",
+      "sha256": "b600ea431ae05832e73a4d842fe0153b7e578a7bb886c29b945c94461db6d882"
+    },
+    {
+      "path": "src/test/java/eapdf/TestSupport.java",
+      "sha256": "be2b8014a9ccf7180ddfe9e79e0329a8454d734e9b1fabbd25919e9dcef93453"
+    },
+    {
+      "path": "src/test/java/eapdf/UnfixedRegressionTests.java",
+      "sha256": "1dfd4948f73df938cce8509918e43dc0ddc07570f74db1565fd289d163d80168"
+    },
+    {
+      "path": "tests/test_accessibility_profiles.py",
+      "sha256": "d3795f39a0f3114384875feaea39628d987d26755b4e9ebfbeb878452bc0c472"
+    },
+    {
+      "path": "tests/test_additional_spec_rules.py",
+      "sha256": "f5e6bb7824be4df733218c3c5f7684ab6c62c35fa4c556bce3ec49e6bcddd155"
+    },
+    {
+      "path": "tests/test_creator_accuracy.py",
+      "sha256": "35aa1fb1a3c9571d88d45255f007304b7e5d0dd3fc3de1110a9aff1b6b7db3a1"
+    },
+    {
+      "path": "tests/test_dpart_diagnostics.py",
+      "sha256": "437c6428ae6ffa07b7dbcb6b20c043bb3a38819eac092bee07bd3b352a6b02c5"
+    },
+    {
+      "path": "tests/test_first_five_fixes.py",
+      "sha256": "848e4900fd18c0bc1bb8c1d01f9565edd67e598081a84ef6657960ef09ee17ee"
+    },
+    {
+      "path": "tests/test_followup_security.py",
+      "sha256": "703f661936c980429119389bfebb6cd9301d457466611579ca74039bd225bcfb"
+    },
+    {
+      "path": "tests/test_generated_profiles.py",
+      "sha256": "9ca199e78efb515a7c2183c66d47dc3011fa997aad345b2ade072532895fdd83"
+    },
+    {
+      "path": "tests/test_preservation_safety.py",
+      "sha256": "27721ae6bf6c7d27ada56b39498f0f35f308b83064b357d18e1535db86719bfe"
+    },
+    {
+      "path": "tests/test_remaining_workflow.py",
+      "sha256": "ba34a13204c0e241f9844b44f8a38f4a24706e86b6c2f202ba61b28c169f333b"
+    },
+    {
+      "path": "tests/test_report_observed_values.py",
+      "sha256": "5140ddba2c33ff69c764fe6779e0b40f7d1253a8de7408263a58d0dd9bffe915"
+    },
+    {
+      "path": "tests/test_source_attachment_references.py",
+      "sha256": "3256bcb4192c09b8e20434caf592cc975c1ab2c518d142fc4ed63b9329913295"
+    },
+    {
+      "path": "tests/test_spec_repair_integration.py",
+      "sha256": "230e6e08efa02b35ea1aac779c8b6d0a476118db20b3c803dd84f53980d37aff"
+    },
+    {
+      "path": "tests/test_spec_repairs.py",
+      "sha256": "3aeaa7774309fa6388e85eec0b240582cacbca579059cccecc8a42b3362b0910"
+    },
+    {
+      "path": "tests/test_supervised_conversion.py",
+      "sha256": "58383cdee10806348b3488efb46ee737e48bf054d136a42563a71e1b3131688b"
+    },
+    {
+      "path": "tests/test_validator_completion.py",
+      "sha256": "ed76383763049f489e019b32aa99ef934ba699b95d906ed765ae1da47691f336"
+    },
+    {
+      "path": "tests/test_validator_correctness.py",
+      "sha256": "5269278eb2fe425ee351ea3af762d8846679e214e027303c738accba52d10f23"
+    },
+    {
+      "path": "validate_eapdf.py",
+      "sha256": "3440d5c40b5d4ec7348bba742a9dc895917b64f28ae5bec7e60069c92a3b6321"
+    },
+    {
+      "path": "validator_rule_text.json",
+      "sha256": "c3460b117632ce0aaf95b219cd737f92a3ee025e8e98f2e1e7935d8be8514216"
+    }
+  ],
+  "remaining": "The existing complete ISO/TS 32005, human/accessibility, live account/platform, deployment and release-rights verification boundaries remain in unfixed.md."
+}

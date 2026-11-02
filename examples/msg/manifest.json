@@ -1,0 +1,133 @@
+{
+  "input_type": "msg",
+  "creator_version": "1.6.0-beta.7",
+  "filename_policy": "Lower-case input type, input filename stem, _archive for multiple inputs, and EA-PDF profile. Single-message mailbox examples contain one extracted child.",
+  "creator_sha256": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
+  "validator_sha256": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4",
+  "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
+  "configuration_sha256": "9dd5ea95b331668c1017bc2005c5a9319e8258297e3c27b759b206801ac8e191",
+  "sources": {
+    "in/TxtSampleEmailWithAttachment.msg": "16c1d79495d1eb3be668a36fd59d4f6af32f04f2e9c3800f8b26cdb09e0708ed",
+    "in/test.MSG": "86522f1c47d0d76ec17d41dfe1a394b25db60032a5f82fd4987b1ced893e3277"
+  },
+  "single_message_policy": "First listed input file.",
+  "archive_policy": "Every message in all listed inputs.",
+  "validation": "Standalone Java validator, bundled real PDF/A and selected ISO structure checks, including collection children; default validator limits unchanged.",
+  "parallelism": {
+    "creator_jobs": 2,
+    "creator_heap_mb": 2048,
+    "concurrent_formats": 2
+  },
+  "samples": [
+    {
+      "profile": "1s",
+      "file": "msg_TxtSampleEmailWithAttachment_1s.pdf",
+      "sha256": "925077ba4106c844df1520593d54bcd6b7c6ec726983de1ab10ced95c47e4c1e",
+      "pages": 2,
+      "inputs": [
+        "in/TxtSampleEmailWithAttachment.msg"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 3.68
+    },
+    {
+      "profile": "1si",
+      "file": "msg_TxtSampleEmailWithAttachment_1si.pdf",
+      "sha256": "873764397e44c2477749e4fd623024c1ec7c27585348c4f0c28dd65e97ea87e4",
+      "pages": 2,
+      "inputs": [
+        "in/TxtSampleEmailWithAttachment.msg"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 3.835
+    },
+    {
+      "profile": "1m",
+      "file": "msg_TxtSampleEmailWithAttachment_archive_1m.pdf",
+      "sha256": "d912c9c6ccce4f998cc44ae326297c694d83c3cbb56742972e773d3efe6b70ce",
+      "pages": 6,
+      "inputs": [
+        "in/TxtSampleEmailWithAttachment.msg",
+        "in/test.MSG"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.9
+    },
+    {
+      "profile": "1mi",
+      "file": "msg_TxtSampleEmailWithAttachment_archive_1mi.pdf",
+      "sha256": "bb37413421d29c8963e29b8a928cb49177e94a59821fdc92557ac4b8b047011f",
+      "pages": 6,
+      "inputs": [
+        "in/TxtSampleEmailWithAttachment.msg",
+        "in/test.MSG"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.338
+    },
+    {
+      "profile": "1c",
+      "file": "msg_TxtSampleEmailWithAttachment_archive_1c.pdf",
+      "sha256": "b1abbb4d77db93a5f7fe1fa5e10ff741941f96121809382d3b508d9ab18dbbac",
+      "pages": 1,
+      "inputs": [
+        "in/TxtSampleEmailWithAttachment.msg",
+        "in/test.MSG"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 5.197
+    },
+    {
+      "profile": "1ci",
+      "file": "msg_TxtSampleEmailWithAttachment_archive_1ci.pdf",
+      "sha256": "d2f606e2ceaa997065a3c53a02c971624aeef0c2b08383ede381c3a3bb8cc9d2",
+      "pages": 1,
+      "inputs": [
+        "in/TxtSampleEmailWithAttachment.msg",
+        "in/test.MSG"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.888
+    }
+  ],
+  "sidecars": [
+    {
+      "file": "msg_TxtSampleEmailWithAttachment_archive_1c_index.xlsx",
+      "sha256": "cd96e282c1e54fea8ecf2d15b9fdc7a743f3042e6310266ae75edabeaf74d864",
+      "xlsx_package": "PASS"
+    },
+    {
+      "file": "msg_TxtSampleEmailWithAttachment_archive_1c_finding_aid.pdf",
+      "sha256": "fe4318f580935ee83c2944ae22afc6cbe6b397044c06b997ec4bab7817387582",
+      "pdfa": "PASS"
+    },
+    {
+      "file": "msg_TxtSampleEmailWithAttachment_archive_1ci_index.xlsx",
+      "sha256": "72ccc4aa7248ce4e0a8cdbe30c44d65ddf76c1a6c8911023c2605b9033de4cfa",
+      "xlsx_package": "PASS"
+    },
+    {
+      "file": "msg_TxtSampleEmailWithAttachment_archive_1ci_finding_aid.pdf",
+      "sha256": "d92c44bc7283cd21a86975d46edafc780a68d9fffaa8faf3f4c0c44f0532f11f",
+      "pdfa": "PASS"
+    }
+  ]
+}

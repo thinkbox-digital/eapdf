@@ -1,0 +1,535 @@
+EA-PDF specification and extracted-rule reexamination
+31 October 2026
+
+CURRENT IMPLEMENTATION FOLLOW-UP — 31 OCTOBER 2026
+
+The audit below describes the earlier 213-rule checkpoint. Its rule numbers
+and statements about unchanged code are historical. The user subsequently
+approved implementation and separate top-level rules, without preserving the
+old numbering. The current JSON contains 229 rules, numbered by the first
+applicable specification page. Operational diagnostics without a source page
+come last. Stable source requirement IDs retain their original meaning.
+
+The creator, both validators and viewer have been updated and the refinement
+checks are complete, with documented limitations. All three local dist JARs are
+updated; the published GitHub release is unchanged. Full Python discovery ran
+1,271 tests with no failures/errors and 43 skips. Java engine/packaging checks
+and real-file checks pass; one native GUI test passed an isolated rerun after
+an unexplained early stop. Both validators agree on 229 outcomes for 15 focused
+files. See docs/DEVELOPMENT_STATUS.md and the rule-refinement summary/evidence
+for exact counts, skip reasons, the narrower Java headerless-MSG evidence scope,
+and unavailable fresh Firefox runtime testing.
+
+The Word author-review document now follows the same 229-rule order. It preserves
+the original source quotations, tables and images, separates the current check
+from full source clauses, and includes the old-to-new rule mapping.
+
+The project repository's two issues and one comment were also reread:
+https://github.com/thinkbox-digital/eapdf/issues/1
+https://github.com/thinkbox-digital/eapdf/issues/2
+The 14-topic disposition is in ../rule-refinement-2026-10-31/project-issues-review.txt
+and Appendix F of EA_PDF_Rule_Review_for_Specification_Authors.docx. Resolved root
+role mapping supersedes the open implementation item in the 29 October review.
+Claims about removing pdfmail, body attachment annotations, or file-creation
+semantics conflict with explicit published wording; those requirements remain.
+Issue discussion is not adopted errata. The updated sample link returns HTTP 404;
+the historical BFO/UIUC files were tested separately and still fail EA-PDF.
+
+The user also expressly authorized viewer alignment after the original audit.
+That supersedes the audit's statement that it did not authorize viewer work.
+PDF/A remains delegated to veraPDF on the finished file, and applicable
+ISO/TS 32005 checks remain separate. The unresolved specification questions
+below remain visible; passing tests do not settle them.
+
+STARTING ASSUMPTION: VALID PDF/A
+
+User-approved scope: the creator first produces a fully valid PDF/A file.
+The additional EA-PDF rules in this document assume that prerequisite has been
+met. PDF/A validation is delegated to veraPDF; this project does not need to
+repeat its baseline rules or independently rebuild its PDF/A coverage catalogue.
+
+Operationally, the prerequisite is a completed, passing veraPDF result for the
+applicable PDF/A level. EA-PDF still determines which PDF/A levels and PDF
+versions it permits. Record the veraPDF version, selected profile, result and
+identity of the validated file. A declaration in metadata is not a substitute
+for validation. Failed, skipped or unfinished PDF/A validation leaves the
+prerequisite unmet and cannot support an overall EA-PDF conformance claim.
+
+The result must apply to the finished bytes. If adding EA-PDF metadata,
+attachments or structure changes the PDF after validation, validate the finished
+file again. Apply this prerequisite to each PDF claimed as EA-PDF, including
+embedded EA-PDF children. It does not require every original email attachment
+to be a PDF/A file.
+
+The remaining rules cover additional EA-PDF requirements: email metadata,
+source relationships, attachments, collections, document parts, navigation and
+applicable logical structure. Keep EA-PDF restrictions even where they concern
+objects also used by PDF/A. Additional ISO/TS 32005 conformance, when required,
+remains a separate dependency; a PDF/A pass alone does not establish it.
+Source fidelity and unavailable original evidence also remain separate matters.
+
+The rulebook needs further work before it can be treated as the complete
+foundation for the additional EA-PDF creation and validation requirements.
+Much of the extraction is already correct. The main problems are requirements
+that have lost important conditions in their summaries, recommendations that
+sound mandatory, and links that count as coverage even though they cover only
+part of a requirement. R8, R9 and the work order below reflect the clarified
+PDF/A prerequisite; historical review evidence remains identified as such.
+
+This is an audit, not an implementation change. No specification, rule JSON,
+creator, validator, viewer, examples, JARs or releases were changed for this
+review. The findings below describe the current 213-rule file, rather than
+repeating defects already repaired on 27 October. A missing sentence in the
+rulebook does not, by itself, prove that the executable validator lacks a check.
+
+WHAT WAS EXAMINED
+
+The source is the PDF Association's EA-PDF 1.0 Specification, February 2025,
+docs/reference/EA-PDF-v1.pdf. It has 97 PDF pages and 90 numbered content pages.
+References below use the printed page numbers; add seven for the PDF page.
+Source SHA-256:
+b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae
+Specification attribution: Copyright 2025 PDF Association, CC BY 4.0.
+
+Three independent reviews covered clauses 1-7, clauses 8-9.7, and clause 9.8,
+including all 19 tables and cross-checks between descriptive and normative text.
+The disputed Core Field and role-map tables were also checked visually.
+
+The comparison included validator_rule_text.json, its separate review records,
+the 301-record requirement inventory, existing local decisions, and the pinned
+veraPDF profile-rule index. The registry audit was rerun successfully. It checks
+numbering, source identity and links; it expressly does not certify completeness
+of implementation. The 301 records include recommendations, creator duties,
+definitions and diagnostics; they are not 301 mandatory PDF checks.
+
+All 26 issues and all 47 comments in pdf-association/report-an-issue were fetched
+and read, including closed issues. At retrieval there were 17 open and 9 closed
+issues. Their bodies, comment bodies and states match the saved 19 October
+review. No new upstream resolution was found. The fresh snapshot is
+reexamination-2026-10-31-upstream.json; verification and input hashes are in
+reexamination-2026-10-31-verification.json in this directory.
+
+Published PDF errata were checked separately. An issue proposal, an explanatory
+comment and a published correction have different authority. None should
+silently replace the pinned specification or a documented project decision.
+
+RULES THAT NEED WORK NOW
+
+R1. Clearly distinguish a requirement from a recommendation.
+
+Several summaries use instructions such as Add, Create or Tag where the source
+says SHOULD. This matters because a valid file can omit a recommended item.
+Once an optional item is supplied, its type or value may still have to be valid.
+
+Affected rules include:
+  74 EMBEDDED_SIZE
+  75 EMBEDDED_MD5
+  76 EMBEDDED_MD5_BINARY_FORMAT
+  105 CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED
+  124 HEADER_FIELDS_TAGGED_RECOMMENDED
+  144 MAIL_FIELD_NESTING_RECOMMENDED
+  146 MAIL_FIELDNAME_NESTING_RECOMMENDED
+  148 MAIL_FIELDVALUE_NESTING_RECOMMENDED
+Sources: 9.4 p67; 9.7 pp74,76; Table 13 p79.
+
+Rule 74 mentions optional presence and the nesting rules mention recommended
+ancestry, but their leading instructions still obscure the distinction. Rules
+75 and 76 are especially unclear: neither says that adding the checksum is a
+recommendation. Say that writers should supply it, then separately state the
+conditions on a supplied checksum. Do not turn a missing recommendation into a
+mandatory failure. This cleanup was intended by the earlier review but is not
+fully reflected in the current text. Supplied-value conditions already covered
+by the accepted PDF/A baseline belong to veraPDF. Retain the additional EA-PDF
+recommendations and any comparisons outside that baseline's scope.
+
+R2. Restore the explicit duty to preserve nonempty original email fields.
+
+The source requires nonempty Core Fields to appear in the email metadata. It
+also says metadata values must stay as equivalent as possible to the full
+original values, allowing representation and encoding differences. A shortened
+subject displayed on a page does not justify shortening the stored metadata.
+Display labels may be translated; stored field names and values must not be
+localized.
+
+Rule 171 EMAIL_XMP_CONTAINER now describes the container and schema, while
+saying source completeness is separate. Its linked requirement XMP-EMAILS
+contains the all-nonempty-fields obligation, but the rule no longer states it.
+Rule 8 MESSAGE_SOURCE_MATCH links HEADER-SOURCE-EQUIVALENCE but describes source
+coverage instead of header-value fidelity. Rules 172,175,182,183,188,191 and 194
+mainly describe optional supplied fields without clearly identifying the
+conditional inclusion check.
+Sources: 7.3.1 p36; 9.8.3 pp86-88.
+
+State three separate obligations: valid metadata structure, inclusion when the
+original contains a nonempty Core Field, and faithful values. Map each to an
+actual check and its required evidence. Unavailable original evidence leaves a
+comparison unverified; it does not make the preservation duty optional. Do not
+make every Raw-* helper field mandatory: those have their own presence rules.
+This is a confirmed text/mapping gap, not a claim that all source comparisons
+are absent from the software.
+
+R3. Restore ownership of all the content belonging to each email.
+
+An identifier that exists somewhere in the PDF's metadata does not prove that
+the pages and attachments are assigned to the right email. Section 9.6 p69
+requires an intermediate document-part node to associate an email with all of
+its Content Sets: its body renderings, attachment renderings and other related
+content groups.
+
+The DPM-EMAIL-OWNERSHIP inventory record maps to rules 90-92:
+  DPM_MAIL_GUID_PRESENT, DPM_MAIL_GUID_MATCH, DPM_MAIL_MESSAGEID_MATCH.
+Their current summaries principally describe identifier presence, type and
+matching. Rule 90 says ownership is separate without stating that separate
+obligation. Checks on optional custom logical tags cannot replace this duty:
+document-part metadata is required even when those tags are absent.
+
+Give all-content-set ownership an explicit assertion and check mapping. Include
+the established exception for genuine document-wide front matter and reports.
+Test ownership independently from whether each identifier is syntactically valid
+or appears in the document-wide metadata.
+
+R4. Put the exact attachment-icon location back into the rule.
+
+Rule 59 ATTACHMENT_ANNOTATIONS_PRESENT says an attachment annotation must be
+visible in each applicable body Content Set. Section 9.3 p65 also says the whole
+annotation must be inside the page's CropBox, the visible page area. MediaBox
+provides the fallback when CropBox is absent. A partly clipped icon is not enough.
+
+Restore complete containment explicitly. Keep this separate from the questions
+of which email owns the attachment and whether every applicable body rendering
+has an annotation. The fuller inventory still contains the geometry condition;
+the current runtime summary has lost it.
+
+R5. State the embedded-file media-type duties beyond the PDF/A prerequisite.
+
+Section 9.4 pp66-67 includes bare embedded-stream media typing already delegated
+to the PDF/A prerequisite. Its additional EA-PDF duty is that, when the original
+email supplies parameters, the same parameters must be stored separately in
+Mail_MediaTypeParameters as a PDF string. Comparing two values is insufficient
+if both omitted required original information.
+
+Rule 69 SOURCE_MEDIATYPE_PARAMETERS_MATCH currently emphasizes agreement with
+XMP. Explicitly restore conditional presence, PDF-string type and preservation
+of original parameters. Rules 68 EMBEDDED_SUBTYPE_MATCH_XMP and 70
+EMBEDDED_MEDIATYPE_RECONSTRUCTION should identify their narrower comparison and
+reconstruction duties without obscuring the complete contract.
+
+Bare Subtype presence/syntax are intentionally delegated to veraPDF. The pinned
+index contains EmbeddedFile 6.8 test 1 for PDF/A-3a/3u and EmbeddedFile 6.9 test 1
+for PDF/A-4/4f/4e, requiring a present bare media type. Preserve this delegation;
+do not add duplicate custom checks merely to increase the numbered rule count.
+The conditional-semicolon reconstruction policy in rule 70 is already labelled
+as a local interpretation and should remain so.
+
+R6. Record the extra interpretation of the custom-tag role-map trigger.
+
+Section 9.7 p75 introduces Table 10 with a trigger based on any of its custom
+tags being present, followed by a requirement to include the role map. Rules
+112-117 instead require each mapping only when that individual tag is used.
+That is a narrower trigger than the literal whole-table reading.
+
+Affected codes: MAIL_MESSAGE_ROLEMAP_DOCUMENT, MAIL_CONTENTGROUP_ROLEMAP_PART,
+MAIL_CONTENTSET_ROLEMAP_ART, MAIL_FIELD_ROLEMAP_APPROPRIATE,
+MAIL_FIELDNAME_ROLEMAP_APPROPRIATE and MAIL_FIELDVALUE_ROLEMAP_APPROPRIATE;
+also the combined description in 109 ROLEMAP_MAIL_TAGS.
+
+The project already documents used-only handling for Table 9 and the optional
+custom vocabulary. Explicitly record whether the same interpretation is intended
+for Table 10, preserving both the source trigger and the project's choice.
+This is an interpretation/traceability issue. The audit does not justify silently
+making existing validators stricter or claiming author confirmation.
+
+R7. Separate type checks from the facts they cannot establish.
+
+Two important limits are already acknowledged but remain incomplete if coverage
+is judged only by requirement IDs having a rule link:
+
+  Rule 167 ASSET_NUMBERMESSAGES_TYPE checks that NumberMessages is a nonnegative
+  integer. Table 16 p85 gives it a further meaning: messages successfully
+  rendered from that particular source asset. A well-formed number is not proof
+  of that count. The T16-NumberMessages record should distinguish these proofs.
+
+  Rule 103 DPM_BODY_MEDIA_TYPE_MATCH_SOURCE covers body renderings only. Table 8
+  pp70-71 also concerns attachment renderings. Rules 101-102 cover presence and
+  syntax, which do not establish the original attachment's type and parameters.
+  The T8-SUBTYPE record should separately account for attachment-source fidelity.
+
+Keep these as acknowledged coverage limits until dependable associations and
+evidence exist. Neither counting every input message nor borrowing a plausible
+attachment record proves the required relationship. Missing evidence should
+remain visible rather than becoming a successful comparison.
+
+R8. Make the PDF/A prerequisite and additional EA-PDF scope explicit.
+
+The refined JSON should describe the additional EA-PDF checks on an already
+validated PDF/A file. It need not reproduce baseline PDF/A requirements. State
+the prerequisite clearly in the rule documentation and retain a concise link
+to the configured veraPDF validation and its result. Preserve stable rule codes
+while distinguishing the baseline prerequisite, additional EA-PDF assertions,
+recommendations and operational diagnostics.
+
+For example, 9.8.1 p84 requires the PDF/A-3 XMP extension schema. The separate
+inventory retains XMP-PDFA3-EXTENSIONS and the retired
+PDFA3_EAPDF_XMP_EXTENSION_SCHEMA mapping. The pinned PDF/A-3 profiles contain
+property-definition, value-type and extension-schema tests under 6.6.2.3.
+These baseline duties remain delegated. The Subtype prohibition discussed in
+R5 is treated the same way. Existing detailed upstream mappings may be retained
+as reference evidence; rebuilding or separately proving veraPDF's complete
+PDF/A implementation is outside this refinement task.
+
+Creator duties also include preprocessing provenance, source fidelity, meaningful
+file descriptions, attachment placeholder policy and recommendations about page
+labels, resource reuse and outline organization. Several are recorded only in
+the secondary inventory. They should stay visible without becoming invented
+mandatory PDF failures. Clause 8 software duties also need their own category;
+this audit does not authorize viewer development.
+
+Maintain complete coverage of the additional EA-PDF assertions with stable
+source IDs. Each creator duty needs its own evidence owner. For a mixed
+requirement, identify the PDF/A-covered part and state the extra EA-PDF condition
+explicitly. Extra dependencies such as ISO/TS 32005 retain their own applicable
+checks. A failed or skipped external run cannot count as a completed prerequisite.
+
+R9. Improve the evidence behind the word complete.
+
+The registry audit verifies all 213 rule links against the existing 301-record
+inventory. It cannot detect an omitted sentence in the source, a condition lost
+inside a linked rule, or a type check standing in for a semantic comparison.
+Its mandatory-file guard specifically checks SHALL and SHALL_NOT records;
+conditional EA-PDF obligations also need explicit coverage accounting. Baseline
+PDF/A duties are accounted for through the prerequisite, while additional
+dependencies remain separately identified.
+
+Some distinct rules have identical descriptions: 168 ASSET_CHECKSUM_FORM and
+169 ASSET_MD5_MATCH both describe an MD5 value, but valid hexadecimal text and
+the correct digest of actual bytes are different proofs. Similar duplication
+occurs in 184 MAIL_GUID_XMP / 185 MAIL_GUID_UNIQUE and 165 SOURCE_MIME_TYPE /
+166 ASSET_CONTENTTYPE. Bundled rule 14 covers several attachment assertions.
+Keep stable codes, but describe what each outcome actually establishes.
+
+Record, per additional EA-PDF assertion: source text and authority, strength,
+applicability, required evidence, implementing check, extra dependency,
+positive/negative test, and unavailable-evidence outcome. The PDF/A prerequisite
+needs its acceptance record rather than a second inventory of PDF/A rules.
+Keep exact source wording separate from paraphrase and local policy.
+The existing summary's zero open findings means its
+previous local decisions were entered; its own full-requirements gate remains
+open. It must not be read as independent confirmation that the specification is
+unambiguous or every obligation has been demonstrated.
+
+SPECIFICATION QUESTIONS THAT REMAIN
+
+These are mostly already recorded in the 27 October decisions. They are not
+newly discovered software defects. Keep the decisions linked to affected rules
+and seek authoritative clarification before presenting them as settled EA-PDF.
+
+1. Missing or unusable sent dates. Table 4 p37 allows a required Sent value to be
+   blank, whereas Table 18 p87 requires xsd:dateTime. A blank value cannot meet
+   that type. Rules 178-179 correctly follow the present Table 18 policy; they
+   do not solve the missing-date case. This is directly relevant to the three
+   documented MBOX exceptions. A future solution needs an explicit unknown-date
+   representation or other agreed policy. Do not insert conversion time as a
+   fictitious send time. Raw-Sent preserves bad original text but does not by
+   itself satisfy the required typed Sent field.
+
+2. Conflicting Core Field tables. Table 4 lists email-level Content-Type but
+   Table 18 supplies no corresponding property. Their size and attachment-count
+   requiredness also differ. Raw-Sent is optional otherwise in Table 4, but
+   discouraged otherwise in Table 18. Current rules 180-181,186-187 deliberately
+   follow Table 18. Do not invent a new mandatory XMP field, make all counts
+   mandatory, or turn SHOULD NOT into a prohibition. An email's top-level MIME
+   type is also different from the types of its individual bodies/attachments.
+
+3. PDF/A levels and editions. Descriptive Table 2 pp8-11 lists narrower profile
+   combinations than the combined normative list in 9.1 p61 and contains the
+   reported 4fe typo. Rules 3-4 follow the normative list but do not explain that
+   conflict. Section 4 names ISO/DIS 19005-4:2024; equivalence with the implemented
+   PDF/A-4 baseline was not certified by this audit. Retain that source-edition
+   discrepancy and identify the configured veraPDF version/profile accepted for
+   the prerequisite. The scope decision above delegates baseline validation;
+   it does not create a task to reimplement or independently certify PDF/A.
+   EA-PDF's allowed-level interpretation remains explicit. Do not reject extra
+   combinations solely from the descriptive table or assume a later standard
+   silently amends this edition of EA-PDF.
+
+4. Collection fields. Table 5 p53 describes Size as original email bytes;
+   Table 6 p68 prescribes the PDF Size subtype, which represents embedded-file
+   bytes. Rules 16/86 already disclose this. Keep the required schema and its
+   local interpretation visible. Table 6 also requires Message-ID, although
+   Table 5 omits it. Bcc remains a schema field even for received mail with no
+   known Bcc recipients. The source also lacks clear collection-item summaries
+   for a child PDF containing multiple emails; do not invent a first-email
+   summary or recipient/date values.
+
+5. Tags and navigation. The broad namespace/role-map requirements and optional
+   custom tags need reconciliation. Rules 107/109 already label used-tag and
+   unused-namespace choices; R6 identifies an additional trigger needing the
+   same treatment. Rule 44 uses a documented PDF 1.7 fallback for
+   NonFullScreenPageMode because UseAttachments is a PDF 2.0 value. An open issue
+   proposing removal does not remove today's requirement. The undefined
+   Mail_ContentField name and document-wide Content Set ancestry also retain
+   recorded local corrections in rules 120/140.
+
+6. Unspecified metadata representations. The text does not explicitly name the
+   outer email-list property; the project uses pdfmailmeta:email. Table 18's
+   description of In-Reply-To mixes ordered and unordered terminology; rule 194
+   expressly chooses rdf:Bag. FOAF address representations and malformed
+   originals also need clear normative examples. Table 13 asks for a ContentGroup
+   comparison to an XMP field that is not defined; rule 138 cannot manufacture
+   that counterpart. Keep these limitations explicit.
+
+7. Original identity and attachment matching. Section 9.4 p67 has ambiguous
+   wording about the number of Source associations. Duplicate Message-IDs,
+   repeated filenames and optional checksums can leave email/attachment-to-byte
+   links uncertain. Current rules 1,6-8,14,59 and 199 contain deliberate evidence
+   policies. A unique identifier or convenient filename alone does not prove
+   complete source preservation. Table 19's preservation of malformed original
+   media types also needs reconciliation with valid embedded-stream typing.
+
+8. Empty input and blank pages. The p63 footnote anticipates preserving an input
+   with no valid email, but s/m cardinalities require one or multiple emails.
+   No zero-message profile should be invented. The same section's blank-page
+   sentence is awkward: rule 51 already labels its policy of at least one
+   nonblank page per Content Set. Do not silently replace that with a ban on
+   every additional blank page.
+
+9. Creation time and historical proof. Section 9.8 p84 names the EA-PDF creation
+   date. Issue 22 debates its interpretation but contains no adopted change.
+   Rules 156-157 keep the PDF-creation interpretation and separate valid date
+   syntax from evidence of the actual event. The sender's name, file timestamp
+   or agreement between two metadata fields cannot alone establish provenance.
+
+WHAT THE UPSTREAM REVIEW CHANGES, AND WHAT IT DOES NOT
+
+Direct EA-PDF discussions:
+
+  #8: malformed number tree in the specification PDF. This is a publication
+      defect, not a new rule for output files. Preserve the pinned source and
+      do not use it as a known-valid PDF fixture.
+  #10: PDF/A-4fe typo. Record the correction and the separate profile conflict.
+  #13: objection to PDF name values in DPM. Published PDF errata now expressly
+       allow names. Keep the current Name types; changing them to strings based
+       on the issue alone would introduce an error.
+  #14: navigation, Source-cardinality wording and inconsistent field spellings.
+       Do not delete requirements or normalize schema property names merely
+       because the issue proposes improvements.
+  #17: collection Size, Bcc and Message-ID. The Bcc comment explains deliberate
+       preservation of blank-versus-unrecorded information; keep its schema key.
+  #21: PDF 2.0 role maps and mandatory ISO/TS 32005. These are proposals for
+       changes, not adopted amendments. Keep the published ISO/TS requirement
+       for tagged PDF 2.0. The issue quotation reverses the first Table 9 pair;
+       the pinned table was visually checked and says Artifact -> Private.
+  #22: Adobe extension level and creation date. A later comment argues against
+       relaxing the level. Current rule 80's exact ExtensionLevel 5 agrees with
+       the published text. Do not change it to >=5 on the opening proposal alone.
+
+Issue URLs: https://github.com/pdf-association/report-an-issue/issues/8
+https://github.com/pdf-association/report-an-issue/issues/10
+https://github.com/pdf-association/report-an-issue/issues/13
+https://github.com/pdf-association/report-an-issue/issues/14
+https://github.com/pdf-association/report-an-issue/issues/17
+https://github.com/pdf-association/report-an-issue/issues/21
+https://github.com/pdf-association/report-an-issue/issues/22
+
+Supporting standards and publication issues were also reviewed:
+  #1: use published Associated Files corrections rather than relying solely on
+      the older application note, including marked-content association syntax.
+  #12: incomplete PDF/A-4 Declaration guidance does not require PDF/A-3-style
+       extension schemas in every PDF/A-4 file.
+  #3/#5: outdated MIME/PDF-A guidance; not amendments to EA-PDF.
+  #7/#9/#15/#16/#19/#20: dependency-publication or errata-page corrections;
+       comments report fixes, including EC3. Those reports do not silently
+       replace the project's pinned dependency files.
+  #2/#4/#6/#11/#18: test-suite, cheat-sheet or other publication matters;
+       no additional EA-PDF file requirement established.
+  #23/#25: accessibility of supporting publications; no amendment established.
+  #24/#26: website navigation and glossary requests; no EA-PDF rule change.
+
+Published sources checked:
+https://pdf-issues.pdfa.org/32000-2-2020/clause14.html#H14.12.4.2
+https://pdf-issues.pdfa.org/32000-2-2020/clause14.html#H14.13.5
+https://pdf-issues.pdfa.org/32000-2-2020/clause12.html#Table147
+https://pdfa.org/declarations/#ISO_TS_32005
+The Declaration's machine identifier is https://pdfa.org/declarations#iso32005;
+it is different from the explanatory webpage's section link.
+
+OTHER CORRECT DECISIONS TO PRESERVE
+
+The specification expressly permits exporting individual emails to EML before
+conversion (7.2 pp34-35). Such a derivative can be the stated conversion source
+of an s file. This does not prove preservation of the original PST/MBOX container,
+but neither does derivation automatically require the isolated profile. Keep
+preservation scope clear rather than confusing it with format conformance.
+
+Object-level Source assets can occur in isolated files. Retrieval of every
+remote asset is not mandatory. Permitted attachment placeholders and ordinary
+PDF/A alternative renderings are distinct from original payloads. Optional
+checksums must remain optional; attachment XMP CheckSum and asset XMP Checksum
+are intentionally different case-sensitive names in this published edition.
+Table 17 is an example list of media types, not a closed list of permitted input
+formats. Do not undo these already corrected interpretations.
+
+REFINEMENT PLAN IN PLAIN ENGLISH
+
+1. Set the starting point: a valid PDF/A file.
+
+   State that veraPDF handles PDF/A validation. Our rules cover what must be
+   added or preserved for EA-PDF. Keep the allowed PDF/A versions clear.
+   A passing result must apply to the finished file; changes made afterward
+   require another check. This step defines the rulebook's scope and does not
+   require a new conversion run before editing the rules.
+
+2. Give every rule the same clear format.
+
+   Say what is required, when it applies, whether it is compulsory or recommended,
+   what evidence is needed to check it, and where it comes from in the
+   specification. Keep the existing rule names and numbers. Separate the
+   specification's requirement from our explanation and any project decision.
+
+3. Fix the clear omissions and misleading wording first.
+
+   Make recommendations sound like recommendations. Restore requirements that
+   the summaries have lost: preserving original email fields, assigning all
+   related content to the correct email, keeping attachment icons entirely
+   inside the visible page, and storing required file-type details correctly.
+   Leave disputed meanings for step 5. Record the old wording, replacement,
+   source reference and reason for each change.
+
+4. Explain what each check actually proves.
+
+   A number can be written correctly but still give the wrong message count.
+   A checksum can have the right format but fail to match the attachment.
+   Separate those checks. Explain which facts can be checked from the PDF and
+   which require the original email. When the necessary evidence is missing,
+   say that the fact could not be verified. Keep the PDF/A checks with veraPDF.
+
+5. Clearly label disagreements in the specification.
+
+   Record both sides of each conflict, the project's current decision and what
+   still needs clarification. Examples include missing send dates, collection
+   sizes, required email fields and rules for document structure. Keep existing
+   decisions visible; a proposal in a GitHub issue does not automatically change
+   the standard. Do not invent missing dates or other historical facts.
+
+6. Compare the revised rules with the software.
+
+   Check the creator and both validators against the revised requirements.
+   For each change, say whether the wording alone needed correction, the
+   software already does the right thing, or a code change is still needed.
+   Record code repairs as follow-up work. A corrected description must not
+   make an unfinished check appear complete.
+
+7. Test the affected rules and publish the remaining work.
+
+   Use small real email examples and focused test cases. Include correct files
+   and files with one deliberate error. When testing an extra EA-PDF rule, the
+   file should still pass PDF/A so the result demonstrates that particular rule.
+   Keep originals unchanged, retain conversion logs and Java validation reports,
+   and run the relevant regression checks. Large PST exports are unnecessary.
+
+The finished refinement should provide a clear rulebook, a source reference for
+every additional EA-PDF requirement, and an honest list of remaining questions
+and code gaps. Rules handled by veraPDF should be identified without copying its
+PDF/A rulebook. Calling a software check complete requires evidence that it
+tests the whole requirement; two validators agreeing is not enough if both use
+the same incomplete rule.

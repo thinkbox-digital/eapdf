@@ -1,0 +1,70 @@
+[
+  {
+    "id": "connected-custom",
+    "mutation": "none",
+    "custom": true,
+    "content": "PASS",
+    "headers": "WARN",
+    "verified_fields": 5,
+    "failures": [],
+    "expected_eapdf": "PASS"
+  },
+  {
+    "id": "custom-untagged",
+    "mutation": "untagged",
+    "custom": true,
+    "content": "WARN",
+    "headers": "N/A",
+    "verified_fields": 0,
+    "failures": [],
+    "expected_eapdf": "INCOMPLETE"
+  },
+  {
+    "id": "custom-unmarked-paint",
+    "mutation": "unmarked-paint",
+    "custom": true,
+    "content": "WARN",
+    "headers": "WARN",
+    "verified_fields": 5,
+    "failures": [],
+    "expected_eapdf": "PASS"
+  },
+  {
+    "id": "standard-body",
+    "mutation": "none",
+    "custom": false,
+    "content": "PASS",
+    "headers": "WARN",
+    "verified_fields": 5,
+    "failures": [],
+    "expected_eapdf": "PASS"
+  },
+  {
+    "id": "header-one-pair-generic",
+    "mutation": "generic-field",
+    "custom": false,
+    "content": "PASS",
+    "headers": "WARN",
+    "verified_fields": 4,
+    "failures": [
+      "CUSTOM_TAG_OPERAND_MATCH"
+    ],
+    "expected_eapdf": "FAIL",
+    "evidence_note": "The mutation changes structure tag names without changing their content-stream operands. Require the independent CUSTOM_TAG_OPERAND_MATCH failure as well as the intended recommendation result."
+  },
+  {
+    "id": "header-values-only",
+    "mutation": "values-only",
+    "custom": false,
+    "content": "PASS",
+    "headers": "WARN",
+    "verified_fields": 0,
+    "failures": [
+      "CUSTOM_TAG_OPERAND_MATCH",
+      "MAIL_FIELDVALUE_WITH_NAME",
+      "MAIL_FIELD_CHILDREN"
+    ],
+    "expected_eapdf": "FAIL",
+    "evidence_note": "The mutation changes structure tag names without changing their content-stream operands. Require the independent CUSTOM_TAG_OPERAND_MATCH failure as well as the intended recommendation result."
+  }
+]

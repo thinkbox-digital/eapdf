@@ -1,0 +1,59 @@
+%PDF-2.0
+%¿÷¢þ
+1 0 obj
+<< /DPartRoot 2 0 R /Metadata 3 0 R /Pages 4 0 R /Type /Catalog >>
+endobj
+2 0 obj
+<< /DPartRootNode 5 0 R /Type /DPartRoot >>
+endobj
+3 0 obj
+<< /Subtype /XML /Type /Metadata /Length 984 >>
+stream
+<ns0:xmpmeta xmlns:ns0="adobe:ns:meta/" xmlns:ns2="http://www.pdfa.org/eapdf/ns/id/" xmlns:ns3="http://www.aiim.org/pdfa/ns/id/" xmlns:ns4="http://www.pdfa.org/eapdf/ns/meta/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:RDF><rdf:Description><ns2:version>1</ns2:version><ns2:rev>2024</ns2:rev><ns2:conformance>s</ns2:conformance><ns3:part>4</ns3:part><ns3:conformance>F</ns3:conformance><ns4:email><rdf:Bag><rdf:li rdf:parseType="Resource"><ns4:Mail_GUID>guid-0</ns4:Mail_GUID><ns4:messageid>&lt;message-0@example.invalid&gt;</ns4:messageid></rdf:li></rdf:Bag></ns4:email><ns4:assets><rdf:Bag /></ns4:assets><ns4:attachments><rdf:Bag><rdf:li rdf:parseType="Resource"><ns4:Filename>fixture.txt</ns4:Filename><ns4:SizeInBytes>34</ns4:SizeInBytes><ns4:Content-Type>text/plain</ns4:Content-Type><ns4:CheckSum>8c441be3b723f4c68a9b470d328915d0</ns4:CheckSum><ns4:Mail_GUID>guid-0</ns4:Mail_GUID></rdf:li></rdf:Bag></ns4:attachments></rdf:Description></rdf:RDF></ns0:xmpmeta>
+endstream
+endobj
+4 0 obj
+<< /Count 1 /Kids [ 6 0 R ] /Type /Pages >>
+endobj
+5 0 obj
+<< /DParts [ [ 7 0 R ] ] /Parent 2 0 R /Type /DPart >>
+endobj
+6 0 obj
+<< /Annots [ 8 0 R ] /Contents 9 0 R /DPart 10 0 R /MediaBox [ 0 0 200 200 ] /Parent 4 0 R /Resources << >> /Type /Page >>
+endobj
+7 0 obj
+<< /DPM << /Mail_GUID (guid-0) /Mail_MessageID (<message-0@example.invalid>) >> /DParts [ [ 10 0 R ] ] /Parent 5 0 R /Type /DPart >>
+endobj
+8 0 obj
+<< /Contents (Synthetic file) /FS 11 0 R /Rect [ 0 0 10 10 ] /Subtype /FileAttachment /Type /Annot >>
+endobj
+9 0 obj
+<< /Length 0 /Filter /FlateDecode >>
+stream
+
+endstream
+endobj
+10 0 obj
+<< /DPM << /Mail_ContentSetType /BodyRendering /Mail_Desc (Synthetic body) /Mail_Subtype /text#2fplain;#20charset=UTF-8 >> /Parent 7 0 R /Start 6 0 R /Type /DPart >>
+endobj
+11 0 obj
+<< /AFRelationship /Data /F (fixture.txt) /Type /Filespec /UF (fixture.txt) >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000015 00000 n 
+0000000097 00000 n 
+0000000156 00000 n 
+0000001221 00000 n 
+0000001280 00000 n 
+0000001350 00000 n 
+0000001488 00000 n 
+0000001636 00000 n 
+0000001753 00000 n 
+0000001823 00000 n 
+0000002005 00000 n 
+trailer << /Root 1 0 R /Size 12 /ID [<26bcb03eb9d7210f43f9cae4920e0f50><26bcb03eb9d7210f43f9cae4920e0f50>] >>
+startxref
+2100
+%%EOF

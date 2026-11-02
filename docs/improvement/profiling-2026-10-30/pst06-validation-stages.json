@@ -1,0 +1,62 @@
+[
+  {
+    "stage": "startup",
+    "sampled_seconds": 1.0,
+    "peak_rss_mib": 18.4
+  },
+  {
+    "stage": "Checking PDF/A",
+    "sampled_seconds": 371.6,
+    "peak_rss_mib": 13581.4
+  },
+  {
+    "stage": "Checking ISO 32005",
+    "sampled_seconds": 344.2,
+    "peak_rss_mib": 13860.1
+  },
+  {
+    "stage": "Checking EA-PDF",
+    "sampled_seconds": 6.1,
+    "peak_rss_mib": 10862.4
+  },
+  {
+    "stage": "Reading metadata",
+    "sampled_seconds": 1.0,
+    "peak_rss_mib": 10862.6
+  },
+  {
+    "stage": "Checking embedded files",
+    "sampled_seconds": 48.9,
+    "peak_rss_mib": 10903.1
+  },
+  {
+    "stage": "Checking document parts",
+    "sampled_seconds": 2.0,
+    "peak_rss_mib": 10903.4
+  },
+  {
+    "stage": "Checking logical structure",
+    "sampled_seconds": 8.2,
+    "peak_rss_mib": 10905.1
+  },
+  {
+    "stage": "Checking page content",
+    "sampled_seconds": 94.8,
+    "peak_rss_mib": 11093.0
+  },
+  {
+    "stage": "Comparing original email metadata",
+    "sampled_seconds": 57.2,
+    "peak_rss_mib": 10997.6
+  },
+  {
+    "stage": "Checking embedded email PDFs",
+    "sampled_seconds": 20.4,
+    "peak_rss_mib": 10990.0
+  },
+  {
+    "stage": "Finished",
+    "sampled_seconds": 0.9,
+    "peak_rss_mib": 0.0
+  }
+]

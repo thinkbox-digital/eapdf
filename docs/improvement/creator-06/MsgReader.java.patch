@@ -1,0 +1,42 @@
+--- before/MsgReader.java
++++ after/MsgReader.java
+@@ -24,6 +24,18 @@
+     return "";
+   }
+ 
++  static String displayAddress(List<MailAgent> agents, String fallback) {
++    String addresses = Common.joinAgents(agents);
++    return addresses.isBlank() ? Common.nz(fallback) : addresses;
++  }
++
++  static String rawAddressHeader(OutlookMessage message, String field, List<MailAgent> agents, String fallback) {
++    String original = headerValue(message, field);
++    if (!original.isBlank()) return original;
++    String addresses = Common.rfc822AddrList(agents);
++    return addresses.isBlank() ? fallback : addresses;
++  }
++
+   static EmailRecord readMsg(String path, String globalId, List<String> archiveEmails, boolean debug) throws Exception {
+     ProcessingLimits.checkMessage(Files.size(Paths.get(path)), path);
+     OutlookMessageParser p = new OutlookMessageParser();
+@@ -38,13 +50,13 @@
+     for (OutlookRecipient rcpt : m.getCcRecipients()) Common.addAgent(r.ccAgents, Common.nz(rcpt.getName()), Common.nz(rcpt.getAddress()));
+     for (OutlookRecipient rcpt : m.getBccRecipients()) Common.addAgent(r.bccAgents, Common.nz(rcpt.getName()), Common.nz(rcpt.getAddress()));
+     r.from = Common.joinAddr(Common.nz(m.getFromName()), Common.nz(m.getFromEmail()));
+-    r.to = Common.nz(m.getDisplayTo());
+-    r.cc = Common.nz(m.getDisplayCc());
+-    r.bcc = Common.nz(m.getDisplayBcc());
+-    r.rawFrom = !Common.rfc822AddrList(r.fromAgents).isBlank() ? Common.rfc822AddrList(r.fromAgents) : (!headerValue(m, "From").isBlank() ? headerValue(m, "From") : r.from);
+-    r.rawTo = !Common.rfc822AddrList(r.toAgents).isBlank() ? Common.rfc822AddrList(r.toAgents) : (!headerValue(m, "To").isBlank() ? headerValue(m, "To") : r.to);
+-    r.rawCc = !Common.rfc822AddrList(r.ccAgents).isBlank() ? Common.rfc822AddrList(r.ccAgents) : (!headerValue(m, "Cc").isBlank() ? headerValue(m, "Cc") : r.cc);
+-    r.rawBcc = !Common.rfc822AddrList(r.bccAgents).isBlank() ? Common.rfc822AddrList(r.bccAgents) : (!headerValue(m, "Bcc").isBlank() ? headerValue(m, "Bcc") : r.bcc);
++    r.to = displayAddress(r.toAgents, m.getDisplayTo());
++    r.cc = displayAddress(r.ccAgents, m.getDisplayCc());
++    r.bcc = displayAddress(r.bccAgents, m.getDisplayBcc());
++    r.rawFrom = rawAddressHeader(m, "From", r.fromAgents, r.from);
++    r.rawTo = rawAddressHeader(m, "To", r.toAgents, r.to);
++    r.rawCc = rawAddressHeader(m, "Cc", r.ccAgents, r.cc);
++    r.rawBcc = rawAddressHeader(m, "Bcc", r.bccAgents, r.bcc);
+     r.messageId = Common.nz(m.getMessageId());
+     if (!headerValue(m, "In-Reply-To").isBlank()) r.inReplyTo.add(headerValue(m, "In-Reply-To"));
+     if (!headerValue(m, "References").isBlank()) r.references.add(headerValue(m, "References"));

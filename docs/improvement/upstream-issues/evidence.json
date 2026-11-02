@@ -1,0 +1,425 @@
+{
+  "checkpoint": "2026-10-19",
+  "authority": "validator_rule_text.json",
+  "review": {
+    "issues": 26,
+    "comments": 47,
+    "direct_eapdf_issues": [
+      8,
+      10,
+      13,
+      14,
+      17,
+      21,
+      22
+    ],
+    "records": 301,
+    "codes": 220,
+    "open_questions": 11,
+    "unmapped_file_requirements": 6
+  },
+  "applied_runtime_changes": [
+    "Read corrected MCAF property dictionaries on AF BDC sequences on pages and Form XObjects; preserve separate direct specs.",
+    "CreateDate presence remains mandatory; no provenance PASS/FAIL inference from source Sent equality/order.",
+    "ADBE BaseVersion must be name /1.7 and ExtensionLevel must be integer exactly 5."
+  ],
+  "tests": {
+    "focused": {
+      "run": 9,
+      "passed": 9
+    },
+    "unit": {
+      "run": 302,
+      "passed": 281,
+      "skipped": 21
+    },
+    "full": {
+      "run": 302,
+      "passed": 301,
+      "skipped": 1,
+      "skip_reason": "Optional PREMIS schema unavailable",
+      "log": "docs/improvement/upstream-issues/full-tests.log"
+    },
+    "boundary": "Final runtime Python and authoritative JSON were unchanged throughout the full run and subsequent runtime checks. Later changes generate documentation, fixtures, review UI and verification evidence only."
+  },
+  "runtime_checks": [
+    {
+      "file": "valid.pdf",
+      "entry": "engine",
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "failures": [],
+      "provenance": "unavailable"
+    },
+    {
+      "file": "createdate-equal.pdf",
+      "entry": "engine",
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "failures": [],
+      "provenance": "unavailable"
+    },
+    {
+      "file": "createdate-earlier.pdf",
+      "entry": "engine",
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "failures": [],
+      "provenance": "unavailable"
+    },
+    {
+      "file": "createdate-later.pdf",
+      "entry": "engine",
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "failures": [],
+      "provenance": "unavailable"
+    },
+    {
+      "file": "mcaf-listed.pdf",
+      "entry": "engine",
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "failures": [],
+      "provenance": "unavailable"
+    },
+    {
+      "file": "mcaf-unlisted.pdf",
+      "entry": "engine",
+      "pdfa": "PASS",
+      "overall": "FAIL",
+      "failures": [
+        "AF_IN_NAME_TREE"
+      ],
+      "provenance": "unavailable"
+    },
+    {
+      "file": "createdate-equal.pdf",
+      "entry": "cli",
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "failures": []
+    },
+    {
+      "file": "createdate-equal.pdf",
+      "entry": "web",
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "failures": []
+    },
+    {
+      "file": "mcaf-unlisted.pdf",
+      "entry": "cli",
+      "pdfa": "PASS",
+      "overall": "FAIL",
+      "failures": [
+        "AF_IN_NAME_TREE"
+      ]
+    },
+    {
+      "file": "mcaf-unlisted.pdf",
+      "entry": "web",
+      "pdfa": "PASS",
+      "overall": "FAIL",
+      "failures": [
+        "AF_IN_NAME_TREE"
+      ]
+    }
+  ],
+  "profiles": [
+    {
+      "profile": "1s",
+      "accessibility": false,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1s.json",
+      "sha256": "9ace3964927d67c54758b5e141efbe3c3d8313e86452f01a095b27bed12986b0"
+    },
+    {
+      "profile": "1si",
+      "accessibility": false,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1si.json",
+      "sha256": "fff6d3eaaef24ab49fe0b6f55200110fe5109424cb5f0d889a2a3a79f5aa8e1a"
+    },
+    {
+      "profile": "1m",
+      "accessibility": false,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1m.json",
+      "sha256": "6815708d240cf2b0f2fb7a31147f745a4944226553bfa987e64537775c6e175f"
+    },
+    {
+      "profile": "1mi",
+      "accessibility": false,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1mi.json",
+      "sha256": "829f87ab7344679a5536b3e2f9b026ce691b2e4eb8e39b144602e6bc4c49b3be"
+    },
+    {
+      "profile": "1c",
+      "accessibility": false,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1c.json",
+      "sha256": "a72fbe338191c12e97cbcc300620938bd148b2b06c6baee43c40943215a5938e"
+    },
+    {
+      "profile": "1ci",
+      "accessibility": false,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1ci.json",
+      "sha256": "49a124c16c39195f7e324d5eda9ce388b98b4553c2159ea27547ed831c5939d4"
+    },
+    {
+      "profile": "1s",
+      "accessibility": true,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1s-accessible.json",
+      "sha256": "100067162cb0dc29a8f42918adc87701435ac346bb95e4d9613cf5fe5947fed7"
+    },
+    {
+      "profile": "1si",
+      "accessibility": true,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1si-accessible.json",
+      "sha256": "fe74f0af464d1a65f1e1319497cec4b5f4fb048fe26a88145e5aba1ad225729b"
+    },
+    {
+      "profile": "1m",
+      "accessibility": true,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1m-accessible.json",
+      "sha256": "7191081f54984ed7653e8cc2d810e7841cd4522e436254f9c7afa15fcdcd4634"
+    },
+    {
+      "profile": "1mi",
+      "accessibility": true,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1mi-accessible.json",
+      "sha256": "72156becebae52b09e458160cce51518edc441127a238b7e323fc8a4d56fc169"
+    },
+    {
+      "profile": "1c",
+      "accessibility": true,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1c-accessible.json",
+      "sha256": "3487b75d58498212ce2485ec9edc9a4fafaa07e438c2411b083d5cfeff9066ad"
+    },
+    {
+      "profile": "1ci",
+      "accessibility": true,
+      "pdfa": "PASS",
+      "overall": "PASS",
+      "report": "docs/improvement/upstream-issues/profiles/1ci-accessible.json",
+      "sha256": "f7d12410dddef9d343a8a5333c58ce66e2a8ed589f4100573ff8c29d6b8ae6ff"
+    }
+  ],
+  "before_hashes": {
+    "examples/sample_1c.pdf": "778b3622a04e7f3837629f675c84059f9ddee081e5b6b8f4c331ac509e83e358",
+    "examples/sample_1c_finding_aid.pdf": "5ef44c9bcd28757a4fb4a9299d0e6719a659bc90c7455d6fb9ea27ecd4a34feb",
+    "examples/sample_1c_index.xlsx": "90870549d88e2e2c6496c253effb0750c08c19abcbd9d36960248542bff5fefa",
+    "examples/sample_1ci.pdf": "b7c81e38f412215a701095f851c11d866534a54d0668dde7d590f5665bfc3447",
+    "examples/sample_1ci_finding_aid.pdf": "1ea9953a43ddc0edc2d1787033f48c9ac428d5b749880086983d2f7c3dadeb04",
+    "examples/sample_1ci_index.xlsx": "858dd9d74ed9550fd42d1e28ec7e8caf5b28b048dc93bb7320711ccf7bb6a1ae",
+    "examples/sample_1m.pdf": "62e92c5c676a5bbfe37a0f0ca46bddd4d4f18199da702958bbe4d0456257608a",
+    "examples/sample_1mi.pdf": "ab9e75d6132fe7c25243cd8d0de9fabdffb9a524809e4b6a99adfdf5246554c0",
+    "examples/sample_1s.pdf": "252427afe303132509c3285a35609ac8d57076e5211f28c7bfe39c0217d9234f",
+    "examples/sample_1si.pdf": "630ae33290c782145aa9c62786b6c3433fb4af7ca8a19a96dd36fc429fe9f4d2",
+    "src/main/java/eapdf/Common.java": "b56919c130d4061450e784388d0c5017f6edd2e5928d144a258183447b70802d",
+    "src/main/java/eapdf/ConversionSupervisor.java": "a46c510d09fd00bd4a9108cfd5630d2a7345e8191c0621e9be9019cc7b7b3de2",
+    "src/main/java/eapdf/EapdfConfig.java": "13bb68283ed7e31d05735c5543cb46a1e6bc87a53106280a1c667f36d6ada5e5",
+    "src/main/java/eapdf/EapdfGui.java": "71e49d4a6c7d4192e1f7eeb3600edfd7edb72ee4ae597626c70ec3770631413d",
+    "src/main/java/eapdf/EmailStyles.java": "029e6399f0587db307dceb331c7871aa5b26b20870e8d6db1156ea4cb40e65ca",
+    "src/main/java/eapdf/EmailToPDFA.java": "5f9e01e320ae6c921e5069cc730dcc9b4789a79b5ce65a14e2597f6e19943639",
+    "src/main/java/eapdf/EmlReader.java": "2ddc4ff3f34aa5498251d66e6e181be413c7c10ad610f5ed513c22643a6b6ff5",
+    "src/main/java/eapdf/FontSupport.java": "906fdcba605309a0fec265a2a82e1b3b5181890c8ad6a195b142b4d695a298a6",
+    "src/main/java/eapdf/GmailDownloadToPdf.java": "18fc6011cdcbfd4367dd5b08c74fbe567f2e391e55779534dde4b7bc38d86688",
+    "src/main/java/eapdf/GmailResumeStore.java": "cd7badb79a835e85da695433d19f151fbc0483f50a5d578b5dae574ef31c8a9b",
+    "src/main/java/eapdf/MboxParser.java": "cbb09f053baacfb18305585b6972d4488b6b0b5705586b37e3f6b16e94a231ef",
+    "src/main/java/eapdf/MboxReadInventory.java": "26c0278f75a9cf5e22e0b684da237080bc47f2cbdd4af4e8a76a21d7c2d6bf8b",
+    "src/main/java/eapdf/MboxReader.java": "fed8c3d74a7772456de8cd51af8e15a414404341c24b9dbf4473efa25cd6db69",
+    "src/main/java/eapdf/Models.java": "db7e84f1f2465e095cfba511b1460a285eee27c39c9948e318707ed40957bbc2",
+    "src/main/java/eapdf/MonthlyFilenameArchiveToPdf.java": "4d51a24cfcc7bcf71edcbf3f572446d17ba2fd3d707220f61e8a8dfa93168abb",
+    "src/main/java/eapdf/MsgReader.java": "f704fa83cb9343446b07ca550fa8a0765abe2f4bcf8ecac2f8834e59ae56fee2",
+    "src/main/java/eapdf/OutputTransaction.java": "82879efd9badd7a62d531b0e8072a94dfe41d37cd3627b833ef1bec1c22f8366",
+    "src/main/java/eapdf/PayloadStore.java": "3b4f8ea0929f1797b452f689e7f51f378674f9ead280eb16ad9e6f643501d529",
+    "src/main/java/eapdf/PdfCollectionSupport.java": "bcd49a89c6c1ca807bd5795cc0118fffe3a564c36dd340927a90b85c7a03374f",
+    "src/main/java/eapdf/PdfCreationValidator.java": "598cb6593b3bd6c7d62a9f6133d29f6314ef5ab54b600ef114437a4148db2534",
+    "src/main/java/eapdf/PdfDocumentParts.java": "17503218b79317e1a9d9eaef78d79204e1c48da9bb9108bb4f49946dfd228b6b",
+    "src/main/java/eapdf/PdfFindingAidSupport.java": "ec414290783378fc07ccf08a6a589ff87afda358259c8513458cc7e4bdcff09f",
+    "src/main/java/eapdf/PdfMailWriter.java": "130dd8cc763cc44ee2ba821dc336de60a65b3659451d7c50545eabcd0c18645f",
+    "src/main/java/eapdf/PremisBuilder.java": "e5d848d4ae7f0c23fe432edd1486ece38429974187ddbec8849f6d7187e16483",
+    "src/main/java/eapdf/PreservationInventory.java": "eca5b5ea9e3974baa02e86fe1247729d6d1ffbfd666853dc7d1e9d9296896217",
+    "src/main/java/eapdf/ProcessingLimits.java": "cb6d6423ab10644a4c3410aaab5544567f855231bdd16a1d44e953fd06caa667",
+    "src/main/java/eapdf/PstReader.java": "4cc7eac91368c0845e1cafc669f7cc44496f6e6b2276420e81c7016dbd4778ce",
+    "src/main/java/eapdf/SemanticStructure.java": "a4d13cd6133754515bc134e1b8553f163d3c572534ad2e1c8b01dabdf2ba2393",
+    "validate_eapdf.py": "3ea76011d90cf5fd116e49ca720deefe1299cf51a11fa3812b4cd206c05e177f",
+    "validator_rule_text.json": "16a82c1f92471d319f5c3d0a78d2f4293c11097039279b6ea864f093c69bb42b",
+    "validator_web.py": "55f4394556465a47fadb3d4808398c36b441ed8811f878a013061656598e1065"
+  },
+  "after_hashes": {
+    "examples/sample_1c.pdf": "778b3622a04e7f3837629f675c84059f9ddee081e5b6b8f4c331ac509e83e358",
+    "examples/sample_1c_finding_aid.pdf": "5ef44c9bcd28757a4fb4a9299d0e6719a659bc90c7455d6fb9ea27ecd4a34feb",
+    "examples/sample_1c_index.xlsx": "90870549d88e2e2c6496c253effb0750c08c19abcbd9d36960248542bff5fefa",
+    "examples/sample_1ci.pdf": "b7c81e38f412215a701095f851c11d866534a54d0668dde7d590f5665bfc3447",
+    "examples/sample_1ci_finding_aid.pdf": "1ea9953a43ddc0edc2d1787033f48c9ac428d5b749880086983d2f7c3dadeb04",
+    "examples/sample_1ci_index.xlsx": "858dd9d74ed9550fd42d1e28ec7e8caf5b28b048dc93bb7320711ccf7bb6a1ae",
+    "examples/sample_1m.pdf": "62e92c5c676a5bbfe37a0f0ca46bddd4d4f18199da702958bbe4d0456257608a",
+    "examples/sample_1mi.pdf": "ab9e75d6132fe7c25243cd8d0de9fabdffb9a524809e4b6a99adfdf5246554c0",
+    "examples/sample_1s.pdf": "252427afe303132509c3285a35609ac8d57076e5211f28c7bfe39c0217d9234f",
+    "examples/sample_1si.pdf": "630ae33290c782145aa9c62786b6c3433fb4af7ca8a19a96dd36fc429fe9f4d2",
+    "src/main/java/eapdf/Common.java": "b56919c130d4061450e784388d0c5017f6edd2e5928d144a258183447b70802d",
+    "src/main/java/eapdf/ConversionSupervisor.java": "a46c510d09fd00bd4a9108cfd5630d2a7345e8191c0621e9be9019cc7b7b3de2",
+    "src/main/java/eapdf/EapdfConfig.java": "13bb68283ed7e31d05735c5543cb46a1e6bc87a53106280a1c667f36d6ada5e5",
+    "src/main/java/eapdf/EapdfGui.java": "71e49d4a6c7d4192e1f7eeb3600edfd7edb72ee4ae597626c70ec3770631413d",
+    "src/main/java/eapdf/EmailStyles.java": "029e6399f0587db307dceb331c7871aa5b26b20870e8d6db1156ea4cb40e65ca",
+    "src/main/java/eapdf/EmailToPDFA.java": "5f9e01e320ae6c921e5069cc730dcc9b4789a79b5ce65a14e2597f6e19943639",
+    "src/main/java/eapdf/EmlReader.java": "2ddc4ff3f34aa5498251d66e6e181be413c7c10ad610f5ed513c22643a6b6ff5",
+    "src/main/java/eapdf/FontSupport.java": "906fdcba605309a0fec265a2a82e1b3b5181890c8ad6a195b142b4d695a298a6",
+    "src/main/java/eapdf/GmailDownloadToPdf.java": "18fc6011cdcbfd4367dd5b08c74fbe567f2e391e55779534dde4b7bc38d86688",
+    "src/main/java/eapdf/GmailResumeStore.java": "cd7badb79a835e85da695433d19f151fbc0483f50a5d578b5dae574ef31c8a9b",
+    "src/main/java/eapdf/MboxParser.java": "cbb09f053baacfb18305585b6972d4488b6b0b5705586b37e3f6b16e94a231ef",
+    "src/main/java/eapdf/MboxReadInventory.java": "26c0278f75a9cf5e22e0b684da237080bc47f2cbdd4af4e8a76a21d7c2d6bf8b",
+    "src/main/java/eapdf/MboxReader.java": "fed8c3d74a7772456de8cd51af8e15a414404341c24b9dbf4473efa25cd6db69",
+    "src/main/java/eapdf/Models.java": "db7e84f1f2465e095cfba511b1460a285eee27c39c9948e318707ed40957bbc2",
+    "src/main/java/eapdf/MonthlyFilenameArchiveToPdf.java": "4d51a24cfcc7bcf71edcbf3f572446d17ba2fd3d707220f61e8a8dfa93168abb",
+    "src/main/java/eapdf/MsgReader.java": "f704fa83cb9343446b07ca550fa8a0765abe2f4bcf8ecac2f8834e59ae56fee2",
+    "src/main/java/eapdf/OutputTransaction.java": "82879efd9badd7a62d531b0e8072a94dfe41d37cd3627b833ef1bec1c22f8366",
+    "src/main/java/eapdf/PayloadStore.java": "3b4f8ea0929f1797b452f689e7f51f378674f9ead280eb16ad9e6f643501d529",
+    "src/main/java/eapdf/PdfCollectionSupport.java": "bcd49a89c6c1ca807bd5795cc0118fffe3a564c36dd340927a90b85c7a03374f",
+    "src/main/java/eapdf/PdfCreationValidator.java": "598cb6593b3bd6c7d62a9f6133d29f6314ef5ab54b600ef114437a4148db2534",
+    "src/main/java/eapdf/PdfDocumentParts.java": "17503218b79317e1a9d9eaef78d79204e1c48da9bb9108bb4f49946dfd228b6b",
+    "src/main/java/eapdf/PdfFindingAidSupport.java": "ec414290783378fc07ccf08a6a589ff87afda358259c8513458cc7e4bdcff09f",
+    "src/main/java/eapdf/PdfMailWriter.java": "130dd8cc763cc44ee2ba821dc336de60a65b3659451d7c50545eabcd0c18645f",
+    "src/main/java/eapdf/PremisBuilder.java": "e5d848d4ae7f0c23fe432edd1486ece38429974187ddbec8849f6d7187e16483",
+    "src/main/java/eapdf/PreservationInventory.java": "eca5b5ea9e3974baa02e86fe1247729d6d1ffbfd666853dc7d1e9d9296896217",
+    "src/main/java/eapdf/ProcessingLimits.java": "cb6d6423ab10644a4c3410aaab5544567f855231bdd16a1d44e953fd06caa667",
+    "src/main/java/eapdf/PstReader.java": "4cc7eac91368c0845e1cafc669f7cc44496f6e6b2276420e81c7016dbd4778ce",
+    "src/main/java/eapdf/SemanticStructure.java": "a4d13cd6133754515bc134e1b8553f163d3c572534ad2e1c8b01dabdf2ba2393",
+    "validate_eapdf.py": "7794b5a36e5b8ce864cd794c6e5005b39c1ac3dc197084cedaafcd2a7349eb58",
+    "validator_rule_text.json": "7b3efe006ee85462e9bc2101446f5a960e11f1bf23fcb9483aae54598348d86a",
+    "validator_web.py": "55f4394556465a47fadb3d4808398c36b441ed8811f878a013061656598e1065"
+  },
+  "unchanged_java_and_saved_examples": [
+    "examples/sample_1c.pdf",
+    "examples/sample_1c_finding_aid.pdf",
+    "examples/sample_1c_index.xlsx",
+    "examples/sample_1ci.pdf",
+    "examples/sample_1ci_finding_aid.pdf",
+    "examples/sample_1ci_index.xlsx",
+    "examples/sample_1m.pdf",
+    "examples/sample_1mi.pdf",
+    "examples/sample_1s.pdf",
+    "examples/sample_1si.pdf",
+    "src/main/java/eapdf/Common.java",
+    "src/main/java/eapdf/ConversionSupervisor.java",
+    "src/main/java/eapdf/EapdfConfig.java",
+    "src/main/java/eapdf/EapdfGui.java",
+    "src/main/java/eapdf/EmailStyles.java",
+    "src/main/java/eapdf/EmailToPDFA.java",
+    "src/main/java/eapdf/EmlReader.java",
+    "src/main/java/eapdf/FontSupport.java",
+    "src/main/java/eapdf/GmailDownloadToPdf.java",
+    "src/main/java/eapdf/GmailResumeStore.java",
+    "src/main/java/eapdf/MboxParser.java",
+    "src/main/java/eapdf/MboxReadInventory.java",
+    "src/main/java/eapdf/MboxReader.java",
+    "src/main/java/eapdf/Models.java",
+    "src/main/java/eapdf/MonthlyFilenameArchiveToPdf.java",
+    "src/main/java/eapdf/MsgReader.java",
+    "src/main/java/eapdf/OutputTransaction.java",
+    "src/main/java/eapdf/PayloadStore.java",
+    "src/main/java/eapdf/PdfCollectionSupport.java",
+    "src/main/java/eapdf/PdfCreationValidator.java",
+    "src/main/java/eapdf/PdfDocumentParts.java",
+    "src/main/java/eapdf/PdfFindingAidSupport.java",
+    "src/main/java/eapdf/PdfMailWriter.java",
+    "src/main/java/eapdf/PremisBuilder.java",
+    "src/main/java/eapdf/PreservationInventory.java",
+    "src/main/java/eapdf/ProcessingLimits.java",
+    "src/main/java/eapdf/PstReader.java",
+    "src/main/java/eapdf/SemanticStructure.java"
+  ],
+  "cli_argument_ast_unchanged": true,
+  "print_function_ast_unchanged": true,
+  "validator_web_source_unchanged_since_upstream_review_start": true,
+  "source_pdf_sha256": "b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae",
+  "source_pdf_observations": {
+    "odd_number_tree_arrays": [
+      {
+        "object": [
+          335,
+          0
+        ],
+        "length": 457
+      },
+      {
+        "object": [
+          336,
+          0
+        ],
+        "length": 459
+      }
+    ]
+  },
+  "retained_files_sha256": {
+    "docs/improvement/upstream-issues/README.md": "671bf6ec1362b89b7b8aa0bb6e037ff3fec532f0e42d5332f054bd0ba27d926b",
+    "docs/improvement/upstream-issues/all-issues.json": "a0fb0a01532d90a84f287355a3e5eca8ae46bd43a4c5229c848d803c988fbb4c",
+    "docs/improvement/upstream-issues/audit-generation.log": "299c1becd39c8dbfbe40b1be65191aacc6380d9410f0ee1265835c12ccb645ba",
+    "docs/improvement/upstream-issues/comments.json": "e2c83a41de2715f6e472eda4e0654e882a6cb346cd8592d86c03e00370d111fb",
+    "docs/improvement/upstream-issues/createdate-earlier.pdf.json": "d85110df93346f43ed7120ae4b566f83f56e454d509bc264fdf96cb6d9d6e41c",
+    "docs/improvement/upstream-issues/createdate-equal.pdf.cli.html": "eaac3c2baf9f60a51b4764694b2f3c9dc031db40d61e35142a8c48f1a932deca",
+    "docs/improvement/upstream-issues/createdate-equal.pdf.cli.json": "db95f647f8a8d4c8098e56f842eb22cb028ad0ed3a30ea7bff495cf6f7adef60",
+    "docs/improvement/upstream-issues/createdate-equal.pdf.json": "c56f1cedecac3017d6f6513da6e37811105b68912fc2b278131ec7718d37accb",
+    "docs/improvement/upstream-issues/createdate-equal.pdf.web.html": "eaac3c2baf9f60a51b4764694b2f3c9dc031db40d61e35142a8c48f1a932deca",
+    "docs/improvement/upstream-issues/createdate-equal.pdf.web.json": "f0bc10c3e401aac208f0af1cd3b64a7eee34db4e15dbd65502ac5c5803f86859",
+    "docs/improvement/upstream-issues/createdate-later.pdf.json": "761fdc43975b8313d96173f27c5dfee595dfd50f1969c03fe6420bfa2d1a93d6",
+    "docs/improvement/upstream-issues/focused-tests.log": "9a3d9680efe5049576498b305c27aed806153a4ac887b0d48ea054d34de1c704",
+    "docs/improvement/upstream-issues/full-tests.log": "d2da0637f61f224edbd7aacffc6ac5cbc2eaf259dcf9601537fc0d54bd68c86e",
+    "docs/improvement/upstream-issues/mcaf-listed.pdf.json": "1e688c3c75f488604b7fa153c7104f52308b37378167345671a9b313dbf8606d",
+    "docs/improvement/upstream-issues/mcaf-unlisted.pdf.cli.html": "aff3f11bb805784fa62b0190be5def07ef0c594e88f15935459f7aee221229cb",
+    "docs/improvement/upstream-issues/mcaf-unlisted.pdf.cli.json": "05d087cd11ca7c9cf81d4a61eb3a1be2fe2c9c51d5f123209a605110bfcc3d64",
+    "docs/improvement/upstream-issues/mcaf-unlisted.pdf.json": "398538db8ac053079b61f48dc6d1d40a3394fa99636d5fe9513f389b2156b978",
+    "docs/improvement/upstream-issues/mcaf-unlisted.pdf.web.html": "aff3f11bb805784fa62b0190be5def07ef0c594e88f15935459f7aee221229cb",
+    "docs/improvement/upstream-issues/mcaf-unlisted.pdf.web.json": "30c3ee6f418da92985685a99ef9f4eb5633f51b63c4d307198c1e192cb707e96",
+    "docs/improvement/upstream-issues/pages.json": "802c13c7bf37331ab7bf9803ad45585b010408472e8877943020ca1eb8b3d21a",
+    "docs/improvement/upstream-issues/pre-fix-corpus.json": "3a7e17bfbc8af84b2017115158340f9f96488e0525530cd4e7c93412683b847e",
+    "docs/improvement/upstream-issues/pre-fix-corpus.log": "57bdbcc8094b130c3890c694b390bac2fadd127591a429737cdb9a7f1f36e441",
+    "docs/improvement/upstream-issues/pre-fix-tests.log": "b9a331fdcb28338ebe762598abd1dbc6231a7815b28048e056ad784aacc9f3fc",
+    "docs/improvement/upstream-issues/profiles/1c-accessible.json": "3487b75d58498212ce2485ec9edc9a4fafaa07e438c2411b083d5cfeff9066ad",
+    "docs/improvement/upstream-issues/profiles/1c.json": "a72fbe338191c12e97cbcc300620938bd148b2b06c6baee43c40943215a5938e",
+    "docs/improvement/upstream-issues/profiles/1ci-accessible.json": "f7d12410dddef9d343a8a5333c58ce66e2a8ed589f4100573ff8c29d6b8ae6ff",
+    "docs/improvement/upstream-issues/profiles/1ci.json": "49a124c16c39195f7e324d5eda9ce388b98b4553c2159ea27547ed831c5939d4",
+    "docs/improvement/upstream-issues/profiles/1m-accessible.json": "7191081f54984ed7653e8cc2d810e7841cd4522e436254f9c7afa15fcdcd4634",
+    "docs/improvement/upstream-issues/profiles/1m.json": "6815708d240cf2b0f2fb7a31147f745a4944226553bfa987e64537775c6e175f",
+    "docs/improvement/upstream-issues/profiles/1mi-accessible.json": "72156becebae52b09e458160cce51518edc441127a238b7e323fc8a4d56fc169",
+    "docs/improvement/upstream-issues/profiles/1mi.json": "829f87ab7344679a5536b3e2f9b026ce691b2e4eb8e39b144602e6bc4c49b3be",
+    "docs/improvement/upstream-issues/profiles/1s-accessible.json": "100067162cb0dc29a8f42918adc87701435ac346bb95e4d9613cf5fe5947fed7",
+    "docs/improvement/upstream-issues/profiles/1s.json": "9ace3964927d67c54758b5e141efbe3c3d8313e86452f01a095b27bed12986b0",
+    "docs/improvement/upstream-issues/profiles/1si-accessible.json": "fe74f0af464d1a65f1e1319497cec4b5f4fb048fe26a88145e5aba1ad225729b",
+    "docs/improvement/upstream-issues/profiles/1si.json": "fff6d3eaaef24ab49fe0b6f55200110fe5109424cb5f0d889a2a3a79f5aa8e1a",
+    "docs/improvement/upstream-issues/runtime-summary.json": "3c0f47efb3e785b8cc532477fd64455372e1ec167d89bd305c359227f3826208",
+    "docs/improvement/upstream-issues/runtime-verification.log": "754214f7efb4e3bf80b75ce15ac7107682c543572d2d7027325f3bb2b237cac4",
+    "docs/improvement/upstream-issues/source-pdf-observations.json": "29bcc28af20ecdc55ef88cc6bcf3e5aab37eea172c14cea1debdcb0bc03590e2",
+    "docs/improvement/upstream-issues/unit-tests.log": "eb7c975bcbeed9d1c1d075e61a2af343e1770e64b8abc87ea69a937cf2e80ea3",
+    "docs/improvement/upstream-issues/valid.pdf.json": "23d0337be846ab278a79495850c55e817961d413da94d21438b2b2f6d20d8df4",
+    "docs/improvement/upstream-issues/validate_eapdf.py.patch": "f28a6867fc33caf74d20d707bb642a1266ecff6fce585ee57ddf14a414a556b9",
+    "docs/improvement/upstream-issues/validator_rule_text.json.patch": "9504d3280a89c9544820ed34714ec80d9e8548f1293e27f94503ba037ba18686",
+    "docs/improvement/upstream-issues/verify-runtime.py": "5de9d3e0a93ae77adeef397a8fd78bbe57e1d107a1e381328622ce5eb51999ec"
+  },
+  "limitations": [
+    "No new Maven build; profile integration used the retained Java generator jar identified in the work log.",
+    "No deployment or external publication. Web checks use the actual local web validation worker.",
+    "Eleven expert/dependency questions and six unmapped mandatory/conditional file records remain open."
+  ]
+}

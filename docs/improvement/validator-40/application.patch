@@ -1,0 +1,242 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -3413,13 +3413,9 @@
+         return None
+     return a,b,s,e
+ 
+-def is_ascii_text(s):
+-    try:
+-        s=str(s)
+-        s.encode("ascii")
+-        return True
+-    except Exception:
+-        return False
++def is_pdf_ascii_string(value):
++    # ASCII string specifies encoded bytes, not merely decoded characters.
++    return isinstance(value,pikepdf.String) and all(byte<128 for byte in bytes(value))
+ 
+ def struct_children(elem):
+     kids=[]
+@@ -4974,10 +4970,15 @@
+             raw_name=dict_get(prop,"/N",None)
+             name=str(raw_name) if raw_name is not None else ""
+             value=dict_get(prop,"/V",None)
+-            if isinstance(raw_name,pikepdf.String) and is_ascii_text(name):
++            if is_pdf_ascii_string(raw_name):
+                 report.ok("USERPROPS_NAME_ASCII","UserProperties N entry is a PDF ASCII string",{"name":name,"tag":elem["type"]})
+             else:
+-                report.fail("USERPROPS_NAME_ASCII","UserProperties N entry must be a PDF ASCII string",{"name":name,"tag":elem["type"]})
++                raw=bytes(raw_name) if isinstance(raw_name,pikepdf.String) else None
++                report.fail("USERPROPS_NAME_ASCII","UserProperties N must use PDF ASCII string bytes",{
++                    "name":name,"tag":elem["type"],"is_pdf_string":raw is not None,
++                    "raw_hex":raw[:64].hex() if raw is not None else None,
++                    "byte_length":len(raw) if raw is not None else None,
++                    "raw_hex_truncated":raw is not None and len(raw)>64})
+             if name in allowed:
+                 kind,scope=allowed[name]
+                 if elem["type"] in scope:
+@@ -7423,7 +7424,9 @@
+     def userprops_by_name(elem):
+         out={}
+         for prop in parse_userproperties(elem["attrs"]):
+-            out[norm_text(dict_get(prop,"/N",""))]=dict_get(prop,"/V",None)
++            name=dict_get(prop,"/N",None)
++            if isinstance(name,pikepdf.String):
++                out[str(name)]=dict_get(prop,"/V",None)
+         return out
+ 
+     bad_groups=[e["objgen"] for e in cgroup if not has_ancestor_type(e,"Mail_Message")]
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -6928,8 +6928,8 @@
+   "USERPROPS_NAME_ASCII": {
+     "rule_number": 114,
+     "rule_name": "USERPROPS_NAME_ASCII",
+-    "spec_section": "EA-PDF 1.0 section 9.7 printed p76,77; EA-PDF 1.0 section 9.7 Table 12 printed p77",
+-    "spec_excerpt": "When custom user attributes with O UserProperties are used: N is a PDF ASCII string; V type and permitted custom tags follow Table 12.",
++    "spec_section": "EA-PDF 1.0 section 9.7 printed p76,77; EA-PDF 1.0 section 9.7 Table 12 printed p77; EA-PDF9.7 Tables12/13; ISO32000-2:2020 Table35 and7.9.2.1",
++    "spec_excerpt": "When EA-PDF UserProperties are used, each N entry must be a PDF ASCII string. The stored bytes must contain only ASCII characters; decoding UTF16 or UTF8-BOM text to ASCII-looking characters does not satisfy the ASCII-string encoding. Unrelated ASCII extension names may contain spaces or ASCII control characters; no printable-only or closed-name policy is imposed.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+@@ -6967,7 +6967,8 @@
+       "scopes": [
+         "file"
+       ],
+-      "issue_ids": []
++      "issue_ids": [],
++      "attribute_name_review": "V40: exact decoded N name lookup is distinct from the raw ASCII-string encoding constraint. Escapes/hexadecimal syntax are resolved by the PDF parser. Unrelated extensions and Unicode V values remain permitted; no PDF CLI/debug behavior changes."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -6976,7 +6977,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "logical_structure",
+-      "uncovered_assertion": "When custom user attributes with O UserProperties are used: N is a PDF ASCII string; V type and permitted custom tags follow Table 12.",
++      "uncovered_assertion": "When EA-PDF UserProperties are used, each N entry must be a PDF ASCII string. The stored bytes must contain only ASCII characters; decoding UTF16 or UTF8-BOM text to ASCII-looking characters does not satisfy the ASCII-string encoding. Unrelated ASCII extension names may contain spaces or ASCII control characters; no printable-only or closed-name policy is imposed.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+@@ -7536,8 +7537,8 @@
+   "MAIL_MESSAGE_GUID_ATTRIBUTE": {
+     "rule_number": 127,
+     "rule_name": "MAIL_MESSAGE_GUID_ATTRIBUTE",
+-    "spec_section": "EA-PDF 1.0 section 9.7 Table 13 printed p79",
+-    "spec_excerpt": "When each Mail_Message: Mail_GUID attribute is required and matches the corresponding DPM/XMP GUID where present.",
++    "spec_section": "EA-PDF 1.0 section 9.7 Table 13 printed p79; EA-PDF9.7 Tables12/13; ISO32000-2:2020 Table35 and7.9.2.1",
++    "spec_excerpt": "Each Mail_Message requires the Mail_GUID user property. Recognize its exact string name without trimming or collapsing whitespace. The separate USERPROPS_NAME_ASCII rule checks raw N encoding; Unicode text encodings remain permitted for the V value.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed Mail_Message Mail_GUID attributes: {actual}. Expected Mail_GUID attribute matching DPM and XMP Metadata where present.",
+@@ -7555,7 +7556,8 @@
+       "scopes": [
+         "file"
+       ],
+-      "issue_ids": []
++      "issue_ids": [],
++      "attribute_name_review": "V40: exact decoded N name lookup is distinct from the raw ASCII-string encoding constraint. Escapes/hexadecimal syntax are resolved by the PDF parser. Unrelated extensions and Unicode V values remain permitted; no PDF CLI/debug behavior changes."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -7564,7 +7566,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "logical_structure",
+-      "uncovered_assertion": "When each Mail_Message: Mail_GUID attribute is required and matches the corresponding DPM/XMP GUID where present.",
++      "uncovered_assertion": "Each Mail_Message requires the Mail_GUID user property. Recognize its exact string name without trimming or collapsing whitespace. The separate USERPROPS_NAME_ASCII rule checks raw N encoding; Unicode text encodings remain permitted for the V value.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+--- /dev/null
++++ after/tests/test_userproperty_ascii_names.py
+@@ -0,0 +1,67 @@
++"""Table12 property names retain ASCII bytes and exact characters."""
++import unittest
++
++import pikepdf
++import test_message_guid_content_owners as fixtures
++from test_preservation_safety import validator as v, failed_codes
++
++
++class UserPropertyAsciiNameTests(unittest.TestCase):
++    def property_report(self, name, value=True):
++        report = v.Report('property-name.pdf')
++        attrs = pikepdf.Dictionary(O=pikepdf.Name.UserProperties,
++            P=pikepdf.Array([pikepdf.Dictionary(N=name, V=value)]))
++        v.check_user_properties([dict(type='Mail_Message', attrs=attrs)], report)
++        return report
++
++    def test_literal_hexadecimal_and_escape_spellings_have_the_same_ascii_name(self):
++        for name in (pikepdf.String('Mail_GUID'), pikepdf.Object.parse(br'(Mail\137GUID)'),
++                     pikepdf.Object.parse(b'<4d61696c5f47554944>')):
++            with self.subTest(raw=bytes(name)):
++                self.assertNotIn('USERPROPS_NAME_ASCII', failed_codes(self.property_report(name, 'one')))
++
++    def test_utf16_and_utf8_bom_names_are_not_ascii_strings(self):
++        for name in (pikepdf.String(b'\xfe\xff' + 'Mail_GUID'.encode('utf-16be')),
++                     pikepdf.String(b'\xef\xbb\xbfMail_GUID')):
++            with self.subTest(raw=bytes(name)):
++                self.assertEqual('Mail_GUID', str(name))
++                self.assertIn('USERPROPS_NAME_ASCII', failed_codes(self.property_report(name, 'one')))
++
++    def test_leading_or_trailing_spaces_do_not_supply_required_guid_name(self):
++        for name in (' Mail_GUID', 'Mail_GUID '):
++            pdf, messages, dparts, paragraphs = fixtures.MessageGuidContentOwnerTests().document()
++            with self.subTest(name=name), pdf:
++                messages[0].A.P[0].N = name
++                report = fixtures.MessageGuidContentOwnerTests().check(pdf)[1]
++                self.assertIn('MAIL_MESSAGE_GUID_ATTRIBUTE', failed_codes(report))
++
++    def test_ascii_control_padding_is_not_removed_from_known_names(self):
++        pdf, messages, dparts, paragraphs = fixtures.MessageGuidContentOwnerTests().document()
++        with pdf:
++            messages[0].A.P[0].N = '\tMail_GUID\n'
++            report = fixtures.MessageGuidContentOwnerTests().check(pdf)[1]
++            self.assertIn('MAIL_MESSAGE_GUID_ATTRIBUTE', failed_codes(report))
++            self.assertNotIn('USERPROPS_NAME_ASCII', failed_codes(report))
++
++    def test_unrelated_ascii_extension_names_may_contain_spaces(self):
++        self.assertFalse(failed_codes(self.property_report(pikepdf.String(' Vendor flag '))))
++
++    def test_non_string_pdf_objects_cannot_supply_ascii_string_names(self):
++        for value in (pikepdf.Name('/Mail_GUID'), 17, True):
++            with self.subTest(value=value):
++                self.assertIn('USERPROPS_NAME_ASCII', failed_codes(self.property_report(value)))
++
++    def test_non_ascii_characters_in_a_name_remain_rejected(self):
++        self.assertIn('USERPROPS_NAME_ASCII', failed_codes(self.property_report(pikepdf.String('Mail_中文'))))
++
++    def test_ascii_name_does_not_impose_ascii_encoding_on_guid_value(self):
++        pdf, messages, dparts, paragraphs = fixtures.MessageGuidContentOwnerTests().document()
++        with pdf:
++            messages[0].A.P[0].V = pikepdf.String(b'\xfe\xff' + 'one'.encode('utf-16be'))
++            self.assertEqual('PASS', fixtures.MessageGuidContentOwnerTests().check(pdf)[0]['level'])
++            self.assertFalse(failed_codes(self.property_report(pikepdf.String('Mail_GUID'),
++                pikepdf.String(b'\xfe\xff' + 'one'.encode('utf-16be')))))
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- /dev/null
++++ after/scripts/build_eapdf_userproperty_name_fixtures.py
+@@ -0,0 +1,59 @@
++"""Table12 exact N names, ASCII byte encoding and permitted Unicode V values."""
++import hashlib
++import json
++from pathlib import Path
++
++import pikepdf
++
++ROOT = Path(__file__).resolve().parents[1]
++OUT = ROOT / 'tests/fixtures/eapdf/validator-userproperty-names'
++SEED = ROOT / 'tests/fixtures/eapdf/validator-operands/valid.pdf'
++
++
++def main():
++    OUT.mkdir(parents=True, exist_ok=True)
++    wrong_names = ('guid-name-leading-space', 'guid-name-trailing-space', 'guid-name-control-padding')
++    wrong_encoding = ('guid-name-utf16', 'guid-name-utf8-bom')
++    cases = []
++    for name in wrong_names + wrong_encoding + (
++            'valid', 'extension-name-spaces', 'unicode-guid-value', 'extension-name-control', 'unicode-extension-value'):
++        with pikepdf.open(SEED) as pdf:
++            pending = [pdf.Root.StructTreeRoot.K]
++            while pending:
++                element = pending.pop()
++                if not isinstance(element, pikepdf.Dictionary):
++                    continue
++                if element.get('/S') == pikepdf.Name('/Mail_Message'):
++                    prop = next(p for p in element.A.P if str(p.N) == 'Mail_GUID')
++                    if name == 'guid-name-leading-space': prop.N = ' Mail_GUID'
++                    elif name == 'guid-name-trailing-space': prop.N = 'Mail_GUID '
++                    elif name == 'guid-name-control-padding': prop.N = '\tMail_GUID\n'
++                    elif name == 'guid-name-utf16': prop.N = pikepdf.String(b'\xfe\xff' + 'Mail_GUID'.encode('utf-16be'))
++                    elif name == 'guid-name-utf8-bom': prop.N = pikepdf.String(b'\xef\xbb\xbfMail_GUID')
++                    elif name == 'extension-name-spaces':
++                        element.A.P.append(pikepdf.Dictionary(N=' Vendor flag ', V=True))
++                    elif name == 'unicode-guid-value':
++                        prop.V = pikepdf.String(b'\xfe\xff' + str(prop.V).encode('utf-16be'))
++                    elif name == 'extension-name-control':
++                        element.A.P.append(pikepdf.Dictionary(N='Vendor\tFlag', V=True))
++                    elif name == 'unicode-extension-value':
++                        element.A.P.append(pikepdf.Dictionary(N='VendorLabel', V='中文 policy'))
++                    break
++                children = element.get('/K', [])
++                pending.extend(list(children) if isinstance(children, pikepdf.Array) else [children])
++            path = OUT / (name + '.pdf')
++            pdf.save(path, static_id=True, fix_metadata_version=False)
++        failures = (['MAIL_MESSAGE_GUID_ATTRIBUTE'] if name in wrong_names else
++                    ['USERPROPS_NAME_ASCII'] if name in wrong_encoding else [])
++        cases.append(dict(file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
++                          expected_status='FAIL' if failures else 'PASS', expected_failures=failures))
++    (OUT / 'expectations.json').write_text(json.dumps(dict(
++        authority='EA-PDF9.7 Table12 N and V entries; Table13 Mail_GUID; ISO32000-2:2020 Table35 and7.9.2.1 string encodings',
++        seed_sha256=hashlib.sha256(SEED.read_bytes()).hexdigest(),
++        boundary='Known names are matched exactly. Arbitrary unrelated ASCII extension names may retain spaces/control characters; Unicode text values are not restricted to ASCII. Name presence and its separate encoding constraint retain distinct findings.',
++        cases=cases), indent=2) + '\n')
++    print('Built ten exact-name/ASCII-byte controls.')
++
++
++if __name__ == '__main__':
++    main()

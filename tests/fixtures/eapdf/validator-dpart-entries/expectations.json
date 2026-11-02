@@ -1,0 +1,107 @@
+{
+  "authority": "ISO32000-2:2020 Tables408/409, sections7.3.5 and14.12.4.1; XML1.0 Fifth Edition Name/NameChar/Nmtoken",
+  "seed_sha256": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+  "boundary": "Optional omissions remain valid. Node labels that are definitely invalid under both XML Name and NMTOKEN fail; NMTOKEN-only/undecodable cases remain unavailable. RecordLevel range/meaning and broader DPart metadata errata are separate.",
+  "cases": [
+    {
+      "file": "root-type-text.pdf",
+      "sha256": "bd028fd4cec09586a672768838cf8d4c4a3131275272ec08b22221184f12a334",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "node-type-text.pdf",
+      "sha256": "e35f9d304ed1e42ad62c19a6b83e080deadfa64dc9553b05dcba226f4c39450f",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "root-type-wrong.pdf",
+      "sha256": "bc0eed6d5a5f219034555fb41c4904b2bf2298a334564bd1710ca7ef7c9d1281",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "node-type-wrong.pdf",
+      "sha256": "a0c294f79b66ed9e53df0f39de57ea41eb26246c857f9e0906362498d4cbfb76",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "record-level-boolean.pdf",
+      "sha256": "38191e7d6ec118fb972fc464a7deedc3dccb4472b132f0549bf6079cdb8fd4db",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "node-names-text.pdf",
+      "sha256": "fd6f49ae6bbe3a52bd1f9baa9a3bd75ed4a2294eb35f842d807beec27e97ae7b",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "node-names-count.pdf",
+      "sha256": "a706e528dfbf5322fbf3db245cd2026ca3542791cdeb67bd998e5565f748eeb6",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "node-name-space.pdf",
+      "sha256": "52ab5ab2bf1190c8226cb2a2d3ff584db6120af56d659e8786229eb008eeac46",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "node-name-xmlbad.pdf",
+      "sha256": "2320cd58063a8e64955aeb52c13817a691dabe9a0fb4b669503daa04e1bd999b",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "node-name-unreadable.pdf",
+      "sha256": "193e9774b661a12e08114abe78c4bcc3c08c4af7eff12c8d1da39a7498dc5968",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "valid.pdf",
+      "sha256": "2c464b4426531037066274c9f5c375308978193e452249ce596372a12c62d3bf",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "optional-omitted.pdf",
+      "sha256": "9ef5631a62cea22489a824f204471e35155e6ea437eebaa880880e193022608b",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "valid-names.pdf",
+      "sha256": "a32e40cfd328db0e69b9df86e626c6e2287665965a8ff5234ae3f89b42960fd4",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "unicode-names.pdf",
+      "sha256": "c5d91463372cd9ac4cdaaf9a6a4955c9960bb0c46c098367be3e5a2f9dfe8ae9",
+      "expected_status": "PASS",
+      "expected_failures": []
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "reviewDate": "2026-10-17",
+  "applicationVersion": "1.4.0",
+  "reviewedHead": "0b08414534c4841c03183c767c1e4ad2377bf9ad",
+  "reviewedModifiedWorkingTree": true,
+  "sourceFingerprint": {
+    "sha256": "7320c5d8577601c6ed10e64c8e238789a030669a61e347459591bd184ee1c3df",
+    "selectedFileCount": 60,
+    "algorithm": "SHA-256 of json.dumps(files, sort_keys=True).encode(), where files is the sorted path/sha256 list produced by review_probes.source_manifest; excludes documents and binary assets"
+  },
+  "verdict": {
+    "productionReady": false,
+    "completeEaPdfIsoConformanceEstablished": false,
+    "scope": "Engineering assessment with source inspection and reproducible probes; not formal certification"
+  },
+  "tests": {
+    "javaPackage": {"tests": 97, "failures": 0, "errors": 0, "skipped": 0},
+    "pythonDefault": {"tests": 112, "failures": 0, "errors": 0, "skipped": 3},
+    "pythonWithGenerator": {"tests": 112, "failures": 0, "errors": 0, "skipped": 0},
+    "pythonFreshRequirementsEnvironment": {"tests": 112, "failures": 0, "errors": 0, "skipped": 0, "inheritedPythonPathDisabled": true},
+    "integrationTopLevelPdfs": 15,
+    "integrationPdfaPasses": 15,
+    "integrationPdfaProfile": "PDF/A-4F validation profile",
+    "recursiveCollectionChecksEnabled": true
+  },
+  "tools": {
+    "java": "OpenJDK 21.0.12.1",
+    "maven": "3.8.7",
+    "python": "3.12",
+    "pikepdfImportedVersion": "10.17.0",
+    "pypdfImportedVersion": "6.21.0",
+    "flask": "3.1.3",
+    "werkzeug": "3.1.9",
+    "verapdf": {"core": "1.31.1", "validationModel": "1.31.17", "apps": "1.31.18"},
+    "premisSchema": {
+      "url": "https://www.loc.gov/standards/premis/premis.xsd",
+      "sha256": "03b8a77a20b32b882ad799e12262671d07ad18210c60233f4e613a1289491cba"
+    }
+  },
+  "probes": [
+    {
+      "case": "image_only",
+      "finding": "R1",
+      "sourceImages": 2,
+      "renderedImageObjects": 0,
+      "generatorExit": 0,
+      "conversionWarnings": [],
+      "pdfaStatus": "PASS",
+      "combinedStatus": "PASS",
+      "interpretation": "Silent visual content loss despite combined PASS"
+    },
+    {
+      "case": "colon:source",
+      "finding": "R2",
+      "generatorExit": 0,
+      "pdfaStatus": "PASS",
+      "combinedStatus": "FAIL",
+      "failures": ["COLLECTION_FILENAMES_VALID"],
+      "interpretation": "Creator gate accepts an EA-PDF-invalid collection source filename"
+    },
+    {
+      "case": "nfsm",
+      "finding": "R3",
+      "mutation": "NonFullScreenPageMode changed to UseNone",
+      "pdfaStatus": "PASS",
+      "combinedStatus": "PASS",
+      "failures": [],
+      "warnings": ["PROFILE_NFSM_SINGLE_NO_ATTACHMENTS"],
+      "interpretation": "Mandatory navigation violation is treated as an ordinary warning"
+    },
+    {
+      "case": "missing-subject",
+      "finding": "R3",
+      "mutation": "Remove nonempty pdfmailmeta:Subject while preserving source and all namespace prefixes",
+      "pdfaStatus": "PASS",
+      "combinedStatus": "PASS",
+      "failures": [],
+      "warnings": ["MESSAGE_SUBJECT_XMP"],
+      "interpretation": "Missing nonempty core field is accepted"
+    },
+    {
+      "case": "body_parameters",
+      "finding": "R4",
+      "sourceBodyType": "text/plain; charset=UTF-8; format=flowed",
+      "dpmBodySubtype": "text/plain",
+      "generatorExit": 0,
+      "pdfaStatus": "PASS",
+      "combinedStatus": "PASS",
+      "interpretation": "Selected source body parameters are lost and unchecked"
+    },
+    {
+      "case": "premis",
+      "findings": ["R5", "R6"],
+      "generatorExit": 0,
+      "pdfaStatus": "PASS",
+      "combinedStatus": "FAIL",
+      "failures": ["PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"],
+      "warnings": ["PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS"],
+      "premisSchemaValid": false,
+      "premisSchemaUnexpectedElements": ["objectCategory", "eventDetail"],
+      "interpretation": "Invalid optional PREMIS XML and unrelated navigation false positive"
+    },
+    {
+      "case": "image_with_text",
+      "finding": "R7",
+      "generatorExit": 0,
+      "renderedImageObjects": 1,
+      "figureAlternatives": [""],
+      "conversionWarnings": [],
+      "pdfaStatus": "PASS",
+      "combinedStatus": "PASS",
+      "interpretation": "Missing source alternative text bypasses review warning"
+    }
+  ],
+  "limitations": [
+    "R8 resource limits are static findings; no destructive exhaustion testing was performed",
+    "No full live Gmail, GUI, assistive-technology, viewer interoperability or production-load acceptance",
+    "No complete inherited ISO clause audit, dependency security certification or legal clearance",
+    "Temporary detailed logs are not the sole durable evidence; preserve fresh release artifacts and reports"
+  ],
+  "reproduction": "See README.md and review_probes.py in this directory"
+}

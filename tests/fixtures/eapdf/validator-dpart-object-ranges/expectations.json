@@ -1,0 +1,81 @@
+{
+  "authority": "ISO32000-2:2020 sections14.12.2/3 and Tables408/409; EA-PDF9.6",
+  "source_files": {
+    "tests/fixtures/eapdf/validator-operands/valid.pdf": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+    ".eapdf-verification-v24/.eapdf-integration-_2w7plry/1m/1m.pdf": "01c6ce264a91cd19dbeb400f7d194ec1a9324fecc26ce3a45e32bb3c12536f7e"
+  },
+  "boundary": "Original creator bytes are unchanged. Multi-message fixture copies repair only independently proved operand mismatches before isolated range/order mutations. Optional Type entries remain optional.",
+  "cases": [
+    {
+      "file": "root-stream.pdf",
+      "sha256": "45674752086697910241bb4d3c9b65e35af4818014d6e035d72100c6e9e316d0",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "root-node-stream-preserved.pdf",
+      "sha256": "d51a8f4dff2550e377506f56124d09fb02bb1688f8fb7a5adb8a7c1fb41621f2",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "leaf-stream-preserved.pdf",
+      "sha256": "3dc8218a2f19679c12f613a66155c990e62cba2600861fe2afb782f390e37e79",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE",
+        "PAGE_DPART_PRESENT"
+      ]
+    },
+    {
+      "file": "valid.pdf",
+      "sha256": "2c464b4426531037066274c9f5c375308978193e452249ce596372a12c62d3bf",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "optional-types-omitted.pdf",
+      "sha256": "9ef5631a62cea22489a824f204471e35155e6ea437eebaa880880e193022608b",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "multi-ordered.pdf",
+      "sha256": "f5a680737d64e668bade6921b2e09d9d41385ba26ed5e2453940a1f3c7370ac7",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "multi-reversed.pdf",
+      "sha256": "392011f4db81c4475451fe17d88574907ef89f107208170aedb4ce9e212c39d2",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "PAGE_DPART_PRESENT"
+      ],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "multi-overlapping.pdf",
+      "sha256": "ec136dba2a4569d8046ad0307579d70114f2052d900227427349d0dde2e45c59",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "PAGE_DPART_PRESENT"
+      ],
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    }
+  ],
+  "parent_requirement_review": {
+    "evidence": "docs/improvement/validator-53/prior-native-census.json",
+    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
+    "retained_pdf_bytes": true,
+    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
+  }
+}

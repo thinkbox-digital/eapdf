@@ -1,0 +1,30 @@
+{
+  "checkpoint": "C96",
+  "fix": "Decode ANSI MSG plain-text body using its declared message code page; retain Unicode and existing parser fallback behavior.",
+  "reproduction": {
+    "code_page": 1251,
+    "expected": "Проверка письма: встреча в пятницу. Стоимость 25 €.",
+    "before": "Ïðîâåðêà ïèñüìà: âñòðå÷à â ïÿòíèöó. Ñòîèìîñòü 25 .",
+    "after_correct": true
+  },
+  "java_focused": {
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "last_full_java_suite": "C95, 214 passes; not rerun for C96.",
+  "changed_production_classes": [
+    "eapdf/MsgReader.class"
+  ],
+  "pdf_results": "pdf-results.json",
+  "source_sha256": "78b92c3e98568c69bfea0a79e10e2473d4d10516a740723e7f7e403284395191",
+  "jars": {
+    "emailtopdfa.jar": "e5d8ed1366dd6ac06171ff45d21373d332d278c584f4f8c82589e9e888c68473",
+    "emailtopdfa-gui.jar": "851266849825cf02b08efc20fd09d34b42767f3c9512b175ee0fee13ed6b0537"
+  },
+  "scope": "Existing creator correctness only. CLI, validator, preservation policy and distribution preparation unchanged.",
+  "staging_removed": true,
+  "known_limit": "Retained MSG source comparisons remain INCOMPLETE in the frozen validator, with no mandatory failures.",
+  "before_review_file": "output/creator-review/c96/Before - plain text 1251.pdf"
+}

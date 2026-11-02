@@ -1,0 +1,380 @@
+--- /tmp/eapdf-validator04/before/validate_eapdf.py	2026-10-19 10:29:23.725138743 -0400
++++ validate_eapdf.py	2026-10-19 13:38:43.171556338 -0400
+@@ -1334,7 +1334,7 @@
+     candidates=[]
+     seen=set()
+     annotations=[annotation.get("file") for annotation in collect_file_attachment_annotations(pdf)]
+-    for fileinfo in list(efiles)+list(afiles)+collect_marked_content_af_specs(pdf)+annotations:
++    for fileinfo in list(efiles)+list(afiles)+collect_object_af_specs(pdf)+collect_marked_content_af_specs(pdf)+annotations:
+         if not fileinfo:
+             continue
+         identity=fileinfo.get("objgen")
+@@ -1966,6 +1966,24 @@
+                 pending.extend((child,depth+1) for child in (dict_get(node,"/Kids",[]) or []))
+     return files
+ 
++def reconstruct_embedded_media_type(stream):
++    """EA-PDF 9.4: decoded UTF-8 name plus the decoded PDF parameter string.
++
++    pikepdf already removes name # escapes. bytes(name) preserves the decoded
++    bytes, allowing strict UTF-8 decoding without replacing invalid sequences.
++    This does not duplicate veraPDF's bare MIME syntax/presence predicates.
++    """
++    subtype=dict_get(stream,"/Subtype",None)
++    if not isinstance(subtype,pikepdf.Name):
++        raise ValueError("Reconstruction requires a Subtype PDF name")
++    bare=bytes(subtype)[1:].decode("utf-8")
++    parameters=dict_get(stream,"/Mail_MediaTypeParameters",None)
++    if parameters is None:
++        return bare+";"
++    if not isinstance(parameters,pikepdf.String):
++        raise ValueError("Mail_MediaTypeParameters must be a PDF text string")
++    return bare+";"+str(parameters)
++
+ def parse_filespec(tree_name,spec,source="unknown"):
+     info={"tree_name":tree_name,"source":source,"objgen":objgen(spec),"filename":"","ufilename":"","afrelationship":"","desc":"","stream":None,"subtype":"","media_type_parameters":"","size":None,"size_entry":None,"checksum":"","bytes":b"","sha256":"","md5":"","ef_objgen":None}
+     info["filename"]=norm_text(str(dict_get(spec,"/F",""))) if dict_get(spec,"/F",None) is not None else ""
+@@ -1988,6 +2006,19 @@
+             except Exception:
+                 stream=None
+     info["stream"]=stream
++    embedded_streams=[]
++    seen_streams=set()
++    for key in ("/UF","/F","/Unix","/DOS","/Mac"):
++        candidate=dict_get(ef,key,None)
++        if candidate is None:
++            continue
++        identity=pdf_object_identity(candidate)
++        if identity not in seen_streams:
++            seen_streams.add(identity)
++            embedded_streams.append((key,candidate))
++    if not embedded_streams and stream is not None:
++        embedded_streams.append(("selected",stream))
++    info["embedded_streams"]=embedded_streams
+     info["ef_objgen"]=objgen(stream) if stream is not None else None
+     if stream is not None:
+         st=dict_get(stream,"/Subtype",None)
+@@ -1998,10 +2029,14 @@
+         info["checksum_parameter_present"]=checksum_parameter is not None
+         info["checksum_parameter_valid"]=isinstance(checksum_parameter,pikepdf.String) and len(bytes(checksum_parameter))==16
+         mtp=dict_get(stream,"/Mail_MediaTypeParameters",None)
+-        if mtp is None and params is not None:
+-            mtp=dict_get(params,"/Mail_MediaTypeParameters",None)
+-        if mtp is not None:
+-            info["media_type_parameters"]=norm_text(str(mtp))
++        if isinstance(mtp,pikepdf.String):
++            info["media_type_parameters"]=str(mtp)
++        try:
++            info["reconstructed_media_type"]=reconstruct_embedded_media_type(stream)
++            info["media_type_reconstruction_error"]=None
++        except (ValueError,UnicodeError) as error:
++            info["reconstructed_media_type"]=None
++            info["media_type_reconstruction_error"]=str(error)
+         if sz is None and params is not None:
+             sz=dict_get(params,"/Size",None)
+         if sz is not None:
+@@ -2573,9 +2608,13 @@
+ 
+ def media_type_signature(value):
+     headers=MimeHeaders()
+-    headers["Content-Type"]=norm_text(value)
++    # Header folding is handled by the MIME parser. Whitespace inside a quoted
++    # parameter is data and must not be collapsed (nor may its case change).
++    headers["Content-Type"]=str(value or "")
+     parameters=[]
+     for name,item in (headers.get_params() or [])[1:]:
++        if not name:
++            continue  # No parameter after an optional trailing semicolon.
+         if isinstance(item,tuple):
+             item=collapse_rfc2231_value(item)
+         if name.lower()=="charset":
+@@ -2604,7 +2643,7 @@
+     annot_names.discard("")
+     att_checksum=norm_text(first_present(att,"CheckSum","Checksum")).lower()
+     att_size=parse_nonneg_int_value(first_present(att,"SizeInBytes"))
+-    att_ctype=norm_text(first_present(att,"Content-Type","ContentType"))
++    att_ctype=str(first_present(att,"Content-Type","ContentType"))
+     file_checksum=norm_text(fileinfo.get("md5","")).lower()
+     file_size=fileinfo.get("size")
+     declared_size=fileinfo.get("size_entry")
+@@ -2612,9 +2651,11 @@
+         return False
+     if fileinfo.get("checksum") and norm_text(fileinfo["checksum"]).lower()!=file_checksum:
+         return False
+-    file_ctype=norm_text(fileinfo.get("subtype",""))
+-    if fileinfo.get("media_type_parameters"):
+-        file_ctype+=";"+fileinfo["media_type_parameters"]
++    file_ctype=fileinfo.get("reconstructed_media_type")
++    if "reconstructed_media_type" not in fileinfo:
++        file_ctype=str(fileinfo.get("subtype",""))
++        if fileinfo.get("media_type_parameters"):
++            file_ctype+=";"+fileinfo["media_type_parameters"]
+ 
+     name_match=bool(att_name and att_name in annot_names)
+     checksum_match=bool(att_checksum and file_checksum and att_checksum==file_checksum)
+@@ -2668,26 +2709,28 @@
+     return dict(result,status="verified",size_in_bytes=candidates[0]["size_in_bytes"],
+                 checksum=candidates[0]["checksum"],reason="Original attachment verified inside the referenced source email; no separate copy is embedded")
+ 
+-def matching_attachment_for_embedded(f, attachments):
++def matching_attachment_for_embedded(f, attachments, ambiguities=None):
+     fn=normalize_path_tail(f.get("ufilename") or f.get("filename") or f.get("tree_name","")).lower()
+     md5=norm_text(f.get("md5","")).lower()
+     size=f.get("size")
+-    subtype=norm_text(f.get("subtype","")).lower()
++    candidates=[]
+     for att in attachments:
+         att_fn=normalize_path_tail(first_present(att,"Filename")).lower()
+         att_md5=norm_text(first_present(att,"CheckSum","Checksum")).lower()
+         att_size=parse_nonneg_int_value(first_present(att,"SizeInBytes"))
+-        att_type=norm_text(first_present(att,"Content-Type","ContentType")).lower()
+         if fn and att_fn and fn != att_fn and not (md5 and att_md5 and md5 == att_md5):
+             continue
+         if md5 and att_md5 and md5 != att_md5:
+             continue
+         if size is not None and att_size is not None and size != att_size:
+             continue
+-        if subtype and att_type and subtype != att_type:
+-            continue
+-        return att
+-    return None
++        # The media type is the value being checked, not association evidence.
++        # Require an actual filename or checksum match and preserve ambiguity.
++        if (fn and att_fn and fn==att_fn) or (md5 and att_md5 and md5==att_md5):
++            candidates.append(att)
++    if len(candidates)>1 and ambiguities is not None:
++        ambiguities.append({"filename":fn,"candidate_count":len(candidates)})
++    return candidates[0] if len(candidates)==1 else None
+ 
+ def dpart_message_identity(item, by_objgen):
+     cur=item
+@@ -3024,6 +3067,34 @@
+         out.append(parse_filespec("",item,source="AF"))
+     return out
+ 
++def collect_object_af_specs(pdf):
++    """Read AF arrays on reachable dictionaries/streams, including direct ones."""
++    pending=[(pdf.Root,0)]
++    seen=set()
++    count=0
++    files=[]
++    while pending:
++        obj,depth=pending.pop()
++        if not isinstance(obj,(pikepdf.Dictionary,pikepdf.Stream,pikepdf.Array)):
++            continue
++        identity=objgen(obj)
++        if identity and identity!=(0,0):
++            if identity in seen:
++                continue
++            seen.add(identity)
++        count+=1
++        if depth>MAX_TREE_DEPTH or count>MAX_TREE_ITEMS:
++            raise ValueError("Associated-file object traversal exceeds resource limits")
++        if isinstance(obj,pikepdf.Array):
++            pending.extend((child,depth+1) for child in obj)
++        else:
++            associated=dict_get(obj,"/AF",None)
++            if is_pdf_array(associated):
++                files.extend(parse_filespec("",spec,source="ObjectAF") for spec in associated
++                             if isinstance(spec,pikepdf.Dictionary))
++            pending.extend((child,depth+1) for child in obj.values())
++    return files
++
+ def walk_collection_folder_nodes(node, out, parent_id=None, seen=None, depth=0):
+     if node is None:
+         return
+@@ -3537,6 +3608,7 @@
+     efiles=get_embedded_files(pdf)
+     afiles=get_af_specs(pdf)
+     marked_afiles=collect_marked_content_af_specs(pdf)
++    object_afiles=collect_object_af_specs(pdf)
+     source_optional_profile = eapdf_conf in ("si","mi","ci")
+     afarr=dict_get(pdf.Root,"/AF",None)
+     if efiles:
+@@ -3561,11 +3633,29 @@
+     byspec=map_embedded_by_objgen(efiles)
+     bystream=map_stream_by_objgen(efiles)
+     _=bystream
+-    for af in afiles + marked_afiles:
++    associated_seen=set()
++    associated_count=0
++    for af in object_afiles + marked_afiles:
++        identity=af["objgen"]
++        if identity and identity!=(0,0):
++            if identity in associated_seen:
++                continue
++            associated_seen.add(identity)
++        associated_count+=1
++        for key,stream in af.get("embedded_streams") or [("missing",None)]:
++            date=dict_get(dict_get(stream,"/Params",None),"/ModDate",None)
++            detail={"filename":af["ufilename"] or af["filename"],"objgen":identity,
++                    "association":af["source"],"ef_key":key,"actual":observed_pdf_value(date)}
++            if isinstance(date,pikepdf.String) and looks_like_pdf_date(str(date)):
++                report.ok("ASSOCIATED_FILE_MODDATE","Associated embedded file has a ModDate PDF date string",detail)
++            else:
++                report.fail("ASSOCIATED_FILE_MODDATE","Associated embedded file Params requires a ModDate PDF date string",detail)
+         if af["objgen"] in byspec:
+             report.ok("AF_IN_NAME_TREE","AF file specification also listed in EmbeddedFiles name tree",{"filename":af["ufilename"] or af["filename"] or af["tree_name"],"objgen":af["objgen"]})
+         else:
+             report.fail("AF_IN_NAME_TREE","AF file specification missing from EmbeddedFiles name tree",{"filename":af["ufilename"] or af["filename"] or af["tree_name"],"objgen":af["objgen"]})
++    if not associated_count:
++        report.na("ASSOCIATED_FILE_MODDATE","No associated embedded files require ModDate",{"reason":"No AF array or AF marked-content file associations were found."})
+     source=[f for f in afiles if f["afrelationship"]=="Source"]
+     if isolated:
+         if source: report.fail("SOURCE_IN_ISOLATED","Isolated profile contains Source AF",{"count":len(source),"files":embedded_file_observations(source)})
+@@ -3582,6 +3672,17 @@
+         if f["stream"] is None:
+             report.fail("EMBEDDED_STREAM","Embedded file specification lacks embedded file stream",{"name":name})
+             continue
++        for key,stream in f["embedded_streams"]:
++            details={"name":name,"ef_key":key}
++            if not isinstance(dict_get(stream,"/Subtype",None),pikepdf.Name):
++                report.warn("EMBEDDED_MEDIATYPE_RECONSTRUCTION","Media-type reconstruction unavailable until the upstream Subtype requirement is satisfied",dict(details,assessment="unavailable",reason="Subtype is not a PDF name"))
++                continue
++            try:
++                media_type=reconstruct_embedded_media_type(stream)
++            except (ValueError,UnicodeError) as error:
++                report.fail("EMBEDDED_MEDIATYPE_RECONSTRUCTION","Embedded media type cannot be reconstructed under EA-PDF 9.4",dict(details,reason=str(error)))
++            else:
++                report.ok("EMBEDDED_MEDIATYPE_RECONSTRUCTION","Embedded media type reconstructed from UTF-8 name and PDF parameter text",dict(details,media_type=media_type))
+         if f.get("size_entry") is None:
+             report.warn("EMBEDDED_SIZE","Embedded file stream missing /Size",{"name":name,"actual":len(f["bytes"])})
+         elif len(f["bytes"])==f["size_entry"]:
+@@ -3608,6 +3709,8 @@
+                 report.fail("EMBEDDED_STREAM","File specifications require embedded streams",{"files":absent})
+             else:
+                 report.ok("EMBEDDED_STREAM","All inspected file specifications have embedded streams",{"files":len(candidates)})
++    if "EMBEDDED_MEDIATYPE_RECONSTRUCTION" not in report.seen_codes:
++        report.na("EMBEDDED_MEDIATYPE_RECONSTRUCTION","No readable embedded streams require media-type reconstruction",{"reason":"No embedded file stream was available; required stream presence is evaluated separately."})
+     return efiles,afiles
+ 
+ def check_profile_rules(pdf,efiles,afiles,eapdf_conf,pdfa_part,report,root_xml=None):
+@@ -3813,6 +3916,8 @@
+                     report.fail("DPM_SUBTYPE_REQUIRED","Leaf DPM node missing Mail_Subtype for rendering content set",{"objgen":item["objgen"],"type":ctype})
+             if eapdf_conf in ("c","ci") and ctype=="AttachmentList":
+                 report.fail("DPM_ATTACHMENTLIST_FORBIDDEN","AttachmentList DPM content set forbidden in container profiles",{"objgen":item["objgen"]})
++            if eapdf_conf in ("c","ci") and ctype in {"AttachmentRendering","BodyRendering","EmailHeaderRendering","RawEmailRendering"}:
++                report.fail("DPM_CONTAINER_CONTENTSET_TYPES","Email rendering Content Set type is forbidden in container profiles",{"objgen":item["objgen"],"type":ctype,"profile":eapdf_conf})
+ 
+             rng=page_range_from_dpart(item,page_map)
+             if rng is None:
+@@ -3865,6 +3970,8 @@
+         report.ok("DPM_KEY_PREFIX","All inspected DPM keys use the Mail_ prefix",{"nodes":len(nodes)})
+     if eapdf_conf in ("c","ci") and "DPM_ATTACHMENTLIST_FORBIDDEN" not in report.seen_codes:
+         report.ok("DPM_ATTACHMENTLIST_FORBIDDEN","Container content sets do not use AttachmentList",{"content_sets":len(leaf_nodes)})
++    if eapdf_conf in ("c","ci") and "DPM_CONTAINER_CONTENTSET_TYPES" not in report.seen_codes and leaf_nodes:
++        report.ok("DPM_CONTAINER_CONTENTSET_TYPES","Container content sets do not use the four prohibited email rendering types",{"content_sets":len(leaf_nodes)})
+     return leaf_nodes
+ 
+ def check_collection_rules(pdf,eapdf_conf,report):
+@@ -4558,7 +4665,9 @@
+                 report.fail("ASSET_SIZE_MATCH","XMP asset size does not match embedded Source file",dict(details,**{"xmp_size":a.get("SizeInBytes")}))
+         except Exception:
+             report.fail("ASSET_SIZE_MATCH","XMP asset size not comparable",dict(details,**{"xmp_size":a.get("SizeInBytes")}))
+-        if norm_text(a.get("ContentType",""))==norm_text(found["subtype"]):
++        reconstructed=found.get("reconstructed_media_type",found["subtype"])
++        details["embedded_media_type"]=reconstructed
++        if reconstructed and media_type_signature(a.get("ContentType",""))==media_type_signature(reconstructed):
+             report.ok("ASSET_CONTENTTYPE_MATCH","XMP asset content type matches embedded Source file",details)
+         else:
+             report.fail("ASSET_CONTENTTYPE_MATCH","XMP asset content type does not match embedded Source file",dict(details,**{"xmp_contenttype":a.get("ContentType")}))
+@@ -5828,18 +5937,20 @@
+     bad_params=[]
+     comparable_params=0
+     parameter_comparisons=[]
++    ambiguous_media_types=[]
+     assets=flatten_assets(xroot) if xroot is not None else []
+     attachments=flatten_attachments(xroot) if xroot is not None else []
+     def matching_asset_for_source(f):
+         fn=normalize_path_tail(f.get("ufilename") or f.get("filename") or f.get("tree_name",""))
++        candidates=[]
+         for a in assets:
+             afn=normalize_path_tail(a.get("Filename",""))
+-            if fn and afn and fn == afn:
+-                return a
+-        for a in assets:
+-            if str(a.get("Checksum","")).lower() == str(f.get("md5","")).lower():
+-                return a
+-        return None
++            checksum=str(a.get("Checksum","")).lower()
++            if (fn and afn and fn == afn) or (checksum and checksum==str(f.get("md5","")).lower()):
++                candidates.append(a)
++        if len(candidates)>1:
++            ambiguous_media_types.append({"filename":fn,"candidate_count":len(candidates)})
++        return candidates[0] if len(candidates)==1 else None
+     for f in embedded_candidates:
+         names=[norm_text(v) for v in (f.get("ufilename",""), f.get("filename",""), f.get("tree_name","")) if norm_text(v)]
+         bad_name=None
+@@ -5860,23 +5971,24 @@
+         xmp_content_type=""
+         if f.get("afrelationship")=="Source":
+             asset=matching_asset_for_source(f)
+-            content_type=norm_text(asset.get("ContentType","")) if asset else ""
+-            xmp_content_type=norm_text(content_type.split(";",1)[0]) if content_type else ""
+-            if ";" in content_type:
+-                comparable_params += 1
+-                expected=norm_text(content_type.split(";",1)[1])
+-                actual=norm_text(f.get("media_type_parameters",""))
+-                parameter_comparisons.append({"filename":f.get("ufilename") or f.get("filename") or f.get("tree_name",""),"xmp":expected,"actual":actual})
+-                if expected != actual:
+-                    bad_params.append({"filename":(f.get("ufilename") or f.get("filename") or f.get("tree_name","")),"expected":expected,"actual":actual})
+-        else:
+-            attachment=matching_attachment_for_embedded(f, attachments)
+-            content_type=norm_text(first_present(attachment,"Content-Type","ContentType")) if attachment else ""
+-            xmp_content_type=norm_text(content_type.split(";",1)[0]) if content_type else ""
+-        if subtype and xmp_content_type:
++            content_type=str(asset.get("ContentType","")) if asset else ""
++        else:
++            attachment=matching_attachment_for_embedded(f, attachments, ambiguous_media_types)
++            content_type=str(first_present(attachment,"Content-Type","ContentType")) if attachment else ""
++        xmp_content_type=content_type
++        reconstructed=f.get("reconstructed_media_type",subtype)
++        if ";" in content_type:
++            comparable_params += 1
++            expected=content_type.split(";",1)[1]
++            actual=f.get("media_type_parameters","")
++            detail={"filename":f.get("ufilename") or f.get("filename") or f.get("tree_name",""),"xmp":expected,"actual":actual}
++            parameter_comparisons.append(detail)
++            if media_type_signature("application/octet-stream;"+expected)!=media_type_signature("application/octet-stream;"+actual):
++                bad_params.append(detail)
++        if xmp_content_type:
+             comparable_subtype_xmp += 1
+-            subtype_comparisons.append({"filename":f.get("ufilename") or f.get("filename") or f.get("tree_name",""),"subtype":subtype,"xmp_content_type":xmp_content_type})
+-            if subtype.lower() != xmp_content_type.lower():
++            subtype_comparisons.append({"filename":f.get("ufilename") or f.get("filename") or f.get("tree_name",""),"subtype":subtype,"reconstructed":reconstructed,"xmp_content_type":xmp_content_type})
++            if not reconstructed or media_type_signature(reconstructed)!=media_type_signature(xmp_content_type):
+                 bad_subtype_xmp.append({
+                     "filename":f.get("ufilename") or f.get("filename") or f.get("tree_name",""),
+                     "subtype":subtype,
+@@ -5894,9 +6006,11 @@
+                        "Embedded file /Subtype values omit media-type parameters" if not bad_subtypes else "Embedded file /Subtype values must not include semicolons or media-type parameters",
+                        {"count":len(embedded_candidates),"files":file_observations} if not bad_subtypes else {"actual":bad_subtypes})
+     if bad_subtype_xmp:
+-        emit_if_unseen(report,"fail","EMBEDDED_SUBTYPE_MATCH_XMP","Embedded file /Subtype must match equivalent document-level XMP ContentType",{"actual":bad_subtype_xmp})
++        emit_if_unseen(report,"fail","EMBEDDED_SUBTYPE_MATCH_XMP","Reconstructed embedded media type must match equivalent document-level XMP ContentType",{"actual":bad_subtype_xmp})
++    elif ambiguous_media_types:
++        emit_if_unseen(report,"warn","EMBEDDED_SUBTYPE_MATCH_XMP","Media-type consistency cannot be established for ambiguous XMP asset associations",{"assessment":"unavailable","actual":ambiguous_media_types,"verified_comparisons":subtype_comparisons})
+     elif comparable_subtype_xmp:
+-        emit_if_unseen(report,"ok","EMBEDDED_SUBTYPE_MATCH_XMP","Embedded file /Subtype values match equivalent document-level XMP ContentType values",{"count":comparable_subtype_xmp,"comparisons":subtype_comparisons})
++        emit_if_unseen(report,"ok","EMBEDDED_SUBTYPE_MATCH_XMP","Reconstructed embedded media types match equivalent document-level XMP ContentType values",{"count":comparable_subtype_xmp,"comparisons":subtype_comparisons})
+     else:
+         emit_if_unseen(report,"na","EMBEDDED_SUBTYPE_MATCH_XMP","Rule not applicable for this PDF",{"reason":"Not applied because the validator found no embedded files with comparable document-level XMP ContentType metadata."})
+     if bad_params:
+@@ -5904,7 +6018,7 @@
+     elif comparable_params:
+         emit_if_unseen(report,"ok","SOURCE_MEDIATYPE_PARAMETERS_MATCH","Mail_MediaTypeParameters matches the source email asset",{"count":comparable_params,"comparisons":parameter_comparisons})
+     else:
+-        emit_if_unseen(report,"na","SOURCE_MEDIATYPE_PARAMETERS_MATCH","Rule not applicable for this PDF",{"reason":"Not applied because the embedded Source email assets inspected by the validator do not declare media-type parameters."})
++        emit_if_unseen(report,"na","SOURCE_MEDIATYPE_PARAMETERS_MATCH","Rule not applicable for this PDF",{"reason":"No comparable source-asset or attachment XMP media type declares parameters."})
+ 
+     if container_profile:
+         invalid=[]
+@@ -6672,7 +6786,7 @@
+     profile_groups={
+         "single_message_profile":{"PROFILE_EMAIL_COUNT_SINGLE","DPM_INTERMEDIATE_COUNT_SINGLE","MAIL_MESSAGE_COUNT_SINGLE"},
+         "multi_message_profile":{"PROFILE_EMAIL_COUNT_MULTI","DPM_INTERMEDIATE_COUNT_MULTI","MAIL_MESSAGE_COUNT_MULTI","PROFILE_PAGEMODE_MULTI","PROFILE_NFSM_MULTI"},
+-        "container_profile":{"DPM_INTERMEDIATE_COUNT_CONTAINER","MAIL_MESSAGE_COUNT_CONTAINER","PROFILE_PAGEMODE_CONTAINER","PROFILE_NFSM_CONTAINER","COLLECTION_CHILD_VALIDATION"},
++        "container_profile":{"DPM_INTERMEDIATE_COUNT_CONTAINER","DPM_CONTAINER_CONTENTSET_TYPES","MAIL_MESSAGE_COUNT_CONTAINER","PROFILE_PAGEMODE_CONTAINER","PROFILE_NFSM_CONTAINER","COLLECTION_CHILD_VALIDATION"},
+         "mail_profile":{"MESSAGE_SENT_XMP","MESSAGE_SENT_FORMAT","MESSAGE_ID_XMP","MAIL_GUID_XMP","EMAIL_XMP_CONTAINER","MAIL_GUID_UNIQUE","MESSAGE_SOURCE_MATCH","DPM_BODY_MEDIA_TYPE_MATCH_SOURCE"},
+     }
+     for condition,codes in profile_groups.items():

@@ -1,0 +1,326 @@
+--- before/validate_eapdf.py
++++ validate_eapdf.py
+@@ -3504,11 +3504,15 @@
+         else:
+             report.fail("XMP_NS_PREFIX","Required EA-PDF namespace missing",{"uri":uri,"expected_prefix":pfx})
+     creator=find_xmp_values(root_xml,NS_DC,"creator")
++    creator_arrays=xmp_document_property_values(root_xml,NS_DC,"creator")
++    first_creators=[value[0] if isinstance(value,XmpArray) and value else "" for value in creator_arrays]
+     producer=first_xmp_value(root_xml,NS_PDF,"Producer")
+     cdate=first_xmp_value(root_xml,NS_XMP,"CreateDate")
+     title=collect_alt_xdefault(root_xml)
+-    if creator: report.ok("XMP_CREATOR","EA-PDF creation software field dc:creator is present",{"value":creator})
+-    else: report.fail("XMP_CREATOR","EA-PDF creation software field dc:creator is missing",{"value":creator})
++    if first_creators and all(is_xmp_text(value) and norm_text(value) for value in first_creators):
++        report.ok("XMP_CREATOR","The required first dc:creator item is populated",{"value":creator,"first_values":first_creators})
++    else:
++        report.fail("XMP_CREATOR","EA-PDF requires the first dc:creator item to be populated",{"value":creator,"first_values":first_creators})
+     if producer: report.ok("XMP_PRODUCER","EA-PDF creation software field pdf:Producer is present",{"value":producer})
+     else: report.fail("XMP_PRODUCER","EA-PDF creation software field pdf:Producer is missing",{"value":producer})
+     if cdate: report.ok("XMP_CREATEDATE","EA-PDF file creation date field xmp:CreateDate is present",{"value":cdate})
+@@ -4745,11 +4749,12 @@
+         if ctype in GENERIC_BAD_MIME:
+             report.warn("ASSET_CONTENTTYPE_GENERIC","Asset XMP uses discouraged generic media type",{"Filename":a.get("Filename"),"ContentType":ctype})
+         num_messages=a.get("NumberMessages","")
+-        if num_messages not in ("",None):
++        if "NumberMessages" in a:
+             if is_nonneg_int_str(num_messages):
+                 report.ok("ASSET_NUMBERMESSAGES_TYPE","Asset XMP NumberMessages is a non-negative integer",{"Filename":a.get("Filename"),"NumberMessages":str(num_messages)})
+             else:
+-                report.warn("ASSET_NUMBERMESSAGES_TYPE","Asset XMP NumberMessages should be a non-negative integer when present",{"asset":a})
++                report.fail("ASSET_NUMBERMESSAGES_TYPE","Supplied asset NumberMessages must be a non-negative integer",{
++                    "asset":a,"actual_type":xmp_semantic_type(num_messages)})
+     matches=[]
+     unmatched_assets=[]
+     remaining=list(src)
+@@ -4778,7 +4783,11 @@
+         else:
+             report.fail("ASSET_MD5_MATCH","XMP asset checksum does not match embedded Source file",dict(details,**{"xmp_checksum":a.get("Checksum")}))
+         try:
+-            if nonnegative_integer_equals(a.get("SizeInBytes"),found["size"]):
++            if not is_xmp_text(a.get("SizeInBytes")):
++                report.warn("ASSET_SIZE_MATCH","Source size comparison is unavailable for an invalid semantic value",{
++                    **details,"state":"unavailable","actual_type":xmp_semantic_type(a.get("SizeInBytes")),
++                    "reason":"SizeInBytes must first satisfy its simple integer type; the schema violation is reported separately."})
++            elif nonnegative_integer_equals(a.get("SizeInBytes"),found["size"]):
+                 report.ok("ASSET_SIZE_MATCH","XMP asset size matches embedded Source file",details)
+             else:
+                 report.fail("ASSET_SIZE_MATCH","XMP asset size does not match embedded Source file",dict(details,**{"xmp_size":a.get("SizeInBytes")}))
+@@ -5271,26 +5280,22 @@
+     if root_xml is None:
+         return
+     summary=summarize_source_email(afiles)
+-    creator_vals=find_xmp_values(root_xml,NS_DC,"creator")
+-    creator=first_scalar(creator_vals[0] if creator_vals else "")
++    creator_vals=xmp_document_property_values(root_xml,NS_DC,"creator")
++    creator=(creator_vals[0][0] if creator_vals and isinstance(creator_vals[0],XmpArray) and creator_vals[0] else "")
+     producer=first_xmp_value(root_xml,NS_PDF,"Producer")
+     cdate=first_xmp_value(root_xml,NS_XMP,"CreateDate")
+ 
+     if creator:
+-        if summary and value_matches_source_sender(creator, summary):
+-            report.fail("XMP_CREATOR_SEMANTICS","EA-PDF creation software field dc:creator appears to identify the source email sender instead of the software that created the EA-PDF file",{"value":creator,"source_from":summary.get("raw_from","")})
+-        elif value_looks_like_mailbox_identity(creator):
+-            report.fail("XMP_CREATOR_SEMANTICS","EA-PDF creation software field dc:creator looks like an email identity rather than the software that created the EA-PDF file",{"value":creator})
+-        else:
+-            report.ok("XMP_CREATOR_SEMANTICS","EA-PDF creation software field dc:creator appears to identify the software that created the EA-PDF file",{"value":creator})
++        report.warn("XMP_CREATOR_SEMANTICS","Creator attribution requires independent creation provenance",{
++            "value":creator,"assessment":"unavailable",
++            "reason":"A person's, organization's or service's creator name may resemble an email address or match an email sender.",
++            "needed_evidence":"Independent evidence of the entity responsible for creating the EA-PDF resource; first-item presence is checked separately."})
+ 
+     if producer:
+-        if summary and value_matches_source_sender(producer, summary):
+-            report.fail("XMP_PRODUCER_SEMANTICS","EA-PDF creation software field pdf:Producer appears to identify the source email sender instead of the software that created the EA-PDF file",{"value":producer,"source_from":summary.get("raw_from","")})
+-        elif value_looks_like_mailbox_identity(producer):
+-            report.fail("XMP_PRODUCER_SEMANTICS","EA-PDF creation software field pdf:Producer looks like an email identity rather than the software that created the EA-PDF file",{"value":producer})
+-        else:
+-            report.ok("XMP_PRODUCER_SEMANTICS","EA-PDF creation software field pdf:Producer appears to identify the software that created the EA-PDF file",{"value":producer})
++        report.warn("XMP_PRODUCER_SEMANTICS","Producer attribution requires independent creation provenance",{
++            "value":producer,"assessment":"unavailable",
++            "reason":"The PDF creation tool has no required name grammar; mailbox-like text or sender equality does not prove wrong attribution.",
++            "needed_evidence":"Independent evidence of the tool that created the PDF; required property presence is checked separately."})
+ 
+     if cdate:
+         report.warn("XMP_CREATEDATE_SEMANTICS","Creation provenance cannot be established from xmp:CreateDate and source Sent alone",{
+@@ -7154,7 +7159,14 @@
+         records=[{"Sent":first_message_xmp_value(root_xml,"Sent"),
+                   "Mail_GUID":first_message_xmp_value(root_xml,"Mail_GUID")}]
+     identifiers=set()
++    attachment_records=flatten_attachments(root_xml)
+     for index,record in enumerate(records, start=1):
++        owner=guid_value(record.get("Mail_GUID",""))
++        owned_attachments=[item for item in attachment_records if owner and guid_value(item.get("Mail_GUID",""))==owner]
++        if "NumberAttachments" not in record and owned_attachments:
++            report.fail("MESSAGE_ATTACHMENT_COUNT_XMP","NumberAttachments is required for an email with an explicitly owned attachment record",{
++                "email":index,"Mail_GUID":owner,"owned_attachment_records":len(owned_attachments),
++                "evidence":"Exact Mail_GUID ownership in document-level attachment metadata; no source-byte comparison inferred"})
+         # Supplied Table 18 types are file-internal requirements. Source absence
+         # cannot turn malformed metadata into N/A or merely a recommendation.
+         text_fields={"Subject":"MESSAGE_SUBJECT_XMP","Raw-To":"MESSAGE_RAW_TO_XMP",
+--- before/validator_rule_text.json
++++ validator_rule_text.json
+@@ -8114,7 +8114,7 @@
+     "rule_number": 143,
+     "rule_name": "XMP_CREATOR",
+     "spec_section": "EA-PDF 1.0 section 9.8 printed p84",
+-    "spec_excerpt": "EA-PDF 9.8 requires the first dc:creator item to be recorded. dc:creator is an ordered array of creator names (person, organization or service), not a field reserved for a software product. Preserve its standard XMP type; do not infer invalidity from an email-like value.",
++    "spec_excerpt": "EA-PDF 9.8 requires the first dc:creator item to be recorded. dc:creator is an ordered array of creator names (person, organization or service), not a field reserved for a software product. Preserve its standard XMP type; do not infer invalidity from an email-like value. A later nonempty sequence member does not populate an empty or missing first creator item.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+@@ -8517,7 +8517,7 @@
+     "rule_number": 150,
+     "rule_name": "XMP_CREATOR_SEMANTICS",
+     "spec_section": "EA-PDF 1.0 section 9.8 printed p84",
+-    "spec_excerpt": "dc:creator identifies the entity primarily responsible for the resource, as an ordered array of names. EA-PDF requires its first item; neither EA-PDF nor the reviewed XMP definition requires a software-name pattern. Actual incorrect attribution requires provenance evidence; punctuation, address-like text or equality to an email sender alone is insufficient.",
++    "spec_excerpt": "dc:creator identifies the entity primarily responsible for the resource, as an ordered array of names. EA-PDF requires its first item; neither EA-PDF nor the reviewed XMP definition requires a software-name pattern. Actual incorrect attribution requires provenance evidence; punctuation, address-like text or equality to an email sender alone is insufficient. Mailbox-like spelling or equality with an email sender is not evidence of incorrect attribution. Without independent creation provenance, report attribution as unavailable rather than assert PASS or FAIL.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+@@ -8584,7 +8584,7 @@
+     "rule_number": 151,
+     "rule_name": "XMP_PRODUCER_SEMANTICS",
+     "spec_section": "EA-PDF 1.0 section 9.8 printed p84",
+-    "spec_excerpt": "pdf:Producer denotes the PDF creation tool. Evaluate contradictions only with reliable provenance; a lexical heuristic alone cannot establish an incorrect tool identity.",
++    "spec_excerpt": "pdf:Producer denotes the PDF creation tool. Evaluate contradictions only with reliable provenance; a lexical heuristic alone cannot establish an incorrect tool identity. Mailbox-like spelling or equality with an email sender is not evidence of incorrect attribution. Without independent creation provenance, report attribution as unavailable rather than assert PASS or FAIL.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+@@ -9692,11 +9692,12 @@
+     "rule_number": 164,
+     "rule_name": "ASSET_NUMBERMESSAGES_TYPE",
+     "spec_section": "EA-PDF 1.0 section 9.8.2 Table 16 printed p85",
+-    "spec_excerpt": "When each applicable source asset description with NumberMessages: NumberMessages: nonnegative integer counting successfully rendered messages, not all messages in the asset.",
++    "spec_excerpt": "When each applicable source asset description with NumberMessages: NumberMessages: nonnegative integer counting successfully rendered messages, not all messages in the asset. Absence remains permitted. Each supplied value, including an empty one, must satisfy the normal nonnegative integer type; violations are mandatory failures, not recommendations.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "N/A": "Not applied because {explanation}.",
+-      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
++      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
++      "FAIL": "Supplied NumberMessages must be a nonnegative integer."
+     },
+     "spec_excerpt_kind": "Reviewed paraphrase, not a verbatim specification quotation",
+     "requirements_review": {
+@@ -10023,11 +10024,12 @@
+     "rule_number": 169,
+     "rule_name": "ASSET_SIZE_MATCH",
+     "spec_section": "EA-PDF 1.0 section 9.4 printed p67; EA-PDF 1.0 section 9.8.2 Table 16 printed p85",
+-    "spec_excerpt": "When source email asset containers: Document-level source metadata matches embedded file size and media type; XMP filenames may contain paths unlike file specification strings.",
++    "spec_excerpt": "When source email asset containers: Document-level source metadata matches embedded file size and media type; XMP filenames may contain paths unlike file specification strings. A URI/container cannot be compared as a numeric size: retain its mandatory type failure and report the byte comparison as unavailable, without asserting a byte mismatch.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+-      "N/A": "Not applied because {explanation}."
++      "N/A": "Not applied because {explanation}.",
++      "WARN": "Comparison unavailable: {message}"
+     },
+     "spec_excerpt_kind": "Reviewed paraphrase, not a verbatim specification quotation",
+     "requirements_review": {
+@@ -11010,7 +11012,7 @@
+     "rule_number": 185,
+     "rule_name": "MESSAGE_ATTACHMENT_COUNT_XMP",
+     "spec_section": "EA-PDF 9.8.3 Table 18, printed p88",
+-    "spec_excerpt": "NumberAttachments is a nonnegative integer, required when the email has one or more attachments, with default zero otherwise. Distinguish internal count consistency from source-dependent completeness. Validate the type of every supplied value even when source email is unavailable; absence and source-value agreement are separate conditions. URI and container values are not integer simple values.",
++    "spec_excerpt": "NumberAttachments is a nonnegative integer, required when the email has one or more attachments, with default zero otherwise. Distinguish internal count consistency from source-dependent completeness. Validate the type of every supplied value even when source email is unavailable; absence and source-value agreement are separate conditions. URI and container values are not integer simple values. An attachment record with an exact Mail_GUID matching an email establishes that its conditional count field is required, even when source bytes are omitted. Unrelated or ambiguously owned records do not establish that condition for another email.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "N/A": "Not applied because {explanation}.",
+@@ -25363,6 +25365,23 @@
+           "batch": "V10",
+           "status": "Pre-fix regressions reproduced; scoped implementation and acceptance in progress",
+           "scope": "Table 15 integer values and exact conformance text retain their semantic simple-value types; generic RDF syntax remains upstream."
++        },
++        "presence_provenance_in_progress": {
++          "batch": "V11",
++          "status": "Scoped implementation and authored/unit/PDF checks pass; cumulative frozen acceptance pending.",
++          "authority": [
++            "XMP-CREATOR",
++            "XMP-PRODUCER",
++            "T18-NumberAttachments"
++          ],
++          "boundary": "No source-completeness assertion, arbitrary creator-name grammar or ambiguous Message-ID ownership inference.",
++          "scope": [
++            "First creator presence",
++            "Exact-GUID-owned attachment count presence",
++            "Unavailable creator/producer provenance instead of lexical heuristics",
++            "Required type of supplied optional NumberMessages",
++            "Invalid size semantic types cannot support byte comparisons"
++          ]
+         }
+       },
+       "upstream_issue_review": {
+--- before/validator_web.py
++++ validator_web.py
+@@ -776,17 +776,17 @@
+         if details.get("expected_prefix") and details.get("uri"):
+             return f"namespace {details['uri']} with prefix {details['expected_prefix']}"
+     if code == "XMP_CREATOR":
+-        return "dc:creator present"
++        return "a populated first dc:creator name"
+     if code == "XMP_CREATOR_SEMANTICS":
+-        return "dc:creator identifying the software agent"
++        return "creator attribution supported by independent provenance"
+     if code == "XMP_PRODUCER":
+         return "pdf:Producer present"
+     if code == "XMP_PRODUCER_SEMANTICS":
+-        return "pdf:Producer identifying the software agent"
++        return "attribution to the PDF creation tool supported by independent provenance"
+     if code == "XMP_CREATEDATE":
+         return "xmp:CreateDate present"
+     if code == "XMP_CREATEDATE_SEMANTICS":
+-        return "xmp:CreateDate matching the file creation timestamp semantics"
++        return "resource creation time supported by independent provenance"
+     if code == "XMP_TITLE":
+         return "dc:title present"
+     if code == "EAPDF_VERSION":
+--- before/scripts/build_eapdf_table11_fixtures.py
++++ scripts/build_eapdf_table11_fixtures.py
+@@ -52,8 +52,16 @@
+     for case in cases:
+         case['sha256'] = hashlib.sha256((output / case['file']).read_bytes()).hexdigest()
+         case['expected_eapdf_status'] = 'FAIL' if case['expected_failures'] else 'PASS'
++        case['expected_upstream_failures'] = ['ISO32005_UPSTREAM'] if case['expected_failures'] else []
++        case['expected_iso_clauses'] = {
++            'content-set-field-name.pdf': ['Table 5. Art-TD'],
++            'message-field-name.pdf': ['Table 5. Document-TD'],
++            'field-content-set.pdf': ['Table 5. TR-Art'],
++            'misparented-field-value.pdf': ['Table 5. Art-TD'],
++        }.get(case['file'], [])
+     (output / 'expectations.json').write_text(json.dumps(dict(
+         authority='EA-PDF 9.7 Tables 11/13; Mail_ContentField→Mail_Field approved by user 2026-10-19',
++        expectation_scope='expected_failures lists custom findings; expected_upstream_failures adds inherited ISO findings for complete validation.',
+         source='examples/sample_1s.pdf', source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+         cases=cases), indent=2) + '\n')
+     for case in cases:
+@@ -62,7 +70,7 @@
+         failures = sorted({item['code'] for item in result['items'] if item['level'] == 'FAIL'})
+         assert result['pdfa']['status'] == 'PASS', (case['file'], result['pdfa'])
+         assert result['summary']['eapdf_status'] == case['expected_eapdf_status'], case['file']
+-        assert failures == sorted(case['expected_failures']), (case['file'], failures)
++        assert failures == sorted(case['expected_failures'] + case['expected_upstream_failures']), (case['file'], failures)
+         print(case['file'], result['pdfa']['status'], failures, flush=True)
+     print('Reports:', reports)
+ 
+--- before/tests/fixtures/eapdf/validator-table11/expectations.json
++++ tests/fixtures/eapdf/validator-table11/expectations.json
+@@ -1,5 +1,5 @@
+ {
+-  "authority": "EA-PDF 9.7 Tables 11/13; Mail_ContentField\u2192Mail_Field approved by user 2026-10-19",
++  "authority": "EA-PDF 9.7 Tables 11/13; Mail_ContentField→Mail_Field approved by user 2026-10-19",
+   "source": "examples/sample_1s.pdf",
+   "source_sha256": "a41491747970410a68f2fdaea57bd265dc6f698f5b6cd8f97fcaa973c05d1e3d",
+   "cases": [
+@@ -7,7 +7,9 @@
+       "file": "valid.pdf",
+       "expected_failures": [],
+       "sha256": "a41491747970410a68f2fdaea57bd265dc6f698f5b6cd8f97fcaa973c05d1e3d",
+-      "expected_eapdf_status": "PASS"
++      "expected_eapdf_status": "PASS",
++      "expected_upstream_failures": [],
++      "expected_iso_clauses": []
+     },
+     {
+       "file": "content-set-field-name.pdf",
+@@ -15,7 +17,13 @@
+         "MAIL_CONTENTSET_CHILDREN"
+       ],
+       "sha256": "83290b0d5c69a82e43dd6f1fb9141b309d3926d38b4e60f8a02771e990fcd5ba",
+-      "expected_eapdf_status": "FAIL"
++      "expected_eapdf_status": "FAIL",
++      "expected_upstream_failures": [
++        "ISO32005_UPSTREAM"
++      ],
++      "expected_iso_clauses": [
++        "Table 5. Art-TD"
++      ]
+     },
+     {
+       "file": "message-field-name.pdf",
+@@ -23,7 +31,13 @@
+         "MAIL_MESSAGE_CHILDREN"
+       ],
+       "sha256": "feb761de5e2069a3a399a5ef9cbbf8faaab08b517796ff6049789110cc784034",
+-      "expected_eapdf_status": "FAIL"
++      "expected_eapdf_status": "FAIL",
++      "expected_upstream_failures": [
++        "ISO32005_UPSTREAM"
++      ],
++      "expected_iso_clauses": [
++        "Table 5. Document-TD"
++      ]
+     },
+     {
+       "file": "field-content-set.pdf",
+@@ -31,7 +45,13 @@
+         "MAIL_FIELD_CHILDREN"
+       ],
+       "sha256": "1ec668cd214fe397be5411e5f3c941b54a1bfaea451007f57a8657b30e6c76ec",
+-      "expected_eapdf_status": "FAIL"
++      "expected_eapdf_status": "FAIL",
++      "expected_upstream_failures": [
++        "ISO32005_UPSTREAM"
++      ],
++      "expected_iso_clauses": [
++        "Table 5. TR-Art"
++      ]
+     },
+     {
+       "file": "misparented-field-value.pdf",
+@@ -40,7 +60,14 @@
+         "MAIL_FIELDVALUE_WITH_NAME"
+       ],
+       "sha256": "512cfdb1baee609ccecd7ccf8263c3bb3a0f8eae99979ac23c1312dc8fdfe826",
+-      "expected_eapdf_status": "FAIL"
++      "expected_eapdf_status": "FAIL",
++      "expected_upstream_failures": [
++        "ISO32005_UPSTREAM"
++      ],
++      "expected_iso_clauses": [
++        "Table 5. Art-TD"
++      ]
+     }
+-  ]
++  ],
++  "expectation_scope": "expected_failures lists custom EA-PDF findings; expected_upstream_failures adds inherited ISO findings for complete validation."
+ }

@@ -1,0 +1,282 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "EA-PDF Python and web validator",
+      "version": "1.6.0-beta.7"
+    },
+    "properties": [
+      {
+        "name": "eapdf:scope",
+        "value": "Resolved runtime dependency inventory; licensing/advisory review is separate. Local patches are recorded by source and artifact hashes."
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "blinker",
+      "version": "1.9.0",
+      "purl": "pkg:pypi/blinker@1.9.0",
+      "bom-ref": "pkg:pypi/blinker@1.9.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT License"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "120ec4f992a9123a6e063f430208b31e97b7d3bd11474c0a9c4b19f6bc531058"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "click",
+      "version": "8.5.0",
+      "purl": "pkg:pypi/click@8.5.0",
+      "bom-ref": "pkg:pypi/click@8.5.0",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "43d8bb1ce44dea5d9423b7eae1d6ba911974425b96acc170b036e1655a901e10"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "flask",
+      "version": "3.1.3",
+      "purl": "pkg:pypi/flask@3.1.3",
+      "bom-ref": "pkg:pypi/flask@3.1.3",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "18cb1eaaf28dba79e3eee1e612292fc809b011ecddda5f65bca0288a7e7080a1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "gunicorn",
+      "version": "26.2.0",
+      "purl": "pkg:pypi/gunicorn@26.2.0",
+      "bom-ref": "pkg:pypi/gunicorn@26.2.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "7ba0f0d9a0a413cb6df3d10a4625a3a1e460f73a4eb5b70902473713822d304f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "itsdangerous",
+      "version": "2.2.0",
+      "purl": "pkg:pypi/itsdangerous@2.2.0",
+      "bom-ref": "pkg:pypi/itsdangerous@2.2.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD License"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "b303bcd128d85b48cefd16f82f5c7c48a95e8dd186422c220a4c79bf176cb1aa"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "jinja2",
+      "version": "3.1.6",
+      "purl": "pkg:pypi/jinja2@3.1.6",
+      "bom-ref": "pkg:pypi/jinja2@3.1.6",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD License"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "1bb3b46d00f55f63d24c3a34a7f955ef6692d4691217a53b15261769607f9f7c"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "lxml",
+      "version": "6.1.3",
+      "purl": "pkg:pypi/lxml@6.1.3",
+      "bom-ref": "pkg:pypi/lxml@6.1.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "0314346711778d77f4d5438755bbf84228258fa85e9dcb52f2d886ec7a267098"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "markupsafe",
+      "version": "3.0.4",
+      "purl": "pkg:pypi/markupsafe@3.0.4",
+      "bom-ref": "pkg:pypi/markupsafe@3.0.4",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "f1c1ebcc3629b6371b96ab97205f93935cd971b2cceb082f1dd7a9a20fe6f22d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "olefile",
+      "version": "0.46",
+      "purl": "pkg:pypi/olefile@0.46",
+      "bom-ref": "pkg:pypi/olefile@0.46",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD License"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "8ac399664394aca9bcd09073cb8d0c6bdc9f2113ba4dda39dabe58164b2ada19"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "packaging",
+      "version": "26.3",
+      "purl": "pkg:pypi/packaging@26.3",
+      "bom-ref": "pkg:pypi/packaging@26.3",
+      "licenses": [
+        {
+          "expression": "Apache-2.0 OR BSD-2-Clause"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "a2cd431afc6ca596c9bf35faf2b902709cad9c48a55d264a71c71e70c6cb2e7a"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pikepdf",
+      "version": "10.17.0",
+      "purl": "pkg:pypi/pikepdf@10.17.0",
+      "bom-ref": "pkg:pypi/pikepdf@10.17.0",
+      "licenses": [
+        {
+          "expression": "MPL-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "06dfc531fff7fb56a702f354935037df71e1b03888d0252a27adbc09f16577ce"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pillow",
+      "version": "12.3.0",
+      "purl": "pkg:pypi/pillow@12.3.0",
+      "bom-ref": "pkg:pypi/pillow@12.3.0",
+      "licenses": [
+        {
+          "expression": "MIT-CMU"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "3c8c81345169b66224a19d036e57e2ce59ff232e914c7e366f313d40e9312310"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pypdf",
+      "version": "6.21.4",
+      "purl": "pkg:pypi/pypdf@6.21.4",
+      "bom-ref": "pkg:pypi/pypdf@6.21.4",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "cdc2d34411457eb49c91c47fdd2814a96572461c918380e8d33234e86d5f77f7"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "werkzeug",
+      "version": "3.1.9",
+      "purl": "pkg:pypi/werkzeug@3.1.9",
+      "bom-ref": "pkg:pypi/werkzeug@3.1.9",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "a5993ff3274547ef46d426bc480cc9781a2c2f6f8c28da6e15ca829aa1421727"
+        }
+      ]
+    }
+  ]
+}

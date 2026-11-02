@@ -1,0 +1,193 @@
+{
+  "authority": "EA-PDF Tables4/18 source Core Field fidelity and available-original comparison; candidate ownership cannot be inferred from a contradicted field under test.",
+  "boundary": "Every catalog Source is considered, including previously consumed occurrences. Unsupported/recovered inventories block a universal proof. Known valid header comparisons do not certify full source grammar, encoding policy, provenance or unique occurrence assignment.",
+  "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+  "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+  "cases": [
+    {
+      "file": "wrong-to.pdf",
+      "sha256": "daac36d24b7adeb104cce8e89d2ff8360cab75c2e8945fef2a2c84810d314257",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [
+            "MESSAGE_TO_FOAF"
+          ],
+          "expected_status": "FAIL"
+        },
+        "reason": "The proven original field mismatch is now reported by MESSAGE_METADATA_MATCH_SOURCE with its exact field key, while the field-specific schema rule retains only its representation predicate.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "To"
+        ]
+      }
+    },
+    {
+      "file": "wrong-subject.pdf",
+      "sha256": "0f0c47fd504c3cfc339547266f670c0d6ffa4fb68ea81fdeb923a2779c6565ea",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [
+            "MESSAGE_SUBJECT_XMP"
+          ],
+          "expected_status": "FAIL"
+        },
+        "reason": "The proven original field mismatch is now reported by MESSAGE_METADATA_MATCH_SOURCE with its exact field key, while the field-specific schema rule retains only its representation predicate.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Subject"
+        ]
+      }
+    },
+    {
+      "file": "empty-raw-from.pdf",
+      "sha256": "a3f5b58ba1bc08df0fa380f3375027fa4e3a0c9cea028a4d0250b191fe87c86f",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [
+            "MESSAGE_RAW_FROM_XMP"
+          ],
+          "expected_status": "FAIL"
+        },
+        "reason": "The proven original field mismatch is now reported by MESSAGE_METADATA_MATCH_SOURCE with its exact field key, while the field-specific schema rule retains only its representation predicate.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Raw-From"
+        ]
+      }
+    },
+    {
+      "file": "wrong-size.pdf",
+      "sha256": "512096e3d7305cb8184c61863065dd32986c673553f761ec882ebbfe5dd154e5",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [
+            "MESSAGE_SIZE_XMP"
+          ],
+          "expected_status": "FAIL"
+        },
+        "reason": "The proven original field mismatch is now reported by MESSAGE_METADATA_MATCH_SOURCE with its exact field key, while the field-specific schema rule retains only its representation predicate.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "SizeInBytes"
+        ]
+      }
+    },
+    {
+      "file": "compatible-other.pdf",
+      "sha256": "d38e549b4de5c31788c7765c3fd07aa4191c1d279f3efe8ade81d3be350c652f",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "unknown-format.pdf",
+      "sha256": "c96d77cd92b304994a6a1f0aaa058a21968edb729afdd76327fe2836dac2199e",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [],
+          "expected_status": "INCOMPLETE"
+        },
+        "reason": "Despite the historical fixture name, the retained MSG is readable: its native recipient table contains crocodile@neverland.com, not the XMP wrong@example.org. Every independently inspectable candidate contradicts To, so the field-specific source value rule fails. Unavailable transport headers remain unavailable; no opaque source is assumed readable.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "To"
+        ]
+      }
+    },
+    {
+      "file": "tentative-unknown.pdf",
+      "sha256": "44647d837e8a2ddf458b8799912a557b387b3ff1b6ca0b13c6813695c746fee8",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [],
+          "expected_status": "INCOMPLETE"
+        },
+        "reason": "Despite the historical fixture name, the retained MSG is readable: its native recipient table contains crocodile@neverland.com, not the XMP wrong@example.org. Every independently inspectable candidate contradicts To, so the field-specific source value rule fails. Unavailable transport headers remain unavailable; no opaque source is assumed readable.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "To"
+        ]
+      }
+    },
+    {
+      "file": "partial-headers.pdf",
+      "sha256": "1a174bac014ad42407dc03a54a5c2856009b260c72855d3c8029ae2f361cee5e",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "composite-fields.pdf",
+      "sha256": "698569fe4a61777ef464888e9c7439df745991481780d019dcc08367f97b4200",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_SOURCE_COVERAGE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [
+            "MESSAGE_SOURCE_MATCH"
+          ],
+          "expected_status": "FAIL"
+        },
+        "reason": "A complete compatible source assignment remains impossible; the narrowed source coverage code replaces the previous bundled name.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "unknown-other-field.pdf",
+      "sha256": "55f159036e2ab6f4f02c8b5d93bfa1fd83e22fb29750cb31813dcccb97fc8b6d",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_failures": [
+            "MESSAGE_TO_FOAF"
+          ],
+          "expected_status": "FAIL"
+        },
+        "reason": "The proven original field mismatch is now reported by MESSAGE_METADATA_MATCH_SOURCE with its exact field key, while the field-specific schema rule retains only its representation predicate.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "To"
+        ]
+      }
+    },
+    {
+      "file": "matching-ambiguous.pdf",
+      "sha256": "f397f0fee7333584ca2b6078c5007ca81d24329564000fe20d614ca879b093e3",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "consistent-candidate.pdf",
+      "sha256": "b7b3335ba86f1ac9a377cc2d8a501abfc73e1c031508c0517096d2947c072977",
+      "expected_status": "PASS",
+      "expected_failures": []
+    }
+  ]
+}

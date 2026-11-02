@@ -1,0 +1,110 @@
+{
+  "scope": "Upstream PDF/A controls; not complete EA-PDF documents",
+  "cases": [
+    {
+      "file": "3a-valid.pdf",
+      "sha256": "1ea3249bed4646607cd17ff8b74ffe7715ef148583643c9ca22b66afd9758bcf",
+      "profile": "PDF/A-3A validation profile",
+      "expected_pdfa": "PASS",
+      "expected_failure_clause": null
+    },
+    {
+      "file": "3a-javascript.pdf",
+      "sha256": "0a9548b3299c5c95ee32712dc04b92e93e56312d0dba69bbf02987224dc8e4e7",
+      "profile": "PDF/A-3A validation profile",
+      "expected_pdfa": "FAIL",
+      "expected_failure_clause": "6.5.1"
+    },
+    {
+      "file": "3a-launch.pdf",
+      "sha256": "b30215ab0f99c79ece055b1c2119d8edce8661a0693ad66acb56c9bbe53d8a2e",
+      "profile": "PDF/A-3A validation profile",
+      "expected_pdfa": "FAIL",
+      "expected_failure_clause": "6.5.1"
+    },
+    {
+      "file": "3u-valid.pdf",
+      "sha256": "1d3fc7ce0b8d454633652d05dcdca8eabe14d1f12b46379b2f505fc24f5860d1",
+      "profile": "PDF/A-3U validation profile",
+      "expected_pdfa": "PASS",
+      "expected_failure_clause": null
+    },
+    {
+      "file": "3u-javascript.pdf",
+      "sha256": "0e55c5134cab3c4d468c7f06199cf5e05f013cc6f3fa33de9c21fbef3fc4f85e",
+      "profile": "PDF/A-3U validation profile",
+      "expected_pdfa": "FAIL",
+      "expected_failure_clause": "6.5.1"
+    },
+    {
+      "file": "3u-launch.pdf",
+      "sha256": "ba13494ec4776262618a46219200cfa429877bcd758f6726351dafe46411ed11",
+      "profile": "PDF/A-3U validation profile",
+      "expected_pdfa": "FAIL",
+      "expected_failure_clause": "6.5.1"
+    },
+    {
+      "file": "4-valid.pdf",
+      "sha256": "c7a86512a7c1978141f2499afa358a8abf69e5938d6a782b90cab553f8411ee5",
+      "profile": "PDF/A-4 validation profile",
+      "expected_pdfa": "PASS",
+      "expected_failure_clause": null
+    },
+    {
+      "file": "4-javascript.pdf",
+      "sha256": "9f192346feddc49f7f4035bca61dce269194471aa369ba6524de2495b6d4edbf",
+      "profile": "PDF/A-4 validation profile",
+      "expected_pdfa": "PASS",
+      "expected_failure_clause": null
+    },
+    {
+      "file": "4-launch.pdf",
+      "sha256": "1e38a18cd38cf15c536dc03f3a90bd63d99dedd71eab84e0b32e7bad5e6d8a0d",
+      "profile": "PDF/A-4 validation profile",
+      "expected_pdfa": "FAIL",
+      "expected_failure_clause": "6.6.1"
+    },
+    {
+      "file": "4f-valid.pdf",
+      "sha256": "bee87c546a4809f16dfd53d1a961da9dbd807b248e4bdb88a972513f9c2d2886",
+      "profile": "PDF/A-4F validation profile",
+      "expected_pdfa": "PASS",
+      "expected_failure_clause": null
+    },
+    {
+      "file": "4f-javascript.pdf",
+      "sha256": "f4be2a0cb4e5db4fb50f24b2d6b966f1ecb7caedf7fca3872a62ee0ee92bcef5",
+      "profile": "PDF/A-4F validation profile",
+      "expected_pdfa": "PASS",
+      "expected_failure_clause": null
+    },
+    {
+      "file": "4f-launch.pdf",
+      "sha256": "c84e52f7a309cefe68678037548b0ed5f8a9b1628b41266dd6575933e0b9b88d",
+      "profile": "PDF/A-4F validation profile",
+      "expected_pdfa": "FAIL",
+      "expected_failure_clause": "6.6.1"
+    },
+    {
+      "file": "4e-valid.pdf",
+      "sha256": "e42e13914eb6f46e96e8be0b4dcea417a1512a5c41fe54c39cff90d9dbc2e443",
+      "profile": "PDF/A-4E validation profile",
+      "expected_pdfa": "PASS",
+      "expected_failure_clause": null
+    },
+    {
+      "file": "4e-javascript.pdf",
+      "sha256": "c101ba8ccfd8380ea12836e7e76eabbd6cd51fc1e9818ce006bd91134bc00609",
+      "profile": "PDF/A-4E validation profile",
+      "expected_pdfa": "PASS",
+      "expected_failure_clause": null
+    },
+    {
+      "file": "4e-launch.pdf",
+      "sha256": "ea6c3d8e09ad1da91cf0ae093a585297a29420692e51c3dece713fd637e38d11",
+      "profile": "PDF/A-4E validation profile",
+      "expected_pdfa": "FAIL",
+      "expected_failure_clause": "6.6.1"
+    }
+  ]
+}

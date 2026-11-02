@@ -1,0 +1,35 @@
+{
+  "created": "2026-10-29",
+  "creator_version": "1.6.0-beta.2",
+  "creator_sha256": "3937dcb3dfe5dfc154c3cbb95ea5f0f2917b02c2ae5ff64bfd624dda0046aed5",
+  "validator_sha256": "8065f67a7985d718211e477f2c05196ff99d254196e7ade890595bdabfb40083",
+  "sources": {
+    "in/Agenda and timeline slides.eml": "c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6",
+    "in/eml_01_403.eml": "311ec37e7324327f8f216266f738fa90c7cee89c36f3f0d583d33752d60934a9"
+  },
+  "private_key_retained": false,
+  "signed_examples": [
+    {
+      "file": "eml_signed_1s.pdf",
+      "sha256": "5deae9507817bdd043ff17ead9123a61cb83ed05480dae7ee7d8c7a67e2c2886",
+      "profile": "1s",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "pdfua2_machine": "PASS",
+      "signature_integrity": "PASS",
+      "certificate_trust": "SELF_SIGNED_TEST_ONLY",
+      "report_directory": "output/release-1.6.0-beta.2/signing/1s"
+    },
+    {
+      "file": "eml_signed_1c.pdf",
+      "sha256": "9b31b767ddf7fbd671f684445f692677fb1f581422dce6e244e76fafe9f1da41",
+      "profile": "1c",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "pdfua2_machine": "PASS",
+      "signature_integrity": "PASS",
+      "certificate_trust": "SELF_SIGNED_TEST_ONLY",
+      "report_directory": "output/release-1.6.0-beta.2/signing/1c"
+    }
+  ]
+}

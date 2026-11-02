@@ -1,0 +1,269 @@
+{
+  "authority": [
+    "EA-PDF 7.5 printed p44: repeated names/shared streams",
+    "EA-PDF 9.4 printed pp66-67: equivalent XMP media and parameter reconstruction",
+    "EA-PDF 9.8.4 Table 19 printed pp89-90: original attachment Content-Type including parameters/errors"
+  ],
+  "boundary": "Only values contradicted by every observed possible native payload fail. Compatible/unreadable observations do not select an occurrence.",
+  "seeds": {
+    "isolated-ambiguous-media.pdf": "2a5403539bdf8e47d73e948f3818268eb183c7775f36086be27c37a259d61d09",
+    "isolated-ambiguous-size.pdf": "53555ff5348cb8234b76e4ca56f992467592980497b61e3d155379122bc73aa8",
+    "isolated-distinct-payloads.pdf": "29a12037fda8257624c6946aad86f80ed722e47e4e774cad4b85a9a754169b83",
+    "isolated-equivalent.pdf": "05e3229f6e19e83e1dc86abf889e713e9d15f5bffb40c71911e8a56f0ca22b2c",
+    "isolated-wrong-media.pdf": "0003597b7083f15ed987af99fe696aed79e13474b58852b91dc3782929deb44a",
+    "isolated-wrong-size.pdf": "3f791c92dcdc22fa457023abb1b0ea27b9c0024a4721bcb97f136d5e3f603396"
+  },
+  "cases": [
+    {
+      "file": "one-type-wrong.pdf",
+      "sha256": "4e54510a779888ae5e6834a96616c46fbce5c74fb7794e04d4fe7b5a9613eb16",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "EMBEDDED_SUBTYPE_MATCH_XMP"
+          ],
+          "required_parameter_warning": false
+        },
+        "reason": "Complete reconstructed PDF subtype and parameters disagree with equivalent XMP; original-value fidelity is separate. Complete reconstructed PDF/XMP type and parameters now have one public result; a proven type contradiction remains FAIL even if a parameter-only association is unresolved.",
+        "retained_pdf_bytes": true
+      },
+      "expected_media_consistency_level": "FAIL"
+    },
+    {
+      "file": "all-parameters-wrong.pdf",
+      "sha256": "5599260eb4eedd52c8737ecc2570d8fa04bbf14390ea9f1ce23dd905de0bb45f",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "EMBEDDED_SUBTYPE_MATCH_XMP",
+            "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+          ],
+          "required_parameter_warning": false
+        },
+        "reason": "Complete reconstructed PDF subtype and parameters disagree with equivalent XMP; original-value fidelity is separate. Complete reconstructed PDF/XMP type and parameters now have one public result; a proven type contradiction remains FAIL even if a parameter-only association is unresolved.",
+        "retained_pdf_bytes": true
+      },
+      "expected_media_consistency_level": "FAIL"
+    },
+    {
+      "file": "distinct-types-impossible.pdf",
+      "sha256": "373f9fa60fff8b1a8d1f22c208060ed5ae0eac221c97d3ad40b9f99c72ee5dcb",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "EMBEDDED_SUBTYPE_MATCH_XMP"
+          ],
+          "required_parameter_warning": false
+        },
+        "reason": "Complete reconstructed PDF subtype and parameters disagree with equivalent XMP; original-value fidelity is separate. Complete reconstructed PDF/XMP type and parameters now have one public result; a proven type contradiction remains FAIL even if a parameter-only association is unresolved.",
+        "retained_pdf_bytes": true
+      },
+      "expected_media_consistency_level": "FAIL"
+    },
+    {
+      "file": "distinct-types-compatible.pdf",
+      "sha256": "2aa805c65c02e38819b9091b8b086e158e9aebf2cf468cf7911edae2da8f85e3",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "expected_media_consistency_level": "WARN",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ],
+          "required_parameter_warning": false
+        },
+        "reason": " Complete reconstructed PDF/XMP type and parameters now have one public result; a proven type contradiction remains FAIL even if a parameter-only association is unresolved.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "parameters-compatible.pdf",
+      "sha256": "f942fe7fb57c61ec69a0e16424e5d54d0edf239503c4e6bd40252c37e15bb354",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "expected_media_consistency_level": "WARN",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ],
+          "required_parameter_warning": true
+        },
+        "reason": " Complete reconstructed PDF/XMP type and parameters now have one public result; a proven type contradiction remains FAIL even if a parameter-only association is unresolved.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "distinct-parameters-wrong.pdf",
+      "sha256": "80abb4a1a0240d0c46046b43943981890896cbe8307d2b2da12dde8d6aec01e6",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "EMBEDDED_SUBTYPE_MATCH_XMP",
+            "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+          ],
+          "required_parameter_warning": false
+        },
+        "reason": "Complete reconstructed PDF subtype and parameters disagree with equivalent XMP; original-value fidelity is separate. Complete reconstructed PDF/XMP type and parameters now have one public result; a proven type contradiction remains FAIL even if a parameter-only association is unresolved.",
+        "retained_pdf_bytes": true
+      },
+      "expected_media_consistency_level": "FAIL"
+    },
+    {
+      "file": "malformed-parameters-wrong.pdf",
+      "sha256": "0b8b5d3629de2398ead349561ad5492f4f01fbcae62f359fd69049d26e0934ae",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "EMBEDDED_SUBTYPE_MATCH_XMP",
+            "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+          ],
+          "required_parameter_warning": false
+        },
+        "reason": "Complete reconstructed PDF subtype and parameters disagree with equivalent XMP; original-value fidelity is separate. Complete reconstructed PDF/XMP type and parameters now have one public result; a proven type contradiction remains FAIL even if a parameter-only association is unresolved.",
+        "retained_pdf_bytes": true
+      },
+      "expected_media_consistency_level": "FAIL"
+    },
+    {
+      "file": "malformed-parameters-compatible.pdf",
+      "sha256": "d4e3ec1ab0c68d08bf28b1591dd138b02db80737d357e573ce36e177a07d5532",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "expected_media_consistency_level": "WARN",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ],
+          "required_parameter_warning": true
+        },
+        "reason": " Complete reconstructed PDF/XMP type and parameters now have one public result; a proven type contradiction remains FAIL even if a parameter-only association is unresolved.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "legal-parameters-control.pdf",
+      "sha256": "a868827e748acaa1293d5175bd2e09faa7769ed27132a57e5d5b060b615b47d8",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "expected_media_consistency_level": "PASS",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ],
+          "required_parameter_warning": false
+        },
+        "reason": " Complete reconstructed PDF/XMP type and parameters now have one public result; a proven type contradiction remains FAIL even if a parameter-only association is unresolved.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "matching-parameters-wrong-type.pdf",
+      "sha256": "91cbc7f95de7e34dab4f0838e7319d44b8819a5eaad03d91fa22956af5617188",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged.",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "EMBEDDED_SUBTYPE_MATCH_XMP"
+          ],
+          "required_parameter_warning": true
+        },
+        "reason": "Complete reconstructed PDF subtype and parameters disagree with equivalent XMP; original-value fidelity is separate. Complete reconstructed PDF/XMP type and parameters now have one public result; a proven type contradiction remains FAIL even if a parameter-only association is unresolved.",
+        "retained_pdf_bytes": true
+      },
+      "expected_media_consistency_level": "FAIL"
+    }
+  ],
+  "parent_requirement_review": {
+    "evidence": "docs/improvement/validator-53/prior-native-census.json",
+    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
+    "retained_pdf_bytes": true,
+    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
+  }
+}

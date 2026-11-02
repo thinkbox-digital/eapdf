@@ -1,0 +1,413 @@
+--- v22/fixed.md
++++ v23/fixed.md
+@@ -1,4 +1,6 @@
+ # Fixed bugs, improvements, and functionality gaps
++
++**V22 accepted — 2026-10-20:** Ambiguous native associations no longer hide universally contradicted media types or parameters. **440 unit passes / 39 skips; twelve PDF cases, twelve generated profiles, 194 custom comparisons and eight CLI/web-worker checks match.** Six new probes and two retained cases gain proved media/parameter failures; two compatible-parameter controls now report WARN instead of N/A. All 184 prior PDF hashes and 182 other prior status/failure outcomes are unchanged. Occurrence assignment remains open; creator unchanged; eleven questions remain. [Evidence](docs/improvement/validator-22/evidence.json).
+ 
+ **V21 accepted — 2026-10-20:** Ambiguous native associations no longer hide a size/checksum contradicted by every possible payload. **430 unit passes / 38 skips; twelve PDF cases, twelve generated profiles, 184 custom comparisons and eight CLI/web-worker checks match.** Five new negative probes and two retained cases now fail; all 174 prior PDF hashes and 172 other prior custom outcomes are unchanged. Association remains unavailable; no owner or occurrence is selected. Creator unchanged; eleven questions remain open. [Evidence](docs/improvement/validator-21/evidence.json).
+ 
+--- v22/scripts/build_eapdf_unmatched_parameter_fixtures.py
++++ v23/scripts/build_eapdf_unmatched_parameter_fixtures.py
+@@ -0,0 +1,75 @@
++"""Declared parameters without a native association remain unavailable evidence."""
++from pathlib import Path
++import hashlib
++import json
++import sys
++from xml.etree import ElementTree as ET
++
++import pikepdf
++
++ROOT=Path(__file__).resolve().parents[1]
++sys.path.insert(0,str(ROOT))
++import validate_eapdf as v
++
++
++def main():
++    output=ROOT/'tests/fixtures/eapdf/validator-unmatched-parameters';output.mkdir(exist_ok=True)
++    seed=ROOT/'tests/fixtures/eapdf/validator-attachment-equivalence/isolated-equivalent.pdf'
++    media='EMBEDDED_SUBTYPE_MATCH_XMP';params='SOURCE_MEDIATYPE_PARAMETERS_MATCH'
++    recipes=[('unknown-alias-parameters','INCOMPLETE',[],'WARN'),
++             ('unknown-alias-malformed','INCOMPLETE',[],'WARN'),
++             ('mixed-verified-and-unknown','INCOMPLETE',[],'WARN'),
++             ('mixed-failure-and-unknown','FAIL',[media,params],'FAIL'),
++             ('checksum-known-alias','PASS',[],'PASS'),
++             ('no-parameters-control','INCOMPLETE',[],'N/A'),
++             ('alternative-only-control','PASS',[],'N/A'),
++             ('mixed-bare-and-unknown-parameters','INCOMPLETE',[],'WARN')]
++    cases=[]
++    for name,status,failures,level in recipes:
++        with pikepdf.open(seed) as pdf:
++            root,namespaces,_=v.parse_xmp(v.read_metadata_stream(pdf),v.Report('parse'))
++            for prefix,uri in namespaces.items():ET.register_namespace(prefix,uri)
++            bag=root.find('.//'+v.qn(v.NS_PDFMAILMETA,'attachments')+'/'+v.qn(v.NS_RDF,'Bag'))
++            files=[f for f in v.embedded_file_candidates(pdf,v.get_embedded_files(pdf),v.get_af_specs(pdf))
++                   if f['afrelationship']=='Data' and f['ufilename']=='same.txt']
++            assert len(bag)==len(files)==2
++            for index,(row,fileinfo) in enumerate(zip(bag,files)):
++                spec=pdf.get_object(fileinfo['objgen']);stream=spec.EF.F
++                spec.F=pikepdf.String(f'stored-{index}.txt');spec.UF=spec.F
++                row.find(v.qn(v.NS_PDFMAILMETA,'Content-Type')).text='text/plain; note=x'
++                stream.Mail_MediaTypeParameters=pikepdf.String('note=x')
++                if name=='unknown-alias-malformed':
++                    row.find(v.qn(v.NS_PDFMAILMETA,'Content-Type')).text='text/plain; note=x; =ignored'
++                    stream.Mail_MediaTypeParameters=pikepdf.String(' note=x; =ignored')
++                if name.startswith('mixed-'):
++                    if index==0:
++                        spec.F=pikepdf.String('same.txt');spec.UF=spec.F
++                        if name=='mixed-failure-and-unknown':stream.Mail_MediaTypeParameters=pikepdf.String('note=y')
++                    else:row.find(v.qn(v.NS_PDFMAILMETA,'Filename')).text='missing.txt'
++                if name=='checksum-known-alias':ET.SubElement(row,v.qn(v.NS_PDFMAILMETA,'CheckSum')).text=fileinfo['md5']
++                if name=='no-parameters-control' or (name=='mixed-bare-and-unknown-parameters' and index==0):
++                    row.find(v.qn(v.NS_PDFMAILMETA,'Content-Type')).text='text/plain'
++                    del stream.Mail_MediaTypeParameters
++                if name=='alternative-only-control':spec.AFRelationship=pikepdf.Name.Alternative
++            if name=='alternative-only-control':
++                # The archive also embeds its index workbook. Exclude that
++                # supplementary file too, so this control has no native files.
++                for fileinfo in v.embedded_file_candidates(pdf,v.get_embedded_files(pdf),v.get_af_specs(pdf)):
++                    pdf.get_object(fileinfo['objgen']).AFRelationship=pikepdf.Name.Alternative
++            packet=ET.tostring(root,encoding='utf-8')
++            for prefix,uri in (('pdfmail',v.NS_PDFMAIL),('pdfmailid',v.NS_PDFMAILID),('pdfmailmeta',v.NS_PDFMAILMETA)):
++                if ('xmlns:'+prefix+'=').encode() not in packet:root.set('xmlns:'+prefix,uri)
++            pdf.Root.Metadata.write(ET.tostring(root,encoding='utf-8'))
++            path=output/(name+'.pdf');pdf.save(path,fix_metadata_version=False,deterministic_id=True)
++        cases.append(dict(file=path.name,sha256=hashlib.sha256(path.read_bytes()).hexdigest(),expected_status=status,
++                          expected_failures=sorted(failures),expected_parameter_level=level))
++    (output/'expectations.json').write_text(json.dumps(dict(
++        authority=['EA-PDF 9.4 pp66-67: reconstructed native media/parameters match equivalent XMP',
++                   'EA-PDF Table 19 pp89-90: original Filename can differ from native name and Content-Type retains parameters/errors',
++                   'EA-PDF 7.5 p44: native streams can be shared; removed attachments are not universally required as separate copies'],
++        boundary='Report unavailable declared parameters only when native files exist but no association is established. Do not invent a native copy requirement.',
++        seed=str(seed.relative_to(ROOT)),seed_sha256=hashlib.sha256(seed.read_bytes()).hexdigest(),cases=cases),indent=2)+'\n')
++    print('Wrote',len(cases),'unmatched-parameter probes')
++
++
++if __name__=='__main__':main()
+--- v22/tests/fixtures/eapdf/validator-attachment-evidence/expectations.json
++++ v23/tests/fixtures/eapdf/validator-attachment-evidence/expectations.json
+@@ -32,7 +32,8 @@
+         "ATTACHMENT_XMP_MATCH",
+         "ATTACHMENT_ANNOTATIONS_PRESENT",
+         "VALIDATION_INCOMPLETE"
+-      ]
++      ],
++      "expected_parameter_level": "WARN"
+     },
+     {
+       "file": "original-padding.pdf",
+@@ -43,7 +44,8 @@
+         "ATTACHMENT_XMP_MATCH",
+         "ATTACHMENT_ANNOTATIONS_PRESENT",
+         "VALIDATION_INCOMPLETE"
+-      ]
++      ],
++      "expected_parameter_level": "WARN"
+     },
+     {
+       "file": "native-double-spaces.pdf",
+@@ -54,7 +56,8 @@
+         "ATTACHMENT_XMP_MATCH",
+         "ATTACHMENT_ANNOTATIONS_PRESENT",
+         "VALIDATION_INCOMPLETE"
+-      ]
++      ],
++      "expected_parameter_level": "WARN"
+     },
+     {
+       "file": "source-name-differs.pdf",
+@@ -81,5 +84,6 @@
+       "expected_status": "FAIL",
+       "required_unavailable_codes": []
+     }
+-  ]
++  ],
++  "v23_review": "Declared parameters remain unavailable when existing native files cannot be associated. Overall status/failure codes and PDF bytes are unchanged."
+ }
+--- v22/tests/fixtures/eapdf/validator-attachment-filenames/expectations.json
++++ v23/tests/fixtures/eapdf/validator-attachment-filenames/expectations.json
+@@ -51,7 +51,8 @@
+       "required_unavailable_codes": [
+         "ATTACHMENT_ANNOTATIONS_PRESENT",
+         "VALIDATION_INCOMPLETE"
+-      ]
++      ],
++      "expected_parameter_level": "WARN"
+     },
+     {
+       "file": "placeholder-alias-no-checksum.pdf",
+@@ -85,7 +86,8 @@
+         "ATTACHMENT_XMP_MATCH"
+       ],
+       "expected_status": "FAIL",
+-      "required_unavailable_codes": []
++      "required_unavailable_codes": [],
++      "expected_parameter_level": "WARN"
+     },
+     {
+       "file": "renamed-wrong-size.pdf",
+@@ -108,5 +110,6 @@
+       "expected_status": "FAIL",
+       "required_unavailable_codes": []
+     }
+-  ]
++  ],
++  "v23_review": "Declared parameters remain unavailable when existing native files cannot be associated. Overall status/failure codes and PDF bytes are unchanged."
+ }
+--- v22/tests/fixtures/eapdf/validator-attachment-streams/expectations.json
++++ v23/tests/fixtures/eapdf/validator-attachment-streams/expectations.json
+@@ -101,7 +101,8 @@
+         "ATTACHMENT_XMP_MATCH",
+         "EMBEDDED_SUBTYPE_MATCH_XMP",
+         "VALIDATION_INCOMPLETE"
+-      ]
++      ],
++      "expected_parameter_level": "WARN"
+     },
+     {
+       "file": "ambiguous-records.pdf",
+@@ -118,5 +119,6 @@
+     }
+   ],
+   "v21_review": "ambiguous-records: SizeInBytes=1 contradicts the only native candidate of 49,338 bytes. Association remains unavailable; PDF bytes unchanged.",
+-  "v22_review": "ambiguous-records: declared application/pdf contradicts its only native candidate application/octet-stream; original size contradiction and unavailable association remain."
++  "v22_review": "ambiguous-records: declared application/pdf contradicts its only native candidate application/octet-stream; original size contradiction and unavailable association remain.",
++  "v23_review": "Declared parameters remain unavailable when existing native files cannot be associated. Overall status/failure codes and PDF bytes are unchanged."
+ }
+--- v22/tests/fixtures/eapdf/validator-unmatched-parameters/README.md
++++ v23/tests/fixtures/eapdf/validator-unmatched-parameters/README.md
+@@ -0,0 +1,21 @@
++# Unmatched attachment parameters
++
++Eight probes reuse an accepted isolated archive. Actual native payload bytes,
++sizes and checksums remain unchanged. Native file-spec aliases and XMP media
++fields isolate the missing-association reporting path.
++
++Four controls require parameter WARN when native files exist but cannot be
++associated. These include malformed original text, a mixed verified/unmatched
++set, and a verified bare type alongside an unmatched parameter declaration.
++Other controls retain a definite mismatch, a checksum-supported native alias,
++a declaration without parameters and an Alternative-only file inventory.
++The last control marks the archive's index workbook Alternative too, so it has
++no files in the existing native comparison scope.
++
++No alias is guessed and no new native-copy requirement is introduced.
++Source/Alternative exclusions and invalid field shapes have direct unit tests.
++`expectations.json` records the expected parameter severity and overall result,
++seed and PDF hashes. Regenerate with
++`python3 -B scripts/build_eapdf_unmatched_parameter_fixtures.py`.
++
++Authority: EA-PDF 7.5 p44; 9.4 pp66–67; Table 19 pp89–90.
+--- v22/tests/fixtures/eapdf/validator-unmatched-parameters/expectations.json
++++ v23/tests/fixtures/eapdf/validator-unmatched-parameters/expectations.json
+@@ -0,0 +1,71 @@
++{
++  "authority": [
++    "EA-PDF 9.4 pp66-67: reconstructed native media/parameters match equivalent XMP",
++    "EA-PDF Table 19 pp89-90: original Filename can differ from native name and Content-Type retains parameters/errors",
++    "EA-PDF 7.5 p44: native streams can be shared; removed attachments are not universally required as separate copies"
++  ],
++  "boundary": "Report unavailable declared parameters only when native files exist but no association is established. Do not invent a native copy requirement.",
++  "seed": "tests/fixtures/eapdf/validator-attachment-equivalence/isolated-equivalent.pdf",
++  "seed_sha256": "05e3229f6e19e83e1dc86abf889e713e9d15f5bffb40c71911e8a56f0ca22b2c",
++  "cases": [
++    {
++      "file": "unknown-alias-parameters.pdf",
++      "sha256": "a8f19b4aae788bd48763904b0b2d1c1d6f91cdbab170ec20d2cd5303a2405d96",
++      "expected_status": "INCOMPLETE",
++      "expected_failures": [],
++      "expected_parameter_level": "WARN"
++    },
++    {
++      "file": "unknown-alias-malformed.pdf",
++      "sha256": "2bd39b8043e5f0b21cce17442d592f1c2441bdfe547522082389aea5b2eddf75",
++      "expected_status": "INCOMPLETE",
++      "expected_failures": [],
++      "expected_parameter_level": "WARN"
++    },
++    {
++      "file": "mixed-verified-and-unknown.pdf",
++      "sha256": "e943931f012ec2d2b97f0fa0f01a3361934d75da01ca4aa049753889fb617908",
++      "expected_status": "INCOMPLETE",
++      "expected_failures": [],
++      "expected_parameter_level": "WARN"
++    },
++    {
++      "file": "mixed-failure-and-unknown.pdf",
++      "sha256": "553a6272f5a2e56ff6ff9ef8fda2d19829f3c591fb6e2f4d5deca2a9b182a7de",
++      "expected_status": "FAIL",
++      "expected_failures": [
++        "EMBEDDED_SUBTYPE_MATCH_XMP",
++        "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
++      ],
++      "expected_parameter_level": "FAIL"
++    },
++    {
++      "file": "checksum-known-alias.pdf",
++      "sha256": "53dd48a6aa290f7dd814cbbea010afeae511d5070bea2bcb3f345006d317bed4",
++      "expected_status": "PASS",
++      "expected_failures": [],
++      "expected_parameter_level": "PASS"
++    },
++    {
++      "file": "no-parameters-control.pdf",
++      "sha256": "9d6c2f46ed044e128b8c382bd9501be79cd96fcf01febbdd573723b677bf9fb3",
++      "expected_status": "INCOMPLETE",
++      "expected_failures": [],
++      "expected_parameter_level": "N/A"
++    },
++    {
++      "file": "alternative-only-control.pdf",
++      "sha256": "14438517b6dc9dbed6eec6be08f969388ccdc6f7b9ea898eb82dc6c4a22cf163",
++      "expected_status": "PASS",
++      "expected_failures": [],
++      "expected_parameter_level": "N/A"
++    },
++    {
++      "file": "mixed-bare-and-unknown-parameters.pdf",
++      "sha256": "760d905bfcc6f71e9c9f05aef09eb24cec5466a6e2c862269bce30528fa4dd73",
++      "expected_status": "INCOMPLETE",
++      "expected_failures": [],
++      "expected_parameter_level": "WARN"
++    }
++  ]
++}
+--- v22/tests/test_unmatched_attachment_parameters.py
++++ v23/tests/test_unmatched_attachment_parameters.py
+@@ -0,0 +1,83 @@
++"""Missing native association is unavailable parameter evidence, not agreement."""
++import hashlib
++import json
++import os
++import unittest
++
++from test_preservation_safety import ROOT, validator as v, failed_codes
++
++PARAMS='SOURCE_MEDIATYPE_PARAMETERS_MATCH'
++
++
++class UnmatchedAttachmentParameterTests(unittest.TestCase):
++    def record(self, **changes):
++        return dict({'Filename':'original.txt','SizeInBytes':'7','Content-Type':'text/plain; note=x','Mail_GUID':'owner'},**changes)
++
++    def file(self, **changes):
++        return dict({'ufilename':'stored.txt','size':7,'md5':v.md5hex(b'payload'),
++                     'reconstructed_media_type':'text/plain;note=x','afrelationship':'Data'},**changes)
++
++    def check(self, records, files):
++        report=v.Report('unmatched.pdf');ambiguities=[]
++        associations=v.check_attachment_stream_consistency(records,files,report,ambiguities=ambiguities)
++        return report,associations,[r for r in ambiguities if r.get('parameter_comparison_unavailable')]
++
++    def test_no_native_association_retains_declared_parameter_evidence(self):
++        report,associations,unavailable=self.check([self.record()],[self.file()])
++        self.assertFalse(failed_codes(report));self.assertFalse(associations)
++        self.assertIn('VALIDATION_INCOMPLETE',report.seen_codes)
++        self.assertEqual(1,len(unavailable));self.assertEqual(0,unavailable[0]['candidate_count'])
++        self.assertEqual('text/plain; note=x',unavailable[0]['xmp_content_type'])
++
++    def test_raw_malformed_and_empty_parameter_text_remains_unavailable(self):
++        for value in ('text/plain; note=x; =ignored','malformed; raw=text','text/plain;'):
++            report,_,unavailable=self.check([self.record(**{'Content-Type':value})],[self.file()])
++            self.assertFalse(failed_codes(report));self.assertEqual(value,unavailable[0]['xmp_content_type'])
++
++    def test_schema_invalid_fields_do_not_invent_parameter_obligations(self):
++        for value in (v.XmpUri('text/plain; note=x'),['text/plain; note=x'],None,'','text/plain'):
++            report,_,unavailable=self.check([self.record(**{'Content-Type':value})],[self.file()])
++            self.assertFalse(failed_codes(report));self.assertFalse(unavailable)
++
++    def test_absence_sources_and_alternatives_do_not_invent_a_native_copy_requirement(self):
++        for files in ([],[self.file(afrelationship='Source')],[self.file(afrelationship='Alternative')]):
++            report,associations,unavailable=self.check([self.record()],files)
++            self.assertFalse(report.items);self.assertFalse(associations);self.assertFalse(unavailable)
++
++    def test_checksum_can_establish_a_permitted_alias(self):
++        file=self.file()
++        report,associations,unavailable=self.check([self.record(CheckSum=file['md5'])],[file])
++        self.assertFalse(failed_codes(report));self.assertIn(id(file),associations);self.assertFalse(unavailable)
++        self.assertNotIn('VALIDATION_INCOMPLETE',report.seen_codes)
++
++    def test_one_verified_record_cannot_remove_unavailable_evidence_for_another(self):
++        records=[self.record(Filename='matched.txt'),self.record()]
++        file=self.file(ufilename='matched.txt')
++        report,associations,unavailable=self.check(records,[file])
++        self.assertFalse(failed_codes(report));self.assertIn(id(file),associations)
++        self.assertEqual(['original.txt'],[r['filename'] for r in unavailable])
++        self.assertIn('VALIDATION_INCOMPLETE',report.seen_codes)
++
++    def test_actual_pdf_corpus_and_parameter_severity(self):
++        directory=ROOT/'tests/fixtures/eapdf/validator-unmatched-parameters'
++        for case in json.loads((directory/'expectations.json').read_text())['cases']:
++            with self.subTest(file=case['file']):
++                path=directory/case['file'];self.assertEqual(case['sha256'],hashlib.sha256(path.read_bytes()).hexdigest())
++                report=v.validate(str(path));self.assertEqual(case['expected_status'],report.summary()['status'])
++                self.assertEqual(set(case['expected_failures']),failed_codes(report))
++                levels={i['level'] for i in report.items if i['code']==PARAMS}
++                self.assertEqual({case['expected_parameter_level']},levels)
++
++    @unittest.skipUnless(os.environ.get('EAPDF_GENERATOR_CLASSPATH'),'Set EAPDF_GENERATOR_CLASSPATH for complete PDF validation')
++    def test_frozen_pdf_corpus(self):
++        directory=ROOT/'tests/fixtures/eapdf/validator-unmatched-parameters'
++        for case in json.loads((directory/'expectations.json').read_text())['cases']:
++            with self.subTest(file=case['file']):
++                result=v.validate_one(str(directory/case['file']),write_html=False)
++                self.assertEqual('PASS',result['pdfa']['status'])
++                self.assertEqual(case['expected_status'],result['summary']['status'])
++                self.assertEqual(set(case['expected_failures']),{i['code'] for i in result['items'] if i['level']=='FAIL'})
++                self.assertEqual({case['expected_parameter_level']},{i['level'] for i in result['items'] if i['code']==PARAMS})
++
++
++if __name__=='__main__':unittest.main()
+--- v22/unfixed.md
++++ v23/unfixed.md
+@@ -1,4 +1,6 @@
+ # Unfixed bugs, improvements, and functionality gaps
++
++**V22 accepted — 2026-10-20:** Ambiguous native associations no longer hide universally contradicted media types or parameters. **440 unit passes / 39 skips; twelve PDF cases, twelve generated profiles, 194 custom comparisons and eight CLI/web-worker checks match.** Six new probes and two retained cases gain proved media/parameter failures; two compatible-parameter controls now report WARN instead of N/A. All 184 prior PDF hashes and 182 other prior status/failure outcomes are unchanged. Occurrence assignment remains open; creator unchanged; eleven questions remain. [Evidence](docs/improvement/validator-22/evidence.json).
+ 
+ **V21 accepted — 2026-10-20:** Ambiguous native associations no longer hide a size/checksum contradicted by every possible payload. **430 unit passes / 38 skips; twelve PDF cases, twelve generated profiles, 184 custom comparisons and eight CLI/web-worker checks match.** Five new negative probes and two retained cases now fail; all 174 prior PDF hashes and 172 other prior custom outcomes are unchanged. Association remains unavailable; no owner or occurrence is selected. Creator unchanged; eleven questions remain open. [Evidence](docs/improvement/validator-21/evidence.json).
+ 
+--- v22/validate_eapdf.py
++++ v23/validate_eapdf.py
+@@ -2961,6 +2961,11 @@
+         # a missing observation or any compatible value prevents that failure.
+         candidates=possible_files[id(attachment)]
+         if not candidates:
++            declared_media=attachment.get("Content-Type")
++            if native_files and is_xmp_text(declared_media) and ";" in declared_media:
++                unavailable.append({"filename":attachment.get("Filename"),"xmp_content_type":declared_media,
++                    "candidate_count":0,"parameter_comparison_unavailable":True,
++                    "reason":"Native files exist but no payload association establishes the declared parameter comparison"})
+             return
+         mismatches=[]
+         declared_size=attachment.get("SizeInBytes")
+--- v22/validator_rule_text.json
++++ v23/validator_rule_text.json
+@@ -4270,7 +4270,7 @@
+     "rule_number": 59,
+     "rule_name": "SOURCE_MEDIATYPE_PARAMETERS_MATCH",
+     "spec_section": "EA-PDF 1.0 section 9.4 printed p66",
+-    "spec_excerpt": "Compare stream Mail_MediaTypeParameters with parameters of uniquely matched source-asset or attachment XMP records. This verifies PDF/XMP consistency, not independent original-email fidelity. V20: MIME recovery must not fabricate parameter equality. Invalid parameter syntax uses preserved text comparison; malformed source values remain permitted. Source attachment/body summaries retain original Content-Type text and quoted spaces. Legal folding and encoded parameter equivalence remain supported; absent or empty body types retain MIME defaults. V22: A valid attachment Content-Type or its declared parameters fails when every possible native candidate has an available contradicting reconstruction for that field. A nonempty candidate set is required; any matching or unreadable candidate blocks that field failure. Parameters are compared independently of the bare media type. Ambiguous parameter comparisons without a proved mismatch remain WARN/unavailable rather than N/A; they cannot hide a separate verified mismatch. MIME recovery safeguards, legal encoded equivalents and exact malformed-text comparisons remain in force. No owner, unique occurrence or complete inventory is inferred.",
++    "spec_excerpt": "Compare stream Mail_MediaTypeParameters with parameters of uniquely matched source-asset or attachment XMP records. This verifies PDF/XMP consistency, not independent original-email fidelity. V20: MIME recovery must not fabricate parameter equality. Invalid parameter syntax uses preserved text comparison; malformed source values remain permitted. Source attachment/body summaries retain original Content-Type text and quoted spaces. Legal folding and encoded parameter equivalence remain supported; absent or empty body types retain MIME defaults. V22: A valid attachment Content-Type or its declared parameters fails when every possible native candidate has an available contradicting reconstruction for that field. A nonempty candidate set is required; any matching or unreadable candidate blocks that field failure. Parameters are compared independently of the bare media type. Ambiguous parameter comparisons without a proved mismatch remain WARN/unavailable rather than N/A; they cannot hide a separate verified mismatch. MIME recovery safeguards, legal encoded equivalents and exact malformed-text comparisons remain in force. No owner, unique occurrence or complete inventory is inferred. V23: Within the existing native-file comparison scope, a normal attachment Content-Type that declares parameters remains unavailable when no native payload association can be established. Another verified attachment does not establish agreement for that record. Report WARN rather than N/A or aggregate PASS; definite mismatches still fail. Do not infer a new native-copy requirement when there are no native files; Source/Alternative exclusions and schema checks remain separate.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed Mail_MediaTypeParameters value(s): {actual}. Expected media-type parameters matching the source email asset when parameters exist.",
+@@ -4278,7 +4278,7 @@
+     },
+     "spec_excerpt_kind": "Reviewed paraphrase, not a verbatim specification quotation",
+     "requirements_review": {
+-      "status": "V22 ambiguous media/parameter contradictions reviewed independently of occurrence identity; complete coverage and eleven expert/dependency questions remain open.",
++      "status": "V23 unavailable parameter applicability verified for unmatched native associations; complete coverage and eleven expert/dependency questions remain open.",
+       "requirement_ids": [
+         "EMBEDDED-PARAMS"
+       ],
+@@ -4297,7 +4297,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "embedded_files",
+-      "uncovered_assertion": "Compare stream Mail_MediaTypeParameters with parameters of uniquely matched source-asset or attachment XMP records. This verifies PDF/XMP consistency, not independent original-email fidelity. V20: MIME recovery must not fabricate parameter equality. Invalid parameter syntax uses preserved text comparison; malformed source values remain permitted. Source attachment/body summaries retain original Content-Type text and quoted spaces. Legal folding and encoded parameter equivalence remain supported; absent or empty body types retain MIME defaults. V22: A valid attachment Content-Type or its declared parameters fails when every possible native candidate has an available contradicting reconstruction for that field. A nonempty candidate set is required; any matching or unreadable candidate blocks that field failure. Parameters are compared independently of the bare media type. Ambiguous parameter comparisons without a proved mismatch remain WARN/unavailable rather than N/A; they cannot hide a separate verified mismatch. MIME recovery safeguards, legal encoded equivalents and exact malformed-text comparisons remain in force. No owner, unique occurrence or complete inventory is inferred.",
++      "uncovered_assertion": "Compare stream Mail_MediaTypeParameters with parameters of uniquely matched source-asset or attachment XMP records. This verifies PDF/XMP consistency, not independent original-email fidelity. V20: MIME recovery must not fabricate parameter equality. Invalid parameter syntax uses preserved text comparison; malformed source values remain permitted. Source attachment/body summaries retain original Content-Type text and quoted spaces. Legal folding and encoded parameter equivalence remain supported; absent or empty body types retain MIME defaults. V22: A valid attachment Content-Type or its declared parameters fails when every possible native candidate has an available contradicting reconstruction for that field. A nonempty candidate set is required; any matching or unreadable candidate blocks that field failure. Parameters are compared independently of the bare media type. Ambiguous parameter comparisons without a proved mismatch remain WARN/unavailable rather than N/A; they cannot hide a separate verified mismatch. MIME recovery safeguards, legal encoded equivalents and exact malformed-text comparisons remain in force. No owner, unique occurrence or complete inventory is inferred. V23: Within the existing native-file comparison scope, a normal attachment Content-Type that declares parameters remains unavailable when no native payload association can be established. Another verified attachment does not establish agreement for that record. Report WARN rather than N/A or aggregate PASS; definite mismatches still fail. Do not infer a new native-copy requirement when there are no native files; Source/Alternative exclusions and schema checks remain separate.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",

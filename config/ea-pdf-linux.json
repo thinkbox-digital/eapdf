@@ -1,0 +1,29 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information"
+    }
+  },
+  "XsltProcessors": {
+    "Default": "Saxon",
+    "Saxon": {
+      "ClassPath": "/usr/share/java/Saxon-HE.jar"
+    }
+  },
+  "FoProcessors": {
+    "Default": "Fop",
+    "Fop": {
+      "ClassPath": "/usr/share/java/fop.jar;/usr/share/java/batik-all.jar;/usr/share/java/commons-io.jar;/usr/share/java/commons-logging.jar;/usr/share/java/fontbox2.jar;/usr/share/java/xercesImpl.jar;/usr/share/java/xml-apis.jar;/usr/share/java/xml-apis-ext.jar;/usr/share/java/xmlgraphics-commons.jar",
+      "ConfigFilePath": "config/ea-pdf-fop.xconf"
+    },
+    "Xep": {
+      "ClassPath": "",
+      "ConfigFilePath": "/media/lepore/Work/thinkbox/ea-pdf/EaPdf/XResources/xep.xml"
+    }
+  },
+  "EaxsToEaPdfProcessorSettings": {
+    "XsltFoFilePath": "/media/lepore/Work/thinkbox/ea-pdf/EaPdf/XResources/eaxs_to_fo.xsl",
+    "XsltDpartFilePath": "/media/lepore/Work/thinkbox/ea-pdf/EaPdf/XResources/eaxs_to_dpart.xsl",
+    "XsltRootXmpFilePath": "/media/lepore/Work/thinkbox/ea-pdf/EaPdf/XResources/eaxs_to_root_xmp.xsl"
+  }
+}

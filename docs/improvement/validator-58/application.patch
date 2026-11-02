@@ -1,0 +1,113 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -3227,7 +3227,11 @@
+     cur=item
+     while cur is not None:
+         dpm=cur.get("dpm",{})
+-        ident={"Mail_GUID":guid_value(dpm.get("Mail_GUID","")),"Message-ID":""}
++        try:
++            guid=guid_value(dpm.get("Mail_GUID",""))
++        except (UnicodeError,ValueError,pikepdf.PdfError):
++            return {"Mail_GUID":"","Message-ID":""}
++        ident={"Mail_GUID":guid,"Message-ID":""}
+         try:
+             ident["Message-ID"]=norm_text(first_present(dpm,"Message-ID","MessageID","messageid","Mail_MessageID"))
+         except (UnicodeError,ValueError,pikepdf.PdfError):
+@@ -4463,9 +4467,18 @@
+         is_identity_intermediate=(not is_leaf) and ("Mail_GUID" in dpm or "Mail_MessageID" in dpm)
+         if is_identity_intermediate:
+             msg_nodes.append(item)
+-            if isinstance(dpm.get("Mail_GUID"),pikepdf.String) and guid_value(dpm["Mail_GUID"]):
+-                report.ok("DPM_MAIL_GUID_PRESENT","Intermediate DPM node contains Mail_GUID",{"objgen":item["objgen"],"Mail_GUID":str(dpm["Mail_GUID"])})
+-                val=guid_value(dpm["Mail_GUID"])
++            try:
++                val=guid_value(dpm["Mail_GUID"]) if isinstance(dpm.get("Mail_GUID"),pikepdf.String) else ""
++            except (UnicodeError,ValueError,pikepdf.PdfError):
++                val=None
++            if val is None:
++                for code in ("DPM_MAIL_GUID_PRESENT","DPM_MAIL_GUID_MATCH"):
++                    report.warn(code,"DPM GUID text could not be decoded",
++                                {"objgen":item["objgen"],"assessment":"unavailable","actual":observed_pdf_value(dpm["Mail_GUID"])})
++                report.warn("VALIDATION_INCOMPLETE","Required DPM GUID presence and correspondence could not be assessed",
++                            {"rules":["DPM_MAIL_GUID_PRESENT","DPM_MAIL_GUID_MATCH"],"assessment":"unavailable","objgen":item["objgen"]})
++            elif val:
++                report.ok("DPM_MAIL_GUID_PRESENT","Intermediate DPM node contains Mail_GUID",{"objgen":item["objgen"],"Mail_GUID":val})
+                 if val in mail_guid_set:
+                     report.ok("DPM_MAIL_GUID_MATCH","DPM Mail_GUID matches document XMP",{"value":val})
+                 else:
+@@ -6792,7 +6805,10 @@
+             value=item["dpm"].get("Mail_GUID")
+             if item["child_count"] and value is not None:
+                 tick(items=len(guids))
+-                guid=guid_value(value) if isinstance(value,pikepdf.String) else ""
++                try:
++                    guid=guid_value(value) if isinstance(value,pikepdf.String) else ""
++                except (UnicodeError,ValueError,pikepdf.PdfError):
++                    guid=""
+                 if guid:guids=guids|{guid}
+                 else:unknown=True
+             ancestry[item["objgen"]]=(guids,unknown)
+@@ -7456,6 +7472,7 @@
+                 for b in body_sets
+                 if any(identity_fields(b["identity"]).values())
+             }
++            unknown_body_sets=[b for b in body_sets if not any(identity_fields(b["identity"]).values())]
+             failures=[]
+             omissions=[]
+             unavailable=[]
+@@ -7473,8 +7490,14 @@
+                     report.warn("VALIDATION_INCOMPLETE","Attachment owner cannot be uniquely resolved before body annotation matching",{
+                         "attachment":first_present(att,"Filename"),"assessment":"unavailable"})
+                     continue
++                if unknown_body_sets:
++                    unavailable.append({"attachment":first_present(att,"Filename") or "<unnamed>",
++                                        "reason":"Some BodyRendering owner identities are unavailable",
++                                        "content_sets":[b["objgen"] for b in unknown_body_sets]})
++                    report.warn("VALIDATION_INCOMPLETE","Attachment applicability to unknown body owners could not be assessed",
++                                {"rules":["ATTACHMENT_ANNOTATIONS_PRESENT"],"assessment":"unavailable"})
+                 relevant_sets=[b for b in body_sets if identities_match(body_identity,b["identity"])]
+-                if not relevant_sets and len(unique_body_identities)<=1 and not any(att_ident.values()):
++                if not relevant_sets and not unknown_body_sets and len(unique_body_identities)<=1 and not any(att_ident.values()):
+                     relevant_sets=list(body_sets)
+                 if not relevant_sets:
+                     if known_nonbody:
+@@ -7482,6 +7505,8 @@
+                     if not body_sets:
+                         unavailable.append({"attachment":first_present(att,"Filename") or "<unnamed>",
+                                             "reason":"DPM does not establish whether a BodyRendering Content Set applies"})
++                        continue
++                    if unknown_body_sets:
+                         continue
+                     failures.append({
+                         "attachment":first_present(att,"Filename") or "<unnamed>",
+@@ -7842,7 +7867,20 @@
+     if guid_presence_unavailable:
+         report.warn("VALIDATION_INCOMPLETE","Required message GUID text could not be decoded",
+                     {"rules":["MAIL_MESSAGE_GUID_ATTRIBUTE"],"assessment":"unavailable"})
+-    dpm_mail_guids={guid_value(item["dpm"].get("Mail_GUID","")) for item in dpart_nodes}
++    dpm_mail_guids=set()
++    dpm_guid_inventory_unavailable=False
++    for item in dpart_nodes:
++        try:
++            dpm_mail_guids.add(guid_value(item["dpm"].get("Mail_GUID","")))
++        except (UnicodeError,ValueError,pikepdf.PdfError):
++            dpm_guid_inventory_unavailable=True
++    if dpm_guid_inventory_unavailable:
++        if not any(i["code"]=="DPM_MAIL_GUID_MATCH" and i["level"]=="WARN" and
++                   (i.get("details") or {}).get("assessment")=="unavailable" for i in report.items):
++            report.warn("DPM_MAIL_GUID_MATCH","Some DPM GUID values could not be decoded",
++                        {"assessment":"unavailable","reason":"The global DPM GUID inventory is incomplete"})
++        report.warn("VALIDATION_INCOMPLETE","Some DPM GUID values remain unavailable",
++                    {"rules":["DPM_MAIL_GUID_MATCH"],"assessment":"unavailable"})
+     dpm_mail_guids.discard("")
+     xmp_mail_guids=xmp_value_set(xroot,"Mail_GUID")
+     guid_mismatch=[]
+@@ -7875,7 +7913,7 @@
+                                          "value":observed_pdf_value(value)})
+                 continue
+             problem={}
+-            if dpm_mail_guids and mail_guid not in dpm_mail_guids:
++            if not dpm_guid_inventory_unavailable and dpm_mail_guids and mail_guid not in dpm_mail_guids:
+                 problem.update(dpm_guids=dpm_guid_sample,dpm_guid_count=len(dpm_mail_guids))
+             if xmp_mail_guids and mail_guid not in xmp_mail_guids:
+                 problem.update(xmp_guids=xmp_guid_sample,xmp_guid_count=len(xmp_mail_guids))

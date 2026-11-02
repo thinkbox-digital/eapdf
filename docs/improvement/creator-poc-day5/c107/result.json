@@ -1,0 +1,9 @@
+{
+  "ordinary_msg_sources": 29,
+  "by_value_native_occurrences": 21,
+  "embedded_message_storages": 2,
+  "failures": [],
+  "checkpoint": "C107",
+  "scope": "Independent native-stream comparison of supplied ordinary MSG messages; no production change.",
+  "embedded_storage_note": "All original streams preserved; existing embedded-to-standalone property-header expansion accounted for."
+}

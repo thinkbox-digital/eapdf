@@ -1,0 +1,20 @@
+{
+  "messages": 1433,
+  "unique_mail_guids": 1433,
+  "exact_original_sources": 1433,
+  "pages": 2106,
+  "content_set_page_counts": {
+    "/FrontMatter": 101,
+    "/BodyRendering": 2005
+  },
+  "container_sha256": "ac91b223f9eaeb57f7498bc08b8eb190ef4624b7c88bb5534e3fd4934ac2dfd4",
+  "pdf_sha256": "01a42c0bb3dd57f8731a0ae8f2004e477323ff783df9e2eed6331e4df9c364a3",
+  "creator_heap_bytes": 536870912,
+  "all_page_content_and_pixels_compared": 2106,
+  "only_expected_finding_aid_timestamp_pages": 1,
+  "footer_image_objects": 1,
+  "footer_page_occurrences": 1433,
+  "bytes_before": 70485490,
+  "bytes_after": 40410952,
+  "reduction_percent": 42.67
+}

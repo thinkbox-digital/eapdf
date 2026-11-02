@@ -1,0 +1,550 @@
+{
+  "recorded_utc": "2026-10-18T12:54:21.556160+00:00",
+  "status": "Batch 02 verified. Overall improvement plan, full applicability audit and standards register remain open.",
+  "scope": "Strict Table 12 PDF object types/names and generic-header scope; concrete absent-header/file/optional-checksum applicability edges; integration assertions reject incomplete recursive results.",
+  "source_sha256": {
+    "validate_eapdf.py": "3e3f717d4a0d99eb68ecbc91dbeb82ef05343f37fe11811e8a7d4c2a61acd314",
+    "scripts/build_eapdf_rule_fixtures.py": "663f8c72c9338aea3f417e0d29660f138143f61ca57869af6dba91ead924beaa",
+    "tests/test_userproperty_types.py": "b334e6b11c339ca489fe91da246632b73f3444843cdab14f5add4378cab077fd",
+    "tests/test_applicability_edges.py": "70507212f019ceec8772e6777bc9bf8b032ced3841484015c7b485250c70c5d8",
+    "tests/test_generated_profiles.py": "c135aa58f72dabf0631d7895e1cfedc7b0505e8575e0a4ffb672b4cd21907e6b",
+    "tests/test_accessibility_profiles.py": "19b304ab28cbff110d666f800902b6c26951879b4fd16d25ef05dce917aa5075",
+    "tests/fixtures/eapdf/batch02/cases.json": "8df74131992747a22fc837ed9f0e043651feb5544710e75f2e58c59d573c59b3",
+    "tests/fixtures/eapdf/batch02/source.eml": "9a4347c8f7dc917227eaa3529ca9bf7ca8f6dfbc2b812d0a67a1f40de01cfb5f",
+    "src/main/java/eapdf/PdfMailWriter.java": "e3fe45d0e4cd36718cafe5327f870c2ee04c360cf623bef3f6f1aad75bd9f95b",
+    "src/main/java/eapdf/PdfCreationValidator.java": "4405e3ae765999a16f2bf88a73a8905fbf49d0d468e2d8b4059b2cd3ede2798d",
+    "validator_web.py": "bc9e4fc328a6542f84c04caae9655afeafc72fbc12cb4260ef07f2c6ce99b77c",
+    "validator_rule_text.json": "3c455228cc79066a8c17d934c6487f6feb1168a4cd637d1aeadf9e6a75e8d2e2"
+  },
+  "documentation_sha256": {
+    "docs/EA_PDF_WORK_LOG.md": "dd2956f9f1afc6a86da8697817dfb0d718d9cae97434085e1f0c69bf7e161f00",
+    "docs/DEVELOPMENT_STATUS.md": "2955db8fa298a7b9b26e8296be4d91bcf9e0a4e08487765b4e500d57db54ba27",
+    "docs/EA_PDF_IMPROVEMENT_PLAN.md": "e9be6bf32cda910a050c20bb533a1c111830a126ebdad2fcef4ecab0eefbca28",
+    "docs/VALIDATOR_COVERAGE.md": "00c55762ac9a1d690a3ad19bd740edf4cd884d89a04944ba8bc23b6138bffa33",
+    "docs/VALIDATION_RESULTS.md": "b4a53e9ab416ff0517c24ba0f72f7afb971270ead8a58539f96a2c15793db699",
+    "docs/CHANGELOG.md": "2b614b760df1451f2976a52bdee01d4d7e5757da853a35c8b408d34e894f2cf0",
+    "fixed.md": "88239b506b021d7a3052c0f027f4494bca91e1ff90fad79ed03bae82a6f3542f",
+    "unfixed.md": "c240cdf0aeb9354a64a579e3144c573d5b66b523c24fb33abaf997781e1fb25c",
+    "docs/improvement/requirements.json": "5516719e3704ee63a4c2fb39523cb405d254a6a63b97b2de51ba787b9c06e94d",
+    "docs/improvement/known-next-gaps.json": "ef94a504dc07295356952d54681bc4eb24821fa77c69a2144f0097308de39814",
+    "tests/fixtures/eapdf/batch02/README.md": "bd5a83a62139ef0d323c673b05b8c3e9ed6d5a0d9479619718005f1794c6b228"
+  },
+  "commands": {
+    "before": "env -u PYTHONPATH python3 -B -m unittest discover -s tests -p test_userproperty_types.py -v",
+    "applicability_before": "env -u PYTHONPATH python3 -B -m unittest discover -s tests -p test_applicability_edges.py -v",
+    "acceptance": "env -u PYTHONPATH EAPDF_GENERATOR_CLASSPATH=/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0.jar EAPDF_INTEGRATION_REPORT_DIR=/tmp/eapdf-improvement-batch02/accepted-integration python3 -B -m unittest discover -s tests -v",
+    "corpus": "env -u PYTHONPATH EAPDF_GENERATOR_CLASSPATH=/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0.jar EAPDF_RULE_FIXTURE_SET=batch02 python3 -B scripts/build_eapdf_rule_fixtures.py",
+    "rebuild_if_needed": "mvn -o -Deapdf.build.directory=/tmp/eapdf-improvement-batch02/build package; then update EAPDF_GENERATOR_CLASSPATH to that build path"
+  },
+  "python": {
+    "run": 162,
+    "passed": 161,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 258.18,
+    "skip_reason": "EAPDF_PREMIS_SCHEMA is not configured for the optional official PREMIS XSD test."
+  },
+  "java": {
+    "run_in_this_batch": false,
+    "reason": "No Java changes. Reused the B01 hash-verified packaged creator; its 134 Java passes are historical evidence only.",
+    "build_artifacts": {
+      "/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0.jar": "b756994355e00d5d272dcbc936d1641f2223a5fe02736aa9816b499ab9684374",
+      "/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0-gui.jar": "aeadc068a46c2549c34158d6772541cdf6a43afb6a28de363e7f6e0c2f1ad429"
+    }
+  },
+  "saved_examples": {
+    "regenerated_in_this_batch": false,
+    "reason": "No creator changes. All ten B01 artifact hashes still match; latest six-profile validation uses newly generated integration files.",
+    "unchanged_sha256": {
+      "examples/sample_1s.pdf": "d6b5e17a30e5dd0ab4bc422a3a4670c80d8bb3c3af8a5edb5aabf6b30aaa561c",
+      "examples/sample_1si.pdf": "2092d763c7c89337915fe6d830d8df06f3d931e5fb5aac940cc4df0d0f1ada7c",
+      "examples/sample_1m.pdf": "f6268d0c9792eb26a8a7eccc1abea640d79c072f769df723f51ba036fa31d52c",
+      "examples/sample_1mi.pdf": "86edef33f446b79a3afeaf6abaa8a1e0a2ccef52b9720528b1f4845634456924",
+      "examples/sample_1c.pdf": "edc3fa577a2d1dd3cdd6e9924d9204a8207c1410f2b92d64b58cfe05c77a3d85",
+      "examples/sample_1c_finding_aid.pdf": "67dc76aafcd36193041db9342159810c93669da7c45f04eed194a5a05d5c0bb0",
+      "examples/sample_1c_index.xlsx": "8c2694ca48a4eee7b3f6290825d3d53b3efde95e78a3648a4b8b9dada96680f2",
+      "examples/sample_1ci.pdf": "2cda5e33507025cb433ad51bca4e7d9d59095f16a88aa9f2ba2af575c3ddb6d3",
+      "examples/sample_1ci_finding_aid.pdf": "c5bbc01fb8d6332a0eee01e7ff2ae2fa17af7c8de67046f44a8a57061df455de",
+      "examples/sample_1ci_index.xlsx": "6c51e06a8d95a50bd2dcadb3c7a9ad1e7467ef9985360e4063a8a1d05d67b6ef"
+    }
+  },
+  "corpus": [
+    {
+      "case": "dictionary-text-valid",
+      "sha256": "1b3cb8aa6749cb6d7b462815648239004b9538ae1727d493f59bd3cdad0f8ca0",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-text-valid",
+      "sha256": "375ae04bf30c4c858337f79a5acf9c2441faf1a6f9b7ac626246343e68119523",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "dictionary-name-as-text",
+      "sha256": "a820b11283e39bfa63cbc5f30d754a61c960d2882916ca87a6258e46a311699f",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "dictionary-dictionary-as-text",
+      "sha256": "234195ff42d1d7dc507f4171d603f37c73d9f1103ea1b06131cd5ce566e2ca13",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "dictionary-text-as-count",
+      "sha256": "aef994804babdcfec3db94c243b4be66f8ed0a7486c30c429b498172e4983135",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-name-as-text",
+      "sha256": "52e295cbecaf7b4d39f61223af50da8c0bde1b32ee682b2496c594f16eb4a4c0",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-dictionary-as-text",
+      "sha256": "9d7d5ed8505fc07ce538ae8948c8f400268507ef7d9a8e4111b14134295e1942",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-text-as-count",
+      "sha256": "8e5271641c7c0a6a0d210ffa922590462de93ead2eaecac915cbb4bd4533bf83",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "unicode-text-valid",
+      "sha256": "30715d7db493813a926ae099a0fb8cfff4faaa8d8c4d9f2a0c56a55bf670ac13",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "zero-count-valid",
+      "sha256": "5bed61771f08fb47280d987fd4b42f2d6c0543ecb998110fef6e431665f57f8d",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-size-valid",
+      "sha256": "c5fbe84a1bab75cf8e9e589a91335be5469608db05a8fc0e90f6761dd7c72bc1",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "generic-real-valid",
+      "sha256": "7bd2d646bcbfb5420b9c15266f9fc6c87018f0b5e2d1a149edc4eb124fdf3d44",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "generic-integer-valid",
+      "sha256": "2616a8884b921a127d19d462ff81769d69e9bb649d2e4ef594bcc424e0f3e572",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "generic-boolean-valid",
+      "sha256": "0b2156b3d1b1e45978b94aaaf4ed8962ea85afe93e79173675db98cb39f3414a",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "generic-text-valid",
+      "sha256": "d8a19d4e0c21451a8ca19a63dcf27a65a3af7f899a540858b54b510d32aa4edc",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-as-text",
+      "sha256": "7474a3b978192c86faa4633ae80d3d14b8684c70fc2c8efa57f668e5ce541bee",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "null-as-text",
+      "sha256": "0eca9e6c937a56d3cc3da08000367cc616e1d75230d53a2ae0b09fe1d0f3db7c",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "boolean-as-text",
+      "sha256": "5007c00f630d56aaac9bbd4361864596d829c23a4745cf30093aab38086e7265",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "real-as-text",
+      "sha256": "8a17662b8e4013fd6fb8ac040e2fd7deb0c06215774c010b21a7be63b8aab055",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "real-as-count",
+      "sha256": "24ffe9cd78b4be8f84433cd3c3147e43f707dd3cd5453d42ade2bf8d46b495ae",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "boolean-as-count",
+      "sha256": "6b54397c868b5fac666579306e63abda391eceef9bfcca6e5b7f254733dd9391",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "negative-as-count",
+      "sha256": "88e2fd97f43d7fa0308183e58172c0c5243f281b280072a55bfc020b1e0aac74",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "generic-name-invalid",
+      "sha256": "54c9064f8979fdddd3d61bdaeac768e28b4d4f116ed455175567c549dbe1ae9b",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "generic-dictionary-invalid",
+      "sha256": "25b2623743bf5d5aaa256a9378b63476b68cc01e8837e74aa328d1344188eade",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "generic-array-invalid",
+      "sha256": "ba2450062e111f4df2b1596bf36cb7c5e6049c8945df9469ac84d255e6ce0fba",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "generic-null-invalid",
+      "sha256": "260d17e6275270700e348b20421c0dbc2f209c1957c1c493e7ecb91e70346f3c",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "generic-header-wrong-tag",
+      "sha256": "9ba0f14162efb3057fb4c801f9f466bf1b09d48c9a984f2d64c2ac608b9577ab",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TAG_SCOPE"
+      ],
+      "expected_result_observed": true
+    }
+  ],
+  "profile_integrations": [
+    {
+      "report": "docs/improvement/batch-02-profile-reports/1c.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 3
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/1ci.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 3
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/1m.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/1mi.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/1s.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/1si.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/accessibility/1c.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 2
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/accessibility/1ci.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 2
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/accessibility/1m.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/accessibility/1mi.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/accessibility/1s.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-02-profile-reports/accessibility/1si.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    }
+  ],
+  "durable_artifacts": {
+    "docs/improvement/batch-02-corpus/array-as-text.html": "ba041003aa44f9d45adb63cf748d448c5fa63037287f415d62310e06bce14dc0",
+    "docs/improvement/batch-02-corpus/array-as-text.json": "75b2b9f14014c22d152a516e86f0fccf16f733ebd938488cac052f5d0ccbb696",
+    "docs/improvement/batch-02-corpus/array-as-text.pdf": "7474a3b978192c86faa4633ae80d3d14b8684c70fc2c8efa57f668e5ce541bee",
+    "docs/improvement/batch-02-corpus/array-dictionary-as-text.html": "9200527e88a09cfda0ee06dd0b2d82f7c93899e28fa9d9c76ed31cddcdcbebf4",
+    "docs/improvement/batch-02-corpus/array-dictionary-as-text.json": "bb475820bf172c9a90f22c73a222bf5c295cdaf642cee523e2cabe5d6d6fc2ab",
+    "docs/improvement/batch-02-corpus/array-dictionary-as-text.pdf": "9d7d5ed8505fc07ce538ae8948c8f400268507ef7d9a8e4111b14134295e1942",
+    "docs/improvement/batch-02-corpus/array-name-as-text.html": "4b38686df8bfdc78a5229e9830f4bbb341704c4aea5c415e274b713cdad87abe",
+    "docs/improvement/batch-02-corpus/array-name-as-text.json": "1de7e4ca7d26001508729a40a04619d3779d01d47de4d49b414c18731e075ce9",
+    "docs/improvement/batch-02-corpus/array-name-as-text.pdf": "52e295cbecaf7b4d39f61223af50da8c0bde1b32ee682b2496c594f16eb4a4c0",
+    "docs/improvement/batch-02-corpus/array-size-valid.html": "4803f243945aa3ca6cf3c0c6ccaf07c7fa06b9f796b4a57861d8be896e306d35",
+    "docs/improvement/batch-02-corpus/array-size-valid.json": "afe88b057f7a39e881535ea42691ca25efda1a2ac0f190f41f0a8cafa088b2df",
+    "docs/improvement/batch-02-corpus/array-size-valid.pdf": "c5fbe84a1bab75cf8e9e589a91335be5469608db05a8fc0e90f6761dd7c72bc1",
+    "docs/improvement/batch-02-corpus/array-text-as-count.html": "5981aef4bd9516c4ab7ccfc13530453fe2c55c2baeec4e0f7655b62b67793deb",
+    "docs/improvement/batch-02-corpus/array-text-as-count.json": "4d2d57a411e69e5aaea10f1d22b4c73c31ef7eda6d78a069b27b744b5e6f6292",
+    "docs/improvement/batch-02-corpus/array-text-as-count.pdf": "8e5271641c7c0a6a0d210ffa922590462de93ead2eaecac915cbb4bd4533bf83",
+    "docs/improvement/batch-02-corpus/array-text-valid.html": "be5312e83933afbb8223efc245b101be7a2df3bca205c88e1840a18b180360e8",
+    "docs/improvement/batch-02-corpus/array-text-valid.json": "2f38a02584e1f379128eaa04afcd70d413016e86282e16e2bf60b4181fb32cf7",
+    "docs/improvement/batch-02-corpus/array-text-valid.pdf": "375ae04bf30c4c858337f79a5acf9c2441faf1a6f9b7ac626246343e68119523",
+    "docs/improvement/batch-02-corpus/boolean-as-count.html": "b6146e935d6bf389ca01d0a48ddfa38fc14ac80e7b687bdfe5b630d8ee160f8f",
+    "docs/improvement/batch-02-corpus/boolean-as-count.json": "8922374b166fcd3119be59a06674962afd556bfe20e527f2f97ae39adb031dcc",
+    "docs/improvement/batch-02-corpus/boolean-as-count.pdf": "6b54397c868b5fac666579306e63abda391eceef9bfcca6e5b7f254733dd9391",
+    "docs/improvement/batch-02-corpus/boolean-as-text.html": "9a16f5026081a4782a7d07364f29e1e326a3ddc97fbb23f0368e9316c7ca6ce6",
+    "docs/improvement/batch-02-corpus/boolean-as-text.json": "1a6a3a19c68c7f13bdd11b8dfc8b0f92f28a00c1d0d1125e42148dc1317bf0b3",
+    "docs/improvement/batch-02-corpus/boolean-as-text.pdf": "5007c00f630d56aaac9bbd4361864596d829c23a4745cf30093aab38086e7265",
+    "docs/improvement/batch-02-corpus/config.json": "e995f0d8f72463627fa0debb54f534c15cf5ad26ec001be802dadd6d7bb8e9c7",
+    "docs/improvement/batch-02-corpus/dictionary-dictionary-as-text.html": "a7e9b9d9b081b0a9527eb472fa8610e99547508e158623761fda7ef722edcbfe",
+    "docs/improvement/batch-02-corpus/dictionary-dictionary-as-text.json": "3d298cf3fda7feac17f37b9bd578cc0041a76832d14cfeec635455603e3c733c",
+    "docs/improvement/batch-02-corpus/dictionary-dictionary-as-text.pdf": "234195ff42d1d7dc507f4171d603f37c73d9f1103ea1b06131cd5ce566e2ca13",
+    "docs/improvement/batch-02-corpus/dictionary-name-as-text.html": "e1b2945c78e950cbbf63e61d2d0a453ef2f50364e316c15b496de0def3d7474c",
+    "docs/improvement/batch-02-corpus/dictionary-name-as-text.json": "56dde5e61c9ed98ab92c0441d690f7941b3f13733fdc2a91e6ddb1cfe2e233ba",
+    "docs/improvement/batch-02-corpus/dictionary-name-as-text.pdf": "a820b11283e39bfa63cbc5f30d754a61c960d2882916ca87a6258e46a311699f",
+    "docs/improvement/batch-02-corpus/dictionary-text-as-count.html": "4bf4920ff394a2ee3b9bdbdf88495b6615a28ebc541ed1aff4a0dea7db342329",
+    "docs/improvement/batch-02-corpus/dictionary-text-as-count.json": "ac471329d773d9b4e435f06e5be454237671648cf86ccb53789a42f8addc1ae3",
+    "docs/improvement/batch-02-corpus/dictionary-text-as-count.pdf": "aef994804babdcfec3db94c243b4be66f8ed0a7486c30c429b498172e4983135",
+    "docs/improvement/batch-02-corpus/dictionary-text-valid.html": "3b9c7cdb8d7f005a904e3daa584fa309d85ad0c8db66f4f6bd2cddc036f81834",
+    "docs/improvement/batch-02-corpus/dictionary-text-valid.json": "75d56fb88939fffff53d0ac6add405313d2205bf28946a992e5d00dc5cb0fe28",
+    "docs/improvement/batch-02-corpus/dictionary-text-valid.pdf": "1b3cb8aa6749cb6d7b462815648239004b9538ae1727d493f59bd3cdad0f8ca0",
+    "docs/improvement/batch-02-corpus/generation.log": "f37686671a0947619ab0e0c90d4126333d9855d3143d6eb970b055a11518883d",
+    "docs/improvement/batch-02-corpus/generic-array-invalid.html": "fdf8d9b435750a2e174f7e1c7e5f01e29e4243ba8849246809860d1b04cdafb9",
+    "docs/improvement/batch-02-corpus/generic-array-invalid.json": "7b85534bf720699b69f63e454b73ebf86b1a4a087f49460671797f3e8d23f7b5",
+    "docs/improvement/batch-02-corpus/generic-array-invalid.pdf": "ba2450062e111f4df2b1596bf36cb7c5e6049c8945df9469ac84d255e6ce0fba",
+    "docs/improvement/batch-02-corpus/generic-boolean-valid.html": "d5145a0a35e3fbfbb5151ca19cd6b5b8d02d5edfd8634a425fdb064f67a106c6",
+    "docs/improvement/batch-02-corpus/generic-boolean-valid.json": "6acb14d32c48e474f0f235c8a7460fecc994339dbb096c6c463b2839aec0a7b9",
+    "docs/improvement/batch-02-corpus/generic-boolean-valid.pdf": "0b2156b3d1b1e45978b94aaaf4ed8962ea85afe93e79173675db98cb39f3414a",
+    "docs/improvement/batch-02-corpus/generic-dictionary-invalid.html": "2e71cb1036417513bc1f23165d1da3884ee845b8421b31afc08664ea905dc6a0",
+    "docs/improvement/batch-02-corpus/generic-dictionary-invalid.json": "68f266c2996a73502723c697ce260194278da251c5b31dc47febf57fcc58ff14",
+    "docs/improvement/batch-02-corpus/generic-dictionary-invalid.pdf": "25b2623743bf5d5aaa256a9378b63476b68cc01e8837e74aa328d1344188eade",
+    "docs/improvement/batch-02-corpus/generic-header-wrong-tag.html": "3a808d61bbdf0dd0a04efa43548bc8329a5d928be5c70c3ed2b418c3b31b7d97",
+    "docs/improvement/batch-02-corpus/generic-header-wrong-tag.json": "6429a4aac65d6e4bbbfbacbd50bb1a10e11452188fad41c72ef0b0ed24becaac",
+    "docs/improvement/batch-02-corpus/generic-header-wrong-tag.pdf": "9ba0f14162efb3057fb4c801f9f466bf1b09d48c9a984f2d64c2ac608b9577ab",
+    "docs/improvement/batch-02-corpus/generic-integer-valid.html": "a3104156d9b4f1b3bd1d9c5cac7edf11b8c9c663ee31023f11b7280f3834aa47",
+    "docs/improvement/batch-02-corpus/generic-integer-valid.json": "a85a7e7573e8601c87d766ac4fd562fc831325f3f13593793e3d29f55899bb51",
+    "docs/improvement/batch-02-corpus/generic-integer-valid.pdf": "2616a8884b921a127d19d462ff81769d69e9bb649d2e4ef594bcc424e0f3e572",
+    "docs/improvement/batch-02-corpus/generic-name-invalid.html": "95b21b356234d1b0895339042e13b8d8eb7073eedb9f630e73e65c9cd87b8e27",
+    "docs/improvement/batch-02-corpus/generic-name-invalid.json": "d133e6be4a6c7f63051bd28947aefcf8abf5afd5c88f77862405325ea8b1a57e",
+    "docs/improvement/batch-02-corpus/generic-name-invalid.pdf": "54c9064f8979fdddd3d61bdaeac768e28b4d4f116ed455175567c549dbe1ae9b",
+    "docs/improvement/batch-02-corpus/generic-null-invalid.html": "30fbd8ce0e9b4a1bde9956b59d4a3f2724fab72ae79893cad1217325c09afbfe",
+    "docs/improvement/batch-02-corpus/generic-null-invalid.json": "16977475c9285f72cafb157b898fa1b4c5aa47798a81b50412e7f2a63563938b",
+    "docs/improvement/batch-02-corpus/generic-null-invalid.pdf": "260d17e6275270700e348b20421c0dbc2f209c1957c1c493e7ecb91e70346f3c",
+    "docs/improvement/batch-02-corpus/generic-real-valid.html": "802ea72d9dba64d5a9e11e0a4efdf63c0a8d66d7370e7033ff6794a3bdfdff81",
+    "docs/improvement/batch-02-corpus/generic-real-valid.json": "31cf6612c39489a617cbd9a4f17bf7ec86e52008e2b695fe066c1d3fec4da9ab",
+    "docs/improvement/batch-02-corpus/generic-real-valid.pdf": "7bd2d646bcbfb5420b9c15266f9fc6c87018f0b5e2d1a149edc4eb124fdf3d44",
+    "docs/improvement/batch-02-corpus/generic-text-valid.html": "86aa09e9d1d8ac32018b21c2824dd928c2677e5ecf164b5653c8d7f42b73c35b",
+    "docs/improvement/batch-02-corpus/generic-text-valid.json": "60141f67c72c10df12473f87ba0c627979396069279851fc74c072450b465ccb",
+    "docs/improvement/batch-02-corpus/generic-text-valid.pdf": "d8a19d4e0c21451a8ca19a63dcf27a65a3af7f899a540858b54b510d32aa4edc",
+    "docs/improvement/batch-02-corpus/negative-as-count.html": "79d7a1dc064c8987dadcc751bbe557bd2eaf2989cbe81467562f3f055956082e",
+    "docs/improvement/batch-02-corpus/negative-as-count.json": "206b5b8f69517ef220ae3d875312046af32fb2d4e558306f7e10e53e312aabce",
+    "docs/improvement/batch-02-corpus/negative-as-count.pdf": "88e2fd97f43d7fa0308183e58172c0c5243f281b280072a55bfc020b1e0aac74",
+    "docs/improvement/batch-02-corpus/null-as-text.html": "239bff4142b160d8ad6c6de2af9f3d5fbc347ea43ebd2b4c4b0e49c5a819d94b",
+    "docs/improvement/batch-02-corpus/null-as-text.json": "731b77da45ec8bdb4292300547406a34cfd7a5248a43ba2bf57788fc06cd16f4",
+    "docs/improvement/batch-02-corpus/null-as-text.pdf": "0eca9e6c937a56d3cc3da08000367cc616e1d75230d53a2ae0b09fe1d0f3db7c",
+    "docs/improvement/batch-02-corpus/real-as-count.html": "05620c5461a9e9063b5af8fedaff386ad16408ab0fd6b242771c186f0a687861",
+    "docs/improvement/batch-02-corpus/real-as-count.json": "3b5e621862c6e1c57ebdeb82fb89e30f39cb33e9b80893db6b948bf83aa62334",
+    "docs/improvement/batch-02-corpus/real-as-count.pdf": "24ffe9cd78b4be8f84433cd3c3147e43f707dd3cd5453d42ade2bf8d46b495ae",
+    "docs/improvement/batch-02-corpus/real-as-text.html": "9c0db333b41d98c39cbbc19fc009e47fbf8811e66fa7b6e8f4f1dca77cf1cb84",
+    "docs/improvement/batch-02-corpus/real-as-text.json": "26f28eb6788fed712ac94b50542c58071ddc9019f3d1dac7c17d94125f8fb0c2",
+    "docs/improvement/batch-02-corpus/real-as-text.pdf": "8a17662b8e4013fd6fb8ac040e2fd7deb0c06215774c010b21a7be63b8aab055",
+    "docs/improvement/batch-02-corpus/results.json": "e35b253a5ac92575ca571ee076b77b4c6deb839e4006c6f246a0c68f7f9ec8ca",
+    "docs/improvement/batch-02-corpus/seed/EA-PDF attribute fixture_000001.pdf": "b4b391334c9b11f074c2600d73716b7a1a10640ca7f84e17fd64f09876514bb9",
+    "docs/improvement/batch-02-corpus/seed/logs/EA-PDF attribute fixture_000001.log": "2d108a56f1d7c12d5f040bbd5aa085ed8b18dcb7c98adefc5311877cddda4608",
+    "docs/improvement/batch-02-corpus/unicode-text-valid.html": "7303331685efca2b6e2c38147e34823076902749d67bb1fa6476db417c09a587",
+    "docs/improvement/batch-02-corpus/unicode-text-valid.json": "46a8ea54240e724d97e6bfdbd697a5956844361872698256eb0d821f17d75cd4",
+    "docs/improvement/batch-02-corpus/unicode-text-valid.pdf": "30715d7db493813a926ae099a0fb8cfff4faaa8d8c4d9f2a0c56a55bf670ac13",
+    "docs/improvement/batch-02-corpus/zero-count-valid.html": "0d408b4f175a79303e86449bab97d90fa9d2c707938c7a20bd55abc4e395f8ee",
+    "docs/improvement/batch-02-corpus/zero-count-valid.json": "ebdcc409b2bb08a7cd7421e8c3466d539337acdd79ae4e36e101b09d809e5975",
+    "docs/improvement/batch-02-corpus/zero-count-valid.pdf": "5bed61771f08fb47280d987fd4b42f2d6c0543ecb998110fef6e431665f57f8d",
+    "docs/improvement/batch-02-initial-profile-reports/1c.json": "2b393ccf8615d4136b7d698c2d3ccb609269a499a1dbeb55e1f16c91aabe0dcb",
+    "docs/improvement/batch-02-initial-profile-reports/1ci.json": "61117c64616afe31be45b9188301c10236470d8b2669b35c8abe7638af103f5c",
+    "docs/improvement/batch-02-initial-profile-reports/accessibility-1ci.json": "8175e35c3371bfa88ab554ef84886dc4aca7c4ff28d6e524211b3d865b92a8e9",
+    "docs/improvement/batch-02-profile-reports/1c.html": "2445a2b87af70ceebf5d6bbf26baf9ed2f514c22940d1f73e5401be08f0ab9eb",
+    "docs/improvement/batch-02-profile-reports/1c.json": "90533390569e8516827b4100a5a2b4948cd0e087d50855c39b2f7ad6f2d57339",
+    "docs/improvement/batch-02-profile-reports/1ci.html": "caab7348816d4cec29dfbfc2cd8b9832d8f664a4f48509aeb374745bb6192b0d",
+    "docs/improvement/batch-02-profile-reports/1ci.json": "319be1ad579ae5a6f5f3627e82704fd56233d019b6f5a40111d51128fce39c54",
+    "docs/improvement/batch-02-profile-reports/1m.html": "b658cdd643f07c2e40bfb8d5fa5533ee4190a5ebe0c39eabc23f6c362b4b67e7",
+    "docs/improvement/batch-02-profile-reports/1m.json": "0273b0053cf6d26f4fa2ce247c5b9a9b39242d8cca2ae8d8146ff1e40cb63ade",
+    "docs/improvement/batch-02-profile-reports/1mi.html": "eb1f7144a0098a729ebd84e0d07fe8eb7bb4a484e6808756667be0c943e67140",
+    "docs/improvement/batch-02-profile-reports/1mi.json": "43b0239046e203c4ad8085c15f1a0ad5e9e1da08d476d776961d7f2f6fc83f3a",
+    "docs/improvement/batch-02-profile-reports/1s.html": "8134864266c3251c0f69098e871cdc1854092fad318da893da23174071c57741",
+    "docs/improvement/batch-02-profile-reports/1s.json": "51911e0ffcdca665758459e951e431f60f2ba09affeaed8d6335a518f7adf5e8",
+    "docs/improvement/batch-02-profile-reports/1si.html": "1aad1eb08918e0c1dccb0228c5118c3d35eee526579f78a24dc8b9d699506434",
+    "docs/improvement/batch-02-profile-reports/1si.json": "8088257d7e967133a9274c94995a18376518e321c376898954b4dedcdde18791",
+    "docs/improvement/batch-02-profile-reports/accessibility/1c.html": "b6cb974bfadb5e426d3e45686111527f20badf7850f38f86edb8ac226a99f361",
+    "docs/improvement/batch-02-profile-reports/accessibility/1c.json": "ac6770e243ef9e24b5186796bf5de5a704104b29b62d0764c557674168f2eb07",
+    "docs/improvement/batch-02-profile-reports/accessibility/1ci.html": "9d0f90551f6b82ea9bd2132e64f31dac0fba814d59d0b8ffcf5ad9c0d438cd09",
+    "docs/improvement/batch-02-profile-reports/accessibility/1ci.json": "d69afaa1e3b8b2076a4d9defb4eaa6e0748db246a213695dcabf48001ace8ebd",
+    "docs/improvement/batch-02-profile-reports/accessibility/1m.html": "ea9442769666c9b09bbd70401b4b799450e0551b5e9632275e2d8af4d3b6b6ba",
+    "docs/improvement/batch-02-profile-reports/accessibility/1m.json": "53ec612acd2dda3595d2d48c5209e47aa1f9aee27400c6730306cea34d62fb2b",
+    "docs/improvement/batch-02-profile-reports/accessibility/1mi.html": "8113c1d5e6e3ab7d05100c8022d0854627974b882d0f1f3e09f993b3bce28457",
+    "docs/improvement/batch-02-profile-reports/accessibility/1mi.json": "d07ad25b59c5e3004e0a5d23c021f6d3b39df8956348b0067058eba26b161094",
+    "docs/improvement/batch-02-profile-reports/accessibility/1s.html": "54bc69f06306e5277af9d25d802cd281ed488a378074b395f1bb7ef84327b041",
+    "docs/improvement/batch-02-profile-reports/accessibility/1s.json": "5a1f56533657118c7f3e84a055abf7a6d94a00ae04f2abc759b216cf48ebc4ff",
+    "docs/improvement/batch-02-profile-reports/accessibility/1si.html": "9f461666a7fe1dbb6968b70053fd427ccdab2be16a584c51eee659d1d722f971",
+    "docs/improvement/batch-02-profile-reports/accessibility/1si.json": "b18c16945d4f615a54963cf7b9b25ec185618d71261a40b718c200f307764a81"
+  },
+  "audit_logs": {
+    "docs/improvement/batch-02-applicability-before.log": "6d050201d6796f3ff155734230009c2bd94602ba808b657824e5c2dab2a864f1",
+    "docs/improvement/batch-02-applicability-focused.log": "433fe94fbbb7420acb8a140236a86c2c6b00ccb298300a2f6452eb7a9745736c",
+    "docs/improvement/batch-02-corpus-initial-failure.log": "c454bc511de15599d9b26bcd14269919735b40df161e7ad41fc180af8719a21e",
+    "docs/improvement/batch-02-corpus.log": "69334ebf3bab21bef920810a7e4b4a142bdc5a2d3c39ba3e5d9246d1eaeaaddb",
+    "docs/improvement/batch-02-python-acceptance-initial.log": "9f88657285f0f237f5d1807083f3b369ec38c4735feb6833de319e0a56705764",
+    "docs/improvement/batch-02-python-acceptance.log": "b64744f46806ba23409ef2c62e4e2dcdd394a05fed96c23d3f44b17d22f72036",
+    "docs/improvement/batch-02-python-before.log": "8c92d205452c90c8c4ba2113b67972043af0fc8e59c4bae986468b6e073ba7f9",
+    "docs/improvement/batch-02-python-focused.log": "8bbf49ec6a5ff52fe83184d5698d750b41ce595c2d63ebd68f7a9b4a63c00b8c"
+  },
+  "baseline": "docs/improvement/batch-02-baseline.json",
+  "frozen_inputs": "docs/improvement/batch-02-verification-inputs.json",
+  "preserved_findings": [
+    "72 failing pre-fix type subcases; focused run exercised seven tests and skipped the generator integration.",
+    "Initial corpus recipe failure: pikepdf rejects assigning None; deletion represents an absent/null dictionary entry.",
+    "Initial 159-test suite passed while allowing incomplete collection children. Original reports retained; strengthened assertions and explicit applicability repair precede final acceptance.",
+    "Four pre-fix applicability assertion failures; final three focused applicability tests pass."
+  ],
+  "tools": {
+    "python": "3.12.3",
+    "pikepdf": "10.17.0"
+  },
+  "next_actions": [
+    "Implement Table 12 Mail_Sent PDF-date syntax; exact not-a-date false-accept probe is recorded in known-next-gaps.json.",
+    "Audit remaining explicit N/A, especially USERPROPS_VALUES_UNMODIFIED/source and human-dependent recommendations.",
+    "Review repeated attribute owners, class maps, namespaces and revision precedence.",
+    "Expand the twelve-record partial standards register, obtain full ISO/TS 32005, and review applicable errata."
+  ],
+  "limitations": [
+    "Not a complete standards register or external certification.",
+    "PDF-date syntax and source-value equivalence remain open.",
+    "No new Java run, sample regeneration, live viewer/accessibility review, deployment or commit.",
+    "Optional PREMIS schema test is skipped.",
+    "Full-tree whitespace checks encounter pre-existing email CRLF/trailing-space findings; targeted changed-source checks pass."
+  ]
+}

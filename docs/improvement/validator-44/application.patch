@@ -1,0 +1,388 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -4470,7 +4470,7 @@
+             desc_value=dpm.get("Mail_Desc")
+             desc=norm_text(desc_value) if isinstance(desc_value,pikepdf.String) else ""
+             subtype=safe_name(dpm.get("Mail_Subtype",None))
+-            if ctype:
++            if dpm.get("Mail_ContentSetType") is not None:
+                 report.ok("DPM_CONTENTSETTYPE_PRESENT","Leaf DPM node contains Mail_ContentSetType",{"objgen":item["objgen"],"type":ctype})
+             else:
+                 report.fail("DPM_CONTENTSETTYPE_PRESENT","Leaf DPM node missing Mail_ContentSetType",{"objgen":item["objgen"]})
+@@ -4479,7 +4479,7 @@
+             else:
+                 report.fail("DPM_DESC_REQUIRED","Leaf DPM node requires Mail_Desc as a human-readable PDF text string",{"objgen":item["objgen"],"actual":observed_pdf_value(desc_value)})
+             if ctype in ("BodyRendering","AttachmentRendering"):
+-                if subtype:
++                if dpm.get("Mail_Subtype") is not None:
+                     report.ok("DPM_SUBTYPE_REQUIRED","Leaf DPM node contains Mail_Subtype where required",{"objgen":item["objgen"],"type":ctype,"subtype":subtype})
+                 else:
+                     report.fail("DPM_SUBTYPE_REQUIRED","Leaf DPM node missing Mail_Subtype for rendering content set",{"objgen":item["objgen"],"type":ctype})
+@@ -6244,10 +6244,16 @@
+ def declared_content_sets_are_nonbody(pdf,nodes):
+     leaves=[node for node in nodes if node.get("start") is not None or node.get("end") is not None]
+     pages=page_objgen_map(pdf)
+-    return bool(leaves) and not any(safe_name(node["dpm"].get("Mail_ContentSetType"))=="BodyRendering" for node in nodes) and all(
+-        isinstance(node["dpm"].get("Mail_ContentSetType"),pikepdf.Name)
+-        and bool(safe_name(node["dpm"].get("Mail_ContentSetType")))
+-        and page_range_from_dpart(node,pages) is not None for node in leaves)
++    def known_leaf(node):
++        value=node["dpm"].get("Mail_ContentSetType")
++        if not isinstance(value,pikepdf.Name):
++            return False
++        try:
++            content_type=bytes(value)[1:].decode("utf-8")
++        except (UnicodeError,ValueError,pikepdf.PdfError):
++            return False
++        return content_type!="BodyRendering" and page_range_from_dpart(node,pages) is not None
++    return bool(leaves) and not any(safe_name(node["dpm"].get("Mail_ContentSetType"))=="BodyRendering" for node in nodes) and all(known_leaf(node) for node in leaves)
+ 
+ def check_body_media_types(pdf,xroot,afiles,report):
+     sources=summarize_source_emails(afiles)
+@@ -7052,8 +7058,9 @@
+         emit_if_unseen(report,"na","DPM_FRONTMATTER_REQUIRED_CONTAINER","Rule not applicable for this PDF",{"reason":"Not applied because FrontMatter is required only for container profiles."})
+     subtype_bad=[]
+     for item in leaf_nodes:
+-        subtype=safe_name(item["dpm"].get("Mail_Subtype",None))
+-        if subtype and not valid_body_media_type(subtype):
++        raw_subtype=item["dpm"].get("Mail_Subtype",None)
++        subtype=safe_name(raw_subtype)
++        if (subtype or isinstance(raw_subtype,pikepdf.Name)) and not valid_body_media_type(subtype):
+             subtype_bad.append({"objgen":item["objgen"],"subtype":subtype})
+     if subtype_bad:
+         emit_if_unseen(report,"fail","DPM_SUBTYPE_MEDIA_TYPE_NAME","Leaf DPM Mail_Subtype must be an RFC 2046 media type name",{"actual":subtype_bad})
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -5661,8 +5661,8 @@
+   "DPM_CONTENTSETTYPE_PRESENT": {
+     "rule_number": 87,
+     "rule_name": "DPM_CONTENTSETTYPE_PRESENT",
+-    "spec_section": "EA-PDF 1.0 section 9.6 Table 8 printed p70,71",
+-    "spec_excerpt": "When DPart leaf with the stated condition: Every leaf Mail_ContentSetType is a required PDF name. Supported listed names do not form a closed enumeration; other values are allowed.",
++    "spec_section": "EA-PDF 1.0 section 9.6 Table 8 printed p70,71; ISO32000-2:2020 7.3.5; EA-PDF9.6 Table8",
++    "spec_excerpt": "Every DPart leaf must contain Mail_ContentSetType as a PDF name; its open value set does not add a nonempty-name restriction. ISO32000-2 7.3.5 explicitly permits the empty Name. Presence is tested independently of Name type and field syntax; null dictionary values are absent.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+@@ -5681,7 +5681,8 @@
+         "file"
+       ],
+       "issue_ids": [],
+-      "published_erratum": "ISO 32000-2 published ISO-approved erratum 86 permits DPM name values; tracker report #13 does not require replacing them with text strings."
++      "published_erratum": "ISO 32000-2 published ISO-approved erratum 86 permits DPM name values; tracker report #13 does not require replacing them with text strings.",
++      "empty_name_review": "V44: distinguish dictionary entry presence (null means absent), prescribed PDF type and field-specific content syntax. Do not use decoded string truthiness to label an actual empty Name as absent. Open Content Set types have no added nonempty condition; subtype media syntax independently rejects empty Names. Keep type/UTF8 checks, human-readable descriptions, profile constraints and existing source fidelity limits."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -5690,7 +5691,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "document_parts",
+-      "uncovered_assertion": "When DPart leaf with the stated condition: Every leaf Mail_ContentSetType is a required PDF name. Supported listed names do not form a closed enumeration; other values are allowed.",
++      "uncovered_assertion": "Every DPart leaf must contain Mail_ContentSetType as a PDF name; its open value set does not add a nonempty-name restriction. ISO32000-2 7.3.5 explicitly permits the empty Name. Presence is tested independently of Name type and field syntax; null dictionary values are absent.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+@@ -5749,8 +5750,8 @@
+   "DPM_SUBTYPE_REQUIRED": {
+     "rule_number": 89,
+     "rule_name": "DPM_SUBTYPE_REQUIRED",
+-    "spec_section": "EA-PDF 1.0 section 9.6 Table 8 printed p70,71",
+-    "spec_excerpt": "When DPart leaf with the stated condition: Mail_Subtype is a PDF name required for BodyRendering and AttachmentRendering, optional otherwise; it identifies the original body or attachment media type including parameters under RFC 2046 and PDF name escaping.",
++    "spec_section": "EA-PDF 1.0 section 9.6 Table 8 printed p70,71; ISO32000-2:2020 7.3.5; EA-PDF9.6 Table8",
++    "spec_excerpt": "Every BodyRendering or AttachmentRendering DPart leaf must contain Mail_Subtype. A supplied empty Name satisfies entry presence but fails the separate RFC2046 media type syntax requirement. Null dictionary values are absent; the separate DPM_NAME_TYPES check retains prescribed PDF types.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+@@ -5768,7 +5769,8 @@
+       "scopes": [
+         "file"
+       ],
+-      "issue_ids": []
++      "issue_ids": [],
++      "empty_name_review": "V44: distinguish dictionary entry presence (null means absent), prescribed PDF type and field-specific content syntax. Do not use decoded string truthiness to label an actual empty Name as absent. Open Content Set types have no added nonempty condition; subtype media syntax independently rejects empty Names. Keep type/UTF8 checks, human-readable descriptions, profile constraints and existing source fidelity limits."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -5777,7 +5779,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "document_parts",
+-      "uncovered_assertion": "When DPart leaf with the stated condition: Mail_Subtype is a PDF name required for BodyRendering and AttachmentRendering, optional otherwise; it identifies the original body or attachment media type including parameters under RFC 2046 and PDF name escaping.",
++      "uncovered_assertion": "Every BodyRendering or AttachmentRendering DPart leaf must contain Mail_Subtype. A supplied empty Name satisfies entry presence but fails the separate RFC2046 media type syntax requirement. Null dictionary values are absent; the separate DPM_NAME_TYPES check retains prescribed PDF types.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+@@ -6014,8 +6016,8 @@
+   "DPM_SUBTYPE_MEDIA_TYPE_NAME": {
+     "rule_number": 94,
+     "rule_name": "DPM_SUBTYPE_MEDIA_TYPE_NAME",
+-    "spec_section": "EA-PDF 1.0 section 9.6 Table 8 printed p70,71",
+-    "spec_excerpt": "When DPart leaf with the stated condition: Mail_Subtype is a PDF name required for BodyRendering and AttachmentRendering, optional otherwise; it identifies the original body or attachment media type including parameters under RFC 2046 and PDF name escaping.",
++    "spec_section": "EA-PDF 1.0 section 9.6 Table 8 printed p70,71; ISO32000-2:2020 7.3.5; EA-PDF9.6 Table8",
++    "spec_excerpt": "A supplied DPart leaf Mail_Subtype name, including an optional or empty Name, must conform to the referenced media type syntax and PDF Name encoding. An empty Name has valid PDF Name syntax but cannot be a media type. Missing optional subtype data does not invent a presence requirement.",
+     "plain_language_template": {
+       "PASS": "Requirement satisfied.",
+       "FAIL": "Observed Mail_Subtype value(s): {actual}. Expected RFC 2046 media-type names encoded as allowed PDF names.",
+@@ -6034,7 +6036,8 @@
+         "file"
+       ],
+       "issue_ids": [],
+-      "published_erratum": "ISO 32000-2 published ISO-approved erratum 86 permits DPM name values and requires their decoded bytes to be UTF-8; exact decoding/traversal coverage remains explicit."
++      "published_erratum": "ISO 32000-2 published ISO-approved erratum 86 permits DPM name values and requires their decoded bytes to be UTF-8; exact decoding/traversal coverage remains explicit.",
++      "empty_name_review": "V44: distinguish dictionary entry presence (null means absent), prescribed PDF type and field-specific content syntax. Do not use decoded string truthiness to label an actual empty Name as absent. Open Content Set types have no added nonempty condition; subtype media syntax independently rejects empty Names. Keep type/UTF8 checks, human-readable descriptions, profile constraints and existing source fidelity limits."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -6043,7 +6046,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "document_parts",
+-      "uncovered_assertion": "When DPart leaf with the stated condition: Mail_Subtype is a PDF name required for BodyRendering and AttachmentRendering, optional otherwise; it identifies the original body or attachment media type including parameters under RFC 2046 and PDF name escaping.",
++      "uncovered_assertion": "A supplied DPart leaf Mail_Subtype name, including an optional or empty Name, must conform to the referenced media type syntax and PDF Name encoding. An empty Name has valid PDF Name syntax but cannot be a media type. Missing optional subtype data does not invent a presence requirement.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+@@ -28505,7 +28508,7 @@
+     "rule_number": 216,
+     "rule_name": "DPM_BODY_MEDIA_TYPE_MATCH_SOURCE",
+     "spec_section": "EA-PDF 1.0 section 9.6 Table 8 printed p70,71",
+-    "spec_excerpt": "When DPart leaf with the stated condition: Mail_Subtype is a PDF name required for BodyRendering and AttachmentRendering, optional otherwise; it identifies the original body or attachment media type including parameters under RFC 2046 and PDF name escaping. V20: MIME recovery must not fabricate parameter equality. Invalid parameter syntax uses preserved text comparison; malformed source values remain permitted. Source attachment/body summaries retain original Content-Type text and quoted spaces. Legal folding and encoded parameter equivalence remain supported; absent or empty body types retain MIME defaults.",
++    "spec_excerpt": "When DPart leaf with the stated condition: Mail_Subtype is a PDF name required for BodyRendering and AttachmentRendering, optional otherwise; it identifies the original body or attachment media type including parameters under RFC 2046 and PDF name escaping. V20: MIME recovery must not fabricate parameter equality. Invalid parameter syntax uses preserved text comparison; malformed source values remain permitted. Source attachment/body summaries retain original Content-Type text and quoted spaces. Legal folding and encoded parameter equivalence remain supported; absent or empty body types retain MIME defaults. V44: a fully typed/ranged set of declared non-body Content Set names may include the valid empty extension Name; missing or wrongly typed fields cannot establish non-body applicability.",
+     "plain_language_template": {
+       "PASS": "The declared body media type is supported by its source email.",
+       "FAIL": "The declared body media type contradicts its source email.",
+@@ -28524,7 +28527,8 @@
+       "scopes": [
+         "file"
+       ],
+-      "issue_ids": []
++      "issue_ids": [],
++      "empty_name_applicability_review": "V44: remove the unsupported nonempty-name guard from the existing all-leaves typed/ranged non-body proof. Actual empty Name is distinct from missing/null or text values. Preserve the reviewed source occurrence/ownership boundary. Retain explicit successful UTF8 decoding: unreadable Name bytes cannot establish applicability, even though actual entry presence is known."
+     },
+     "validation_scope": {
+       "decision": "retain_custom_eapdf_requirement",
+@@ -28533,7 +28537,7 @@
+       "version": "1.31.18",
+       "review_status": "Reviewed against all five pinned PDF/A profiles; static ownership evidence, not execution or complete conformance evidence.",
+       "coverage_family": "document_parts",
+-      "uncovered_assertion": "When DPart leaf with the stated condition: Mail_Subtype is a PDF name required for BodyRendering and AttachmentRendering, optional otherwise; it identifies the original body or attachment media type including parameters under RFC 2046 and PDF name escaping. V20: MIME recovery must not fabricate parameter equality. Invalid parameter syntax uses preserved text comparison; malformed source values remain permitted. Source attachment/body summaries retain original Content-Type text and quoted spaces. Legal folding and encoded parameter equivalence remain supported; absent or empty body types retain MIME defaults.",
++      "uncovered_assertion": "When DPart leaf with the stated condition: Mail_Subtype is a PDF name required for BodyRendering and AttachmentRendering, optional otherwise; it identifies the original body or attachment media type including parameters under RFC 2046 and PDF name escaping. V20: MIME recovery must not fabricate parameter equality. Invalid parameter syntax uses preserved text comparison; malformed source values remain permitted. Source attachment/body summaries retain original Content-Type text and quoted spaces. Legal folding and encoded parameter equivalence remain supported; absent or empty body types retain MIME defaults. V44: a fully typed/ranged set of declared non-body Content Set names may include the valid empty extension Name; missing or wrongly typed fields cannot establish non-body applicability.",
+       "profile_evidence": "docs/improvement/verapdf-coverage/profile-rule-index.json",
+       "profile_conditions": {
+         "PDFA-3A": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+--- before/scripts/build_eapdf_empty_name_fixtures.py
++++ after/scripts/build_eapdf_empty_name_fixtures.py
+@@ -0,0 +1,80 @@
++"""DPM entry presence, valid empty Names and independent media syntax."""
++import hashlib
++import json
++from pathlib import Path
++import sys
++
++import pikepdf
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT))
++import validate_eapdf as v
++from build_eapdf_message_owner_fixtures import structure_elements
++
++OUT = ROOT / 'tests/fixtures/eapdf/validator-empty-dpm-names'
++OPAQUE = ROOT / 'tests/fixtures/eapdf/validator-content-group-types/opaque-group-types.pdf'
++SUBTYPE = ROOT / 'tests/fixtures/eapdf/validator-active-userproperties/owner-subtype-consistent.pdf'
++
++
++def null_field(leaf, key):
++    fields = pikepdf.Object.parse(('<< /' + key + ' null >>').encode('ascii'))
++    for name, value in leaf.DPM.items():
++        if name != '/' + key:
++            fields[name] = value
++    leaf.DPM = fields
++
++
++def main():
++    OUT.mkdir(parents=True, exist_ok=True)
++    cases = []
++    for name in ('empty-extension-type', 'empty-optional-subtype', 'empty-required-subtype',
++                 'missing-content-type', 'null-content-type', 'missing-required-subtype',
++                 'null-required-subtype', 'omitted-optional-subtype'):
++        type_case = name in ('empty-extension-type', 'missing-content-type', 'null-content-type')
++        with pikepdf.open(OPAQUE if type_case else SUBTYPE) as pdf:
++            elements = structure_elements(pdf)
++            _, _, nodes = v.get_dpart_nodes(pdf)
++            if name == 'empty-extension-type':
++                for item in nodes:
++                    if not item['child_count'] and str(item['dpm'].get('Mail_ContentSetType')) == '/ Vendor  rendering ':
++                        item['node'].DPM.Mail_ContentSetType = pikepdf.Name('/')
++                for element in elements:
++                    if element.get('/S') in (pikepdf.Name('/Mail_ContentGroup'), pikepdf.Name('/Mail_ContentSet')):
++                        for prop in element.A.P:
++                            if str(prop.N) == 'Mail_ContentSetType' and str(prop.V) == ' Vendor  rendering ':
++                                prop.V = ''
++            elif type_case:
++                leaf = next(item['node'] for item in nodes if not item['child_count']
++                            and str(item['dpm'].get('Mail_ContentSetType')) == '/ Vendor  rendering ')
++                if name == 'null-content-type': null_field(leaf, 'Mail_ContentSetType')
++                else: del leaf.DPM.Mail_ContentSetType
++            else:
++                wanted = 'FrontMatter' if name in ('empty-optional-subtype', 'omitted-optional-subtype') else 'BodyRendering'
++                item = next(i for i in nodes if not i['child_count']
++                            and i['dpm'].get('Mail_ContentSetType') == pikepdf.Name('/' + wanted))
++                content = next(e for e in elements if e.get('/S') == pikepdf.Name('/Mail_ContentSet')
++                               and e.get('/Pg') is not None and e.Pg.objgen == item['start'].objgen)
++                if name.startswith('empty-'):
++                    item['node'].DPM.Mail_Subtype = pikepdf.Name('/')
++                    next(p for p in content.A.P if str(p.N) == 'Mail_Subtype').V = ''
++                else:
++                    if name == 'null-required-subtype': null_field(item['node'], 'Mail_Subtype')
++                    else: del item['node'].DPM.Mail_Subtype
++                    content.A.P = pikepdf.Array([p for p in content.A.P if str(p.N) != 'Mail_Subtype'])
++            path = OUT / (name + '.pdf')
++            pdf.save(path, static_id=True, fix_metadata_version=False)
++        legal = name in ('empty-extension-type', 'omitted-optional-subtype')
++        failure = ('DPM_CONTENTSETTYPE_PRESENT' if type_case else 'DPM_SUBTYPE_MEDIA_TYPE_NAME'
++                   if name.startswith('empty-') else 'DPM_SUBTYPE_REQUIRED')
++        cases.append(dict(file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
++            expected_status='PASS' if legal else 'FAIL', expected_failures=[] if legal else [failure]))
++    (OUT / 'expectations.json').write_text(json.dumps(dict(
++        authority='ISO32000-2:2020 7.3.5 empty Name; EA-PDF9.6 Table8 required entries/open types/media subtype syntax',
++        source_files={str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in (OPAQUE, SUBTYPE)},
++        boundary='An actual empty Name is present and has valid Name syntax. Open extension type names have no added nonempty restriction; an empty subtype still fails its media syntax. Null dictionary values are absent. These are internal declared metadata controls, not source/vendor format-fidelity proof.',
++        cases=cases), indent=2) + '\n')
++    print('Built eight DPM presence/empty-name controls.')
++
++
++if __name__ == '__main__':
++    main()
+--- before/scripts/build_eapdf_dpm_schema_fixtures.py
++++ after/scripts/build_eapdf_dpm_schema_fixtures.py
+@@ -22,7 +22,7 @@
+         ('description-utf16', 'Mail_Desc', pikepdf.String(b'\xfe\xff' + 'résumé'.encode('utf-16be')), []),
+         ('extension-key', 'Acme_Job', 17, []),
+         ('invalid-utf8-name', 'Mail_ContentSetType', pikepdf.Object.parse(b'/Vendor#FF'),
+-         ['DPM_CONTENTSETTYPE_PRESENT', 'DPM_NAME_TYPES']),
++         ['DPM_NAME_TYPES']),  # Actual Name is present; its decoded UTF8 is invalid.
+     ]
+     cases = []
+     for name, key, value, failures in recipes:
+--- before/tests/test_dpm_empty_names.py
++++ after/tests/test_dpm_empty_names.py
+@@ -0,0 +1,101 @@
++"""An empty PDF Name is present; field syntax remains an independent constraint."""
++import unittest
++
++import pikepdf
++from test_preservation_safety import ROOT, validator as v
++
++TYPE = 'DPM_CONTENTSETTYPE_PRESENT'
++SUBTYPE = 'DPM_SUBTYPE_REQUIRED'
++FORMAT = 'DPM_SUBTYPE_MEDIA_TYPE_NAME'
++
++
++class DpmEmptyNameTests(unittest.TestCase):
++    def document(self):
++        return pikepdf.open(ROOT / 'tests/fixtures/eapdf/validator-operands/valid.pdf')
++
++    def leaf(self, pdf):
++        return next(item['node'] for item in v.get_dpart_nodes(pdf)[2]
++                    if not item['child_count'] and item['dpm'].get('Mail_ContentSetType') == pikepdf.Name.BodyRendering)
++
++    def null_field(self, leaf, key):
++        fields = pikepdf.Object.parse(('<< /' + key + ' null >>').encode('ascii'))
++        for name, value in leaf.DPM.items():
++            if name != '/' + key:
++                fields[name] = value
++        leaf.DPM = fields
++
++    def levels(self, pdf, code):
++        report = v.Report('dpm-name-focused.pdf')
++        v.validate_pdf(pdf, report)
++        return {item['level'] for item in report.items if item['code'] == code}
++
++    def test_empty_extension_name_is_present(self):
++        with self.document() as pdf:
++            self.leaf(pdf).DPM.Mail_ContentSetType = pikepdf.Name('/')
++            self.assertEqual({'PASS'}, self.levels(pdf, TYPE))
++
++    def test_other_unlisted_names_remain_present(self):
++        with self.document() as pdf:
++            self.leaf(pdf).DPM.Mail_ContentSetType = pikepdf.Name('/Vendor value')
++            self.assertEqual({'PASS'}, self.levels(pdf, TYPE))
++
++    def test_missing_content_set_type_fails_presence(self):
++        with self.document() as pdf:
++            del self.leaf(pdf).DPM.Mail_ContentSetType
++            self.assertIn('FAIL', self.levels(pdf, TYPE))
++
++    def test_null_content_set_type_is_absent(self):
++        with self.document() as pdf:
++            self.null_field(self.leaf(pdf), 'Mail_ContentSetType')
++            self.assertIn('FAIL', self.levels(pdf, TYPE))
++
++    def test_empty_required_subtype_is_present(self):
++        with self.document() as pdf:
++            self.leaf(pdf).DPM.Mail_Subtype = pikepdf.Name('/')
++            self.assertEqual({'PASS'}, self.levels(pdf, SUBTYPE))
++
++    def test_empty_required_subtype_fails_media_type_syntax(self):
++        with self.document() as pdf:
++            self.leaf(pdf).DPM.Mail_Subtype = pikepdf.Name('/')
++            self.assertEqual({'FAIL'}, self.levels(pdf, FORMAT))
++
++    def test_empty_optional_subtype_still_fails_media_type_syntax(self):
++        with self.document() as pdf:
++            leaf = self.leaf(pdf)
++            leaf.DPM.Mail_ContentSetType = pikepdf.Name.Other
++            leaf.DPM.Mail_Subtype = pikepdf.Name('/')
++            self.assertEqual({'FAIL'}, self.levels(pdf, FORMAT))
++
++    def test_absent_required_subtype_still_fails_presence(self):
++        with self.document() as pdf:
++            del self.leaf(pdf).DPM.Mail_Subtype
++            self.assertIn('FAIL', self.levels(pdf, SUBTYPE))
++
++    def test_null_required_subtype_is_absent(self):
++        with self.document() as pdf:
++            self.null_field(self.leaf(pdf), 'Mail_Subtype')
++            self.assertIn('FAIL', self.levels(pdf, SUBTYPE))
++
++    def test_empty_extension_name_proves_no_declared_body_rendering(self):
++        with self.document() as pdf:
++            self.leaf(pdf).DPM.Mail_ContentSetType = pikepdf.Name('/')
++            self.assertEqual({'N/A'}, self.levels(pdf, 'DPM_BODY_MEDIA_TYPE_MATCH_SOURCE'))
++
++    def test_missing_type_cannot_prove_no_declared_body_rendering(self):
++        with self.document() as pdf:
++            del self.leaf(pdf).DPM.Mail_ContentSetType
++            self.assertEqual({'WARN'}, self.levels(pdf, 'DPM_BODY_MEDIA_TYPE_MATCH_SOURCE'))
++
++    def test_text_type_cannot_prove_no_declared_body_rendering(self):
++        with self.document() as pdf:
++            self.leaf(pdf).DPM.Mail_ContentSetType = pikepdf.String('')
++            self.assertEqual({'WARN'}, self.levels(pdf, 'DPM_BODY_MEDIA_TYPE_MATCH_SOURCE'))
++
++    def test_non_name_values_retain_their_separate_type_failure(self):
++        with self.document() as pdf:
++            self.leaf(pdf).DPM.Mail_ContentSetType = pikepdf.String('')
++            self.assertIn('FAIL', self.levels(pdf, 'DPM_NAME_TYPES'))
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- before/tests/fixtures/eapdf/validator-dpm-schema/expectations.json
++++ after/tests/fixtures/eapdf/validator-dpm-schema/expectations.json
+@@ -58,12 +58,12 @@
+       "file": "invalid-utf8-name.pdf",
+       "expected_failures": [
+         "CUSTOM_TAG_OPERAND_MATCH",
+-        "DPM_CONTENTSETTYPE_PRESENT",
+         "DPM_NAME_TYPES"
+       ],
+       "sha256": "2408e0ec3551d31ae2f81d22e67c90551012d70753bb3af7bcb118324338d572",
+       "expected_status": "FAIL",
+-      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
++      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
++      "presence_review": "V44 independent actual Name/byte proof: docs/improvement/validator-44/prior-presence-review.json"
+     }
+   ]
+ }

@@ -1,0 +1,60 @@
+{
+  "checkpoint": "C130",
+  "reproduced_loss": "A valid multipart email supplies readable payment text, but its HTML contains only invisible format/space characters and a blocked web image. The prior readable-alternative check counted the invisible characters as readable words and emitted a PDF without the payment body.",
+  "fix": "Use Unicode whitespace/space/format categories to decide whether actual visible text exists. Reuse the existing readable alternative for unavailable web-image HTML. Authored readable HTML, generated CSS content, SVG and native/embedded images retain their existing priority.",
+  "scope": "Ordinary valid controlled email. Existing real 31 MSG and 20 checked Gmail content/asset fingerprints remain unchanged; no new real-corpus missing-body case is claimed.",
+  "focused_java": {
+    "tests": 38,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "last_full_java_suite": {
+    "checkpoint": "C124",
+    "passes": 252
+  },
+  "changed_production_classes": [
+    "eapdf/EmlReader.class"
+  ],
+  "checks": {
+    "reproduction": "Valid multipart alternative with a useful plain body and image-only web HTML containing only format/space characters.",
+    "missing_payment_body_restored": true,
+    "original_sources_exact": true,
+    "existing_msg_core_and_asset_multisets_unchanged": 31,
+    "checked_gmail_record_fingerprints_unchanged": 20,
+    "validation": {
+      "before": {
+        "status": "PASS",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "mandatory_failure_codes": [],
+        "staging_removed": true
+      },
+      "after": {
+        "status": "PASS",
+        "pdfa": "PASS",
+        "selected_iso": [
+          "PASS"
+        ],
+        "mandatory_failure_codes": [],
+        "staging_removed": true
+      }
+    }
+  },
+  "source_policy": "Original EML and MSG bytes retained exactly; no change to isolated profiles, CLI options or PST native-body policy.",
+  "verification_adjustment": "Normalize ordinary page line wrapping when asserting the complete payment reference. The amount and reference are present; no production change required for this check adjustment.",
+  "jars": {
+    "emailtopdfa.jar": "3a01ee79d22262241849c52ff363876fe9dfb6d4946e043c2e32c2a3353d50dc",
+    "emailtopdfa-gui.jar": "ea4ac221d385ff29d516c09d68d2553425f4059e77b97f1e380bd071439f119e"
+  },
+  "saved_samples": "Six C124 samples and alias unchanged.",
+  "frozen_validator_changed": false,
+  "temporary_shared_staging_removed": true,
+  "known_limits": [
+    "Existing calendar-only/unsupported-section rendering limits remain explicit.",
+    "Retained MSG and isolated PST native comparisons retain known INCOMPLETE results.",
+    "C122 large-file full frozen validation remains uncompleted/FAIL at existing resource limits."
+  ]
+}

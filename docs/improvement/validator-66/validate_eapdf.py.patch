@@ -1,0 +1,78 @@
+--- 
++++ 
+@@ -4146,6 +4146,8 @@
+     sources={}
+     related_streams={}
+     errors=[]
++    unavailable=[]
++    unknown_names=defaultdict(int)
+     declarations=0
+     for spec in dict_get(pdf.Root,"/AF",[]) or []:
+         if safe_name(dict_get(spec,"/AFRelationship",None))!="Source":
+@@ -4169,28 +4171,55 @@
+                 continue
+             for index in range(0,len(array),2):
+                 filename,stream=array[index],array[index+1]
+-                if not isinstance(filename,pikepdf.String) or not str(filename).strip() or not isinstance(stream,pikepdf.Stream) \
++                if not isinstance(filename,pikepdf.String) or not isinstance(stream,pikepdf.Stream) \
+                         or safe_name(dict_get(stream,"/Type",None))!="EmbeddedFile":
+                     errors.append({"primary":name,"key":key,"pair":index//2,"error":"Invalid related filename or embedded stream"})
+-                else:
+-                    related.add(str(filename))
+-                    identity=pdf_object_identity(stream)
+-                    if identity not in related_streams:
+-                        related_streams[identity]=parse_filespec(str(filename),pikepdf.Dictionary(
+-                            F=filename,UF=filename,EF=pikepdf.Dictionary(UF=stream)),source="RF")
++                    continue
++                try:
++                    decoded=str(filename)
++                except UnicodeError as error:
++                    decoded=None
++                    unknown_names[name]+=1
++                    unavailable.append({"primary":name,"key":key,"pair":index//2,
++                                        "filename_bytes":bytes(filename).hex(),"reason":str(error)})
++                if decoded is not None:
++                    if not decoded.strip():
++                        errors.append({"primary":name,"key":key,"pair":index//2,"error":"Invalid related filename or embedded stream"})
++                        continue
++                    related.add(decoded)
++                identity=pdf_object_identity(stream)
++                if identity not in related_streams:
++                    # An unknown name supplies no filename association evidence.
++                    # Retain the stream so checksum/byte/asset checks can proceed.
++                    value=filename if decoded is not None else pikepdf.String("")
++                    related_streams[identity]=parse_filespec(decoded or "",pikepdf.Dictionary(
++                        F=value,UF=value,EF=pikepdf.Dictionary(UF=stream)),source="RF")
++                    if decoded is None:
++                        related_streams[identity]["filename_unavailable"]=True
+     supplements=source_set_supplements(root_xml,afiles)
+     supplement_names={f["ufilename"] or f["filename"] for f in supplements}
+     for primary,members in (expected_sets or {}).items():
+         available=sources.get(primary,set()) | {f["ufilename"] or f["filename"] for f in afiles
+             if f["afrelationship"]=="Supplement" and f.get("stream") is not None}
+-        if primary not in sources or not set(members).issubset(available):
+-            errors.append({"primary":primary,"missing":sorted(set(members)-available),"error":"Required source set is not preserved through RF or catalog Supplement"})
++        missing=set(members)-available
++        if primary not in sources or len(missing)>unknown_names[primary]:
++            details={"primary":primary,"error":"Required source set is not preserved through RF or catalog Supplement"}
++            if unknown_names[primary]:
++                details.update(missing_candidates=sorted(missing),minimum_missing=len(missing)-unknown_names[primary])
++            else:
++                details["missing"]=sorted(missing)
++            errors.append(details)
+     if errors:
+         report.fail("SOURCE_FILE_SET","Source email file sets require valid RF entries or all required catalog Supplement members",{"actual":errors})
+-    elif declarations or supplements or expected_sets:
++    elif not unavailable and (declarations or supplements or expected_sets):
+         report.ok("SOURCE_FILE_SET","Declared source file-set relationships are valid",{"related_sets":declarations,"supplements":sorted(supplement_names),"original_inventory_supplied":expected_sets is not None})
+-    else:
++    elif not unavailable:
+         report.na("SOURCE_FILE_SET","No source file set is identified",{"reason":"No RF, source-asset Supplement metadata or original file-set inventory is present. Independent Source assets do not imply a file set; omitted undeclared companions cannot be inferred from the PDF alone."})
++    if unavailable:
++        report.warn("SOURCE_FILE_SET","Related-file filename comparison is unavailable",{
++            "assessment":"unavailable","actual":unavailable,"original_inventory_supplied":expected_sets is not None})
++        report.warn("VALIDATION_INCOMPLETE","Required source file-set filename checks could not be completed",{
++            "assessment":"unavailable","rules":["SOURCE_FILE_SET"]})
+     return related_streams,supplements
+ 
+ def check_collection_content(pdf,efiles,afiles,eapdf_conf,report,related_streams=(),supplements=()):

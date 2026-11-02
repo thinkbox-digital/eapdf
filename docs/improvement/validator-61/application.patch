@@ -1,0 +1,167 @@
+--- before/validate_eapdf.py
++++ after/validate_eapdf.py
+@@ -754,6 +754,10 @@
+      "source":"docs/reference/EA-PDF-v1.pdf; ISO 32000-2 logical structure",
+      "spec":"EA-PDF 1.0 section 9.7",
+      "excerpt":"Marked content, structure content references, and ParentTree entries must consistently identify the same content and owning structure element."},
++    {"codes":{"ANNOTATION_CONTENTS_REQUIRED"},
++     "source":"docs/reference/EA-PDF-v1.pdf, section 7.5 printed p44",
++     "spec":"EA-PDF 1.0 section 7.5",
++     "excerpt":"Each FileAttachment annotation must contain Contents text; filespec Desc is recommended separately."},
+     {"codes":{"COLLECTION_CHILD_VALIDATION"},
+      "source":"docs/reference/EA-PDF-v1.pdf",
+      "spec":"EA-PDF 1.0 collection profiles",
+@@ -2606,11 +2610,20 @@
+             rect=parse_rect_coords(dict_get(annot,"/Rect",None))
+             page_box=page_effective_box(page)
+             visible_ok, flags=annotation_visibility_ok(annot)
++            contents_value=dict_get(annot,"/Contents",None)
++            contents_unavailable=False
++            try:
++                contents=str(contents_value) if isinstance(contents_value,pikepdf.String) else ""
++            except (UnicodeError,ValueError,pikepdf.PdfError):
++                contents=None
++                contents_unavailable=True
+             out.append({
+                 "page":idx,
+                 "objgen":objgen(annot),
+                 "filename":norm_text(str(dict_get(fs,"/UF",dict_get(fs,"/F","")))) if fs is not None else "",
+-                "contents":norm_text(str(dict_get(annot,"/Contents",""))),
++                "contents":norm_text(contents),
++                "contents_is_text":isinstance(contents_value,pikepdf.String),
++                "contents_unavailable":contents_unavailable,
+                 "rect":rect,
+                 "page_box":page_box,
+                 "within_page_box":rect_is_within_box(rect,page_box),
+@@ -2620,6 +2633,21 @@
+                 "file":fs_info,
+             })
+     return out
++
++def check_file_attachment_contents(pdf,report):
++    annotations=collect_file_attachment_annotations(pdf)
++    code="ANNOTATION_CONTENTS_REQUIRED"
++    if not annotations:
++        report.na(code,"No FileAttachment annotation requires Contents",{"reason":"No FileAttachment annotations are present."})
++    for annotation in annotations:
++        details={key:annotation[key] for key in ("page","objgen","contents")}
++        if not annotation["contents_is_text"]:
++            report.fail(code,"FileAttachment annotation requires a PDF text-string Contents entry",details)
++        elif annotation["contents_unavailable"]:
++            report.warn(code,"Attachment annotation Contents text could not be decoded",dict(details,assessment="unavailable"))
++            report.warn("VALIDATION_INCOMPLETE","Attachment annotation Contents could not be assessed",{"rules":[code],"assessment":"unavailable"})
++        else:
++            report.ok(code,"FileAttachment annotation contains Contents text",details)
+ 
+ def extract_actionable_urls(text):
+     if not text:
+@@ -4467,39 +4495,42 @@
+         is_identity_intermediate=(not is_leaf) and ("Mail_GUID" in dpm or "Mail_MessageID" in dpm)
+         if is_identity_intermediate:
+             msg_nodes.append(item)
++        if is_identity_intermediate or "Mail_GUID" in dpm:
+             try:
+                 val=guid_value(dpm["Mail_GUID"]) if isinstance(dpm.get("Mail_GUID"),pikepdf.String) else ""
+             except (UnicodeError,ValueError,pikepdf.PdfError):
+                 val=None
+             if val is None:
+-                for code in ("DPM_MAIL_GUID_PRESENT","DPM_MAIL_GUID_MATCH"):
++                for code in (("DPM_MAIL_GUID_PRESENT","DPM_MAIL_GUID_MATCH") if is_identity_intermediate else ("DPM_MAIL_GUID_MATCH",)):
+                     report.warn(code,"DPM GUID text could not be decoded",
+                                 {"objgen":item["objgen"],"assessment":"unavailable","actual":observed_pdf_value(dpm["Mail_GUID"])})
+                 report.warn("VALIDATION_INCOMPLETE","Required DPM GUID presence and correspondence could not be assessed",
+-                            {"rules":["DPM_MAIL_GUID_PRESENT","DPM_MAIL_GUID_MATCH"],"assessment":"unavailable","objgen":item["objgen"]})
++                            {"rules":(["DPM_MAIL_GUID_PRESENT","DPM_MAIL_GUID_MATCH"] if is_identity_intermediate else ["DPM_MAIL_GUID_MATCH"]),"assessment":"unavailable","objgen":item["objgen"]})
+             elif val:
+-                report.ok("DPM_MAIL_GUID_PRESENT","Intermediate DPM node contains Mail_GUID",{"objgen":item["objgen"],"Mail_GUID":val})
++                if is_identity_intermediate:
++                    report.ok("DPM_MAIL_GUID_PRESENT","Intermediate DPM node contains Mail_GUID",{"objgen":item["objgen"],"Mail_GUID":val})
+                 if val in mail_guid_set:
+                     report.ok("DPM_MAIL_GUID_MATCH","DPM Mail_GUID matches document XMP",{"value":val})
+                 else:
+                     report.fail("DPM_MAIL_GUID_MATCH","DPM Mail_GUID missing from document XMP",{"value":val,"objgen":item["objgen"]})
+             else:
+-                report.fail("DPM_MAIL_GUID_PRESENT","Intermediate DPM node requires Mail_GUID as a nonempty PDF text string",{"objgen":item["objgen"],"actual":observed_pdf_value(dpm.get("Mail_GUID"))})
+-            if "Mail_MessageID" in dpm:
+-                value=dpm["Mail_MessageID"]
+-                try:
+-                    mid=norm_text(str(value)) if isinstance(value,pikepdf.String) else ""
+-                except (UnicodeError,ValueError,pikepdf.PdfError):
+-                    mid=None
+-                if mid is None:
+-                    report.warn("DPM_MAIL_MESSAGEID_MATCH","DPM Mail_MessageID text could not be decoded",
+-                                {"objgen":item["objgen"],"assessment":"unavailable","value":observed_pdf_value(value)})
+-                    report.warn("VALIDATION_INCOMPLETE","Supplied DPM MessageID correspondence could not be assessed",
+-                                {"rules":["DPM_MAIL_MESSAGEID_MATCH"],"assessment":"unavailable","objgen":item["objgen"]})
+-                elif isinstance(value,pikepdf.String) and mid in messageid_set:
+-                    report.ok("DPM_MAIL_MESSAGEID_MATCH","DPM Mail_MessageID matches document XMP",{"value":mid})
+-                else:
+-                    report.fail("DPM_MAIL_MESSAGEID_MATCH","DPM Mail_MessageID must be a PDF text string matching document XMP",{"value":observed_pdf_value(value),"objgen":item["objgen"]})
++                code="DPM_MAIL_GUID_PRESENT" if is_identity_intermediate else "DPM_MAIL_GUID_MATCH"
++                report.fail(code,"DPM Mail_GUID requires a nonempty PDF text string matching document XMP",{"objgen":item["objgen"],"actual":observed_pdf_value(dpm.get("Mail_GUID"))})
++        if "Mail_MessageID" in dpm:
++            value=dpm["Mail_MessageID"]
++            try:
++                mid=norm_text(str(value)) if isinstance(value,pikepdf.String) else ""
++            except (UnicodeError,ValueError,pikepdf.PdfError):
++                mid=None
++            if mid is None:
++                report.warn("DPM_MAIL_MESSAGEID_MATCH","DPM Mail_MessageID text could not be decoded",
++                            {"objgen":item["objgen"],"assessment":"unavailable","value":observed_pdf_value(value)})
++                report.warn("VALIDATION_INCOMPLETE","Supplied DPM MessageID correspondence could not be assessed",
++                            {"rules":["DPM_MAIL_MESSAGEID_MATCH"],"assessment":"unavailable","objgen":item["objgen"]})
++            elif isinstance(value,pikepdf.String) and mid in messageid_set:
++                report.ok("DPM_MAIL_MESSAGEID_MATCH","DPM Mail_MessageID matches document XMP",{"value":mid})
++            else:
++                report.fail("DPM_MAIL_MESSAGEID_MATCH","DPM Mail_MessageID must be a PDF text string matching document XMP",{"value":observed_pdf_value(value),"objgen":item["objgen"]})
+ 
+         if is_leaf:
+             leaf_nodes.append(item)
+@@ -7773,14 +7804,11 @@
+                    "Mail_ContentGroup elements are nested below Mail_Message" if not bad_groups else "Mail_ContentGroup elements must be nested below Mail_Message",
+                    {"count":len(cgroup)} if not bad_groups else {"actual":bad_groups})
+     bad_sets=[e["objgen"] for e in cset if not has_ancestor_type(e,"Mail_Message")]
+-    if bad_sets and eapdf_conf in ("c","ci"):
+-        emit_if_unseen(report,"warn","MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+-                       "Collection Content Set parent requirements remain unresolved",
+-                       {"assessment":"unavailable","actual":bad_sets,"conformance":eapdf_conf,
+-                        "issue_id":"SPEC-T13-CONTAINER-PARENT"})
+-        report.warn("VALIDATION_INCOMPLETE","Collection Content Set nesting could not be established",
+-                    {"rules":["MAIL_CONTENTSET_NESTED_UNDER_MESSAGE"],"assessment":"unavailable",
+-                     "issue_id":"SPEC-T13-CONTAINER-PARENT"})
++    if eapdf_conf in ("c","ci"):
++        emit_if_unseen(report,"na","MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
++                       "Collection Content Sets do not require a Mail_Message ancestor",
++                       {"reason":"Collection front matter belongs to the document, while Mail_Message is prohibited in c/ci.",
++                        "conformance":eapdf_conf,"local_interpretation":"SPEC-T13-CONTAINER-PARENT"})
+     else:
+         emit_if_unseen(report,"ok" if not bad_sets else "fail","MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+                        "Content Sets are nested below Mail_Message" if not bad_sets else
+@@ -8494,6 +8522,19 @@
+                            "Supplied email free text must be a normal simple string",{
+                                "email":index,"field":field,"value":record[field],"actual_type":xmp_semantic_type(record[field]),
+                                "source_comparison":"Not established by this schema check"})
++        if "Message-ID" in record and "messageid" in record:
++            canonical,legacy=record["Message-ID"],record["messageid"]
++            if is_xmp_text(canonical) and is_xmp_text(legacy) and canonical!=legacy:
++                report.fail("MESSAGE_ID_XMP","Message-ID aliases contain conflicting identifiers",
++                            {"email":index,"Message-ID":canonical,"messageid":legacy})
++        if "In-Reply-To" in record:
++            replies=record["In-Reply-To"]
++            valid=isinstance(replies,XmpArray) and replies.kind=="Bag" and all(is_xmp_text(value) for value in replies)
++            report.add("PASS" if valid else "FAIL","MESSAGE_INREPLYTO_XMP",
++                       "Reply identifiers use an unordered Bag of text strings" if valid else
++                       "In-Reply-To must be an unordered rdf:Bag of normal text strings",
++                       {"email":index,"value":replies,"actual_type":xmp_semantic_type(replies),
++                        "local_interpretation":"SPEC-INREPLYTO-ARRAY"})
+         for field,code in (("SizeInBytes","MESSAGE_SIZE_XMP"),("NumberAttachments","MESSAGE_ATTACHMENT_COUNT_XMP")):
+             if field in record:
+                 valid=is_xmp_text(record[field]) and is_nonneg_int_str(record[field])
+@@ -8812,6 +8853,7 @@
+     check_collection_rules(pdf,eapdf_conf,report)
+     check_dpart_and_content_sets(pdf,xroot,eapdf_conf,report,outline_pages)
+     check_logical_structure(pdf,eapdf_conf,report)
++    check_file_attachment_contents(pdf,report)
+     check_structure_correspondence(pdf,report)
+     af_streams={file["ef_objgen"] for file in afiles}
+     related_assets=[file for identity,file in related_streams.items() if identity not in af_streams]

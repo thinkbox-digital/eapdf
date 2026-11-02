@@ -1,0 +1,19 @@
+{
+  "sourcePath": "tests/attachments/source/pst_sample_1c.pdf",
+  "sourceSha256": "f44114ddc8be4f473f5be4ab17a4adbc1e3875240d796b223e94b70f58ae4b2d",
+  "childName": "TRIP INFO_000046_1s.pdf",
+  "childSha256": "79efb34a82779db2ba70499e499283916b0adbdb2609da99a90de4de0dac205d",
+  "reference": "Independent pikepdf read of the existing collection child; both FileAttachment annotations are on physical page 2.",
+  "attachments": [
+    {
+      "name": "TAHOE INFORMATOIN.doc",
+      "bytes": 21504,
+      "sha256": "09e08361abaf87d368f7d72038ffa73b2ccc688d9a538ef1b411ff60426e4e14"
+    },
+    {
+      "name": "tahoe.xls",
+      "bytes": 19968,
+      "sha256": "46a552eeac3def863cc23dce0d3bf133e4fd6123a40aa4c2016d3945b1578c19"
+    }
+  ]
+}

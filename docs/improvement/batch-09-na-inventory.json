@@ -1,0 +1,366 @@
+{
+  "scope": "Static explicit N/A call-site inventory, not a complete applicability audit. B09 adds no N/A call sites.",
+  "source_sha256": "2d794f1d2f91fd0ddb98a6f9e33d040b8023047065feaf0cd7172d41ca1e7de7",
+  "calls": [
+    {
+      "line": 3432,
+      "code_expression": "'SOURCE_FILE_SET'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 3437,
+      "code_expression": "'COLLECTION_CONTENT_TYPES'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 4263,
+      "code_expression": "code",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 4330,
+      "code_expression": "code",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 4336,
+      "code_expression": "code",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 4368,
+      "code_expression": "code",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5274,
+      "code_expression": "'DPM_BODY_MEDIA_TYPE_MATCH_SOURCE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5278,
+      "code_expression": "'DPM_BODY_MEDIA_TYPE_MATCH_SOURCE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5674,
+      "code_expression": "code",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5718,
+      "code_expression": "'MESSAGE_METADATA_SKIPPED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5800,
+      "code_expression": "'EMBEDDED_SUBTYPE_MATCH_XMP'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5806,
+      "code_expression": "'SOURCE_MEDIATYPE_PARAMETERS_MATCH'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5849,
+      "code_expression": "'COLLECTION_FILENAMES_VALID'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5850,
+      "code_expression": "'COLLECTION_FILENAMES_UNIQUE_CASEFOLD'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5861,
+      "code_expression": "'DPM_FRONTMATTER_REQUIRED_CONTAINER'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5872,
+      "code_expression": "'DPM_SUBTYPE_MEDIA_TYPE_NAME'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5881,
+      "code_expression": "'PDFA3_EAPDF_XMP_EXTENSION_SCHEMA'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5887,
+      "code_expression": "'LOGICAL_TS32005_DECLARATION'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5967,
+      "code_expression": "'TEXT_CONTENT_PDF_TEXT_OBJECTS'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 5999,
+      "code_expression": "'CORE_FIELDS_TEXT_OBJECTS'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6004,
+      "code_expression": "'ATTACHMENT_ANNOTATIONS_PRESENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6079,
+      "code_expression": "'ATTACHMENT_ANNOTATIONS_PRESENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6115,
+      "code_expression": "'PAGE_CONTEXT_PRESENT_RECOMMENDED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6116,
+      "code_expression": "'PAGE_CONTEXT_TEXT_OBJECTS_RECOMMENDED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6132,
+      "code_expression": "'ACTIONABLE_URLS_LINK_ANNOTATIONS'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6174,
+      "code_expression": "'CUSTOM_TAG_MARKED_SEQUENCE_ONLY'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6175,
+      "code_expression": "'CUSTOM_TAG_OPERAND_MATCH'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6176,
+      "code_expression": "'CONTENT_SET_MAIL_CONTENTSET_TAGGED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6177,
+      "code_expression": "'MAIL_CONTENTGROUP_NESTED_UNDER_MESSAGE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6178,
+      "code_expression": "'MAIL_CONTENTSET_ART_ONLY'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6179,
+      "code_expression": "'MULTI_EMAIL_DOCUMENT_STRUCTURE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6180,
+      "code_expression": "'MAIL_MESSAGE_GUID_ATTRIBUTE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6181,
+      "code_expression": "'MAIL_MESSAGE_GUID_MATCH_DPM_XMP'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6182,
+      "code_expression": "'MAIL_MESSAGE_ROLEMAP_DOCUMENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6183,
+      "code_expression": "'MAIL_CONTENTGROUP_ROLEMAP_PART'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6184,
+      "code_expression": "'MAIL_CONTENTSET_NESTED_UNDER_MESSAGE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6185,
+      "code_expression": "'MAIL_CONTENTSET_ROLEMAP_ART'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6186,
+      "code_expression": "'MAIL_FIELD_ROLEMAP_APPROPRIATE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6187,
+      "code_expression": "'MAIL_FIELDNAME_ROLEMAP_APPROPRIATE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6188,
+      "code_expression": "'MAIL_FIELDVALUE_ROLEMAP_APPROPRIATE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6189,
+      "code_expression": "'MAIL_FIELD_PROFILE_USE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6190,
+      "code_expression": "'MAIL_FIELDNAME_PROFILE_USE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6191,
+      "code_expression": "'MAIL_FIELDVALUE_PROFILE_USE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6192,
+      "code_expression": "'MAIL_CONTENTGROUP_CONTENTSETTYPE_ATTRIBUTE_RECOMMENDED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6193,
+      "code_expression": "'MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6194,
+      "code_expression": "'MAIL_CONTENTSET_SUBTYPE_ATTRIBUTE_RECOMMENDED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6195,
+      "code_expression": "'MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6196,
+      "code_expression": "'MAIL_FIELD_NESTING_RECOMMENDED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6197,
+      "code_expression": "'MAIL_FIELDNAME_NESTING_RECOMMENDED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6198,
+      "code_expression": "'MAIL_FIELDVALUE_NESTING_RECOMMENDED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6250,
+      "code_expression": "'CONTENT_SET_MAIL_CONTENTSET_TAGGED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6268,
+      "code_expression": "'CUSTOM_TAG_OPERAND_MATCH'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6270,
+      "code_expression": "'CUSTOM_TAG_MARKED_SEQUENCE_ONLY'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6271,
+      "code_expression": "'CUSTOM_TAG_OPERAND_MATCH'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6279,
+      "code_expression": "'MAIL_CONTENTSET_ART_ONLY'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6286,
+      "code_expression": "'MULTI_EMAIL_DOCUMENT_STRUCTURE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6299,
+      "code_expression": "'MAIL_MESSAGE_GUID_ATTRIBUTE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6317,
+      "code_expression": "'MAIL_MESSAGE_GUID_MATCH_DPM_XMP'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6319,
+      "code_expression": "'MAIL_MESSAGE_GUID_MATCH_DPM_XMP'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6336,
+      "code_expression": "code",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6349,
+      "code_expression": "code",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6361,
+      "code_expression": "'MAIL_CONTENTGROUP_CONTENTSETTYPE_ATTRIBUTE_RECOMMENDED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6367,
+      "code_expression": "'MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6369,
+      "code_expression": "'MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6371,
+      "code_expression": "'MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6393,
+      "code_expression": "'MAIL_CONTENTSET_SUBTYPE_ATTRIBUTE_RECOMMENDED'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6398,
+      "code_expression": "'MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6400,
+      "code_expression": "'MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6402,
+      "code_expression": "'MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT'",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6415,
+      "code_expression": "code",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6701,
+      "code_expression": "code",
+      "review_status": "Inventory only; predicate requires separate review."
+    },
+    {
+      "line": 6709,
+      "code_expression": "'VALIDATION_INCOMPLETE'",
+      "review_status": "Inventory only; predicate requires separate review."
+    }
+  ]
+}

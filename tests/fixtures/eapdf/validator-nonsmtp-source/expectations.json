@@ -1,0 +1,88 @@
+{
+  "authority": "V61 local REQ-FOAF-REPRESENTATION: exact raw non-SMTP preservation or unavailable normalization, never invented SMTP addresses.",
+  "boundary": "Known SMTP presence, supplied mailbox syntax and supplied raw-text fidelity remain independent. No directory lookup, inferred SMTP address or complete source-normalization certification is added.",
+  "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+  "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+  "cases": [
+    {
+      "file": "omitted.pdf",
+      "sha256": "242d83bc1467372fbabbc430d7aa285842748397d7e01b463ab61afca14c844b",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "raw-preserved.pdf",
+      "sha256": "e719e2462238679e22d54d8cd3ee2f756b44765ce1f15bd96e5bc24a59bbe1e0",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "normalized-unverified.pdf",
+      "sha256": "b3727d49a0c61583fde6198cfb21f3ae84ab023d6f15ba8d07c91f7dfb123ba8",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "raw-mismatch.pdf",
+      "sha256": "253dc45f18c06ebbcaf2141a7f9842d5211c1b12d1689f4aaca3df8d79348618",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_RAW_FROM_XMP"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "Raw-From"
+        ]
+      }
+    },
+    {
+      "file": "raw-omitted-normalized.pdf",
+      "sha256": "5e719900338a3e2df874c965b7be753f1ed712f041f9c1378024b91a6a5e6490",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "mixed-known.pdf",
+      "sha256": "35c94565f0daeb26ae500dc79102749b6739f0994275b4e55dc55f7cf021d2e5",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "mixed-missing.pdf",
+      "sha256": "277fb07ed3a15cd19acffe9d693703762cdd279cbe5766ecabfe2697b20bd670",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_CORE_FIELDS_SOURCE_REQUIRED"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_FROM_XMP"
+          ]
+        },
+        "reason": "Known nonempty original fields require corresponding Core Fields; supplied value fidelity is separate.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "From"
+        ]
+      }
+    },
+    {
+      "file": "bad-foaf.pdf",
+      "sha256": "af8071fe1a92e3f96cde44cd9cd600d07ebecfc668edc8300f935b9bbf8b793b",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_FROM_FOAF"
+      ]
+    }
+  ]
+}

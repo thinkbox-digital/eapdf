@@ -1,0 +1,100 @@
+{
+  "authority": [
+    "EA-PDF1.0 Table18 FOAF Agent mailbox fields",
+    "RFC6068 section2: mailto percent encoding, once-only decoding",
+    "RFC5321 sections2.4 and4.1.2: local-part case and quoted equivalence"
+  ],
+  "source_urls": [
+    "https://xmlns.com/foaf/spec/#term_mbox",
+    "https://www.rfc-editor.org/rfc/rfc6068.html#section-2",
+    "https://www.rfc-editor.org/rfc/rfc5321.html#section-2.4"
+  ],
+  "cases": [
+    {
+      "file": "literal.pdf",
+      "sha256": "2c464b4426531037066274c9f5c375308978193e452249ce596372a12c62d3bf",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "encoded-attribute.pdf",
+      "sha256": "c01d49f513de2886e5f48357c22ab1b3e2664df1553caabd858be1df82cea4f8",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "encoded-resource.pdf",
+      "sha256": "f49aade11a76a6721dbdd19848fbcbcf4e6b18b6e4d4bb1be4921b7cc5dcaa6f",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "lowercase-hex.pdf",
+      "sha256": "62d10a4874717beddc898172ccfc31f31d7dd22a263bf197f18b19506d211066",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "quoted-local.pdf",
+      "sha256": "5ba16d5b4871dbafb3ef86a05c5cea0306109636bde5958813ef19b8010e0e5c",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "domain-case.pdf",
+      "sha256": "3802288662b59bc103ee7f69e59b83e49b3dd1a9541e9c1adede1db9facfd0cf",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "local-case.pdf",
+      "sha256": "5154b44889a11c0c53530ade77d467071bdc4eff5a580711f9e84f4ba6931d60",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_TO_FOAF"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "To"
+        ]
+      }
+    },
+    {
+      "file": "double-encoded.pdf",
+      "sha256": "a67766cc254b468a3120f2dba61151b8c8a916f8c1f80b747eca59caec6eb92c",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_TO_FOAF"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "To"
+        ]
+      }
+    },
+    {
+      "file": "invalid-utf8.pdf",
+      "sha256": "41a4e0e8f5777669bdb6545a9cd88e4bdd339ea29b4b27735a4e03bde8762af5",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_TO_FOAF"
+      ]
+    }
+  ]
+}

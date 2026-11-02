@@ -1,0 +1,109 @@
+{
+  "authority": "Required source-header presence and Raw-Sent conditions belong to the actual email scope; global source order is not an ownership decision.",
+  "boundary": "Schema checks and universal contradictions remain independent. Unassigned ownership stays incomplete, without deriving a condition from an arbitrary catalog Source.",
+  "seed": "tests/fixtures/eapdf/validator-source-mailbox-data/from-exact.pdf",
+  "seed_sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+  "cases": [
+    {
+      "file": "missing-to.pdf",
+      "sha256": "1fe8f80e91b2bf7fa153bd6d5a3fe446c2b17215a761bb3d431b7e452ef48d74",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "missing-from.pdf",
+      "sha256": "4b776d5a35b391a4fb90efe1aba461f6345dd22e74a8b102515962b41f573f8e",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "missing-cc.pdf",
+      "sha256": "5d1002102ad5cd8b99ca8f5cf4991a3eae3f1a84e06acc6dec59b1d683ff5956",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "missing-bcc.pdf",
+      "sha256": "e862d6ec26613a2bc2c652ff9c75e2fd10fa497e148059c8b4f5b7dead9d85f2",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "missing-subject.pdf",
+      "sha256": "7d15fab10b159b6bc0fb069e4b457bf4b7a7bbfb2998621849d19cf04d90d468",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "mixed-date.pdf",
+      "sha256": "395cc14f98ef2d278c031f1e661dcce7558e3eb2b47211260eaace530fa0ae7d",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "all-require-to.pdf",
+      "sha256": "5f20ed603e01c07b90cbca5836cf466c0db8d9e7a8cf276f242d736aa5767390",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_CORE_FIELDS_SOURCE_REQUIRED"
+      ],
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_TO_XMP"
+          ]
+        },
+        "reason": "Known nonempty original fields require corresponding Core Fields; supplied value fidelity is separate.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "To"
+        ]
+      }
+    },
+    {
+      "file": "all-require-raw-sent.pdf",
+      "sha256": "d2bae83bc0e5844b4808d584dd085c83a4e768fcf9d5b894eb7ba4e81b10562a",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID"
+      ]
+    },
+    {
+      "file": "assigned-second.pdf",
+      "sha256": "68c1b2bf9f7b250d5b32a2083907a8d8907447e6030187abf720a7d48ba10dc3",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "assigned-positive.pdf",
+      "sha256": "5a8d55e7eacee0a0317a83c62faef55c0e7e61de5854abe3b7ce6540f5b0ca08",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "assigned-date-second-valid.pdf",
+      "sha256": "0ff20686b2967fa56b45b467cd58452558a991033f6c048de8e7e04f9a06af2a",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "assigned-date-second-invalid.pdf",
+      "sha256": "206c545c4f8ce89a07f1d3c5ca914fd5b26acecaff3c6ebcd69e053ded7e02ec",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "missing-to-reversed.pdf",
+      "sha256": "a14c8ec26d67c283d5de6c900bba8bedef3a3abb03b543c43515b501a226a25c",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "assigned-second-reversed.pdf",
+      "sha256": "b9f95c4ff6cc08f29bf1052182da1a2d9f20e442f6737db028ca3877b79fc97d",
+      "expected_status": "PASS",
+      "expected_failures": []
+    }
+  ]
+}

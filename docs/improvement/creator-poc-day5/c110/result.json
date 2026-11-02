@@ -1,0 +1,28 @@
+{
+  "checkpoint": "C110",
+  "fix": "Without transport From, use the native represented author when its address is supplied, rather than the delegate. Preserve the prior sender fallback when the represented-author address is missing.",
+  "java_full": {
+    "tests": 239,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "changed_production_classes": [
+    "eapdf/PstReader.class"
+  ],
+  "pdf_results": "pdf-results.json",
+  "pst_preservation": {
+    "messages": 78,
+    "all_body_export_attachment_hashes_identical": true,
+    "partial_native_author_records_keep_existing_exchange_address": true
+  },
+  "native_pst_file_unchanged": true,
+  "first_pass_adjustment": "The native snapshot exposed a partial represented-author record in a supplied attachment. Kept the existing sender fallback for missing represented addresses; all 78 hashes then remained exact.",
+  "reference": "https://learn.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxomsg/44b3a36c-989b-4247-9b23-85268c8f8b92",
+  "jars": {
+    "emailtopdfa.jar": "d3e8b0e1e7fbf311d965bb4fb66b5ffce01c32a2297d3dc4a645b05a87b095f7",
+    "emailtopdfa-gui.jar": "b3008cc1d49d6c3f82c31f5a4f6928ab072b236481a154de7b4437e0c3ba11ac"
+  },
+  "temporary_shared_staging_removed": true,
+  "continued_work": "Active until explicitly told to stop."
+}

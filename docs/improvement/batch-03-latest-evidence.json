@@ -1,0 +1,533 @@
+{
+  "recorded_utc": "2026-10-18T13:08:55.207631+00:00",
+  "status": "Batch 03 verified. Overall plan and full standards/applicability/source-value review remain open.",
+  "scope": "EA-PDF Table 12 Mail_Sent PDF-date object/syntax/calendar/timezone constraint; raw email and XMP dates and tolerant document-date comparison parser remain separate.",
+  "source_sha256": {
+    "validate_eapdf.py": "6b03a2442471b38ab9c1da92c03946eeff4d27e279dc90ed0185bff7a8025219",
+    "scripts/build_eapdf_rule_fixtures.py": "87e3d238c0f62c8eebe8f7a2668a6f0b7df79efa77943d7fa30c494bbce586a9",
+    "tests/test_userproperty_dates.py": "6ec78e573a5c8163911248a3ab4bf4eb19806e9a119e8cfe3806c0a822f5fe03",
+    "tests/fixtures/eapdf/batch03/cases.json": "2bbb75d2072b0484173b1b7098c032429eed7cfd0e33f99197bc48b107c051ce",
+    "tests/fixtures/eapdf/batch03/source.eml": "9a4347c8f7dc917227eaa3529ca9bf7ca8f6dfbc2b812d0a67a1f40de01cfb5f",
+    "src/main/java/eapdf/PdfMailWriter.java": "e3fe45d0e4cd36718cafe5327f870c2ee04c360cf623bef3f6f1aad75bd9f95b",
+    "src/main/java/eapdf/PdfCreationValidator.java": "4405e3ae765999a16f2bf88a73a8905fbf49d0d468e2d8b4059b2cd3ede2798d",
+    "validator_web.py": "bc9e4fc328a6542f84c04caae9655afeafc72fbc12cb4260ef07f2c6ce99b77c",
+    "validator_rule_text.json": "3c455228cc79066a8c17d934c6487f6feb1168a4cd637d1aeadf9e6a75e8d2e2"
+  },
+  "documentation_sha256": {
+    "docs/EA_PDF_WORK_LOG.md": "8af56d866165b630d580d404e39439cf152c1159fec6fed16dc9ec2c4d4925a1",
+    "docs/DEVELOPMENT_STATUS.md": "d1e9aae5249d261a4fb09ac467bec5cae6e96c9b3046aed805453d545ca50890",
+    "docs/EA_PDF_IMPROVEMENT_PLAN.md": "5233dbeaafb5d0af9fcc172e02c27caf76d26c071501f7ad4f817fdc73e7c0ca",
+    "docs/VALIDATOR_COVERAGE.md": "c6990e492456bdfc3bca687844fcecbb2d8903036284ffcda90a9967fe806dd1",
+    "docs/VALIDATION_RESULTS.md": "762b135ad5269dddf8188a892b3dedf3c1cd824bb5fb8c377bd8927fd88fd569",
+    "docs/CHANGELOG.md": "bad9fc7514e40824e550b5ba25b339faf43f4b13f4e238382783929d0fbec282",
+    "fixed.md": "6e671ee3d57cd3fd402b50c1c8e4cd4d7743e4c3d90b742a42fc21e0097df252",
+    "unfixed.md": "26386c07e392286d83a2e17a6ab1c10f1486a4c6d5846de75322ad8ee0b060d3",
+    "docs/improvement/requirements.json": "d492423f79c2c3c2d40ce0d82167aa3da077cfa006b436d1b5035e07a4f6fb6d",
+    "docs/improvement/known-next-gaps.json": "94435410fa6a9918e9228faef44e1118b8214a6577085b096d206c94219c665c",
+    "docs/improvement/batch-03-date-review.md": "595ac03eb29bbf8ae2ca7170b5beae1cfc576d8d5b7c0e200316848287e1fc3e",
+    "tests/fixtures/eapdf/batch03/README.md": "3ba954aab002964aa7ea16c991607b7a0fd72e7240a0fe1c36686118ec2723d5"
+  },
+  "commands": {
+    "before": "env -u PYTHONPATH python3 -B -m unittest discover -s tests -p test_userproperty_dates.py -v",
+    "focused": "env -u PYTHONPATH python3 -B -m unittest discover -s tests -p test_userproperty_dates.py -v",
+    "acceptance": "env -u PYTHONPATH EAPDF_GENERATOR_CLASSPATH=/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0.jar EAPDF_INTEGRATION_REPORT_DIR=/tmp/eapdf-improvement-batch03/accepted-integration python3 -B -m unittest discover -s tests -v",
+    "corpus": "env -u PYTHONPATH EAPDF_GENERATOR_CLASSPATH=/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0.jar EAPDF_RULE_FIXTURE_SET=batch03 python3 -B scripts/build_eapdf_rule_fixtures.py",
+    "rebuild_if_needed": "mvn -o -Deapdf.build.directory=/tmp/eapdf-improvement-batch03/build package; then update EAPDF_GENERATOR_CLASSPATH to that build path"
+  },
+  "python": {
+    "run": 170,
+    "passed": 169,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 311.647,
+    "skip_reason": "EAPDF_PREMIS_SCHEMA is not configured for the optional official PREMIS XSD test."
+  },
+  "java": {
+    "run_in_this_batch": false,
+    "reason": "No Java changes. Current creator does not emit optional Mail_Sent UserProperties; reused B01 hash-verified JARs. B01 134 Java passes are historical.",
+    "build_artifacts": {
+      "/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0.jar": "b756994355e00d5d272dcbc936d1641f2223a5fe02736aa9816b499ab9684374",
+      "/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0-gui.jar": "aeadc068a46c2549c34158d6772541cdf6a43afb6a28de363e7f6e0c2f1ad429"
+    }
+  },
+  "saved_examples": {
+    "regenerated_in_this_batch": false,
+    "reason": "No creator changes. All ten B01/B02 artifact hashes still match; current profile validation uses freshly generated integration files.",
+    "unchanged_sha256": {
+      "examples/sample_1s.pdf": "d6b5e17a30e5dd0ab4bc422a3a4670c80d8bb3c3af8a5edb5aabf6b30aaa561c",
+      "examples/sample_1si.pdf": "2092d763c7c89337915fe6d830d8df06f3d931e5fb5aac940cc4df0d0f1ada7c",
+      "examples/sample_1m.pdf": "f6268d0c9792eb26a8a7eccc1abea640d79c072f769df723f51ba036fa31d52c",
+      "examples/sample_1mi.pdf": "86edef33f446b79a3afeaf6abaa8a1e0a2ccef52b9720528b1f4845634456924",
+      "examples/sample_1c.pdf": "edc3fa577a2d1dd3cdd6e9924d9204a8207c1410f2b92d64b58cfe05c77a3d85",
+      "examples/sample_1c_finding_aid.pdf": "67dc76aafcd36193041db9342159810c93669da7c45f04eed194a5a05d5c0bb0",
+      "examples/sample_1c_index.xlsx": "8c2694ca48a4eee7b3f6290825d3d53b3efde95e78a3648a4b8b9dada96680f2",
+      "examples/sample_1ci.pdf": "2cda5e33507025cb433ad51bca4e7d9d59095f16a88aa9f2ba2af575c3ddb6d3",
+      "examples/sample_1ci_finding_aid.pdf": "c5bbc01fb8d6332a0eee01e7ff2ae2fa17af7c8de67046f44a8a57061df455de",
+      "examples/sample_1ci_index.xlsx": "6c51e06a8d95a50bd2dcadb3c7a9ad1e7467ef9985360e4063a8a1d05d67b6ef"
+    }
+  },
+  "corpus": [
+    {
+      "case": "dictionary-full-valid",
+      "sha256": "84338b1fd2719ca570c152a1b626ffa5d73427fb75d39c83dd408430cd2fa2e2",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-full-valid",
+      "sha256": "5c3157907cfbd49d960e7b4afcbc42f73bbea0283efe04d7af4d10bb32104bc1",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "year-only-valid",
+      "sha256": "83df309463227f357743097b28bcb7c7d3a8c70000e29c1a06625bd1a06aaa2a",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "leap-date-valid",
+      "sha256": "cce8ca9711e94acd2f1c50c1605fdeb33e44ebf27d786ea9a44164c1253379f0",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "minute-offset-valid",
+      "sha256": "dbcad807d30f185201496d38f57d645c344f49605cb2674f0a415fa44d1ce07c",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "legacy-offset-valid",
+      "sha256": "43d4dbc9b2a551b8408009787c60102914c8d7601df8b78cd039f10d164e46fc",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "z-zero-offset-valid",
+      "sha256": "1fd2be524e43158980ff05187b76df53e61d68ba25f1f99025368a44e29506d4",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "max-offset-valid",
+      "sha256": "ff979a8940ddb1ea5da3d5acf5aaa90beaccc9c6b8ade8ea78b22ab8a3d93058",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "utf16-date-valid",
+      "sha256": "e3da13d7ba9d508172de17f6d6e10f2463b9cd5ef1086cbd9b4e3660b0fd7e45",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "dictionary-not-a-date",
+      "sha256": "8f63bad243e0cff9b37429d942ad558903f306d19c227a214c1a133aca6e35f3",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-not-a-date",
+      "sha256": "846eb657f1c3b65b50b2815483f1ac5876d6687b04d3519fb4404eab040ad346",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "xmp-date-invalid",
+      "sha256": "c5e065757f862fc6eb22c047e6d3e61fe9643d903524915531e250babee32526",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "raw-email-date-invalid",
+      "sha256": "79c6514b9f84f8944f953892d9a23e3bff590d426f9d102fab908ce5b504a12d",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "missing-prefix-invalid",
+      "sha256": "21166820810e55f71c472b103ea12f740d6bb88c730aac8f989c422a0fa68459",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "whitespace-invalid",
+      "sha256": "cc04e2c76c224d303609ea4461cbf0acef29f7800fd3e993d3b45fcb0acfd6d8",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "nonleap-day-invalid",
+      "sha256": "74c10fc1a3752488e26b1418aeeb4c237cc6dbbf7468ba7b4ee387388700b95d",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "century-day-invalid",
+      "sha256": "51b0eb5b0d4f1a440e77519877045f7e00bf2da093ebc774688f5a9ef6669c9f",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "month-day-invalid",
+      "sha256": "476baf3347a4263304abb81a8f0f02a391a87b921f483a4a1485a8ddeb3f968f",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "hour-invalid",
+      "sha256": "c6452cb5d8ab0552913ab0096c26d3508113dab307213ec06467dad37738790a",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "second-invalid",
+      "sha256": "8d5fb9a321959bf8b1d77090325d138b36455402492294211685de50124a5606",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "offset-hour-invalid",
+      "sha256": "ab5047a01f005e434192da5d041500a19072b5e562508ebeca8d81ec2bb54dd1",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "offset-minute-invalid",
+      "sha256": "825f06fb73a61f1228adf85e6468a2b87d2c880be2ce11397f96b56979513197",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "z-nonzero-invalid",
+      "sha256": "8a431acf3af461d030a362b5b52718ab5328965c5ba980d129ad79f63c4b05e5",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "offset-apostrophe-invalid",
+      "sha256": "c3fca9e3854f5dd23c8e7057746f5cfc7f220ac86f48b7a1534f14067d4b39d4",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "unicode-digits-invalid",
+      "sha256": "9afc12cdf91b5222f96eafe2b170a654b49aa8a427971135377b9e84b40b9eea",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    }
+  ],
+  "profile_integrations": [
+    {
+      "report": "docs/improvement/batch-03-profile-reports/1c.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 3
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/1ci.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 3
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/1m.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/1mi.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/1s.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/1si.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/accessibility/1c.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 2
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/accessibility/1ci.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 2
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/accessibility/1m.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/accessibility/1mi.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/accessibility/1s.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    },
+    {
+      "report": "docs/improvement/batch-03-profile-reports/accessibility/1si.json",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "children_pass": 0
+    }
+  ],
+  "durable_artifacts": {
+    "docs/improvement/batch-03-corpus/array-full-valid.html": "9dfd8cca8cb7c0c595b62d23e63373ed47688e06bebecf93d597a031ad362143",
+    "docs/improvement/batch-03-corpus/array-full-valid.json": "d9928eff006db866cdd141977aa03b8841235c67fa14ac9e28efb22778d08cc2",
+    "docs/improvement/batch-03-corpus/array-full-valid.pdf": "5c3157907cfbd49d960e7b4afcbc42f73bbea0283efe04d7af4d10bb32104bc1",
+    "docs/improvement/batch-03-corpus/array-not-a-date.html": "0a173eb05d673f96bf86a2027f24ed23e2931d681e3ae8b881d617afa083f927",
+    "docs/improvement/batch-03-corpus/array-not-a-date.json": "9417c9533716fcd3a43eda9a852de8254dff349bf2d6d1ab2cd25050bfbe97f2",
+    "docs/improvement/batch-03-corpus/array-not-a-date.pdf": "846eb657f1c3b65b50b2815483f1ac5876d6687b04d3519fb4404eab040ad346",
+    "docs/improvement/batch-03-corpus/century-day-invalid.html": "dacda39c84f53658c0cd8ec8d401c7d3977d4a3a368af3d2104aa979e5e77578",
+    "docs/improvement/batch-03-corpus/century-day-invalid.json": "7320123f0a2e80cae9d08d0e892154d6f4009442692b3f6c540ac3127f426533",
+    "docs/improvement/batch-03-corpus/century-day-invalid.pdf": "51b0eb5b0d4f1a440e77519877045f7e00bf2da093ebc774688f5a9ef6669c9f",
+    "docs/improvement/batch-03-corpus/config.json": "e995f0d8f72463627fa0debb54f534c15cf5ad26ec001be802dadd6d7bb8e9c7",
+    "docs/improvement/batch-03-corpus/dictionary-full-valid.html": "8fbb72a0916fc8b17d21cf6af83ae8687f8f22acdfd4d5d3b9d5ef426d2b89f1",
+    "docs/improvement/batch-03-corpus/dictionary-full-valid.json": "9e6672491787621d4f2fe9cbb0d3660bf9f2bf6884b4cc1e426fc01b1adce8b0",
+    "docs/improvement/batch-03-corpus/dictionary-full-valid.pdf": "84338b1fd2719ca570c152a1b626ffa5d73427fb75d39c83dd408430cd2fa2e2",
+    "docs/improvement/batch-03-corpus/dictionary-not-a-date.html": "e840ec9c57cbf2eb47e435db66edc909e38f703a86b833a516eb86843291cc95",
+    "docs/improvement/batch-03-corpus/dictionary-not-a-date.json": "e575be215ff082e3df6858b7a3ed996ca4236e5c7059c1d01161022d55dcc17c",
+    "docs/improvement/batch-03-corpus/dictionary-not-a-date.pdf": "8f63bad243e0cff9b37429d942ad558903f306d19c227a214c1a133aca6e35f3",
+    "docs/improvement/batch-03-corpus/generation.log": "c23ef3ff66442749db8748d157b18298651936538d822faf50257ee08591c54a",
+    "docs/improvement/batch-03-corpus/hour-invalid.html": "0e7ddb3e0645b070db35ebe567fb3fee832d27b2b556d47c9e15996945068ebd",
+    "docs/improvement/batch-03-corpus/hour-invalid.json": "4fd295066b88c9bea02f07134fb4ca537cfb7d6d710d11a838c1344e65f31897",
+    "docs/improvement/batch-03-corpus/hour-invalid.pdf": "c6452cb5d8ab0552913ab0096c26d3508113dab307213ec06467dad37738790a",
+    "docs/improvement/batch-03-corpus/leap-date-valid.html": "76b82c0a52abbd7aa2d4aead1e2c7950bdc47f22eeae1c811b7ccf13795c95b5",
+    "docs/improvement/batch-03-corpus/leap-date-valid.json": "1a49b21cc823590fc779be6ea24097cca17d85038eacfe215123da50764b1954",
+    "docs/improvement/batch-03-corpus/leap-date-valid.pdf": "cce8ca9711e94acd2f1c50c1605fdeb33e44ebf27d786ea9a44164c1253379f0",
+    "docs/improvement/batch-03-corpus/legacy-offset-valid.html": "9a2bee779bfa54537795ab96e84cd443cf3bcf76f3c9c91bbb54c1e1f8ee0230",
+    "docs/improvement/batch-03-corpus/legacy-offset-valid.json": "f8d68caf0577b86d4026fdad1a73d9da5bf942bd5fb40b5b63392393dc2c7510",
+    "docs/improvement/batch-03-corpus/legacy-offset-valid.pdf": "43d4dbc9b2a551b8408009787c60102914c8d7601df8b78cd039f10d164e46fc",
+    "docs/improvement/batch-03-corpus/max-offset-valid.html": "c595249846d07a86d1ba01ce48824edd69a6cd4787208879da2d516684c58466",
+    "docs/improvement/batch-03-corpus/max-offset-valid.json": "ffe46bf941e410a6262f35bf7851570e9dad50fdf299c4cb35436fdb0fbe6de8",
+    "docs/improvement/batch-03-corpus/max-offset-valid.pdf": "ff979a8940ddb1ea5da3d5acf5aaa90beaccc9c6b8ade8ea78b22ab8a3d93058",
+    "docs/improvement/batch-03-corpus/minute-offset-valid.html": "7d1ad71bdd99d25633d1ab0190fc62ffc7a5505760e531561213c1a4ab2d5466",
+    "docs/improvement/batch-03-corpus/minute-offset-valid.json": "80cf51d03a5d1664de5e8dd50e3dcab7e2432581759f9792be66e4f128fb55f2",
+    "docs/improvement/batch-03-corpus/minute-offset-valid.pdf": "dbcad807d30f185201496d38f57d645c344f49605cb2674f0a415fa44d1ce07c",
+    "docs/improvement/batch-03-corpus/missing-prefix-invalid.html": "e9dbf0cbd35ec0407ea46e87d10e04f56ac75f1bba59febbef405ef7925b8932",
+    "docs/improvement/batch-03-corpus/missing-prefix-invalid.json": "944a1daa91eff25ab3d09c183da57f90b02efedbdb4a12ec4c8fc60c1d72987a",
+    "docs/improvement/batch-03-corpus/missing-prefix-invalid.pdf": "21166820810e55f71c472b103ea12f740d6bb88c730aac8f989c422a0fa68459",
+    "docs/improvement/batch-03-corpus/month-day-invalid.html": "badd43426fbba9405beb8fa42552f575e4124b928fab62949a36e87a20a0a058",
+    "docs/improvement/batch-03-corpus/month-day-invalid.json": "71c21b3cb96745618568ce4e0b50252f9234ad3e1e3b3725d56bad20bf6d6150",
+    "docs/improvement/batch-03-corpus/month-day-invalid.pdf": "476baf3347a4263304abb81a8f0f02a391a87b921f483a4a1485a8ddeb3f968f",
+    "docs/improvement/batch-03-corpus/nonleap-day-invalid.html": "b8d45639753b87d1ce0e4a9a87bc848f3a3689bef5de1b03b2530f9eb5932186",
+    "docs/improvement/batch-03-corpus/nonleap-day-invalid.json": "35b7a188cabe53368a447695753d2f71c7d620c37a2812a6f33221ec6592263f",
+    "docs/improvement/batch-03-corpus/nonleap-day-invalid.pdf": "74c10fc1a3752488e26b1418aeeb4c237cc6dbbf7468ba7b4ee387388700b95d",
+    "docs/improvement/batch-03-corpus/offset-apostrophe-invalid.html": "3e50eca0a76ac544bb9e1823da68c761c1270ad4108d814f6eaece985ef846a7",
+    "docs/improvement/batch-03-corpus/offset-apostrophe-invalid.json": "af17a5eab82168c2bb771027956e06e10fbca43ed6db1258feb7dfa7c6b3cc23",
+    "docs/improvement/batch-03-corpus/offset-apostrophe-invalid.pdf": "c3fca9e3854f5dd23c8e7057746f5cfc7f220ac86f48b7a1534f14067d4b39d4",
+    "docs/improvement/batch-03-corpus/offset-hour-invalid.html": "316308dcdb50e2ccff6fea812caa09a8ea272a6711a2accc42a1f97de6fcc9de",
+    "docs/improvement/batch-03-corpus/offset-hour-invalid.json": "287a97fcf8fa4dd8af49de00df55ecce2665101e3786aa1017b4c26bccef3360",
+    "docs/improvement/batch-03-corpus/offset-hour-invalid.pdf": "ab5047a01f005e434192da5d041500a19072b5e562508ebeca8d81ec2bb54dd1",
+    "docs/improvement/batch-03-corpus/offset-minute-invalid.html": "2c6ea7d6d5f76d1a9736b516553defea4a1bc61fba42177a296c37a8ef447dfb",
+    "docs/improvement/batch-03-corpus/offset-minute-invalid.json": "05409c10b0fd2f298e957f81c730844089e13f3499e0971a3084755eb23585bd",
+    "docs/improvement/batch-03-corpus/offset-minute-invalid.pdf": "825f06fb73a61f1228adf85e6468a2b87d2c880be2ce11397f96b56979513197",
+    "docs/improvement/batch-03-corpus/raw-email-date-invalid.html": "d4f70a19e64c2eaab4af06ac1a3a2edb3eba61f500dbca0e3c0cfb1f608c5abd",
+    "docs/improvement/batch-03-corpus/raw-email-date-invalid.json": "17cb720dd33471daab732209c1e232f8045233e1167ceaf6baa7c0687162c678",
+    "docs/improvement/batch-03-corpus/raw-email-date-invalid.pdf": "79c6514b9f84f8944f953892d9a23e3bff590d426f9d102fab908ce5b504a12d",
+    "docs/improvement/batch-03-corpus/results.json": "ebd9dbf32375d0ed9e6232d86f602ea83bd763c72064cbc64fe9b8a614ee2bbc",
+    "docs/improvement/batch-03-corpus/second-invalid.html": "a4b1e4a1c640aa2f1bd79f039f1194caf4f0b652bc0aec480ecc70fb5eb24c5e",
+    "docs/improvement/batch-03-corpus/second-invalid.json": "40fcf1800ef2e07104a9ea878a7d488b3312ebb8051bf7896f74458b75a3da20",
+    "docs/improvement/batch-03-corpus/second-invalid.pdf": "8d5fb9a321959bf8b1d77090325d138b36455402492294211685de50124a5606",
+    "docs/improvement/batch-03-corpus/seed/EA-PDF attribute fixture_000001.pdf": "320580b52128a91ee382a2f8ccdd1d7d6d8006c59ac75534d183776c8edec611",
+    "docs/improvement/batch-03-corpus/seed/logs/EA-PDF attribute fixture_000001.log": "443d4f4e5931f25fe9ef4deb96a67f7805294540fb89fb88b3b248e54c1b5001",
+    "docs/improvement/batch-03-corpus/unicode-digits-invalid.html": "55563520e643f7f9f126de313f1fd9e9980b67b46d77a9111cfded7217444581",
+    "docs/improvement/batch-03-corpus/unicode-digits-invalid.json": "aad21bd428875e7152ac9672731b719b6904eccb27bfe16722e5a0acdead4f68",
+    "docs/improvement/batch-03-corpus/unicode-digits-invalid.pdf": "9afc12cdf91b5222f96eafe2b170a654b49aa8a427971135377b9e84b40b9eea",
+    "docs/improvement/batch-03-corpus/utf16-date-valid.html": "94c37a2c29800540a8e5d49159a41246b60dcb1f80b476c0302808a34aaa1328",
+    "docs/improvement/batch-03-corpus/utf16-date-valid.json": "cc03e8a312f6b1de4618273c3d8ebcac0dcb84d6061bac71e38e1b1945d04e48",
+    "docs/improvement/batch-03-corpus/utf16-date-valid.pdf": "e3da13d7ba9d508172de17f6d6e10f2463b9cd5ef1086cbd9b4e3660b0fd7e45",
+    "docs/improvement/batch-03-corpus/whitespace-invalid.html": "3e1e58ca051e34066835c2f78886b9a29a33729d8629f3a122e3fc1f2f6b280e",
+    "docs/improvement/batch-03-corpus/whitespace-invalid.json": "acda8e10f5d0bb59cc0c48032e099dbe3380241478af5083a8feb0b92d656dcc",
+    "docs/improvement/batch-03-corpus/whitespace-invalid.pdf": "cc04e2c76c224d303609ea4461cbf0acef29f7800fd3e993d3b45fcb0acfd6d8",
+    "docs/improvement/batch-03-corpus/xmp-date-invalid.html": "9e0921e805468ca8d5ec5242eea0e51db83f3a77ce957da0c8cfd5da01938cf5",
+    "docs/improvement/batch-03-corpus/xmp-date-invalid.json": "0b4cfc2007cabfabf6d6d3fdf6eacb7d845c49a6f58aa6e01f27f923dc5311e6",
+    "docs/improvement/batch-03-corpus/xmp-date-invalid.pdf": "c5e065757f862fc6eb22c047e6d3e61fe9643d903524915531e250babee32526",
+    "docs/improvement/batch-03-corpus/year-only-valid.html": "6659892727b97d2bf61e92cf89f7582647a4d6d6a9dd0e53990093e1d2cf1b6f",
+    "docs/improvement/batch-03-corpus/year-only-valid.json": "3fadf8dc76ef2e6b8f001d6e1d4385d7dffd926282c9621ae6571a4adf890361",
+    "docs/improvement/batch-03-corpus/year-only-valid.pdf": "83df309463227f357743097b28bcb7c7d3a8c70000e29c1a06625bd1a06aaa2a",
+    "docs/improvement/batch-03-corpus/z-nonzero-invalid.html": "a2bde9757b154e0c760f3a979aebd7a33f38dedfdc1698ed810413c53b43b51f",
+    "docs/improvement/batch-03-corpus/z-nonzero-invalid.json": "a1d8cbbb324121c37e98c67e7f0e9fdb6738c028c43501fa672fc08f4971621b",
+    "docs/improvement/batch-03-corpus/z-nonzero-invalid.pdf": "8a431acf3af461d030a362b5b52718ab5328965c5ba980d129ad79f63c4b05e5",
+    "docs/improvement/batch-03-corpus/z-zero-offset-valid.html": "d834c6a4cc6f3d0f712d3384fe1782cd2fa06a009583a9ebd277af73460a0b6c",
+    "docs/improvement/batch-03-corpus/z-zero-offset-valid.json": "b68380a214f126d837f69d5d773fef074e2143f4544d0f2fc97ddc5cc5cacfa8",
+    "docs/improvement/batch-03-corpus/z-zero-offset-valid.pdf": "1fd2be524e43158980ff05187b76df53e61d68ba25f1f99025368a44e29506d4",
+    "docs/improvement/batch-03-profile-reports/1c.html": "e0248843e4ed548db52bfea84f1ad299d7cb3ebc18ff43963bbe27b47768da52",
+    "docs/improvement/batch-03-profile-reports/1c.json": "d862226233979a5790ca976ec087052f2cddff06c096ecb2b27a59d0f6f184ab",
+    "docs/improvement/batch-03-profile-reports/1ci.html": "caf0d345b14a3c5f542e4f9d63737002bca797a32dd3e0e907ba421f641bb4e3",
+    "docs/improvement/batch-03-profile-reports/1ci.json": "244c81a9baa361a09eca7906a60e816258c29fe63d9467b7d9c38613433e36be",
+    "docs/improvement/batch-03-profile-reports/1m.html": "bfe27c6da051e97f709d66eacd12b2aa36e3a054caab3dcdf725994c7721fb43",
+    "docs/improvement/batch-03-profile-reports/1m.json": "a100f44a5b50d3376532ea4deb949e8319dddf7b4d181aca9a0202f4768cb58d",
+    "docs/improvement/batch-03-profile-reports/1mi.html": "16df1d5b3c91e1a9af624a4d507428e6b35705d645985f8918a0b53e8e405d1c",
+    "docs/improvement/batch-03-profile-reports/1mi.json": "c3242ad03d52dffe58228ed44162b8fcbfe7970e1271de14232afa68d8961447",
+    "docs/improvement/batch-03-profile-reports/1s.html": "dd236c1e17428eb92e110a4890f7e7eff20059017d33e03411a9d3eb653aebc8",
+    "docs/improvement/batch-03-profile-reports/1s.json": "45121fef9ee514f25ad0f870562f31b03411c8e3bf017788986f234f4fd3d02c",
+    "docs/improvement/batch-03-profile-reports/1si.html": "e6c0fa487b8847a421fb0e075b4eeecde841226d1b02f5948c012ada35b34fe9",
+    "docs/improvement/batch-03-profile-reports/1si.json": "f442e0460864ac87092c3d7164b4f43dd567391dcdf50e6da8f1e97a024d89ee",
+    "docs/improvement/batch-03-profile-reports/accessibility/1c.html": "bf9ed2fc58351a5c8ee385148dd055c90565e7693a7386b75168c79f84b165dd",
+    "docs/improvement/batch-03-profile-reports/accessibility/1c.json": "a6613ce4a4ed31666064d3a6df56804fff054912f4431908c591777a6d9bb1da",
+    "docs/improvement/batch-03-profile-reports/accessibility/1ci.html": "6ab17ccca903a95414af40684808fe8b77aa2187c0b11a5c18baef6b701bdb82",
+    "docs/improvement/batch-03-profile-reports/accessibility/1ci.json": "f142b7044828c0598b1e0e383b8529fdb7168a929fbee5d28e5c6e9b489d4bde",
+    "docs/improvement/batch-03-profile-reports/accessibility/1m.html": "23a55ef25662d7b81d4b76c57e1b3b7f72c67aaf0d9dbdc417659720397fae47",
+    "docs/improvement/batch-03-profile-reports/accessibility/1m.json": "9ad151f1a695861863a3996e7a1be6c1b107ebeaba39c829c6368700e9436e9f",
+    "docs/improvement/batch-03-profile-reports/accessibility/1mi.html": "d8bf07d2cce4c20bab45809d40c1da2d567f2f1a519239929c9391e1d3c40222",
+    "docs/improvement/batch-03-profile-reports/accessibility/1mi.json": "afd06f26164acc938c61adcbba8ed56b7559f5b647690a42d1fe5612b5f0db5a",
+    "docs/improvement/batch-03-profile-reports/accessibility/1s.html": "a7b46b3c2e65a067efa0bd78a89adb6f549e81b88efd4351a52f2470b3259246",
+    "docs/improvement/batch-03-profile-reports/accessibility/1s.json": "4dac60b9914a538f53b27d79be11d6b72000c76d6587f9100aef5422cdaae385",
+    "docs/improvement/batch-03-profile-reports/accessibility/1si.html": "932a04ebb6e8186d794fc891f231523b87fda2e24f5ce0d1ca3377baebb1efd0",
+    "docs/improvement/batch-03-profile-reports/accessibility/1si.json": "73cc5b2f4d0b4b4fb2ef403c7e90d7a1840251b17d01a47dc9d8a01ce5dc5fb3"
+  },
+  "audit_logs": {
+    "docs/improvement/batch-03-corpus.log": "6639d51d9fcd3bd8853c938988e787ee7e47d682a4ab80b4f997a3258c842b73",
+    "docs/improvement/batch-03-python-acceptance.log": "360025429ebb25f32b1ec151d3545ff7fda9a5acb689e064de838c678064c0c7",
+    "docs/improvement/batch-03-python-before.log": "4b5302fdd4235913ef5000f48eaadc00c64806d1c02b63c784479d51df196ce4",
+    "docs/improvement/batch-03-python-focused.log": "6b9dd645495a5301450460a2f8cd5423a5ff40cdbeb64aa1f7d6c08e147c2f39"
+  },
+  "baseline": "docs/improvement/batch-03-baseline.json",
+  "frozen_inputs": "docs/improvement/batch-03-verification-inputs.json",
+  "normative_review": {
+    "notes": "docs/improvement/batch-03-date-review.md",
+    "local_sources": {
+      "docs/reference/EA-PDF-v1.pdf": "b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae",
+      "docs/reference/ISO_32000-2_sponsored-ec2.pdf": "0958d3b076f4ad3bb32c1a1aa62011f52751b58bd2e3914bc714b74a1ccc517b"
+    },
+    "pdf17": {
+      "url": "https://raw.githubusercontent.com/adobe/dc-acrobat-sdk-docs/master/docs/standards/pdfstandards/pdf/PDF32000_2008.pdf",
+      "sha256": "9de0ca9e8570d6209e8bd48a355be8eb6ec376acfc3fc3ae97cd8730351417ff",
+      "temporary_download": "/tmp/eapdf-b03-iso32000-1.pdf",
+      "clause": "7.9.4, printed pages 87\u201388"
+    },
+    "date_errata": {
+      "url": "https://pdf-issues.pdfa.org/32000-2-2020/clause07.html#7.9.4",
+      "reviewed_on": "2026-10-18",
+      "scope": "7.9.4 including missing timezone offset clarification issue 251; not a complete errata review"
+    }
+  },
+  "preserved_findings": [
+    "Pre-fix focused run: 144 false-accept assertions and one missing-failure-details error; generator test skipped. Original log retained.",
+    "Focused repaired run: seven passes and one intentionally skipped generator test. Full suite runs the generator test successfully.",
+    "Known not-a-date PDF string probe now fails USERPROPS_TYPE; original PASS preserved in known-next-gaps.json."
+  ],
+  "tools": {
+    "python": "3.12.3",
+    "pikepdf": "10.17.0"
+  },
+  "next_actions": [
+    "Review/implement USERPROPS_VALUES_UNMODIFIED with correct source/message ownership and raw/decoded/date semantics; retain SHOULD severity and explicit unverifiable outcomes.",
+    "Audit remaining explicit N/A and source/human-dependent recommendations.",
+    "Review repeated attribute owners, namespaces, class maps and revision precedence.",
+    "Expand the thirteen-record partial register, obtain full ISO/TS 32005 and review remaining applicable errata."
+  ],
+  "limitations": [
+    "Not a complete standards register, full date audit or external certification.",
+    "This check validates declared Mail_Sent values; it does not establish source/XMP date equality.",
+    "Tolerant document-date comparison parser unchanged.",
+    "Reduced-precision/legacy/encoding/calendar interpretation is recorded for review, including accepting all four-digit years.",
+    "No new Java run, sample regeneration, live viewer/accessibility review, deployment or commit.",
+    "Optional PREMIS schema test skipped."
+  ]
+}

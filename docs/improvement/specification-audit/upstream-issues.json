@@ -1,0 +1,841 @@
+{
+  "repository": "pdf-association/report-an-issue",
+  "url": "https://github.com/pdf-association/report-an-issue/issues",
+  "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+  "method": "GitHub REST all-state pagination, every issue body and every comment page; web issue-list rendering was stale and individual web pages unavailable, so current REST data is the review basis.",
+  "issue_count": 26,
+  "comment_count": 47,
+  "listing_pages": [
+    {
+      "url": "https://api.github.com/repos/pdf-association/report-an-issue/issues?state=all&per_page=100&page=1",
+      "count": 26,
+      "link": ""
+    }
+  ],
+  "raw_snapshot_sha256": {
+    "issues": "a0fb0a01532d90a84f287355a3e5eca8ae46bd43a4c5229c848d803c988fbb4c",
+    "comments": "e2c83a41de2715f6e472eda4e0654e882a6cb346cd8592d86c03e00370d111fb"
+  },
+  "formal_errata_tracker_cross_check": {
+    "url": "https://api.github.com/repos/pdf-association/pdf-issues/issues?state=all&labels=EA-PDF&per_page=100",
+    "matching_entries": 0,
+    "boundary": "A label query is not an exhaustive search of unlabelled formal issues; published clause errata were checked directly for the relevant inherited corrections."
+  },
+  "decision_policy": "Published applicable normative clauses and approved errata govern conformance; open issue reports and individual comments are evidence, not automatic amendments. Closed does not prove a new edition was downloaded. Unknown implementation coverage remains explicit.",
+  "issues": [
+    {
+      "number": 1,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/1",
+      "title": "PDF 2.0 Application Note for Associated Files is out of date",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2025-01-03T00:38:10Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "published_iso_erratum",
+      "disposition": "Apply published ISO erratum 374 when reading marked-content AF associations: named property dictionary MCAF under AF/BDC. Preserve legacy observations without claiming generic conformance. The older application note is not the complete current authority.",
+      "affected_rule_codes": [
+        "AF_IN_NAME_TREE",
+        "AF_RULE",
+        "SOURCE_FILE_SET"
+      ],
+      "body_sha256": "02b1daf92dafc2b7c21ef6c19a6b790b04fef68609c541448f204fc21c2faf5b",
+      "comments_reviewed": 2,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/1#issuecomment-2490126974",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2024-11-21T05:42:36Z",
+          "body_sha256": "97af198768275d5c52971a7a9230391e59582f360c87625696ab6fbe84a766af"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/1#issuecomment-2568561225",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2025-01-03T00:38:10Z",
+          "body_sha256": "e44633abed693acacaf94d44ca1a56fa446aa2b467acc60c7b769f460eac4036"
+        }
+      ],
+      "published_resolution": "https://pdf-issues.pdfa.org/32000-2-2020/clause14.html#H14.13.5"
+    },
+    {
+      "number": 2,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/2",
+      "title": "CalPoly Test Suite 1.0.1 for PDF/VT issues",
+      "github_state": "closed",
+      "github_state_reason": "completed",
+      "updated_at": "2024-11-21T06:58:16Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "out_of_scope",
+      "authority_level": "other_publication",
+      "disposition": "PDF/VT-specific test-suite repairs do not change EA-PDF requirements or make that suite an EA-PDF conformance oracle.",
+      "affected_rule_codes": [],
+      "body_sha256": "2dbe39afa47f73062745c2cb74ccbad22058b181cf37e055f9f13d8341c383f5",
+      "comments_reviewed": 1,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/2#issuecomment-2490131002",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2024-11-21T05:46:45Z",
+          "body_sha256": "7b7101263f8ac3a2db3446a611b30352bd59e2e02c426e0f9f93faa81f2a1f29"
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/3",
+      "title": "RFC 8118 is out of date",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2024-11-21T06:57:43Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "unresolved_reference_update",
+      "disposition": "Treat RFC 8118 as a dated media-type reference. Do not infer PDF/A-4 or newer extension support from its older feature inventory, and do not invent a replacement RFC from an unresolved report.",
+      "affected_rule_codes": [],
+      "body_sha256": "252c7c739b987fbc127c573d8fc024caab47f8d10a62d9bcd0c4efa9681acbb7",
+      "comments_reviewed": 1,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/3#issuecomment-2490160662",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2024-11-21T06:13:24Z",
+          "body_sha256": "7ba4e95a00b4b036e71bbaa385748aeeb50c20371dace7e2df7a54c846f67452"
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/4",
+      "title": "Typo in Standard Structure Elements Cheat Sheet for PDF 2.0 SSEs \"Thead\" - should be \"THead\"",
+      "github_state": "closed",
+      "github_state_reason": "completed",
+      "updated_at": "2025-11-26T22:28:55Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "member_comment",
+      "disposition": "Use the standard THead spelling. A corrected cheat-sheet master is not evidence that a downloaded release changed. Generic structure validation remains upstream.",
+      "affected_rule_codes": [
+        "STRUCTURE_CORRESPONDENCE"
+      ],
+      "body_sha256": "93da61730818c1509fd766bd41ded49a364d14cf33210d2ad1419d72abd898c6",
+      "comments_reviewed": 1,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/4#issuecomment-3583426629",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2025-11-26T22:28:55Z",
+          "body_sha256": "1c70166fb0abcdbe9cbd76166c3ea4a5801c2bf6acdac375425f32e6e8786bf4"
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/5",
+      "title": "\"PDF/A in a Nutshell 2.0\" is out of date",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2024-11-21T23:12:26Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "unresolved_reference_update",
+      "disposition": "The older PDF/A booklet is not the profile/edition authority. Continue using pinned actual veraPDF profiles and retain the PDF/A-4 edition question.",
+      "affected_rule_codes": [
+        "PDFA_PART",
+        "PDFA_CONFORMANCE"
+      ],
+      "body_sha256": "c460ae8da553b1705fcdebed5360e8a8b56d80fba0b742905f1b512a9e979c2a",
+      "comments_reviewed": 0,
+      "comment_evidence": []
+    },
+    {
+      "number": 6,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/6",
+      "title": "PDF/A cheat sheets",
+      "github_state": "closed",
+      "github_state_reason": "completed",
+      "updated_at": "2025-11-26T22:24:31Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "member_comment",
+      "disposition": "Cheat sheets are supporting explanations, not a replacement for normative clauses or actual profile predicates; no runtime change follows the editorial comments.",
+      "affected_rule_codes": [],
+      "body_sha256": "0d75a0ec9bf4b6656dab4f3a92eafd474ec33e2428a4d1850ec03f4d75949b33",
+      "comments_reviewed": 3,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/6#issuecomment-2495755968",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2024-11-24T02:12:23Z",
+          "body_sha256": "772ed3e49b979b2ae33a87fc8416d3728b68d371958da6d624bac6f68e525f26"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/6#issuecomment-3550873738",
+          "author": "crlf0710",
+          "author_association": "NONE",
+          "updated_at": "2025-11-19T05:27:20Z",
+          "body_sha256": "345f9d6bf6f4c466cf711380858f1cf9d779b3daeb89dd8f1fd3aa4261b74aea"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/6#issuecomment-3583415406",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2025-11-26T22:24:14Z",
+          "body_sha256": "64e51d097c3cbf2b6d0222160dca9883998db4c189134acb76fe551f90738776"
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/7",
+      "title": "Typo in errata in sponsored ISO 32000-2:2020 Errata Collection 2",
+      "github_state": "closed",
+      "github_state_reason": "completed",
+      "updated_at": "2026-05-27T06:22:19Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "member_comment",
+      "disposition": "Track the EC2 annotation typo RP versus EP as a source-publication defect. Comments confirm correction in EC3; do not claim the pinned EC2 copy was replaced or that EC3 was downloaded.",
+      "affected_rule_codes": [
+        "STRUCTURE_CORRESPONDENCE"
+      ],
+      "body_sha256": "7b3d067e9804056a7c62b0e9905b7ea5c9a79856ffa75ea304f73855218ab749",
+      "comments_reviewed": 3,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/7#issuecomment-2495745327",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2024-11-24T01:45:35Z",
+          "body_sha256": "a3c44ff316f643e3ef49491318e435c8910db120677a2461bfb87be72bd5d4dd"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/7#issuecomment-4537407094",
+          "author": "tippi-fifestarr",
+          "author_association": "NONE",
+          "updated_at": "2026-05-25T21:37:45Z",
+          "body_sha256": "0d11cba00ca9b415b2df0e2d2ae99caeddb6044931c0c90093f6df5ff23ed734"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/7#issuecomment-4551926877",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-05-27T06:22:19Z",
+          "body_sha256": "c5fedec7938ea79269a7dd7799eeef87b92519a530fe75acc2a00857932045fc"
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/8",
+      "title": "EA-PDF v1.0 spec PDF is technically invalid (number tree has odd number of entries)",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2025-05-19T00:12:57Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "direct",
+      "authority_level": "locally_verified_publication_defect",
+      "disposition": "The pinned EA-PDF publication contains two odd-length number-tree arrays, including the reported object. Preserve its content hash, use its text as specification evidence, and exclude its bytes as a positive conformance fixture.",
+      "affected_rule_codes": [],
+      "body_sha256": "978ba13fc123bd864efb40e6d1e6b02b40b50f9d7ca7ba0835fea254de390830",
+      "comments_reviewed": 0,
+      "comment_evidence": []
+    },
+    {
+      "number": 9,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/9",
+      "title": "Sponsored EC2 PDF is technically invalid (attached files have Subtype in EF)",
+      "github_state": "closed",
+      "github_state_reason": "completed",
+      "updated_at": "2026-06-12T01:34:17Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "member_comment",
+      "disposition": "Subtype belongs on the embedded-file stream, not the EF dictionary. Record the EC2 publication defect and EC3 resolution comment; do not copy the malformed publication object or add a duplicate generic PDF/A validator.",
+      "affected_rule_codes": [
+        "EMBEDDED_SUBTYPE_PRESENT",
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP"
+      ],
+      "body_sha256": "369fa93fd2571cce1d91c8f65dede76448e49d51ae788438393b3749cbc169c1",
+      "comments_reviewed": 1,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/9#issuecomment-4686543693",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-06-12T01:34:17Z",
+          "body_sha256": "47a56db52def83d2376d5702584510826cd33b2215cb9b1666cdf146e27ce755"
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/10",
+      "title": "Typo in EA-PDF v1.0",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2025-08-01T03:11:47Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "direct",
+      "authority_level": "normative_cross_check",
+      "disposition": "Treat PDF/A-4fe in the overview as a reported editorial typo. The normative allowed-flavour table and current engine accept 4e, never a new 4fe flavour.",
+      "affected_rule_codes": [
+        "PDFA_PART",
+        "PDFA_CONFORMANCE"
+      ],
+      "body_sha256": "027c53f16945ca450b7ab244d685f8f27f39814c60cbfee87f87a43af625a36b",
+      "comments_reviewed": 0,
+      "comment_evidence": []
+    },
+    {
+      "number": 11,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/11",
+      "title": "WTPDF 1.0 outline hierachy in the PDF is incorrectly indented - H3 is merged with H2",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2025-08-05T02:16:53Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "out_of_scope",
+      "authority_level": "other_publication",
+      "disposition": "The WTPDF publication outline indentation defect does not change EA-PDF obligations.",
+      "affected_rule_codes": [],
+      "body_sha256": "5cd86118345be62f7f539cba92cd1c46a6904befa95f8222422a656bfc02b341",
+      "comments_reviewed": 0,
+      "comment_evidence": []
+    },
+    {
+      "number": 12,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/12",
+      "title": "PDF Declarations does not provide advice or schema for PDF/A-4",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2025-08-05T02:47:58Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "unresolved_dependency",
+      "disposition": "The missing PDF/A-4 declaration-schema example is a dependency limitation, not permission to require a nonexistent RELAX NG artifact or reuse the PDF/A-3 extension schema unconditionally. Keep EA-PDF declaration semantics and upstream syntax separate.",
+      "affected_rule_codes": [
+        "LOGICAL_TS32005_DECLARATION",
+        "PDFA3_EAPDF_XMP_EXTENSION_SCHEMA"
+      ],
+      "body_sha256": "b295da2f06805dc188bf5159612d669d1c310253b499d09bd69f8ef9a08e09d4",
+      "comments_reviewed": 0,
+      "comment_evidence": []
+    },
+    {
+      "number": 13,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/13",
+      "title": "EA-PDF 1.0 - requirements for DPM metadata in table 8 are invalid",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2025-09-11T11:04:15Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "direct",
+      "authority_level": "published_iso_erratum",
+      "disposition": "The reported DPM-name prohibition is superseded by published ISO-approved erratum 86, which permits name values and requires their decoded bytes to be UTF-8. Retain Table 8 names; do not implement the proposed text-string replacement. DPM traversal/name decoding coverage remains a dependency follow-up.",
+      "affected_rule_codes": [
+        "DPM_CONTENTSETTYPE_PRESENT",
+        "DPM_SUBTYPE_REQUIRED",
+        "DPM_SUBTYPE_MEDIA_TYPE_NAME"
+      ],
+      "body_sha256": "5ad0eb2ed2a109c1cd19eb80f7210184ce51cfb1befea47bb870b50d2a91f1b1",
+      "comments_reviewed": 0,
+      "comment_evidence": [],
+      "published_resolution": "https://pdf-issues.pdfa.org/32000-2-2020/clause14.html#H14.12.4.2"
+    },
+    {
+      "number": 14,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/14",
+      "title": "EA-PDF 1.0 - minor issues",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2025-10-14T14:01:56Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "direct",
+      "authority_level": "unresolved_report",
+      "disposition": "Retain the published NonFullScreenPageMode SHALL despite the removal proposal. Flag ambiguous Source-AF cardinality for expert review. Keep asset ContentType/Checksum distinct from attachment Content-Type/CheckSum; the naming complaint is not authorization to rename fields. Corrected paraphrases need not reproduce the editorial spelling typo.",
+      "affected_rule_codes": [
+        "SOURCE_AF",
+        "PROFILE_NFSM_SINGLE_NO_ATTACHMENTS",
+        "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS",
+        "PROFILE_NFSM_MULTI",
+        "PROFILE_NFSM_CONTAINER",
+        "ASSET_XMP_FIELDS",
+        "ATTACHMENT_XMP_CONTENTTYPE"
+      ],
+      "body_sha256": "e02c3c5c4e5c1f077deaecf39f016c022b88c4db6e1ae4e707ae30f90b419d62",
+      "comments_reviewed": 0,
+      "comment_evidence": []
+    },
+    {
+      "number": 15,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/15",
+      "title": "Typo in text of errata annotation of ISO 32000-2 sponsored editon 2",
+      "github_state": "closed",
+      "github_state_reason": "completed",
+      "updated_at": "2026-05-28T08:05:13Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "member_comment",
+      "disposition": "The EC2 annotation wording was corrected after review to retain the word text. Use the final normative erratum, not an intermediate comment or base-text extraction that omits annotations.",
+      "affected_rule_codes": [],
+      "body_sha256": "4205797223bba577a6c316741ca3395e6f0fb1360b7af5939931367e745ab984",
+      "comments_reviewed": 4,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/15#issuecomment-4537445379",
+          "author": "tippi-fifestarr",
+          "author_association": "NONE",
+          "updated_at": "2026-05-25T21:45:45Z",
+          "body_sha256": "8425b503ab283fbb3808f51e52c71d520c4ca6c9cc3409d7dbeb987b9de67cdf"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/15#issuecomment-4551947465",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-05-27T06:26:11Z",
+          "body_sha256": "bff6a656f6a90557ea71a729d35c31f030a9aa22178c5b55ccf02945dfc349c4"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/15#issuecomment-4556726651",
+          "author": "tippi-fifestarr",
+          "author_association": "NONE",
+          "updated_at": "2026-05-27T16:58:23Z",
+          "body_sha256": "a06eaff70b6129e00becce43a94b9dd145fe7b53dbea3f278eb971c5144a170b"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/15#issuecomment-4561953591",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-05-28T08:05:12Z",
+          "body_sha256": "6a524324a9ec0f2493d73e1a76af30330b6f5bd44415c94e1c2624127232663d"
+        }
+      ]
+    },
+    {
+      "number": 16,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/16",
+      "title": "Spurious “24T” characters in the Type 2 function formula in Table 40 of ISO 32000-2 PDF when zoomed",
+      "github_state": "closed",
+      "github_state_reason": "completed",
+      "updated_at": "2026-05-27T06:26:48Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "member_comment",
+      "disposition": "The tiny formula artifact is a publication/rendering defect, not a new EA-PDF requirement or a reason to copy the malformed formula. Generic PDF graphics constraints remain upstream.",
+      "affected_rule_codes": [],
+      "body_sha256": "9e82cca75dbca3cc37cecb14ebf18341cd8d485533d7455b64251c59a2b79410",
+      "comments_reviewed": 3,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/16#issuecomment-3544146271",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2025-11-17T22:37:50Z",
+          "body_sha256": "1ea72d66347a1fec0e637adde60ca2e2dd7fceddc5792dcf0b1fe18d8325cf10"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/16#issuecomment-4537440635",
+          "author": "tippi-fifestarr",
+          "author_association": "NONE",
+          "updated_at": "2026-05-25T21:52:00Z",
+          "body_sha256": "0eb8c416d5bf58ed2d79f4c046c51cce078038483efd95c5af5fc6d18c741217"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/16#issuecomment-4551950621",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-05-27T06:26:48Z",
+          "body_sha256": "68535ba3378bef5110a376a8cd6e8793a62625924fb4f32cf6517ea795da96c9"
+        }
+      ]
+    },
+    {
+      "number": 17,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/17",
+      "title": "EA-PDF 1.0 - minor issue (with collections)",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2025-11-13T05:27:19Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "direct",
+      "authority_level": "mixed_report_and_member_comment",
+      "disposition": "Keep Bcc in the required collection schema, allowing an explicitly blank message value; the member comment explains that preservation intent. Track Size/source-byte semantics and the Table 5/6 Message-ID discrepancy for expert review. Retain Table 6 requirements pending disposition.",
+      "affected_rule_codes": [
+        "COLLECTION_SCHEMA_FIELD"
+      ],
+      "body_sha256": "7c3dd78c21905d048e011625ffcb1fcb7ba180495cdf014e45f6f6e6601a1edb",
+      "comments_reviewed": 1,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/17#issuecomment-3525476611",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2025-11-13T05:27:19Z",
+          "body_sha256": "fd8422e681b858a695096f1dd2d0312c4d8fcca78215b6774886712a60896fa3"
+        }
+      ]
+    },
+    {
+      "number": 18,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/18",
+      "title": "Consider adding a Form/Action/Digitial Signature page and a Multimedia/Richmedia/3D page to PDF cheatsheets",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2025-12-09T11:50:00Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "out_of_scope",
+      "authority_level": "other_publication",
+      "disposition": "A request for new forms/signatures/multimedia cheat sheets does not add EA-PDF file-format requirements.",
+      "affected_rule_codes": [],
+      "body_sha256": "a99254fd1f983e046c0eebf19795ee7cfdb67382c5bbae87f75edaabfc1e8549",
+      "comments_reviewed": 2,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/18#issuecomment-3583423765",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2025-11-26T22:27:28Z",
+          "body_sha256": "bc19c9c572a100df2067e19f839c342470c3fd0d5a97b6c743e095c4fba8aba5"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/18#issuecomment-3631848785",
+          "author": "crlf0710",
+          "author_association": "NONE",
+          "updated_at": "2025-12-09T11:50:00Z",
+          "body_sha256": "a0a97aa50ee18d4a39f29361d84f45d5a339ae901d5e30d589c3487cac2073ae"
+        }
+      ]
+    },
+    {
+      "number": 19,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/19",
+      "title": "iso 32000-2 Errata clause 12 webpage is a bit incorrect.",
+      "github_state": "closed",
+      "github_state_reason": "completed",
+      "updated_at": "2025-12-10T01:18:54Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "member_comment",
+      "disposition": "The generic form CharSet version-label editorial fix has no EA-PDF-specific runtime delta. Use current normative references when forms are reviewed.",
+      "affected_rule_codes": [],
+      "body_sha256": "ec5aa5e751cfb27e3863da3d9361b66cbf4eee57c05f3ba3335483b6c6c0ab02",
+      "comments_reviewed": 1,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/19#issuecomment-3634952266",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2025-12-10T01:18:54Z",
+          "body_sha256": "b287839003b3905215137d86e1d6a423189027746bb859ad9468f8ea32042411"
+        }
+      ]
+    },
+    {
+      "number": 20,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/20",
+      "title": "Another mention of a table has changed caption.",
+      "github_state": "closed",
+      "github_state_reason": "completed",
+      "updated_at": "2026-05-28T08:04:27Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "member_comment",
+      "disposition": "The encryption-table caption correction is reference maintenance, not permission to change encryption policy. Generic encryption restrictions stay upstream.",
+      "affected_rule_codes": [],
+      "body_sha256": "5631b9d69ddddbbab66fa21ec0d3070ca12171708f0b6a60066fc19b3e1f3111",
+      "comments_reviewed": 4,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/20#issuecomment-3635535740",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2025-12-10T06:05:32Z",
+          "body_sha256": "2031db658fb6da42608bd892cb5f9cea08f9dcb18027f67ffb51beba09b8c0da"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/20#issuecomment-4552080726",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-05-27T06:44:01Z",
+          "body_sha256": "180071e05f1329a05652bdc8337f29d195e30608a7b30cbef535a6aa3b75c305"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/20#issuecomment-4558619220",
+          "author": "tippi-fifestarr",
+          "author_association": "NONE",
+          "updated_at": "2026-05-27T20:58:56Z",
+          "body_sha256": "0cb6c936b4c8487b981f134a096bb44f82bf6b28f02da820193c191f4e39d6b5"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/20#issuecomment-4561948637",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-05-28T08:04:27Z",
+          "body_sha256": "952fa126a694898abdf141bb7d69716714472400a1e07892c8fb32cae45fcbee"
+        }
+      ]
+    },
+    {
+      "number": 21,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/21",
+      "title": "EA-PDF - requirements when the PDF/A-4 file is tagged.",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2026-04-01T18:39:16Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "direct",
+      "authority_level": "unresolved_report",
+      "disposition": "Record RoleMap/RoleMapNS scope and placement concerns against the existing question. Do not downgrade ISO/TS 32005 SHALL to SHOULD, remove required maps, or require optional PDF/UA-2 because an open issue proposes a different policy. The issue body reverses the first Table 9 pair compared with the pinned PDF; preserve the pinned Artifact-to-Private mapping.",
+      "affected_rule_codes": [
+        "ROLEMAPNS_PRESENT",
+        "LOGICAL_TS32005_DECLARATION"
+      ],
+      "body_sha256": "1a48af8f4b1f71b8c377043091ba0c3993e89c9cffa9455cd5c6c82484ade54b",
+      "comments_reviewed": 0,
+      "comment_evidence": []
+    },
+    {
+      "number": 22,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/22",
+      "title": "EA-PDF 1.0 - more minor issues",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2026-04-13T01:00:53Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "direct",
+      "authority_level": "mixed_normative_cross_check_and_member_comments",
+      "disposition": "Keep exactly integer ExtensionLevel 5 with BaseVersion name 1.7; do not adopt the proposed >=5 rule. Date comments are not a published amendment: preserve EA-PDF 9.8 creation-date wording, but remove inferred PASS/FAIL based solely on comparison with source Sent and report unavailable independent provenance.",
+      "affected_rule_codes": [
+        "COLLECTION_EXTENSIONS",
+        "XMP_CREATEDATE_SEMANTICS"
+      ],
+      "body_sha256": "fa6986158b12622355e925c8fc388b8ef74d7fbfe656121de90f5dccafe037d9",
+      "comments_reviewed": 4,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/22#issuecomment-4230635005",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-04-12T03:10:12Z",
+          "body_sha256": "a288447a3c17dbb7d56401d91933d3eec61dc13bd208c8c040916c1780cc3015"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/22#issuecomment-4231503718",
+          "author": "DuffJohnson",
+          "author_association": "MEMBER",
+          "updated_at": "2026-04-12T12:28:08Z",
+          "body_sha256": "c0ce8ab0e168970b805902cf904823bbda7a3dfe099268db52a76864bbbd332b"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/22#issuecomment-4233021559",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-04-12T23:57:37Z",
+          "body_sha256": "ec2938a714367d077bd08bc7668945c9ad5957c38f3f94ebad3e0d47a64c5951"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/22#issuecomment-4233169643",
+          "author": "DuffJohnson",
+          "author_association": "MEMBER",
+          "updated_at": "2026-04-13T01:00:53Z",
+          "body_sha256": "af3d661526ffccecaac6c4ace3cc66c83e499abfb6c5731f5cafb32c7cb6403b"
+        }
+      ]
+    },
+    {
+      "number": 23,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/23",
+      "title": "Accessibility issues with the Hierarchical inclusion rules excel document",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2026-07-30T17:00:16Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "dependency",
+      "authority_level": "unresolved_resource_issue",
+      "disposition": "Record accessibility concerns in the supplementary ISO/TS 32005 spreadsheet as source QA. They do not invalidate the standard inclusion rules, establish that a profile ran, or mandate PDF/UA in EA-PDF.",
+      "affected_rule_codes": [
+        "LOGICAL_TS32005_DECLARATION"
+      ],
+      "body_sha256": "f4075c807d61a8d05ad1ac92b0aeacdcc917e8e246b48fee57af5301817e6e5f",
+      "comments_reviewed": 3,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/23#issuecomment-5124619252",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-07-29T23:57:19Z",
+          "body_sha256": "97ef5abc4ef72b8ca7aa6d9db6267534f90f13c3999e570993f38efca2c27f74"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/23#issuecomment-5124671323",
+          "author": "DuffJohnson",
+          "author_association": "MEMBER",
+          "updated_at": "2026-07-30T00:05:41Z",
+          "body_sha256": "ca3eb0bfa3744e99f613e327aee577ffddaaeabfc99ce3e2ef422fd39bb08e3a"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/23#issuecomment-5133862078",
+          "author": "lynelal",
+          "author_association": "NONE",
+          "updated_at": "2026-07-30T17:00:16Z",
+          "body_sha256": "f3ee7afaedd41cf2f095f5ef341673287aa7b96b1d05908261b7b964e981d10d"
+        }
+      ]
+    },
+    {
+      "number": 24,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/24",
+      "title": "Improvement suggestion for pdfa.org site",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2026-08-25T07:16:22Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "reference_navigation",
+      "authority_level": "resource_navigation",
+      "disposition": "Use canonical section anchors for declarations and extensions. Heading-link UI suggestions do not change the referenced declaration definitions.",
+      "affected_rule_codes": [
+        "LOGICAL_TS32005_DECLARATION",
+        "COLLECTION_EXTENSIONS"
+      ],
+      "body_sha256": "895082c80e569cd61af548a16f4784921e78ccddf7a2100d891b12d9691a0ea1",
+      "comments_reviewed": 9,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/24#issuecomment-5305905621",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-08-16T05:28:13Z",
+          "body_sha256": "16d9a9179ef1a2fccf4cf29174c82e589359f3676141762eea8515a1af5177d0"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/24#issuecomment-5305907656",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-08-16T05:28:54Z",
+          "body_sha256": "073a459014bfca2d47e4b2d6b082f4e75e451480624fe0501a733c8ad70d9ec7"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/24#issuecomment-5307826821",
+          "author": "DuffJohnson",
+          "author_association": "MEMBER",
+          "updated_at": "2026-08-16T14:05:19Z",
+          "body_sha256": "d30384c3e398d65bbe2ffe6aef78f60005227656b0115ba43e4f0d6099c0365c"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/24#issuecomment-5359050727",
+          "author": "DuffJohnson",
+          "author_association": "MEMBER",
+          "updated_at": "2026-08-20T16:54:58Z",
+          "body_sha256": "2cc3915c04fc101c9a598097b051642eb58a5a92a2a5637a6eb486d4a15dab42"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/24#issuecomment-5359685876",
+          "author": "faceless2",
+          "author_association": "NONE",
+          "updated_at": "2026-08-20T17:54:03Z",
+          "body_sha256": "b86e14acd7f239f032f51bcc218eb0bf3b7e1e6b6b33ec46090b230707f4e9f7"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/24#issuecomment-5359776073",
+          "author": "DuffJohnson",
+          "author_association": "MEMBER",
+          "updated_at": "2026-08-20T18:02:22Z",
+          "body_sha256": "c8bea586fe680d554caf192c82828c9bc49561046eedc06347adbc549bea40cf"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/24#issuecomment-5359883622",
+          "author": "faceless2",
+          "author_association": "NONE",
+          "updated_at": "2026-08-20T18:12:24Z",
+          "body_sha256": "57a0eaadce08fb71510911d24e5fd1b5ce41a614fb23471275483abf716f1f2e"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/24#issuecomment-5396037571",
+          "author": "DuffJohnson",
+          "author_association": "MEMBER",
+          "updated_at": "2026-08-24T13:39:58Z",
+          "body_sha256": "ca5b768f7352deaa52457c5549f6b1f0d88243390d7bc5df58e9a8b4fee1beb7"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/24#issuecomment-5406862126",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-08-25T07:16:21Z",
+          "body_sha256": "390699eb4bf6341b335c9bbbe385bc9f946d00146134eade258c6f766a87dc6b"
+        }
+      ]
+    },
+    {
+      "number": 25,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/25",
+      "title": "Accessibility of Alt and Contents for Link Annotations, with Brotli document",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2026-09-16T05:10:26Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "adjacent_accessibility_resource",
+      "authority_level": "other_publication",
+      "disposition": "The discussion concerns links in the Brotli publication and PDF/UA/WTPDF goals. It does not make PDF/UA conformance or Alt on every EA-PDF annotation mandatory; retain the separate EA-PDF attachment Contents question.",
+      "affected_rule_codes": [
+        "ACTIONABLE_URLS_LINK_ANNOTATIONS"
+      ],
+      "body_sha256": "f305fa4d6c4bb8bd1e7d5c42a8a855888b9eab2d65512cbd6e5011bc824da793",
+      "comments_reviewed": 1,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/25#issuecomment-5692355277",
+          "author": "ozross",
+          "author_association": "NONE",
+          "updated_at": "2026-09-16T05:10:26Z",
+          "body_sha256": "5036c9cc17f87d624b208b902395b6499d0a05144f0fdc0df989549c4ec036ac"
+        }
+      ]
+    },
+    {
+      "number": 26,
+      "url": "https://github.com/pdf-association/report-an-issue/issues/26",
+      "title": "Add QuadPoints definition to the glossary",
+      "github_state": "open",
+      "github_state_reason": null,
+      "updated_at": "2026-10-10T04:37:25Z",
+      "reviewed_at_utc": "2026-10-19T13:57:08.065093+00:00",
+      "classification": "adjacent_annotation_glossary",
+      "authority_level": "unresolved_glossary_draft",
+      "disposition": "A draft glossary explanation is not a conformance amendment. Rect and QuadPoints semantics are subtype-specific; do not add QuadPoints to FileAttachment or require it on every link based on this discussion.",
+      "affected_rule_codes": [
+        "ACTIONABLE_URLS_LINK_ANNOTATIONS"
+      ],
+      "body_sha256": "41c53b7d3128979ddc0b8c25ba69d4f917cf20f39548164e69541f863f4a19a5",
+      "comments_reviewed": 3,
+      "comment_evidence": [
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/26#issuecomment-6068697731",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-10-08T20:45:27Z",
+          "body_sha256": "299865362056018fb89c75afeb6aa56ec290fad2a8a63bb289865891b6e704fc"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/26#issuecomment-6071253205",
+          "author": "DuffJohnson",
+          "author_association": "MEMBER",
+          "updated_at": "2026-10-08T23:44:18Z",
+          "body_sha256": "58c62816168d91955eb4b4ccab56b50fe3ebbabef64252b54f369b95707eeafc"
+        },
+        {
+          "url": "https://github.com/pdf-association/report-an-issue/issues/26#issuecomment-6093834227",
+          "author": "petervwyatt",
+          "author_association": "MEMBER",
+          "updated_at": "2026-10-10T04:37:25Z",
+          "body_sha256": "32ab534235714d3976a24651bf191f917476832c924e14a959118886074810c3"
+        }
+      ]
+    }
+  ]
+}

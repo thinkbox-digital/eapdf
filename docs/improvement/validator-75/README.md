@@ -1,0 +1,5 @@
+# V75: Source date availability and normalization
+
+**V75 accepted — 2026-10-21:** Source date parser limits no longer prove Raw-Sent violations. RFC negative-zero UTC and supported wide offsets preserve instant semantics; extended-year/UTC-overflow assessments and unperformed instant comparisons remain INCOMPLETE. Known wrong instants, missing Sent and invalid calendars still fail. **1020 unit passes / 40 skips; 685 freshly checked custom cases; ten PDF/A/ISO controls, CLI/worker and 16 browser checks match.** All 675 prior hashes/statuses/failure sets remain. One false failure passes; one unsupported failure and three silent passes become INCOMPLETE. Creator repair remains deferred. [Evidence](improvement/validator-75/evidence.json).
+
+RFC5322 section3.3 and XSD dateTime are recorded in source-review.json. A parser range limit cannot prove a malformed original. Mandatory unperformed date comparisons contribute VALIDATION_INCOMPLETE; matching Raw-Sent does not establish an unsupported instant comparison. Valid negative-zero UTC passes, wrong instants and invalid calendars retain their distinct failures. Creator source/JAR and CLI behavior remain unchanged.

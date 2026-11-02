@@ -1,0 +1,137 @@
+{
+  "authority": [
+    "EA-PDF Table18 FOAF mailbox fields",
+    "RFC5321 section4.1.2",
+    "RFC5322 sections3.2.4/3.4.1",
+    "RFC2047 section5"
+  ],
+  "boundary": "Quoted source mailbox data and display-name decoding; full SMTPUTF8, IDNA, obsolete/folded source grammar and raw-header fidelity normalization remain unverified.",
+  "seed": "tests/fixtures/eapdf/validator-contentset-parent/nested-single.pdf",
+  "seed_sha256": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+  "cases": [
+    {
+      "file": "to-exact.pdf",
+      "sha256": "92e35f0dd998dd96e786bd1fc69e9e95df6ee450cd05bfe1d183a59dd25f73e8",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "original_field": "To",
+      "original_value": "\"a  b\"@example.org",
+      "mailbox_uri": "mailto:%22a%20%20b%22@example.org"
+    },
+    {
+      "file": "from-exact.pdf",
+      "sha256": "997764a997b08d4f337a0d9b5e61a1779dbf4ef7ccd1c90ebbdeb3ac64380296",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "original_field": "From",
+      "original_value": "\"a  b\"@example.org",
+      "mailbox_uri": "mailto:%22a%20%20b%22@example.org"
+    },
+    {
+      "file": "cc-exact.pdf",
+      "sha256": "dd92cf26818f1df7d409b598d0b37ad303025d75145bace0026949b7a6465abb",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "original_field": "Cc",
+      "original_value": "\"a  b\"@example.org",
+      "mailbox_uri": "mailto:%22a%20%20b%22@example.org"
+    },
+    {
+      "file": "bcc-exact.pdf",
+      "sha256": "2936a61f29ab852595672e5d2d9bba3b691c44dce15898bd8cfff18a102449b8",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "original_field": "Bcc",
+      "original_value": "\"a  b\"@example.org",
+      "mailbox_uri": "mailto:%22a%20%20b%22@example.org"
+    },
+    {
+      "file": "to-collapsed.pdf",
+      "sha256": "03f0421482f5ba42690b9b429d31b864bdd31f74a0ab6542e0d1173f9588a3b3",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "original_field": "To",
+      "original_value": "\"a  b\"@example.org",
+      "mailbox_uri": "mailto:%22a%20b%22@example.org",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_TO_FOAF"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "To"
+        ]
+      }
+    },
+    {
+      "file": "from-collapsed.pdf",
+      "sha256": "41de63558e98773ff035188c4efaac40089b6cc57faa778024e89a5cfbd844be",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_METADATA_MATCH_SOURCE"
+      ],
+      "original_field": "From",
+      "original_value": "\"a  b\"@example.org",
+      "mailbox_uri": "mailto:%22a%20b%22@example.org",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "MESSAGE_FROM_FOAF"
+          ]
+        },
+        "reason": "Source-derived field values differ; their individual field names are retained as evidence, separate from XMP schema.",
+        "retained_pdf_bytes": true,
+        "failed_source_fields": [
+          "From"
+        ]
+      }
+    },
+    {
+      "file": "display-comma.pdf",
+      "sha256": "6d365309d49db5be7637d90b030143905b92623fed05a2849ff420159645d61a",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "original_field": "From",
+      "original_value": "=?utf-8?q?Last=2C_First?= <person@example.org>",
+      "mailbox_uri": "mailto:person@example.org"
+    },
+    {
+      "file": "literal-word-local.pdf",
+      "sha256": "e115fab36b19425178cc84cda3206d935026a08a24469eecf0014869ef118da8",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "original_field": "From",
+      "original_value": "=?utf-8?q?foo?=@example.org",
+      "mailbox_uri": "mailto:%3D%3Futf-8%3Fq%3Ffoo%3F%3D@example.org"
+    },
+    {
+      "file": "bad-dot-domain.pdf",
+      "sha256": "4e1fe56a3e94534cd652a36280fe3cf129e8d7459758693131c9f5420b32cb94",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_FROM_FOAF"
+      ],
+      "original_field": "From",
+      "original_value": "person@example.org",
+      "mailbox_uri": "mailto:%3D%3Futf-8%3Fq%3Ffoo%3F%3D@example..org"
+    },
+    {
+      "file": "bad-double-at.pdf",
+      "sha256": "7239d9688278391802f2ea4ef8c356be72dbfbe9cd930dd0a5879bc8e907e4ff",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "MESSAGE_FROM_FOAF"
+      ],
+      "original_field": "From",
+      "original_value": "person@example.org",
+      "mailbox_uri": "mailto:%3D%3Futf-8%3Fq%3Ffoo%3F%3D%40@example.org"
+    }
+  ]
+}

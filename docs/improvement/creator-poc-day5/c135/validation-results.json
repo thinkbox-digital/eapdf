@@ -1,0 +1,421 @@
+[
+  {
+    "pdf": "2019.10.07 Weary comments__Application of Jeffry Spinney, 126 Golden Ridge Road, Alna_000001.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "2019.10.08 DEP response__RE_ Application of Jeffry Spinney, 126 Golden Ridge Road, Alna_000002.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "2019.10.10a additional comments and questions for DEP__Re_ [Non-DoD Source] Application of Jeffry Spinney, 126 Golden Ridge Road, Alna_000003.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "EmailWith2Attachments__E-mail with 2 attachments_000004.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "EmailWithAttachments__This is the subject_000005.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "EmailWithInnerMailAndAttachments__Outer mail_000006.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "EmailWithMsgAttachment__FW_ Msg Attachment Test_000007.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "EmailWithReactions__Test read receipts_000008.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "EmailWithSpecialCharsInSubject_2__Un sujet tr\u00e8s bien d\u00e9fini_000010.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "EmailWithSpecialCharsInSubject__Un sujet bien d\u00e9fini \u00c0\u00e9roport ma\u00f1ana \u00eatre ou\u00efe \u00e9lectricit\u00e9 cos\u00ec pr\u00f3xima \u00e0 \u00d4_000009.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "HtmlSampleEmailWithAttachment__HtmlSampleEmailWithAttachment_000012.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "HtmlSampleEmail__HtmlSampleEmail_000011.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "RtfSampleEmailWithAttachment__RtfSampleEmailWithAttachment_000014.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "RtfSampleEmail__RtfSampleEmail_000013.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "RtfWithShortRussianString__message_000015.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "TxtSampleEmailWithAttachment__TxtSampleEmailWithAttachment_000017.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "TxtSampleEmail__TxtSampleEmail_000016.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "message__Re_ test internal_000018.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "msgKitOut_attach__This is the subject_000019.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "msgKitOut_noattach__This is the subject_000020.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "no-attachments__This is the subject_000021.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "qwerty_1-orig__qwerty_000022.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "qwerty_2-with_custom_properties__qwerty_000023.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "qwerty_3__qwerty_000024.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "sediment__FW_ Lab Results_ ONE 7771 Final - Yachting Solutions - Sample Date_ 7_14_2020_000025.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "testOut__This is the subject_000026.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "testOut_attach__This is the subject_000027.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "testOut_noattach__This is the subject_000028.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "test_Blammo__BlammoBlammo_000029.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Single-message viewer attachment conditions could not be established",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "test__Office of Enforcement Investigation Report - National Security Technologies_000031.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  },
+  {
+    "pdf": "test_internal__Re_ test internal_000030.pdf",
+    "status": "INCOMPLETE",
+    "pdfa": "PASS",
+    "selected_iso": [
+      "PASS"
+    ],
+    "mandatory_failures": [],
+    "incomplete_messages": [
+      "Source-header comparisons could not be completed for an email",
+      "Some rules have no verified result or applicability decision"
+    ]
+  }
+]

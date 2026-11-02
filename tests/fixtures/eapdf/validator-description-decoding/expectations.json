@@ -1,0 +1,97 @@
+{
+  "authority": "EA-PDF1.0 Table8 human-readable Mail_Desc text string; actual PDF String decoding and V35 object-class scope",
+  "boundary": "Unreadable text is unavailable, not certified valid or empty. Known empty/wrong class and independent revision failures remain.",
+  "source_files": {
+    "tests/fixtures/eapdf/validator-contentset-parent/nested-single.pdf": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7"
+  },
+  "cases": [
+    {
+      "file": "unreadable-utf8.pdf",
+      "sha256": "ec51906904757ab71ac73637e73a77ea5344ade5093334db9bdaada6f7b1f908",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "expected_description_level": "WARN",
+      "expected_description_levels": [
+        "WARN"
+      ]
+    },
+    {
+      "file": "unreadable-utf8-surrogate.pdf",
+      "sha256": "d124305209f24a9be61ca721e3fb7411422e592349c479809312c5885e993ca0",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "expected_description_level": "WARN",
+      "expected_description_levels": [
+        "WARN"
+      ]
+    },
+    {
+      "file": "valid-utf8.pdf",
+      "sha256": "9d0c44dfd75b880f6916c5c83975736372bdaac2d9f8f071774df884308fb636",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_description_level": "PASS",
+      "expected_description_levels": [
+        "PASS"
+      ]
+    },
+    {
+      "file": "valid-utf16.pdf",
+      "sha256": "da0b99e805f6bbf7e19a20f64f2f5e8e4ac19353b439dc475c44fcde269072e5",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "expected_description_level": "PASS",
+      "expected_description_levels": [
+        "PASS"
+      ]
+    },
+    {
+      "file": "empty.pdf",
+      "sha256": "43740a91ea5138e4dfd8d0d1cf87c791d93515c28c7daa3288716b0b631fb5c6",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPM_DESC_REQUIRED"
+      ],
+      "expected_description_level": "FAIL",
+      "expected_description_levels": [
+        "FAIL"
+      ]
+    },
+    {
+      "file": "wrong-name.pdf",
+      "sha256": "866623ef962a0e196a704dbd1bb19151ac638e492ea275d0536d074cb6613e40",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPM_DESC_REQUIRED"
+      ],
+      "expected_description_level": "FAIL",
+      "expected_description_levels": [
+        "FAIL"
+      ]
+    },
+    {
+      "file": "utf16-decoded-empty.pdf",
+      "sha256": "701c3d4f04fdc4a4d93df0782aa9e639a7bff9378305ee4404462cc540544ccd",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPM_DESC_REQUIRED"
+      ],
+      "expected_description_level": "FAIL",
+      "expected_description_levels": [
+        "FAIL"
+      ]
+    },
+    {
+      "file": "unreadable-with-revision-failure.pdf",
+      "sha256": "4892d130d86bf4233ba3902d0ec0da9f42425b301d07a1c6a26af5c1b147de46",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "EAPDF_REV"
+      ],
+      "expected_description_level": "WARN",
+      "expected_description_levels": [
+        "WARN"
+      ]
+    }
+  ]
+}

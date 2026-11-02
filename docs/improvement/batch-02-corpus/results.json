@@ -1,0 +1,254 @@
+[
+  {
+    "case": "dictionary-text-valid",
+    "sha256": "1b3cb8aa6749cb6d7b462815648239004b9538ae1727d493f59bd3cdad0f8ca0",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "array-text-valid",
+    "sha256": "375ae04bf30c4c858337f79a5acf9c2441faf1a6f9b7ac626246343e68119523",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "dictionary-name-as-text",
+    "sha256": "a820b11283e39bfa63cbc5f30d754a61c960d2882916ca87a6258e46a311699f",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "dictionary-dictionary-as-text",
+    "sha256": "234195ff42d1d7dc507f4171d603f37c73d9f1103ea1b06131cd5ce566e2ca13",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "dictionary-text-as-count",
+    "sha256": "aef994804babdcfec3db94c243b4be66f8ed0a7486c30c429b498172e4983135",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "array-name-as-text",
+    "sha256": "52e295cbecaf7b4d39f61223af50da8c0bde1b32ee682b2496c594f16eb4a4c0",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "array-dictionary-as-text",
+    "sha256": "9d7d5ed8505fc07ce538ae8948c8f400268507ef7d9a8e4111b14134295e1942",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "array-text-as-count",
+    "sha256": "8e5271641c7c0a6a0d210ffa922590462de93ead2eaecac915cbb4bd4533bf83",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "unicode-text-valid",
+    "sha256": "30715d7db493813a926ae099a0fb8cfff4faaa8d8c4d9f2a0c56a55bf670ac13",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "zero-count-valid",
+    "sha256": "5bed61771f08fb47280d987fd4b42f2d6c0543ecb998110fef6e431665f57f8d",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "array-size-valid",
+    "sha256": "c5fbe84a1bab75cf8e9e589a91335be5469608db05a8fc0e90f6761dd7c72bc1",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "generic-real-valid",
+    "sha256": "7bd2d646bcbfb5420b9c15266f9fc6c87018f0b5e2d1a149edc4eb124fdf3d44",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "generic-integer-valid",
+    "sha256": "2616a8884b921a127d19d462ff81769d69e9bb649d2e4ef594bcc424e0f3e572",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "generic-boolean-valid",
+    "sha256": "0b2156b3d1b1e45978b94aaaf4ed8962ea85afe93e79173675db98cb39f3414a",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "generic-text-valid",
+    "sha256": "d8a19d4e0c21451a8ca19a63dcf27a65a3af7f899a540858b54b510d32aa4edc",
+    "pdfa": "PASS",
+    "eapdf": "PASS",
+    "failures": [],
+    "expected_result_observed": true
+  },
+  {
+    "case": "array-as-text",
+    "sha256": "7474a3b978192c86faa4633ae80d3d14b8684c70fc2c8efa57f668e5ce541bee",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "null-as-text",
+    "sha256": "0eca9e6c937a56d3cc3da08000367cc616e1d75230d53a2ae0b09fe1d0f3db7c",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "boolean-as-text",
+    "sha256": "5007c00f630d56aaac9bbd4361864596d829c23a4745cf30093aab38086e7265",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "real-as-text",
+    "sha256": "8a17662b8e4013fd6fb8ac040e2fd7deb0c06215774c010b21a7be63b8aab055",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "real-as-count",
+    "sha256": "24ffe9cd78b4be8f84433cd3c3147e43f707dd3cd5453d42ade2bf8d46b495ae",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "boolean-as-count",
+    "sha256": "6b54397c868b5fac666579306e63abda391eceef9bfcca6e5b7f254733dd9391",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "negative-as-count",
+    "sha256": "88e2fd97f43d7fa0308183e58172c0c5243f281b280072a55bfc020b1e0aac74",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "generic-name-invalid",
+    "sha256": "54c9064f8979fdddd3d61bdaeac768e28b4d4f116ed455175567c549dbe1ae9b",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "generic-dictionary-invalid",
+    "sha256": "25b2623743bf5d5aaa256a9378b63476b68cc01e8837e74aa328d1344188eade",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "generic-array-invalid",
+    "sha256": "ba2450062e111f4df2b1596bf36cb7c5e6049c8945df9469ac84d255e6ce0fba",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "generic-null-invalid",
+    "sha256": "260d17e6275270700e348b20421c0dbc2f209c1957c1c493e7ecb91e70346f3c",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "expected_result_observed": true
+  },
+  {
+    "case": "generic-header-wrong-tag",
+    "sha256": "9ba0f14162efb3057fb4c801f9f466bf1b09d48c9a984f2d64c2ac608b9577ab",
+    "pdfa": "PASS",
+    "eapdf": "FAIL",
+    "failures": [
+      "USERPROPS_TAG_SCOPE"
+    ],
+    "expected_result_observed": true
+  }
+]

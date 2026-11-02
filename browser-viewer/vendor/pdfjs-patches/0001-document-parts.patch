@@ -1,0 +1,393 @@
+--- a/src/core/catalog.js
++++ b/src/core/catalog.js
+@@ -51,6 +51,7 @@
+ import { clearGlobalCaches } from "./cleanup_helper.js";
+ import { ColorSpaceUtils } from "./colorspace_utils.js";
+ import { FileSpec } from "./file_spec.js";
++import { getDocumentParts } from "./document_parts.js";
+ import { MetadataParser } from "./metadata_parser.js";
+ import { soundStreamToWav } from "./sound.js";
+ import { stringToPDFString } from "./string_utils.js";
+@@ -163,6 +164,14 @@
+ 
+   cloneDict() {
+     return this.#catDict.clone();
++  }
++
++  getDocumentParts() {
++    return getDocumentParts(
++      this,
++      this.#catDict.getRaw("DPartRoot"),
++      this.pdfManager.docId
++    );
+   }
+ 
+   /**
+--- /dev/null
++++ b/src/core/document_parts.js
+@@ -0,0 +1,320 @@
++/* Copyright 2026 Mozilla Foundation
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++import { Dict, Name, Ref } from "./primitives.js";
++import { BaseStream } from "./base_stream.js";
++import { MissingDataException } from "./core_utils.js";
++import { stringToPDFString } from "./string_utils.js";
++
++// Fixed ceilings for this read-only scalar projection, not a general graph API.
++const LIMITS = Object.freeze({
++  maxNodes: 2048,
++  maxDepth: 32,
++  maxEntries: 8192,
++  maxStringBytes: 65536,
++  maxTotalStringBytes: 1048576,
++});
++
++async function getDocumentParts(catalog, root, documentId) {
++  const result = {
++    apiVersion: 1,
++    documentId,
++    status: root === undefined ? "missing" : "present",
++    root: null,
++    parts: [],
++    diagnostics: [],
++    limits: { ...LIMITS },
++  };
++  let visits = 0,
++    entries = 0,
++    stringBytes = 0,
++    stopped = false;
++  const seen = new Set();
++  const arrays = new Set();
++  const pageIndices = new Map();
++  const ref = obj =>
++    obj instanceof Ref ? { num: obj.num, gen: obj.gen } : null;
++  const locator = (obj, path) => ({
++    ref: ref(obj),
++    path: obj instanceof Ref ? `object:${obj.num}:${obj.gen}` : path,
++  });
++  const identity = loc => loc.path;
++  const issue = (code, loc) => {
++    result.status = "partial";
++    // One diagnostic per visited item; the traversal budget bounds this list.
++    result.diagnostics.push({ code, locator: loc });
++  };
++  const fetch = obj => (obj instanceof Ref ? catalog.xref.fetch(obj) : obj);
++  const fail = (error, loc) => {
++    // Let PDFManager retry range-loaded input through its normal mechanism.
++    if (error instanceof MissingDataException) {
++      throw error;
++    }
++    issue("INVALID_REFERENCE", loc);
++  };
++  const text = raw => {
++    if (
++      raw.length > LIMITS.maxStringBytes ||
++      stringBytes + raw.length > LIMITS.maxTotalStringBytes
++    ) {
++      return null;
++    }
++    stringBytes += raw.length;
++    return Array.from(raw, c =>
++      c.charCodeAt(0).toString(16).padStart(2, "0")
++    ).join("");
++  };
++  const scalar = (raw, loc) => {
++    const reference = ref(raw);
++    let obj;
++    try {
++      obj = fetch(raw);
++    } catch (error) {
++      fail(error, loc);
++      return { kind: "invalid", ref: reference };
++    }
++    if (obj === undefined) {
++      return { kind: "missing", ref: reference };
++    }
++    if (obj === null) {
++      return { kind: reference ? "invalid" : "null", ref: reference };
++    }
++    if (typeof obj === "string" || obj instanceof Name) {
++      const name = obj instanceof Name;
++      const rawText = name ? obj.name : obj;
++      const bytesHex = text(rawText);
++      if (bytesHex === null) {
++        issue("STRING_LIMIT", loc);
++        return { kind: "unavailable", ref: reference };
++      }
++      return {
++        kind: name ? "name" : "string",
++        ref: reference,
++        value: name ? rawText : stringToPDFString(rawText, true),
++        bytesHex,
++      };
++    }
++    if (
++      typeof obj === "boolean" ||
++      (typeof obj === "number" && Number.isFinite(obj))
++    ) {
++      return { kind: typeof obj, ref: reference, value: obj };
++    }
++    // Never traverse arbitrary DPM values or expose core Dict/Stream/Ref objects.
++    issue("UNSUPPORTED_DPM_VALUE", loc);
++    return {
++      kind:
++        obj instanceof BaseStream
++          ? "stream"
++          : obj instanceof Dict
++            ? "dictionary"
++            : Array.isArray(obj)
++              ? "array"
++              : "unsupported",
++      ref: reference,
++    };
++  };
++  const reference = raw => ({
++    kind:
++      raw === undefined
++        ? "missing"
++        : raw instanceof Ref
++          ? "reference"
++          : "invalid",
++    ref: ref(raw),
++  });
++  async function pageIndex(raw) {
++    if (!(raw instanceof Ref)) {
++      throw new Error("Expected a page reference");
++    }
++    const key = raw.toString();
++    if (pageIndices.has(key)) {
++      return pageIndices.get(key);
++    }
++    const index = await catalog.getPageIndex(raw);
++    if (!Number.isInteger(index) || index < 0 || index >= catalog.numPages) {
++      throw new Error("Page index outside document");
++    }
++    // getPageIndex alone can assign index zero to a detached /Page dictionary.
++    const [, actual] = await catalog.getPageDict(index);
++    if (
++      !(actual instanceof Ref) ||
++      actual.num !== raw.num ||
++      actual.gen !== raw.gen
++    ) {
++      throw new Error("Page reference is outside the document page tree");
++    }
++    pageIndices.set(key, index);
++    return index;
++  }
++  async function walk(raw, parent, path, depth, expectedParent) {
++    if (stopped) {
++      return;
++    }
++    const loc = locator(raw, path);
++    if (++visits > LIMITS.maxNodes || depth > LIMITS.maxDepth) {
++      issue("TRAVERSAL_LIMIT", loc);
++      stopped = true;
++      return;
++    }
++    let node;
++    try {
++      node = fetch(raw);
++    } catch (error) {
++      fail(error, loc);
++      return;
++    }
++    if (Array.isArray(node)) {
++      // Preserve order, including arrays nested within a DParts array.
++      const key = raw instanceof Ref ? identity(loc) : node;
++      if (arrays.has(key)) {
++        issue("REPEATED_CHILD_REFERENCE", loc);
++        return;
++      }
++      arrays.add(key);
++      for (let i = 0; i < node.length && !stopped; i++) {
++        await walk(
++          node[i],
++          parent,
++          `${loc.path}[${i}]`,
++          depth + 1,
++          expectedParent
++        );
++      }
++      return;
++    }
++    if (!(node instanceof Dict)) {
++      issue("INVALID_DPART", loc);
++      return;
++    }
++    const key = raw instanceof Ref ? identity(loc) : node;
++    if (seen.has(key)) {
++      issue("REPEATED_DPART", loc);
++      return;
++    }
++    seen.add(key);
++    const declaredParent = node.getRaw("Parent");
++    const expected = expectedParent.ref;
++    if (
++      !(declaredParent instanceof Ref) ||
++      !expected ||
++      declaredParent.num !== expected.num ||
++      declaredParent.gen !== expected.gen
++    ) {
++      issue("PARENT_MISMATCH", loc);
++    }
++    const part = {
++      locator: loc,
++      parent: parent?.locator ?? null,
++      declaredParent: reference(declaredParent),
++      children: [],
++      dpm: { state: "missing", locator: null, entries: [] },
++      start: reference(node.getRaw("Start")),
++      end: reference(node.getRaw("End")),
++      pageRange: {
++        state: "missing",
++        start: null,
++        end: null,
++        indexBase: 0,
++        endInclusive: true,
++      },
++    };
++    result.parts.push(part);
++    parent?.children.push(loc);
++    const dpmRaw = node.getRaw("DPM");
++    if (dpmRaw !== undefined) {
++      const dpmLoc = locator(dpmRaw, `${loc.path}/DPM`);
++      part.dpm.locator = dpmLoc;
++      part.dpm.state = "invalid";
++      try {
++        const dpm = fetch(dpmRaw);
++        if (dpm instanceof Dict) {
++          part.dpm.state = "present";
++          for (const name of dpm.getKeys()) {
++            if (++entries > LIMITS.maxEntries) {
++              issue("ENTRY_LIMIT", dpmLoc);
++              part.dpm.state = "partial";
++              stopped = true;
++              break;
++            }
++            const bytesHex = text(name);
++            if (bytesHex === null) {
++              issue("STRING_LIMIT", dpmLoc);
++              part.dpm.state = "partial";
++              break;
++            }
++            part.dpm.entries.push({
++              key: name,
++              keyBytesHex: bytesHex,
++              value: scalar(dpm.getRaw(name), dpmLoc),
++            });
++          }
++        } else {
++          issue("INVALID_DPM", dpmLoc);
++        }
++      } catch (error) {
++        fail(error, dpmLoc);
++      }
++    }
++    const start = node.getRaw("Start");
++    const end = node.getRaw("End");
++    if (start !== undefined || end !== undefined) {
++      part.pageRange.state = "invalid";
++      try {
++        const a = await pageIndex(start);
++        const b = end === undefined ? a : await pageIndex(end);
++        if (a > b) {
++          throw new Error("Reversed page range");
++        }
++        Object.assign(part.pageRange, { state: "present", start: a, end: b });
++      } catch (error) {
++        if (error instanceof MissingDataException) {
++          throw error;
++        }
++        issue("INVALID_PAGE_RANGE", loc);
++      }
++    }
++    const kids = node.getRaw("DParts");
++    if (kids !== undefined) {
++      await walk(kids, part, `${loc.path}/DParts`, depth + 1, loc);
++    }
++  }
++  if (root === undefined) {
++    return result;
++  }
++  const rootLoc = locator(root, "catalog/DPartRoot");
++  result.root = rootLoc;
++  try {
++    const dict = fetch(root);
++    if (!(dict instanceof Dict)) {
++      issue("INVALID_DPART_ROOT", rootLoc);
++      result.status = "invalid";
++    } else {
++      await walk(
++        dict.getRaw("DPartRootNode"),
++        null,
++        `${rootLoc.path}/DPartRootNode`,
++        0,
++        rootLoc
++      );
++    }
++  } catch (error) {
++    fail(error, rootLoc);
++    result.status = "invalid";
++  }
++  return result;
++}
++
++export { getDocumentParts };
+--- a/src/core/worker.js
++++ b/src/core/worker.js
+@@ -513,6 +513,10 @@
+ 
+     handler.on("GetOutline", function () {
+       return pdfManager.ensureCatalog("documentOutline");
++    });
++
++    handler.on("GetDocumentParts", function () {
++      return pdfManager.ensureCatalog("getDocumentParts");
+     });
+ 
+     handler.on("GetOptionalContentConfig", function () {
+--- a/src/display/api.js
++++ b/src/display/api.js
+@@ -931,6 +931,19 @@
+   }
+ 
+   /**
++   * Inspect the document-part tree without interpreting application DPM keys.
++   * Returns detached, structured-clone-safe records, never core objects.
++   * Page indices are zero-based and ranges include their end page.
++   * The documentId scopes locators to this loaded document, not its file hash.
++   * Complex DPM values are reported by type without traversing their graphs.
++   * Diagnostics describe extraction limits/errors, not PDF conformance.
++   * @returns {Promise<Object>} Version 1 document-part inspection record.
++   */
++  getDocumentParts() {
++    return this._transport.getDocumentParts();
++  }
++
++  /**
+    * @typedef {object} GetOptionalContentConfigParameters
+    * @property {string} [intent] - Determines the optional content groups that
+    *   are visible by default; valid values are:
+@@ -3129,5 +3142,9 @@
+     return this.messageHandler.sendWithPromise("GetOutline", null);
+   }
+ 
++  getDocumentParts() {
++    return this.messageHandler.sendWithPromise("GetDocumentParts", null);
++  }
++
+   getOptionalContentConfig(renderingIntent) {
+     const name = "GetOptionalContentConfig";

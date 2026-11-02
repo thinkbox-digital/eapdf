@@ -1,0 +1,808 @@
+{
+  "version": "1.6.0-beta.7",
+  "viewer": "0.5.0-beta.5",
+  "status": "Published GitHub prerelease; all 13 remote asset hashes verified",
+  "quality_gate": {
+    "status": "PASS",
+    "scope": "Linux Java builds, small real EML/MSG/MBOX/PST fidelity/visual acceptance, Java EA-PDF/veraPDF validation",
+    "excluded": [
+      "RealWorldInputTests: optional local corpus includes large PST scans",
+      "GUI runtime tests",
+      "Cross-platform runtime certification"
+    ],
+    "steps": [
+      {
+        "name": "oracle-tests",
+        "exit_code": 0
+      },
+      {
+        "name": "creator",
+        "exit_code": 0
+      },
+      {
+        "name": "creator-repeat",
+        "exit_code": 0
+      },
+      {
+        "name": "validator",
+        "exit_code": 0
+      },
+      {
+        "name": "validator-repeat",
+        "exit_code": 0
+      },
+      {
+        "name": "conversion-quality",
+        "exit_code": 0
+      }
+    ],
+    "tests": {
+      "creator": {
+        "tests": 369,
+        "failures": 0,
+        "errors": 0,
+        "skipped": [
+          "eapdf.MsgAddressPreservationTests.suppliedOutlookMessageRetainsItsTransportRecipientOrder",
+          "eapdf.MsgSentDateTests.suppliedNativeSubmissionFractionSurvivesIntoXmpExactly",
+          "eapdf.MsgThreadPreservationTests.suppliedTransportFieldsKeepPriorityWhileMissingFieldsAreRecovered",
+          "eapdf.MsgThreadPreservationTests.suppliedOutlookReplyRetainsItsNativeThreadFields"
+        ]
+      },
+      "validator": {
+        "tests": 244,
+        "failures": 0,
+        "errors": 0,
+        "skipped": [
+          "eapdf.OutlookSourceTests.nativeCorePreservesTheStoredSubmissionInstantAndDoesNotClaimHeaders",
+          "eapdf.OutlookSourceTests.nestedMessagesHaveContentEvidenceAndCidIsNotAlwaysInline",
+          "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[1]",
+          "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[2]",
+          "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[3]",
+          "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[4]",
+          "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[5]",
+          "eapdf.OutlookSourceTests.unknownRecipientTypeAndDifferentRepresentedAuthorRemainUnknown",
+          "eapdf.ValidatorDesktopSmokeTests.windowValidatesARealFileAndStopsASecondRunWithoutLeavingWorkFiles"
+        ]
+      }
+    },
+    "artifacts": {
+      "emailtopdfa-1.6.0-beta.7.jar": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
+      "emailtopdfa-1.6.0-beta.7-gui.jar": "4e5304a8c6d187003372f650082da8258ab0d544b0cd6759cce7001f70d3d72d",
+      "eapdf-validator.jar": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4"
+    }
+  },
+  "real_file_conversions": {
+    "status": "PASS",
+    "scope": "Pinned real EML, MSG, MBOX and small PST fidelity, visual checks and standalone Java validation",
+    "cases": [
+      {
+        "input": "in/sample.eml",
+        "source_sha256": "e0d8979fb882d5b65ef04b81b0f98b3e5e9e86cdc10034380d348a33b5ba995b",
+        "pdf_sha256": "0576086dbe886a123bc8050f96771869c691277800ed67f613cbb61475a2f5de",
+        "pages": 2,
+        "message_count": 1,
+        "known_limitations": [],
+        "source_representation": "Original source bytes embedded",
+        "status": "PASS",
+        "validation_report": "sample/validation.json",
+        "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21"
+      },
+      {
+        "input": "in/test3.eml",
+        "source_sha256": "c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6",
+        "pdf_sha256": "1e1e90638f4d140624411bbe2abc8e2da83b082db9e0078bf4ff8338d0563259",
+        "pages": 2,
+        "message_count": 1,
+        "known_limitations": [],
+        "source_representation": "Original source bytes embedded",
+        "status": "PASS",
+        "validation_report": "test3/validation.json",
+        "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21"
+      },
+      {
+        "input": "in/EmailWith2Attachments.msg",
+        "source_sha256": "513a894a87de02ecbb312ada79ea19318378607bcb593ddb05ddecbade2d511f",
+        "pdf_sha256": "8f6699f4831f64a0f452ea7b675adf9789c9203d338ee2cda5253f91f0f25831",
+        "pages": 2,
+        "message_count": 1,
+        "known_limitations": [],
+        "source_representation": "Original source bytes embedded",
+        "status": "PASS",
+        "validation_report": "EmailWith2Attachments/validation.json",
+        "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21"
+      },
+      {
+        "input": "in/enron-sample.mbox",
+        "source_sha256": "370c41998013037bed444887b5cfe560ef74607db401f1ecbb80bf76df12251c",
+        "pdf_sha256": "9e475e1b12c5423a4dd10c9cd4a79e89d686893e9b6f298c91dc21409a1eac76",
+        "pages": 3,
+        "message_count": 2,
+        "known_limitations": [],
+        "source_representation": "Per-message RFC822 derivatives; original MBOX container is not embedded",
+        "status": "PASS",
+        "validation_report": "enron-sample/validation.json",
+        "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21"
+      },
+      {
+        "input": "in/quality-attached-message.pst",
+        "source_sha256": "f2a6b1d2cad00f574e3d1c1211c4b1c854d6526caea77213adc3da92b7813ae3",
+        "pdf_sha256": "592d40206d2008267a33ae78fa0daed36fbeaafb24b0cbe0545afdc600cad083",
+        "pages": 13,
+        "message_count": 7,
+        "known_limitations": [
+          "Native sent-time fractions .446s (parent) and .773s (attached email) are lost when reconstructed to RFC822. Exact native values are recorded in native_sent; sent checks the whole-second derivative, not exact native timestamp preservation."
+        ],
+        "source_representation": "Reconstructed per-message RFC822 derivatives; original PST container is not embedded",
+        "status": "PASS",
+        "validation_report": "quality-attached-message/validation.json",
+        "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21"
+      }
+    ]
+  },
+  "viewer_checks": {
+    "node_tests": 38,
+    "chromium_reading": "PASS",
+    "chromium_download_burst": "PASS: 16 exact downloads and cancellation",
+    "firefox_reading": "PASS",
+    "full_chromium_workflow": "PASS before version-only bump; output/viewer-next-2026-11-02",
+    "full_firefox_attachment_suite": "Not rerun",
+    "firefox_shutdown_warning": "Native PrivateBrowsingUtils warning after PASS; retained in log"
+  },
+  "python_targeted": {
+    "tests": 47,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0,
+    "full_suite": "Not rerun"
+  },
+  "examples": {
+    "eml": {
+      "input_type": "eml",
+      "creator_version": "1.6.0-beta.7",
+      "filename_policy": "Lower-case input type, input filename stem, _archive for multiple inputs, and EA-PDF profile. Single-message mailbox examples contain one extracted child.",
+      "creator_sha256": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
+      "validator_sha256": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4",
+      "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
+      "configuration_sha256": "9dd5ea95b331668c1017bc2005c5a9319e8258297e3c27b759b206801ac8e191",
+      "sources": {
+        "in/Agenda and timeline slides.eml": "c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6",
+        "in/eml_01_403.eml": "311ec37e7324327f8f216266f738fa90c7cee89c36f3f0d583d33752d60934a9"
+      },
+      "single_message_policy": "First listed input file.",
+      "archive_policy": "Every message in all listed inputs.",
+      "validation": "Standalone Java validator, bundled real PDF/A and selected ISO structure checks, including collection children; default validator limits unchanged.",
+      "parallelism": {
+        "creator_jobs": 2,
+        "creator_heap_mb": 2048,
+        "concurrent_formats": 2
+      },
+      "samples": [
+        {
+          "profile": "1s",
+          "file": "eml_Agenda_and_timeline_slides_1s.pdf",
+          "sha256": "612019ea6593c077bb54376bf5c6091442a45ea11d677d03fe5ddd503dc5bcdf",
+          "pages": 2,
+          "inputs": [
+            "in/Agenda and timeline slides.eml"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 3.729
+        },
+        {
+          "profile": "1si",
+          "file": "eml_Agenda_and_timeline_slides_1si.pdf",
+          "sha256": "41e30d50a76cc3b367623262f6f1054d6205b99a1b499cf942a929a994837ad7",
+          "pages": 2,
+          "inputs": [
+            "in/Agenda and timeline slides.eml"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 3.946
+        },
+        {
+          "profile": "1m",
+          "file": "eml_Agenda_and_timeline_slides_archive_1m.pdf",
+          "sha256": "c7633ea1d0632f1dae899765b4b167b3980d82be81cc4b64a8cb05da7c0635a4",
+          "pages": 5,
+          "inputs": [
+            "in/Agenda and timeline slides.eml",
+            "in/eml_01_403.eml"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 4.964
+        },
+        {
+          "profile": "1mi",
+          "file": "eml_Agenda_and_timeline_slides_archive_1mi.pdf",
+          "sha256": "3009112a24f1eff66655e7511a51993a45467f675ce04bb9816bf269b9440d05",
+          "pages": 5,
+          "inputs": [
+            "in/Agenda and timeline slides.eml",
+            "in/eml_01_403.eml"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 4.039
+        },
+        {
+          "profile": "1c",
+          "file": "eml_Agenda_and_timeline_slides_archive_1c.pdf",
+          "sha256": "27d66ef4a55a2336524df1be7c1b34f13b96a6eeedb6497ab7b23bb9b852f90c",
+          "pages": 1,
+          "inputs": [
+            "in/Agenda and timeline slides.eml",
+            "in/eml_01_403.eml"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 5.148
+        },
+        {
+          "profile": "1ci",
+          "file": "eml_Agenda_and_timeline_slides_archive_1ci.pdf",
+          "sha256": "6fbb6cfe7b99cd6dd4fd67960bc3b98a05a6971b946a247c5e4a215c9fdf6e9a",
+          "pages": 1,
+          "inputs": [
+            "in/Agenda and timeline slides.eml",
+            "in/eml_01_403.eml"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 4.743
+        }
+      ],
+      "sidecars": [
+        {
+          "file": "eml_Agenda_and_timeline_slides_archive_1c_index.xlsx",
+          "sha256": "c537b88489918eb33b6f003750f483d83b09b6a8b364c68b8ec73ae2b2e292fd",
+          "xlsx_package": "PASS"
+        },
+        {
+          "file": "eml_Agenda_and_timeline_slides_archive_1c_finding_aid.pdf",
+          "sha256": "27c905c02ef55aa63a7a0a3135bd360151d839c11ae0b0c5ecf3f7ab6660bea3",
+          "pdfa": "PASS"
+        },
+        {
+          "file": "eml_Agenda_and_timeline_slides_archive_1ci_index.xlsx",
+          "sha256": "374677296df85a4a8147e7617a3455dbbadd68a731e6b6529480a621ba824986",
+          "xlsx_package": "PASS"
+        },
+        {
+          "file": "eml_Agenda_and_timeline_slides_archive_1ci_finding_aid.pdf",
+          "sha256": "b43e5b02fc7f91c25c3c9146919a8eb450c4e5f1f1e13bf831bf85221b5473dc",
+          "pdfa": "PASS"
+        }
+      ]
+    },
+    "msg": {
+      "input_type": "msg",
+      "creator_version": "1.6.0-beta.7",
+      "filename_policy": "Lower-case input type, input filename stem, _archive for multiple inputs, and EA-PDF profile. Single-message mailbox examples contain one extracted child.",
+      "creator_sha256": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
+      "validator_sha256": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4",
+      "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
+      "configuration_sha256": "9dd5ea95b331668c1017bc2005c5a9319e8258297e3c27b759b206801ac8e191",
+      "sources": {
+        "in/TxtSampleEmailWithAttachment.msg": "16c1d79495d1eb3be668a36fd59d4f6af32f04f2e9c3800f8b26cdb09e0708ed",
+        "in/test.MSG": "86522f1c47d0d76ec17d41dfe1a394b25db60032a5f82fd4987b1ced893e3277"
+      },
+      "single_message_policy": "First listed input file.",
+      "archive_policy": "Every message in all listed inputs.",
+      "validation": "Standalone Java validator, bundled real PDF/A and selected ISO structure checks, including collection children; default validator limits unchanged.",
+      "parallelism": {
+        "creator_jobs": 2,
+        "creator_heap_mb": 2048,
+        "concurrent_formats": 2
+      },
+      "samples": [
+        {
+          "profile": "1s",
+          "file": "msg_TxtSampleEmailWithAttachment_1s.pdf",
+          "sha256": "925077ba4106c844df1520593d54bcd6b7c6ec726983de1ab10ced95c47e4c1e",
+          "pages": 2,
+          "inputs": [
+            "in/TxtSampleEmailWithAttachment.msg"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 3.68
+        },
+        {
+          "profile": "1si",
+          "file": "msg_TxtSampleEmailWithAttachment_1si.pdf",
+          "sha256": "873764397e44c2477749e4fd623024c1ec7c27585348c4f0c28dd65e97ea87e4",
+          "pages": 2,
+          "inputs": [
+            "in/TxtSampleEmailWithAttachment.msg"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 3.835
+        },
+        {
+          "profile": "1m",
+          "file": "msg_TxtSampleEmailWithAttachment_archive_1m.pdf",
+          "sha256": "d912c9c6ccce4f998cc44ae326297c694d83c3cbb56742972e773d3efe6b70ce",
+          "pages": 6,
+          "inputs": [
+            "in/TxtSampleEmailWithAttachment.msg",
+            "in/test.MSG"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 4.9
+        },
+        {
+          "profile": "1mi",
+          "file": "msg_TxtSampleEmailWithAttachment_archive_1mi.pdf",
+          "sha256": "bb37413421d29c8963e29b8a928cb49177e94a59821fdc92557ac4b8b047011f",
+          "pages": 6,
+          "inputs": [
+            "in/TxtSampleEmailWithAttachment.msg",
+            "in/test.MSG"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 4.338
+        },
+        {
+          "profile": "1c",
+          "file": "msg_TxtSampleEmailWithAttachment_archive_1c.pdf",
+          "sha256": "b1abbb4d77db93a5f7fe1fa5e10ff741941f96121809382d3b508d9ab18dbbac",
+          "pages": 1,
+          "inputs": [
+            "in/TxtSampleEmailWithAttachment.msg",
+            "in/test.MSG"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 5.197
+        },
+        {
+          "profile": "1ci",
+          "file": "msg_TxtSampleEmailWithAttachment_archive_1ci.pdf",
+          "sha256": "d2f606e2ceaa997065a3c53a02c971624aeef0c2b08383ede381c3a3bb8cc9d2",
+          "pages": 1,
+          "inputs": [
+            "in/TxtSampleEmailWithAttachment.msg",
+            "in/test.MSG"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 4.888
+        }
+      ],
+      "sidecars": [
+        {
+          "file": "msg_TxtSampleEmailWithAttachment_archive_1c_index.xlsx",
+          "sha256": "cd96e282c1e54fea8ecf2d15b9fdc7a743f3042e6310266ae75edabeaf74d864",
+          "xlsx_package": "PASS"
+        },
+        {
+          "file": "msg_TxtSampleEmailWithAttachment_archive_1c_finding_aid.pdf",
+          "sha256": "fe4318f580935ee83c2944ae22afc6cbe6b397044c06b997ec4bab7817387582",
+          "pdfa": "PASS"
+        },
+        {
+          "file": "msg_TxtSampleEmailWithAttachment_archive_1ci_index.xlsx",
+          "sha256": "72ccc4aa7248ce4e0a8cdbe30c44d65ddf76c1a6c8911023c2605b9033de4cfa",
+          "xlsx_package": "PASS"
+        },
+        {
+          "file": "msg_TxtSampleEmailWithAttachment_archive_1ci_finding_aid.pdf",
+          "sha256": "d92c44bc7283cd21a86975d46edafc780a68d9fffaa8faf3f4c0c44f0532f11f",
+          "pdfa": "PASS"
+        }
+      ]
+    },
+    "pst": {
+      "input_type": "pst",
+      "creator_version": "1.6.0-beta.7",
+      "filename_policy": "Lower-case input type, input filename stem, _archive for multiple inputs, and EA-PDF profile. Single-message mailbox examples contain one extracted child.",
+      "creator_sha256": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
+      "validator_sha256": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4",
+      "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
+      "configuration_sha256": "9dd5ea95b331668c1017bc2005c5a9319e8258297e3c27b759b206801ac8e191",
+      "sources": {
+        "in/quality-attached-message.pst": "f2a6b1d2cad00f574e3d1c1211c4b1c854d6526caea77213adc3da92b7813ae3"
+      },
+      "single_message_policy": "First matching message child, sorted by collection name, copied unchanged from the corresponding collection.",
+      "archive_policy": "Every message in all listed inputs.",
+      "validation": "Standalone Java validator, bundled real PDF/A and selected ISO structure checks, including collection children; default validator limits unchanged.",
+      "parallelism": {
+        "creator_jobs": 2,
+        "creator_heap_mb": 2048,
+        "concurrent_formats": 2
+      },
+      "samples": [
+        {
+          "profile": "1s",
+          "file": "pst_quality-attached-message_1s.pdf",
+          "sha256": "be8e1a3d8b0759b365dec55beba336d04892f4d19beec9c578085fcf68b99fa3",
+          "pages": 2,
+          "inputs": [
+            "in/quality-attached-message.pst"
+          ],
+          "extracted_from": {
+            "collection": "pst_quality-attached-message_1c.pdf",
+            "member": "<1>FW_ First email_000001_1s.pdf",
+            "member_sha256": "be8e1a3d8b0759b365dec55beba336d04892f4d19beec9c578085fcf68b99fa3"
+          },
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 3.078
+        },
+        {
+          "profile": "1si",
+          "file": "pst_quality-attached-message_1si.pdf",
+          "sha256": "1990ca4192ba59cdcc90b71b588ab52da57f5f75be8fe3fb56ba4339c849a01b",
+          "pages": 2,
+          "inputs": [
+            "in/quality-attached-message.pst"
+          ],
+          "extracted_from": {
+            "collection": "pst_quality-attached-message_1ci.pdf",
+            "member": "<1>FW_ First email_000001_1si.pdf",
+            "member_sha256": "1990ca4192ba59cdcc90b71b588ab52da57f5f75be8fe3fb56ba4339c849a01b"
+          },
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 2.972
+        },
+        {
+          "profile": "1m",
+          "file": "pst_quality-attached-message_1m.pdf",
+          "sha256": "c232ec9796df04f5cbd7a0a096f47c228bdb95b9fbd30fee3fa150c441ace366",
+          "pages": 13,
+          "inputs": [
+            "in/quality-attached-message.pst"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 5.195
+        },
+        {
+          "profile": "1mi",
+          "file": "pst_quality-attached-message_1mi.pdf",
+          "sha256": "bd0e859945692e76fa74409a7597219d35216a165317b49f69f1f693351e7ab1",
+          "pages": 13,
+          "inputs": [
+            "in/quality-attached-message.pst"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 5.04
+        },
+        {
+          "profile": "1c",
+          "file": "pst_quality-attached-message_1c.pdf",
+          "sha256": "c9c5846e500e8ce4b7929293040ad9f5f3c336875a4100ab11f6ccb764a72be4",
+          "pages": 1,
+          "inputs": [
+            "in/quality-attached-message.pst"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 6.659
+        },
+        {
+          "profile": "1ci",
+          "file": "pst_quality-attached-message_1ci.pdf",
+          "sha256": "25d7995eae4cd00f1044497a279ed24bf6e9ce8b90ef2a8118181c3b1eae520f",
+          "pages": 1,
+          "inputs": [
+            "in/quality-attached-message.pst"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 6.444
+        }
+      ],
+      "sidecars": [
+        {
+          "file": "pst_quality-attached-message_1c_index.xlsx",
+          "sha256": "dd8447cbc38468503c6f6b65d9aa9927815a84986e29fa74c29e3515d50219d8",
+          "xlsx_package": "PASS"
+        },
+        {
+          "file": "pst_quality-attached-message_1c_finding_aid.pdf",
+          "sha256": "f552722547b56429046f10313ea5788c62a2115b5d4fbbe52549850e9d344d2b",
+          "pdfa": "PASS"
+        },
+        {
+          "file": "pst_quality-attached-message_1ci_index.xlsx",
+          "sha256": "f3563ced373ca331bb10c022b49e1a0e709b6de9c4efc4c4a53c34f79a119fec",
+          "xlsx_package": "PASS"
+        },
+        {
+          "file": "pst_quality-attached-message_1ci_finding_aid.pdf",
+          "sha256": "aef8e9d3775d225e9589c2fa38275c2ceae888ebc669420fb0b1f1917885cd15",
+          "pdfa": "PASS"
+        }
+      ]
+    },
+    "mbox": {
+      "input_type": "mbox",
+      "creator_version": "1.6.0-beta.7",
+      "filename_policy": "Lower-case input type, input filename stem, _archive for multiple inputs, and EA-PDF profile. Single-message mailbox examples contain one extracted child.",
+      "creator_sha256": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
+      "validator_sha256": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4",
+      "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
+      "configuration_sha256": "9dd5ea95b331668c1017bc2005c5a9319e8258297e3c27b759b206801ac8e191",
+      "sources": {
+        "in/enron-sample.mbox": "370c41998013037bed444887b5cfe560ef74607db401f1ecbb80bf76df12251c"
+      },
+      "single_message_policy": "First matching message child, sorted by collection name, copied unchanged from the corresponding collection.",
+      "archive_policy": "Every message in all listed inputs.",
+      "validation": "Standalone Java validator, bundled real PDF/A and selected ISO structure checks, including collection children; default validator limits unchanged.",
+      "parallelism": {
+        "creator_jobs": 2,
+        "creator_heap_mb": 2048,
+        "concurrent_formats": 2
+      },
+      "samples": [
+        {
+          "profile": "1s",
+          "file": "mbox_enron-sample_1s.pdf",
+          "sha256": "d5efa58a09f1ea7982d52f5b0b7bea0b3e346cea8eb1c77d067a189b4352d47b",
+          "pages": 1,
+          "inputs": [
+            "in/enron-sample.mbox"
+          ],
+          "extracted_from": {
+            "collection": "mbox_enron-sample_1c.pdf",
+            "member": "<1>12_28 Power VaR_000002_1s.pdf",
+            "member_sha256": "d5efa58a09f1ea7982d52f5b0b7bea0b3e346cea8eb1c77d067a189b4352d47b"
+          },
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 3.275
+        },
+        {
+          "profile": "1si",
+          "file": "mbox_enron-sample_1si.pdf",
+          "sha256": "7862e0086ea229615f72498333effc73f85373bcc5a5d17a0f477710a8b9a1a7",
+          "pages": 1,
+          "inputs": [
+            "in/enron-sample.mbox"
+          ],
+          "extracted_from": {
+            "collection": "mbox_enron-sample_1ci.pdf",
+            "member": "<1>12_28 Power VaR_000002_1si.pdf",
+            "member_sha256": "7862e0086ea229615f72498333effc73f85373bcc5a5d17a0f477710a8b9a1a7"
+          },
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 3.28
+        },
+        {
+          "profile": "1m",
+          "file": "mbox_enron-sample_1m.pdf",
+          "sha256": "fa3f4952160144dfcc8d7cf96a60555c873d98f8308e3ff21ff47381cdb034c7",
+          "pages": 3,
+          "inputs": [
+            "in/enron-sample.mbox"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 3.884
+        },
+        {
+          "profile": "1mi",
+          "file": "mbox_enron-sample_1mi.pdf",
+          "sha256": "1800914ae864ddabadb717084cf26f20cc7707b67428844629f6182a8aa84a12",
+          "pages": 3,
+          "inputs": [
+            "in/enron-sample.mbox"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 3.581
+        },
+        {
+          "profile": "1c",
+          "file": "mbox_enron-sample_1c.pdf",
+          "sha256": "48085d193e157097f1dd3c5f9cc8b2cb7ef383323836049b48ca8185118a4b6d",
+          "pages": 1,
+          "inputs": [
+            "in/enron-sample.mbox"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 4.634
+        },
+        {
+          "profile": "1ci",
+          "file": "mbox_enron-sample_1ci.pdf",
+          "sha256": "202d1fab38d33fcb7a814996a7c5b27b91645efd8f1ae4c66ebb0a2a42dc6e3e",
+          "pages": 1,
+          "inputs": [
+            "in/enron-sample.mbox"
+          ],
+          "extracted_from": null,
+          "pdfa": "PASS",
+          "eapdf": "PASS",
+          "selected_iso_structure": "PASS",
+          "validation_seconds": 4.798
+        }
+      ],
+      "sidecars": [
+        {
+          "file": "mbox_enron-sample_1c_index.xlsx",
+          "sha256": "bc5b93ce65c1f2fe59a5965c96b24b4360880b9c27fc41ebe507fa6fc12e93c3",
+          "xlsx_package": "PASS"
+        },
+        {
+          "file": "mbox_enron-sample_1c_finding_aid.pdf",
+          "sha256": "65f0a06b54a0e4437d120d7bfbdfc4f7e8daf11d8879bf697a162011b5dd6452",
+          "pdfa": "PASS"
+        },
+        {
+          "file": "mbox_enron-sample_1ci_index.xlsx",
+          "sha256": "882843920685683c11732ea8c5ae361934ea8636e0d5e2fced76736fc3b39db3",
+          "xlsx_package": "PASS"
+        },
+        {
+          "file": "mbox_enron-sample_1ci_finding_aid.pdf",
+          "sha256": "4273410c6941d4aaa3bf2f6c1f5c401fcaaabe106480976a6222c8044480d1ac",
+          "pdfa": "PASS"
+        }
+      ]
+    }
+  },
+  "manual": {
+    "edition": "2026-11-02",
+    "pdf": "EA-PDF_User_Manual.pdf",
+    "sha256": "286234c5be75b1aa5af2503bab24457949fe457bf711cb71772f383d6dc95186",
+    "pdfa_validation": {
+      "status": "PASS",
+      "profile": "PDF/A-2B validation profile",
+      "checks": 33124,
+      "failed_rules": 0,
+      "job_end_status": "normal",
+      "findings": []
+    },
+    "sources": {
+      "docs/manual/user-manual.html": "dedfd9fe0a772ad3567f22beef8af23113e08eb551428e0fa2a4e740511c2584",
+      "src/main/resources/assets/DejaVuSans.ttf": "ae7b7855e115a5966d8b1b3f80f254ccc117ec86f9965e202ee2940453837280",
+      "assets/LiberationSans-Regular.ttf": "4659bc0c58c5028dd488ec928d41d9265db43d9b669fc14ca8b0832daca7b144",
+      "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf": "5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895",
+      "docs/manual/screenshots/creator-ready.png": "aa876fdcc57386063928fbf1a893c6e029f0e42f2c91fe7e4a9147365ff3c639",
+      "docs/manual/screenshots/creator-complete.png": "736e4294587840e6f98ee25a20334fd5a1e6db7d8a6f490c474879e344c65b05",
+      "docs/manual/screenshots/creator-gmail.png": "32ead1b9b5f5cecd22d4ec697eb894619e4b1d727289e15dae6ff512b25abfac",
+      "docs/manual/screenshots/validator-complete.png": "48d88091917fd581c850bbe04b6dfc6972de0c5d6b2dfb5689ecf0db3738ae32",
+      "docs/manual/screenshots/web-validator-ready.png": "d40c1fdeb64b503e4161b395d7dd7b89524ed72713e5f954580a8f6a8e4c0571",
+      "docs/manual/screenshots/web-validator-result.png": "13011b19bc03031f764a7c79ac65bc9571516cfbf22ad740d781167420ca2beb",
+      "docs/manual/screenshots/web-creator.png": "27640de409b61b66d364143d0a2bffa46c03045f361c48a18e6bbd1679bc9676",
+      "docs/manual/screenshots/viewer-email.png": "fc978d81aa0c7eeafa99c2fee2093396fd81ea7fcfc8604f643f84fb566c27cb",
+      "docs/manual/screenshots/viewer-collection.png": "42dc326d9ae1d59be0b434612bcb7c473e6450611ea0a16ba64c43f2881c3987",
+      "docs/manual/screenshots/viewer-attachment.png": "dbc5cef5f60c1a17e795e1b2b163b6d05f8193a3455e5d40efb10fa1379c8b8e",
+      "src/main/resources/assets/sRGB.icc": "2a92d4bae450b76d8b0aa42193df974d75f62738ecebf74f01c5e75b12a95796",
+      "scripts/manual/ManualPdf.java": "ee5107e9e7790a3ade333fb917b55a2618681430f7d79adf2bf7276332981a5f",
+      "scripts/manual/build_manual.py": "ac7721134476f58f764e21100141286540f707eab5b26646f121f043a890dcaf"
+    },
+    "runtime_jars": {
+      "emailtopdfa.jar": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
+      "eapdf-validator.jar": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4"
+    },
+    "scope": "Ordinary PDF/A-2b user manual; no EA-PDF conformance asserted; screenshots use fictional mail."
+  },
+  "release_manifest": {
+    "version": "1.6.0-beta.7",
+    "viewer": "0.5.0-beta.5",
+    "date": "2026-11-02",
+    "tests": {
+      "creator": {
+        "tests": 369,
+        "failures": 0,
+        "errors": 0,
+        "skipped": [
+          "eapdf.MsgAddressPreservationTests.suppliedOutlookMessageRetainsItsTransportRecipientOrder",
+          "eapdf.MsgSentDateTests.suppliedNativeSubmissionFractionSurvivesIntoXmpExactly",
+          "eapdf.MsgThreadPreservationTests.suppliedTransportFieldsKeepPriorityWhileMissingFieldsAreRecovered",
+          "eapdf.MsgThreadPreservationTests.suppliedOutlookReplyRetainsItsNativeThreadFields"
+        ]
+      },
+      "validator": {
+        "tests": 244,
+        "failures": 0,
+        "errors": 0,
+        "skipped": [
+          "eapdf.OutlookSourceTests.nativeCorePreservesTheStoredSubmissionInstantAndDoesNotClaimHeaders",
+          "eapdf.OutlookSourceTests.nestedMessagesHaveContentEvidenceAndCidIsNotAlwaysInline",
+          "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[1]",
+          "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[2]",
+          "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[3]",
+          "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[4]",
+          "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[5]",
+          "eapdf.OutlookSourceTests.unknownRecipientTypeAndDifferentRepresentedAuthorRemainUnknown",
+          "eapdf.ValidatorDesktopSmokeTests.windowValidatesARealFileAndStopsASecondRunWithoutLeavingWorkFiles"
+        ]
+      }
+    },
+    "quality_gate": "docs/improvement/release-1.6.0-beta.7/summary.json",
+    "examples": "24 regenerated, eight PDF/A-only sidecars; small real inputs only",
+    "manual": "Updated viewer guidance/screenshots; PDF/A-2b validated",
+    "limitations": [
+      "Large PST exports excluded",
+      "PST/MBOX originals not embedded; per-message sources are derivatives",
+      "Unsigned viewer; no extension-store approval",
+      "Firefox reading tested; full Firefox attachment suite not rerun",
+      "Python validator regression suite not rerun; code unchanged"
+    ],
+    "artifacts": {
+      "EA-PDF_User_Manual.pdf": "286234c5be75b1aa5af2503bab24457949fe457bf711cb71772f383d6dc95186",
+      "EA_PDF_Rule_Review_for_Specification_Authors.docx": "888e308db47b8749dd4e0cb8aa8c4aff1591b55e5e80a362feae1a5dac80a473",
+      "EA_PDF_Specification_Questions_for_Experts.docx": "a4ce3357f083c3aac893ed20ca1953ac6859b1791eb1ab80d6b3cff5bb6a2e72",
+      "configuration-1.6.0-beta.7.zip": "99c91630e2f91e77b242014a8bc27d723aaceb699e0173de7eae1dd59944c945",
+      "ea-pdf-examples-1.6.0-beta.7.zip": "47270ea9d957cace76bc0b53cafcfca2bbee43dddf28e6ef301325f4fa86b56a",
+      "eapdf-validator-1.6.0-beta.7.jar": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4",
+      "eapdf-viewer-0.5.0-beta.5-chromium.zip": "cd7baca33bbb5826bdb5bd5e79b97e81c965ade1f4515c4e51a648743e201311",
+      "eapdf-viewer-0.5.0-beta.5-firefox.zip": "f7d29c8d1ae4e6281bb5385acf772e750b59b9be9049d2c3bc18adce91f9e1c8",
+      "emailtopdfa-1.6.0-beta.7-gui.jar": "4e5304a8c6d187003372f650082da8258ab0d544b0cd6759cce7001f70d3d72d",
+      "emailtopdfa-1.6.0-beta.7.jar": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
+      "licenses-and-notices-1.6.0-beta.7.zip": "daab1402a744ee582aec50e8f092086dfd69c4564d56fbcb1b412df680862fd9"
+    },
+    "reproducible_builds": {
+      "creator_cli_gui_validator": "two clean Maven builds match",
+      "viewer_packages": "two clean builds/ZIPs match",
+      "manual_pdf": "two builds match"
+    }
+  },
+  "earlier_release_gate_attempts": [
+    "quality-gate: stale creator example paths",
+    "quality-gate-final: validator frozen-fixture paths",
+    "quality-gate-passing: intentional visual source-name/version changes; reviewed baseline update, thresholds unchanged"
+  ],
+  "reproducible_artifacts": {
+    "creator_cli_gui_validator": "two clean Maven builds match",
+    "viewer_packages": "two clean builds/ZIPs match",
+    "manual_pdf": "two builds match"
+  },
+  "publication_receipt": "publication.json"
+}

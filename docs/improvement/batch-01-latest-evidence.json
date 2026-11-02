@@ -1,0 +1,330 @@
+{
+  "recorded_utc": "2026-10-18T12:31:39.239452+00:00",
+  "status": "Batch 01 verified. Overall improvement plan and full requirements/applicability audit remain in progress.",
+  "source_sha256": {
+    "validate_eapdf.py": "042a6e8e3fdefe10ac1e0a2aca00ce12e70df4e3168328a72037fa0c2d4f68c9",
+    "validator_web.py": "bc9e4fc328a6542f84c04caae9655afeafc72fbc12cb4260ef07f2c6ce99b77c",
+    "validator_rule_text.json": "3c455228cc79066a8c17d934c6487f6feb1168a4cd637d1aeadf9e6a75e8d2e2",
+    "src/main/java/eapdf/PdfMailWriter.java": "e3fe45d0e4cd36718cafe5327f870c2ee04c360cf623bef3f6f1aad75bd9f95b",
+    "src/main/java/eapdf/PdfCreationValidator.java": "4405e3ae765999a16f2bf88a73a8905fbf49d0d468e2d8b4059b2cd3ede2798d",
+    "src/main/java/eapdf/PdfFindingAidSupport.java": "ec414290783378fc07ccf08a6a589ff87afda358259c8513458cc7e4bdcff09f",
+    "src/test/java/eapdf/UserPropertiesArrayTests.java": "f2e644e11185afb6f27d0f834822164174855ec7ac43687e5a3874390d5c6ad1",
+    "tests/test_array_applicability.py": "722be660da12c98190682d3740fc8bd0cc7fd660b6e78671da02ba68e0c31114",
+    "scripts/build_eapdf_rule_fixtures.py": "f4be1f8355d0173b9edb4566611fe08b7e97eeb8906741335aebe72e452d7871",
+    "tests/fixtures/eapdf/batch01/source.eml": "9a4347c8f7dc917227eaa3529ca9bf7ca8f6dfbc2b812d0a67a1f40de01cfb5f",
+    "tests/fixtures/eapdf/batch01/cases.json": "2d9448498566f07d176ee0b79e3e8bde5fdc3240a795d67337a48144eb0fa566",
+    "docs/improvement/requirements.json": "f363b52a2f001c705998220e477c00123c322352a440365454a68e9b03ecc990"
+  },
+  "commands": {
+    "build": "mvn -o -Deapdf.build.directory=/tmp/eapdf-improvement-batch01/build package",
+    "acceptance": "env -u PYTHONPATH EAPDF_GENERATOR_CLASSPATH=/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0.jar EAPDF_INTEGRATION_REPORT_DIR=/tmp/eapdf-improvement-batch01/accepted-integration python3 -B -m unittest discover -s tests -v",
+    "corpus": "env -u PYTHONPATH EAPDF_GENERATOR_CLASSPATH=/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0.jar python3 -B scripts/build_eapdf_rule_fixtures.py"
+  },
+  "logs": {
+    "build": "docs/improvement/batch-01-build.log",
+    "acceptance": "docs/improvement/batch-01-python-acceptance.log",
+    "corpus": "docs/improvement/batch-01-corpus.log",
+    "samples": "docs/improvement/batch-01-samples.log"
+  },
+  "resume": "Inspect the final logs, preserve before logs, finish evidence and restart docs. Then extend requirements/applicability review and fix confirmed type/coercion defects in known-next-gaps.json. Do not repeat baseline creation or restore the dirty tree.",
+  "preserved_runs": [
+    "batch-01-python-before.log",
+    "batch-01-java-before.log",
+    "batch-01-python-acceptance-initial.log",
+    "batch-01-python-acceptance-scope-failure.log"
+  ],
+  "java": {
+    "tests": 134,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "python": {
+    "run": 151,
+    "passed": 150,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 191.965,
+    "skip_reason": "Official PREMIS XSD was not configured (EAPDF_PREMIS_SCHEMA)."
+  },
+  "corpus": [
+    {
+      "case": "dictionary-valid",
+      "sha256": "ee1c3c51b762f25f263797e5086c505159c486d5fdeeb2b16c93796110a1c478",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-valid",
+      "sha256": "68f521a05d75d1762e3cafaafa1a491c6ebc682f9683208c8bdcf82a6346d851",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "untagged-valid",
+      "sha256": "5cd5ba7cba476b6c427aff59f860efa949c36b7d84d7db2af921b57f9dc4c2c3",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": [],
+      "expected_result_observed": true
+    },
+    {
+      "case": "dictionary-nonascii-name",
+      "sha256": "510dfcfb2699e0c3f5a4ef393cc751c5c2bf14d3a791557f74111919e121c57d",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_NAME_ASCII"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-nonascii-name",
+      "sha256": "2e845bdbbda3535d5aad12092e5e5d2004b794b5f65f14432a662a66a248f344",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_NAME_ASCII"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "dictionary-wrong-value-type",
+      "sha256": "f30f3080ff7c48257d2fb9d750e09c9d1e16a9f1eedcc08e952a00ce0d1c3c56",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    },
+    {
+      "case": "array-wrong-value-type",
+      "sha256": "1ab4d49d99b15e028e88b1af05e3c291d0b0afc2b9c1f6e8768295abb4fdcc24",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "USERPROPS_TYPE"
+      ],
+      "expected_result_observed": true
+    }
+  ],
+  "samples": {
+    "examples/sample_1s.pdf": {
+      "sha256": "d6b5e17a30e5dd0ab4bc422a3a4670c80d8bb3c3af8a5edb5aabf6b30aaa561c",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    "examples/sample_1si.pdf": {
+      "sha256": "2092d763c7c89337915fe6d830d8df06f3d931e5fb5aac940cc4df0d0f1ada7c",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    "examples/sample_1m.pdf": {
+      "sha256": "f6268d0c9792eb26a8a7eccc1abea640d79c072f769df723f51ba036fa31d52c",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    "examples/sample_1mi.pdf": {
+      "sha256": "86edef33f446b79a3afeaf6abaa8a1e0a2ccef52b9720528b1f4845634456924",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    "examples/sample_1c.pdf": {
+      "sha256": "edc3fa577a2d1dd3cdd6e9924d9204a8207c1410f2b92d64b58cfe05c77a3d85",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    "examples/sample_1c_finding_aid.pdf": {
+      "sha256": "67dc76aafcd36193041db9342159810c93669da7c45f04eed194a5a05d5c0bb0",
+      "pdfa": "PASS"
+    },
+    "examples/sample_1c_index.xlsx": {
+      "sha256": "8c2694ca48a4eee7b3f6290825d3d53b3efde95e78a3648a4b8b9dada96680f2"
+    },
+    "examples/sample_1ci.pdf": {
+      "sha256": "2cda5e33507025cb433ad51bca4e7d9d59095f16a88aa9f2ba2af575c3ddb6d3",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    "examples/sample_1ci_finding_aid.pdf": {
+      "sha256": "c5bbc01fb8d6332a0eee01e7ff2ae2fa17af7c8de67046f44a8a57061df455de",
+      "pdfa": "PASS"
+    },
+    "examples/sample_1ci_index.xlsx": {
+      "sha256": "6c51e06a8d95a50bd2dcadb3c7a9ad1e7467ef9985360e4063a8a1d05d67b6ef"
+    }
+  },
+  "children": [
+    {
+      "level": "N/A",
+      "code": "COLLECTION_CHILD_VALIDATION",
+      "message": "Rule not applicable for this PDF",
+      "details": {
+        "reason": "This rule does not apply to profile s (single-message). Context: profile=s (single-message); pdfa_part=4; xmp_readable=True; source_af=1; inspectable_rfc822_source=True; xmp_assets=1; xmp_attachments=1; collection=False; struct_tree=True; mail_tags=Mail_ContentSet,Mail_Field,Mail_FieldName,Mail_FieldValue,Mail_Message."
+      }
+    },
+    {
+      "level": "N/A",
+      "code": "COLLECTION_CHILD_VALIDATION",
+      "message": "Rule not applicable for this PDF",
+      "details": {
+        "reason": "This rule does not apply to profile si (single-message isolated). Context: profile=si (single-message isolated); pdfa_part=4; xmp_readable=True; source_af=0; inspectable_rfc822_source=False; xmp_assets=0; xmp_attachments=1; collection=False; struct_tree=True; mail_tags=Mail_ContentSet,Mail_Field,Mail_FieldName,Mail_FieldValue,Mail_Message."
+      }
+    },
+    {
+      "level": "N/A",
+      "code": "COLLECTION_CHILD_VALIDATION",
+      "message": "Rule not applicable for this PDF",
+      "details": {
+        "reason": "This rule does not apply to profile m (multi-message). Context: profile=m (multi-message); pdfa_part=4; xmp_readable=True; source_af=71; inspectable_rfc822_source=True; xmp_assets=71; xmp_attachments=70; collection=False; struct_tree=True; mail_tags=Mail_ContentGroup,Mail_ContentSet,Mail_Field,Mail_FieldName,Mail_FieldValue,Mail_Message."
+      }
+    },
+    {
+      "level": "N/A",
+      "code": "COLLECTION_CHILD_VALIDATION",
+      "message": "Rule not applicable for this PDF",
+      "details": {
+        "reason": "This rule does not apply to profile mi (multi-message isolated). Context: profile=mi (multi-message isolated); pdfa_part=4; xmp_readable=True; source_af=0; inspectable_rfc822_source=False; xmp_assets=0; xmp_attachments=70; collection=False; struct_tree=True; mail_tags=Mail_ContentGroup,Mail_ContentSet,Mail_Field,Mail_FieldName,Mail_FieldValue,Mail_Message."
+      }
+    },
+    {
+      "level": "PASS",
+      "code": "COLLECTION_CHILD_VALIDATION",
+      "message": "Contained email PDF passes PDF/A and EA-PDF checks",
+      "details": {
+        "child": "Agenda and timeline slides_000001_1s.pdf",
+        "sha256": "9b5affeff8f32ded8d26f379f1441d8f99acfe2de021e06b672f6abd6bb8fdf2",
+        "status": "PASS",
+        "pdfa_status": "PASS",
+        "pdfa": {
+          "status": "PASS",
+          "message": "PDF file is compliant with Validation Profile requirements.",
+          "profile_name": "PDF/A-4F validation profile",
+          "failed_rules": 0,
+          "failed_checks": 0,
+          "exit_code": 0
+        },
+        "findings": []
+      }
+    },
+    {
+      "level": "PASS",
+      "code": "COLLECTION_CHILD_VALIDATION",
+      "message": "Contained email PDF passes PDF/A and EA-PDF checks",
+      "details": {
+        "child": "Agenda and timeline slides_000001_1si.pdf",
+        "sha256": "5df55b8d3d639aebc606d993c51f10a674171f3b6d7b443968495c09773cc0a5",
+        "status": "PASS",
+        "pdfa_status": "PASS",
+        "pdfa": {
+          "status": "PASS",
+          "message": "PDF file is compliant with Validation Profile requirements.",
+          "profile_name": "PDF/A-4F validation profile",
+          "failed_rules": 0,
+          "failed_checks": 0,
+          "exit_code": 0
+        },
+        "findings": [
+          {
+            "level": "WARN",
+            "code": "ATTACHMENT_ANNOTATIONS_PRESENT",
+            "message": "Attachment annotations use zero-byte placeholders; their original contents are not verified by the annotation check",
+            "details": {
+              "actual": [
+                {
+                  "attachment": "Lean Six Sigma Kickoff Meeting.pptx",
+                  "reason": "attachment is represented by a zero-byte placeholder"
+                }
+              ],
+              "requirement": "EA-PDF sections 7.5 and 9.3"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tools": {
+    "python": "3.12.3",
+    "pikepdf": "10.17.0"
+  },
+  "build_artifacts": {
+    "/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0.jar": "b756994355e00d5d272dcbc936d1641f2223a5fe02736aa9816b499ab9684374",
+    "/tmp/eapdf-improvement-batch01/build/emailtopdfa-1.4.0-gui.jar": "aeadc068a46c2549c34158d6772541cdf6a43afb6a28de363e7f6e0c2f1ad429"
+  },
+  "durable_artifacts": {
+    "docs/improvement/batch-01-corpus/array-nonascii-name.html": "579497eb1bb20d233d2bd117d7966573d5064a9129896ddea5942000a639db8f",
+    "docs/improvement/batch-01-corpus/array-nonascii-name.json": "f9b977dfe359130e1fe3e28902510f8100c0fcc545148b0ab64297e736db7b07",
+    "docs/improvement/batch-01-corpus/array-nonascii-name.pdf": "2e845bdbbda3535d5aad12092e5e5d2004b794b5f65f14432a662a66a248f344",
+    "docs/improvement/batch-01-corpus/array-valid.html": "a949e05695ba481bed319331d7593e45e465f850d89fa942a76ebd4c6d98c59e",
+    "docs/improvement/batch-01-corpus/array-valid.json": "c58fe344abcc419bd43f94327d42f8d6165b8236a8ae09cc25fcb3957d1948b5",
+    "docs/improvement/batch-01-corpus/array-valid.pdf": "68f521a05d75d1762e3cafaafa1a491c6ebc682f9683208c8bdcf82a6346d851",
+    "docs/improvement/batch-01-corpus/array-wrong-value-type.html": "ccb5202254c271576366dd60c4257a890dcde5670e598d06506ee60005ecf73f",
+    "docs/improvement/batch-01-corpus/array-wrong-value-type.json": "2b449f44ba741c99989f083a41459d42514d48830ab397120129aae63ef10240",
+    "docs/improvement/batch-01-corpus/array-wrong-value-type.pdf": "1ab4d49d99b15e028e88b1af05e3c291d0b0afc2b9c1f6e8768295abb4fdcc24",
+    "docs/improvement/batch-01-corpus/config.json": "e995f0d8f72463627fa0debb54f534c15cf5ad26ec001be802dadd6d7bb8e9c7",
+    "docs/improvement/batch-01-corpus/dictionary-nonascii-name.html": "0a858ed76570ff5e4e5476e5d568b2413d3460465c9afd018ac32d8e75e02d40",
+    "docs/improvement/batch-01-corpus/dictionary-nonascii-name.json": "6950caf39b13183fcf200a0ffc8c293487e29258c287cf2dbc1b83e2188b4b73",
+    "docs/improvement/batch-01-corpus/dictionary-nonascii-name.pdf": "510dfcfb2699e0c3f5a4ef393cc751c5c2bf14d3a791557f74111919e121c57d",
+    "docs/improvement/batch-01-corpus/dictionary-valid.html": "96c963114ef343c48879fb9e39234f7c685a4b96841c82ddf7719eeb738ebccc",
+    "docs/improvement/batch-01-corpus/dictionary-valid.json": "a1a5ed79b6fae8dd2c89631a514cff7ef2adb4380661dd904aa51e7b5f757d43",
+    "docs/improvement/batch-01-corpus/dictionary-valid.pdf": "ee1c3c51b762f25f263797e5086c505159c486d5fdeeb2b16c93796110a1c478",
+    "docs/improvement/batch-01-corpus/dictionary-wrong-value-type.html": "6d0d1652f37bc1b1604cd0624d8e00e9cf3ec0500d86992fc3c8c0c8561f603b",
+    "docs/improvement/batch-01-corpus/dictionary-wrong-value-type.json": "67dbed0ce1366e17ed97e3b258c433c336be927c03bafb586b4c1f20fd911508",
+    "docs/improvement/batch-01-corpus/dictionary-wrong-value-type.pdf": "f30f3080ff7c48257d2fb9d750e09c9d1e16a9f1eedcc08e952a00ce0d1c3c56",
+    "docs/improvement/batch-01-corpus/generation.log": "8f1a84ef423db2502158bd23a2a83ab3e87f2213edd6c1304c06b951b4d3fa91",
+    "docs/improvement/batch-01-corpus/results.json": "2c04078c5bcbd2ac04a0f512e2732488ec47b403e8180c27b1966d90152d69e8",
+    "docs/improvement/batch-01-corpus/seed/EA-PDF attribute fixture_000001.pdf": "b890ead9f6cf258404776870a387a73d8d7b8f7e97aca7ae7f1983bec2625be6",
+    "docs/improvement/batch-01-corpus/seed/logs/EA-PDF attribute fixture_000001.log": "da97461a3a593fb103389d949621d21783d6805532a0b1474857be8d0df72209",
+    "docs/improvement/batch-01-corpus/untagged-valid.html": "f5a75be5374629623307d8ae255bff262c36d371ce3bf058dea955e9dc7d13c0",
+    "docs/improvement/batch-01-corpus/untagged-valid.json": "0a9d3f57bd059c24ee3400ad2e1c9823030225a1e3e6b5e13640b5dc1a4d2f66",
+    "docs/improvement/batch-01-corpus/untagged-valid.pdf": "5cd5ba7cba476b6c427aff59f860efa949c36b7d84d7db2af921b57f9dc4c2c3",
+    "docs/improvement/batch-01-saved-reports/1c-finding-aid-pdfa.json": "4a785faa4e74863143b195bf768f853cfe9440f40568e36ed6466c00f187f30a",
+    "docs/improvement/batch-01-saved-reports/1c.html": "c7f7f5d11e67a75b40f781cfa3bccccffdc813bf141c27c00502297e4ece3751",
+    "docs/improvement/batch-01-saved-reports/1c.json": "9c7d794d9335fd8645600734b437092b036453d8a0d3b641b49ba45b6a62078c",
+    "docs/improvement/batch-01-saved-reports/1ci-finding-aid-pdfa.json": "cbe029851a5e6c9d115fe6a6980d9edda3f2291b638684e8f77027b05bb962b2",
+    "docs/improvement/batch-01-saved-reports/1ci.html": "571afb70ee404cf77bdf08f29698191929bd91565aeba9f633c6f795d8e250a2",
+    "docs/improvement/batch-01-saved-reports/1ci.json": "97f501713f3d27302f435b8bcdf575e7f7f74f93156198241a7adfae375d524b",
+    "docs/improvement/batch-01-saved-reports/1m.html": "3887c1c181e5ee7d93a0fa102e12bf8cfc0bf5fe3fb0f3149c7027020e2cd690",
+    "docs/improvement/batch-01-saved-reports/1m.json": "1077052b51a4f891aa5005311e0cceb1e1518c4121793d85b5be2db0c966662e",
+    "docs/improvement/batch-01-saved-reports/1mi.html": "c344d6d3ead78e5e21bfb4a182e7c2e71cedd95da3fc9ef89a253ed1e9f2fe4e",
+    "docs/improvement/batch-01-saved-reports/1mi.json": "f9d2ee4129a9cc7d0c0f3ae1368d3764a7095dc1ead1c05423e0268b0f0d8c5c",
+    "docs/improvement/batch-01-saved-reports/1s.html": "a331468750c260132f7f4198c54e50ec2fc54ab4fc8d2aba59cc9e273990ac5c",
+    "docs/improvement/batch-01-saved-reports/1s.json": "183f233cc23357c7f6d930ed2ab42d7910340e59f7a719c11aede7fc68810e69",
+    "docs/improvement/batch-01-saved-reports/1si.html": "db02bacf2f55767039fa4099566372696a9c74d3ffb462d14d76f8d1db2a529a",
+    "docs/improvement/batch-01-saved-reports/1si.json": "c0fc4d799e309e69e0dd0d1fa095c050cb11158055c55890df517efb208fc1a4"
+  },
+  "audit_logs": {
+    "docs/improvement/batch-01-build.log": "f1040d0d5b4d465e4db1cd59649f826cf85ad1079944ff1766ca06ac34827593",
+    "docs/improvement/batch-01-corpus.log": "3fc4dc230e4af52fcb3e8feeccbd470a54bb5a4ca11cfb63da664540d013bef0",
+    "docs/improvement/batch-01-java-before.log": "141968afdb1e69d5867dc04a4d07cebd1e4709fce2d7cc22a879031b7ff4a365",
+    "docs/improvement/batch-01-java-focused.log": "42677d773961ecb95a24f84311b23c38466713d7c189213a2ab8ec21c6acdd6f",
+    "docs/improvement/batch-01-python-acceptance-initial.log": "f0de88b18a0286bb189c3bac57dd11834f4e8a2b3d8e152776c8db50090a927f",
+    "docs/improvement/batch-01-python-acceptance-scope-failure.log": "d7484f2acb0b9c509aaf72b8517f2ac046ef9da9b4efc2a8c943d425b21a88de",
+    "docs/improvement/batch-01-python-acceptance.log": "ea7883a4bee6ffcdb179e670994873ad3f710b241e017a91b7de685d043db019",
+    "docs/improvement/batch-01-python-before.log": "fd331bb5bb113465e74b09134746ea238ff0dc67d02d796294da0bdfee64ce1c",
+    "docs/improvement/batch-01-python-focused.log": "c235c16b08375a1ce16e87f42a20130a16cb6982ed6fdda7df9055975eafa76d",
+    "docs/improvement/batch-01-python-unit.log": "6e0f2e93659fc569194534591a83cd209fe1e4f7e042c2fd4cc59550ab340c8f",
+    "docs/improvement/batch-01-samples.log": "675b83c5167df271e107cad30676966ccbf92d7be2817a5086a16db8f2751fbb",
+    "docs/improvement/batch-01-saved-samples.log": "cae90d2bd51f192396a926948ca70b45a353ba2ad86c9123087d3e9ddc7474e1"
+  },
+  "next_actions": [
+    "Continue priorities 1 and 2: review the remaining explicit N/A branches and expand requirements.json against authoritative clauses.",
+    "Convert the confirmed Table 12 type/coercion reproductions in known-next-gaps.json into regressions, then repair type checks while extending the register.",
+    "Review repeated attribute owners, namespaces, class-map resolution and revision precedence; the simple array cases do not prove these.",
+    "Obtain/review the full ISO/TS 32005 text and applicable later errata.",
+    "Proceed through the remaining ordered plan items after the P0 register/applicability work."
+  ],
+  "limitations": [
+    "Only eight obligation records and seven corpus cases are reviewed; no full standards or ISO/TS 32005 conformance claim.",
+    "The known type/coercion defects remain open and reproducible.",
+    "Existing explicit N/A branches, including source/human-dependent recommendations, still require review.",
+    "One optional PREMIS schema test was skipped; release acceptance must configure it.",
+    "Build JARs and additional integration reports under /tmp may expire; durable corpus/saved reports and logs are in docs/improvement."
+  ]
+}

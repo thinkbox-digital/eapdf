@@ -1,0 +1,103 @@
+{
+  "file": "/media/lepore/Work/thinkbox/convert/docs/improvement/upstream-profile-execution/font-controls/4f-font-valid.pdf",
+  "tool": "veraPDF CLI (Docker)",
+  "image": "ghcr.io/verapdf/cli:v1.31.18",
+  "status": "PASS",
+  "message": "PDF file is compliant with Validation Profile requirements.",
+  "ran": true,
+  "compliant": true,
+  "profile_name": "PDF/A-4F validation profile",
+  "statement": "PDF file is compliant with Validation Profile requirements.",
+  "job_end_status": "normal",
+  "passed_rules": 109,
+  "failed_rules": 0,
+  "passed_checks": 143,
+  "failed_checks": 0,
+  "rule_summaries": [],
+  "profile_allowed": true,
+  "stderr_severity": "",
+  "exit_code": 0,
+  "raw_json": {
+    "report": {
+      "buildInformation": {
+        "releaseDetails": [
+          {
+            "id": "core",
+            "version": "1.31.1",
+            "buildDate": 1770819600000
+          },
+          {
+            "id": "validation-model",
+            "version": "1.31.17",
+            "buildDate": 1773310860000
+          },
+          {
+            "id": "apps",
+            "version": "1.31.18",
+            "buildDate": 1773311520000
+          }
+        ]
+      },
+      "jobs": [
+        {
+          "itemDetails": {
+            "name": "/work/docs/improvement/upstream-profile-execution/font-controls/4f-font-valid.pdf",
+            "size": 18297
+          },
+          "validationResult": [
+            {
+              "details": {
+                "passedRules": 109,
+                "failedRules": 0,
+                "passedChecks": 143,
+                "failedChecks": 0,
+                "ruleSummaries": []
+              },
+              "jobEndStatus": "normal",
+              "profileName": "PDF/A-4F validation profile",
+              "statement": "PDF file is compliant with Validation Profile requirements.",
+              "compliant": true
+            }
+          ],
+          "processingTime": {
+            "start": 1792525017494,
+            "finish": 1792525017880,
+            "duration": "00:00:00.386",
+            "difference": 386
+          }
+        }
+      ],
+      "batchSummary": {
+        "duration": {
+          "start": 1792525017392,
+          "finish": 1792525017902,
+          "duration": "00:00:00.510",
+          "difference": 510
+        },
+        "totalJobs": 1,
+        "outOfMemory": 0,
+        "veraExceptions": 0,
+        "featuresSummary": {
+          "failedJobCount": 0,
+          "totalJobCount": 0,
+          "successfulJobCount": 0
+        },
+        "repairSummary": {
+          "failedJobCount": 0,
+          "totalJobCount": 0,
+          "successfulJobCount": 0
+        },
+        "multiJob": false,
+        "failedEncryptedJobs": 0,
+        "failedParsingJobs": 0,
+        "validationSummary": {
+          "compliantPdfaCount": 1,
+          "failedJobCount": 0,
+          "totalJobCount": 1,
+          "nonCompliantPdfaCount": 0,
+          "successfulJobCount": 1
+        }
+      }
+    }
+  }
+}

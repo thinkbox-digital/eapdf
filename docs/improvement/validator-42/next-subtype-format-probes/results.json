@@ -1,0 +1,94 @@
+[
+  {
+    "file": "matching-quoted-spaces.pdf",
+    "sha256": "8ab8f1a202b2f031a78f6c2f9d1a7d0636e09dda723847b71d99aa37e84c7099",
+    "dpm": "application/pdf; x-eapdf=\"a  b\"",
+    "value": "application/pdf; x-eapdf=\"a  b\"",
+    "status": "FAIL",
+    "failures": [
+      "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "changed-quoted-spaces.pdf",
+    "sha256": "8ae9f71b4121dff013f8d3a467a4717246d6853bcdd115ad758f22f8b8bd3f2c",
+    "dpm": "application/pdf; x-eapdf=\"a b\"",
+    "value": "application/pdf; x-eapdf=\"a  b\"",
+    "status": "PASS",
+    "failures": [],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "equivalent-type-case.pdf",
+    "sha256": "d503cd26dd7d10c91d6dc77b073afa6af774b9b3b6d0b7ddaeabcd970483bd29",
+    "dpm": "application/pdf",
+    "value": "APPLICATION/PDF",
+    "status": "FAIL",
+    "failures": [
+      "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "equivalent-quoted-token.pdf",
+    "sha256": "10c325406a9ee566a37a8da3a3e53d3a5e0b8ea7e8e83231f601fa5bccc41f91",
+    "dpm": "application/pdf; x-eapdf=ok",
+    "value": "application/pdf; x-eapdf=\"ok\"",
+    "status": "FAIL",
+    "failures": [
+      "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "equivalent-parameter-order.pdf",
+    "sha256": "4fa317b019e60af45d8a5c0af9985612ecb3f4096283b8025c39fd83bc05bd6e",
+    "dpm": "application/pdf; x-eapdf=one; y-eapdf=two",
+    "value": "application/pdf; y-eapdf=two; x-eapdf=one",
+    "status": "FAIL",
+    "failures": [
+      "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "changed-parameter-case.pdf",
+    "sha256": "9afe75fce99f6aeb5d4b4432dd26c88e0c2d2e65d84f79e91372edb5897e0734",
+    "dpm": "application/pdf; x-eapdf=Ab",
+    "value": "application/pdf; x-eapdf=ab",
+    "status": "FAIL",
+    "failures": [
+      "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "matching-layout-spaces.pdf",
+    "sha256": "8db0910eae92c7e0643a7895136418f12ec502bcbe30529239449cf2f4864600",
+    "dpm": "application/pdf;  x-eapdf=ok",
+    "value": "application/pdf;  x-eapdf=ok",
+    "status": "FAIL",
+    "failures": [
+      "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "matching-baseline.pdf",
+    "sha256": "48c59a87e795819252c3795ff605e78f4068c91fc8e6e379f9d4725c9d410d32",
+    "dpm": "application/pdf",
+    "value": "application/pdf",
+    "status": "PASS",
+    "failures": [],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  }
+]

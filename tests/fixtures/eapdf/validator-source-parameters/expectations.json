@@ -1,0 +1,200 @@
+{
+  "authority": "EA-PDF 9.4 printed pp66-67; 9.8.2 Table 16 printed p85",
+  "boundary": "Existing Source associations only; no new requirement to retain missing sources",
+  "cases": [
+    {
+      "file": "ambiguous-verified.pdf",
+      "sha256": "51b18eae0dd268935e645218ac61b90c2fa5136a4d6f7224f908179a13c83be6",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "seed": "tests/fixtures/eapdf/validator-ambiguous-sources/compatible-parameters.pdf",
+      "seed_sha256": "6e2bfad7fb67bd2409777495b24e0b1bb907a3fab3b4cfc20c195365beeeaea3",
+      "expected_media_consistency_level": "WARN",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "INCOMPLETE",
+          "expected_failures": [],
+          "expected_parameter_level": "WARN"
+        },
+        "reason": "The public predicate now covers complete reconstructed PDF/XMP media consistency; it does not assert a distinct parameter-only result or original-source fidelity.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "ambiguous-no-attachments.pdf",
+      "sha256": "fdcfea8daf602f7cc84660ad9beac4c24f5963bb12619413f04391816777743b",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_XMP_CONTAINER"
+      ],
+      "seed": "tests/fixtures/eapdf/validator-ambiguous-sources/compatible-parameters.pdf",
+      "seed_sha256": "6e2bfad7fb67bd2409777495b24e0b1bb907a3fab3b4cfc20c195365beeeaea3",
+      "expected_media_consistency_level": "WARN",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_XMP"
+          ],
+          "expected_parameter_level": "WARN"
+        },
+        "reason": "Attachment array shape retains its previous schema predicate under the explicit container code. The public predicate now covers complete reconstructed PDF/XMP media consistency; it does not assert a distinct parameter-only result or original-source fidelity.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "unknown-verified.pdf",
+      "sha256": "e8aa52ac6bd84587bee9217b768ef5a0773dc3e689c86f1edeadf2253f379f6b",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ASSET_MATCH",
+        "SOURCE_WITHOUT_XMP"
+      ],
+      "seed": "tests/fixtures/eapdf/validator-ambiguous-sources/compatible-parameters.pdf",
+      "seed_sha256": "6e2bfad7fb67bd2409777495b24e0b1bb907a3fab3b4cfc20c195365beeeaea3",
+      "expected_media_consistency_level": "WARN",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ASSET_MATCH",
+            "SOURCE_WITHOUT_XMP"
+          ],
+          "expected_parameter_level": "WARN"
+        },
+        "reason": "The public predicate now covers complete reconstructed PDF/XMP media consistency; it does not assert a distinct parameter-only result or original-source fidelity.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "unknown-no-attachments.pdf",
+      "sha256": "872e8eba6cbc268e3531e1ff0462d669f7d9f96e4bc1a6eb118adca99c52f780",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ASSET_MATCH",
+        "ATTACHMENT_XMP_CONTAINER",
+        "SOURCE_WITHOUT_XMP"
+      ],
+      "seed": "tests/fixtures/eapdf/validator-ambiguous-sources/compatible-parameters.pdf",
+      "seed_sha256": "6e2bfad7fb67bd2409777495b24e0b1bb907a3fab3b4cfc20c195365beeeaea3",
+      "expected_media_consistency_level": "WARN",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ASSET_MATCH",
+            "ATTACHMENT_XMP",
+            "SOURCE_WITHOUT_XMP"
+          ],
+          "expected_parameter_level": "WARN"
+        },
+        "reason": "Attachment array shape retains its previous schema predicate under the explicit container code. The public predicate now covers complete reconstructed PDF/XMP media consistency; it does not assert a distinct parameter-only result or original-source fidelity.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "bare-control.pdf",
+      "sha256": "399404d7d8f1c41e7ab05d17d9eab99b16547f041b58881067ab28fcf6fb32e9",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": [],
+      "seed": "tests/fixtures/eapdf/validator-ambiguous-sources/compatible-parameters.pdf",
+      "seed_sha256": "6e2bfad7fb67bd2409777495b24e0b1bb907a3fab3b4cfc20c195365beeeaea3",
+      "expected_media_consistency_level": "WARN",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "INCOMPLETE",
+          "expected_failures": [],
+          "expected_parameter_level": "PASS"
+        },
+        "reason": "The public predicate now covers complete reconstructed PDF/XMP media consistency; it does not assert a distinct parameter-only result or original-source fidelity.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "unique-parameters.pdf",
+      "sha256": "751af9b8c2642df412a129bb84269685aaf5d52a6f8feb8c2061b3dd64dc9c87",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "seed": "tests/fixtures/eapdf/validator-operands/valid.pdf",
+      "seed_sha256": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+      "expected_media_consistency_level": "PASS",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "PASS",
+          "expected_failures": [],
+          "expected_parameter_level": "PASS"
+        },
+        "reason": "The public predicate now covers complete reconstructed PDF/XMP media consistency; it does not assert a distinct parameter-only result or original-source fidelity.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "unique-names-shared-checksum.pdf",
+      "sha256": "8edd1aec3af557638dded1edff05364b6a3a3c0e65f2a399f5734b5f3e23d8ff",
+      "expected_status": "PASS",
+      "expected_failures": [],
+      "seed": "tests/fixtures/eapdf/validator-ambiguous-sources/compatible-parameters.pdf",
+      "seed_sha256": "6e2bfad7fb67bd2409777495b24e0b1bb907a3fab3b4cfc20c195365beeeaea3",
+      "expected_media_consistency_level": "PASS",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "PASS",
+          "expected_failures": [],
+          "expected_parameter_level": "PASS"
+        },
+        "reason": "The public predicate now covers complete reconstructed PDF/XMP media consistency; it does not assert a distinct parameter-only result or original-source fidelity.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "invalid-shape-control.pdf",
+      "sha256": "cae99cac833adb96da1df8c958e7db47a6d016bbc5f1f8fb5317ab0ed70e65a7",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ASSET_CONTENTTYPE",
+        "ASSET_XMP_FIELDS"
+      ],
+      "seed": "tests/fixtures/eapdf/validator-ambiguous-sources/compatible-parameters.pdf",
+      "seed_sha256": "6e2bfad7fb67bd2409777495b24e0b1bb907a3fab3b4cfc20c195365beeeaea3",
+      "expected_media_consistency_level": "WARN",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ASSET_CONTENTTYPE",
+            "ASSET_XMP_FIELDS"
+          ],
+          "expected_parameter_level": "PASS"
+        },
+        "reason": "The public predicate now covers complete reconstructed PDF/XMP media consistency; it does not assert a distinct parameter-only result or original-source fidelity.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "definite-failure.pdf",
+      "sha256": "36f423c8a16c70da78dfea71d0b98f89d7908934cdc28f8a5dd2a1ec96bdee20",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP",
+        "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+      ],
+      "seed": "tests/fixtures/eapdf/validator-ambiguous-sources/compatible-parameters.pdf",
+      "seed_sha256": "6e2bfad7fb67bd2409777495b24e0b1bb907a3fab3b4cfc20c195365beeeaea3",
+      "expected_media_consistency_level": "FAIL",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_ANNOTATIONS_PRESENT",
+            "EMBEDDED_SUBTYPE_MATCH_XMP",
+            "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+          ],
+          "expected_parameter_level": "FAIL"
+        },
+        "reason": "Complete reconstructed PDF subtype and parameters disagree with equivalent XMP; original-value fidelity is separate. The public predicate now covers complete reconstructed PDF/XMP media consistency; it does not assert a distinct parameter-only result or original-source fidelity.",
+        "retained_pdf_bytes": true
+      }
+    }
+  ]
+}

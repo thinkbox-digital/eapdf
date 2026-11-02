@@ -1,0 +1,119 @@
+{
+  "checkpoint": "C122",
+  "fix": "Save and close the complete archive inside a separate writer scope before the existing serialized-PDF validation runs. Release writer-only object allocator references for the completed archive/finding aids. Preserve every creation/preservation gate and publication order.",
+  "initial_failure": "Public CLI full bundled mailbox failed with Java heap space at PdfCreationValidator.documentDictionaries while original archive remained open. No partial output published.",
+  "runtime_evidence": "runtime-evidence.json",
+  "standalone_proof": "The same complete serialized archive passes unchanged final creation checks alone with the same512MB heap, observed used heap388330752bytes.",
+  "java_focused": {
+    "tests": 39,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "last_full_java": {
+    "checkpoint": "C117",
+    "counts": {
+      "tests": 250,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "changed_production_classes": [
+    "eapdf/PdfDocumentParts$ObjectAllocator.class",
+    "eapdf/PdfDocumentParts.class",
+    "eapdf/PdfMailWriter$2.class",
+    "eapdf/PdfMailWriter$ArchiveBuildResult.class",
+    "eapdf/PdfMailWriter.class"
+  ],
+  "line_table_only_companions": [
+    "eapdf/PdfDocumentParts$ObjectAllocator.class",
+    "eapdf/PdfMailWriter$2.class"
+  ],
+  "large_batch_creation": {
+    "exit_code": 0,
+    "elapsed_seconds": 176.97,
+    "heap_limit_bytes": 536870912,
+    "render_starts": 1433,
+    "false_date_warnings": 0,
+    "published_bytes": 70485510
+  },
+  "large_batch_preservation": {
+    "messages": 1433,
+    "unique_mail_guids": 1433,
+    "exact_sources": 1433,
+    "pages": 2106,
+    "content_set_page_counts": {
+      "/FrontMatter": 101,
+      "/BodyRendering": 2005
+    },
+    "container_sha256": "ac91b223f9eaeb57f7498bc08b8eb190ef4624b7c88bb5534e3fd4934ac2dfd4",
+    "pdf_sha256": "e53fb6c5452246b6032ac7512091eda7d575daa697264c95324aeca3493bae3c",
+    "frozen_validator_changed": false,
+    "trusted_local_inspection_budget": 10000000
+  },
+  "normal_archive_conformance": {
+    "m": {
+      "messages": 20,
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "mandatory_failure_codes": [],
+      "exact_source_count": 20,
+      "sha256": "25029423d7892b6b7ce13495ab52a39a8e00dcacd7fd7b0f6a520ac32eaba2ea",
+      "staging_removed": true
+    },
+    "mi": {
+      "messages": 20,
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "mandatory_failure_codes": [],
+      "exact_source_count": 0,
+      "sha256": "f5cb399fd5ec998869a319f0777487825aa6511f9b5842d2ca28cf0d2778b8d3",
+      "staging_removed": true
+    }
+  },
+  "large_full_frozen_validation": {
+    "messages": 1433,
+    "unique_mail_guids": 1433,
+    "exact_sources": 1433,
+    "pages": 2106,
+    "content_set_page_counts": {
+      "/FrontMatter": 101,
+      "/BodyRendering": 2005
+    },
+    "container_sha256": "ac91b223f9eaeb57f7498bc08b8eb190ef4624b7c88bb5534e3fd4934ac2dfd4",
+    "pdf_sha256": "e53fb6c5452246b6032ac7512091eda7d575daa697264c95324aeca3493bae3c",
+    "frozen_validator_changed": false,
+    "trusted_local_inspection_budget": 10000000,
+    "status": "FAIL",
+    "pdfa": "FAIL",
+    "selected_iso": [
+      "N/A"
+    ],
+    "mandatory_failures": [
+      {
+        "code": "VALIDATION_ERROR",
+        "message": "Unable to complete PDF validation"
+      }
+    ],
+    "incomplete": [],
+    "staging_removed": true
+  },
+  "large_validation_limit": "The unmodified validator could not complete: veraPDF512MB reported OutOfMemory, and associated-file object traversal exceeded its existing bound. This is the retained FAIL result, not a conformance PASS. MAX_TREE_ITEMS was raised only for this trusted diagnostic run; MAX_TREE_DEPTH256 and external512MB remained unchanged.",
+  "validator_source_changed": false,
+  "validator_gates_removed": false,
+  "creator_heap_raised": false,
+  "jars": {
+    "emailtopdfa.jar": "c97d2a67210a1d4f58e3bd8be413e7008547f2aa7b4835c71a021b2d84340c1a",
+    "emailtopdfa-gui.jar": "83516ad4c8725aba21aa854a3f07efb55bf87d724a511bf17c8ce360233005e5"
+  },
+  "saved_samples": "C120 checked samples unchanged, including absent corner badges.",
+  "temporary_shared_staging_removed": true,
+  "continues": "Focused creator work active until explicitly stopped."
+}

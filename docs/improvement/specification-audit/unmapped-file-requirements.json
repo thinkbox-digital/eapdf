@@ -1,0 +1,77 @@
+[
+  {
+    "id": "EMBEDDED-SUBTYPE-PARAMS",
+    "section": "9.4",
+    "printed_pages": [
+      66
+    ],
+    "pdf_pages": [
+      73
+    ],
+    "table": null,
+    "strength": "SHALL_NOT",
+    "scope": "file",
+    "applies_when": "every embedded file stream",
+    "assertion": "Subtype contains neither semicolons nor media-type parameters.",
+    "evidence_needed": "PDF objects and XMP",
+    "candidate_rule_codes": [],
+    "requirement_review": "reviewed_local_EA_PDF_text",
+    "implementation_status": "not_verified_by_this_audit",
+    "issues": [],
+    "dependencies": [],
+    "custom_validator_scope": "Apply the linked authoritative rule validation_scope, including profile-specific covered and uncovered fragments.",
+    "assessment": {
+      "authority_status": "reviewed_requirement_or_guidance",
+      "implementation_mapping": "existing_rule_candidates",
+      "conformance_effect": "mandatory_when_applicable",
+      "evidence_boundary": "Use evidence_needed and applies_when; separate PDF-internal schema from original-source fidelity."
+    },
+    "plain_language": {
+      "summary": "Keep media-type parameters and semicolons out of the embedded stream's Subtype.",
+      "when": "every embedded file stream",
+      "basis_sha256": "d528a38f1876443eca6ad130d775713eb7655c38a1f7f804a1a941684567f987"
+    },
+    "upstream_rule_codes": [
+      "EMBEDDED_SUBTYPE_NO_PARAMETERS"
+    ]
+  },
+  {
+    "id": "XMP-PDFA3-EXTENSIONS",
+    "section": "9.8.1",
+    "printed_pages": [
+      84
+    ],
+    "pdf_pages": [
+      91
+    ],
+    "table": null,
+    "strength": "inherited_requirement",
+    "scope": "file",
+    "applies_when": "PDF/A-3 and custom XMP",
+    "assertion": "Include extension schemas as required by PDF/A-3 6.6.2.3.2; EA-PDF-only schema presence does not establish complete arbitrary custom-schema coverage.",
+    "evidence_needed": "PDF objects and XMP",
+    "candidate_rule_codes": [],
+    "requirement_review": "reviewed_local_EA_PDF_text",
+    "implementation_status": "not_verified_by_this_audit",
+    "issues": [],
+    "dependencies": [],
+    "custom_validator_scope": "Apply the linked authoritative rule validation_scope, including profile-specific covered and uncovered fragments.",
+    "assessment": {
+      "authority_status": "reviewed_requirement_or_guidance",
+      "implementation_mapping": "existing_rule_candidates",
+      "conformance_effect": "mandatory_when_applicable",
+      "evidence_boundary": "Use evidence_needed and applies_when; separate PDF-internal schema from original-source fidelity."
+    },
+    "upstream_issue_references": [
+      "https://github.com/pdf-association/report-an-issue/issues/12"
+    ],
+    "plain_language": {
+      "summary": "Include extension schemas when PDF/A-3 requires them. EA-PDF schemas alone may not describe all custom metadata.",
+      "when": "PDF/A-3 and custom XMP",
+      "basis_sha256": "ca36a7cedf861f962fcdcbba3cdafb72dcceaefe4cc27a3378f2f16216ca92c1"
+    },
+    "upstream_rule_codes": [
+      "PDFA3_EAPDF_XMP_EXTENSION_SCHEMA"
+    ]
+  }
+]

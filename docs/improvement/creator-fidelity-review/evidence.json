@@ -1,0 +1,298 @@
+{
+  "date_utc": "2026-10-25T17:19:15.080351+00:00",
+  "task": "Fresh ordinary creator accuracy review and confirmed subject/source-comparison repairs",
+  "version": "1.5.0-beta.1",
+  "artifacts": {
+    "emailtopdfa.jar": {
+      "sha256": "1a8a34124babe874ead14c7aea9be87f8e94d187fa54ff656b8a9238829bb5de",
+      "bytes": 39889585
+    },
+    "emailtopdfa-gui.jar": {
+      "sha256": "1e8e6190756d5272526449956b1e6e914ae9743eb84533ee042721eaeb572f4a",
+      "bytes": 39889581
+    },
+    "eapdf-validator.jar": {
+      "sha256": "43d1f526f2329a32a8ea5e47123b9321dd132f7afa42673f0f6eee41c5aa8633",
+      "bytes": 28628688
+    }
+  },
+  "tests": {
+    "creator": {
+      "tests": 277,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "java_validator": {
+      "tests": 154,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python": {
+      "run": 1182,
+      "passed": 1142,
+      "skipped": 40,
+      "failures": 0,
+      "errors": 0
+    }
+  },
+  "fidelity": {
+    "pdfs": 24,
+    "represented_emails": 100,
+    "missing_originals": 0,
+    "missing_asset_records": 0,
+    "body_token_leads": 0,
+    "subject_leads": 0,
+    "pst_export_body_leads": 0,
+    "referenced_image_leads": 0,
+    "referenced_images": 5,
+    "source_email_counts": {
+      "eml": 4,
+      "msg": 6,
+      "pst": 78,
+      "gmail": 12
+    },
+    "exact_direct_originals": 22,
+    "pst_native_body_exports": 78,
+    "by_value_asset_occurrences": 84
+  },
+  "headers": {
+    "messages": 100,
+    "field_comparisons": 440,
+    "field_mismatches": 0,
+    "unavailable_field_comparisons": 60,
+    "raw_address_fields_preserved": 42,
+    "native_timestamp_precision_limits": 1
+  },
+  "preservation": {
+    "messages": 100,
+    "body_pages_compared": 210,
+    "same_body_page_pixels": 99,
+    "corrected_subject_emails": 1,
+    "other_core_metadata_changes": 0
+  },
+  "nested_pst": {
+    "retained_native_attachment": true,
+    "selected_visible_body_text_preserved": true,
+    "native_assets": 1,
+    "native_assets_preserved": 1
+  },
+  "comparisons": {
+    "corpus": {
+      "parent_pdfs": 808,
+      "reports": 875,
+      "rules": 213,
+      "summary": {
+        "status_matches": 875,
+        "pdfa_exact_matches": 875,
+        "iso_exact_matches": 875,
+        "pdfa_diagnostic_matches": 875,
+        "iso_diagnostic_matches": 875,
+        "rule_worst_level_matches": 186375,
+        "rule_comparisons": 186375,
+        "missed_failure_pairs": 0,
+        "extra_failure_pairs": 0,
+        "rules_with_missed_failures": 0,
+        "rules_with_extra_failures": 0,
+        "execution_errors": 0,
+        "java_inspection_errors": 0,
+        "cases_with_child_inventory_difference": 0
+      }
+    },
+    "real-msg": {
+      "parent_pdfs": 32,
+      "reports": 32,
+      "rules": 213,
+      "summary": {
+        "status_matches": 32,
+        "pdfa_exact_matches": 32,
+        "iso_exact_matches": 32,
+        "pdfa_diagnostic_matches": 32,
+        "iso_diagnostic_matches": 32,
+        "rule_worst_level_matches": 6816,
+        "rule_comparisons": 6816,
+        "missed_failure_pairs": 0,
+        "extra_failure_pairs": 0,
+        "rules_with_missed_failures": 0,
+        "rules_with_extra_failures": 0,
+        "execution_errors": 0,
+        "java_inspection_errors": 0,
+        "cases_with_child_inventory_difference": 0
+      }
+    },
+    "fresh": {
+      "parent_pdfs": 15,
+      "reports": 27,
+      "rules": 213,
+      "summary": {
+        "status_matches": 27,
+        "pdfa_exact_matches": 27,
+        "iso_exact_matches": 27,
+        "pdfa_diagnostic_matches": 27,
+        "iso_diagnostic_matches": 27,
+        "rule_worst_level_matches": 5751,
+        "rule_comparisons": 5751,
+        "missed_failure_pairs": 0,
+        "extra_failure_pairs": 0,
+        "rules_with_missed_failures": 0,
+        "rules_with_extra_failures": 0,
+        "execution_errors": 0,
+        "java_inspection_errors": 0,
+        "cases_with_child_inventory_difference": 0
+      }
+    }
+  },
+  "reports": 934,
+  "matching_rule_outcomes": 198942,
+  "privacy": "Only numerical validation summaries retained. No private Gmail subjects, addresses, message IDs, filenames, diagnostic text or case rows are copied to project evidence.",
+  "gmail": {
+    "read_only": true,
+    "messages": 12,
+    "same_sources_before_after": true,
+    "credential_originals_unchanged": true
+  },
+  "public_example": {
+    "pdf": "output/creator-review/fidelity/Decoded subject.pdf",
+    "sha256": "9b6ac070ad429ae88773bdae8971f4e4c27e50c890ba6e272a4bf65d31030c10",
+    "before_status": "FAIL",
+    "before_failures": [
+      "MESSAGE_SUBJECT_XMP"
+    ],
+    "after_status": "PASS",
+    "pdfa_both": "PASS"
+  },
+  "upstream_provenance": {
+    "java": "Fresh final-JAR checks for all compared reports",
+    "web_existing_corpus_and_msg": "Prior real upstream reports reused after exact PDF SHA256 checks; current EA-PDF/ISO report verification rerun",
+    "web_fresh_outputs": "Real upstream checks executed in this review; same-byte upstream results reused after validator repairs; current EA-PDF/ISO report verification rerun"
+  },
+  "standalone": {
+    "jar_sha256": "43d1f526f2329a32a8ea5e47123b9321dd132f7afa42673f0f6eee41c5aa8633",
+    "only_jar_in_empty_working_directory": true,
+    "path": "/unavailable",
+    "worker_classpath": "eapdf-validator.jar",
+    "overall": "PASS",
+    "java_port_complete": true,
+    "pdfa": "PASS",
+    "ea_failures": 0,
+    "iso": "PASS",
+    "specification_pane_populated": true,
+    "gui_font_points": 16,
+    "window_width": 2000,
+    "worker_workspaces_cleaned": true
+  },
+  "frozen_hashes_unchanged": {
+    "validator_rule_text.json": "36f7731d64f56e902d729ea8481a60413af609bc624c7e232f8b20f7e5db47d7",
+    "config/verapdf/ISO-32005.xml": "a2181a59dcaef27d20cc3078aa8b63e63fe528908a69f985a0b56b714c62d7a1",
+    "config/verapdf/ISO-32005.json": "6bdd077d49c5ac1d86cc769e9a4dae2e1049ee8796fa82a7cb2ae33c230e7ea2"
+  },
+  "protected_pdf_hashes": {
+    "output/Agenda and timeline slides_000001.pdf": "60df01947e5bf63561ec6b5f5b91eac9f5395c04ab7e17ee1473d1d2b37b4fd7",
+    "output/bfo.pdf": "cf7e3669ad5994439a999e3ad37f02503fe05755fe8c5fc74d091f9695114efb"
+  },
+  "source_hashes": {
+    "VERSION": "5fad9bd0a894d81bd7a3258c4ec85aa8282506067e20a9c366addf9dec061cf2",
+    "docs/improvement/specification-audit/review-questions.md": "04bae73c3ea49cde5bf6739e5dd6b4ec4e0d47dfe200df9ddeda8c80a80255e1",
+    "docs/improvement/specification-audit/validator-rule-review.json": "2b92902b7229cc1c00438d0e7d00896ef605f87b5e9095a0f2d31c8362d4e73e",
+    "pom.xml": "cdd4b03c910e11c278a472897905e86ab61be8de062cd0f073f0ad819e9060ea",
+    "requirements-web.txt": "50e4026bf6aefac292c82b20cc1ca30c5062e5b23e8a75513ab7b6e4ed50dac5",
+    "scripts/build_eapdf_attachment_equivalence_fixtures.py": "a8410e8144e27738b37b19326ed905434bbd9b2de6e2695e1a2b842c539422d1",
+    "scripts/build_eapdf_attachment_occurrence_fixtures.py": "f80ed234c8936e8fb58abb7a14268d892d487f2fa99039bf319d462668ee1e5f",
+    "scripts/build_eapdf_coverage_branch_fixtures.py": "08e4758899ae955461e16217d24553c59e3dea5952aa8b4752067be669b4dd07",
+    "scripts/build_eapdf_media_parameter_fixtures.py": "05e35366c97eafba215fc3c7b2a3f4b7224720b28c95057266ffcbf22f7d5af0",
+    "scripts/build_eapdf_profile_source_scope_fixtures.py": "fa118ae6e7a407b2a79930a3b7e7127d1eedd67ce903a6ba4b63cac94fef138d",
+    "scripts/build_eapdf_source_parameter_fixtures.py": "44651c83ba774d8f2c5a96f3d22c4bce3a671a67f748b59f124f24d5fde85c97",
+    "scripts/build_eapdf_uninspectable_source_fixtures.py": "e944a7b475fa0d206aafb2e7287c0d8c4be10864d5b8711819a23855a178130d",
+    "scripts/regenerate_email_samples.py": "a70c1d8ae75863b7d3dd74159eadbcd4bc166d629fce833f0babdbccadfa52bd",
+    "src/main/java/com/pff/EaPdfPstProperties.java": "b903d7300293e82c729d13f0fbb6619e553172b793254cae519026cf35d1e104",
+    "src/main/java/eapdf/Common.java": "bce50e5dabb6856ef55f0f6ae222030805203293c4f2cb2a0ac74f6c7687da8d",
+    "src/main/java/eapdf/ConversionSupervisor.java": "a46c510d09fd00bd4a9108cfd5630d2a7345e8191c0621e9be9019cc7b7b3de2",
+    "src/main/java/eapdf/EapdfConfig.java": "13bb68283ed7e31d05735c5543cb46a1e6bc87a53106280a1c667f36d6ada5e5",
+    "src/main/java/eapdf/EapdfGui.java": "11843db2d13107a4d256ebfbc47582101a8bcbb31c79bec8ea09aa4d21136081",
+    "src/main/java/eapdf/EmailStyles.java": "2b23158031759410054a6b9cd10eb868652d89f99a6089f6d9e56651e2ac112f",
+    "src/main/java/eapdf/EmailToPDFA.java": "f217eeaeba18ca820b89a2ed11d261d8e04235f168e96175c816f2fcdef9f3a7",
+    "src/main/java/eapdf/EmlReader.java": "b64a1ce06092899fd0c40eb538f95079c09ceaad40bb7fe0d21579061d54688e",
+    "src/main/java/eapdf/FontSupport.java": "c056c7ddf8f2007a7cbeac9c52d3702903366d8ee5c93b064aa5767e0393cae6",
+    "src/main/java/eapdf/GmailDownloadToPdf.java": "f0cdfe2f28f93b2e4025f6832a9ec2ddf7ae68de841ab88a9233916605f32e0e",
+    "src/main/java/eapdf/GmailResumeStore.java": "cd7badb79a835e85da695433d19f151fbc0483f50a5d578b5dae574ef31c8a9b",
+    "src/main/java/eapdf/ImageOrientation.java": "ba008af2310d193928ea2900f86952246396040eb6628954b50e38721be38be0",
+    "src/main/java/eapdf/MboxParser.java": "cbb09f053baacfb18305585b6972d4488b6b0b5705586b37e3f6b16e94a231ef",
+    "src/main/java/eapdf/MboxReadInventory.java": "26c0278f75a9cf5e22e0b684da237080bc47f2cbdd4af4e8a76a21d7c2d6bf8b",
+    "src/main/java/eapdf/MboxReader.java": "e8e94f418c2c3c5f1d686d6c2763aa720bcf3e5a0130025920fbdbc3950d0585",
+    "src/main/java/eapdf/Models.java": "4e9a1cbada046bc088a8c0be47012e22d594deb1419195230913cbb81df24a50",
+    "src/main/java/eapdf/MonthlyFilenameArchiveToPdf.java": "f3d0d274cda270ea4a2eb64231134ca10d68d4b03fe38c6a6b1c27af2a22dff8",
+    "src/main/java/eapdf/MsgReader.java": "de42cf54413191126d2e05d0825a56b9d0f41978c79d33e38213c0d69274dc63",
+    "src/main/java/eapdf/OutputTransaction.java": "82879efd9badd7a62d531b0e8072a94dfe41d37cd3627b833ef1bec1c22f8366",
+    "src/main/java/eapdf/PayloadStore.java": "3b4f8ea0929f1797b452f689e7f51f378674f9ead280eb16ad9e6f643501d529",
+    "src/main/java/eapdf/PdfCollectionSupport.java": "97c4657ef37a2d7cf89b8be5e5a693082c5d6c3cfe12a39cb2b16a2111c6e371",
+    "src/main/java/eapdf/PdfCreationValidator.java": "030d69a0bf49d9ed8c4f748c0191966ac28153a7ae318d23d6fb0a89ea732ef3",
+    "src/main/java/eapdf/PdfDocumentParts.java": "0f3ffcdc00b5af96ab851da57a3a118a9e2ee60cf4b9ebc20827cba48057c7ff",
+    "src/main/java/eapdf/PdfFindingAidSupport.java": "22eb7a7c53e9a2e9bacad1766960c4b0a9e4aa7921c6c0f50c597f2febd389f8",
+    "src/main/java/eapdf/PdfMailWriter.java": "02d5391c5d4c2dc80f358641434d97cfef7490ca32df805675e93662e344a9f6",
+    "src/main/java/eapdf/PremisBuilder.java": "b2683ef8c9d85b2ca64aac701b3d3795d7b8531e1c1f902d2cdc633c425ba1f9",
+    "src/main/java/eapdf/PreservationInventory.java": "c67fa9db78746f3564b22b1c4c5eae5225799387f646f42868dd5e8366e837b6",
+    "src/main/java/eapdf/ProcessingLimits.java": "6ff8bfb963fa61d7bc7e6349dfad8223b8057d284fc672f6440e04010a5b38d9",
+    "src/main/java/eapdf/PstReader.java": "6a06dda68e4bfe3ddc4cadc9e78dc0bc7c77f08fb3f4a382e32197ee6a20d8d1",
+    "src/main/java/eapdf/SemanticStructure.java": "e3ef9663b9986aa8e0bea71009d89bd4a50f3b3015fe2ed78cb2f30ba599fafa",
+    "src/test/java/eapdf/MsgAddressPreservationTests.java": "eb8a132c2850760e35578163cbfac59777eb22f1a4ac334a29555c6c482ad4a2",
+    "src/test/java/eapdf/MsgSentDateTests.java": "5ca0d65c11924e6bea310dd1c81b89a5df3e21a906d35fc86e3677a8493f520b",
+    "src/test/java/eapdf/RuleAlignmentTests.java": "328f1d50178c36f4b3907b25e5e93ce377b9dbd1bcf3c3ba5c75805b8a9db882",
+    "src/test/java/eapdf/SubjectDecodingTests.java": "ecaf7d5b336d6d1be993b26622267dacf2e7502d30f73261a78297d4b1091c69",
+    "tests/fixtures/eapdf/validator-coverage-branches/expectations.json": "bc77659f06253a77febf5e6b45a39b1d399fbbd9c6a51d8e96f019ee9f34a63a",
+    "tests/fixtures/eapdf/validator-profile-source-scope/expectations.json": "1416f0473b8ce2348e875e86265a716830f8241dc1f941d976e8d767955f5a20",
+    "tests/fixtures/eapdf/validator-source-parameters/expectations.json": "cf3f8eb29b879cc9707f09f6c5e9748ecde1ccfc8653eb75b3228f2b11500ace",
+    "tests/fixtures/eapdf/validator-uninspectable-source/expectations.json": "d1af1cbdc5376ed4ad3b499103c7b50cd962026e1d25ef76358168c8e7c3a039",
+    "tests/test_attachment_owner_scope.py": "e0aab8c788fe043bc4d24d9f742b0572ced78c013177f580cf4e43c71e6f5ed4",
+    "tests/test_foaf_mailbox_uris.py": "7920db2269b02dd03c441bb058c587830211bee740337a4014bad29b44926a20",
+    "tests/test_message_guid_content_owners.py": "fc15404c870a1d8f7209540cde78720cf0dace2ff88b7804be65edc306a0c67a",
+    "tests/test_outlook_sources.py": "61599cbe154cc484f0c458d0e5c9b96451b9531428d90a7a0bdd6fdcb9339ad4",
+    "tests/test_preservation_safety.py": "d27deb468e39358abaa1c506dd6a5cce65cabdc0ee2a0031f1280903f19a762b",
+    "tests/test_profile_source_scope.py": "713991e56340840ffecb2dd8231302ae335e732e9e9b73ce4b3bf43a4403571f",
+    "tests/test_source_fidelity.py": "85fb816b98d0dc4f918fc95d1c65b808edd2c902e4497ec034b179b5d87f22f1",
+    "tests/test_uninspectable_source_headers.py": "37b23b59aa2d5fa7f456e05f2b1d5f5fcb68f3cc4d4860a1a81474fafccf1258",
+    "tests/test_xmp_record_schema.py": "6963a8cfcba71949f6f137b85d1e16dc6be2a2cba93ed1c202d58e52a33dd4f0",
+    "validate_eapdf.py": "4c70d558b8484bba7ecf59461915e5b3279c28163bd583ddbc13b422c1358d2d",
+    "validator-desktop/README.md": "5f141e976fbaf9001093381cfd76809f5bf9e52e80332cbee8fa9d1b37b3686c",
+    "validator-desktop/THIRD_PARTY_NOTICES.md": "f5cf51065ab6bc6a3a9d6c2cabc4b8ad59d4e569a52bea1028a7c821d528340e",
+    "validator-desktop/pom.xml": "96198830ad1771462a49da3035b4a7344863fa028b993145392b9aedf31ab7ed",
+    "validator-desktop/src/main/java/eapdf/AttachmentChecks.java": "8fe47f421ba60734d3efb28854e12e9c26a96bc575cf43f714613cb8c394c32c",
+    "validator-desktop/src/main/java/eapdf/DocumentPartChecks.java": "883dc176359e1f14b2c8db8629d5d37cb24e8f1b2f06652ac164996852f902d4",
+    "validator-desktop/src/main/java/eapdf/EaPdfChecks.java": "7b3bfd9917748fcbffadcbb3c9795833453431d8f369d603fd318fe89cd646e2",
+    "validator-desktop/src/main/java/eapdf/JavaValidation.java": "ca5029eda5a2298650a528c115225d21a8b38af79b59a4b82b5ac9277cee79d9",
+    "validator-desktop/src/main/java/eapdf/JavaValidatorEngine.java": "d62ee4e55391ee04a58e551841c506bad8e7afdfbc665e04d0946613a84809df",
+    "validator-desktop/src/main/java/eapdf/LogicalStructureChecks.java": "6cdbf1b8fff597bab3fff97385b2dde1fa06eba287421d6c59c8997e4c7730e9",
+    "validator-desktop/src/main/java/eapdf/MailboxChecks.java": "38102798147897bbf3bc3cc07cf100879a8e5677f23576e00b79596cb1d2c38d",
+    "validator-desktop/src/main/java/eapdf/MarkedFileAssociations.java": "aa819de587e2b54a9b1a3e8372343b5c3ec955f4febf3efaa4a241a564a4707d",
+    "validator-desktop/src/main/java/eapdf/MetadataChecks.java": "d2400b63969168b125798d4673cff3c8834edbff56df420c3f3bf78c5a8525a5",
+    "validator-desktop/src/main/java/eapdf/OutlookSource.java": "67f3f07863c8157cff68897fc42673126acef68d86dc9934bed550a727116c18",
+    "validator-desktop/src/main/java/eapdf/PageContentChecks.java": "3357340906308f6c2e87cff95cf8fd8547e3821d4cc18e10fb903e7b79c9bec1",
+    "validator-desktop/src/main/java/eapdf/RuleApplicability.java": "b09bc211e2314a3a93efcab097d807d751be022dded450e94815ac44f8dc6992",
+    "validator-desktop/src/main/java/eapdf/SourceHeaders.java": "7b413a0708004f5e3bd267555def58a0ff630aebccf7af68997f76ac00525211",
+    "validator-desktop/src/main/java/eapdf/SpecificationReferences.java": "8d83afad875a62e64c6b7be5ec287bb7e7b98085c9df81f59ebda0a683ba5991",
+    "validator-desktop/src/main/java/eapdf/StructureOwnershipBudget.java": "4c7df86f105135b23c7ffd24d8289149d42b18ca4bdc5f50e81c9b3b25ace134",
+    "validator-desktop/src/main/java/eapdf/UnicodeCasefold.java": "311f2fa89ac2b9febeab6a79d8622ffe049bd176582ca6edbf9946d69d26ace4",
+    "validator-desktop/src/main/java/eapdf/ValidatorGui.java": "4b569ac407d44a4877e0f1766d6cde91caf3c83ae5bf1684037b1e0145685904",
+    "validator-desktop/src/main/resources/META-INF/eapdf/third-party/MPL-2.0.txt": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+    "validator-desktop/src/main/resources/validator/specification-references.json": "2559daccaf7fb9adde2379078723957267bc9c2014cfefb46b33ebb04a2b4879",
+    "validator-desktop/src/main/resources/validator/unicode-casefold.json": "2e3238edae62cafaefc5fe984b3f044153f12db1bde42f799ccff54e6850671f",
+    "validator-desktop/src/test/java/eapdf/AttachmentOwnerScopeTests.java": "a094e99c83df87c6e1f5a83cb0cba4fceb593d767114c48ac33737f43000c46e",
+    "validator-desktop/src/test/java/eapdf/ComparisonRegressionTests.java": "55f856beb2a45f431b7399acc7a643036506385f37ba46b0d5c9e5b78671775d",
+    "validator-desktop/src/test/java/eapdf/JavaValidationTests.java": "e24f01fe46166c503186a2395c8b89e5cf713e34c4bbb7350414f737fe1465e8",
+    "validator-desktop/src/test/java/eapdf/OutlookSourceTests.java": "06bc818f8f02f602eeb3c4730970cde1dc039664418dce2d56fc5cf191e814ac",
+    "validator-desktop/src/test/java/eapdf/RuleAlignmentTests.java": "88cd771bf511f1036fb3f142ab1006aa3d23da792c0e868c634976967aecd211",
+    "validator-desktop/src/test/java/eapdf/SourceFidelityTests.java": "053ebd3ecd4e93d0f4ff5becbb460687fab54c081cb9d818195da307b1c46185",
+    "validator-desktop/src/test/java/eapdf/SpecificationReferencesTests.java": "c863169de49dd146d793070e488f82e99490ca2098a2a47b7386dd117b854010",
+    "validator-desktop/src/test/java/eapdf/ValidatorComparisonRunner.java": "89efc110bce1e18441ee1ba98b6808192fb521ef2c8c5b76a3ef495cc4129f07",
+    "validator-desktop/src/test/java/eapdf/ValidatorDesktopSmokeTests.java": "585390f6697d8f84a144d764bbaef6097fce61952624a8e14142a0569eb470d5",
+    "validator-desktop/src/test/java/eapdf/ValidatorGuiTests.java": "0097362519167f9bfa92c918dce09734ec9c2ce3acc62e9b6c1dfd11f0c1464b",
+    "validator-desktop/src/test/java/eapdf/WebParityRegressionTests.java": "9e2eea6962e208b83795f1687254b7c421d76f4118a88a25fb6918d956eb8530",
+    "validator-desktop/tools/build_spec_references.py": "e81b95b9a6fe3500f9fb6d2d7dbd15829c5a0fb547017c62875bd256040e0f25",
+    "validator-desktop/tools/compare_existing.py": "b09a04213730ebd0c4b6d9cbe2a6b6543c963e120bcd4a325ddb1ec52000e0a7",
+    "validator-desktop/tools/comparison_report.py": "d42ed003b631b664495ff91149124125fe4b879e00e257a54c7a2162bfb74cf5",
+    "validator-desktop/tools/write_comparison_evidence.py": "b66d84c96b300485bdca8e82d4cc95f064d780f7a17e79bab1ea5f64675b5532",
+    "validator_rule_text.json": "36f7731d64f56e902d729ea8481a60413af609bc624c7e232f8b20f7e5db47d7",
+    "validator_web.py": "308918e39c4a2a3d8148d7ad52501c8f40344175d915633abe50e040a5863420"
+  },
+  "debugging": "IDE configuration writes target, prohibited by AGENTS.md. Isolated JVM probes captured actual values. No debugger session or breakpoint created."
+}

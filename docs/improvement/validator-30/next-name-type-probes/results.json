@@ -1,0 +1,26 @@
+[
+  {
+    "file": "docs/improvement/validator-30/next-name-type-probes/collection-subtype.pdf",
+    "sha256": "925d0521670994c1b5e6240ef45d40891ba5e0cddb8fb71f1a7d6bd66684b842",
+    "observed": {
+      "value": "S",
+      "is_pdf_name": false
+    },
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  },
+  {
+    "file": "docs/improvement/validator-30/next-name-type-probes/catalog-version.pdf",
+    "sha256": "0315dc4d8fdbc1652eb56af2073f6c780bb3a5d92fb0b7f559bb466004cbacff",
+    "observed": {
+      "value": "2.0",
+      "is_pdf_name": false
+    },
+    "status": "PASS",
+    "pdfa": "PASS",
+    "iso": "PASS",
+    "failures": []
+  }
+]

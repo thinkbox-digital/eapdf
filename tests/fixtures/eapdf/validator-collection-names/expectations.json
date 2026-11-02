@@ -1,0 +1,255 @@
+{
+  "authority": "EA-PDF 9.5 printed p68; ISO 32000-2:2020 Table 159 and following text printed pp454-455",
+  "seed": "tests/fixtures/eapdf/validator-booleans/collection-false.pdf",
+  "seed_sha256": "5a199646ce05aae761445d5973322a4dcac97023520cd03e4d9a1d81381100ed",
+  "boundary": "Exact text and per-folder naming scope; no claim of full Collection folder graph validation; custom-only child PDF/A remains skipped",
+  "cases": [
+    {
+      "file": "folder-spaces.pdf",
+      "sha256": "4fa8457bc55236921bf022434920f5943b29576f42c39f35ddf0d5dc96c6a954",
+      "expected_status": "INCOMPLETE",
+      "expected_pipeline_status": "PASS",
+      "expected_failures": [],
+      "file_keys": [],
+      "added_folder_names": [
+        "a  b",
+        "A B"
+      ],
+      "root_folder_id": 0,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "folder-identical.pdf",
+      "sha256": "1a1101456aaef855f38e359536c3f3c66ce4acbb45423bf8d062a51fc096e456",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_FILENAMES_UNIQUE_CASEFOLD"
+      ],
+      "file_keys": [],
+      "added_folder_names": [
+        "same",
+        "same"
+      ],
+      "root_folder_id": 0,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "folder-case.pdf",
+      "sha256": "ba90fdb915fbdfdd25cef335992fcebfea67d1557ddc4ce5b96760d386b5a17c",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_FILENAMES_UNIQUE_CASEFOLD"
+      ],
+      "file_keys": [],
+      "added_folder_names": [
+        "one",
+        "ONE"
+      ],
+      "root_folder_id": 0,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "empty-file.pdf",
+      "sha256": "ed61a3dc91a84cb70228304c5d682710b35ca8322ab018fcf6585929004ccf46",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_FILENAMES_VALID"
+      ],
+      "file_keys": [
+        ""
+      ],
+      "added_folder_names": [],
+      "root_folder_id": 0,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "long-file.pdf",
+      "sha256": "9f4e913fc648efabc7765ee2dcefd5a8d424ce7339c8d4bca68d5c8c8b8c4623",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_FILENAMES_VALID"
+      ],
+      "file_keys": [
+        "a                                                                                                                                                                                                                                                               "
+      ],
+      "added_folder_names": [],
+      "root_folder_id": 0,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "long-folder.pdf",
+      "sha256": "9e3b75efdebbb3c332ad21c208197c6e5456c3e62b788218b5d1d5f27cfab706",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_FILENAMES_VALID"
+      ],
+      "file_keys": [],
+      "added_folder_names": [
+        "a                                                                                                                                                                                                                                                               "
+      ],
+      "root_folder_id": 0,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "whitespace-names.pdf",
+      "sha256": "1e43b61532de0fcbefc2a46e0ac261d90cdee2ea683870885cc6bd85bfd40e6c",
+      "expected_status": "INCOMPLETE",
+      "expected_pipeline_status": "PASS",
+      "expected_failures": [],
+      "file_keys": [
+        " "
+      ],
+      "added_folder_names": [
+        " "
+      ],
+      "root_folder_id": 0,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "shared-case-aliases.pdf",
+      "sha256": "3483a7e47f03b8574aacb2cff7bd5fb34c3ac51fe15810ec9466ad5248dae51e",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_FILENAMES_UNIQUE_CASEFOLD"
+      ],
+      "file_keys": [
+        "A.pdf",
+        "a.pdf"
+      ],
+      "added_folder_names": [],
+      "root_folder_id": 0,
+      "shared_filespec": true,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "shared-distinct-aliases.pdf",
+      "sha256": "83aa800be164956b11a4b13ac4ff2d3c85adc012c0580d09a4f005011d322337",
+      "expected_status": "INCOMPLETE",
+      "expected_pipeline_status": "PASS",
+      "expected_failures": [],
+      "file_keys": [
+        "a  b.pdf",
+        "A B.pdf"
+      ],
+      "added_folder_names": [],
+      "root_folder_id": 0,
+      "shared_filespec": true,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "implicit-root-alias.pdf",
+      "sha256": "bf12f3a202c3cdecbf2d90a08264e6d66e86ec3e19e662ab24ae038d1ac1e39d",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_FILENAMES_UNIQUE_CASEFOLD"
+      ],
+      "file_keys": [
+        "A.pdf",
+        "<7>a.pdf"
+      ],
+      "added_folder_names": [],
+      "root_folder_id": 7,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "linefeed-name.pdf",
+      "sha256": "e244a172ac40bc9b8899b97a5f5ac0670afe4be7667d26a97ed97e33d040d463",
+      "expected_status": "INCOMPLETE",
+      "expected_pipeline_status": "PASS",
+      "expected_failures": [],
+      "file_keys": [
+        "<1>a\nb.pdf",
+        "<1>A B.pdf"
+      ],
+      "added_folder_names": [],
+      "root_folder_id": 0,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "nonascii-prefix.pdf",
+      "sha256": "121d6e9a35d6717a0cba2ee47415a3d80506c342a957b823537316f12d9703ad",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_FILENAMES_VALID"
+      ],
+      "file_keys": [
+        "<\u0661>a.pdf"
+      ],
+      "added_folder_names": [],
+      "root_folder_id": 0,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "numeric-folder.pdf",
+      "sha256": "0dbc5a23f75a371a26aca884970bc068df120f808b527fb148746ffd447805d2",
+      "expected_status": "FAIL",
+      "expected_pipeline_status": "FAIL",
+      "expected_failures": [
+        "COLLECTION_FILENAMES_VALID"
+      ],
+      "file_keys": [],
+      "added_folder_names": [
+        123
+      ],
+      "root_folder_id": 0,
+      "shared_filespec": false,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    },
+    {
+      "file": "different-folders.pdf",
+      "sha256": "a8ede4f05ba480214491a35778460bc6b9f04b483f47b12c59530953f1938d7c",
+      "expected_status": "INCOMPLETE",
+      "expected_pipeline_status": "PASS",
+      "expected_failures": [],
+      "file_keys": [
+        "<1>a.pdf",
+        "<2>A.pdf"
+      ],
+      "added_folder_names": [
+        "one",
+        "two"
+      ],
+      "root_folder_id": 0,
+      "shared_filespec": true,
+      "expected_parent_level": "N/A",
+      "parent_review": "V61 user-authorized collection front-matter exception; independent child validation still applies."
+    }
+  ],
+  "parent_requirement_review": {
+    "evidence": "docs/improvement/validator-53/prior-native-census.json",
+    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
+    "retained_pdf_bytes": true,
+    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
+  }
+}

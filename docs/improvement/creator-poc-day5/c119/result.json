@@ -1,0 +1,25 @@
+{
+  "exit_code": 0,
+  "read_only": true,
+  "credential_originals_unchanged": true,
+  "messages": 3,
+  "downloads": 3,
+  "label_assignments": 9,
+  "multiple_label_messages": 3,
+  "status": "PASS",
+  "pdfa": "PASS",
+  "selected_iso": [
+    "PASS"
+  ],
+  "mandatory_failure_codes": [],
+  "unique_children": 3,
+  "exact_original_emails": 3,
+  "verified_collection_assignments": 3,
+  "gmail_status_category_labels_filtered": true,
+  "staging_removed": true,
+  "checkpoint": "C119",
+  "creator_checkpoint": "C118",
+  "production_changes": false,
+  "privacy": "Read-only Gmail; temporary credential copies deleted; original home credentials unchanged. Private source/output files retained under ignored output/gmail-live-review/c119 with directories0700/files0600.",
+  "note": "Initial verification incorrectly expected UNREAD and CATEGORY_* to create folders. Existing intentional filtering was retained; the corrected check compares actual folder memberships after that filtering. This sample does not exercise multiple non-status folder memberships."
+}

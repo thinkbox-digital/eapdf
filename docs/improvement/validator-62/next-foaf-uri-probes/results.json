@@ -1,0 +1,203 @@
+[
+  {
+    "case": "plus",
+    "uri": "mailto:foo%2Bbar@example.org",
+    "source": "mailto:foo+bar@example.org",
+    "items": [
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_XMP",
+        "message": "XMP To present",
+        "details": {
+          "count": 1,
+          "agents": [
+            {
+              "name": "",
+              "mbox": "mailto:foo+bar@example.org",
+              "mbox_uri": "mailto:foo%2Bbar@example.org"
+            }
+          ]
+        }
+      },
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_FOAF",
+        "message": "XMP To foaf:Agent entries include foaf:mbox",
+        "details": {
+          "count": 1,
+          "agents": [
+            {
+              "name": "",
+              "mbox": "mailto:foo+bar@example.org",
+              "mbox_uri": "mailto:foo%2Bbar@example.org"
+            }
+          ]
+        }
+      },
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_FOAF",
+        "message": "XMP To foaf:Agent values match source email",
+        "details": {
+          "count": 1,
+          "xmp": [
+            "mailto:foo+bar@example.org"
+          ],
+          "source": [
+            "mailto:foo+bar@example.org"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "case": "quoted",
+    "uri": "mailto:%22not..atom%22@example.org",
+    "source": "mailto:\"not..atom\"@example.org",
+    "items": [
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_XMP",
+        "message": "XMP To present",
+        "details": {
+          "count": 1,
+          "agents": [
+            {
+              "name": "",
+              "mbox": "mailto:\"not..atom\"@example.org",
+              "mbox_uri": "mailto:%22not..atom%22@example.org"
+            }
+          ]
+        }
+      },
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_FOAF",
+        "message": "XMP To foaf:Agent entries include foaf:mbox",
+        "details": {
+          "count": 1,
+          "agents": [
+            {
+              "name": "",
+              "mbox": "mailto:\"not..atom\"@example.org",
+              "mbox_uri": "mailto:%22not..atom%22@example.org"
+            }
+          ]
+        }
+      },
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_FOAF",
+        "message": "XMP To foaf:Agent values match source email",
+        "details": {
+          "count": 1,
+          "xmp": [
+            "mailto:\"not..atom\"@example.org"
+          ],
+          "source": [
+            "mailto:\"not..atom\"@example.org"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "case": "percent-once",
+    "uri": "mailto:foo%252Bbar@example.org",
+    "source": "mailto:foo%2Bbar@example.org",
+    "items": [
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_XMP",
+        "message": "XMP To present",
+        "details": {
+          "count": 1,
+          "agents": [
+            {
+              "name": "",
+              "mbox": "mailto:foo%2Bbar@example.org",
+              "mbox_uri": "mailto:foo%252Bbar@example.org"
+            }
+          ]
+        }
+      },
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_FOAF",
+        "message": "XMP To foaf:Agent entries include foaf:mbox",
+        "details": {
+          "count": 1,
+          "agents": [
+            {
+              "name": "",
+              "mbox": "mailto:foo%2Bbar@example.org",
+              "mbox_uri": "mailto:foo%252Bbar@example.org"
+            }
+          ]
+        }
+      },
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_FOAF",
+        "message": "XMP To foaf:Agent values match source email",
+        "details": {
+          "count": 1,
+          "xmp": [
+            "mailto:foo%2Bbar@example.org"
+          ],
+          "source": [
+            "mailto:foo%2Bbar@example.org"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "case": "local-case",
+    "uri": "mailto:Case@example.org",
+    "source": "mailto:case@example.org",
+    "items": [
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_XMP",
+        "message": "XMP To present",
+        "details": {
+          "count": 1,
+          "agents": [
+            {
+              "name": "",
+              "mbox": "mailto:Case@example.org"
+            }
+          ]
+        }
+      },
+      {
+        "level": "PASS",
+        "code": "MESSAGE_TO_FOAF",
+        "message": "XMP To foaf:Agent entries include foaf:mbox",
+        "details": {
+          "count": 1,
+          "agents": [
+            {
+              "name": "",
+              "mbox": "mailto:Case@example.org"
+            }
+          ]
+        }
+      },
+      {
+        "level": "FAIL",
+        "code": "MESSAGE_TO_FOAF",
+        "message": "XMP To foaf:Agent values differ from source email header",
+        "details": {
+          "xmp": [
+            "mailto:Case@example.org"
+          ],
+          "source": [
+            "mailto:case@example.org"
+          ]
+        }
+      }
+    ]
+  }
+]

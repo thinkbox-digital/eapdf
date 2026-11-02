@@ -1,0 +1,80 @@
+[
+  {
+    "file": "vendor-name-value.pdf",
+    "sha256": "41a51d73e5644e5cd89baca5b55321f9cc2ab25597d9df8761f89ab16c419c0d",
+    "status": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "vendor-array-value.pdf",
+    "sha256": "6628e310a04a16c5f7de3e7cf49a97efd55a6858b52d99561e5fe5ed8a9bdcea",
+    "status": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "vendor-dictionary-value.pdf",
+    "sha256": "4c2e079ee4f4f124c09c2b647537e918261950748be7ad51af75da725a18145b",
+    "status": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "vendor-unreadable-name-value.pdf",
+    "sha256": "cc2f64c2b25db053625263b2374afa48163bd1917d11feca80a2a98242b6a1ae",
+    "status": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "mail-header-name-value.pdf",
+    "sha256": "1cc6e6c4421a837b858002ca647b2ed0859cb6b2668d826c423495a25888cbd7",
+    "status": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "vendor-unicode-text.pdf",
+    "sha256": "7b2f4eeda20b1e54e067efaef014d8c9fc69ae36271db006d4cfb09f6d7eb27b",
+    "status": "PASS",
+    "failures": [],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "vendor-missing-value.pdf",
+    "sha256": "12e0aac47e29608c0be1d62195f421ee9f60a33b293d26f65fd4088ac3028197",
+    "status": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  },
+  {
+    "file": "vendor-null-value.pdf",
+    "sha256": "12e0aac47e29608c0be1d62195f421ee9f60a33b293d26f65fd4088ac3028197",
+    "status": "FAIL",
+    "failures": [
+      "USERPROPS_TYPE"
+    ],
+    "pdfa": "PASS",
+    "iso": "PASS"
+  }
+]

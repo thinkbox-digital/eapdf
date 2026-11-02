@@ -1,0 +1,84 @@
+--- V30/validate_eapdf.py
++++ V31/validate_eapdf.py
+@@ -2043,8 +2043,15 @@
+ def get_declared_pdf_version(pdf):
+     hdr=str(pdf.pdf_version)
+     root_ver=dict_get(pdf.Root,"/Version",None)
+-    rv=safe_name(root_ver) if root_ver is not None else ""
++    rv=safe_name(root_ver) if isinstance(root_ver,pikepdf.Name) else ""
+     return hdr,rv
++
++def effective_pdf_version(header,catalog):
++    if not catalog:
++        return header
++    if re.fullmatch(r"[0-9]\.[0-9]",header) and re.fullmatch(r"[0-9]\.[0-9]",catalog):
++        return max(header,catalog)
++    return catalog
+ 
+ def read_docinfo(pdf):
+     try:
+@@ -3699,22 +3706,25 @@
+     return out
+ 
+ def check_pdf_version(pdf,report):
+-    hdr=str(pdf.pdf_version)
++    hdr,rv=get_declared_pdf_version(pdf)
+     root_ver=dict_get(pdf.Root,"/Version",None)
+-    rv=safe_name(root_ver) if root_ver is not None else ""
+-    effective=rv if rv else hdr
++    effective=effective_pdf_version(hdr,rv)
+     allowed_versions=("1.7","2.0")
+-    if hdr in ("1.4","1.5","1.6","1.7","2.0"):
+-        report.ok("PDF_HEADER_VERSION_READ","Read PDF header version",{"header_version":hdr})
++    if hdr in allowed_versions:
++        report.ok("PDF_HEADER_VERSION_READ","PDF header version allowed",{"header_version":hdr})
+     else:
+-        report.fail("PDF_HEADER_VERSION_READ","Could not interpret PDF header version",{"header_version":hdr})
+-    if rv in allowed_versions:
+-        report.ok("PDF_CATALOG_VERSION","Catalog /Version allowed",{"catalog_version":rv})
+-    elif rv:
++        report.fail("PDF_HEADER_VERSION_READ","PDF header version must be 1.7 or 2.0",{"header_version":hdr,"expected_versions":list(allowed_versions)})
++    if root_ver is not None and not isinstance(root_ver,pikepdf.Name):
++        report.fail("PDF_CATALOG_VERSION","Catalog /Version must be a PDF name",{
++            "actual":observed_pdf_value(root_ver),"is_pdf_name":False,"header_version":hdr})
++    elif root_ver is not None and re.fullmatch(r"[0-9]\.[0-9]",rv) and effective in allowed_versions:
++        report.ok("PDF_CATALOG_VERSION","Catalog /Version is a PDF version name with an allowed effective version",{
++            "catalog_version":rv,"header_version":hdr,"effective_version":effective})
++    elif root_ver is not None:
+         report.fail(
+             "PDF_CATALOG_VERSION",
+-            "Catalog /Version present but not allowed",
+-            {"catalog_version":rv},
++            "Catalog /Version is malformed or yields an unsupported effective version",
++            {"catalog_version":rv,"header_version":hdr,"effective_version":effective},
+         )
+     elif hdr in allowed_versions:
+         report.ok(
+@@ -4455,7 +4465,7 @@
+             report.fail("COLLECTION_FORBIDDEN","Non-container profile must not have Collection dictionary",{"Collection":observed_pdf_value(collection)})
+         return
+     hdr,rv=get_declared_pdf_version(pdf)
+-    effective=rv if rv else hdr
++    effective=effective_pdf_version(hdr,rv)
+     if effective=="1.7":
+         ext=dict_get(root,"/Extensions",None)
+         adbe=dict_get(ext,"/ADBE",None) if ext is not None else None
+@@ -4493,11 +4503,13 @@
+         if field is None:
+             report.fail("COLLECTION_SCHEMA_FIELD","Required Collection schema field missing",{"field":name,"actual_subtype":None,"expected_subtype":subtype})
+             continue
+-        actual=safe_name(dict_get(field,"/Subtype",None))
+-        if actual==subtype:
+-            report.ok("COLLECTION_SCHEMA_FIELD","Required Collection schema field present with correct subtype",{"field":name,"subtype":actual})
+-        else:
+-            report.fail("COLLECTION_SCHEMA_FIELD","Collection schema field has wrong subtype",{"field":name,"expected_subtype":subtype,"actual_subtype":actual})
++        actual_value=dict_get(field,"/Subtype",None)
++        actual=safe_name(actual_value)
++        is_name=isinstance(actual_value,pikepdf.Name)
++        if is_name and actual==subtype:
++            report.ok("COLLECTION_SCHEMA_FIELD","Required Collection schema field present with correct subtype",{"field":name,"subtype":actual,"is_pdf_name":is_name})
++        else:
++            report.fail("COLLECTION_SCHEMA_FIELD","Collection schema field has wrong subtype",{"field":name,"expected_subtype":subtype,"actual_subtype":actual,"is_pdf_name":is_name})
+     for name,field in schema.items():
+         e=dict_get(field,"/E",None)
+         if e is None or e is False:

@@ -1,0 +1,16 @@
+--- before/validator_rule_text.json
++++ after/validator_rule_text.json
+@@ -13166,6 +13166,13 @@
+         "PDFA-4F": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites.",
+         "PDFA-4E": "No complete predicate for the linked EA-PDF assertion; enforce only the uncovered assertion, not generic PDF/A prerequisites."
+       }
++    },
++    "operational_availability_review": {
++      "date": "2026-10-22",
++      "basis": "Section 7.6 requires contained files to satisfy their applicable EA-PDF requirements. An exception staging or executing a child check supplies no child-conformance finding and leaves required validation unavailable.",
++      "outcomes": "Operational exceptions add an unavailable child warning and VALIDATION_INCOMPLETE. Actual child failures remain FAIL. Any result already obtained before a cleanup exception retains its findings; no incomplete attempt is cached as a success.",
++      "boundary": "Recursive membership, actual corrupt/invalid children, resource limits and independent parent failures retain their predicates. This review does not change upstream PDF/A engine error status policy or certify every operational failure mode.",
++      "evidence": "docs/improvement/validator-83/evidence.json"
+     }
+   },
+   "VALIDATION_INCOMPLETE": {

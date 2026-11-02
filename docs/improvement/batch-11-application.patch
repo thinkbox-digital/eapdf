@@ -1,0 +1,70 @@
+--- a/src/main/java/eapdf/PdfCreationValidator.java
++++ b/src/main/java/eapdf/PdfCreationValidator.java
+@@ -34,6 +34,16 @@
+   }
+ 
+   static void validate(PDDocument document) throws Exception {
++    validate(document, 0, new ChildValidationContext());
++  }
++
++  private static final class ChildValidationContext {
++    long count;
++    long bytes;
++  }
++
++  private static void validate(PDDocument document, int depth, ChildValidationContext context) throws Exception {
++    ProcessingLimits.checkCancelled();
+     ProcessingLimits.checkPages(document.getNumberOfPages());
+     var catalog = document.getDocumentCatalog();
+     require(catalog.getMetadata() != null, "Missing document XMP metadata");
+@@ -130,7 +140,7 @@
+     }
+     if (profile.equals("c") || profile.equals("ci")) {
+       validateCollection(catalog.getCOSObject());
+-      validateContainedFiles(document, metadata);
++      validateContainedFiles(document, metadata, depth, context);
+       return;
+     }
+     var attachments = metadata.getElementsByTagNameNS(MAIL, "attachments");
+@@ -255,7 +265,8 @@
+     return false;
+   }
+ 
+-  private static void validateContainedFiles(PDDocument document, org.w3c.dom.Document metadata) throws Exception {
++  private static void validateContainedFiles(PDDocument document, org.w3c.dom.Document metadata,
++                                            int depth, ChildValidationContext context) throws Exception {
+     java.util.Set<COSDictionary> sources = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+     java.util.Set<COSStream> related = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+     var af = document.getDocumentCatalog().getCOSObject().getDictionaryObject(COSName.getPDFName("AF"));
+@@ -281,10 +292,19 @@
+       COSBase stream = ef.getDictionaryObject(COSName.UF, COSName.F);
+       if (stream instanceof COSStream payload && related.contains(payload)) continue;
+       require(stream instanceof COSStream, "Contained file has no embedded stream");
++      require(depth < 8, "Contained EA-PDF validation exceeds the nesting limit of 8");
++      ProcessingLimits.checkCount(++context.count);
+       Path temporary = java.nio.file.Files.createTempFile("eapdf-contained-", ".pdf");
+       try {
+-        try (var input = ((COSStream) stream).createInputStream()) {
+-          java.nio.file.Files.copy(input, temporary, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
++        try (var input = ((COSStream) stream).createInputStream();
++             var output = java.nio.file.Files.newOutputStream(temporary)) {
++          byte[] buffer = new byte[8192];
++          int count;
++          while ((count = input.read(buffer)) != -1) {
++            context.bytes = Math.addExact(context.bytes, count);
++            ProcessingLimits.checkOutput(context.bytes);
++            output.write(buffer, 0, count);
++          }
+         }
+         try (PDDocument child = Loader.loadPDF(temporary.toFile(), org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
+           require(child.getDocumentCatalog().getMetadata() != null, "Contained file is not an EA-PDF");
+@@ -300,6 +320,9 @@
+             var values = xml.getElementsByTagNameNS(ID, expected.getKey());
+             require(values.getLength() == 1 && expected.getValue().equals(values.item(0).getTextContent()), "Contained file has invalid EA-PDF identification");
+           }
++          // Reopen and check the bytes actually embedded in the final parent.
++          // Identification alone cannot establish child creation consistency.
++          validate(child, depth + 1, context);
+         }
+       } finally { java.nio.file.Files.deleteIfExists(temporary); }
+     }

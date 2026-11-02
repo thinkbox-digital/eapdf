@@ -1,0 +1,84 @@
+{
+  "status": "PASS",
+  "results": [
+    {
+      "id": "example-1s",
+      "files": 2,
+      "streams": 2,
+      "diagnostics": [],
+      "status": "PASS"
+    },
+    {
+      "id": "example-1si",
+      "files": 1,
+      "streams": 1,
+      "diagnostics": [],
+      "status": "PASS"
+    },
+    {
+      "id": "example-1m",
+      "files": 5,
+      "streams": 5,
+      "diagnostics": [],
+      "status": "PASS"
+    },
+    {
+      "id": "example-1mi",
+      "files": 3,
+      "streams": 3,
+      "diagnostics": [],
+      "status": "PASS"
+    },
+    {
+      "id": "example-1c",
+      "files": 4,
+      "streams": 4,
+      "diagnostics": [],
+      "status": "PASS"
+    },
+    {
+      "id": "example-1ci",
+      "files": 2,
+      "streams": 2,
+      "diagnostics": [],
+      "status": "PASS"
+    },
+    {
+      "id": "s-object-af-only",
+      "files": 1,
+      "streams": 1,
+      "diagnostics": [],
+      "status": "PASS"
+    },
+    {
+      "id": "s-two-streams",
+      "files": 1,
+      "streams": 2,
+      "diagnostics": [],
+      "status": "PASS"
+    },
+    {
+      "id": "s-missing-stream",
+      "files": 1,
+      "streams": 0,
+      "diagnostics": [],
+      "status": "PASS"
+    },
+    {
+      "id": "c-nested-mixed",
+      "files": 2,
+      "streams": 2,
+      "diagnostics": [],
+      "status": "PASS"
+    },
+    {
+      "id": "c-folder-cycle",
+      "files": 0,
+      "streams": 0,
+      "diagnostics": [
+        "FOLDER_CYCLE"
+      ],
+      "status": "PASS"
+    }
+  ]
+}

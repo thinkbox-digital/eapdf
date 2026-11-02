@@ -1,0 +1,7 @@
+# V66: RF filename decoder recovery
+
+Related-file filename Unicode decoder errors no longer abort validation. The mandatory filename assessment remains WARN/unavailable with VALIDATION_INCOMPLETE; the companion stream is retained without invented filename evidence for independent checksum/asset/byte checks. Known empty/wrong-class names, malformed later pairs, independent revision failures and original inventory cardinality contradictions remain failures. One unknown pair cannot establish absence of one required companion, but cannot cover two distinct missing companions.
+
+Verification: 981 frozen unit tests ran: 941 passed, 40 integration/schema checks explicitly skipped. All603 prior PDF hashes/statuses/failure sets remain across611 freshly executed custom cases. Eight exact-byte controls pass real PDF/A and verified ISO checks. CLI and isolated worker agree; twelve retained creator outputs preserve their known failures. Sixteen offline browser checks pass. Two decoder aborts become INCOMPLETE; two retain independent failures after recovery. Valid UTF8/UTF16 names, empty text and wrong classes preserve their existing outcomes.
+
+This guards Unicode decoder errors in RF pair names; complete PDF text encoding and general file specification decoding are not certified. Full obligation/occurrence review, normative-edition equivalence and original inventory completeness remain open. The separate creator proposal remains deferred and unapplied; all Java source hashes match V65.

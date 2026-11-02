@@ -1,0 +1,199 @@
+{
+  "date_utc": "2026-10-25T13:25:00.053775+00:00",
+  "task": "Scope native attachment consistency using declared annotation-page email owners",
+  "artifact": "dist/eapdf-validator.jar",
+  "artifact_sha256": "2372fc635a678168531172a3b4e4e9486e773493f6ef7eac2b1a02dd17a43b72",
+  "artifact_bytes": 28624479,
+  "creator_changed": false,
+  "rulebook_changed": false,
+  "input_pdf_bytes_changed": false,
+  "inspection_limits_changed": false,
+  "tests": {
+    "java_validator": {
+      "tests": 140,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python": {
+      "run": 1175,
+      "passed": 1135,
+      "skipped": 40,
+      "failures": 0,
+      "errors": 0
+    },
+    "creator": "unchanged; preceding complete 274-pass build retained"
+  },
+  "corpus": {
+    "corpus_cases": 808,
+    "parent_and_child_comparisons": 875,
+    "rule_count": 213,
+    "summary": {
+      "status_matches": 875,
+      "pdfa_exact_matches": 875,
+      "iso_exact_matches": 875,
+      "pdfa_diagnostic_matches": 875,
+      "iso_diagnostic_matches": 875,
+      "rule_worst_level_matches": 186375,
+      "rule_comparisons": 186375,
+      "missed_failure_pairs": 0,
+      "extra_failure_pairs": 0,
+      "rules_with_missed_failures": 0,
+      "rules_with_extra_failures": 0,
+      "execution_errors": 0,
+      "java_inspection_errors": 0,
+      "cases_with_child_inventory_difference": 0
+    }
+  },
+  "additional_real_msg_reports": 32,
+  "total_reports": 907,
+  "total_matching_rule_outcomes": 193191,
+  "fresh_web_sample_profiles": [
+    {
+      "profile": "s",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": [],
+      "unavailable": []
+    },
+    {
+      "profile": "si",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": [],
+      "unavailable": []
+    },
+    {
+      "profile": "m",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": [],
+      "unavailable": []
+    },
+    {
+      "profile": "mi",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": [],
+      "unavailable": []
+    },
+    {
+      "profile": "c",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": [],
+      "unavailable": []
+    },
+    {
+      "profile": "ci",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "failures": [],
+      "unavailable": []
+    }
+  ],
+  "effect": "effect.json",
+  "source_hashes": {
+    "docs/improvement/specification-audit/validator-rule-review.json": "2b92902b7229cc1c00438d0e7d00896ef605f87b5e9095a0f2d31c8362d4e73e",
+    "requirements-web.txt": "50e4026bf6aefac292c82b20cc1ca30c5062e5b23e8a75513ab7b6e4ed50dac5",
+    "scripts/build_eapdf_coverage_branch_fixtures.py": "08e4758899ae955461e16217d24553c59e3dea5952aa8b4752067be669b4dd07",
+    "scripts/build_eapdf_profile_source_scope_fixtures.py": "32c0ef8bf3d632651a17b6a1c2366c63bfe7e6421375cfc96aed73cd007b4c7d",
+    "scripts/build_eapdf_source_parameter_fixtures.py": "44651c83ba774d8f2c5a96f3d22c4bce3a671a67f748b59f124f24d5fde85c97",
+    "scripts/build_eapdf_uninspectable_source_fixtures.py": "996a85cb2c39fbadedc715637bbae735475ff3ce34a5e04c554a934489b835c6",
+    "src/main/java/eapdf/MsgReader.java": "de42cf54413191126d2e05d0825a56b9d0f41978c79d33e38213c0d69274dc63",
+    "src/main/java/eapdf/PdfCreationValidator.java": "030d69a0bf49d9ed8c4f748c0191966ac28153a7ae318d23d6fb0a89ea732ef3",
+    "src/test/java/eapdf/MsgAddressPreservationTests.java": "eb8a132c2850760e35578163cbfac59777eb22f1a4ac334a29555c6c482ad4a2",
+    "src/test/java/eapdf/MsgSentDateTests.java": "5ca0d65c11924e6bea310dd1c81b89a5df3e21a906d35fc86e3677a8493f520b",
+    "src/test/java/eapdf/RuleAlignmentTests.java": "328f1d50178c36f4b3907b25e5e93ce377b9dbd1bcf3c3ba5c75805b8a9db882",
+    "tests/fixtures/eapdf/validator-coverage-branches/expectations.json": "bc77659f06253a77febf5e6b45a39b1d399fbbd9c6a51d8e96f019ee9f34a63a",
+    "tests/fixtures/eapdf/validator-profile-source-scope/expectations.json": "ed7217b8939d7428952266dd9989830854ef12c3f19999dc41e7664923ea3679",
+    "tests/fixtures/eapdf/validator-source-parameters/expectations.json": "cf3f8eb29b879cc9707f09f6c5e9748ecde1ccfc8653eb75b3228f2b11500ace",
+    "tests/fixtures/eapdf/validator-uninspectable-source/expectations.json": "253134c537c38c75fb679418610acec86a7ba7eda10bf45988c6e4138d3a91d3",
+    "tests/test_attachment_owner_scope.py": "e0aab8c788fe043bc4d24d9f742b0572ced78c013177f580cf4e43c71e6f5ed4",
+    "tests/test_foaf_mailbox_uris.py": "7920db2269b02dd03c441bb058c587830211bee740337a4014bad29b44926a20",
+    "tests/test_message_guid_content_owners.py": "fc15404c870a1d8f7209540cde78720cf0dace2ff88b7804be65edc306a0c67a",
+    "tests/test_outlook_sources.py": "57d00db4d359cc385df60c622b5bbbea5fd5be02355db5f26de70308597740d5",
+    "tests/test_preservation_safety.py": "d27deb468e39358abaa1c506dd6a5cce65cabdc0ee2a0031f1280903f19a762b",
+    "tests/test_profile_source_scope.py": "179dc20ce19296cf9d20981243b2da2e108888f0599ce143e2f6c622f1b6031f",
+    "tests/test_uninspectable_source_headers.py": "388b55b50d9c25edecaa6de26e2fe4ac36821cd0a057a7d347b18cfb64ad9665",
+    "tests/test_xmp_record_schema.py": "6963a8cfcba71949f6f137b85d1e16dc6be2a2cba93ed1c202d58e52a33dd4f0",
+    "validate_eapdf.py": "275bf8a7fe8bf6b5a6983761f0b56761e5f1297e1164058d6186b22110468d65",
+    "validator-desktop/README.md": "5f141e976fbaf9001093381cfd76809f5bf9e52e80332cbee8fa9d1b37b3686c",
+    "validator-desktop/THIRD_PARTY_NOTICES.md": "f5cf51065ab6bc6a3a9d6c2cabc4b8ad59d4e569a52bea1028a7c821d528340e",
+    "validator-desktop/pom.xml": "96198830ad1771462a49da3035b4a7344863fa028b993145392b9aedf31ab7ed",
+    "validator-desktop/src/main/java/eapdf/AttachmentChecks.java": "8fe47f421ba60734d3efb28854e12e9c26a96bc575cf43f714613cb8c394c32c",
+    "validator-desktop/src/main/java/eapdf/DocumentPartChecks.java": "883dc176359e1f14b2c8db8629d5d37cb24e8f1b2f06652ac164996852f902d4",
+    "validator-desktop/src/main/java/eapdf/EaPdfChecks.java": "7b3bfd9917748fcbffadcbb3c9795833453431d8f369d603fd318fe89cd646e2",
+    "validator-desktop/src/main/java/eapdf/JavaValidation.java": "ca5029eda5a2298650a528c115225d21a8b38af79b59a4b82b5ac9277cee79d9",
+    "validator-desktop/src/main/java/eapdf/JavaValidatorEngine.java": "d62ee4e55391ee04a58e551841c506bad8e7afdfbc665e04d0946613a84809df",
+    "validator-desktop/src/main/java/eapdf/LogicalStructureChecks.java": "6cdbf1b8fff597bab3fff97385b2dde1fa06eba287421d6c59c8997e4c7730e9",
+    "validator-desktop/src/main/java/eapdf/MailboxChecks.java": "38102798147897bbf3bc3cc07cf100879a8e5677f23576e00b79596cb1d2c38d",
+    "validator-desktop/src/main/java/eapdf/MarkedFileAssociations.java": "aa819de587e2b54a9b1a3e8372343b5c3ec955f4febf3efaa4a241a564a4707d",
+    "validator-desktop/src/main/java/eapdf/MetadataChecks.java": "9b418e51d3fad8e2fcd847cd86d24c707f4809040b51be7aef07637eca8b08a0",
+    "validator-desktop/src/main/java/eapdf/OutlookSource.java": "1d127c3650712aa2a4bb16a6988e8cc38f71239f0558cf120c045917d025ace1",
+    "validator-desktop/src/main/java/eapdf/PageContentChecks.java": "3357340906308f6c2e87cff95cf8fd8547e3821d4cc18e10fb903e7b79c9bec1",
+    "validator-desktop/src/main/java/eapdf/RuleApplicability.java": "b09bc211e2314a3a93efcab097d807d751be022dded450e94815ac44f8dc6992",
+    "validator-desktop/src/main/java/eapdf/SourceHeaders.java": "9ee879bd691303d4044e7a55f1198a4262af29d0bc4ddfa08fa6d60640240db3",
+    "validator-desktop/src/main/java/eapdf/SpecificationReferences.java": "8d83afad875a62e64c6b7be5ec287bb7e7b98085c9df81f59ebda0a683ba5991",
+    "validator-desktop/src/main/java/eapdf/StructureOwnershipBudget.java": "4c7df86f105135b23c7ffd24d8289149d42b18ca4bdc5f50e81c9b3b25ace134",
+    "validator-desktop/src/main/java/eapdf/UnicodeCasefold.java": "311f2fa89ac2b9febeab6a79d8622ffe049bd176582ca6edbf9946d69d26ace4",
+    "validator-desktop/src/main/java/eapdf/ValidatorGui.java": "4b569ac407d44a4877e0f1766d6cde91caf3c83ae5bf1684037b1e0145685904",
+    "validator-desktop/src/main/resources/META-INF/eapdf/third-party/MPL-2.0.txt": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+    "validator-desktop/src/main/resources/validator/specification-references.json": "2559daccaf7fb9adde2379078723957267bc9c2014cfefb46b33ebb04a2b4879",
+    "validator-desktop/src/main/resources/validator/unicode-casefold.json": "2e3238edae62cafaefc5fe984b3f044153f12db1bde42f799ccff54e6850671f",
+    "validator-desktop/src/test/java/eapdf/AttachmentOwnerScopeTests.java": "a094e99c83df87c6e1f5a83cb0cba4fceb593d767114c48ac33737f43000c46e",
+    "validator-desktop/src/test/java/eapdf/ComparisonRegressionTests.java": "55f856beb2a45f431b7399acc7a643036506385f37ba46b0d5c9e5b78671775d",
+    "validator-desktop/src/test/java/eapdf/JavaValidationTests.java": "e24f01fe46166c503186a2395c8b89e5cf713e34c4bbb7350414f737fe1465e8",
+    "validator-desktop/src/test/java/eapdf/OutlookSourceTests.java": "67f67fc29033bfc40432cac0099b1e2e8957070000eae41137738ee62554a3f4",
+    "validator-desktop/src/test/java/eapdf/RuleAlignmentTests.java": "88cd771bf511f1036fb3f142ab1006aa3d23da792c0e868c634976967aecd211",
+    "validator-desktop/src/test/java/eapdf/SpecificationReferencesTests.java": "c863169de49dd146d793070e488f82e99490ca2098a2a47b7386dd117b854010",
+    "validator-desktop/src/test/java/eapdf/ValidatorComparisonRunner.java": "89efc110bce1e18441ee1ba98b6808192fb521ef2c8c5b76a3ef495cc4129f07",
+    "validator-desktop/src/test/java/eapdf/ValidatorDesktopSmokeTests.java": "585390f6697d8f84a144d764bbaef6097fce61952624a8e14142a0569eb470d5",
+    "validator-desktop/src/test/java/eapdf/ValidatorGuiTests.java": "0097362519167f9bfa92c918dce09734ec9c2ce3acc62e9b6c1dfd11f0c1464b",
+    "validator-desktop/src/test/java/eapdf/WebParityRegressionTests.java": "0b04f4ee00e00a9ef3d9590bb60f0fff66f4a806ce239a5bfc334a5625d7f1f7",
+    "validator-desktop/tools/build_spec_references.py": "e81b95b9a6fe3500f9fb6d2d7dbd15829c5a0fb547017c62875bd256040e0f25",
+    "validator-desktop/tools/compare_existing.py": "cf89ca48db705c13bf43ee0de171f803f38a2e56f25516fd114c3c2f0b97db6e",
+    "validator-desktop/tools/comparison_report.py": "d42ed003b631b664495ff91149124125fe4b879e00e257a54c7a2162bfb74cf5",
+    "validator-desktop/tools/write_comparison_evidence.py": "b66d84c96b300485bdca8e82d4cc95f064d780f7a17e79bab1ea5f64675b5532",
+    "validator_rule_text.json": "36f7731d64f56e902d729ea8481a60413af609bc624c7e232f8b20f7e5db47d7",
+    "validator_web.py": "308918e39c4a2a3d8148d7ad52501c8f40344175d915633abe50e040a5863420"
+  },
+  "upstream_verification": {
+    "java_corpus": "fresh real upstream checks from the exact delivered JAR",
+    "python_corpus": "all current EA-PDF checks rerun; verified upstream reports reused only after matching exact PDF SHA-256; current ISO report verification retained",
+    "python_real_msg": "32 current EA-PDF reports rerun with exact-byte verified upstream reports from the preceding delivery",
+    "java_real_msg": "fresh real upstream checks from the exact delivered JAR",
+    "python_fresh_sample_profiles": [
+      "s",
+      "si",
+      "m",
+      "mi",
+      "c",
+      "ci"
+    ],
+    "cache_source": "/tmp/eapdf-msg-native; docs/improvement/validator-msg-native/evidence.json"
+  },
+  "protected_pdf_hashes": {
+    "output/Agenda and timeline slides_000001.pdf": "60df01947e5bf63561ec6b5f5b91eac9f5395c04ab7e17ee1473d1d2b37b4fd7",
+    "output/bfo.pdf": "cf7e3669ad5994439a999e3ad37f02503fe05755fe8c5fc74d091f9695114efb"
+  },
+  "creator_jars_unchanged": {
+    "emailtopdfa.jar": "5d0682123a750bae1c9b9729af9fcd1b356dd014af1d5f73cf5f2cfee60d0654",
+    "emailtopdfa-gui.jar": "e9d822ce27098ce753f02fbf9726ebe632788421a4276d92368a62bf809adc43"
+  },
+  "sample_hashes_unchanged": {
+    "examples/sample_1c.pdf": "7ad5f86137b5b8ad08997b33ccca563c36d7e5792311522ad0df2c0b631f3bd0",
+    "examples/sample_1c_finding_aid.pdf": "f4ce7449e4bb42bf95c6adc9973c9a2f9212b609b54d546a8812a4ffd7b419bb",
+    "examples/sample_1ci.pdf": "4370b5dc71ca4e8c781157935d1ca2d535f9a870a0c53b84942fd67c457ef383",
+    "examples/sample_1ci_finding_aid.pdf": "1b789ca583c99e1f7d94322267b8cc76dfbf00a5112d3d11c87f70114e66df2f",
+    "examples/sample_1m.pdf": "0f5e4f0d6c61fd7d827afe536b9e7a045acf73386dde9127117e2e5600155f10",
+    "examples/sample_1mi.pdf": "bc0339eec68af34740f7c83aac30ff88b38ea19bea16da818420bcc84004c60e",
+    "examples/sample_1s.pdf": "b54108501282ad3597aa3da82f95961e969a94574fbef8f82c60659afc686363",
+    "examples/sample_1si.pdf": "985762806a2e9d01a126ae0d8211ad137aa7cdf04bb1338358eb9464935f6879"
+  },
+  "remaining_limits": [
+    "Full header/address/body comparison for native-only and unsupported MSG",
+    "Three documented rulebook interpretation questions",
+    "Default validation resource limits for very large archives"
+  ]
+}

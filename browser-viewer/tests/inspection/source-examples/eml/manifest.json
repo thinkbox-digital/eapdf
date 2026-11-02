@@ -1,0 +1,133 @@
+{
+  "input_type": "eml",
+  "creator_version": "1.5.0-beta.1",
+  "filename_policy": "Output filenames begin with the lower-case input type.",
+  "creator_sha256": "8918135573caa147be4585355b8d441eab8f404945912b15f66c43718f2c2309",
+  "validator_sha256": "606c894fb373c463ee69637f9b573c50f0cd09a3a89cd1df92ab4e16f9d675bc",
+  "rulebook_sha256": "d06686fa52506827453cb8732c215348f02dec7ac813d28e97aefc4a5a623700",
+  "configuration_sha256": "f0fc89a04bec5c508dbb1f860188afeb4113657a3bc83e60f42228fc10de4fbf",
+  "sources": {
+    "in/test3.eml": "c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6",
+    "in/sample.eml": "e0d8979fb882d5b65ef04b81b0f98b3e5e9e86cdc10034380d348a33b5ba995b"
+  },
+  "single_message_policy": "First listed input file.",
+  "archive_policy": "Every message in all listed inputs.",
+  "validation": "Standalone Java validator, bundled real PDF/A and selected ISO structure checks, including collection children; default validator limits unchanged.",
+  "parallelism": {
+    "creator_jobs": 2,
+    "creator_heap_mb": 2048,
+    "concurrent_formats": 1
+  },
+  "samples": [
+    {
+      "profile": "1s",
+      "file": "eml_sample_1s.pdf",
+      "sha256": "b4fb687d52613c4f49a9e26b7c41498dc4bb39b34c04bd198f0cca6c163d4d48",
+      "pages": 2,
+      "inputs": [
+        "in/test3.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.16
+    },
+    {
+      "profile": "1si",
+      "file": "eml_sample_1si.pdf",
+      "sha256": "401b0c687bb7cee95ced7e25849efa87310c4dbdb69cd6f26b031d3cfa17694c",
+      "pages": 2,
+      "inputs": [
+        "in/test3.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.053
+    },
+    {
+      "profile": "1m",
+      "file": "eml_sample_1m.pdf",
+      "sha256": "22c66e070532356788a2753601d42b5e4c7f9b81e05c759d6f7ccca81bea8510",
+      "pages": 5,
+      "inputs": [
+        "in/test3.eml",
+        "in/sample.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.946
+    },
+    {
+      "profile": "1mi",
+      "file": "eml_sample_1mi.pdf",
+      "sha256": "aaec5a76c1d54b623b3344f0d5aeb0878510ae02a30304296d93ea6c2a529c78",
+      "pages": 5,
+      "inputs": [
+        "in/test3.eml",
+        "in/sample.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.557
+    },
+    {
+      "profile": "1c",
+      "file": "eml_sample_1c.pdf",
+      "sha256": "d2f95d2efd15bba485487fd02d13c49d03e45e5415b2534e64261e0f5abe7688",
+      "pages": 1,
+      "inputs": [
+        "in/test3.eml",
+        "in/sample.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.807
+    },
+    {
+      "profile": "1ci",
+      "file": "eml_sample_1ci.pdf",
+      "sha256": "2dcc73dab85a702d098dae39d9a315cab384e427a1ff8b7c755c0376688e1b83",
+      "pages": 1,
+      "inputs": [
+        "in/test3.eml",
+        "in/sample.eml"
+      ],
+      "extracted_from": null,
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "selected_iso_structure": "PASS",
+      "validation_seconds": 4.703
+    }
+  ],
+  "sidecars": [
+    {
+      "file": "eml_sample_1c_index.xlsx",
+      "sha256": "2eb0ebf5c1b0813532b1bd682c252bd7a7bfc48947be73ba31befe7eb790b963",
+      "xlsx_package": "PASS"
+    },
+    {
+      "file": "eml_sample_1c_finding_aid.pdf",
+      "sha256": "70ef53fb2d1e97b62c986e9da98d8c5b383ef9b3f0490311b02b96570cd78b47",
+      "pdfa": "PASS"
+    },
+    {
+      "file": "eml_sample_1ci_index.xlsx",
+      "sha256": "152cbfe8f76faa602332eee861085e04ebb04d472fc76745b750426d1c74224c",
+      "xlsx_package": "PASS"
+    },
+    {
+      "file": "eml_sample_1ci_finding_aid.pdf",
+      "sha256": "187444c172957476408ffb13a924082d6fec739eef9d9f3737444d38bc9ece91",
+      "pdfa": "PASS"
+    }
+  ]
+}

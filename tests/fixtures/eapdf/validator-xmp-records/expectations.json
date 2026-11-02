@@ -1,0 +1,114 @@
+{
+  "authority": [
+    "EA-PDF 9.8.2 Table 16",
+    "EA-PDF 9.8.4 Table 19",
+    "Reviewed XMP normal-string versus URI and array value semantics"
+  ],
+  "source": "tests/fixtures/eapdf/upstream-issues/valid.pdf",
+  "source_sha256": "a41491747970410a68f2fdaea57bd265dc6f698f5b6cd8f97fcaa973c05d1e3d",
+  "cases": [
+    {
+      "file": "valid.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "a396ccc6c3531a5699370cd98db824e5803ddc0090d25a5da62137c75e05d210",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "asset-checksum-alias.pdf",
+      "expected_failures": [
+        "ASSET_CHECKSUM_FORM",
+        "ASSET_MD5_MATCH",
+        "ASSET_XMP_FIELDS",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "0ea93a0463c3aa80b36c498787ecf0221da3b366382b9a2942240599bbb609fd",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "asset-type-alias.pdf",
+      "expected_failures": [
+        "ASSET_CONTENTTYPE",
+        "ASSET_CONTENTTYPE_MATCH",
+        "ASSET_XMP_FIELDS",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "f4ebe88d3d7282c0dd9cc9712cb8e83272772b205e575ed86c53b47119c3f18a",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "asset-negative-size.pdf",
+      "expected_failures": [
+        "ASSET_SIZE_MATCH",
+        "ASSET_SIZE_TYPE",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "0ce20629f1ee927cade64acf023b221154189cae89206692fe9cce59c4a2a5e1",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "asset-uri-size.pdf",
+      "expected_failures": [
+        "ASSET_SIZE_TYPE",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "be31e438e6ab64bb87146448ddf6c4ed06dd2a94cc3b58ee0a568a7d087886d2",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "attachment-type-alias.pdf",
+      "expected_failures": [
+        "ATTACHMENT_XMP_CONTENTTYPE",
+        "ATTACHMENT_XMP_CONTENTTYPE_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "991e9b7d11dcec61e5b4e90bd241c7d244cad487d4e4a75bf2b06d63e80ce10c",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "attachment-empty-checksum.pdf",
+      "expected_failures": [
+        "ATTACHMENT_XMP_CHECKSUM_FORM",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "ff112fc3424490de42a2a28266e009458f8cb3beb1b4f4c8fd2469e614a5f8c4",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "attachment-uri-checksum.pdf",
+      "expected_failures": [
+        "ATTACHMENT_XMP_CHECKSUM_FORM",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "82c259384c155cef1d122ab74bd18c2823fd60aba04943e482efc46a26e31b15",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "attachment-checksum-absent.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "b04c15a018fcbc175e0b42a4923cb97c1c427006b1cdbb6564d88c7b567be79f",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "asset-signed-zero-padding.pdf",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "sha256": "cbabf93033a50afd935a8ba41ddcac8d1afdbb174a6c0ba2c451ac0500973586",
+      "expected_status": "FAIL",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    }
+  ]
+}

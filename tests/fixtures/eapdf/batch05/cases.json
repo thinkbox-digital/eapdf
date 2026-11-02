@@ -1,0 +1,182 @@
+[
+  {
+    "id": "class-dictionary",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "class-dictionary",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "class-array",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "class-array",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "class-revision",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "class-revision",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "classes-later",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "classes-later",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "direct-override",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "direct-override",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "direct-later",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "direct-later",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "direct-revisions",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "direct-revisions",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "missing-class",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "missing-class",
+    "expected_eapdf": "PASS",
+    "required_failures": []
+  },
+  {
+    "id": "class-bad",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "class-bad",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "class-array-bad",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "class-array-bad",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "classes-bad",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "classes-bad",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "direct-bad",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "direct-bad",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "direct-last-bad",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "direct-last-bad",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "USERPROPS_TYPE"
+    ]
+  },
+  {
+    "id": "classes-replace-p",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "classes-replace-p",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "MAIL_MESSAGE_GUID_ATTRIBUTE"
+    ],
+    "expected_unverified": [
+      "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+    ],
+    "evidence_note": "Removing Mail_GUID must fail its presence requirement and leave its cross-representation comparison unavailable, not proved equal."
+  },
+  {
+    "id": "direct-replace-p",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "direct-replace-p",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "MAIL_MESSAGE_GUID_ATTRIBUTE"
+    ],
+    "expected_unverified": [
+      "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+    ],
+    "evidence_note": "Removing Mail_GUID must fail its presence requirement and leave its cross-representation comparison unavailable, not proved equal."
+  },
+  {
+    "id": "direct-empty-p",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "direct-empty-p",
+    "expected_eapdf": "FAIL",
+    "required_failures": [
+      "MAIL_MESSAGE_GUID_ATTRIBUTE"
+    ],
+    "expected_unverified": [
+      "MAIL_MESSAGE_GUID_MATCH_DPM_XMP"
+    ],
+    "evidence_note": "Removing Mail_GUID must fail its presence requirement and leave its cross-representation comparison unavailable, not proved equal."
+  },
+  {
+    "id": "class-subject-unchanged",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "class-dictionary",
+    "property": "Mail_Subject",
+    "value_kind": "string",
+    "value": "EA-PDF attribute fixture",
+    "expected_eapdf": "PASS",
+    "required_failures": [],
+    "expected_recommendation": "PASS"
+  },
+  {
+    "id": "class-subject-changed",
+    "array_form": false,
+    "mutation": null,
+    "attribute_form": "class-dictionary",
+    "property": "Mail_Subject",
+    "value_kind": "string",
+    "value": "Truncated",
+    "expected_eapdf": "PASS",
+    "required_failures": [],
+    "expected_recommendation": "WARN"
+  }
+]

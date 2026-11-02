@@ -1,0 +1,39 @@
+{
+  "configVersion": 1,
+  "creator": "",
+  "signing": {
+    "enabled": false,
+    "pkcs12Path": "",
+    "alias": "",
+    "reason": ""
+  },
+  "branding": {
+    "enabled": true
+  },
+  "findingAid": {
+    "pdfEnabled": true,
+    "excelEnabled": false,
+    "embedExcel": true,
+    "embedPdfInCollections": true
+  },
+  "premis": {
+    "enabled": false
+  },
+  "accessibility": {
+    "addPdfUaFeatures": false,
+    "markInfoMarked": true,
+    "language": "en",
+    "readingDirection": "L2R",
+    "pageLabels": {
+      "enabled": true,
+      "singleMessage": false,
+      "archiveAndCollection": true,
+      "frontMatterPrefix": "Index-"
+    },
+    "experimental": {
+      "artifactGeneratedBranding": false,
+      "semanticFindingAidTags": false,
+      "altTextGeneratedImages": false
+    }
+  }
+}

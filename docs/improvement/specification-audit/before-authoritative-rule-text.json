@@ -1,0 +1,2392 @@
+{
+  "EMBEDDED_STREAM": {
+    "rule_number": 1,
+    "rule_name": "EMBEDDED_STREAM",
+    "spec_section": "EA-PDF 1.0 section 7.1.3 / 9.4, p. 31 example requirement context and p. 66 embedded files requirements",
+    "spec_excerpt": "“All embedded file streams included as Associated Files ... SHALL be listed in the Document Catalog Name name-tree EmbeddedFiles entry.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "OUTPUT_INTENT": {
+    "rule_number": 2,
+    "rule_name": "OUTPUT_INTENT",
+    "spec_section": "EA-PDF 1.0 section 9.1 and underlying PDF/A rules",
+    "spec_excerpt": "PDF/A-conformant files SHALL include a valid OutputIntent required by the claimed PDF/A profile.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "FONTS_NONE": {
+    "rule_number": 3,
+    "rule_name": "FONTS_NONE",
+    "spec_section": "EA-PDF 1.0 section 9.1 and underlying PDF/A rules",
+    "spec_excerpt": "PDF/A conformance requires fonts used for page text to be present and available for embedded-font validation.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "FONTS_EMBEDDED": {
+    "rule_number": 4,
+    "rule_name": "FONTS_EMBEDDED",
+    "spec_section": "EA-PDF 1.0 section 9.1 and underlying PDF/A rules",
+    "spec_excerpt": "PDF/A conformance requires fonts used in page content to be embedded.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "FONTS_MISSING": {
+    "rule_number": 5,
+    "rule_name": "FONTS_MISSING",
+    "spec_section": "EA-PDF 1.0 section 9.1 and underlying PDF/A rules",
+    "spec_excerpt": "Fonts used in page content SHALL be embedded.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "FONTS_ALL_EMBEDDED": {
+    "rule_number": 6,
+    "rule_name": "FONTS_ALL_EMBEDDED",
+    "spec_section": "EA-PDF 1.0 section 9.1 and underlying PDF/A rules",
+    "spec_excerpt": "All fonts discovered in page content SHALL be embedded.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PDF_HEADER_VERSION_READ": {
+    "rule_number": 7,
+    "rule_name": "PDF_HEADER_VERSION_READ",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, first paragraph under “9.1 EA-PDF file”",
+    "spec_excerpt": "\"The PDF header SHALL be either “%PDF-1.7” or “%PDF-2.0”.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PDF_CATALOG_VERSION": {
+    "rule_number": 8,
+    "rule_name": "PDF_CATALOG_VERSION",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, first paragraph under “9.1 EA-PDF file”",
+    "spec_excerpt": "\"The declared PDF version number of an EA-PDF file SHALL be either PDF 1.7 or PDF 2.0.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected either 1.7 or 2.0.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PDF_EFFECTIVE_VERSION": {
+    "rule_number": 9,
+    "rule_name": "PDF_EFFECTIVE_VERSION",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, first paragraph under “9.1 EA-PDF file”",
+    "spec_excerpt": "\"An EA-PDF file SHALL be either PDF 1.7 or PDF 2.0.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PDFA_PART": {
+    "rule_number": 10,
+    "rule_name": "PDFA_PART",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, paragraph following the PDF version requirement",
+    "spec_excerpt": "“All EA-PDF files SHALL conform to either PDF/A-3a, PDF/A-3u, PDF/A-4, PDF/A-4f, or PDF/A-4e.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PDFA_CONFORMANCE": {
+    "rule_number": 11,
+    "rule_name": "PDFA_CONFORMANCE",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, paragraph following the PDF version requirement",
+    "spec_excerpt": "“All EA-PDF files SHALL conform to either PDF/A-3a, PDF/A-3u, PDF/A-4, PDF/A-4f, or PDF/A-4e.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DOCINFO_PRESENT": {
+    "rule_number": 12,
+    "rule_name": "DOCINFO_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, paragraph beginning “All EA-PDF files that also conform to PDF/A-3...”",
+    "spec_excerpt": "“All EA-PDF files that also conform to PDF/A-3 SHALL have a Document Information dictionary referenced from the trailer Info entry.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DOCINFO_TITLE_MATCH": {
+    "rule_number": 13,
+    "rule_name": "DOCINFO_TITLE_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, paragraph beginning “All EA-PDF files that also conform to PDF/A-3...”",
+    "spec_excerpt": "“The information in this document information dictionary SHALL be consistent with the document catalog XMP Metadata entry as defined by Table 7 - Crosswalk between document information dictionary and XMP properties in [PDF/A-3].”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DOCINFO_PRODUCER_MATCH": {
+    "rule_number": 14,
+    "rule_name": "DOCINFO_PRODUCER_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, paragraph beginning “All EA-PDF files that also conform to PDF/A-3...”",
+    "spec_excerpt": "“The information in this document information dictionary SHALL be consistent with the document catalog XMP Metadata entry as defined by Table 7 - Crosswalk between document information dictionary and XMP properties in [PDF/A-3].”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DOCINFO_AUTHOR_MATCH": {
+    "rule_number": 15,
+    "rule_name": "DOCINFO_AUTHOR_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, paragraph beginning “All EA-PDF files that also conform to PDF/A-3...”",
+    "spec_excerpt": "“The information in this document information dictionary SHALL be consistent with the document catalog XMP Metadata entry as defined by Table 7 - Crosswalk between document information dictionary and XMP properties in [PDF/A-3].”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DOCINFO_SUBJECT_MATCH": {
+    "rule_number": 16,
+    "rule_name": "DOCINFO_SUBJECT_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, paragraph beginning “All EA-PDF files that also conform to PDF/A-3...”",
+    "spec_excerpt": "“The information in this document information dictionary SHALL be consistent with the document catalog XMP Metadata entry as defined by Table 7 - Crosswalk between document information dictionary and XMP properties in [PDF/A-3].”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DOCINFO_CREATOR_MATCH": {
+    "rule_number": 17,
+    "rule_name": "DOCINFO_CREATOR_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, paragraph beginning “All EA-PDF files that also conform to PDF/A-3...”",
+    "spec_excerpt": "“The information in this document information dictionary SHALL be consistent with the document catalog XMP Metadata entry as defined by Table 7 - Crosswalk between document information dictionary and XMP properties in [PDF/A-3].”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DOCINFO_CREATIONDATE_MATCH": {
+    "rule_number": 18,
+    "rule_name": "DOCINFO_CREATIONDATE_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, paragraph beginning “All EA-PDF files that also conform to PDF/A-3...”",
+    "spec_excerpt": "“The information in this document information dictionary SHALL be consistent with the document catalog XMP Metadata entry as defined by Table 7 - Crosswalk between document information dictionary and XMP properties in [PDF/A-3].”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DOCINFO_MODDATE_MATCH": {
+    "rule_number": 19,
+    "rule_name": "DOCINFO_MODDATE_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 61, paragraph beginning “All EA-PDF files that also conform to PDF/A-3...”",
+    "spec_excerpt": "“The information in this document information dictionary SHALL be consistent with the document catalog XMP Metadata entry as defined by Table 7 - Crosswalk between document information dictionary and XMP properties in [PDF/A-3].”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DOCINFO_KEYWORDS": {
+    "rule_number": 20,
+    "rule_name": "DOCINFO_KEYWORDS",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, paragraph beginning “The XMP pdf:Keywords property...”",
+    "spec_excerpt": "“The XMP pdf:Keywords property and, for all PDF-A/3-based EA-PDF files, the PDF document information dictionary Keywords entry SHALL each include “EA-PDF”.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "CATALOG_PIECEINFO": {
+    "rule_number": 21,
+    "rule_name": "CATALOG_PIECEINFO",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, first normative paragraph",
+    "spec_excerpt": "“All EA-PDF files SHALL NOT contain a PieceInfo entry in the document catalog dictionary.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_KEYWORDS": {
+    "rule_number": 22,
+    "rule_name": "XMP_KEYWORDS",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, paragraph beginning “The XMP pdf:Keywords property...”",
+    "spec_excerpt": "“The XMP pdf:Keywords property and, for all PDF-A/3-based EA-PDF files, the PDF document information dictionary Keywords entry SHALL each include “EA-PDF”.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_KEYWORDS_UNCHECKED": {
+    "rule_number": 23,
+    "rule_name": "XMP_KEYWORDS_UNCHECKED",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, paragraph beginning “The XMP pdf:Keywords property...”",
+    "spec_excerpt": "“The XMP pdf:Keywords property and, for all PDF-A/3-based EA-PDF files, the PDF document information dictionary Keywords entry SHALL each include “EA-PDF”.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PAGEMODE_PRESENT": {
+    "rule_number": 24,
+    "rule_name": "PAGEMODE_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, PageMode paragraphs for PDF/mail-1{s, si}",
+    "spec_excerpt": "\"The Document Catalog dictionary’s PageMode entry SHALL be set according to the EA-PDF profile rules.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "NONFULLSCREENPAGEMODE_PRESENT": {
+    "rule_number": 25,
+    "rule_name": "NONFULLSCREENPAGEMODE_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, PageMode/NonFullScreenPageMode paragraphs for PDF/mail-1{s, si}",
+    "spec_excerpt": "\"The Viewer Preferences NonFullScreenPageMode entry SHALL be set according to the EA-PDF profile rules.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed NonFullScreenPageMode: {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_PAGEMODE_SINGLE_NO_ATTACHMENTS": {
+    "rule_number": 26,
+    "rule_name": "PROFILE_PAGEMODE_SINGLE_NO_ATTACHMENTS",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, PageMode/Viewer Preferences paragraphs",
+    "spec_excerpt": "\"For PDF/mail-1{s, si} with no email attachments, the Document Catalog dictionary's PageMode entry SHALL be UseOutlines.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS": {
+    "rule_number": 27,
+    "rule_name": "PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, PageMode/Viewer Preferences paragraphs",
+    "spec_excerpt": "\"For PDF/mail-1{s, si} with email attachments, the Document Catalog PageMode entry SHALL be UseAttachments.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_PAGEMODE_MULTI": {
+    "rule_number": 28,
+    "rule_name": "PROFILE_PAGEMODE_MULTI",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, paragraph for PDF/mail-1{m, mi}",
+    "spec_excerpt": "\"For all PDF/mail-1{m, mi} files, the Document Catalog dictionary's PageMode entry SHALL be UseOutlines.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_NFSM_SINGLE_NO_ATTACHMENTS": {
+    "rule_number": 29,
+    "rule_name": "PROFILE_NFSM_SINGLE_NO_ATTACHMENTS",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, PageMode/Viewer Preferences paragraphs",
+    "spec_excerpt": "\"For PDF/mail-1{s, si} with no email attachments, the Viewer Preferences NonFullScreenPageMode entry SHALL be UseOutlines.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS": {
+    "rule_number": 30,
+    "rule_name": "PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, PageMode/Viewer Preferences paragraphs",
+    "spec_excerpt": "\"For PDF/mail-1{s, si} with email attachments, the Viewer Preferences NonFullScreenPageMode entry SHALL be UseAttachments for PDF 2.0 or UseOutlines for PDF 1.7 files.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_NFSM_MULTI": {
+    "rule_number": 31,
+    "rule_name": "PROFILE_NFSM_MULTI",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, paragraph for PDF/mail-1{m, mi}",
+    "spec_excerpt": "\"For all PDF/mail-1{m, mi} files, the Viewer Preferences NonFullScreenPageMode entry SHALL be UseOutlines.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "VIEWER_PREFS": {
+    "rule_number": 32,
+    "rule_name": "VIEWER_PREFS",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, paragraph following PageMode rules",
+    "spec_excerpt": "“All PDF/mail-1 files SHALL set the Viewer Preferences DisplayDocTitle entry to true.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DISPLAY_DOCTITLE": {
+    "rule_number": 33,
+    "rule_name": "DISPLAY_DOCTITLE",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 62, PageMode/Viewer Preferences paragraphs",
+    "spec_excerpt": "“All PDF/mail-1 files SHALL set the Viewer Preferences DisplayDocTitle entry to true.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "AF_RULE": {
+    "rule_number": 34,
+    "rule_name": "AF_RULE",
+    "spec_section": "EA-PDF 1.0 section 9.1, pp. 62–63, paragraph beginning “For non-isolated PDF/mail-1{s, m, c}...”",
+    "spec_excerpt": "“For non-isolated PDF/mail-1{s, m, c}, the Document Catalog dictionary SHALL have an AF entry as an array with at least one array element.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "SOURCE_AF": {
+    "rule_number": 35,
+    "rule_name": "SOURCE_AF",
+    "spec_section": "EA-PDF 1.0 section 9.1, pp. 62–63, paragraph beginning “For non-isolated PDF/mail-1{s, m, c}...”",
+    "spec_excerpt": "“At least one array element (file specification dictionary) in this array SHALL have an AFRelationship value of Source, representing the primary original source email asset(s).”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "OUTLINES_PRESENT": {
+    "rule_number": 36,
+    "rule_name": "OUTLINES_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 63, final paragraph before section 9.2",
+    "spec_excerpt": "“All PDF/mail-1 files SHALL have an Outlines and DPartRoot entries in the Document Catalog. As a consequence, all pages in all EA-PDF files will have a DPart entry.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPARTROOT_PRESENT": {
+    "rule_number": 37,
+    "rule_name": "DPARTROOT_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.1, p. 63, final paragraph before section 9.2",
+    "spec_excerpt": "“All PDF/mail-1 files SHALL have an Outlines and DPartRoot entries in the Document Catalog. As a consequence, all pages in all EA-PDF files will have a DPart entry.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "CONTENT_SET_COUNT": {
+    "rule_number": 38,
+    "rule_name": "CONTENT_SET_COUNT",
+    "spec_section": "EA-PDF 1.0 section 9.2, p. 63, main normative paragraph",
+    "spec_excerpt": "\"All PDF/mail-1 files SHALL contain at least one Content Set ...\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "CONTENT_SET_NONBLANK": {
+    "rule_number": 39,
+    "rule_name": "CONTENT_SET_NONBLANK",
+    "spec_section": "EA-PDF 1.0 section 9.2, p. 63, main normative paragraph",
+    "spec_excerpt": "\"All PDF/mail-1 files ... Content Set ... SHALL NOT be blank.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "CONTENT_SET_OUTLINE_REF": {
+    "rule_number": 40,
+    "rule_name": "CONTENT_SET_OUTLINE_REF",
+    "spec_section": "EA-PDF 1.0 section 9.2, p. 63, main normative paragraph",
+    "spec_excerpt": "“The first page in each Content Set in all PDF/mail-1 files SHALL be referenced from at least one Outline item referenced from the Document Catalog Outlines entry.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_EMAIL_COUNT_SINGLE": {
+    "rule_number": 41,
+    "rule_name": "PROFILE_EMAIL_COUNT_SINGLE",
+    "spec_section": "EA-PDF 1.0 section 9.2, p. 63, profile-count paragraphs",
+    "spec_excerpt": "\"PDF/mail-1{s, si} files SHALL represent only a single email ...\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_EMAIL_COUNT_MULTI": {
+    "rule_number": 42,
+    "rule_name": "PROFILE_EMAIL_COUNT_MULTI",
+    "spec_section": "EA-PDF 1.0 section 9.2, p. 63, profile-count paragraphs",
+    "spec_excerpt": "\"PDF/mail-1{m, mi} files SHALL represent 2 or more emails ...\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PAGE_COUNT": {
+    "rule_number": 43,
+    "rule_name": "PAGE_COUNT",
+    "spec_section": "EA-PDF 1.0 section 9.2, p. 63, main normative paragraph",
+    "spec_excerpt": "\"All PDF/mail-1 files SHALL contain at least one Content Set of at least 1 page each ...\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "OUTLINE_ITEMS_PRESENT": {
+    "rule_number": 44,
+    "rule_name": "OUTLINE_ITEMS_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.2, p. 64, paragraph beginning “The first page of every Content Set...”",
+    "spec_excerpt": "“The first page of every Content Set SHALL be referenced by an outline item in the same PDF. ... all EA-PDF files will have at least one outline item ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PAGE_DPART_PRESENT": {
+    "rule_number": 45,
+    "rule_name": "PAGE_DPART_PRESENT",
+    "spec_section": "EA-PDF 1.0 sections 9.2 and 9.6",
+    "spec_excerpt": "All PDF pages must be included in the Document Part Metadata tree. Each page must have a DPart entry referring to the content set whose Start/End range includes that page.",
+    "plain_language_template": {
+      "PASS": "Every PDF page links to a document part whose page range includes it.",
+      "FAIL": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "TEXT_CONTENT_PDF_TEXT_OBJECTS": {
+    "rule_number": 46,
+    "rule_name": "TEXT_CONTENT_PDF_TEXT_OBJECTS",
+    "spec_section": "EA-PDF 1.0 section 9.3, p. 64",
+    "spec_excerpt": "\"Content ... that is text in the source email assets SHOULD use PDF text objects.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ATTACHMENT_ANNOTATIONS_PRESENT": {
+    "rule_number": 47,
+    "rule_name": "ATTACHMENT_ANNOTATIONS_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.3, pp. 64-65, paragraph beginning \"Each email attachment...\"",
+    "spec_excerpt": "\"Each email attachment (as indicated in the document-level XMP metadata) SHALL be visibly represented by a File Attachment annotation positioned entirely within the CropBox of a PDF page in each Content Set that represents an email body of the source email that contained that attachment.\"",
+    "plain_language_template": {
+      "PASS": "{message}",
+      "FAIL": "Observed attachment-annotation coverage: {actual}. Expected each email attachment to be visibly represented by a File Attachment annotation in each body Content Set.",
+      "WARN": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PAGE_CONTEXT_PRESENT_RECOMMENDED": {
+    "rule_number": 48,
+    "rule_name": "PAGE_CONTEXT_PRESENT_RECOMMENDED",
+    "spec_section": "EA-PDF 1.0 section 9.3, p. 64",
+    "spec_excerpt": "\"All pages in an EA-PDF file SHOULD have a unique page number or other identifying context as part of the page content.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PAGE_CONTEXT_TEXT_OBJECTS_RECOMMENDED": {
+    "rule_number": 49,
+    "rule_name": "PAGE_CONTEXT_TEXT_OBJECTS_RECOMMENDED",
+    "spec_section": "EA-PDF 1.0 section 9.3, p. 64",
+    "spec_excerpt": "\"Such context SHOULD use PDF text objects.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "UNSPECIFIED_COLOR_SRGB_ASSUMED": {
+    "rule_number": 50,
+    "rule_name": "UNSPECIFIED_COLOR_SRGB_ASSUMED",
+    "spec_section": "EA-PDF 1.0 section 9.3, p. 64",
+    "spec_excerpt": "\"For unspecified color content in email, sRGB SHOULD be assumed.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "CORE_FIELDS_TEXT_OBJECTS": {
+    "rule_number": 51,
+    "rule_name": "CORE_FIELDS_TEXT_OBJECTS",
+    "spec_section": "EA-PDF 1.0 section 9.3, p. 64",
+    "spec_excerpt": "\"All Core Fields and their values (when present) SHALL use text objects.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "{message}",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ACTIONABLE_URLS_LINK_ANNOTATIONS": {
+    "rule_number": 52,
+    "rule_name": "ACTIONABLE_URLS_LINK_ANNOTATIONS",
+    "spec_section": "EA-PDF 1.0 section 9.3, p. 65",
+    "spec_excerpt": "\"Emails with URLs that are intended to be actionable by users or software SHOULD use PDF Link annotations.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "REFERENCED_ASSETS_AS_ASSOCIATED_FILES": {
+    "rule_number": 53,
+    "rule_name": "REFERENCED_ASSETS_AS_ASSOCIATED_FILES",
+    "spec_section": "EA-PDF 1.0 section 9.3, p. 65",
+    "spec_excerpt": "\"Referenced assets ... SHOULD be embedded as Associated Files ... with an AFRelationship of Source.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT": {
+    "rule_number": 54,
+    "rule_name": "REFERENCED_ASSETS_ASSOCIATED_TO_APPROPRIATE_OBJECT",
+    "spec_section": "EA-PDF 1.0 section 9.3, p. 65",
+    "spec_excerpt": "\"They SHOULD be associated with the most appropriate PDF object.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EMBEDDEDFILES_PRESENT": {
+    "rule_number": 55,
+    "rule_name": "EMBEDDEDFILES_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.4, p. 66, first paragraph under “9.4 Embedded files”",
+    "spec_excerpt": "“All embedded file streams included as Associated Files (i.e. referenced from an AF array entry or AF tag in a marked content sequence) SHALL be listed in the Document Catalog Name name-tree EmbeddedFiles entry.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EMBEDDED_FILESPEC_NO_PATH_COMPONENTS": {
+    "rule_number": 56,
+    "rule_name": "EMBEDDED_FILESPEC_NO_PATH_COMPONENTS",
+    "spec_section": "EA-PDF 1.0 section 9.4, p. 66, second paragraph under \"9.4 Embedded files\"",
+    "spec_excerpt": "\"PDF file specification strings SHALL NOT include absolute or relative path components.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed file specification string(s): {actual}. Expected embedded file specification strings without absolute or relative path components.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EMBEDDED_SUBTYPE_PRESENT": {
+    "rule_number": 57,
+    "rule_name": "EMBEDDED_SUBTYPE_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.4, p. 66, paragraph beginning \"All embedded file streams...\"",
+    "spec_excerpt": "\"All embedded file streams SHALL have a Subtype key in their embedded file stream dictionary ...\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed embedded file stream metadata: {actual}. Expected every embedded file stream to include a Subtype key.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EMBEDDED_SUBTYPE_NO_PARAMETERS": {
+    "rule_number": 58,
+    "rule_name": "EMBEDDED_SUBTYPE_NO_PARAMETERS",
+    "spec_section": "EA-PDF 1.0 section 9.4, p. 66, same paragraph",
+    "spec_excerpt": "\"This SHALL NOT include any SEMI-COLONs or IANA Media Type parameters.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed embedded file Subtype value(s): {actual}. Expected bare IANA media types without semicolons or media-type parameters.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "SOURCE_MEDIATYPE_PARAMETERS_MATCH": {
+    "rule_number": 59,
+    "rule_name": "SOURCE_MEDIATYPE_PARAMETERS_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.4, p. 66, sentence beginning \"Where the embedded file originates...\"",
+    "spec_excerpt": "\"Where the embedded file originates in a source email asset that also specifies IANA Media Type parameters, the same Media Type parameters SHALL be set as the value of the Mail_MediaTypeParameters key.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_MediaTypeParameters value(s): {actual}. Expected media-type parameters matching the source email asset when parameters exist.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "AF_IN_NAME_TREE": {
+    "rule_number": 60,
+    "rule_name": "AF_IN_NAME_TREE",
+    "spec_section": "EA-PDF 1.0 section 9.4, p. 66, first paragraph under “9.4 Embedded files”",
+    "spec_excerpt": "“All embedded file streams included as Associated Files (i.e. referenced from an AF array entry or AF tag in a marked content sequence) SHALL be listed in the Document Catalog Name name-tree EmbeddedFiles entry.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EMBEDDED_SUBTYPE_MATCH_XMP": {
+    "rule_number": 61,
+    "rule_name": "EMBEDDED_SUBTYPE_MATCH_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.4, p. 66, paragraph beginning \"All embedded file streams...\"",
+    "spec_excerpt": "\"All embedded file streams SHALL have a Subtype key in their embedded file stream dictionary which is the IANA Media (MIME) Type of the file and SHALL match the equivalent document-level (document catalog) XMP metadata.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EMBEDDED_SIZE": {
+    "rule_number": 62,
+    "rule_name": "EMBEDDED_SIZE",
+    "spec_section": "EA-PDF 1.0 section 9.4, p. 67, paragraph before section 9.5",
+    "spec_excerpt": "\"EA-PDF Writers SHOULD add ... the uncompressed size of all embedded files in the embedded file parameter dictionary ... Size entries.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EMBEDDED_MD5": {
+    "rule_number": 63,
+    "rule_name": "EMBEDDED_MD5",
+    "spec_section": "EA-PDF 1.0 section 9.4, p. 67, paragraph before section 9.5",
+    "spec_excerpt": "\"EA-PDF Writers SHOULD add the MD5 checksum ... of all embedded files in the embedded file parameter dictionary CheckSum ... entries.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_PAGEMODE_CONTAINER": {
+    "rule_number": 64,
+    "rule_name": "PROFILE_PAGEMODE_CONTAINER",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 67, paragraph beginning “The Collections entry...”",
+    "spec_excerpt": "\"The Document Catalog dictionary of all PDF/mail-1{c, ci} files SHALL have a Collections entry.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_NFSM_CONTAINER": {
+    "rule_number": 65,
+    "rule_name": "PROFILE_NFSM_CONTAINER",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 67, container viewer-preferences requirement context",
+    "spec_excerpt": "\"PDF/mail-1{c, ci} files use attachment-oriented navigation in the catalog and viewer preferences.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_COLLECTION": {
+    "rule_number": 66,
+    "rule_name": "PROFILE_COLLECTION",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 67, first two sentences under “9.5 PDF Collections”",
+    "spec_excerpt": "\"The Document Catalog dictionary of all PDF/mail-1{c, ci} files SHALL have a Collections entry.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_REQUIRED": {
+    "rule_number": 67,
+    "rule_name": "COLLECTION_REQUIRED",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 67, first two sentences under “9.5 PDF Collections”",
+    "spec_excerpt": "\"The Document Catalog dictionary of all PDF/mail-1{c, ci} files SHALL have a Collections entry.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_FORBIDDEN": {
+    "rule_number": 68,
+    "rule_name": "COLLECTION_FORBIDDEN",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 67, first two sentences under “9.5 PDF Collections”",
+    "spec_excerpt": "\"The Collections entry SHALL NOT be present in all other PDF/mail-1{s, si, m, mi} files.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_EXTENSIONS": {
+    "rule_number": 69,
+    "rule_name": "COLLECTION_EXTENSIONS",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 68, first paragraph",
+    "spec_excerpt": "“PDF/mail-1{c, ci} files that are PDF version 1.7 SHALL have an Extensions Dictionary indicating Adobe (ADBE) Extension Level 5 ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_D_FORBIDDEN": {
+    "rule_number": 70,
+    "rule_name": "COLLECTION_D_FORBIDDEN",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 68, paragraph beginning “The Collection dictionary D entry...”",
+    "spec_excerpt": "\"The Collection dictionary D entry SHALL NOT be present.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_VIEW_FORBIDDEN": {
+    "rule_number": 71,
+    "rule_name": "COLLECTION_VIEW_FORBIDDEN",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 68, paragraph beginning “The Collection dictionary D entry...”",
+    "spec_excerpt": "\"The Collection dictionary View entry SHALL NOT have the value H.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_NAVIGATOR_FORBIDDEN": {
+    "rule_number": 72,
+    "rule_name": "COLLECTION_NAVIGATOR_FORBIDDEN",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 68, paragraph following the Collection View rule",
+    "spec_excerpt": "“If the Collection dictionary contains a Navigator entry, it SHALL NOT have either SWF or APIVersion entries.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_SCHEMA_PRESENT": {
+    "rule_number": 73,
+    "rule_name": "COLLECTION_SCHEMA_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 68, paragraph immediately before Table 6",
+    "spec_excerpt": "“All PDF/mail-1{c, ci} files SHALL have a Schema entry in the Collections dictionary.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_SCHEMA_FIELD": {
+    "rule_number": 74,
+    "rule_name": "COLLECTION_SCHEMA_FIELD",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 68, Table 6",
+    "spec_excerpt": "“The following custom fields representing the Core Fields SHALL all exist in the collection schema dictionary – additional custom fields can also be present:”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_SCHEMA_E_FALSE": {
+    "rule_number": 75,
+    "rule_name": "COLLECTION_SCHEMA_E_FALSE",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 68, sentence after Table 6",
+    "spec_excerpt": "“If the E entry is present in any Collection CustomField dictionary it SHALL have the value false.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_FILENAMES_VALID": {
+    "rule_number": 76,
+    "rule_name": "COLLECTION_FILENAMES_VALID",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 68, sentence beginning \"All folder and filenames...\"",
+    "spec_excerpt": "\"All folder and filenames used in PDF/mail-1{c,ci} files SHALL conform to the valid file name restrictions ...\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed collection folder/file name(s): {actual}. Expected names conforming to the PDF Collection filename restrictions.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_FILENAMES_UNIQUE_CASEFOLD": {
+    "rule_number": 77,
+    "rule_name": "COLLECTION_FILENAMES_UNIQUE_CASEFOLD",
+    "spec_section": "EA-PDF 1.0 section 9.5, p. 68, same sentence",
+    "spec_excerpt": "\"All folder and filenames used in PDF/mail-1{c,ci} files ... SHALL be unique after case normalization ...\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed collection folder/file name(s): {actual}. Expected names unique after case normalization.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_ROOTNODE_PRESENT": {
+    "rule_number": 78,
+    "rule_name": "DPM_ROOTNODE_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.6, p. 69, first paragraph and example on p. 72",
+    "spec_excerpt": "“All EA-PDF files SHALL define document part metadata for all pages via the Document Catalog DPartRoot dictionary entry.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_KEY_PREFIX": {
+    "rule_number": 79,
+    "rule_name": "DPM_KEY_PREFIX",
+    "spec_section": "EA-PDF 1.0 section 9.6, p. 69, paragraph beginning “All custom EA-PDF keys used in DPM...”",
+    "spec_excerpt": "“All custom EA-PDF keys used in DPM SHALL use the registered prefix “Mail” followed by an underscore: “Mail_”.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_INTERMEDIATE_COUNT_SINGLE": {
+    "rule_number": 80,
+    "rule_name": "DPM_INTERMEDIATE_COUNT_SINGLE",
+    "spec_section": "EA-PDF 1.0 section 9.6, p. 70, Table 7 and paragraphs following Table 7",
+    "spec_excerpt": "\"PDF/mail-1{s, si} files SHALL have exactly one intermediate node in the Document Part Metadata tree with Mail_MessageID / Mail_GUID entries.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_INTERMEDIATE_COUNT_MULTI": {
+    "rule_number": 81,
+    "rule_name": "DPM_INTERMEDIATE_COUNT_MULTI",
+    "spec_section": "EA-PDF 1.0 section 9.6, p. 70, Table 7 and paragraphs following Table 7",
+    "spec_excerpt": "\"PDF/mail-1{m, mi} files SHALL have at least 2 intermediate nodes in the Document Part Metadata tree with Mail_MessageID / Mail_GUID entries.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_INTERMEDIATE_COUNT_CONTAINER": {
+    "rule_number": 82,
+    "rule_name": "DPM_INTERMEDIATE_COUNT_CONTAINER",
+    "spec_section": "EA-PDF 1.0 section 9.6, p. 70, Table 7 and paragraphs following Table 7",
+    "spec_excerpt": "\"PDF/mail-1{c, ci} files SHALL have no nodes in the Document Part Metadata tree with Mail_MessageID or Mail_GUID entries.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_MAIL_GUID_PRESENT": {
+    "rule_number": 83,
+    "rule_name": "DPM_MAIL_GUID_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.6, p. 70, Table 7 and paragraphs following Table 7",
+    "spec_excerpt": "\"Mail_GUID ... Required.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_MAIL_GUID_MATCH": {
+    "rule_number": 84,
+    "rule_name": "DPM_MAIL_GUID_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.6, p. 70, Table 7 and paragraphs following Table 7",
+    "spec_excerpt": "“Every Mail_MessageID and Mail_GUID value SHALL match a corresponding property in the Document Catalog XMP metadata stream.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_MAIL_MESSAGEID_MATCH": {
+    "rule_number": 85,
+    "rule_name": "DPM_MAIL_MESSAGEID_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.6, p. 70, Table 7 and paragraphs following Table 7",
+    "spec_excerpt": "\"Mail_MessageID ... SHALL match a pdfmailmeta:messageid in the document-level XMP metadata.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_LEAF_REQUIRED": {
+    "rule_number": 86,
+    "rule_name": "DPM_LEAF_REQUIRED",
+    "spec_section": "EA-PDF 1.0 section 9.6, pp. 70–71, Table 8 and paragraph introducing leaf nodes",
+    "spec_excerpt": "“All leaf nodes of the Document Part Metadata tree SHALL contain a DPM dictionary ... as defined in Table 8 ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_CONTENTSETTYPE_PRESENT": {
+    "rule_number": 87,
+    "rule_name": "DPM_CONTENTSETTYPE_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.6, pp. 70–71, Table 8 and paragraph introducing leaf nodes",
+    "spec_excerpt": "“Mail_ContentSetType name Required.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_DESC_REQUIRED": {
+    "rule_number": 88,
+    "rule_name": "DPM_DESC_REQUIRED",
+    "spec_section": "EA-PDF 1.0 section 9.6, pp. 70–71, Table 8 and paragraph introducing leaf nodes",
+    "spec_excerpt": "“Mail_Desc text string Required.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_SUBTYPE_REQUIRED": {
+    "rule_number": 89,
+    "rule_name": "DPM_SUBTYPE_REQUIRED",
+    "spec_section": "EA-PDF 1.0 section 9.6, pp. 70–71, Table 8 and paragraph introducing leaf nodes",
+    "spec_excerpt": "“Mail_Subtype name Required if ContentSetType is BodyRendering or AttachmentRendering. Not required otherwise.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_ATTACHMENTLIST_FORBIDDEN": {
+    "rule_number": 90,
+    "rule_name": "DPM_ATTACHMENTLIST_FORBIDDEN",
+    "spec_section": "EA-PDF 1.0 section 9.6, pp. 70–71, Table 8 and paragraph introducing leaf nodes",
+    "spec_excerpt": "“AttachmentList – ... SHALL NOT occur in PDF/mail-1{c, ci} files.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_ID_XMP": {
+    "rule_number": 91,
+    "rule_name": "MESSAGE_ID_XMP",
+    "spec_section": "EA-PDF 1.0 sections 9.6 and 9.8.3, pp. 70 and 87, Table 7 / Table 18",
+    "spec_excerpt": "“Message-ID Optional Free text string.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MAIL_GUID_XMP": {
+    "rule_number": 92,
+    "rule_name": "MAIL_GUID_XMP",
+    "spec_section": "EA-PDF 1.0 sections 9.6 and 9.8.3, pp. 70 and 87, Table 7 / Table 18",
+    "spec_excerpt": "“Mail_GUID Required An XMP GUID ... that uniquely identifies an email ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_FRONTMATTER_REQUIRED_CONTAINER": {
+    "rule_number": 93,
+    "rule_name": "DPM_FRONTMATTER_REQUIRED_CONTAINER",
+    "spec_section": "EA-PDF 1.0 section 9.6, p. 71, Table 8 row for Mail_ContentSetType",
+    "spec_excerpt": "\"FrontMatter - SHALL always occur in a PDF/mail-1{c, ci} file ...\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed leaf DPM ContentSetType values: {actual}. Expected at least one FrontMatter Content Set in container profiles.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "DPM_SUBTYPE_MEDIA_TYPE_NAME": {
+    "rule_number": 94,
+    "rule_name": "DPM_SUBTYPE_MEDIA_TYPE_NAME",
+    "spec_section": "EA-PDF 1.0 section 9.6, p. 71, Table 8 row for Mail_Subtype",
+    "spec_excerpt": "\"The value of this entry SHALL conform to the Media Type names defined in Internet RFC 2046 ...\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_Subtype value(s): {actual}. Expected RFC 2046 media-type names encoded as allowed PDF names.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "STRUCTTREE_PRESENT": {
+    "rule_number": 95,
+    "rule_name": "STRUCTTREE_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 74, paragraph beginning “For all PDF/mail-1 files that contain Logical Structure...”",
+    "spec_excerpt": "“For all PDF/mail-1 files that contain Logical Structure, the logical structure tree root structure element as defined by the K entry of the structure tree root SHALL be a single structure element dictionary of structure type Document.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "STRUCTTREE_ROOT_DOCUMENT": {
+    "rule_number": 96,
+    "rule_name": "STRUCTTREE_ROOT_DOCUMENT",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 74, paragraph beginning “For all PDF/mail-1 files that contain Logical Structure...”",
+    "spec_excerpt": "The StructTreeRoot K entry must be one structure element dictionary of type Document. If K is an array, it must contain exactly one element, and that element must be a Document structure element dictionary.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed K: {K}; array length: {array_length}. Expected a Document dictionary or an array containing exactly one Document dictionary.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ROLEMAPNS_PRESENT": {
+    "rule_number": 97,
+    "rule_name": "ROLEMAPNS_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 74, paragraph beginning “In all PDF/A-4 files with logical structure...”",
+    "spec_excerpt": "“In all PDF/A-4 files with logical structure, the custom EA-PDF-defined semantics SHALL be included using a PDF 2.0 Namespace dictionary with an NS entry of https://pdfa.org/ns/ea-pdf/mail-1 and including a RoleMapNS entry ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "LOGICAL_TS32005_DECLARATION": {
+    "rule_number": 98,
+    "rule_name": "LOGICAL_TS32005_DECLARATION",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 74, paragraph beginning “When PDF 2.0 (PDF/A-4) is used...”",
+    "spec_excerpt": "\"When PDF 2.0 (PDF/A-4) is used for custom EA-PDF tags, the file SHALL declare conformance with ISO/TS 32005.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected ISO TS 32005 conformance declaration in document-level XMP when PDF/A-4 logical structure is present.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED": {
+    "rule_number": 99,
+    "rule_name": "LOGICAL_STRUCTURE_EQUIVALENCE_RECOMMENDED",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 74",
+    "spec_excerpt": "\"EA-PDF Creation Software SHOULD create equivalent PDF logical structure to that already present in original source email content.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED": {
+    "rule_number": 100,
+    "rule_name": "CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 74",
+    "spec_excerpt": "\"EA-PDF Creation Software SHOULD create PDF logical structure and use Tagged PDF for the content of all pages in custom Content Sets.\"",
+    "plain_language_template": {
+      "PASS": "{message}",
+      "WARN": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELD_NESTING_RECOMMENDED": {
+    "rule_number": 101,
+    "rule_name": "MAIL_FIELD_NESTING_RECOMMENDED",
+    "spec_section": "EA-PDF 1.0 section 9.7, Table 13",
+    "spec_excerpt": "\"Mail_Field ... SHOULD always be nested below Mail_ContentSet.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELDNAME_NESTING_RECOMMENDED": {
+    "rule_number": 102,
+    "rule_name": "MAIL_FIELDNAME_NESTING_RECOMMENDED",
+    "spec_section": "EA-PDF 1.0 section 9.7, Table 13",
+    "spec_excerpt": "\"Mail_FieldName ... SHOULD always be nested below Mail_Field.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELDVALUE_NESTING_RECOMMENDED": {
+    "rule_number": 103,
+    "rule_name": "MAIL_FIELDVALUE_NESTING_RECOMMENDED",
+    "spec_section": "EA-PDF 1.0 section 9.7, Table 13",
+    "spec_excerpt": "\"Mail_FieldValue ... SHOULD always be nested below Mail_Field.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ROLEMAP_MAIL_TAGS": {
+    "rule_number": 104,
+    "rule_name": "ROLEMAP_MAIL_TAGS",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 75, Table 10",
+    "spec_excerpt": "“If an EA-PDF file contains any of the following custom EA-PDF structure elements, then the following role map SHALL be included.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "CUSTOM_TAG_MARKED_SEQUENCE_ONLY": {
+    "rule_number": 105,
+    "rule_name": "CUSTOM_TAG_MARKED_SEQUENCE_ONLY",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 75, paragraph beginning “Custom EA-PDF tags SHALL only occur...”",
+    "spec_excerpt": "\"Custom EA-PDF tags SHALL only occur as structure element types and marked-content sequence tags, not marked-content points.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed custom EA-PDF tag usage: {actual}. Expected custom tags only on marked content sequences, never on marked content points.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "CUSTOM_TAG_OPERAND_MATCH": {
+    "rule_number": 106,
+    "rule_name": "CUSTOM_TAG_OPERAND_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 75, same paragraph",
+    "spec_excerpt": "“... the marked content sequence tag operand SHALL be the same as the custom structure element name ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed marked-content tag operand(s): {actual}. Expected operand to match corresponding custom EA-PDF structure element name.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "HEADER_FIELDS_TAGGED_RECOMMENDED": {
+    "rule_number": 107,
+    "rule_name": "HEADER_FIELDS_TAGGED_RECOMMENDED",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 75",
+    "spec_excerpt": "\"All header fields rendered into page content SHOULD be tagged with a Mail_FieldName and Mail_FieldValue custom EA-PDF tag.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "{message}",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_MESSAGE_CHILDREN": {
+    "rule_number": 108,
+    "rule_name": "MAIL_MESSAGE_CHILDREN",
+    "spec_section": "EA-PDF 1.0 section 9.7, pp. 76 and 79, Table 11 and Table 13",
+    "spec_excerpt": "\"Mail_Message SHALL contain at least one Mail_ContentGroup or Mail_ContentSet child element.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTSET_COUNT": {
+    "rule_number": 109,
+    "rule_name": "MAIL_CONTENTSET_COUNT",
+    "spec_section": "EA-PDF 1.0 section 9.7, pp. 76 and 79, bullet after Table 11 and Table 13",
+    "spec_excerpt": "“Mail_ContentSet SHALL always occur at least once in all PDF/mail-1 files.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "CONTENT_SET_MAIL_CONTENTSET_TAGGED": {
+    "rule_number": 110,
+    "rule_name": "CONTENT_SET_MAIL_CONTENTSET_TAGGED",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 76, bullet after Table 11",
+    "spec_excerpt": "\"Every Content Set shall be tagged with a Mail_ContentSet custom EA-PDF tag.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Content Set tagging: {actual}. Expected every Content Set to be tagged with Mail_ContentSet.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELD_CHILDREN": {
+    "rule_number": 111,
+    "rule_name": "MAIL_FIELD_CHILDREN",
+    "spec_section": "EA-PDF 1.0 section 9.7, pp. 76 and 79, Table 11 and Table 13",
+    "spec_excerpt": "“Mail_Field SHALL contain at least one Mail_FieldName child element.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELDVALUE_WITH_NAME": {
+    "rule_number": 112,
+    "rule_name": "MAIL_FIELDVALUE_WITH_NAME",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 76, bullet under Table 11; see also p. 79 Table 13",
+    "spec_excerpt": "“A Mail_FieldValue custom EA-PDF tag SHALL NOT occur without a corresponding a Mail_FieldName tag inside the immediate containing parent Mail_Field tag.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "USERPROPS_VALUES_UNMODIFIED": {
+    "rule_number": 113,
+    "rule_name": "USERPROPS_VALUES_UNMODIFIED",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 76",
+    "spec_excerpt": "\"When using custom user property structure attributes, the values ... SHOULD NOT be truncated or modified from the original source email.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "USERPROPS_NAME_ASCII": {
+    "rule_number": 114,
+    "rule_name": "USERPROPS_NAME_ASCII",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 77, Table 12",
+    "spec_excerpt": "“In this situation, the user property dictionary N SHALL be PDF ASCII strings with V entries as defined in Table 12: EA-PDF UserProperties custom attributes N and V entries below.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "USERPROPS_TYPE": {
+    "rule_number": 115,
+    "rule_name": "USERPROPS_TYPE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 77, Table 12",
+    "spec_excerpt": "“In this situation, the user property dictionary N SHALL be PDF ASCII strings with V entries as defined in Table 12: EA-PDF UserProperties custom attributes N and V entries below.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "USERPROPS_TAG_SCOPE": {
+    "rule_number": 116,
+    "rule_name": "USERPROPS_TAG_SCOPE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 77, Table 12",
+    "spec_excerpt": "“The UserProperties N entries match the DPM data ... and XMP metadata fields ... when prefixed with “Mail_” to allow validation.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTSET_ART_ONLY": {
+    "rule_number": 117,
+    "rule_name": "MAIL_CONTENTSET_ART_ONLY",
+    "spec_section": "EA-PDF 1.0 section 9.7, pp. 77–78, paragraph beginning “Implicit or explicit Art...”",
+    "spec_excerpt": "“Implicit or explicit Art (article, implicit via Mail_ContentSet) child structure elements SHALL only be used to represent each Content Set in all PDF/mail-1 files.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Art / Mail_ContentSet usage: {actual}. Expected Art child structure elements to represent only Content Sets.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MULTI_EMAIL_DOCUMENT_STRUCTURE": {
+    "rule_number": 118,
+    "rule_name": "MULTI_EMAIL_DOCUMENT_STRUCTURE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 78, paragraph beginning “For PDF/mail-1{m, mi} files...”",
+    "spec_excerpt": "“For PDF/mail-1{m, mi} files, each email SHALL be represented by an implicit or explicit Document structure element (implicitly via Mail_Message).”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed email-to-Document structure mapping: {actual}. Expected each email in PDF/mail-1{m,mi} to be represented by an implicit or explicit Document structure element.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTGROUP_CHILDREN": {
+    "rule_number": 119,
+    "rule_name": "MAIL_CONTENTGROUP_CHILDREN",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_ContentGroup",
+    "spec_excerpt": "\"Mail_ContentGroup ... SHALL contain at least one Mail_ContentSet child element.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTGROUP_NESTED_UNDER_MESSAGE": {
+    "rule_number": 120,
+    "rule_name": "MAIL_CONTENTGROUP_NESTED_UNDER_MESSAGE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_ContentGroup",
+    "spec_excerpt": "\"Mail_ContentGroup ... SHALL always be nested below Mail_Message.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_ContentGroup nesting: {actual}. Expected Mail_ContentGroup elements only below Mail_Message.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_MESSAGE_COUNT_SINGLE": {
+    "rule_number": 121,
+    "rule_name": "MAIL_MESSAGE_COUNT_SINGLE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13",
+    "spec_excerpt": "\"Mail_Message SHALL occur once in PDF/mail-1{s, si} files.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_MESSAGE_COUNT_MULTI": {
+    "rule_number": 122,
+    "rule_name": "MAIL_MESSAGE_COUNT_MULTI",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13",
+    "spec_excerpt": "\"Mail_Message SHALL occur 2 or more times in PDF/mail-1{m, mi} files.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_MESSAGE_COUNT_CONTAINER": {
+    "rule_number": 123,
+    "rule_name": "MAIL_MESSAGE_COUNT_CONTAINER",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13",
+    "spec_excerpt": "\"Mail_Message SHALL not occur in PDF/mail-1{c, ci} files.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELD_PROFILE_USE": {
+    "rule_number": 124,
+    "rule_name": "MAIL_FIELD_PROFILE_USE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_Field",
+    "spec_excerpt": "“Mail_Field SHALL only occur in PDF/mail-1{s, si, m, mi} files.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELDNAME_PROFILE_USE": {
+    "rule_number": 125,
+    "rule_name": "MAIL_FIELDNAME_PROFILE_USE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_FieldName",
+    "spec_excerpt": "“Mail_FieldName SHALL only occur in PDF/mail-1{s, si, m, mi} files.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELDVALUE_PROFILE_USE": {
+    "rule_number": 126,
+    "rule_name": "MAIL_FIELDVALUE_PROFILE_USE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_FieldValue",
+    "spec_excerpt": "“Mail_FieldValue SHALL only occur in PDF/mail-1{s, si, m, mi} files.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_MESSAGE_GUID_ATTRIBUTE": {
+    "rule_number": 127,
+    "rule_name": "MAIL_MESSAGE_GUID_ATTRIBUTE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_Message",
+    "spec_excerpt": "\"Mail_Message ... SHALL have attribute Mail_GUID.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_Message Mail_GUID attributes: {actual}. Expected Mail_GUID attribute matching DPM and XMP Metadata where present.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_MESSAGE_GUID_MATCH_DPM_XMP": {
+    "rule_number": 128,
+    "rule_name": "MAIL_MESSAGE_GUID_MATCH_DPM_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_Message",
+    "spec_excerpt": "\"Mail_GUID ... SHALL match a Mail_GUID in the DPM and XMP Metadata (if present).\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_MESSAGE_ROLEMAP_DOCUMENT": {
+    "rule_number": 129,
+    "rule_name": "MAIL_MESSAGE_ROLEMAP_DOCUMENT",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_Message",
+    "spec_excerpt": "“Mail_Message ... SHALL be role mapped to Document.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_Message role map: {actual}. Expected Document.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTGROUP_ROLEMAP_PART": {
+    "rule_number": 130,
+    "rule_name": "MAIL_CONTENTGROUP_ROLEMAP_PART",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_ContentGroup",
+    "spec_excerpt": "“Mail_ContentGroup ... SHALL be role mapped to Part.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_ContentGroup role map: {actual}. Expected Part.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE": {
+    "rule_number": 131,
+    "rule_name": "MAIL_CONTENTSET_NESTED_UNDER_MESSAGE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_ContentSet",
+    "spec_excerpt": "\"Mail_ContentSet ... SHALL always be nested below Mail_Message.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_ContentSet nesting: {actual}. Expected Mail_ContentSet elements only below Mail_Message.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTSET_ROLEMAP_ART": {
+    "rule_number": 132,
+    "rule_name": "MAIL_CONTENTSET_ROLEMAP_ART",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_ContentSet",
+    "spec_excerpt": "“Mail_ContentSet ... SHALL be role mapped to Art.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_ContentSet role map: {actual}. Expected Art.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELD_ROLEMAP_APPROPRIATE": {
+    "rule_number": 133,
+    "rule_name": "MAIL_FIELD_ROLEMAP_APPROPRIATE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_Field",
+    "spec_excerpt": "“Mail_Field ... SHALL be role mapped appropriately.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_Field role map: {actual}. Expected an appropriate PDF 1.7 structure element per Table 10 / writer choice.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELDNAME_ROLEMAP_APPROPRIATE": {
+    "rule_number": 134,
+    "rule_name": "MAIL_FIELDNAME_ROLEMAP_APPROPRIATE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_FieldName",
+    "spec_excerpt": "“Mail_FieldName ... SHALL be role mapped appropriately.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_FieldName role map: {actual}. Expected an appropriate PDF 1.7 structure element per Table 10 / writer choice.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_FIELDVALUE_ROLEMAP_APPROPRIATE": {
+    "rule_number": 135,
+    "rule_name": "MAIL_FIELDVALUE_ROLEMAP_APPROPRIATE",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_FieldValue",
+    "spec_excerpt": "“Mail_FieldValue ... SHALL be role mapped appropriately.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed Mail_FieldValue role map: {actual}. Expected an appropriate PDF 1.7 structure element per Table 10 / writer choice.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTGROUP_CONTENTSETTYPE_ATTRIBUTE_RECOMMENDED": {
+    "rule_number": 136,
+    "rule_name": "MAIL_CONTENTGROUP_CONTENTSETTYPE_ATTRIBUTE_RECOMMENDED",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_ContentGroup",
+    "spec_excerpt": "\"Mail_ContentGroup ... SHOULD have an attribute Mail_ContentSetType.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT": {
+    "rule_number": 137,
+    "rule_name": "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_ContentGroup",
+    "spec_excerpt": "\"Mail_ContentSetType ... SHALL match the DPM and XMP Metadata if present.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTSET_SUBTYPE_ATTRIBUTE_RECOMMENDED": {
+    "rule_number": 138,
+    "rule_name": "MAIL_CONTENTSET_SUBTYPE_ATTRIBUTE_RECOMMENDED",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_ContentSet",
+    "spec_excerpt": "\"Mail_ContentSet ... SHOULD have an attribute Mail_Subtype.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT": {
+    "rule_number": 139,
+    "rule_name": "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.7, p. 79, Table 13 row for Mail_ContentSet",
+    "spec_excerpt": "\"Mail_Subtype ... SHALL match the DPM if present.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_TITLE": {
+    "rule_number": 140,
+    "rule_name": "XMP_TITLE",
+    "spec_section": "EA-PDF 1.0 section 9.8, p. 81 and p. 91, Title/viewer-title guidance",
+    "spec_excerpt": "\"The dc:title[\"x-default\"] property SHOULD also be set.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_PRESENT": {
+    "rule_number": 141,
+    "rule_name": "XMP_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.8, p. 84, paragraph before section 9.8.1",
+    "spec_excerpt": "“Like all PDF ISO subsets, EA-PDF files SHALL presumptively declare their full conformance using the document catalog XMP Metadata stream.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_NS_PREFIX": {
+    "rule_number": 142,
+    "rule_name": "XMP_NS_PREFIX",
+    "spec_section": "EA-PDF 1.0 section 9.8, p. 84, Table 14",
+    "spec_excerpt": "“All EA-PDF files SHALL contain a Document Catalog Metadata XMP stream including the following namespaces and required prefixes ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed namespace binding: {actual}. Expected prefix: {expected} for {required_uri}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_CREATOR": {
+    "rule_number": 143,
+    "rule_name": "XMP_CREATOR",
+    "spec_section": "EA-PDF 1.0 section 9.8, p. 84, paragraph before section 9.8.1",
+    "spec_excerpt": "“EA-PDF Creation Software SHALL also record the dc:creator[0] ... in the standard XMP metadata fields as defined in [PDF/A-3], Table 7.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_PRODUCER": {
+    "rule_number": 144,
+    "rule_name": "XMP_PRODUCER",
+    "spec_section": "EA-PDF 1.0 section 9.8, p. 84, paragraph before section 9.8.1",
+    "spec_excerpt": "“EA-PDF Creation Software SHALL also record ... pdf:Producer ... in the standard XMP metadata fields as defined in [PDF/A-3], Table 7.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_CREATEDATE": {
+    "rule_number": 145,
+    "rule_name": "XMP_CREATEDATE",
+    "spec_section": "EA-PDF 1.0 section 9.8, p. 84, paragraph before section 9.8.1",
+    "spec_excerpt": "“EA-PDF Creation Software SHALL also record ... the date of the EA-PDF file creation date (xmp:CreateDate) in the standard XMP metadata fields as defined in [PDF/A-3], Table 7.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_MISSING": {
+    "rule_number": 146,
+    "rule_name": "XMP_MISSING",
+    "spec_section": "EA-PDF 1.0 section 9.8",
+    "spec_excerpt": "Every EA-PDF file SHALL include XMP metadata.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_PARSE": {
+    "rule_number": 147,
+    "rule_name": "XMP_PARSE",
+    "spec_section": "EA-PDF 1.0 section 9.8",
+    "spec_excerpt": "XMP metadata SHALL be well-formed and parseable.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PDFA_XMP_UNCHECKED": {
+    "rule_number": 148,
+    "rule_name": "PDFA_XMP_UNCHECKED",
+    "spec_section": "EA-PDF 1.0 section 9.8",
+    "spec_excerpt": "PDF/A identification checks depend on readable XMP metadata.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EAPDF_XMP_UNCHECKED": {
+    "rule_number": 149,
+    "rule_name": "EAPDF_XMP_UNCHECKED",
+    "spec_section": "EA-PDF 1.0 section 9.8",
+    "spec_excerpt": "EA-PDF identification checks depend on readable XMP metadata.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_CREATOR_SEMANTICS": {
+    "rule_number": 150,
+    "rule_name": "XMP_CREATOR_SEMANTICS",
+    "spec_section": "EA-PDF 1.0 section 9.8",
+    "spec_excerpt": "The EA-PDF dc:creator[0] value SHALL identify the software that created the EA-PDF file.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_PRODUCER_SEMANTICS": {
+    "rule_number": 151,
+    "rule_name": "XMP_PRODUCER_SEMANTICS",
+    "spec_section": "EA-PDF 1.0 section 9.8",
+    "spec_excerpt": "The pdf:Producer value SHALL identify the software that produced the EA-PDF file.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_CREATEDATE_SEMANTICS": {
+    "rule_number": 152,
+    "rule_name": "XMP_CREATEDATE_SEMANTICS",
+    "spec_section": "EA-PDF 1.0 section 9.8",
+    "spec_excerpt": "The xmp:CreateDate value SHALL represent the EA-PDF file creation date, not unrelated source dates.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EAPDF_VERSION": {
+    "rule_number": 153,
+    "rule_name": "EAPDF_VERSION",
+    "spec_section": "EA-PDF 1.0 section 9.8.1, p. 84, Table 15",
+    "spec_excerpt": "“pdfmailid:version ... 1 ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EAPDF_REV": {
+    "rule_number": 154,
+    "rule_name": "EAPDF_REV",
+    "spec_section": "EA-PDF 1.0 section 9.8.1, p. 84, Table 15",
+    "spec_excerpt": "“pdfmailid:rev ... 2024 (representing a year) ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EAPDF_CONFORMANCE_VALUE": {
+    "rule_number": 155,
+    "rule_name": "EAPDF_CONFORMANCE_VALUE",
+    "spec_section": "EA-PDF 1.0 section 9.8.1, p. 84, Table 15",
+    "spec_excerpt": "\"pdfmailid:conformance ... ‘s’, ‘si’, ‘m’, ‘mi’, ‘c’ or ‘ci’.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "EAPDF_CONFORMANCE_I_LAST": {
+    "rule_number": 156,
+    "rule_name": "EAPDF_CONFORMANCE_I_LAST",
+    "spec_section": "EA-PDF 1.0 section 9.8.1, p. 84, Table 15",
+    "spec_excerpt": "\"The “i” designator SHALL always be last if present.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PDFA3_EAPDF_XMP_EXTENSION_SCHEMA": {
+    "rule_number": 157,
+    "rule_name": "PDFA3_EAPDF_XMP_EXTENSION_SCHEMA",
+    "spec_section": "EA-PDF 1.0 section 9.8.1, p. 84, sentence after Table 15",
+    "spec_excerpt": "\"If the EA-PDF conforms to PDF/A-3, an XMP extension schema for EA-PDF must also be included.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected the EA-PDF XMP extension schema when the file conforms to PDF/A-3.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "SOURCE_WITHOUT_XMP": {
+    "rule_number": 158,
+    "rule_name": "SOURCE_WITHOUT_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, pp. 85–86, introductory paragraphs and Table 16",
+    "spec_excerpt": "“The following structured metadata ... SHALL be included as an unordered set of one or more source email asset container descriptions ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "SOURCE_MIME_NONE": {
+    "rule_number": 159,
+    "rule_name": "SOURCE_MIME_NONE",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, p. 85, introductory paragraph",
+    "spec_excerpt": "“For non-isolated EA-PDF files that include any source email assets ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "SOURCE_MIME_TYPE": {
+    "rule_number": 160,
+    "rule_name": "SOURCE_MIME_TYPE",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, p. 85, Table 16 row “ContentType”; see also p. 86 Table 17",
+    "spec_excerpt": "“ContentType Required Free text string representing the IANA Media Type (including any required parameters) of this email asset. Refer to Table 17: Common source email asset IANA Media Types below for commonly used source email asset Media Types.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_XMP": {
+    "rule_number": 161,
+    "rule_name": "ASSET_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, p. 85, introductory paragraphs and Table 16",
+    "spec_excerpt": "“The following structured metadata in the document-level XMP Metadata stream using the namespace http://www.pdfa.org/eapdf/ns/meta/ SHALL be included as an unordered set of one or more source email asset container descriptions using pdfmailmeta:assets ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_XMP_FIELDS": {
+    "rule_number": 162,
+    "rule_name": "ASSET_XMP_FIELDS",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, p. 85, introductory paragraphs and Table 16",
+    "spec_excerpt": "“The following structured metadata ... SHALL be included as an unordered set of one or more source email asset container descriptions ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_SIZE_TYPE": {
+    "rule_number": 163,
+    "rule_name": "ASSET_SIZE_TYPE",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, p. 85, Table 16 row “SizeInBytes”",
+    "spec_excerpt": "“SizeInBytes Required A non-negative integer that is the size (in bytes) of this source email asset.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_NUMBERMESSAGES_TYPE": {
+    "rule_number": 164,
+    "rule_name": "ASSET_NUMBERMESSAGES_TYPE",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, p. 85, Table 16 row “NumberMessages”",
+    "spec_excerpt": "“NumberMessages Optional A non-negative integer representing the number of individual email messages in this source email asset that have been successfully rendered into this EA-PDF file.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "ASSET_CHECKSUM_FORM": {
+    "rule_number": 165,
+    "rule_name": "ASSET_CHECKSUM_FORM",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, p. 85, Table 16 row “Checksum”",
+    "spec_excerpt": "“Checksum Required The MD5 checksum of the original email asset, stored as a 32 character long hexadecimal ASCII string (upper and lowecase alphanumerics).”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_CONTENTTYPE": {
+    "rule_number": 166,
+    "rule_name": "ASSET_CONTENTTYPE",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, p. 85, Table 16 row “ContentType”; see also p. 86 Table 17",
+    "spec_excerpt": "“ContentType Required Free text string representing the IANA Media Type (including any required parameters) of this email asset.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_MATCH": {
+    "rule_number": 167,
+    "rule_name": "ASSET_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, pp. 85–86, introductory paragraphs and Table 16",
+    "spec_excerpt": "“The following structured metadata ... SHALL be included as an unordered set of one or more source email asset container descriptions ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_MD5_MATCH": {
+    "rule_number": 168,
+    "rule_name": "ASSET_MD5_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, pp. 85–86, introductory paragraphs and Table 16",
+    "spec_excerpt": "“Checksum Required The MD5 checksum of the original email asset ...”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "The XMP source-asset checksum \"{xmp_checksum}\" does not match the embedded Source file checksum \"{embedded_md5}\".",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_SIZE_MATCH": {
+    "rule_number": 169,
+    "rule_name": "ASSET_SIZE_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, pp. 85–86, introductory paragraphs and Table 16",
+    "spec_excerpt": "“SizeInBytes Required A non-negative integer that is the size (in bytes) of this source email asset.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_CONTENTTYPE_MATCH": {
+    "rule_number": 170,
+    "rule_name": "ASSET_CONTENTTYPE_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, pp. 85–86, introductory paragraphs and Table 16",
+    "spec_excerpt": "“ContentType Required Free text string representing the IANA Media Type (including any required parameters) of this email asset.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_XMP_SKIPPED": {
+    "rule_number": 171,
+    "rule_name": "ASSET_XMP_SKIPPED",
+    "spec_section": "EA-PDF 1.0 section 9.8.2",
+    "spec_excerpt": "Asset metadata checks depend on readable XMP metadata.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ASSET_CONTENTTYPE_GENERIC": {
+    "rule_number": 172,
+    "rule_name": "ASSET_CONTENTTYPE_GENERIC",
+    "spec_section": "EA-PDF 1.0 section 9.8.2",
+    "spec_excerpt": "Generic fallback media types are discouraged in asset XMP ContentType values.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "SOURCE_MIME_GENERIC": {
+    "rule_number": 173,
+    "rule_name": "SOURCE_MIME_GENERIC",
+    "spec_section": "EA-PDF 1.0 section 9.8.2, p. 86, Table 17 note",
+    "spec_excerpt": "\"Nonspecific generic Media Types such as application/octet-stream, application/zip, or text/plain SHOULD NOT be used.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_TO_XMP": {
+    "rule_number": 174,
+    "rule_name": "MESSAGE_TO_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 86, Table 18 row “To”",
+    "spec_excerpt": "\"To Optional Represented as an ordered sequence of FOAF Agents containers (foaf:Agent entries).\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MESSAGE_TO_FOAF": {
+    "rule_number": 175,
+    "rule_name": "MESSAGE_TO_FOAF",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 86, Table 18 row “To”",
+    "spec_excerpt": "\"Each To foaf:Agent entry has required foaf:mbox email address and optional foaf:name or other FOAF Agent fields.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_RAW_TO_XMP": {
+    "rule_number": 176,
+    "rule_name": "MESSAGE_RAW_TO_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 86, Table 18 row “Raw-To”",
+    "spec_excerpt": "“Raw-To Optional Free text string, directly reflecting the email header To: field value.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_METADATA_SKIPPED": {
+    "rule_number": 177,
+    "rule_name": "MESSAGE_METADATA_SKIPPED",
+    "spec_section": "EA-PDF 1.0 section 9.8.3",
+    "spec_excerpt": "Message-level metadata checks depend on readable XMP metadata and inspectable source messages.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_FROM_XMP": {
+    "rule_number": 178,
+    "rule_name": "MESSAGE_FROM_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 87, Table 18 row “From”",
+    "spec_excerpt": "\"From Optional Represented as an ordered sequence of FOAF Agents containers (foaf:Agent entries).\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MESSAGE_FROM_FOAF": {
+    "rule_number": 179,
+    "rule_name": "MESSAGE_FROM_FOAF",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 87, Table 18 row “From”",
+    "spec_excerpt": "\"Each From foaf:Agent entry has required foaf:mbox email address and optional foaf:name or other FOAF Agent fields.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_RAW_FROM_XMP": {
+    "rule_number": 180,
+    "rule_name": "MESSAGE_RAW_FROM_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 87, Table 18 row “Raw-From”",
+    "spec_excerpt": "“Raw-From Optional Free text string, directly reflecting the email header From: field value.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_SENT_XMP": {
+    "rule_number": 181,
+    "rule_name": "MESSAGE_SENT_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 87, Table 18 row “Sent”",
+    "spec_excerpt": "“Sent Optional XMP dateTime of when the email was sent.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MESSAGE_SENT_FORMAT": {
+    "rule_number": 182,
+    "rule_name": "MESSAGE_SENT_FORMAT",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 87, Table 18 row “Sent”",
+    "spec_excerpt": "“Sent Optional XMP dateTime of when the email was sent.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MESSAGE_SUBJECT_XMP": {
+    "rule_number": 183,
+    "rule_name": "MESSAGE_SUBJECT_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 87, Table 18 row “Subject”",
+    "spec_excerpt": "“Subject Optional Free text string.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MESSAGE_SIZE_XMP": {
+    "rule_number": 184,
+    "rule_name": "MESSAGE_SIZE_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “SizeInBytes”",
+    "spec_excerpt": "“SizeInBytes Optional A non-negative integer representing the size in bytes of the original email message.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MESSAGE_ATTACHMENT_COUNT_XMP": {
+    "rule_number": 185,
+    "rule_name": "MESSAGE_ATTACHMENT_COUNT_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “NumberAttachments”",
+    "spec_excerpt": "“NumberAttachments Optional A non-negative integer representing the number of attachments in the original email message.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MESSAGE_CC_XMP": {
+    "rule_number": 186,
+    "rule_name": "MESSAGE_CC_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “Cc”",
+    "spec_excerpt": "\"Cc Optional Represented as an ordered sequence of FOAF Agent containers (foaf:Agent entries).\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MESSAGE_CC_FOAF": {
+    "rule_number": 187,
+    "rule_name": "MESSAGE_CC_FOAF",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “Cc”",
+    "spec_excerpt": "\"Each Cc foaf:Agent entry has required foaf:mbox email address and optional foaf:name or other FOAF Agent fields.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_RAW_CC_XMP": {
+    "rule_number": 188,
+    "rule_name": "MESSAGE_RAW_CC_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “Raw-Cc”",
+    "spec_excerpt": "“Raw-Cc Optional Free text string, directly reflecting the email header Cc: field value.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_BCC_XMP": {
+    "rule_number": 189,
+    "rule_name": "MESSAGE_BCC_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “Bcc”",
+    "spec_excerpt": "\"Bcc Optional Represented as an ordered sequence of FOAF Agent containers (foaf:Agent entries).\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MESSAGE_BCC_FOAF": {
+    "rule_number": 190,
+    "rule_name": "MESSAGE_BCC_FOAF",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “Bcc”",
+    "spec_excerpt": "\"Each Bcc foaf:Agent entry has required foaf:mbox email address and optional foaf:name or other FOAF Agent fields.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_RAW_BCC_XMP": {
+    "rule_number": 191,
+    "rule_name": "MESSAGE_RAW_BCC_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “Raw-Bcc”",
+    "spec_excerpt": "“Raw-Bcc Optional Free text string, directly reflecting the email header Bcc: field value.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_INREPLYTO_XMP": {
+    "rule_number": 192,
+    "rule_name": "MESSAGE_INREPLYTO_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “In-Reply-To”",
+    "spec_excerpt": "“In-Reply-To Optional Free text string.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID": {
+    "rule_number": 193,
+    "rule_name": "MESSAGE_RAW_SENT_REQUIRED_IF_INVALID",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “Raw-Sent”",
+    "spec_excerpt": "\"Required when the email header Sent: field value has an error that would result in an invalid XMP dateTime.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_RAW_SENT_OMIT_IF_VALID": {
+    "rule_number": 194,
+    "rule_name": "MESSAGE_RAW_SENT_OMIT_IF_VALID",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, p. 88, Table 18 row “Raw-Sent”",
+    "spec_excerpt": "\"Otherwise SHOULD not be present.\"",
+    "plain_language_template": {
+      "PASS": "Recommendation satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Recommendation: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ATTACHMENT_XMP": {
+    "rule_number": 195,
+    "rule_name": "ATTACHMENT_XMP",
+    "spec_section": "EA-PDF 1.0 section 9.8.4, p. 89, opening paragraph",
+    "spec_excerpt": "\"Additional metadata about all email attachments in the original source email assets SHOULD be recorded in the document-level ... XMP metadata.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ATTACHMENT_XMP_FILENAME": {
+    "rule_number": 196,
+    "rule_name": "ATTACHMENT_XMP_FILENAME",
+    "spec_section": "EA-PDF 1.0 section 9.8.4, p. 89, Table 19 row \"Filename\"",
+    "spec_excerpt": "\"Filename Required UTF-8 text string reflecting the filename of this email attachment.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ATTACHMENT_XMP_SIZE_PRESENT": {
+    "rule_number": 197,
+    "rule_name": "ATTACHMENT_XMP_SIZE_PRESENT",
+    "spec_section": "EA-PDF 1.0 section 9.8.4, p. 89, Table 19 row \"SizeInBytes\"",
+    "spec_excerpt": "\"SizeInBytes Required A non-negative integer, reflecting the size (in bytes) of this email attachment as stored in the EA-PDF as an embedded file stream.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ATTACHMENT_XMP_SIZE_TYPE": {
+    "rule_number": 198,
+    "rule_name": "ATTACHMENT_XMP_SIZE_TYPE",
+    "spec_section": "EA-PDF 1.0 section 9.8.4, p. 89, Table 19 row “SizeInBytes”",
+    "spec_excerpt": "“SizeInBytes Required A non-negative integer that is the size (in bytes) of this email attachment.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID": {
+    "rule_number": 199,
+    "rule_name": "ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID",
+    "spec_section": "EA-PDF 1.0 section 9.8.4, pp. 89–90, Table 19 rows \"Message-ID\" and \"Mail_GUID\"",
+    "spec_excerpt": "\"Mail_GUID Required if Message-ID is not present Text string reflecting the generated GUID of the email containing this email attachment.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ATTACHMENT_XMP_MATCH": {
+    "rule_number": 200,
+    "rule_name": "ATTACHMENT_XMP_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.8.4",
+    "spec_excerpt": "Each attachment XMP description SHALL match a real attachment found in the embedded source email set.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Values {actual} could not be matched cleanly to an embedded source email attachment.",
+      "FAIL": "Values {actual} missing or incorrect.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ATTACHMENT_XMP_CONTENTTYPE": {
+    "rule_number": 201,
+    "rule_name": "ATTACHMENT_XMP_CONTENTTYPE",
+    "spec_section": "EA-PDF 1.0 section 9.8.4, p. 90, Table 19 row \"Content-Type\"",
+    "spec_excerpt": "\"Content-Type Required Free text string representing the IANA Media Type (including any required parameters) of this email attachment.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ATTACHMENT_XMP_CONTENTTYPE_MATCH": {
+    "rule_number": 202,
+    "rule_name": "ATTACHMENT_XMP_CONTENTTYPE_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.8.4, p. 90, Table 19 row “Content-Type”",
+    "spec_excerpt": "“Content-Type Required Free text string representing the IANA Media Type (including any required parameters) of this email attachment.”",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "ATTACHMENT_XMP_CHECKSUM_FORM": {
+    "rule_number": 203,
+    "rule_name": "ATTACHMENT_XMP_CHECKSUM_FORM",
+    "spec_section": "EA-PDF 1.0 section 9.8.4, p. 90, Table 19 row “CheckSum”",
+    "spec_excerpt": "\"CheckSum Optional A 32 character ASCII text string, representing the MD5 checksum (as hexadecimal, upper or lower case alphanumerics) of this email attachment when processed as its raw binary data.\"",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "N/A": "Not applied because {explanation}.",
+      "WARN": "Observed {field} value(s): {actual}. Expected: {expected}."
+    }
+  },
+  "OPEN": {
+    "rule_number": 204,
+    "rule_name": "OPEN",
+    "spec_section": "Implementation support checks",
+    "spec_excerpt": "This is a validator diagnostic, not an EA-PDF specification requirement. The file must be readable before spec-based validation can proceed.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "The validator could not open the file, so spec-based validation could not proceed.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "SOURCE_IN_ISOLATED": {
+    "rule_number": 205,
+    "rule_name": "SOURCE_IN_ISOLATED",
+    "spec_section": "EA-PDF 1.0 sections 9.1 and 9.4",
+    "spec_excerpt": "Isolated profiles SHALL NOT include Source associated files.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "FAIL": "Observed {field} value(s): {actual}. Expected: {expected}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "PROFILE_RULES_SKIPPED": {
+    "rule_number": 206,
+    "rule_name": "PROFILE_RULES_SKIPPED",
+    "spec_section": "Implementation support checks",
+    "spec_excerpt": "Profile-specific EA-PDF checks depend on a valid XMP pdfmailid:conformance declaration.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied.",
+      "WARN": "Some profile-specific checks could not be run cleanly from the PDF structures that were available.",
+      "FAIL": "The validator could not run the required profile-specific checks from the PDF structures that were available.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "MESSAGE_SOURCE_MATCH": {
+    "rule_number": 207,
+    "rule_name": "MESSAGE_SOURCE_MATCH",
+    "spec_section": "EA-PDF 1.0 section 9.8.3, Table 18",
+    "spec_excerpt": "Each email's metadata describes that email, not another message in the archive.",
+    "plain_language_template": {
+      "PASS": "The email metadata is matched to its source email.",
+      "WARN": "The source email cannot be identified reliably, so source comparisons are incomplete.",
+      "FAIL": "The matched email metadata does not agree with its source.",
+      "N/A": "No inspectable source comparison applies."
+    }
+  },
+  "STRUCTURE_CORRESPONDENCE": {
+    "rule_number": 208,
+    "rule_name": "STRUCTURE_CORRESPONDENCE",
+    "spec_section": "EA-PDF 1.0 section 9.7; ISO 32000-2 logical structure",
+    "spec_excerpt": "Page markings, structure content references, and parent lookup entries must consistently identify the same content and owner.",
+    "plain_language_template": {
+      "PASS": "Content markings and their structure owners agree in both directions.",
+      "FAIL": "A content marking or structure lookup is missing, duplicated, or linked to the wrong object.",
+      "N/A": "The document has no structure connections to check."
+    }
+  },
+  "COLLECTION_CHILD_VALIDATION": {
+    "rule_number": 209,
+    "rule_name": "COLLECTION_CHILD_VALIDATION",
+    "spec_section": "EA-PDF 1.0 collection profiles",
+    "spec_excerpt": "Contained email PDFs require independent PDF/A and EA-PDF validation.",
+    "plain_language_template": {
+      "PASS": "The contained email PDF passes both validation stages.",
+      "WARN": "The contained email PDF could not be fully checked.",
+      "FAIL": "The contained email PDF fails validation; see its findings.",
+      "N/A": "The document is not a collection."
+    }
+  },
+  "VALIDATION_INCOMPLETE": {
+    "rule_number": 210,
+    "rule_name": "VALIDATION_INCOMPLETE",
+    "spec_section": "Validator scope and evidence limits",
+    "spec_excerpt": "An applicable check without sufficient evidence does not establish conformance.",
+    "plain_language_template": {
+      "PASS": "All applicable checks completed.",
+      "WARN": "Some applicable checks remain incomplete; this result is not a full pass.",
+      "FAIL": "Validation could not be completed.",
+      "N/A": "No additional coverage limit was found."
+    }
+  },
+  "EMBEDDED_MD5_BINARY_FORMAT": {
+    "rule_number": 215,
+    "rule_name": "EMBEDDED_MD5_BINARY_FORMAT",
+    "spec_section": "EA-PDF 1.0 section 9.4; ISO 32000-2 Table 45",
+    "spec_excerpt": "An embedded-file CheckSum parameter, when present, is a 16-byte PDF string. XMP uses 32 hexadecimal characters.",
+    "plain_language_template": {
+      "PASS": "The embedded-file checksum has the correct binary representation.",
+      "FAIL": "The embedded-file checksum is not a 16-byte PDF string.",
+      "N/A": "No embedded-file checksum parameter was available to check."
+    }
+  },
+  "DPM_BODY_MEDIA_TYPE_MATCH_SOURCE": {
+    "rule_number": 216,
+    "rule_name": "DPM_BODY_MEDIA_TYPE_MATCH_SOURCE",
+    "spec_section": "EA-PDF 1.0 section 9.6, Table 8",
+    "spec_excerpt": "BodyRendering Mail_Subtype identifies the source body representation where it can be determined.",
+    "plain_language_template": {
+      "PASS": "The declared body media type is supported by its source email.",
+      "FAIL": "The declared body media type contradicts its source email.",
+      "WARN": "The available source evidence does not permit an unambiguous comparison.",
+      "N/A": "No inspectable source body was available."
+    }
+  },
+  "SOURCE_FILE_SET": {
+    "rule_number": 217,
+    "rule_name": "SOURCE_FILE_SET",
+    "spec_section": "EA-PDF 1.0 sections 9.1 and 9.4; ISO 32000-2 Table 43 / section 7.11.4.2",
+    "spec_excerpt": "A source email asset that requires a set of files must preserve required companions through the primary Source file specification RF dictionary or catalog Associated Files with AFRelationship Supplement. Independent Source assets do not imply a file set.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied; see the observed objects and metadata.",
+      "FAIL": "A source email asset that requires a set of files must preserve required companions through the primary Source file specification RF dictionary or catalog Associated Files with AFRelationship Supplement. Independent Source assets do not imply a file set. Observed: {actual}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "COLLECTION_CONTENT_TYPES": {
+    "rule_number": 218,
+    "rule_name": "COLLECTION_CONTENT_TYPES",
+    "spec_section": "EA-PDF 1.0 section 7.6",
+    "spec_excerpt": "Besides original raw source email assets, all contained embedded files in PDF/mail-1{c, ci} must be other EA-PDF files. Ordinary non-EA-PDF finding aids, spreadsheets and preservation XML are not exceptions. Use external sidecars for ordinary auxiliary files.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied; see the observed objects and metadata.",
+      "FAIL": "Besides original raw source email assets, all contained embedded files in PDF/mail-1{c, ci} must be other EA-PDF files. Ordinary non-EA-PDF finding aids, spreadsheets and preservation XML are not exceptions. Use external sidecars for ordinary auxiliary files. Observed: {actual}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  },
+  "XMP_UTF8": {
+    "rule_number": 219,
+    "rule_name": "XMP_UTF8",
+    "spec_section": "EA-PDF 1.0 section 7.1.1",
+    "spec_excerpt": "All XMP metadata stored in EA-PDF files must be encoded as UTF-8. This includes PDF/A-3-based EA-PDF and object-level metadata streams.",
+    "plain_language_template": {
+      "PASS": "Requirement satisfied; see the observed objects and metadata.",
+      "FAIL": "All XMP metadata stored in EA-PDF files must be encoded as UTF-8. This includes PDF/A-3-based EA-PDF and object-level metadata streams. Observed: {actual}.",
+      "N/A": "Not applied because {explanation}."
+    }
+  }
+}

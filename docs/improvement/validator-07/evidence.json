@@ -1,0 +1,37 @@
+{
+  "batch": "V07",
+  "scope": "canonical PDF Declarations namespace and schema",
+  "historical_full_run": {
+    "status": "incomplete",
+    "log": "docs/improvement/validator-07/interrupted-full-tests.log"
+  },
+  "retained_evidence": [
+    "before-tests.log",
+    "java-before.log",
+    "focused-tests.log",
+    "maven-package.log",
+    "sample-regeneration.log",
+    "active-fixtures-before.zip",
+    "samples-before.zip"
+  ],
+  "cumulative_acceptance": {
+    "evidence": "../validator-11/evidence.json",
+    "result": {
+      "status": "PASS",
+      "run": 376,
+      "passed": 375,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 1,
+      "seconds": 1401.576,
+      "log": "docs/improvement/validator-11/full-tests.log"
+    }
+  },
+  "boundary": "Cumulative V11 uses the corrected complete creator JAR; earlier runs keep their own source/artifact boundaries.",
+  "limitations": [
+    "Mapping is not implementation completeness or conformance certification.",
+    "Eleven expert/dependency questions and mixed-rule/ownership review remain open.",
+    "Optional official PREMIS schema is unavailable.",
+    "Earlier incomplete and failed logs remain historical evidence."
+  ]
+}

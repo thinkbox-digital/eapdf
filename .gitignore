@@ -1,0 +1,104 @@
+target/
+out/
+archive/
+out_pdfs/
+out_pdf/
+validation/
+debug_out/
+downloaded_attachments/
+downloaded_eml/
+dist/
+__pycache__/
+.generator_web_tmp/
+.validator_web_tmp/
+.tmp_archive_inputs/
+.run_classpath
+.mvn_classpath
+.vscode/
+*.log
+
+# Local secrets / auth state
+config/credentials.json
+config/credentials.local.json
+scripts/x_state.json
+scripts/facebook_state.json
+in/twitter/x_state.json
+in/facebook/scrape/facebook_state.json
+
+# OS/editor noise
+.DS_Store
+.~lock.*#
+~$*
+
+# Generated review output and local development state
+output/
+.idea/
+*.iml
+.aiignore
+OUTSTANDINGISSUES.jpg
+working.txt
+in/email/test3_old.eml
+*.py[cod]
+.pytest_cache/
+
+# Historical full reports/binary snapshots are kept in the local archive.
+docs/improvement/**/*.html
+docs/improvement/**/*.zip
+docs/improvement/**/*.log
+docs/improvement/**/*.stderr
+scripts/facebook_debug/
+
+# Keep bulky historical working evidence local; publish compact review receipts.
+/docs/improvement/**
+!/docs/improvement/**/
+!/docs/improvement/**/*.md
+!/docs/improvement/**/*.py
+!/docs/improvement/**/*.java
+!/docs/improvement/**/*.patch
+!/docs/improvement/**/evidence.json
+!/docs/improvement/**/results.json
+!/docs/improvement/**/result.json
+!/docs/improvement/**/summary.json
+!/docs/improvement/*.json
+!/docs/improvement/release-1.6.0-beta.1/verification.json
+!/docs/improvement/real-world-corpus-2026-10-27.txt
+!/docs/improvement/real-world-corpus-evidence-2026-10-27/*.json
+!/docs/improvement/specification-audit/*.json
+!/docs/improvement/specification-audit/*.txt
+!/docs/improvement/validator-85/*.json
+!/docs/improvement/creator-poc-day5/c1[23]?/*.json
+!/docs/improvement/coverage-exit-review/*.json
+!/docs/improvement/upstream-profile-execution/**/*.json
+/docs/improvement/**/integration-reports/
+
+# New local email corpora stay private; existing tracked fixtures remain tracked.
+/in/*
+!/in/enron-sample.mbox
+!/in/quality-attached-message.pst
+
+# Adapted veraPDF implementation and its regression tests are source, not reports.
+!/validator-desktop/src/main/java/org/verapdf/pdfa/validation/
+!/validator-desktop/src/main/java/org/verapdf/pdfa/validation/**
+!/validator-desktop/src/test/java/org/verapdf/pdfa/validation/
+!/validator-desktop/src/test/java/org/verapdf/pdfa/validation/**
+
+!/docs/improvement/creation-validation-review-2026-10-28.txt
+
+# Local comparison documents; do not publish to GitHub.
+/compare/
+
+# Private authentication files, including legacy root locations.
+/credentials.json
+/credentials.local.json
+/get_gmail_token.sh
+/token.json
+/tokens/
+.env
+.env.*
+!.env.example
+
+# Obtain licensed standards separately; keep local research copies private.
+/docs/reference/ISO*.pdf
+
+# Superseded local rule-drafting document, not part of the public distribution.
+/docs/reference/Validation requirements.docx

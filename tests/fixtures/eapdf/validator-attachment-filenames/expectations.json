@@ -1,0 +1,195 @@
+{
+  "authority": [
+    "EA-PDF 9.8.4 Table 19 Filename/SizeInBytes/CheckSum",
+    "EA-PDF 9.3 visible native attachment annotations"
+  ],
+  "sources": {
+    "_source.pdf": "2b81ad176c8a05501eb58c883fcb73c899f73ab26bff7dbd22bb8b9c3343d03d",
+    "_placeholder-source.pdf": "4b012f98a93163dc1c89d4f3b1b5c98b903d9a9e8c92102f9b007371a3581315"
+  },
+  "cases": [
+    {
+      "file": "valid.pdf",
+      "sha256": "6252e575707f1fd72efd5433592f085ef02647235e4dff5d545418b6bdc3db1b",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "stored-name-differs.pdf",
+      "sha256": "2c48711c3480b5ec6268ed3bca2d09ba4179c0c3ca45e9cff0c6352f18c33891",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "stored-name-no-checksum.pdf",
+      "sha256": "25bb78cb94477031d0bd5ee1fc423683fe816398ec68c2bcb0dd0a0116285c2a",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "source-absent-original-no-checksum.pdf",
+      "sha256": "ec661deee463376d0d34e94651c89c504a0c06f016e72e019f2d5c4dc3b6dd0d",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "source-absent-alias-checksum.pdf",
+      "sha256": "722b7642377e041510e156f5dbb7547c72ab94c88b7a8fc8468278ec5a03afb1",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "source-absent-alias-no-checksum.pdf",
+      "sha256": "4a9040098b3b48397f3fd5546ec14bee8fc411b983638f3ddded47d1b301e254",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [
+        "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "VALIDATION_INCOMPLETE"
+      ],
+      "expected_parameter_level": "WARN",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "placeholder-alias-no-checksum.pdf",
+      "sha256": "bdee5a5b2976679643df670041672b29842ccc59cf9b22639b0ffb7f4309775f",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "large-size-mismatch.pdf",
+      "sha256": "ab35dd607e03f76579bbdc91f425a71abc64fecad1a0c62c47a5f0c22e26e25f",
+      "expected_failures": [
+        "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "ATTACHMENT_XMP_SIZE_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_ANNOTATIONS_PRESENT",
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ]
+        },
+        "reason": "Declared SizeInBytes is compared with the associated stored native stream, independently of original byte preservation.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "long-zero-size.pdf",
+      "sha256": "f77bd59ba27f0ce298ccb150dd4192f657bb46e140024e473ecced9b04bb1f13",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json"
+    },
+    {
+      "file": "renamed-wrong-checksum.pdf",
+      "sha256": "c6c8236c626b4d7dd8219067a7f1950e12193a51f0c72f9c42106ec59299fd3a",
+      "expected_failures": [
+        "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "expected_parameter_level": "WARN",
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_ANNOTATIONS_PRESENT",
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ]
+        },
+        "reason": "Removed the bundled original-attachment matching failure: a missing original association is unavailable evidence, not proof of a wrong native size/checksum or a mandatory original-byte preservation failure. Independent annotation, schema, and content failures remain.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "renamed-wrong-size.pdf",
+      "sha256": "101cfba7370ff4fdec029ed63cbd9d493956df69a71d27095766c7ec2e87529a",
+      "expected_failures": [
+        "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "ATTACHMENT_XMP_SIZE_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_ANNOTATIONS_PRESENT",
+            "ATTACHMENT_XMP_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH"
+          ]
+        },
+        "reason": "Declared SizeInBytes is compared with the associated stored native stream, independently of original byte preservation.",
+        "retained_pdf_bytes": true
+      }
+    },
+    {
+      "file": "renamed-wrong-type.pdf",
+      "sha256": "019a9280aa854f269e24cc325edc9363b718e6697498b0c711512bc9ff542289",
+      "expected_failures": [
+        "ATTACHMENT_ANNOTATIONS_PRESENT",
+        "ATTACHMENT_XMP_CONTENTTYPE_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH",
+        "EMBEDDED_MEDIA_TYPE_MATCH_XMP"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "top_level_rule_split_2026_10_31": {
+        "previous_expectations": {
+          "expected_status": "FAIL",
+          "expected_failures": [
+            "ATTACHMENT_ANNOTATIONS_PRESENT",
+            "ATTACHMENT_XMP_CONTENTTYPE_MATCH",
+            "CUSTOM_TAG_OPERAND_MATCH",
+            "EMBEDDED_SUBTYPE_MATCH_XMP"
+          ]
+        },
+        "reason": "Complete reconstructed PDF subtype and parameters disagree with equivalent XMP; original-value fidelity is separate.",
+        "retained_pdf_bytes": true
+      }
+    }
+  ],
+  "v23_review": "Declared parameters remain unavailable when existing native files cannot be associated. Overall status/failure codes and PDF bytes are unchanged."
+}

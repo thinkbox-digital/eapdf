@@ -1,0 +1,134 @@
+{
+  "private_evidence": "output/performance-fixes-2026-10-30/candidate-largest-124305",
+  "validator_sha256": "fbd8f93aa88fa80e2d4ced63466c3b897ca2c9db5c4e5bd98a670ab4ed7902a5",
+  "source_sha256": "fa3318a0b45aa16cff2d27e7723000963bfd26594c5c0d6b07b8ecb0c7eaac17",
+  "pdf_sha256": "74b2abbc80c38bea56db19bc476379a7f51a6103e571c1a9e66695eca022272b",
+  "metrics": {
+    "exit_code": 2,
+    "seconds": 5395.272170276,
+    "peak_rss_bytes": 24870387712,
+    "last_stage": "Finished",
+    "interrupted": false,
+    "source_unchanged": true,
+    "pdf_unchanged": true
+  },
+  "heap_mib": 19456,
+  "processor_cap": 4,
+  "rule_level_counts_equal": true,
+  "pdfa_assertions_equal": true,
+  "iso32005_assertions_equal": true,
+  "summary": {
+    "file": "/media/lepore/Work/thinkbox/convert/output/performance-fixes-2026-10-30/combined/pst-large/pdf/pst-large.pdf",
+    "status": "INCOMPLETE",
+    "verification_spec": "1m",
+    "validation_scope": "Automated checks, not independent EA-PDF certification",
+    "pdfa_status": "PASS",
+    "rule_total": 213,
+    "java_port_complete": true,
+    "pass": 9951528,
+    "warn": 52859,
+    "fail": 0,
+    "na": 40
+  },
+  "pdfa": {
+    "file": "/media/lepore/Work/thinkbox/convert/output/performance-fixes-2026-10-30/combined/pst-large/pdf/pst-large.pdf",
+    "tool": "Bundled veraPDF Java library",
+    "status": "PASS",
+    "ran": true,
+    "compliant": true,
+    "profile_allowed": true,
+    "profile_name": "PDF/A-4F validation profile",
+    "flavour": "4f",
+    "message": "PDF/A checks passed.",
+    "job_end_status": "normal",
+    "rule_total": 109,
+    "failed_rules": 0,
+    "checks": 201183288,
+    "findings": []
+  },
+  "iso32005": {
+    "file": "/media/lepore/Work/thinkbox/convert/output/performance-fixes-2026-10-30/combined/pst-large/pdf/pst-large.pdf",
+    "tool": "Bundled veraPDF Java library",
+    "status": "PASS",
+    "ran": true,
+    "compliant": true,
+    "profile_allowed": true,
+    "profile_name": "EA-PDF ISO 32005 upstream rules (veraPDF 1.31.18)",
+    "flavour": "ua2",
+    "message": "PDF/A checks passed.",
+    "job_end_status": "normal",
+    "rule_total": 1636,
+    "failed_rules": 0,
+    "checks": 71118152,
+    "findings": []
+  },
+  "stages": {
+    "startup": {
+      "first_seconds": 0.002,
+      "last_seconds": 0.002,
+      "peak_rss_bytes": 372736
+    },
+    "Checking PDF/A": {
+      "first_seconds": 2.432,
+      "last_seconds": 1981.326,
+      "peak_rss_bytes": 24358494208
+    },
+    "Checking ISO 32005": {
+      "first_seconds": 1983.327,
+      "last_seconds": 3898.022,
+      "peak_rss_bytes": 24870387712
+    },
+    "Checking EA-PDF": {
+      "first_seconds": 3900.944,
+      "last_seconds": 3930.803,
+      "peak_rss_bytes": 19988512768
+    },
+    "Reading metadata": {
+      "first_seconds": 3932.804,
+      "last_seconds": 3942.043,
+      "peak_rss_bytes": 20006912000
+    },
+    "Checking embedded files": {
+      "first_seconds": 3944.044,
+      "last_seconds": 4577.21,
+      "peak_rss_bytes": 15691804672
+    },
+    "Checking document parts": {
+      "first_seconds": 4579.211,
+      "last_seconds": 4585.199,
+      "peak_rss_bytes": 15698333696
+    },
+    "Checking logical structure": {
+      "first_seconds": 4587.2,
+      "last_seconds": 4627.155,
+      "peak_rss_bytes": 16063954944
+    },
+    "Checking page content": {
+      "first_seconds": 4629.156,
+      "last_seconds": 4865.51,
+      "peak_rss_bytes": 19998072832
+    },
+    "Comparing original email metadata": {
+      "first_seconds": 4867.511,
+      "last_seconds": 5305.229,
+      "peak_rss_bytes": 21244518400
+    },
+    "Checking original attachments": {
+      "first_seconds": 5307.23,
+      "last_seconds": 5307.23,
+      "peak_rss_bytes": 21246775296
+    },
+    "Checking embedded email PDFs": {
+      "first_seconds": 5313.271,
+      "last_seconds": 5369.885,
+      "peak_rss_bytes": 21249175552
+    },
+    "Finished": {
+      "first_seconds": 5371.886,
+      "last_seconds": 5371.886,
+      "peak_rss_bytes": 0
+    }
+  },
+  "scratch_removed": true,
+  "caveat": "Local runs with overlapping bounded tests and different available RAM; baseline included two forced histogram GCs. RSS includes mapped files; global swap includes other applications."
+}

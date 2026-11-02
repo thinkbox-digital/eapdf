@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>local</groupId>
+  <artifactId>emailtopdfa</artifactId>
+  <version>1.6.0-beta.7</version>
+
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.build.outputTimestamp>2026-10-31T00:00:00Z</project.build.outputTimestamp>
+    <eapdf.build.directory>${project.basedir}/target</eapdf.build.directory>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>eapdf-patched-openhtmltopdf</id>
+      <url>file://${project.basedir}/third_party/maven</url>
+      <releases><enabled>true</enabled><checksumPolicy>fail</checksumPolicy></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+  </repositories>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-bom</artifactId>
+        <version>2.2.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-scratchpad</artifactId>
+        <version>5.5.1</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+
+    <!-- Legacy email code pages used by real PST and MIME messages. -->
+    <dependency>
+      <groupId>com.beetstra.jutf7</groupId>
+      <artifactId>jutf7</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
+    <!-- PST parsing -->
+    <dependency>
+      <groupId>com.pff</groupId>
+      <artifactId>java-libpst</artifactId>
+      <version>0.9.3</version>
+    </dependency>
+
+    <!-- MSG parsing -->
+    <dependency>
+      <groupId>org.simplejavamail</groupId>
+      <artifactId>outlook-message-parser</artifactId>
+      <version>1.16.2</version>
+    </dependency>
+
+
+  <dependency>
+    <groupId>jakarta.mail</groupId>
+    <artifactId>jakarta.mail-api</artifactId>
+    <version>2.1.5</version>
+  </dependency>
+  <dependency>
+    <groupId>org.eclipse.angus</groupId>
+    <artifactId>angus-mail</artifactId>
+    <version>2.0.5</version>
+    <scope>runtime</scope>
+  </dependency>
+  <dependency>
+    <groupId>jakarta.activation</groupId>
+    <artifactId>jakarta.activation-api</artifactId>
+    <version>2.1.4</version>
+  </dependency>
+  <dependency>
+    <groupId>org.eclipse.angus</groupId>
+    <artifactId>angus-activation</artifactId>
+    <version>2.0.3</version>
+    <scope>runtime</scope>
+  </dependency>
+
+
+    <!-- Required by outlook-message-parser -->
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi</artifactId>
+      <version>5.5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>5.5.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.drewnoakes</groupId>
+      <artifactId>metadata-extractor</artifactId>
+      <version>2.19.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.23.2</version>
+    </dependency>
+	
+	<dependency>
+  <groupId>io.github.openhtmltopdf</groupId>
+  <artifactId>openhtmltopdf-pdfbox</artifactId>
+  <version>1.1.105-eapdf.1</version>
+</dependency>
+
+    <!-- RTF conversion dependency (fixes CodePage error) -->
+        <dependency>
+      <groupId>com.github.bbottema</groupId>
+      <artifactId>rtf-to-html</artifactId>
+      <version>2.0.3</version>
+    </dependency>
+
+    <!-- Detached CMS signatures for outer EA-PDF outputs. -->
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk18on</artifactId>
+      <version>1.86</version>
+    </dependency>
+
+    <!-- PDF/A generation -->
+    <dependency>
+      <groupId>org.apache.pdfbox</groupId>
+      <artifactId>pdfbox</artifactId>
+      <version>3.0.8</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.pdfbox</groupId>
+      <artifactId>xmpbox</artifactId>
+      <version>3.0.8</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.api-client</groupId>
+      <artifactId>google-api-client</artifactId>
+      <version>2.9.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.oauth-client</groupId>
+      <artifactId>google-oauth-client</artifactId>
+      <version>1.39.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.oauth-client</groupId>
+      <artifactId>google-oauth-client-jetty</artifactId>
+      <version>1.39.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.oauth-client</groupId>
+      <artifactId>google-oauth-client-java6</artifactId>
+      <version>1.39.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.http-client</groupId>
+      <artifactId>google-http-client-gson</artifactId>
+      <version>2.2.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-gmail</artifactId>
+      <version>v1-rev20261005-2.0.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>6.1.3</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.http-client</groupId>
+      <artifactId>google-http-client</artifactId>
+      <version>2.2.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.14.0</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <directory>${eapdf.build.directory}</directory>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes><exclude>eapdf-build.properties</exclude></excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes><include>eapdf-build.properties</include></includes>
+      </resource>
+      <resource>
+        <directory>${project.basedir}</directory>
+        <targetPath>META-INF/eapdf</targetPath>
+        <includes>
+          <include>LICENSE</include>
+          <include>NOTICE</include>
+          <include>THIRD_PARTY_NOTICES.md</include>
+          <include>third_party_licenses/**</include>
+        </includes>
+      </resource>
+    </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+      <testResource>
+        <directory>in</directory>
+        <targetPath>eapdf/email</targetPath>
+        <includes>
+          <include>test.pst</include>
+        </includes>
+      </testResource>
+    </testResources>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.5.0</version>
+        <configuration><forceCreation>true</forceCreation></configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.16.0</version>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+          <encoding>${project.build.sourceEncoding}</encoding>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.6.0</version>
+        <configuration>
+          <useModulePath>false</useModulePath>
+          <workingDirectory>${project.basedir}</workingDirectory>
+          <environmentVariables>
+            <EAPDF_CONFIG>${project.basedir}/src/test/resources/eapdf/test-config.json</EAPDF_CONFIG>
+          </environmentVariables>
+        </configuration>
+      </plugin>
+
+      <!-- Build a runnable fat jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.2</version>
+        <configuration>
+          <createDependencyReducedPom>false</createDependencyReducedPom>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>META-INF/*.SF</exclude><exclude>META-INF/*.RSA</exclude><exclude>META-INF/*.DSA</exclude>
+                <exclude>module-info.class</exclude><exclude>META-INF/versions/**/module-info.class</exclude>
+              </excludes>
+            </filter>
+          </filters>
+          <transformers>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>META-INF/LICENSE</resource></transformer>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>META-INF/LICENSE.txt</resource></transformer>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>META-INF/LICENSE.md</resource></transformer>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>META-INF/NOTICE</resource></transformer>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>META-INF/NOTICE.txt</resource></transformer>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>META-INF/NOTICE.md</resource></transformer>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>META-INF/DEPENDENCIES</resource></transformer>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>LICENSE-2.0.txt</resource></transformer>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>NOTICE.txt</resource></transformer>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer"><resource>RELEASE.txt</resource></transformer>
+          </transformers>
+        </configuration>
+        <executions>
+          <execution>
+            <id>shade-gui</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <shadedClassifierName>gui</shadedClassifierName>
+              <transformers combine.children="append">
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>eapdf.EapdfGui</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+          <execution>
+            <id>shade-cli</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <transformers combine.children="append">
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>eapdf.EmailToPDFA</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>

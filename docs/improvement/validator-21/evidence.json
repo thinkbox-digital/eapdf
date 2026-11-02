@@ -1,0 +1,149 @@
+{
+  "scope": "V21 native-byte contradictions across ambiguous attachment candidates",
+  "verification": {
+    "unit_tests": {
+      "run": 468,
+      "passed": 430,
+      "skipped": 38,
+      "seconds": 25.992,
+      "log": "unit-tests.log"
+    },
+    "pdf_probes": {
+      "cases": 12,
+      "new_cases": 10,
+      "prior_changed_cases": 2,
+      "pdfa_passes": 12,
+      "iso_passes": 12,
+      "same_bytes_before_and_after": true,
+      "results": "before-after-comparison.json"
+    },
+    "generated_profiles": [
+      {
+        "mode": "normal",
+        "profile": "1s",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1si",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1m",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1mi",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1c",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "normal",
+        "profile": "1ci",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1s",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1si",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1m",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1mi",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1c",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      },
+      {
+        "mode": "accessibility",
+        "profile": "1ci",
+        "status": "PASS",
+        "pdfa": "PASS",
+        "iso": "PASS"
+      }
+    ],
+    "custom_comparisons": {
+      "total": 184,
+      "prior_pdf_hashes_unchanged": 174,
+      "prior_outcomes_unchanged": 172,
+      "prior_outcomes_intentionally_changed": 2,
+      "all_changed": 7,
+      "results": "custom-regressions.json"
+    },
+    "entry_points": {
+      "checks": 8,
+      "cli": 4,
+      "isolated_web_workers": 4,
+      "all_expected_outcomes_match": true,
+      "results": "pdf-results.json"
+    }
+  },
+  "inputs": {
+    "snapshot": ".eapdf-verification-v21-final",
+    "manifest": "verification-inputs.json",
+    "files": 722,
+    "archive": "runtime-inputs-final.zip",
+    "archive_sha256": "8de88dc43fdafcd1796da1362a17d05a991d3e5c2f64c93c87248595dc3eafc3",
+    "initial_to_final": "initial-to-final-inputs.json"
+  },
+  "creator": {
+    "unchanged": true,
+    "jar_sha256": "272ad741590552489dfb6d096f7ee4b01035fb3faf1c76d817394c0c2ad5e16a",
+    "new_java_build": false
+  },
+  "limits": [
+    "Eleven expert/dependency questions remain open.",
+    "Only a universally contradicted supplied valid size/checksum fails. Association and ambiguous media evidence remain unavailable.",
+    "A matching or unreadable candidate blocks that field failure; no owner, unique occurrence or original inventory is inferred.",
+    "No new Maven build or full packaged-suite acceptance is claimed. Integration/schema skips remain explicit."
+  ],
+  "artifacts": {
+    "assemble-evidence.py": "6f2059e7863b36e960dfd523f0a2103313531fce4f2c968b1c3a76b82d3bc35e",
+    "before-validate_eapdf.py": "56990a91ba9156a3b39b2e9a294541d90c27adf49ea586c2c8fa492c61f95187",
+    "finalize-docs.py": "1b369af9469afcdf93ff0b07f1c314f50a7bbe5a30da7dfae0a213f195647904",
+    "initial-verify-pdfs.py": "d429148ceaff1a99be03700efd27d076ae8514ec95637ec373d622ba8685b2ec",
+    "verify-pdfs.py": "456784a588607968b369849392e28ac175395431b9a7a67c0060fb146a1f91d5",
+    "verify-regressions.py": "a5388632600c0ff5352faa996cc096b8423e6533ec73cca71b363b797d41f9d9"
+  }
+}

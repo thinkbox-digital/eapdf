@@ -1,0 +1,94 @@
+{
+  "authority": [
+    "EA-PDF 9.8.2 assets are an unordered set",
+    "Table 16 paths are allowed",
+    "Reviewed ASSET_MATCH: ambiguous correspondence cannot establish a violation"
+  ],
+  "source_sha256": "60100138be5ff09658ca45c3f016415601f6492a2649e9dc9c095a94e8403302",
+  "cases": [
+    {
+      "file": "valid.pdf",
+      "sha256": "e7682885f75e4bd036c461c1d28b69e57c6babdbe28e1ed43a7d8636a0444bf4",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "assets-reversed.pdf",
+      "sha256": "8428582129512fd463a527fed1e4a284129de54c4b582f3024b12a6114fc1750",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "collision-forward.pdf",
+      "sha256": "08886008a20114a699a2e5992fde6f2cca518feb481d437a2ec9e2f8dca8c31e",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "collision-reversed.pdf",
+      "sha256": "3642d9338b855f77d059fd8c51741c756650084331e2404e92068c09014da6ea",
+      "expected_failures": [
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "checksum-wrong.pdf",
+      "sha256": "04aca8329b2fb6954ebb3ff289fe21c0203cabcc486a5d3ecb9cebcaab5351a0",
+      "expected_failures": [
+        "ASSET_MD5_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    },
+    {
+      "file": "association-ambiguous.pdf",
+      "sha256": "fd19b519225b4c8b03889801b3225f436eb3428a59c1b15ba0da661bd5eb33fc",
+      "expected_failures": [
+        "ASSET_MD5_MATCH",
+        "CUSTOM_TAG_OPERAND_MATCH"
+      ],
+      "expected_status": "FAIL",
+      "required_unavailable_codes": [
+        "ASSET_MATCH",
+        "SOURCE_WITHOUT_XMP",
+        "VALIDATION_INCOMPLETE"
+      ],
+      "operand_review": "EA-PDF 9.7 p75: independent page/MCID inspection in docs/improvement/validator-24/retained-operand-review.json",
+      "expected_parent_level": "PASS",
+      "parent_interpretation": "2026-10-27 finding 29: document-wide DPart/content ownership, not blanket noncollection ancestry. Other failure expectations unchanged."
+    }
+  ],
+  "parent_requirement_review": {
+    "evidence": "docs/improvement/validator-53/prior-native-census.json",
+    "authority": "EA9.7 Table13; SPEC-T13-CONTAINER-PARENT remains open",
+    "retained_pdf_bytes": true,
+    "boundary": "Historical builder parameters predate this ancestry review. Retain historical bytes as negative/unavailable controls; do not regenerate them as positive fixtures. The contentset-parent cohort provides current positive controls."
+  }
+}

@@ -1,0 +1,22 @@
+--- snapshot/scripts/build_eapdf_attachment_scope_fixtures.py
++++ current/scripts/build_eapdf_attachment_scope_fixtures.py
+@@ -53,7 +53,7 @@
+     (output / 'expectations.json').write_text(json.dumps({'authority': [
+         'EA-PDF 9.8.4 Table 19: corresponding native attachment stream',
+         'EA-PDF 7.5: Alternative relationship distinguishes rendered representations',
+-        'EA-PDF 9.2.5: collection members are EA-PDFs, attachments are in owning children'],
++        'EA-PDF 7.6 (printed p54) and 9.5: collection members are EA-PDFs; attachment payload comparisons belong to their owning children'],
+         'cases': cases}, indent=2) + '\n')
+     print('Wrote', len(cases), 'attachment-role probes')
+ 
+--- snapshot/tests/fixtures/eapdf/validator-attachment-scope/expectations.json
++++ current/tests/fixtures/eapdf/validator-attachment-scope/expectations.json
+@@ -2,7 +2,7 @@
+   "authority": [
+     "EA-PDF 9.8.4 Table 19: corresponding native attachment stream",
+     "EA-PDF 7.5: Alternative relationship distinguishes rendered representations",
+-    "EA-PDF 9.2.5: collection members are EA-PDFs, attachments are in owning children"
++    "EA-PDF 7.6 (printed p54) and 9.5: collection members are EA-PDFs; attachment payload comparisons belong to their owning children"
+   ],
+   "cases": [
+     {

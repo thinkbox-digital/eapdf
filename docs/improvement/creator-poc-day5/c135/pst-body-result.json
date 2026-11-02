@@ -1,0 +1,9 @@
+{
+  "sample": "examples/sample_1m.pdf",
+  "sample_checkpoint": "C132",
+  "current_creator_checkpoint": "C134",
+  "messages_matched_to_owned_rendering_pages": 71,
+  "files_with_missing_body_word_leads": 0,
+  "sample_sha256": "5b3145f49a2e134b0906496d1ffff3abb4f16155045e23dab1dc9255d944dde0",
+  "note": "Native selected body text compared by message ID to its own rendered pages. Investigation aid, not visual certification; no new product change or claimed C134 sample regeneration."
+}

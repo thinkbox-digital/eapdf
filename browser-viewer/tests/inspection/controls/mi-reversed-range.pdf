@@ -1,0 +1,85 @@
+%PDF-2.0
+%¿÷¢þ
+1 0 obj
+<< /DPartRoot 2 0 R /Metadata 3 0 R /Pages 4 0 R /Type /Catalog >>
+endobj
+2 0 obj
+<< /DPartRootNode 5 0 R /Type /DPartRoot >>
+endobj
+3 0 obj
+<< /Subtype /XML /Type /Metadata /Length 1127 >>
+stream
+<ns0:xmpmeta xmlns:ns0="adobe:ns:meta/" xmlns:ns2="http://www.pdfa.org/eapdf/ns/id/" xmlns:ns3="http://www.aiim.org/pdfa/ns/id/" xmlns:ns4="http://www.pdfa.org/eapdf/ns/meta/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:RDF><rdf:Description><ns2:version>1</ns2:version><ns2:rev>2024</ns2:rev><ns2:conformance>mi</ns2:conformance><ns3:part>4</ns3:part><ns3:conformance>F</ns3:conformance><ns4:email><rdf:Bag><rdf:li rdf:parseType="Resource"><ns4:Mail_GUID>guid-0</ns4:Mail_GUID><ns4:messageid>&lt;message-0@example.invalid&gt;</ns4:messageid></rdf:li><rdf:li rdf:parseType="Resource"><ns4:Mail_GUID>guid-1</ns4:Mail_GUID><ns4:messageid>&lt;message-1@example.invalid&gt;</ns4:messageid></rdf:li></rdf:Bag></ns4:email><ns4:assets><rdf:Bag /></ns4:assets><ns4:attachments><rdf:Bag><rdf:li rdf:parseType="Resource"><ns4:Filename>fixture.txt</ns4:Filename><ns4:SizeInBytes>0</ns4:SizeInBytes><ns4:Content-Type>text/plain</ns4:Content-Type><ns4:CheckSum>d41d8cd98f00b204e9800998ecf8427e</ns4:CheckSum><ns4:Mail_GUID>guid-0</ns4:Mail_GUID></rdf:li></rdf:Bag></ns4:attachments></rdf:Description></rdf:RDF></ns0:xmpmeta>
+endstream
+endobj
+4 0 obj
+<< /Count 2 /Kids [ 6 0 R 7 0 R ] /Type /Pages >>
+endobj
+5 0 obj
+<< /DParts [ [ 8 0 R 9 0 R ] ] /Parent 2 0 R /Type /DPart >>
+endobj
+6 0 obj
+<< /Annots [ 10 0 R ] /Contents 11 0 R /DPart 12 0 R /MediaBox [ 0 0 200 200 ] /Parent 4 0 R /Resources << >> /Type /Page >>
+endobj
+7 0 obj
+<< /Contents 13 0 R /DPart 14 0 R /MediaBox [ 0 0 200 200 ] /Parent 4 0 R /Resources << >> /Type /Page >>
+endobj
+8 0 obj
+<< /DPM << /Mail_GUID (guid-0) /Mail_MessageID (<message-0@example.invalid>) >> /DParts [ [ 12 0 R ] ] /Parent 5 0 R /Type /DPart >>
+endobj
+9 0 obj
+<< /DPM << /Mail_GUID (guid-1) /Mail_MessageID (<message-1@example.invalid>) >> /DParts [ [ 14 0 R ] ] /Parent 5 0 R /Type /DPart >>
+endobj
+10 0 obj
+<< /Contents (Synthetic file) /FS 15 0 R /Rect [ 0 0 10 10 ] /Subtype /FileAttachment /Type /Annot >>
+endobj
+11 0 obj
+<< /Length 0 /Filter /FlateDecode >>
+stream
+
+endstream
+endobj
+12 0 obj
+<< /DPM << /Mail_ContentSetType /BodyRendering /Mail_Desc (Synthetic body) /Mail_Subtype /text#2fplain;#20charset=UTF-8 >> /End 6 0 R /Parent 8 0 R /Start 7 0 R /Type /DPart >>
+endobj
+13 0 obj
+<< /Length 0 /Filter /FlateDecode >>
+stream
+
+endstream
+endobj
+14 0 obj
+<< /DPM << /Mail_ContentSetType /BodyRendering /Mail_Desc (Synthetic body) /Mail_Subtype /text#2fplain;#20charset=UTF-8 >> /Parent 9 0 R /Start 7 0 R /Type /DPart >>
+endobj
+15 0 obj
+<< /AFRelationship /Data /EF << /F 16 0 R /UF 16 0 R >> /F (fixture.txt) /Type /Filespec /UF (fixture.txt) >>
+endobj
+16 0 obj
+<< /Params << /CheckSum <d41d8cd98f00b204e9800998ecf8427e> /Size 0 >> /Subtype /text#2fplain /Type /EmbeddedFile /Length 0 /Filter /FlateDecode >>
+stream
+
+endstream
+endobj
+xref
+0 17
+0000000000 65535 f 
+0000000015 00000 n 
+0000000097 00000 n 
+0000000156 00000 n 
+0000001365 00000 n 
+0000001430 00000 n 
+0000001506 00000 n 
+0000001646 00000 n 
+0000001767 00000 n 
+0000001915 00000 n 
+0000002063 00000 n 
+0000002181 00000 n 
+0000002252 00000 n 
+0000002445 00000 n 
+0000002516 00000 n 
+0000002698 00000 n 
+0000002824 00000 n 
+trailer << /Root 1 0 R /Size 17 /ID [<b1248c6d240d652d375cd0b75a99a176><b1248c6d240d652d375cd0b75a99a176>] >>
+startxref
+3005
+%%EOF

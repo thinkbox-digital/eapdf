@@ -1,0 +1,113 @@
+{
+  "status": "PASS",
+  "fixtures": [
+    {
+      "id": "example-1s",
+      "status": "PASS"
+    },
+    {
+      "id": "example-1si",
+      "status": "PASS"
+    },
+    {
+      "id": "example-1m",
+      "status": "PASS"
+    },
+    {
+      "id": "example-1mi",
+      "status": "PASS"
+    },
+    {
+      "id": "example-1c",
+      "status": "PASS"
+    },
+    {
+      "id": "example-1ci",
+      "status": "PASS"
+    },
+    {
+      "id": "c-folder-cycle",
+      "status": "PASS"
+    },
+    {
+      "id": "c-nested-mixed",
+      "status": "PASS"
+    },
+    {
+      "id": "ci-corrupt-child",
+      "status": "PASS"
+    },
+    {
+      "id": "m-duplicate-guid",
+      "status": "PASS"
+    },
+    {
+      "id": "mi-reversed-range",
+      "status": "PASS"
+    },
+    {
+      "id": "s-bad-checksum",
+      "status": "PASS"
+    },
+    {
+      "id": "s-conflicting-profile",
+      "status": "PASS"
+    },
+    {
+      "id": "s-dpart-cycle",
+      "status": "PASS"
+    },
+    {
+      "id": "s-duplicate-files",
+      "status": "PASS"
+    },
+    {
+      "id": "s-invalid-page-ref",
+      "status": "PASS"
+    },
+    {
+      "id": "s-malformed-xmp",
+      "status": "PASS"
+    },
+    {
+      "id": "s-missing-guid",
+      "status": "PASS"
+    },
+    {
+      "id": "s-missing-stream",
+      "status": "PASS"
+    },
+    {
+      "id": "s-object-af-only",
+      "status": "PASS"
+    },
+    {
+      "id": "s-two-streams",
+      "status": "PASS"
+    },
+    {
+      "id": "s-unknown-profile",
+      "status": "PASS"
+    },
+    {
+      "id": "s-uri-guid",
+      "status": "PASS"
+    },
+    {
+      "id": "si-name-guid",
+      "status": "PASS"
+    },
+    {
+      "id": "existing-reversed-order",
+      "status": "PASS"
+    },
+    {
+      "id": "existing-uri-checksum",
+      "status": "PASS"
+    },
+    {
+      "id": "ordinary",
+      "status": "PASS"
+    }
+  ]
+}

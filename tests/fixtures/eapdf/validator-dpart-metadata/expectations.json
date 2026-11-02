@@ -1,0 +1,123 @@
+{
+  "authority": "ISO32000-2:2020 Tables408/409 and 14.12.4.2 with industry-approved clause14 corrections accessed2026-10-20; XML1.0 Fifth Edition",
+  "seed_sha256": "6576265f4bc786f85df8d201e23fc2bc2d9fe47fcb451394a6d5a4bfe2208db7",
+  "boundary": "Dictionary nulls are absent. Shared/cyclic data containers are allowed. Name values require UTF-8, not XML spelling; NMTOKEN-only dictionary key spelling remains unavailable.",
+  "cases": [
+    {
+      "file": "record-negative.pdf",
+      "sha256": "0bfe3866adf167994eb9a3fe8dc5313896622a03c0c9e0deb408a005ef5c8538",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "record-outside.pdf",
+      "sha256": "0d1551e95d0a77e96370845c2678a4d5da4e9380069801e260a9bde1a35b9742",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "metadata-stream.pdf",
+      "sha256": "7801ec67a8d50601c7d3e243dcdb1732369ec063bb7b7e27b389c743512307c1",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "dpm-stream.pdf",
+      "sha256": "e3c13a9efb7dcddf7c86a70d46f7b41a5721257b9e559ad7fe6dacb4d0b6db1a",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "dpm-nested-stream.pdf",
+      "sha256": "bb4463781054e68f468ba0f55cc740a078ce8a661af660a46654a04f5c272c1c",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "dpm-array-stream.pdf",
+      "sha256": "0060993945f0d7043dcbb4c2b7d5efcb1086bf65030eefb34e25d982ca902f3c",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "dpm-array-null.pdf",
+      "sha256": "445371e44dcc7d04196a138f3c9589d8cc924652f7821f4d450775e528eeac21",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "dpm-value-name-utf8.pdf",
+      "sha256": "a3e4ab3881e0fbfb5a55bace3a884e63e5a7d15cefc18adaa2f99ddedce50347",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPM_NAME_TYPES"
+      ]
+    },
+    {
+      "file": "dpm-key-space.pdf",
+      "sha256": "50ec2192b51658e2474ea5fc1c71549697f4d75e8b74d546a4bc9110e206ec85",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "dpm-nested-key-space.pdf",
+      "sha256": "1d3a2c895841ad525b496ede0ec7b1d1351c96875887cda78901a27b86718a4f",
+      "expected_status": "FAIL",
+      "expected_failures": [
+        "DPART_OBJECT_STRUCTURE"
+      ]
+    },
+    {
+      "file": "dpm-key-nmtoken.pdf",
+      "sha256": "244f46d8ac58858249bb443a052f904970fb1d7e796c0ae6d662719d05e909dc",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "dpm-nested-key-nmtoken.pdf",
+      "sha256": "6559ffeb43f21cb1e9e319ae714b65fc46a3d608626737aed8fbbe5d0caa03fd",
+      "expected_status": "INCOMPLETE",
+      "expected_failures": []
+    },
+    {
+      "file": "valid.pdf",
+      "sha256": "2c464b4426531037066274c9f5c375308978193e452249ce596372a12c62d3bf",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "permitted-values.pdf",
+      "sha256": "40bc0d94292fb56d9e979cf4236f119aa955e8e36c6aed5137bb5608175dc50f",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "dictionary-null.pdf",
+      "sha256": "0d5dd6e6bc2a323746381430f69cd9915be067b68e8133ea997ef6b962b958ba",
+      "expected_status": "PASS",
+      "expected_failures": []
+    },
+    {
+      "file": "shared-cycle.pdf",
+      "sha256": "47d5e89385e3188f7117ddf8e8ee90388881e002cbe55b6dc79aae5fca744bcb",
+      "expected_status": "PASS",
+      "expected_failures": []
+    }
+  ]
+}

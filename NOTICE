@@ -1,0 +1,13 @@
+EA-PDF Generator
+Copyright 2026 ThinkBox Digital
+
+This product includes software developed by third parties.
+
+See:
+- THIRD_PARTY_NOTICES.md
+- docs/THIRD_PARTY_LICENSES.md
+- third_party_licenses/
+
+This repository also includes ThinkBox branding assets under assets/.
+Those branding assets are not granted under the Apache License unless
+separately authorized by their owner.

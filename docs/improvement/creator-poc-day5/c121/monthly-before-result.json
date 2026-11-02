@@ -1,0 +1,20 @@
+{
+  "s": {
+    "before": {
+      "2026-10_1s.pdf": "245c4c506bb922b53b4e6c1953d91219d28851ebc9246a4b3b1173469fa9b059"
+    },
+    "after": {
+      "2026-10_1s.pdf": "26716bcafe78706c1e9278490c34d3a52cfba2950162321f908b57f371a68f94"
+    },
+    "earlier_pdf_replaced": true
+  },
+  "m": {
+    "before": {
+      "2026-10_1m.pdf": "70f2275b6337f7c04f8f11edf2d8611529d5e7bd0a56bf3e3bc76248c28935b5"
+    },
+    "after": {
+      "2026-10_1m.pdf": "85343eff8aae48fec16f283f2b100ab58161fe2c79a3a539785da1fbce3465ca"
+    },
+    "earlier_pdf_replaced": true
+  }
+}

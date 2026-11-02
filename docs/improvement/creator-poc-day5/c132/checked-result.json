@@ -1,0 +1,44 @@
+{
+  "m": {
+    "pages": 8,
+    "all_email_page_pixels_and_text_identical": true,
+    "finding_aid_identical_except_expected_run_timestamp": true,
+    "original_sources_exact": 4,
+    "native_attachments_exact": 2,
+    "image_objects_before": 4,
+    "image_objects_after": 1,
+    "bytes_before": 312584,
+    "bytes_after": 249609,
+    "validation": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "mandatory_failures": [],
+      "incomplete": []
+    },
+    "staging_removed": true
+  },
+  "mi": {
+    "pages": 8,
+    "all_email_page_pixels_and_text_identical": true,
+    "finding_aid_identical_except_expected_run_timestamp": true,
+    "original_sources_exact": 0,
+    "native_attachments_exact": 2,
+    "image_objects_before": 4,
+    "image_objects_after": 1,
+    "bytes_before": 227539,
+    "bytes_after": 164535,
+    "validation": {
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": [
+        "PASS"
+      ],
+      "mandatory_failures": [],
+      "incomplete": []
+    },
+    "staging_removed": true
+  }
+}

@@ -1,0 +1,257 @@
+{
+  "date": "2026-10-19",
+  "batch": "V04",
+  "recovered_thread": "01a1522c-7e25-7911-b234-262f2d4423d7",
+  "authority": "validator_rule_text.json",
+  "inventory_records": 301,
+  "rule_codes": 223,
+  "unmapped_mandatory_conditional_file_records": 0,
+  "open_expert_dependency_questions": 11,
+  "tests": {
+    "full": {
+      "run": 322,
+      "passed": 321,
+      "skipped": 1,
+      "seconds": 578.215,
+      "skip_reason": "Optional official PREMIS XSD unavailable"
+    },
+    "focused": {
+      "run": 19,
+      "passed": 19
+    }
+  },
+  "profiles": [
+    {
+      "mode": "normal",
+      "profile": "1s",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "normal",
+      "profile": "1si",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "normal",
+      "profile": "1m",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "normal",
+      "profile": "1mi",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "normal",
+      "profile": "1c",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "normal",
+      "profile": "1ci",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1s",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1si",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1m",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1mi",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1c",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    },
+    {
+      "mode": "accessibility",
+      "profile": "1ci",
+      "pdfa": "PASS",
+      "eapdf": "PASS"
+    }
+  ],
+  "corpus": [
+    {
+      "file": "valid-mail.pdf",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": []
+    },
+    {
+      "file": "valid-container.pdf",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": []
+    },
+    {
+      "file": "associated-date-missing.pdf",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "ASSOCIATED_FILE_MODDATE"
+      ]
+    },
+    {
+      "file": "associated-date-calendar.pdf",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "ASSOCIATED_FILE_MODDATE"
+      ]
+    },
+    {
+      "file": "parameters-not-string.pdf",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "ASSET_CONTENTTYPE_MATCH",
+        "EMBEDDED_MEDIATYPE_RECONSTRUCTION",
+        "EMBEDDED_SUBTYPE_MATCH_XMP"
+      ]
+    },
+    {
+      "file": "parameters-utf16.pdf",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": []
+    },
+    {
+      "file": "parameters-value-mismatch.pdf",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "ASSET_CONTENTTYPE_MATCH",
+        "EMBEDDED_SUBTYPE_MATCH_XMP",
+        "SOURCE_MEDIATYPE_PARAMETERS_MATCH"
+      ]
+    },
+    {
+      "file": "container-AttachmentRendering.pdf",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "DPM_CONTAINER_CONTENTSET_TYPES"
+      ]
+    },
+    {
+      "file": "container-BodyRendering.pdf",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "DPM_CONTAINER_CONTENTSET_TYPES"
+      ]
+    },
+    {
+      "file": "container-EmailHeaderRendering.pdf",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "DPM_CONTAINER_CONTENTSET_TYPES"
+      ]
+    },
+    {
+      "file": "container-RawEmailRendering.pdf",
+      "pdfa": "PASS",
+      "eapdf": "FAIL",
+      "failures": [
+        "DPM_CONTAINER_CONTENTSET_TYPES"
+      ]
+    },
+    {
+      "file": "container-extension.pdf",
+      "pdfa": "PASS",
+      "eapdf": "PASS",
+      "failures": []
+    }
+  ],
+  "runtime_entry_points": [
+    {
+      "file": "parameters-utf16.pdf",
+      "entry": "cli",
+      "pdfa": "PASS",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "file": "parameters-utf16.pdf",
+      "entry": "web-worker",
+      "pdfa": "PASS",
+      "status": "PASS",
+      "failures": []
+    },
+    {
+      "file": "associated-date-missing.pdf",
+      "entry": "cli",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "ASSOCIATED_FILE_MODDATE"
+      ]
+    },
+    {
+      "file": "associated-date-missing.pdf",
+      "entry": "web-worker",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "ASSOCIATED_FILE_MODDATE"
+      ]
+    },
+    {
+      "file": "container-BodyRendering.pdf",
+      "entry": "cli",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "DPM_CONTAINER_CONTENTSET_TYPES"
+      ]
+    },
+    {
+      "file": "container-BodyRendering.pdf",
+      "entry": "web-worker",
+      "pdfa": "PASS",
+      "status": "FAIL",
+      "failures": [
+        "DPM_CONTAINER_CONTENTSET_TYPES"
+      ]
+    }
+  ],
+  "generator": {
+    "path": "/tmp/eapdf-improvement-batch13/build/emailtopdfa-1.4.0.jar",
+    "sha256": "23b62a23a0f2d8f80a204669fe63f2b51718b3abe89544df6655d90ed1c09024",
+    "fresh_java_build": false
+  },
+  "verification_inputs": "verification-inputs.json",
+  "boundary": "Runtime engine, authoritative checking definitions, tests and creator sources stayed frozen throughout broad acceptance. The fixture recipe/corpus were corrected before their full-suite test ran. Later authoritative checkpoint fields and generated documentation only record these outcomes.",
+  "limits": [
+    "Zero unmapped records does not prove all mapped predicates correct or executed.",
+    "Eleven specification/dependency questions remain.",
+    "DPM field types/prefix handling are confirmed next repair; before-state regressions retained separately.",
+    "Broader schema, per-email/source association, mixed-rule fragment ownership and standalone ISO/TS 32005 integration remain open.",
+    "No creator change, fresh Maven build, saved-sample regeneration, CLI change, deployment or publication."
+  ]
+}

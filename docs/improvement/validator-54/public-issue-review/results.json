@@ -1,0 +1,26 @@
+[
+  {
+    "number": 21,
+    "status": "open",
+    "title": "EA-PDF - requirements when the PDF/A-4 file is tagged.",
+    "updated": "2026-04-01T18:39:16Z",
+    "comments": 0,
+    "url": "https://github.com/pdf-association/report-an-issue/issues/21"
+  },
+  {
+    "number": 14,
+    "status": "open",
+    "title": "EA-PDF 1.0 - minor issues",
+    "updated": "2025-10-14T14:01:56Z",
+    "comments": 0,
+    "url": "https://github.com/pdf-association/report-an-issue/issues/14"
+  },
+  {
+    "number": 17,
+    "status": "open",
+    "title": "EA-PDF 1.0 - minor issue (with collections)",
+    "updated": "2025-11-13T05:27:19Z",
+    "comments": 1,
+    "url": "https://github.com/pdf-association/report-an-issue/issues/17"
+  }
+]

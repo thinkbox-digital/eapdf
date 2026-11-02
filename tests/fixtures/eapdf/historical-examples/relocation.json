@@ -1,0 +1,56 @@
+{
+  "date": "2026-11-02",
+  "scope": "Original historical demonstration bytes; not regenerated or revalidated",
+  "files": [
+    {
+      "original": "examples/eml/eml_signed_1s.pdf",
+      "file": "tests/fixtures/eapdf/historical-examples/eml/eml_signed_1s.pdf",
+      "sha256": "5deae9507817bdd043ff17ead9123a61cb83ed05480dae7ee7d8c7a67e2c2886"
+    },
+    {
+      "original": "examples/eml/eml_signed_1c.pdf",
+      "file": "tests/fixtures/eapdf/historical-examples/eml/eml_signed_1c.pdf",
+      "sha256": "9b31b767ddf7fbd671f684445f692677fb1f581422dce6e244e76fafe9f1da41"
+    },
+    {
+      "original": "examples/eml/eml_accessibility_1c.pdf",
+      "file": "tests/fixtures/eapdf/historical-examples/eml/eml_accessibility_1c.pdf",
+      "sha256": "11c29aab49a988c784859b6aa6672e2e50ea78d717b2cf1a38281e29a303205e"
+    },
+    {
+      "original": "examples/eml/test-signing-certificate.pem",
+      "file": "tests/fixtures/eapdf/historical-examples/eml/test-signing-certificate.pem",
+      "sha256": "cadb9c0729f26744aaddc5f4ab8b129318d97e7174ab2d8f446c6a5c7c42680f"
+    },
+    {
+      "original": "examples/eml/signing-manifest.json",
+      "file": "tests/fixtures/eapdf/historical-examples/eml/signing-manifest.json",
+      "sha256": "9e5da7a4389e86cadfeb16105a959f13940642aafe4f87990df674a4c45f55d1"
+    },
+    {
+      "original": "examples/eml/accessibility-manifest.json",
+      "file": "tests/fixtures/eapdf/historical-examples/eml/accessibility-manifest.json",
+      "sha256": "2c8c020eba9eb30752134816685b3055c96488c67f51582be6a04191273453e7"
+    },
+    {
+      "original": "examples/mbox/mbox_missing_sent_date_1s.pdf",
+      "file": "tests/fixtures/eapdf/historical-examples/mbox/mbox_missing_sent_date_1s.pdf",
+      "sha256": "12d1fabc256f741200708c115b18ecf0a04814203929e6a48d625759af69e1fa"
+    },
+    {
+      "original": "examples/mbox/source-problems-manifest.json",
+      "file": "tests/fixtures/eapdf/historical-examples/mbox/source-problems-manifest.json",
+      "sha256": "083f82a1f064be6a4896410a59dd1165c75f655c524f28914ba2a48ca9d55604"
+    },
+    {
+      "original": "examples/pst/pst_missing_attachment_1s.pdf",
+      "file": "tests/fixtures/eapdf/historical-examples/pst/pst_missing_attachment_1s.pdf",
+      "sha256": "9260f0b42f34e59663254ec9572f5f2ac088dc6b0ec594b48ebea694cf3b4b60"
+    },
+    {
+      "original": "examples/pst/source-problems-manifest.json",
+      "file": "tests/fixtures/eapdf/historical-examples/pst/source-problems-manifest.json",
+      "sha256": "709ceeec9404be719d2701218db040381fc24887dab8bc8389e8fde95a8d3342"
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "checkpoint": "C113",
+  "work": "Regenerated six existing standard email samples using the verified C112 local creator; no production changes.",
+  "creator_checkpoint": "C112",
+  "results": [
+    {
+      "profile": "1s",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": [],
+      "sha256": "589792b6a1730e832645370249f78a16161502b87c6d42620349a93fcc979181",
+      "pages": 2,
+      "page_sizes": [
+        [
+          612.0,
+          792.0
+        ]
+      ],
+      "previous_pages": 2
+    },
+    {
+      "profile": "1si",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": [],
+      "sha256": "67654007ef7198c0775f2fef7fb14718dace244bddeb5f66c828f7e3d3398eca",
+      "pages": 2,
+      "page_sizes": [
+        [
+          612.0,
+          792.0
+        ]
+      ],
+      "previous_pages": 2
+    },
+    {
+      "profile": "1m",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": [],
+      "sha256": "6fe5d8d3120ce83cdcbe98c9fed7c058a7289d59fb7bbfa437002091646c7a14",
+      "pages": 151,
+      "page_sizes": [
+        [
+          612.0,
+          792.0
+        ],
+        [
+          721.01,
+          792.0
+        ],
+        [
+          792.0,
+          612.0
+        ]
+      ],
+      "previous_pages": 151
+    },
+    {
+      "profile": "1mi",
+      "status": "INCOMPLETE",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": [],
+      "sha256": "f9ae559d821b5c84b651d5b28671c473c0e31f8aa3b6b50814c0124f73ac959c",
+      "pages": 151,
+      "page_sizes": [
+        [
+          612.0,
+          792.0
+        ],
+        [
+          721.01,
+          792.0
+        ],
+        [
+          792.0,
+          612.0
+        ]
+      ],
+      "previous_pages": 151
+    },
+    {
+      "profile": "1c",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": [],
+      "sha256": "cb5a1eaf21cb16e61f90e3d8c8b9b4646d833dd7c0589cf44b193ef6d07c06eb",
+      "pages": 1,
+      "page_sizes": [
+        [
+          792.0,
+          612.0
+        ]
+      ],
+      "previous_pages": 1
+    },
+    {
+      "profile": "1ci",
+      "status": "PASS",
+      "pdfa": "PASS",
+      "selected_iso": "PASS",
+      "mandatory_failures": [],
+      "sha256": "925e01697ace6b6dbb26faecdc716152b2e0500707373918abb2d0163854e946",
+      "pages": 1,
+      "page_sizes": [
+        [
+          792.0,
+          612.0
+        ]
+      ],
+      "previous_pages": 1
+    }
+  ],
+  "one_s_alias_exact": true,
+  "protected_comparison_pdfs_unchanged": true,
+  "finding_aid_sidecars": "Both pass PDF/A and contain no embedded files; existing script also checks XLSX workbook validity.",
+  "known_limit": "1mi attachment native-byte comparison remains INCOMPLETE; not hidden or weakened.",
+  "temporary_shared_staging_removed": true,
+  "jars": {
+    "emailtopdfa.jar": "f61517f9ac527093e99bc366da2d9410c27cceb3e0b7e88220a94273b9693770",
+    "emailtopdfa-gui.jar": "0425747d89648dec679638c706505a3486a687ab27aa6cff83c30bf7b1dfaa71"
+  },
+  "continued_work": "Active; next reproduced defect is missing supplied plain Outlook body behind unavailable HTML images."
+}

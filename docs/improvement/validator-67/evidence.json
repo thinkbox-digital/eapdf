@@ -1,0 +1,39 @@
+{
+  "checkpoint": "V67",
+  "date": "2026-10-21",
+  "status": "accepted",
+  "scope": "Source publication identification and current exit review; no runtime or requirement semantics change.",
+  "verification": {
+    "fresh_offline_browser_checks": 16,
+    "runtime_acceptance_reused_from": "docs/improvement/validator-66/evidence.json",
+    "fresh_unit_or_pdf_runs": false
+  },
+  "inputs": {
+    "validate_eapdf.py": "9b092f8d83e8ad445e96f63bf68ea05b530498c64b3cc15df9dc3de4036a463d",
+    "validator_web.py": "b12f228cd312ce3502c75b5c4202cb2117b0a5170648ada23229624c4b2ad71b",
+    "validator_rule_text.json": "bbd6f05f23d2e2ba795062950c946e85cb1ec15064359302dc9d705e4bc9b625",
+    "docs/improvement/validator-66/evidence.json": "5d858346e8b6a0319d74d9e97af3f7c90620612b180753681fab0545f2609806",
+    "docs/improvement/reference-review/adbe-l5/source-review.json": "61bb987ea532f1752b7bc735cf0b4f864b2fd24200e67459730748ac9f4163ef",
+    "scripts/refresh_eapdf_current_exit_review.py": "9009cadaa0697203175ce490b230d02ee5706e0b946d468ae7f050c727c6eddc"
+  },
+  "unchanged": {
+    "validator": true,
+    "web": true,
+    "all_validation_scopes": true,
+    "all_requirement_inventory_entries": true
+  },
+  "limits": [
+    "The exact Adobe collection reference is identified; complete inherited-standard and reader coverage is not certified.",
+    "Six broader completion gates remain open. Eleven local decisions are not official errata.",
+    "Creator proposal remains deferred and unapplied."
+  ],
+  "artifacts": {
+    "README.md": "37ad236521562084f24713f6539fa0fbdf1c57a8e41587e619e7b78fd9926b25",
+    "audit-build.log": "1bccd05ecebc05945ec13020b3b290f5ba2d895c4b09fbabb85213bddd47092a",
+    "authority.patch": "5b4b399042faa6dc65a4b2160d0686b95b340d5cd906305751dc7514cd011701",
+    "before-validator_rule_text.json": "296e42a5420d2ab87a4c12f1148eb6869bee6aa6a3216d515611c0bcca536953",
+    "browser-build.log": "4a3b3e64c9d06e3b5b63ae906f8fba57bab07af3b4808c0f56f89c17aae0d1ea",
+    "browser-tests.log": "49bdd9d72396f3a0d68826a36970a13c6354bbeba7d787c8009b8ac466b68055",
+    "verification-inputs.json": "8e9647fc5d5ca568118594959ba2b245adda7eed697c4e12a92bbae1a2a2de2d"
+  }
+}
