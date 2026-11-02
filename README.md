@@ -1,5 +1,7 @@
 # EmailToPDFA
 
+**[Read the documentation](https://thinkbox-digital.github.io/eapdf/)** — installation, conversion, validation and viewing guides.
+
 [Conversion quality](https://github.com/thinkbox-digital/eapdf/actions/workflows/quality.yml) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [Library packages](docs/PACKAGES.md)
 
 [User manual (PDF/A)](docs/EA-PDF_User_Manual.pdf) — beginner instructions for the creator, both validators and viewer, with screenshots.

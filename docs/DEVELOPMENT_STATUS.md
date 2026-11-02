@@ -1,5 +1,19 @@
 # Development status and restart guide
 
+**Documentation website — 2026-11-02:** Added Material for MkDocs at
+https://thinkbox-digital.github.io/eapdf/. The public repository remains the home
+for source, issues, Releases and Packages. Website chapters are generated from
+the existing manual HTML and screenshots; selected Markdown guides are reused
+for reference and developer pages. Sidebar navigation, local full-text search,
+light/dark themes and responsive layout are enabled. Fonts are local and no
+analytics are configured. Site width is controlled by one stylesheet variable.
+
+The strict build checks 25 HTML pages and their local links/assets. Chromium
+checks pass for desktop search and mobile navigation/layout. A stale coverage
+link was corrected. The Documentation workflow builds pull requests and deploys
+only main through GitHub Pages. No creator, validator or viewer runtime code
+changed. See [website maintenance](WEBSITE.md).
+
 **Fresh public snapshot — 2026-11-02:**
 Published at https://github.com/thinkbox-digital/eapdf with fresh history.
 The previous repository remains a private archive; its commits, tags, issues,

@@ -1,0 +1,76 @@
+site_name: EA-PDF
+site_description: Convert email to preservation PDFs, validate the results, and read messages and attachments.
+site_author: Thinkbox.DIGITAL
+site_url: https://thinkbox-digital.github.io/eapdf/
+repo_url: https://github.com/thinkbox-digital/eapdf
+repo_name: thinkbox-digital/eapdf
+copyright: Created by Thinkbox.DIGITAL
+# scripts/build_documentation.py supplies the assembled documentation directory.
+docs_dir: docs/site
+use_directory_urls: true
+strict: true
+theme:
+  name: material
+  font: false
+  palette:
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+plugins:
+  - search
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+extra_css:
+  - stylesheets/extra.css
+nav:
+  - Home: index.md
+  - User guide:
+      - Choose your output: manual/basics.md
+      - Install the applications: manual/installation.md
+      - Convert local email: manual/creator.md
+      - Download from Gmail: manual/gmail.md
+      - Standalone Java validator: manual/java-validator.md
+      - Python and web validator: manual/python-validator.md
+      - Read with the viewer: manual/viewer.md
+      - Settings: manual/settings.md
+      - Command line: manual/command-line.md
+      - Troubleshooting: manual/troubleshooting.md
+      - Maintain your records: manual/maintenance.md
+  - Reference:
+      - Configuration: reference/configuration.md
+      - Gmail setup: reference/gmail.md
+      - Conversion operations: reference/operations.md
+      - Validation coverage: reference/validation.md
+      - Java validator details: reference/java-validator.md
+      - Web deployment: reference/web.md
+      - Security boundaries: reference/security.md
+  - Developers:
+      - Contributing: developers/contributing.md
+      - Patched libraries: developers/packages.md
+      - Maintain this website: developers/website.md
+      - Report a vulnerability: developers/security.md
+  - Downloads: downloads.md
+  - Source code: https://github.com/thinkbox-digital/eapdf
