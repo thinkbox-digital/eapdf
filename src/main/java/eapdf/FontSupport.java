@@ -17,6 +17,20 @@ import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.jsoup.Jsoup;
 
 final class FontSupport {
+  static final ThreadLocal<Boolean> ARCHIVE_FONTS = ThreadLocal.withInitial(() -> false);
+  static void register(PdfRendererBuilder builder, File file, String family) {
+    if (!ARCHIVE_FONTS.get() || family.startsWith("ArchiveFallback")) {
+      builder.useFont(file, family);
+      return;
+    }
+    // The renderer's File supplier always subsets; its stream supplier honors this flag.
+    builder.useFont((com.openhtmltopdf.extend.FSSupplier<java.io.InputStream>) () -> {
+      try { return java.nio.file.Files.newInputStream(file.toPath()); }
+      catch (java.io.IOException error) { throw new java.io.UncheckedIOException(error); }
+    }, family, 400,
+        com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle.NORMAL,
+        false);
+  }
   // Cache metrics only; PDFont instances belong to their individual documents.
   private static final com.openhtmltopdf.extend.FSCacheEx<String, com.openhtmltopdf.extend.FSCacheValue> METRICS =
       new com.openhtmltopdf.extend.FSCacheEx<>() {
@@ -98,7 +112,7 @@ final class FontSupport {
     StringBuilder families = new StringBuilder("ArchiveFont");
     for (int index = 1; index < fonts.size(); index++) {
       String family = "ArchiveFallback" + index;
-      builder.useFont(fonts.get(index).toFile(), family);
+      register(builder, fonts.get(index).toFile(), family);
       families.append(", ").append(family);
     }
     var document = Jsoup.parse(xhtml, "", org.jsoup.parser.Parser.xmlParser());
@@ -121,7 +135,7 @@ final class FontSupport {
         Path mono = Common.bundledAssetPath("assets/DejaVuSansMono.ttf", ".ttf");
         if (mono == null) throw Common.fail("Bundled fixed-width font is missing");
         ProcessingLimits.checkFont(mono);
-        builder.useFont(mono.toFile(), "ArchiveMono");
+        register(builder, mono.toFile(), "ArchiveMono");
         head.appendElement("style").text("body .ea-plain-text, body .ea-plain-text *, body pre, body pre *, body code, body code * { font-family: ArchiveMono, "
             + families + " !important; }");
       }
@@ -129,7 +143,7 @@ final class FontSupport {
         Path serif = Common.bundledAssetPath("assets/LiberationSerif-Regular.ttf", ".ttf");
         if (serif == null) throw Common.fail("Bundled serif font is missing");
         ProcessingLimits.checkFont(serif);
-        builder.useFont(serif.toFile(), "ArchiveSerif");
+        register(builder, serif.toFile(), "ArchiveSerif");
       }
     }
     reportMissing(record, "rendered message text", document.text(), fonts);

@@ -31,3 +31,15 @@ jobs:
           name: conversion-quality-evidence
           path: output/quality-ci
           retention-days: 14
+  pdfjs-pin:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+      - run: npm run verify:pdfjs
+        working-directory: browser-viewer
+      - run: node --test tests/pdfjs-pin.test.mjs
+        working-directory: browser-viewer

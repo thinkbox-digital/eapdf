@@ -57,7 +57,7 @@ export async function metadataCsv(root:BrowserDocument,
   let rows=0,documents=0,bytes=0;
   const encoder=new TextEncoder();
   async function visit(doc:BrowserDocument,path:string,folderPaths:string[]):Promise<void>{
-    check();if(++documents>1000)throw new Error('Export exceeds 1,000 PDFs; no CSV was downloaded.');
+    check();documents++;
     const inspection=doc.inspection;
     if(inspection.diagnostics.some(d=>/^XMP_.*LIMIT$/.test(d.code))||
       !['present','missing'].includes(inspection.coverage.metadata)||
@@ -66,7 +66,7 @@ export async function metadataCsv(root:BrowserDocument,
     const collection=inspection.collection;
     if(!['present','missing'].includes(collection.state))throw new Error(`Collection could not be fully read in ${path}; no CSV was downloaded.`);
     if(!collection.value&&inspection.diagnostics.some(d=>d.code==='XMP_DISPLAY_VALUE_UNAVAILABLE'||d.code==='XMP_DISPLAY_VALUE_AMBIGUOUS'))
-      throw new Error(`An email metadata value could not be read unambiguously in ${path}; no CSV was downloaded. See Reading notes.`);
+      throw new Error(`An email metadata value could not be read unambiguously in ${path}; no CSV was downloaded.`);
     const attachments=collection.value?undefined:attachmentIndex(inspection);
     // Collection-level email records index the embedded messages. Export those
     // messages from their PDFs once, retaining repetitions in distinct children.
@@ -75,7 +75,7 @@ export async function metadataCsv(root:BrowserDocument,
       const values=[path,folderPaths.map(p=>p?'/'+p:'/').join('\n'),...['From','To','Cc','Bcc'].map(k=>data['Raw-'+k]||data[k]||''),
         data.Subject??'',data.Sent??'',message.internetMessageId.value??'',...attachments!(message)];
       const line=values.map(csvCell).join(',')+'\r\n';bytes+=encoder.encode(line).length;
-      if(++rows>100000||bytes>64*1024**2)throw new Error('Export exceeds 100,000 rows or 64 MiB; no CSV was downloaded.');
+      rows++;if(bytes>64*1024**2)throw new Error('Export exceeds the 64 MiB byte budget; no CSV was downloaded.');
       chunks.push(line);
       if(rows%250===0){progress(rows);await new Promise(resolve=>setTimeout(resolve,0));check();}
     }

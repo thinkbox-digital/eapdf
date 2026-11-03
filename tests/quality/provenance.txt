@@ -88,3 +88,14 @@ Beta.7 PST visual baseline reviewed 2026-11-02: source labels now match the
 embedded message_NN.eml filenames, and version footer advances. See
 docs/improvement/release-1.6.0-beta.7/visual-review.json. Comparison thresholds
 and masks are unchanged.
+
+Beta.8 visual baseline reviewed 2026-11-03: all 22 reference pages were
+reviewed against conversions of the five pinned real inputs. Compact first-page
+branding replaces the large raster footer. Complete continuation text now uses
+the reclaimed footer space; page counts are unchanged. Finding-aid content
+moves down 14 points beneath the banner. Its existing generated-time-only mask
+moves from y=104–116 to y=118–130, keeping Run stats visible and checked.
+Independent source/content/attachment expectations and Java EA-PDF/PDF/A
+validation pass unchanged. The 0.1% pixel threshold is unchanged; the test
+runner still never updates references. Before/after hashes, rendered pages and
+review evidence are retained locally in output/version-beta8-review/.

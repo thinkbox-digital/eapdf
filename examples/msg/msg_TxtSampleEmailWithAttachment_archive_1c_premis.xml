@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<premis:premis xmlns:premis="http://www.loc.gov/premis/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0">
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>object:msg_TxtSampleEmailWithAttachment_archive_1c.pdf</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>PDF</premis:formatName>
+                    
+          <premis:formatVersion>2.0</premis:formatVersion>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>msg_TxtSampleEmailWithAttachment_archive_1c.pdf</premis:originalName>
+      
+  </premis:object>
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>record:uuid:8fd4cce2-de82-4469-a586-900a475a42f9</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>&lt;6BA412B7BBD2FD42861293C22F31BF8F1AECAC05@pifmbx04.Leeds.gov.uk&gt;</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>application/vnd.ms-outlook</premis:formatName>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>TxtSampleEmailWithAttachment</premis:originalName>
+      
+  </premis:object>
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>embedded:uuid:8fd4cce2-de82-4469-a586-900a475a42f9:16c1d79495d1eb3be668a36fd59d4f6af32f04f2e9c3800f8b26cdb09e0708ed:TxtSampleEmailWithAttachment.msg</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:fixity>
+                
+        <premis:messageDigestAlgorithm>SHA-256</premis:messageDigestAlgorithm>
+                
+        <premis:messageDigest>16c1d79495d1eb3be668a36fd59d4f6af32f04f2e9c3800f8b26cdb09e0708ed</premis:messageDigest>
+              
+      </premis:fixity>
+            
+      <premis:size>206336</premis:size>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>application/vnd.ms-outlook</premis:formatName>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>TxtSampleEmailWithAttachment.msg</premis:originalName>
+      
+  </premis:object>
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>record:uuid:5f93b51e-e9d2-4634-a60a-d1f85864f5a0</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>&lt;F0391B9ADC682144BA63E0B002D3E3C072680C156C@ESCE-EVS-01.doe.local&gt;</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>application/vnd.ms-outlook</premis:formatName>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>Office of Enforcement Investigation Report - National Security Technologies</premis:originalName>
+      
+  </premis:object>
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>embedded:uuid:5f93b51e-e9d2-4634-a60a-d1f85864f5a0:86522f1c47d0d76ec17d41dfe1a394b25db60032a5f82fd4987b1ced893e3277:test.MSG</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:fixity>
+                
+        <premis:messageDigestAlgorithm>SHA-256</premis:messageDigestAlgorithm>
+                
+        <premis:messageDigest>86522f1c47d0d76ec17d41dfe1a394b25db60032a5f82fd4987b1ced893e3277</premis:messageDigest>
+              
+      </premis:fixity>
+            
+      <premis:size>509440</premis:size>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>application/vnd.ms-outlook</premis:formatName>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>test.MSG</premis:originalName>
+      
+  </premis:object>
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>object:child:1:TxtSampleEmailWithAttachment_000001_1s.pdf</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>PDF</premis:formatName>
+                    
+          <premis:formatVersion>2.0</premis:formatVersion>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>TxtSampleEmailWithAttachment_000001_1s.pdf</premis:originalName>
+      
+  </premis:object>
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>object:child:1:Office of Enforcement Investigation Report - National Security Technologies_000002_1s.pdf</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>PDF</premis:formatName>
+                    
+          <premis:formatVersion>2.0</premis:formatVersion>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>Office of Enforcement Investigation Report - National Security Technologies_000002_1s.pdf</premis:originalName>
+      
+  </premis:object>
+  <premis:event>
+        
+    <premis:eventIdentifier>
+            
+      <premis:eventIdentifierType>local</premis:eventIdentifierType>
+            
+      <premis:eventIdentifierValue>event:conversion:msg_TxtSampleEmailWithAttachment_archive_1c.pdf</premis:eventIdentifierValue>
+          
+    </premis:eventIdentifier>
+        
+    <premis:eventType>normalization</premis:eventType>
+        
+    <premis:eventDateTime>2026-11-03T23:30:43Z</premis:eventDateTime>
+        
+    <premis:eventDetailInformation>
+            
+      <premis:eventDetail>Prepared EA-PDF 1c content for serialization; this event does not attest final publication or independent conformance validation.</premis:eventDetail>
+          
+    </premis:eventDetailInformation>
+        
+    <premis:linkingAgentIdentifier>
+            
+      <premis:linkingAgentIdentifierType>local</premis:linkingAgentIdentifierType>
+            
+      <premis:linkingAgentIdentifierValue>agent:EmailToPDFA</premis:linkingAgentIdentifierValue>
+          
+    </premis:linkingAgentIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>object:msg_TxtSampleEmailWithAttachment_archive_1c.pdf</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>record:uuid:8fd4cce2-de82-4469-a586-900a475a42f9</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>record:uuid:5f93b51e-e9d2-4634-a60a-d1f85864f5a0</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+      
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>object:child:1:TxtSampleEmailWithAttachment_000001_1s.pdf</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>object:child:1:Office of Enforcement Investigation Report - National Security Technologies_000002_1s.pdf</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+  </premis:event>
+    
+  <premis:event>
+        
+    <premis:eventIdentifier>
+            
+      <premis:eventIdentifierType>local</premis:eventIdentifierType>
+            
+      <premis:eventIdentifierValue>event:conversion:child:1:TxtSampleEmailWithAttachment_000001_1s.pdf</premis:eventIdentifierValue>
+          
+    </premis:eventIdentifier>
+        
+    <premis:eventType>normalization</premis:eventType>
+        
+    <premis:eventDateTime>2026-11-03T23:30:42Z</premis:eventDateTime>
+        
+    <premis:eventDetailInformation>
+            
+      <premis:eventDetail>Prepared EA-PDF 1s content for serialization; this event does not attest final publication or independent conformance validation.</premis:eventDetail>
+          
+    </premis:eventDetailInformation>
+        
+    <premis:linkingAgentIdentifier>
+            
+      <premis:linkingAgentIdentifierType>local</premis:linkingAgentIdentifierType>
+            
+      <premis:linkingAgentIdentifierValue>agent:EmailToPDFA</premis:linkingAgentIdentifierValue>
+          
+    </premis:linkingAgentIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>object:child:1:TxtSampleEmailWithAttachment_000001_1s.pdf</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>record:uuid:8fd4cce2-de82-4469-a586-900a475a42f9</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+      
+  </premis:event>
+  <premis:event>
+        
+    <premis:eventIdentifier>
+            
+      <premis:eventIdentifierType>local</premis:eventIdentifierType>
+            
+      <premis:eventIdentifierValue>event:conversion:child:1:Office of Enforcement Investigation Report - National Security Technologies_000002_1s.pdf</premis:eventIdentifierValue>
+          
+    </premis:eventIdentifier>
+        
+    <premis:eventType>normalization</premis:eventType>
+        
+    <premis:eventDateTime>2026-11-03T23:30:42Z</premis:eventDateTime>
+        
+    <premis:eventDetailInformation>
+            
+      <premis:eventDetail>Prepared EA-PDF 1s content for serialization; this event does not attest final publication or independent conformance validation.</premis:eventDetail>
+          
+    </premis:eventDetailInformation>
+        
+    <premis:linkingAgentIdentifier>
+            
+      <premis:linkingAgentIdentifierType>local</premis:linkingAgentIdentifierType>
+            
+      <premis:linkingAgentIdentifierValue>agent:EmailToPDFA</premis:linkingAgentIdentifierValue>
+          
+    </premis:linkingAgentIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>object:child:1:Office of Enforcement Investigation Report - National Security Technologies_000002_1s.pdf</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>record:uuid:5f93b51e-e9d2-4634-a60a-d1f85864f5a0</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+      
+  </premis:event>
+  <premis:agent>
+        
+    <premis:agentIdentifier>
+            
+      <premis:agentIdentifierType>local</premis:agentIdentifierType>
+            
+      <premis:agentIdentifierValue>agent:EmailToPDFA</premis:agentIdentifierValue>
+          
+    </premis:agentIdentifier>
+        
+    <premis:agentName>EmailToPDFA</premis:agentName>
+        
+    <premis:agentType>software</premis:agentType>
+      
+  </premis:agent>
+  
+</premis:premis>

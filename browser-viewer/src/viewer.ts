@@ -22,13 +22,16 @@ function treeIcon(kind:'folder'|'message'|'document'):SVGSVGElement {
   return icon;
 }
 const fileInput=element<HTMLInputElement>('file'),pageInput=element<HTMLInputElement>('page'),zoom=element<HTMLSelectElement>('zoom');
-const status=element('status'),tree=element('tree'),files=element('files'),info=element('document-info'),diagnostics=element('diagnostics');
+const status=element('status'),tree=element('tree'),files=element('files'),info=element('document-info');
 const surface=element('page-surface'),viewport=element('viewport'),empty=element('empty-state');
 const search=element<HTMLInputElement>('search'),searchStatus=element('search-status');
 const attachmentViewer=new AttachmentViewer();
+const failedPages=new Set<number>();
 const pages=new ScrollingPages(viewport,surface,number=>{
   pageNumber=number;syncMessageToPage();if(current){savedPages.set(current,number);status.textContent=`${current.name} — Page ${number} of ${current.pdf.numPages}`;}controls();
-},message=>{status.textContent=`Unable to display PDF: ${message}`;});
+},message=>{status.textContent=`Unable to display PDF: ${message}`;},(number,failed)=>{
+  if(failed)failedPages.add(number);else failedPages.delete(number);controls();
+});
 let cancelLinked=()=>{};
 const finder=new DocumentSearch();let searchEpoch=0;
 const selectedMessage=(doc:BrowserDocument)=>doc.inspection.messages.find(m=>m.id===savedMessages.get(doc));
@@ -54,6 +57,7 @@ function controls():void {
   element<HTMLButtonElement>('previous').disabled=busy||!available||pageNumber<=1;
   element<HTMLButtonElement>('next').disabled=busy||!available||pageNumber>=(current?.pdf.numPages??0);
   element<HTMLButtonElement>('export-csv').disabled=busy||!available;
+  element('retry').hidden=!available||!failedPages.has(pageNumber);
   for(const id of ['retry','restart','find-previous'])element<HTMLButtonElement>(id).disabled=busy||!available;
   element<HTMLButtonElement>('back').disabled=busy||!current?.parent;
   element<HTMLButtonElement>('zoom-out').disabled=busy||!available||Number(zoom.value)<=0.5;
@@ -70,25 +74,38 @@ async function operation(action:(ticket:number)=>Promise<void>):Promise<void>{
   try{await action(ticket);}catch(error){if(ticket===generation){element('restart').hidden=!current;status.textContent=`Unable to display PDF: ${error instanceof Error?error.message:String(error)}`;}}
   finally{if(ticket===generation){busy=false;controls();}}
 }
+const loadingDialog=element<HTMLDialogElement>('loading-dialog');
+let loadingTimer:ReturnType<typeof setTimeout>|undefined;
+function finishLoading():void {
+  clearTimeout(loadingTimer);loadingTimer=undefined;
+  loadingDialog.close();tree.hidden=false;
+}
+element('loading-cancel').addEventListener('click',()=>close());
+loadingDialog.addEventListener('cancel',event=>{event.preventDefault();close();});
 function close():void {
+  finishLoading();
   metadataEpoch++;metadataSession?.close();metadataSession=undefined;metadataIndex=undefined;clearTimeout(filterTimer);
   filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;filter.value='';tree.hidden=false;
-  for(const list of virtualLists)list.close();virtualLists.clear();fileList?.close();fileList=undefined;diagnosticList?.close();diagnosticList=undefined;
+  for(const list of virtualLists)list.close();virtualLists.clear();fileList?.close();fileList=undefined;
   cancelLinked();searchSession?.close();searchSession=undefined;exportSession?.close();exportSession=undefined;
-  generation++;searchEpoch++;finder.clear();pages.clear();attachmentViewer.close();session?.close();session=undefined;current=undefined;
+  generation++;searchEpoch++;failedPages.clear();finder.clear();pages.clear();attachmentViewer.close();session?.close();session=undefined;current=undefined;
   nodes.clear();savedPages.clear();savedMessages.clear();busy=false;pageNumber=1;editingPage=false;
-  element('restart').hidden=true;empty.hidden=false;element('reading-notes').hidden=true;element('collection-results').hidden=true;element('collection-matches').replaceChildren();element('outline').replaceChildren();element('outline-panel').hidden=true;
-  for(const panel of [tree,files,info,diagnostics,element('breadcrumbs')])panel.replaceChildren();
-  element('file-count').textContent=element('note-count').textContent='0';search.value='';searchStatus.textContent='';
+  element('restart').hidden=true;empty.hidden=false;element('collection-results').hidden=true;element('collection-matches').replaceChildren();element('outline').replaceChildren();element('outline-panel').hidden=true;
+  for(const panel of [tree,files,info,element('breadcrumbs')])panel.replaceChildren();
+  element('file-count').textContent='0';search.value='';searchStatus.textContent='';
   status.textContent='Closed. Open or drop a PDF to begin.';controls();
 }
 async function render(ticket:number,followMessage=true):Promise<void>{
-  const doc=current;if(!doc||!session)return;await session.ensure(doc);check(ticket);
-  status.textContent=`Rendering page ${pageNumber}…`;
-  let scale=Number(zoom.value)*PDF_TO_CSS;
-  if(zoom.value.startsWith('fit-')){const page=await doc.run(doc.pdf.getPage(pageNumber));try{const v=page.getViewport({scale:1});scale=(viewport.clientWidth-60)/v.width;if(zoom.value==='fit-page')scale=Math.min(scale,(viewport.clientHeight-60)/v.height);}finally{page.cleanup();}check(ticket);}
-  empty.hidden=true;await pages.show(doc,Math.max(0.1,scale),pageNumber,search.value);check(ticket);
-  empty.hidden=true;status.textContent=`${doc.name} — Page ${pageNumber} of ${doc.pdf.numPages}`;savedPages.set(doc,pageNumber);if(followMessage)syncMessageToPage();
+  const doc=current;if(!doc||!session)return;
+  failedPages.clear();controls();
+  try{
+    await session.ensure(doc);check(ticket);
+    status.textContent=`Rendering page ${pageNumber}…`;
+    let scale=Number(zoom.value)*PDF_TO_CSS;
+    if(zoom.value.startsWith('fit-')){const page=await doc.run(doc.pdf.getPage(pageNumber));try{const v=page.getViewport({scale:1});scale=(viewport.clientWidth-60)/v.width;if(zoom.value==='fit-page')scale=Math.min(scale,(viewport.clientHeight-60)/v.height);}finally{page.cleanup();}check(ticket);}
+    empty.hidden=true;await pages.show(doc,Math.max(0.1,scale),pageNumber,search.value);check(ticket);
+    empty.hidden=true;status.textContent=`${doc.name} — Page ${pageNumber} of ${doc.pdf.numPages}`;savedPages.set(doc,pageNumber);if(followMessage)syncMessageToPage();
+  }catch(error){if(ticket===generation&&current===doc)failedPages.add(pageNumber);throw error;}
 }
 
 function pair(parent:HTMLElement,label:string,value:string):void {parent.append(text('dt',label),text('dd',value));}
@@ -124,31 +141,25 @@ function breadcrumbs(doc:BrowserDocument):void {
   for(let d:BrowserDocument|null=doc;d;d=d.parent)path.unshift(d);
   path.forEach((d,i)=>{if(i)bar.append(text('span','›'));const b=button(d.name,()=>void operation(ticket=>showDocument(d,ticket)));b.title=d.name;bar.append(b);});
 }
-let diagnosticList:VirtualList<BrowserDocument['inspection']['diagnostics'][number]>|undefined;
 function showInformation(doc:BrowserDocument):void {
   info.replaceChildren();const list=text('dl',''),id=doc.inspection.identification;
   pair(list,'Document',doc.name);pair(list,'Declared profile',id.declaredProfile.value?`${id.eapdfVersion.value??'?'}${id.declaredProfile.value}`:id.declaredProfile.state);
   pair(list,'EA-PDF revision',observation(id.eapdfRevision));pair(list,'File size',sizeLabel(doc.inspection.source.byteLength));info.append(list);
-  diagnosticList?.close();diagnosticList=undefined;diagnostics.replaceChildren();
-  const notes=doc.inspection.diagnostics;
-  if(notes.length>256){
-    const list=text('ul','');list.style.listStyle='none';list.style.padding='0';diagnostics.append(list);
-    diagnosticList=new VirtualList(list,diagnostics.closest('aside')!,notes,d=>{const row=text('li','');row.append(text('p',`${d.message} (${d.code})`));return row;},42);
-  }else for(const d of notes)diagnostics.append(text('p',`${d.message} (${d.code})`));
-  element('reading-notes').hidden=doc.inspection.diagnostics.length===0;
-  element('note-count').textContent=String(doc.inspection.diagnostics.length);breadcrumbs(doc);
+  for(const diagnostic of doc.inspection.diagnostics)console.debug('[EA-PDF inspection]',doc.name,diagnostic);
+  breadcrumbs(doc);
 }
 function refreshInspection(doc:BrowserDocument):void {
   if(current!==doc)return;showInformation(doc);showFiles(doc,singleMessage(doc)?undefined:selectedMessage(doc));
   const mismatches=doc.inspection.diagnostics.filter(d=>d.code==='CHECKSUM_MISMATCH');
-  if(mismatches.length){element('reading-notes').closest('details')!.open=true;status.textContent='Warning: an embedded file differs from its recorded checksum. See Reading notes.';}
+  if(mismatches.length){status.textContent='Warning: an embedded file differs from its recorded checksum.';}
 }
 function showFiles(doc:BrowserDocument,message?:MailMessage):void {
   fileList?.close();fileList=undefined;files.replaceChildren();const selected=doc.inspection.files.filter(f=>!message||f.owners.value?.includes(message.id));element('file-count').textContent=String(selected.length);
   files.append(text('p',`Files stored in ${doc.name}.`));
   if(message){const note=text('p','Files for this email. Select the document name for all files stored in this PDF.');note.className='file-note';files.append(note);}
-  if(doc.inspection.coverage.associatedFiles!=='present'){const note=text('p','Embedded files could not be fully inspected. This list may be incomplete; see Reading notes.');note.className='file-note';files.append(note);}
-  if(!selected.length){if(doc.inspection.coverage.associatedFiles==='present'){const note=text('p',message&&doc.inspection.files.length?'No files are associated with this email in the PDF. See Reading notes for document errors.':'No embedded files in this selection.');note.className='muted';files.append(note);}}
+  if(doc.inspection.coverage.associatedFiles!=='present'){const note=text('p','Some embedded files could not be listed.');note.className='file-note';files.append(note);}
+  if(message&&doc.inspection.diagnostics.some(d=>d.code==='FILE_EMAIL_ASSOCIATION_MISSING')){const note=text('p','Some files could not be linked to an email.');note.className='file-note';files.append(note);}
+  if(!selected.length){if(doc.inspection.coverage.associatedFiles==='present'){const note=text('p',message&&doc.inspection.files.length?'No files are associated with this email in the PDF.':'No embedded files in this selection.');note.className='muted';files.append(note);}}
   const list=text('ul','');files.append(list);
   const createFile=(file:AssociatedFile)=>{
     const row=text('li','');row.className='file-card';const label=text('strong',fileLabel(file));label.className='file-name';row.append(label);
@@ -163,7 +174,7 @@ function showFiles(doc:BrowserDocument,message?:MailMessage):void {
       const size=stream.decodedSize.value??stream.declaredSize.value,type=stream.mimeType.value?.split(';')[0]||fileLabel(file).split('.').at(-1)?.toUpperCase()||'File';
       const facts=text('p',`${type} · ${sizeLabel(size)}${file.streams.length>1?' · '+stream.efKeys.join('/'):''}`);facts.className='file-facts';row.append(facts);
       const actions=text('div','');actions.className='file-actions';row.append(actions);
-      const save=button(file.afRelationship.value==='Source'&&/\.eml$/i.test(fileLabel(file))?'Download email (.eml)':'Download',()=>void operation(async ticket=>{status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);await saveBlob(new Blob([new Uint8Array(data)],{type:'application/octet-stream'}),fileLabel(file),()=>check(ticket));check(ticket);refreshInspection(doc);status.textContent=`Download requested: ${fileLabel(file)} (${sizeLabel(data.length)}).${doc.inspection.diagnostics.some(d=>d.code==='CHECKSUM_MISMATCH')?' Warning: recorded checksum mismatch; see Reading notes.':''}`;}));save.dataset.fileId=file.id;save.dataset.stream=stream.locator.path;actions.append(save);
+      const save=button(file.afRelationship.value==='Source'&&/\.eml$/i.test(fileLabel(file))?'Download email (.eml)':'Download',()=>void operation(async ticket=>{status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);await saveBlob(new Blob([new Uint8Array(data)],{type:'application/octet-stream'}),fileLabel(file),()=>check(ticket));check(ticket);refreshInspection(doc);status.textContent=`Download requested: ${fileLabel(file)} (${sizeLabel(data.length)}).${doc.inspection.diagnostics.some(d=>d.code==='CHECKSUM_MISMATCH')?' Warning: recorded checksum mismatch.':''}`;}));save.dataset.fileId=file.id;save.dataset.stream=stream.locator.path;actions.append(save);
       if(size===0){const note=text('p','Empty embedded file (zero bytes). It may be an empty original or a placeholder.');note.className='file-note';row.append(note);}
       else if(canView(file,stream)){
         const view=button(isPdf(file,stream)?'Open PDF':'View',()=>void operation(async ticket=>{
@@ -197,8 +208,7 @@ async function showDocument(doc:BrowserDocument,ticket:number,message?:MailMessa
   if(edge){nodes.get(doc)?.querySelector('button')?.scrollIntoView({block:'nearest'});status.textContent=`${doc.name} — Page ${pageNumber} of ${doc.pdf.numPages} · ${edge===1?'Next':'Previous'} file in this folder`;}
   if(message&&!destinations.length)status.textContent+=' — Message page mapping unavailable; showing document page.';
   if(doc.inspection.coverage.metadata==='unavailable'){
-    element('diagnostics').closest('details')!.open=true;
-    status.textContent+=' — Email metadata unavailable; see Reading notes.';
+    status.textContent+=' — Email metadata unavailable.';
   }
 }
 async function openChild(parent:BrowserDocument,file:AssociatedFile,stream:EmbeddedStream,ticket:number,edge?:-1|1):Promise<void>{
@@ -322,8 +332,25 @@ async function openFile(file:Blob,name:string):Promise<void>{
   if(busy)return;close();element('linked-file').hidden=true;session=new BrowserSession();const active=session;
   await operation(async ticket=>{
     status.textContent=`Opening ${name}…`;
+    tree.hidden=true;
+    element('loading-message').textContent='Inspecting the email archive. Large files may take a while.';
+    element('loading-progress').hidden=false;
+    element('loading-cancel').textContent='Cancel';
+    loadingTimer=setTimeout(()=>{if(ticket===generation)loadingDialog.showModal();},1000);
+    try {
     const doc=await active.open(file,name,fraction=>{if(ticket===generation)status.textContent=`Inspecting ${name} · ${Math.round(fraction*100)}%`;},null,undefined,undefined,async preview=>{check(ticket);empty.hidden=true;await pages.show(preview,PDF_TO_CSS,1,'');check(ticket);status.textContent='First page ready. Email and file inspection continues…';});check(ticket);
     tree.append(documentTree(doc));zoom.value='1';await showDocument(doc,ticket);
+    if(ticket===generation)finishLoading();
+    } catch(error) {
+      if(ticket===generation){
+        clearTimeout(loadingTimer);loadingTimer=undefined;
+        element('loading-message').textContent=`Unable to open PDF: ${error instanceof Error?error.message:String(error)}`;
+        element('loading-progress').hidden=true;
+        element('loading-cancel').textContent='Close';
+        if(!loadingDialog.open)loadingDialog.showModal();
+      }
+      throw error;
+    }
   });
 }
 fileInput.addEventListener('change',()=>{const file=fileInput.files?.[0];fileInput.value='';if(file)void openFile(file,file.name);});
@@ -377,13 +404,20 @@ search.addEventListener('keydown',event=>{if(event.key==='Escape'){search.value=
 async function showOutline(doc:BrowserDocument,ticket:number):Promise<void>{
   const panel=element('outline-panel'),list=element('outline');list.replaceChildren();panel.hidden=true;
   try{const entries=await doc.run(doc.pdf.getOutline());check(ticket);if(current!==doc||!entries)return;let count=0;
-    const add=(items:typeof entries,parent:HTMLElement,depth:number)=>{if(depth>16)return;for(const item of items){if(++count>1000)return;const row=text('li','');
+    const pending=entries.slice().reverse().map(item=>({item,parent:list})),seen=new Set<typeof entries[number]>();
+    while(pending.length){
+      const {item,parent}=pending.pop()!;
+      if(seen.has(item))throw new Error('Cyclic bookmark tree.');seen.add(item);
+      const row=text('li','');
       if(item.dest)row.append(button(item.title,()=>void operation(async active=>{
         const dest=typeof item.dest==='string'?await doc.run(doc.pdf.getDestination(item.dest)):item.dest;check(active);if(!dest)throw new Error('Bookmark destination is unavailable.');
         const ref=dest[0];const index=typeof ref==='number'?ref:await doc.run(doc.pdf.getPageIndex(ref));check(active);if(index<0||index>=doc.pdf.numPages)throw new Error('Bookmark page is outside this PDF.');pageNumber=index+1;await render(active);
       })));else row.append(text('span',item.title+' (no internal page destination)'));
-      parent.append(row);if(item.items.length){const nested=text('ul','');row.append(nested);add(item.items,nested,depth+1);}
-    }};add(entries,list,0);panel.hidden=!list.children.length;
+      parent.append(row);
+      if(item.items.length){const nested=text('ul','');row.append(nested);for(const child of item.items.slice().reverse())pending.push({item:child,parent:nested});}
+      if(++count%250===0){await new Promise(resolve=>setTimeout(resolve,0));check(ticket);}
+    }
+    panel.hidden=!list.children.length;
   }catch(error){if(ticket===generation&&current===doc){list.append(text('li','Bookmarks could not be read.'));panel.hidden=false;}}
 }
 async function findInCollection():Promise<void>{
@@ -411,7 +445,7 @@ async function findMatch(direction:1|-1):Promise<void>{
     const epoch=++searchEpoch;const checkSearch=()=>{check(ticket);if(epoch!==searchEpoch)throw new Error('Search cancelled.');};
     element('cancel-search').hidden=false;searchStatus.textContent='Searching this PDF…';
     try{await session!.ensure(doc);const result=await finder.find(doc,query,pageNumber,direction,checkSearch);checkSearch();
-      if('page'in result){pageNumber=result.page;await render(ticket);checkSearch();pages.highlight(query,result);searchStatus.textContent=`Match ${result.index+1} of ${result.count}${result.count===2000?'+':''} on page ${result.page}`;}
+      if('page'in result){pageNumber=result.page;await render(ticket);checkSearch();pages.highlight(query,result);searchStatus.textContent=`Match ${result.index+1} of ${result.count} on page ${result.page}`;}
       else searchStatus.textContent=result.incomplete?'Search limit reached; results are incomplete.':'No matching text in this document.';
     }catch(error){if(epoch!==searchEpoch){searchStatus.textContent='Search cancelled.';return;}throw error;}
     finally{element('cancel-search').hidden=true;}

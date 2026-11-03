@@ -104,7 +104,7 @@ public class EapdfGui {
     frame.add(top, BorderLayout.NORTH);
     frame.add(buildLogPanel(), BorderLayout.CENTER);
 
-    frame.setMinimumSize(new Dimension(980, 780));
+    frame.setMinimumSize(new Dimension(1200, 955));
     frame.pack();
     frame.setLocationRelativeTo(null);
     frame.setVisible(true);
@@ -201,14 +201,12 @@ public class EapdfGui {
         new Choice("Folder collection (c)", "c", true, false),
         new Choice("Folder collection, omit originals (ci)", "ci", true, false)
     });
-    JCheckBox debugBox = new JCheckBox("Debug output");
     RunConfigControls configControls = buildRunConfigControls();
 
     addPathRow(panel, gc, 0, "Input file or folder", inputField, e -> choosePath(inputField, JFileChooser.FILES_AND_DIRECTORIES, false));
     addPathRow(panel, gc, 1, "Output directory", outDirField, e -> choosePath(outDirField, JFileChooser.DIRECTORIES_ONLY, false, inputField));
     addRow(panel, gc, 2, "Profile", buildProfilePicker(profileBox, true));
-    addRow(panel, gc, 3, "Debug", debugBox);
-    addRow(panel, gc, 4, "Features", buildRunConfigPanel(configControls));
+    addRow(panel, gc, 3, "Features", buildRunConfigPanel(configControls));
 
     JButton runButton = new JButton("Convert Local Input");
     runButtons.add(runButton);
@@ -237,7 +235,6 @@ public class EapdfGui {
       }
       args.add("--jobs");
       args.add("4");
-      if (debugBox.isSelected()) args.add("--debug");
 
       Choice choice = (Choice) profileBox.getSelectedItem();
       if (choice != null && choice.archiveMode) {
@@ -250,7 +247,7 @@ public class EapdfGui {
       runJavaMain("Local Email", "eapdf.EmailToPDFA", args, configControls.snapshot());
     });
 
-    addRunRow(panel, gc, 5, runButton);
+    addRunRow(panel, gc, 4, runButton);
     return panel;
   }
 
@@ -312,7 +309,6 @@ public class EapdfGui {
         new Choice("Folder collection, omit originals (ci)", "ci", true, false)
     });
     JCheckBox unreadOnlyBox = new JCheckBox("Unread only");
-    JCheckBox debugBox = new JCheckBox("Debug output");
     JSpinner limitSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 100000, 1));
     RunConfigControls configControls = buildRunConfigControls();
 
@@ -324,8 +320,7 @@ public class EapdfGui {
     addRow(panel, gc, 5, "Profile", buildProfilePicker(profileBox, false));
     addRow(panel, gc, 6, "Limit (0 = all)", limitSpinner);
     addRow(panel, gc, 7, "Unread filter", unreadOnlyBox);
-    addRow(panel, gc, 8, "Debug", debugBox);
-    addRow(panel, gc, 9, "Features", buildRunConfigPanel(configControls));
+    addRow(panel, gc, 8, "Features", buildRunConfigPanel(configControls));
 
     JButton runButton = new JButton("Download + Convert Gmail");
     runButtons.add(runButton);
@@ -349,7 +344,6 @@ public class EapdfGui {
         args.add(Integer.toString(limit));
       }
       if (unreadOnlyBox.isSelected()) args.add("--unread-only");
-      if (debugBox.isSelected()) args.add("--debug");
 
       Choice choice = (Choice) profileBox.getSelectedItem();
       if (choice != null && choice.archiveMode) {
@@ -361,7 +355,7 @@ public class EapdfGui {
       runJavaMain("Gmail", "eapdf.GmailDownloadToPdf", args, configControls.snapshot());
     });
 
-    addRunRow(panel, gc, 10, runButton);
+    addRunRow(panel, gc, 9, runButton);
     return panel;
   }
 
@@ -372,8 +366,8 @@ public class EapdfGui {
     int titleWidth = password.getFontMetrics(password.getFont()).stringWidth(title);
     dialog.setMinimumSize(new Dimension(Math.max(440, titleWidth + 160), dialog.getHeight()));
     dialog.setLocationRelativeTo(parent);
-    dialog.addWindowListener(new WindowAdapter() {
-      @Override public void windowOpened(WindowEvent event) {
+    dialog.addWindowFocusListener(new WindowAdapter() {
+      @Override public void windowGainedFocus(WindowEvent event) {
         SwingUtilities.invokeLater(password::requestFocusInWindow);
       }
     });
@@ -562,7 +556,7 @@ public class EapdfGui {
       } catch (java.nio.file.InvalidPathException ex) {
         appendSummary(line);
       }
-    } else if (error != null) {
+    } else if (error != null && (!line.startsWith("Caused by: ") || lastRunError == null)) {
       lastRunError = error;
       if (!stopRequested) appendSummary("Error: " + lastRunError);
     } else if (line.startsWith("warning: ")) {
@@ -594,12 +588,12 @@ public class EapdfGui {
     JCheckBox branding = new JCheckBox("Branding", cfg.branding != null && cfg.branding.enabled);
     JCheckBox findingAid = new JCheckBox("Finding Aid", cfg.findingAid != null && cfg.findingAid.pdfEnabled);
     JCheckBox premis = new JCheckBox("PREMIS", cfg.premis != null && cfg.premis.enabled);
-    JCheckBox pdfUa = new JCheckBox("Accessibility (partial)", cfg.accessibility != null && cfg.accessibility.addPdfUaFeatures);
+    JCheckBox pdfUa = new JCheckBox("Accessibility", cfg.accessibility != null && cfg.accessibility.addPdfUaFeatures);
 
     branding.setToolTipText("Show or suppress the ThinkBox footer branding in generated PDFs.");
     findingAid.setToolTipText("Include or omit generated finding-aid front matter and related spreadsheet output.");
     premis.setToolTipText("Include or omit PREMIS preservation metadata sidecar output.");
-    pdfUa.setToolTipText("Enable partial accessibility features. This does not establish PDF/UA conformance.");
+    pdfUa.setToolTipText("Enable accessibility features. This does not establish PDF/UA conformance.");
 
     return new RunConfigControls(branding, findingAid, premis, pdfUa, cfg.signing);
   }

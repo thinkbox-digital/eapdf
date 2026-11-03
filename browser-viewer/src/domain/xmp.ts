@@ -15,15 +15,6 @@ export function parseXmp(text: string | null, loc: ObjectLocator, parse: (source
       if (/<!DOCTYPE|<!ENTITY/i.test(text)) { state = 'unsupported'; throw new Error('DTD/entity declarations are not supported.'); }
       const document = parse(text);
       if (document.getElementsByTagName('parsererror').length) throw new Error('Catalog XMP is not well-formed XML.');
-      const pending:{node:Element;depth:number}[]=[{node:document.documentElement,depth:0}];let nodes=0;
-      while(pending.length){
-        const item=pending.pop()!;
-        if(++nodes>100000||item.depth>64){state='unavailable';throw new Error('XML node/depth limit reached.');}
-        for(const node of item.node.children){
-          if(pending.length+nodes>=100000){state='unavailable';throw new Error('XML node limit reached.');}
-          pending.push({node,depth:item.depth+1});
-        }
-      }
       descriptions = [...document.getElementsByTagNameNS(NS.rdf,'RDF')].flatMap(r => children(r,NS.rdf,'Description'));
       if (!descriptions.length) throw new Error('No RDF description found.');
       state = 'present';
@@ -101,7 +92,6 @@ export function parseXmp(text: string | null, loc: ObjectLocator, parse: (source
       const bags=children(prop,NS.rdf,'Bag');
       if(bags.length!==1){state='unsupported';diagnostic('XMP_RECORD_STRUCTURE','unsupported','Expected RDF Bag.');continue;}
       for(const li of bags[0]!.children){
-        if(index>=10000){state='unavailable';diagnostic('XMP_RECORD_LIMIT','unavailable','Metadata record limit reached.');break;}
         readRecord([children(li,NS.rdf,'Description')[0]??li],container,index++,kind);
       }
     }

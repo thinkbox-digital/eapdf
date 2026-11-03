@@ -31,7 +31,6 @@ final class StructureRoles {
     Key initial = new Key(namespace, role); Result cached = cache.get(initial); if (cached != null) return cached;
     Set<Key> seen = new HashSet<>(); Result result;
     while (true) {
-      if (seen.size() >= 4096) { result = new Result("", "Role mapping inspection limit reached"); break; }
       if (role.isEmpty() || !seen.add(new Key(namespace, role))) { result = new Result("", "Missing or cyclic role mapping"); break; }
       String uri = namespace == null ? PDF17 : string(get(namespace, "NS"));
       if (namespace != null && (!registered.contains(namespace) || uri.isEmpty())) { result = new Result("", "Unregistered or unnamed namespace"); break; }

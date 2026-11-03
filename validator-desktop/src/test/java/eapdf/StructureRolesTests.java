@@ -46,9 +46,9 @@ class StructureRolesTests {
     element.setName(COSName.S,"H12");assertEquals("H12",result().role());
     element.setItem("NS",namespace("urn:custom"));element.setName(COSName.S,"Document");assertEquals("",result().role());
   }
-  @Test void boundedTraversalIsNotAConformanceFailure() {
+  @Test void longRoleMappingChainsAreFullyResolved() {
     element.setName(COSName.S,"R0");for(int i=0;i<4100;i++)map().setName("R"+i,"R"+(i+1));map().setName("R4100","Document");
-    assertTrue(result().limited());
+    assertFalse(result().limited()); assertEquals("Document", result().role());
   }
   private JavaValidation.Report report(String path) {
     var report=new JavaValidation.Report(path);report.pdfa=new com.google.gson.JsonObject();report.pdfa.addProperty("status","NOT_RUN");return report;

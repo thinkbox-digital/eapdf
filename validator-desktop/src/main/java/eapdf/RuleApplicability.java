@@ -46,13 +46,13 @@ final class RuleApplicability {
   }
 
   private void collectParts(COSDictionary node, Set<COSDictionary> seen) {
-    if (node == null || !seen.add(node) || seen.size() > InspectionBudget.nodes(document)) return;
+    if (node == null || !seen.add(node)) return;
     nodes.add(node);
     for (COSDictionary child : PageContentChecks.dictionaries(get(node, "DParts"))) collectParts(child, seen);
   }
   private void collectStructure(COSBase value, COSDictionary root, Set<COSDictionary> seen) {
     for (COSDictionary node : PageContentChecks.dictionaries(value)) {
-      if (!seen.add(node) || seen.size() > InspectionBudget.nodes(document)) continue;
+      if (!seen.add(node)) continue;
       String tag = name(get(node, "S"));
       if (tag.startsWith("Mail_")) {
         tags.add(tag); userProperties |= !LogicalStructureChecks.properties(root, node).isEmpty();

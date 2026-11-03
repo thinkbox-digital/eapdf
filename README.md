@@ -8,7 +8,7 @@
 
 Convert email into EA-PDF files using Java, PDFBox, and XMP metadata.
 
-Current beta version: `1.6.0-beta.7`
+Current source beta version: `1.6.0-beta.8`
 
 The separate [browser viewer beta](browser-viewer/docs/beta-release.md) opens local
 EA-PDF files and embedded PDFs recursively in Firefox and Chromium. It also
@@ -212,6 +212,17 @@ from one PST. Allow sufficient heap for the requested workers: the existing
 default limits budget roughly 1 GiB per rendering worker. The Python validator
 remains available for its regression tests and explicitly requested comparisons
 or diagnostics.
+
+Run the separate [Arlington object-model audit](docs/ARLINGTON_VALIDATION.md)
+locally on the PDFs in `out/`:
+
+```bash
+python3 scripts/install_arlington.py
+python3 scripts/validate_arlington.py out --reports output/arlington --jobs 2
+```
+
+This uses a pinned standalone Java checker and preserves per-file reports and
+hashes. Embedded PDF payloads require a separate pass; see the linked scope notes.
 
 Run the web validator:
 

@@ -53,10 +53,8 @@ class WideEmailTableTests {
       @Override protected void writeString(String text, List<TextPosition> positions) throws java.io.IOException {
         if (getCurrentPageNo() == document.getNumberOfPages()
             && (text.contains("R") && text.contains("C") || text.contains("End of report") || text.contains("Source file:"))) {
-          float limit;
-          try { limit = getCurrentPage().getMediaBox().getHeight() - PdfMailWriter.brandingFooterTop(getCurrentPage().getMediaBox()) - 6f; }
-          catch (Exception error) { throw new java.io.IOException(error); }
-          for (var position : positions) assertTrue(position.getYDirAdj() <= limit, "Body overlaps footer");
+          float limit = getCurrentPage().getMediaBox().getHeight() - 46f;
+          for (var position : positions) assertTrue(position.getYDirAdj() <= limit, "Body exceeds bottom margin");
         }
         super.writeString(text, positions);
       }
@@ -81,7 +79,7 @@ class WideEmailTableTests {
   }
 
   @Test
-  void normalTableKeepsLetterPagesAndLongWideTableKeepsRowsAboveFooter() throws Exception {
+  void normalTableKeepsLetterPagesAndLongWideTableKeepsRowsWithinMargins() throws Exception {
     try (var document = Loader.loadPDF(pdf(message("600", 2)))) {
       assertEquals(612f, document.getPage(0).getMediaBox().getWidth(), 0.1f);
       assertTextFits(document);

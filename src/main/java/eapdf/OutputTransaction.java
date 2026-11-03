@@ -86,7 +86,6 @@ final class OutputTransaction implements AutoCloseable {
     Entry[] entries = new Gson().fromJson(Files.readString(manifest), Entry[].class);
     if (entries == null) throw new IOException("Missing output manifest entries");
     // A collection can publish its PDF plus finding-aid PDF, spreadsheet and PREMIS sidecars.
-    if (entries.length > budget.setting("eapdf.maxMessages", "EAPDF_MAX_MESSAGES", ProcessingLimits.messages()) * 4) throw Common.fail("Too many output manifest entries");
     long total = 0;
     var destinations = new java.util.HashSet<Path>();
     ConversionProgress.begin("verifying_outputs", entries.length, "files");

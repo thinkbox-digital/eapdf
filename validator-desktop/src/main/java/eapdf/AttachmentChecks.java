@@ -108,7 +108,6 @@ final class AttachmentChecks {
     while (!pending.isEmpty()) {
       COSDictionary current = pending.removeFirst();
       if (!seen.add(current)) continue;
-      if (seen.size() > InspectionBudget.nodes(document)) throw new java.io.IOException("Attachment body inventory exceeds its node limit");
       if (get(current, "Start") != null || get(current, "End") != null) leaves.add(current);
       COSBase groups = get(current, "DParts");
       if (groups instanceof COSArray arrays) for (COSBase group : arrays)
@@ -138,7 +137,6 @@ final class AttachmentChecks {
       for (Body body : bodySets(document)) {
         List<Element> owners = body.identity().known() ? ownerIndex.owners(body.identity()) : List.of();
         for (PDPage page : body.pages()) {
-          if (++work > InspectionBudget.nodes(document)) return Map.of();
           if (owners.size() != 1 || body.part().getKey() == null || body.part().getKey().getNumber() <= 0
               || get(page.getCOSObject(), "DPart") != body.part()) unknownPages.add(page.getCOSObject());
           else pages.computeIfAbsent(page.getCOSObject(), ignored -> identitySet()).add(owners.getFirst());
@@ -147,7 +145,6 @@ final class AttachmentChecks {
       Map<COSDictionary, Set<Element>> scopes = new java.util.IdentityHashMap<>();
       Set<COSDictionary> unknownFiles = identitySet();
       for (PDPage page : document.getPages()) for (var annotation : page.getAnnotations()) {
-        if (++work > InspectionBudget.nodes(document)) return Map.of();
         if (!"FileAttachment".equals(name(get(annotation.getCOSObject(), "Subtype")))) continue;
         COSDictionary spec = dict(annotation.getCOSObject(), "FS");
         if (spec == null || spec.getKey() == null || spec.getKey().getNumber() <= 0) continue;

@@ -99,7 +99,7 @@ public class EmailToPDFA {
     }
     List<String> out = new ArrayList<>();
     try (var walk = Files.walk(p)) {
-      List<Path> files = walk.filter(Files::isRegularFile).limit((long)ProcessingLimits.messages() + 1).toList();
+      List<Path> files = walk.filter(Files::isRegularFile).toList();
       ProcessingLimits.checkCount(files.size());
       files = files.stream().sorted().toList();
       for (Path file : files) {

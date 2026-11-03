@@ -10,10 +10,15 @@ export async function expandFolders(browser) {
 export async function checkInterface(browser) {
   const manifest = JSON.parse(await readFile('tests/inspection/manifest.json', 'utf8'));
   const results = [];
+  await browser.evaluate(()=>{
+    window.testInspectionDiagnostics=[];
+    const debug=console.debug;
+    console.debug=(...args)=>{if(args[0]==='[EA-PDF inspection]')window.testInspectionDiagnostics.push(args[2]);debug.apply(console,args);};
+  });
   const snapshot = () => browser.evaluate(() => ({
     status: document.querySelector('#status').textContent,
     info: document.querySelector('#document-info').textContent,
-    notes: document.querySelector('#diagnostics').textContent,
+    notes: JSON.stringify(window.testInspectionDiagnostics),
     tree: document.querySelector('#tree').textContent,
     visible: !document.querySelector('#canvas').hidden,
     page: Number(document.querySelector('#page').value),
@@ -27,7 +32,9 @@ export async function checkInterface(browser) {
     const source = resolve('..', fixture.sourcePath);
     assert.equal(hash(await readFile(source)), fixture.sha256);
     const expected = JSON.parse(await readFile(resolve('tests/inspection', fixture.expected), 'utf8'));
+    await browser.evaluate(()=>{window.testInspectionDiagnostics=[];});
     await browser.open(source);
+    assert.equal(await browser.evaluate(()=>document.querySelector('#reading-notes')),null,'Reading Notes panel removed');
     assert.equal(await browser.evaluate(()=>document.querySelectorAll('#tree details[open]').length),0,'Folders start collapsed');
     let checks = 0, downloads = 0;
     async function inspect(record) {

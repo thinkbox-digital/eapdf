@@ -1,4 +1,6 @@
-# EA-PDF browser viewer — beta 0.5.0-beta.5
+# EA-PDF browser viewer — beta 0.5.0-beta.6
+
+Current source version: `0.5.0-beta.6` (EA-PDF `1.6.0-beta.8`). Published download links below retain their released versions.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
 6.5.438 and retains the existing Chromium/Firefox architecture.
@@ -42,7 +44,7 @@ No Java, server, native host or network connection is needed at runtime.
 
 The earlier 0.3.1 update started folders collapsed, uses folder chevrons, removes
 the opened-PDF count and duplicate Message panel, and reduces header/toolbar
-spacing. Reading notes appear only when the file reader has something to report.
+spacing. Inspection problems use short warnings beside the affected content; detailed diagnostics are available in the browser debug console.
 
 [Install the local beta and view attachments](docs/beta-release.md). Packages are
 in `releases/`; the [current checkpoint](docs/beta-release.md#verified-scope) records tests and limits.
@@ -88,8 +90,8 @@ expanded Document Information by default. See the beta guide for current checks.
   formula-like cells receive a leading apostrophe for spreadsheet safety.
   Export runs locally and can be cancelled with **Close / cancel**. Unreadable
   collection children or inspection limits stop the export without a partial file.
-  Existing inspection limits apply (including 10,000 metadata records per category
-  per PDF); export additionally stops at 1,000 PDFs, 100,000 rows or 64 MiB of CSV.
+  Resource budgets apply; CSV export stops explicitly at its 64 MiB byte budget.
+  PDF, record and row counts do not truncate the export.
   Arbitrary PDF attachments outside collections are not recursively exported.
 - **Close / cancel** stops processing and releases the document workers and data.
 - Right-click a web PDF link and choose **Open in EA-PDF viewer**, then explicitly
@@ -98,7 +100,7 @@ expanded Document Information by default. See the beta guide for current checks.
 ## Build
 
 Use Node **24.19.0**, npm **11.17.0**, TypeScript **5.9.3** and PDF.js **6.5.438**.
-PDF.js upstream commit: `d0991a0d53f3bb3a7307e3b83f279c1d117aafb3`.
+PDF.js upstream commit: `0a4153349dc473ba950fc17941c5ca7eda43c1de`.
 `.nvmrc`, exact package versions, package-lock.json integrity fields and
 `vendor/pdfjs-pin.json` record the upstream inputs. The narrow source patch,
 build recipe and generated-bundle hashes are in `vendor/pdfjs-patches/`.
@@ -238,8 +240,8 @@ The checked-in Python, schema and fixture data are excluded from both packages.
 ## Limits
 
 The interactive viewer caps root PDFs at 512 MiB, individual extracted streams at
-32 MiB, total extraction work at 128 MiB, child documents at 128 and child depth
-at eight. Successful extraction uses a 32 MiB cache. Each reading session retains
+32 MiB and concurrent extraction reservations at 512 MiB. Child count and depth do not impose
+content cutoffs. Successful extraction uses a 32 MiB cache. Each reading session retains
 at most three active PDF workers; isolated CSV/search work can use three more.
 These are processing ceilings, not guarantees that every file within them opens.
 
@@ -265,3 +267,14 @@ See [beta results](docs/m6-results.md), [M5 results](docs/m5-results.md), [M4 re
 [M3 results](docs/m3-results.md), [M2 results](docs/m2-results.md),
 [M1 results](docs/m1-results.md) and the historical [M0 results](docs/m0-results.md).
 This directory contains the browser viewer; creator and validator modules live elsewhere in the repository.
+
+
+Supplement ownership in collections can also be established by exact byte
+identity: a single-email child must contain both the same source email and the
+same supplement in its catalog associations, with consistent document-part
+ownership. No filename, sequence-number or Message-ID guess is used. The scan
+uses two workers, rotated after 16 children, and a 120-second processing budget checked
+between children (individual PDF operations retain their 60-second timeout), within the session's 512 MiB concurrent extraction budget. Incomplete
+scans and conflicting identities leave ownership unresolved. Verified links are reused for
+the session and survive inspection refreshes. Closing the document cancels the
+scan and disposes its workers.

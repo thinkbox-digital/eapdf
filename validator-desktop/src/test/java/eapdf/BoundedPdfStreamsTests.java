@@ -25,14 +25,14 @@ class BoundedPdfStreamsTests {
         } finally { System.setProperty("java.io.tmpdir", previous); }
     }
 
-    @Test void aggregateBudgetCountsRepeatedDecodesAndNewJobResetsIt() throws Exception {
+    @Test void completedDecodesDoNotConsumeFutureStreamAllowances() throws Exception {
         String previous = System.getProperty("VALIDATOR_MAX_DECODED_BYTES");
         System.setProperty("VALIDATOR_MAX_DECODED_BYTES", "12");
         try (var stream = new COSStream()) {
             try (var output = stream.createOutputStream()) { output.write(new byte[8]); }
             try (var budget = BoundedPdfStreams.scope(true)) {
                 assertEquals(8, BoundedPdfStreams.bytes(stream, 8).length);
-                assertThrows(BoundedPdfStreams.Limit.class, () -> BoundedPdfStreams.bytes(stream, 8));
+                assertEquals(8, BoundedPdfStreams.bytes(stream, 8).length);
             }
             try (var budget = BoundedPdfStreams.scope(true)) { assertEquals(8, BoundedPdfStreams.bytes(stream, 8).length); }
         } finally {

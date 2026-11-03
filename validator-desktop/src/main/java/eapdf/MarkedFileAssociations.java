@@ -37,13 +37,11 @@ final class MarkedFileAssociations {
   }
 
   private void parse(PDContentStream stream, PDResources resources, int depth) throws IOException {
-    if (depth > 256) throw new IOException("Marked-content associations exceed the form nesting limit");
     List<COSBase> operands = new ArrayList<>();
     PDFStreamParser parser = new PDFStreamParser(stream);
     try {
       Object item;
       while ((item = parser.parseNextToken()) != null) {
-        if (++instructions > instructionLimit) throw new IOException("Marked-content association inspection exceeds its instruction limit");
         if (item instanceof COSBase value) { operands.add(value); continue; }
         if (!(item instanceof Operator operator)) continue;
         if (Set.of("BDC", "DP").contains(operator.getName()) && operands.size() >= 2) {

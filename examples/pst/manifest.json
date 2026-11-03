@@ -2,10 +2,10 @@
   "input_type": "pst",
   "creator_version": "1.6.0-beta.7",
   "filename_policy": "Lower-case input type, input filename stem, _archive for multiple inputs, and EA-PDF profile. Single-message mailbox examples contain one extracted child.",
-  "creator_sha256": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9",
-  "validator_sha256": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4",
+  "creator_sha256": "338c12beb94bad6aeac0c3ea5484c431cb0495f2b5891380a182ec9fcba05881",
+  "validator_sha256": "7568fcbca3e407a434fea068de5dca6039972803ee9a59b15cadc39d23b191da",
   "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
-  "configuration_sha256": "9dd5ea95b331668c1017bc2005c5a9319e8258297e3c27b759b206801ac8e191",
+  "configuration_sha256": "f788d4ed48d03604527755f450b5adbfe86d5a232635ac102af860eb6880d887",
   "sources": {
     "in/quality-attached-message.pst": "f2a6b1d2cad00f574e3d1c1211c4b1c854d6526caea77213adc3da92b7813ae3"
   },
@@ -15,13 +15,13 @@
   "parallelism": {
     "creator_jobs": 2,
     "creator_heap_mb": 2048,
-    "concurrent_formats": 2
+    "concurrent_formats": 1
   },
   "samples": [
     {
       "profile": "1s",
       "file": "pst_quality-attached-message_1s.pdf",
-      "sha256": "be8e1a3d8b0759b365dec55beba336d04892f4d19beec9c578085fcf68b99fa3",
+      "sha256": "be18d4266cd39d98966c5601b34299c12465da9e37dc6efbe9a4f182409504ed",
       "pages": 2,
       "inputs": [
         "in/quality-attached-message.pst"
@@ -29,17 +29,17 @@
       "extracted_from": {
         "collection": "pst_quality-attached-message_1c.pdf",
         "member": "<1>FW_ First email_000001_1s.pdf",
-        "member_sha256": "be8e1a3d8b0759b365dec55beba336d04892f4d19beec9c578085fcf68b99fa3"
+        "member_sha256": "be18d4266cd39d98966c5601b34299c12465da9e37dc6efbe9a4f182409504ed"
       },
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 3.078
+      "validation_seconds": 5.21
     },
     {
       "profile": "1si",
       "file": "pst_quality-attached-message_1si.pdf",
-      "sha256": "1990ca4192ba59cdcc90b71b588ab52da57f5f75be8fe3fb56ba4339c849a01b",
+      "sha256": "e08f0865403ca14b8e4bc093a0422defd363d3862c49cffbbe162dd4dc5160bf",
       "pages": 2,
       "inputs": [
         "in/quality-attached-message.pst"
@@ -47,17 +47,17 @@
       "extracted_from": {
         "collection": "pst_quality-attached-message_1ci.pdf",
         "member": "<1>FW_ First email_000001_1si.pdf",
-        "member_sha256": "1990ca4192ba59cdcc90b71b588ab52da57f5f75be8fe3fb56ba4339c849a01b"
+        "member_sha256": "e08f0865403ca14b8e4bc093a0422defd363d3862c49cffbbe162dd4dc5160bf"
       },
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 2.972
+      "validation_seconds": 4.848
     },
     {
       "profile": "1m",
       "file": "pst_quality-attached-message_1m.pdf",
-      "sha256": "c232ec9796df04f5cbd7a0a096f47c228bdb95b9fbd30fee3fa150c441ace366",
+      "sha256": "61ab45c460b56d297c5e2186af040126d9cbc6f02455a5c6c6fcd9f74ed40eb2",
       "pages": 13,
       "inputs": [
         "in/quality-attached-message.pst"
@@ -66,12 +66,12 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 5.195
+      "validation_seconds": 7.837
     },
     {
       "profile": "1mi",
       "file": "pst_quality-attached-message_1mi.pdf",
-      "sha256": "bd0e859945692e76fa74409a7597219d35216a165317b49f69f1f693351e7ab1",
+      "sha256": "21d277e4a3293a72952156d0513cd8d9ae1e411068a84e2969b701da83417df9",
       "pages": 13,
       "inputs": [
         "in/quality-attached-message.pst"
@@ -80,12 +80,12 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 5.04
+      "validation_seconds": 8.153
     },
     {
       "profile": "1c",
       "file": "pst_quality-attached-message_1c.pdf",
-      "sha256": "c9c5846e500e8ce4b7929293040ad9f5f3c336875a4100ab11f6ccb764a72be4",
+      "sha256": "df672a582a546d0ee0c18ac59d7ff754e707bc82a2105b91c2b0f882b020ffad",
       "pages": 1,
       "inputs": [
         "in/quality-attached-message.pst"
@@ -94,12 +94,12 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 6.659
+      "validation_seconds": 11.305
     },
     {
       "profile": "1ci",
       "file": "pst_quality-attached-message_1ci.pdf",
-      "sha256": "25d7995eae4cd00f1044497a279ed24bf6e9ce8b90ef2a8118181c3b1eae520f",
+      "sha256": "18be985f75c47bb9bfad9d2aaed1442bd42ecfa9d3c6615615634c4de620e678",
       "pages": 1,
       "inputs": [
         "in/quality-attached-message.pst"
@@ -108,28 +108,54 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 6.444
+      "validation_seconds": 9.766
     }
   ],
   "sidecars": [
     {
+      "file": "pst_quality-attached-message_1m_premis.xml",
+      "sha256": "26ead9daef5d302e49aa17b99c9d69f9ebf7c2f482272110b65baf03739e753f"
+    },
+    {
+      "file": "pst_quality-attached-message_1m_index.xlsx",
+      "sha256": "4d562dcd412ed0b2b5c0ffc733a013fe27b73b96aa741524eeb299906d6cc7bf",
+      "xlsx_package": "PASS"
+    },
+    {
+      "file": "pst_quality-attached-message_1mi_premis.xml",
+      "sha256": "236199560810c6bbf49fe7f1be145fe2e8a3f52993694d9d3773a4d3a4c32c34"
+    },
+    {
+      "file": "pst_quality-attached-message_1mi_index.xlsx",
+      "sha256": "1689067f356f3a716c7e4ef141c20974621811be4908349661cbe0b48bd7a963",
+      "xlsx_package": "PASS"
+    },
+    {
+      "file": "pst_quality-attached-message_1c_premis.xml",
+      "sha256": "e3717e7493a8a57664688be6fbce05ce49ba6aa8877a57171da8392ce337ccc5"
+    },
+    {
       "file": "pst_quality-attached-message_1c_index.xlsx",
-      "sha256": "dd8447cbc38468503c6f6b65d9aa9927815a84986e29fa74c29e3515d50219d8",
+      "sha256": "93d542a98918141cb05bdc766e11e320b15cbadd456d4914a4d2cfc06897f651",
       "xlsx_package": "PASS"
     },
     {
       "file": "pst_quality-attached-message_1c_finding_aid.pdf",
-      "sha256": "f552722547b56429046f10313ea5788c62a2115b5d4fbbe52549850e9d344d2b",
+      "sha256": "851008ace936a74cad075a35d3149ca3bd826e4dea28896528f06ac44a5a2fd5",
       "pdfa": "PASS"
     },
     {
+      "file": "pst_quality-attached-message_1ci_premis.xml",
+      "sha256": "910309f0f22a15461978e888f1edcf877d89fc8b295615ba18891af597440cb7"
+    },
+    {
       "file": "pst_quality-attached-message_1ci_index.xlsx",
-      "sha256": "f3563ced373ca331bb10c022b49e1a0e709b6de9c4efc4c4a53c34f79a119fec",
+      "sha256": "b4074e1478fef938b00bfe40313b041c158f24d2baa62caf99591b416f913732",
       "xlsx_package": "PASS"
     },
     {
       "file": "pst_quality-attached-message_1ci_finding_aid.pdf",
-      "sha256": "aef8e9d3775d225e9589c2fa38275c2ceae888ebc669420fb0b1f1917885cd15",
+      "sha256": "4cbe2ab3b8dbd906ae9fa8e5602bc3cd3d8edb8e5a61b2d61be56618a67255d8",
       "pdfa": "PASS"
     }
   ]

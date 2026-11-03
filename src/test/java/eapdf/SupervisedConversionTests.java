@@ -121,7 +121,7 @@ class SupervisedConversionTests {
     }
   }
 
-  @Test void oneMessageAllowsAllThreeCollectionSidecarsButRejectsAnExtraOutput() throws Exception {
+  @Test void outputManifestHasNoMessageCountCutoff() throws Exception {
     String previous = System.getProperty("eapdf.maxMessages");
     try {
       System.setProperty("eapdf.maxMessages", "1");
@@ -135,16 +135,9 @@ class SupervisedConversionTests {
           }
           transaction.finish(manifest);
         }
-        if (count == 4) {
-          OutputTransaction.publish(manifest, stage);
-          try (var files = Files.list(output)) {
-            Assertions.assertEquals(4, files.count());
-          }
-        } else {
-          var error = Assertions.assertThrows(Common.UserFacingException.class,
-              () -> OutputTransaction.publish(manifest, stage));
-          Assertions.assertTrue(error.getMessage().contains("Too many output manifest entries"));
-          Assertions.assertFalse(Files.exists(output));
+        OutputTransaction.publish(manifest, stage);
+        try (var files = Files.list(output)) {
+          Assertions.assertEquals(count, files.count());
         }
       }
     } finally {
@@ -166,15 +159,15 @@ class SupervisedConversionTests {
     }
   }
 
-  @Test void aggregateImageBudgetAndPageBudgetAreEnforced() throws Exception {
+  @Test void pageAndAggregatePixelCountsDoNotCutOffContent() throws Exception {
     String pixels = System.getProperty("eapdf.maxTotalImagePixels");
     String pages = System.getProperty("eapdf.maxPages");
     try (var job = Common.beginJob()) {
       System.setProperty("eapdf.maxTotalImagePixels", "100");
       System.setProperty("eapdf.maxPages", "1");
       ProcessingLimits.accountImage(60);
-      Assertions.assertThrows(Common.UserFacingException.class, () -> ProcessingLimits.accountImage(60));
-      Assertions.assertThrows(Common.UserFacingException.class, () -> ProcessingLimits.checkPages(2));
+      Assertions.assertDoesNotThrow(() -> ProcessingLimits.accountImage(60));
+      Assertions.assertDoesNotThrow(() -> ProcessingLimits.checkPages(2));
     } finally {
       ProcessingLimitRepairTests.restore("eapdf.maxTotalImagePixels", pixels);
       ProcessingLimitRepairTests.restore("eapdf.maxPages", pages);

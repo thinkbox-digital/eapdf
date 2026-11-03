@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class ProcessingLimitRepairTests {
-  @Test void nestedMimeAndExcessivePartCountsFailBeforeBodyTraversal() throws Exception {
+  @Test void mimeDepthAndPartCountSettingsDoNotTruncateContent() throws Exception {
     SpecRepairTests helpers = new SpecRepairTests();
     String previousDepth = System.getProperty("eapdf.maxMimeDepth");
     String previousParts = System.getProperty("eapdf.maxMimeParts");
@@ -17,10 +17,10 @@ class ProcessingLimitRepairTests {
       for (int index = 0; index < 5; index++) body = "Content-Type: multipart/mixed; boundary=part" + index
           + "\r\n\r\n--part" + index + "\r\n" + body + "\r\n--part" + index + "--\r\n";
       String nested = body;
-      Assertions.assertThrows(RuntimeException.class, () -> EmlReader.readRfc822Bytes(nested.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+      Assertions.assertDoesNotThrow(() -> EmlReader.readRfc822Bytes(nested.getBytes(java.nio.charset.StandardCharsets.UTF_8),
           "deep.eml", "deep.eml", "", java.util.List.of(), false));
       System.setProperty("eapdf.maxMimeParts", "2");
-      Assertions.assertThrows(RuntimeException.class, () -> helpers.record("multipart/mixed; boundary=parts",
+      Assertions.assertDoesNotThrow(() -> helpers.record("multipart/mixed; boundary=parts",
           "--parts\r\nContent-Type: text/plain\r\n\r\nOne\r\n--parts\r\nContent-Type: text/plain\r\n\r\nTwo\r\n--parts--\r\n"));
     } finally {
       restore("eapdf.maxMimeDepth", previousDepth);

@@ -122,10 +122,7 @@ final class DocumentPartChecks {
   private void inspectMetadata(COSBase value, boolean arrayItem, int depth) {
     if (metadataLimited) return;
     value = resolve(value);
-    if (++metadataItems > InspectionBudget.nodes(document) || depth > 256) {
-      metadataLimited = true;
-      report.unavailable("DPART_OBJECT_STRUCTURE", "DPM value inspection exceeded its limit."); return;
-    }
+
     if (value == null || value instanceof COSNull || value instanceof COSStream) {
       if (arrayItem || value instanceof COSStream) report.check("DPART_OBJECT_STRUCTURE", false, "DPM values cannot be streams or null array items.", null);
     } else if (value instanceof COSDictionary dictionary) {
@@ -145,7 +142,7 @@ final class DocumentPartChecks {
   }
 
   private void walk(COSDictionary node, COSDictionary parent, int depth) throws IOException {
-    if (depth > 256 || visited.size() >= InspectionBudget.nodes(document) || !visited.add(node)) throw new IOException("DPart tree is cyclic or exceeds the inspection limit");
+    if (!visited.add(node)) throw new IOException("DPart tree contains a cycle or repeated node");
     maximumDepth = Math.max(maximumDepth, depth);
     report.check("DPART_OBJECT_STRUCTURE", !(node instanceof COSStream), "DPart nodes must be dictionaries, not streams.", null);
     checkType(node, "DPart");

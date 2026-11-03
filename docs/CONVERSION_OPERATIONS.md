@@ -18,7 +18,7 @@ This is recoverable multi-file publication, not instantaneous multi-file visibil
 
 ## Limits
 
-All settings are positive integers, with JVM properties taking precedence over corresponding environment values. The existing message/body/metadata/MIME/per-image/parallel-worker limits still apply.
+All settings are positive integers, with JVM properties taking precedence over corresponding environment values. Message/body/metadata byte budgets, per-image allocation and parallel-worker resource controls still apply. Content counts and nesting depth do not impose fixed cutoffs.
 
 | Environment | JVM property | Default |
 | --- | --- | --- |
@@ -28,10 +28,12 @@ All settings are positive integers, with JVM properties taking precedence over c
 | `EAPDF_MAX_TEMP_BYTES` | `eapdf.maxTempBytes` | 2 GiB temporary workspace and publication-preparation budget |
 | `EAPDF_MAX_TEMP_FILES` | `eapdf.maxTempFiles` | 100,000 temporary files/inodes |
 | `EAPDF_MAX_OUTPUT_BYTES` | `eapdf.maxOutputBytes` | 1 GiB per PDF/output and total staged output |
-| `EAPDF_MAX_PAGES` | `eapdf.maxPages` | 10,000 per PDF |
-| `EAPDF_MAX_TOTAL_PAGES` | `eapdf.maxTotalPages` | 20,000 rendered pages per job |
-| `EAPDF_MAX_TOTAL_IMAGE_PIXELS` | `eapdf.maxTotalImagePixels` | 64 million decoded raster pixels per job; repeated URI accesses in a render count once |
 | `EAPDF_MAX_FONT_BYTES` | `eapdf.maxFontBytes` | 16 MiB per configured font |
+
+The former `EAPDF_MAX_MESSAGES`, `EAPDF_MAX_MIME_PARTS`, `EAPDF_MAX_MIME_DEPTH`,
+`EAPDF_MAX_PAGES`, `EAPDF_MAX_TOTAL_PAGES` and `EAPDF_MAX_TOTAL_IMAGE_PIXELS`
+settings no longer stop content processing. Actual resource exhaustion fails the
+job explicitly; incomplete output must not be accepted as complete.
 
 Temporary aggregate size is sampled and publication space is budgeted; use filesystem quotas for a strict kernel-enforced aggregate disk reservation. Native codecs/vectors/fonts are bounded by worker address space/deadline, not a claim of accurate pixel accounting. Trusted filesystem publication can still be delayed by blocked OS storage; an external service watchdog/quota is required for strict host-wide availability guarantees.
 
@@ -188,3 +190,13 @@ are not embedded; reconstructed message derivatives are checked instead.
 The creation receipt identifies published bytes and records creator checks.
 Its independent PDF/A and EA-PDF checks remain NOT_RUN: keep the separate
 standalone validator report for those results.
+
+### Skipping creation validation for an explicitly requested run
+
+Set `"validateOnCreation": false` in that run's `EAPDF_CONFIG` JSON to skip
+post-write creator validation, including in-memory collection children. The
+default is true. Skipped creation checks are recorded as `SKIPPED`; preservation
+comparison and standalone PDF/A/EA-PDF validation are `NOT_RUN`. This option
+does not disable atomic publication, output hashing, cancellation or resource
+safeguards. It does not establish conformance. Future regeneration configs must
+also enable `accessibility.addPdfUaFeatures`, per the user's preference.

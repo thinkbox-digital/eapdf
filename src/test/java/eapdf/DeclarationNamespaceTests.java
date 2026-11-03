@@ -30,6 +30,24 @@ class DeclarationNamespaceTests {
     }
   }
 
+  @Test void compressedMetadataRetainsExactUtf8BytesAcrossSaveAndReload() throws Exception {
+    String xml = "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">Résumé — 日本語 " + "repeated metadata ".repeat(500) + "</x:xmpmeta>";
+    byte[] expected = xml.getBytes(StandardCharsets.UTF_8);
+    var bytes = new java.io.ByteArrayOutputStream();
+    try (var document = new PDDocument()) {
+      document.addPage(new org.apache.pdfbox.pdmodel.PDPage());
+      PdfMailWriter.setCompressedMetadata(document, xml);
+      document.save(bytes);
+    }
+    try (var document = Loader.loadPDF(bytes.toByteArray())) {
+      var metadata = document.getDocumentCatalog().getMetadata();
+      Assertions.assertArrayEquals(expected, metadata.toByteArray());
+      Assertions.assertEquals(org.apache.pdfbox.cos.COSName.FLATE_DECODE,
+          metadata.getCOSObject().getDictionaryObject(org.apache.pdfbox.cos.COSName.FILTER));
+      Assertions.assertTrue(metadata.getCOSObject().getLength() < expected.length / 2);
+    }
+  }
+
   @Test void creationGateRejectsHttpsNamespaceSubstitution() throws Exception {
     try (PDDocument document = Loader.loadPDF(create())) {
       var metadata = document.getDocumentCatalog().getMetadata();

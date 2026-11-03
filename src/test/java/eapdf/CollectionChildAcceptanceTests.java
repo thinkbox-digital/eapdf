@@ -119,18 +119,32 @@ class CollectionChildAcceptanceTests {
     }
   }
 
-  @Test void excessiveNestingIsRejectedBeforeStackExhaustion() throws Exception {
+  @Test void nestedCollectionsBeyondFormerCutoffAreFullyChecked() throws Exception {
     byte[] seed = collection("c");
     byte[] nested = seed;
     for (int depth = 1; depth < 8; depth++) nested = nest(seed, nested);
     try (PDDocument parent = Loader.loadPDF(nested)) { PdfCreationValidator.validate(parent); }
     try (PDDocument parent = Loader.loadPDF(nest(seed, nested))) {
-      IOException failure = Assertions.assertThrows(IOException.class, () -> PdfCreationValidator.validate(parent));
-      Assertions.assertTrue(failure.getMessage().contains("nesting limit"), failure.getMessage());
+      PdfCreationValidator.validate(parent);
     }
   }
 
-  @Test void nestedChildrenShareCountAndExpandedByteBudgets() throws Exception {
+  @Test void processedChildrenDoNotConsumeLaterStagingAllowances() throws Exception {
+    byte[] seed = collection("c");
+    byte[] nested = nest(seed, seed);
+    String previous = System.getProperty("eapdf.maxOutputBytes");
+    try {
+      System.setProperty("eapdf.maxOutputBytes", Long.toString(seed.length + 1L));
+      try (PDDocument parent = Loader.loadPDF(nested)) {
+        PdfCreationValidator.validate(parent);
+      }
+    } finally {
+      if (previous == null) System.clearProperty("eapdf.maxOutputBytes");
+      else System.setProperty("eapdf.maxOutputBytes", previous);
+    }
+  }
+
+  @Test void legacyChildCountIsIgnoredButIndividualStagedBytesRemainBounded() throws Exception {
     byte[] seed = collection("c");
     byte[] nested = nest(seed, seed);
     for (String property : List.of("eapdf.maxMessages", "eapdf.maxOutputBytes")) {
@@ -138,7 +152,8 @@ class CollectionChildAcceptanceTests {
       try {
         System.setProperty(property, property.equals("eapdf.maxMessages") ? "1" : "16");
         try (PDDocument parent = Loader.loadPDF(nested)) {
-          Assertions.assertThrows(Common.UserFacingException.class, () -> PdfCreationValidator.validate(parent), property);
+          if (property.equals("eapdf.maxMessages")) PdfCreationValidator.validate(parent);
+          else Assertions.assertThrows(Common.UserFacingException.class, () -> PdfCreationValidator.validate(parent), property);
         }
       } finally {
         if (previous == null) System.clearProperty(property);

@@ -364,7 +364,7 @@ class PstReader {
   }
 
   static void collectPstAttachments(PSTMessage m, EmailRecord r, int depth) throws Exception {
-    if (depth > 32) throw Common.fail("PST attached-email nesting exceeds 32 levels");
+    ProcessingLimits.checkCancelled();
     int count = m.getNumberOfAttachments();
     for (int i = 0; i < count; i++) {
       PSTAttachment a0 = m.getAttachment(i);

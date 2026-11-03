@@ -79,8 +79,7 @@ final class PdfCollectionSupport {
     s.append("<p class=\"lede\">EA-PDF 1").append(Common.escapeHtml(collectionProfile)).append(" container. Embedded child EA-PDF files are grouped by top-level folder.</p>");
     if (runSummary != null) {
       s.append("<p><strong>Harvested email(s):</strong> ").append(Common.escapeHtml(runSummary.harvestedEmails)).append("</p>");
-      s.append("<p><strong>Run stats:</strong> ").append(runSummary.messageCount).append(" messages across ")
-          .append(runSummary.folderCount).append(" folders</p>");
+      s.append("<p><strong>Run stats:</strong> ").append(runSummary.countsText()).append("</p>");
       s.append("<p><strong>Generated:</strong> ").append(Common.escapeHtml(runSummary.generatedAt)).append("</p>");
     }
     s.append("<div class=\"member-list\">");
@@ -95,7 +94,6 @@ final class PdfCollectionSupport {
     s.append("</div>");
     s.append("<p>Folders are sorted alphabetically. Each collection folder contains embedded child EA-PDF message files in chronological order.</p>");
     PdfFindingAidSupport.appendFindingAidTable(s, findingAidRows, true);
-    PdfMailWriter.appendBrandingBlock(s, "1" + collectionProfile);
     s.append("</body></html>");
     return Common.stripInvalidXml(s.toString());
   }
@@ -133,7 +131,6 @@ final class PdfCollectionSupport {
       s.append("</div>");
     }
     s.append("</div>");
-    PdfMailWriter.appendBrandingBlock(s, "1" + collectionProfile);
     s.append("</body></html>");
     return Common.stripInvalidXml(s.toString());
   }
@@ -303,7 +300,7 @@ final class PdfCollectionSupport {
     collection.setName(COSName.TYPE, "Collection");
     collection.setName(COSName.getPDFName("View"), "T");
     collection.setItem(COSName.getPDFName("Sort"), collectionSortDictionary("adobe:Order", "FileName"));
-    collection.setName(COSName.getPDFName("Reorder"), "adobe:Order");
+
 
     COSDictionary schema = new COSDictionary();
     schema.setItem(COSName.getPDFName("FileName"), collectionSchemaField("Folder Name", "F"));
@@ -454,7 +451,7 @@ final class PdfCollectionSupport {
       try (PDDocument doc = IndexedPdfLoader.load(pdfPath, org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
         addTopLevelCollectionDictionary(doc, folders);
         rewriteTopLevelCollectionItems(doc, members);
-        doc.save(temporary.toFile());
+        PdfFontMetadata.save(doc, temporary.toFile());
       }
     }, expected);
   }
@@ -473,7 +470,7 @@ final class PdfCollectionSupport {
     try (PDDocument doc = Loader.loadPDF(rendered)) {
       doc.setVersion(2.0f);
       doc.getDocument().setVersion(2.0f);
-      if (PdfMailWriter.CONFIG.branding.enabled) PdfMailWriter.drawBrandingFooter(doc, fontPath, "1" + collectionProfile, 0);
+      if (PdfMailWriter.CONFIG.branding.enabled) PdfMailWriter.drawBrandingBanner(doc, fontPath, "1" + collectionProfile);
       PdfMailWriter.clearImageInterpolation(doc);
       PdfMailWriter.setDocumentInfo(doc, records.get(0));
       PdfMailWriter.configureArchiveCatalog(doc, collectionProfile);
@@ -487,7 +484,7 @@ final class PdfCollectionSupport {
       addMessageCollectionDictionary(doc);
       Files.createDirectories(out.getParent() == null ? Paths.get(".") : out.getParent());
       SemanticStructure.balanceParentTree(doc);
-      Common.writePdfAtomically(out, temporary -> doc.save(temporary.toFile()), expected);
+      Common.writePdfAtomically(out, temporary -> PdfFontMetadata.save(doc, temporary.toFile()), expected);
     }
   }
 
@@ -632,8 +629,8 @@ final class PdfCollectionSupport {
           node.setString(COSName.getPDFName("ModDate"), now);
           int messages = group == null ? 0 : group.messageCount;
           long size = group == null ? 0 : group.totalSizeBytes;
-          node.setLong(COSName.getPDFName("Messages"), messages);
-          node.setLong(COSName.getPDFName("Size"), size);
+
+
           COSDictionary ci = new COSDictionary();
           ci.setFloat(COSName.getPDFName("adobe:Order"), ++orderIndex);
           ci.setInt(COSName.getPDFName("Messages"), messages);
@@ -701,7 +698,7 @@ final class PdfCollectionSupport {
 
     PDEmbeddedFile ef;
     try (var data = file.openData()) {
-      ef = new PDEmbeddedFile(doc, data);
+      ef = new PDEmbeddedFile(doc, data, COSName.FLATE_DECODE);
     }
     PdfMailWriter.setEmbeddedMediaType(ef, mime);
     ef.setSize(file.size());
@@ -711,7 +708,7 @@ final class PdfCollectionSupport {
     PdfMailWriter.setEmbeddedChecksum(ef, checksumMd5);
 
     COSDictionary efd = ef.getCOSObject();
-    efd.setInt(COSName.SIZE, file.size());
+
     COSDictionary params = (COSDictionary)efd.getDictionaryObject(COSName.PARAMS);
     if (params == null) {
       params = new COSDictionary();

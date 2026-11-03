@@ -28,11 +28,7 @@ final class BoundedPdfStreams {
     private static final class Budget {
         long bytes, files;
         String limited;
-        final long maximum = setting("VALIDATOR_MAX_DECODED_BYTES", 512L * 1024 * 1024);
-        void add(int count) throws Limit {
-            if (count > maximum - bytes) throw new Limit("Aggregate decoded-stream byte limit reached");
-            bytes += count;
-        }
+
     }
     static AutoCloseable scope(boolean root) {
         Budget previous = CURRENT.get();
@@ -42,8 +38,7 @@ final class BoundedPdfStreams {
     static String limitedReason() { return CURRENT.get() == null ? null : CURRENT.get().limited; }
     static void file() throws Limit {
         Budget budget = CURRENT.get();
-        if (budget != null && ++budget.files > setting("VALIDATOR_MAX_EMBEDDED_FILES", 2048))
-            throw new Limit("Embedded-file count limit reached");
+        if (budget != null) budget.files++;
     }
     static byte[] bytes(COSStream stream, long maximum) throws IOException {
         try (InputStream input = open(stream, maximum)) { return input.readAllBytes(); }
@@ -53,7 +48,6 @@ final class BoundedPdfStreams {
         COSBase rawFilters = stream.getDictionaryObject(COSName.FILTER);
         if (rawFilters instanceof COSName name) filters.add(name);
         else if (rawFilters instanceof COSArray array) {
-            if (array.size() > 8) throw new Limit("PDF stream filter-chain limit reached");
             for (int i = 0; i < array.size(); i++) {
                 if (!(array.getObject(i) instanceof COSName name)) throw new IOException("Invalid PDF stream filter");
                 filters.add(name);
@@ -100,12 +94,10 @@ final class BoundedPdfStreams {
         } finally { if (previous != null) Files.deleteIfExists(previous); }
     }
     private static OutputStream bounded(OutputStream file, long maximum) {
-        Budget budget = CURRENT.get();
         return new FilterOutputStream(file) {
             long count;
             private void reserve(int length) throws Limit {
                 if (length > maximum - count) throw new Limit("PDF stream exceeds its decoded-byte limit");
-                if (budget != null) budget.add(length);
                 count += length;
             }
             @Override public void write(int value) throws IOException { reserve(1); out.write(value); }

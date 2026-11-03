@@ -25,9 +25,15 @@ export function loadPdf(data: Uint8Array) {
 
 // Application sessions use a dedicated worker so cancellation/timeout releases
 // this document without disrupting a parent or another open collection child.
-export function loadManagedPdf(data: Uint8Array | Blob) {
+export function createManagedWorker() {
   const port = new Worker(pdfjs.GlobalWorkerOptions.workerSrc, {type:'module'});
   const worker = pdfjs.PDFWorker.create({port});
+  let stopped=false,release!:()=>void;
+  const whenClosed=new Promise<void>(resolve=>{release=resolve;});
+  return {worker,whenClosed,close:()=>{if(stopped)return;stopped=true;release();worker.destroy();port.terminate();}};
+}
+export function loadManagedPdf(data: Uint8Array | Blob, shared?:ReturnType<typeof createManagedWorker>) {
+  const owned=shared??createManagedWorker(),worker=owned.worker;
   const asset = (name: string) => new URL(`./vendor/pdfjs/${name}/`,import.meta.url).href;
   let rangeError:(error:Error)=>void = () => {};
   class BlobRange extends pdfjs.PDFDataRangeTransport {
@@ -51,9 +57,10 @@ export function loadManagedPdf(data: Uint8Array | Blob) {
   const cancelled=new Promise<never>((_,reject)=>{rejectCancellation=reject;});
   // Closing an idle document must not create an unhandled rejection.
   void cancelled.catch(()=>{});
+  let disposed:Promise<void>=Promise.resolve();
   const close = (reason = new Error('Document processing cancelled.')) => {
-    if(closed)return;closed=true;passwordAbort.abort();rejectCancellation(reason);
-    void task.destroy().catch(()=>{});worker.destroy();port.terminate();
+    if(closed)return disposed;closed=true;passwordAbort.abort();rejectCancellation(reason);
+    disposed=Promise.race([task.destroy().catch(()=>{}),owned.whenClosed]);if(!shared)owned.close();return disposed;
   };
   async function run<T>(operation: Promise<T>, milliseconds=30000): Promise<T> {
     if(closed){void operation.catch(()=>{});throw new Error('Document is closed.');}

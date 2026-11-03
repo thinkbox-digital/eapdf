@@ -61,7 +61,6 @@ final class PdfCreationValidator {
   private static final class ChildValidationContext {
     boolean outerMetadataScanned;
     long count;
-    long bytes;
     final PreservationInventory.Reconciliation inventory;
     final boolean reportProgress;
 
@@ -365,7 +364,7 @@ final class PdfCreationValidator {
       require(ef.getDictionaryObject(key) instanceof COSStream && value instanceof COSArray,
           "Every RF key requires an EF stream and related-files array");
       COSArray pairs = (COSArray) value;
-      require(pairs.size() > 0 && pairs.size() % 2 == 0 && pairs.size() <= 200000, "RF must contain filename/stream pairs");
+      require(pairs.size() > 0 && pairs.size() % 2 == 0, "RF must contain filename/stream pairs");
       for (int index = 0; index < pairs.size(); index += 2) {
         require(pairs.getObject(index) instanceof org.apache.pdfbox.cos.COSString name && !name.getString().isBlank()
             && pairs.getObject(index + 1) instanceof COSStream stream && COSName.EMBEDDED_FILE.equals(stream.getCOSName(COSName.TYPE)),
@@ -437,17 +436,17 @@ final class PdfCreationValidator {
       require(stream instanceof COSStream, "Contained file has no embedded stream");
       if (listedFiles != null && !listedFiles.contains(file))
         throw new IOException("Preservation inventory mismatch: Contained EA-PDF is absent from the collection member listing");
-      require(depth < 8, "Contained EA-PDF validation exceeds the nesting limit of 8");
+      ProcessingLimits.checkCancelled();
       ProcessingLimits.checkCount(++context.count);
       Path temporary = java.nio.file.Files.createTempFile("eapdf-contained-", ".pdf");
       try {
         try (var input = ((COSStream) stream).createInputStream();
              var output = java.nio.file.Files.newOutputStream(temporary)) {
           byte[] buffer = new byte[8192];
-          int count;
+          int count; long temporaryBytes = 0;
           while ((count = input.read(buffer)) != -1) {
-            context.bytes = Math.addExact(context.bytes, count);
-            ProcessingLimits.checkOutput(context.bytes);
+            temporaryBytes = Math.addExact(temporaryBytes, count);
+            ProcessingLimits.checkOutput(temporaryBytes);
             output.write(buffer, 0, count);
           }
         }
@@ -598,7 +597,7 @@ final class PdfCreationValidator {
   }
 
   private static void validateFolders(COSDictionary folder, int depth, java.util.Set<COSDictionary> visited) throws Exception {
-    require(depth <= 64 && visited.size() < 10000, "Excessive collection folder tree");
+    ProcessingLimits.checkCancelled();
     java.util.Set<String> siblings = new java.util.HashSet<>();
     COSDictionary current = folder;
     while (current != null) {

@@ -64,6 +64,8 @@ final class PdfSigning {
     try (InputStream input = Files.newInputStream(Path.of(cfg.pkcs12Path))) {
       store.load(input, password);
     } catch (IOException e) {
+      if (e.getCause() instanceof UnrecoverableKeyException)
+        throw new IOException("Incorrect signing certificate password. Please try again.", e);
       throw new IOException("Cannot open the signing certificate. Check the file and its password.", e);
     }
     String alias = Common.nz(cfg.alias).trim();
@@ -73,7 +75,12 @@ final class PdfSigning {
       if (candidates.size() != 1) throw Common.fail("The certificate file must contain one signing key, or a signing alias must be selected.");
       alias = candidates.get(0);
     }
-    Key selected = store.getKey(alias, password);
+    Key selected;
+    try {
+      selected = store.getKey(alias, password);
+    } catch (UnrecoverableKeyException e) {
+      throw new IOException("Incorrect signing certificate password. Please try again.", e);
+    }
     java.security.cert.Certificate[] certificates = store.getCertificateChain(alias);
     if (!(selected instanceof PrivateKey privateKey) || certificates == null || certificates.length == 0)
       throw Common.fail("The selected alias has no private key and certificate chain.");

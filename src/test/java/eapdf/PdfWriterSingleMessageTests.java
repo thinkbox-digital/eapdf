@@ -80,6 +80,7 @@ class PdfWriterSingleMessageTests {
     try (PDDocument document = Loader.loadPDF(output.toFile())) {
       Assertions.assertTrue(TestSupport.metadataXml(document).contains("<pdfmailid:conformance>si</pdfmailid:conformance>"));
       Assertions.assertTrue(AttachmentProfilePolicyTests.files(document).isEmpty());
+      Assertions.assertFalse(document.getDocumentCatalog().getCOSObject().containsKey(org.apache.pdfbox.cos.COSName.getPDFName("AF")));
       Assertions.assertEquals(attachments.size(), record.attachmentCount);
     }
   }

@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<premis:premis xmlns:premis="http://www.loc.gov/premis/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0">
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>object:eml_Agenda_and_timeline_slides_archive_1c.pdf</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>PDF</premis:formatName>
+                    
+          <premis:formatVersion>2.0</premis:formatVersion>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>eml_Agenda_and_timeline_slides_archive_1c.pdf</premis:originalName>
+      
+  </premis:object>
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>record:uuid:2d092fbe-d8ea-4e97-96ff-c64565dbc353</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>4CA45768.ARCH2D2.A2D2P1.100.1316735.1.8D7E.1</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>message/rfc822</premis:formatName>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>Agenda and timeline slides</premis:originalName>
+      
+  </premis:object>
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>embedded:uuid:2d092fbe-d8ea-4e97-96ff-c64565dbc353:c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6:Agenda and timeline slides.eml</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:fixity>
+                
+        <premis:messageDigestAlgorithm>SHA-256</premis:messageDigestAlgorithm>
+                
+        <premis:messageDigest>c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6</premis:messageDigest>
+              
+      </premis:fixity>
+            
+      <premis:size>69830</premis:size>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>message/rfc822</premis:formatName>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>Agenda and timeline slides.eml</premis:originalName>
+      
+  </premis:object>
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>record:uuid:996c7b52-0cae-4fe7-ad7f-f80fdee39744</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>&lt;209.db071ef.30a1130a@aol.com&gt;</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>message/rfc822</premis:formatName>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>Fwd: Emergency Meeting of Affordable Housing Advisory Committee</premis:originalName>
+      
+  </premis:object>
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>embedded:uuid:996c7b52-0cae-4fe7-ad7f-f80fdee39744:311ec37e7324327f8f216266f738fa90c7cee89c36f3f0d583d33752d60934a9:eml_01_403.eml</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:fixity>
+                
+        <premis:messageDigestAlgorithm>SHA-256</premis:messageDigestAlgorithm>
+                
+        <premis:messageDigest>311ec37e7324327f8f216266f738fa90c7cee89c36f3f0d583d33752d60934a9</premis:messageDigest>
+              
+      </premis:fixity>
+            
+      <premis:size>19139</premis:size>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>message/rfc822</premis:formatName>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>eml_01_403.eml</premis:originalName>
+      
+  </premis:object>
+    
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>object:child:1:Agenda and timeline slides_000001_1s.pdf</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>PDF</premis:formatName>
+                    
+          <premis:formatVersion>2.0</premis:formatVersion>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>Agenda and timeline slides_000001_1s.pdf</premis:originalName>
+      
+  </premis:object>
+  <premis:object xsi:type="premis:file">
+        
+    <premis:objectIdentifier>
+            
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+            
+      <premis:objectIdentifierValue>object:child:1:Fwd_ Emergency Meeting of Affordable Housing Advisory Committee_000002_1s.pdf</premis:objectIdentifierValue>
+          
+    </premis:objectIdentifier>
+        
+    <premis:objectCharacteristics>
+            
+      <premis:compositionLevel>0</premis:compositionLevel>
+            
+      <premis:format>
+                
+        <premis:formatDesignation>
+                    
+          <premis:formatName>PDF</premis:formatName>
+                    
+          <premis:formatVersion>2.0</premis:formatVersion>
+                  
+        </premis:formatDesignation>
+              
+      </premis:format>
+          
+    </premis:objectCharacteristics>
+        
+    <premis:originalName>Fwd_ Emergency Meeting of Affordable Housing Advisory Committee_000002_1s.pdf</premis:originalName>
+      
+  </premis:object>
+  <premis:event>
+        
+    <premis:eventIdentifier>
+            
+      <premis:eventIdentifierType>local</premis:eventIdentifierType>
+            
+      <premis:eventIdentifierValue>event:conversion:eml_Agenda_and_timeline_slides_archive_1c.pdf</premis:eventIdentifierValue>
+          
+    </premis:eventIdentifier>
+        
+    <premis:eventType>normalization</premis:eventType>
+        
+    <premis:eventDateTime>2026-11-03T23:29:20Z</premis:eventDateTime>
+        
+    <premis:eventDetailInformation>
+            
+      <premis:eventDetail>Prepared EA-PDF 1c content for serialization; this event does not attest final publication or independent conformance validation.</premis:eventDetail>
+          
+    </premis:eventDetailInformation>
+        
+    <premis:linkingAgentIdentifier>
+            
+      <premis:linkingAgentIdentifierType>local</premis:linkingAgentIdentifierType>
+            
+      <premis:linkingAgentIdentifierValue>agent:EmailToPDFA</premis:linkingAgentIdentifierValue>
+          
+    </premis:linkingAgentIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>object:eml_Agenda_and_timeline_slides_archive_1c.pdf</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>record:uuid:2d092fbe-d8ea-4e97-96ff-c64565dbc353</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>record:uuid:996c7b52-0cae-4fe7-ad7f-f80fdee39744</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+      
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>object:child:1:Agenda and timeline slides_000001_1s.pdf</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>object:child:1:Fwd_ Emergency Meeting of Affordable Housing Advisory Committee_000002_1s.pdf</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+  </premis:event>
+    
+  <premis:event>
+        
+    <premis:eventIdentifier>
+            
+      <premis:eventIdentifierType>local</premis:eventIdentifierType>
+            
+      <premis:eventIdentifierValue>event:conversion:child:1:Agenda and timeline slides_000001_1s.pdf</premis:eventIdentifierValue>
+          
+    </premis:eventIdentifier>
+        
+    <premis:eventType>normalization</premis:eventType>
+        
+    <premis:eventDateTime>2026-11-03T23:29:19Z</premis:eventDateTime>
+        
+    <premis:eventDetailInformation>
+            
+      <premis:eventDetail>Prepared EA-PDF 1s content for serialization; this event does not attest final publication or independent conformance validation.</premis:eventDetail>
+          
+    </premis:eventDetailInformation>
+        
+    <premis:linkingAgentIdentifier>
+            
+      <premis:linkingAgentIdentifierType>local</premis:linkingAgentIdentifierType>
+            
+      <premis:linkingAgentIdentifierValue>agent:EmailToPDFA</premis:linkingAgentIdentifierValue>
+          
+    </premis:linkingAgentIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>object:child:1:Agenda and timeline slides_000001_1s.pdf</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>record:uuid:2d092fbe-d8ea-4e97-96ff-c64565dbc353</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+      
+  </premis:event>
+  <premis:event>
+        
+    <premis:eventIdentifier>
+            
+      <premis:eventIdentifierType>local</premis:eventIdentifierType>
+            
+      <premis:eventIdentifierValue>event:conversion:child:1:Fwd_ Emergency Meeting of Affordable Housing Advisory Committee_000002_1s.pdf</premis:eventIdentifierValue>
+          
+    </premis:eventIdentifier>
+        
+    <premis:eventType>normalization</premis:eventType>
+        
+    <premis:eventDateTime>2026-11-03T23:29:19Z</premis:eventDateTime>
+        
+    <premis:eventDetailInformation>
+            
+      <premis:eventDetail>Prepared EA-PDF 1s content for serialization; this event does not attest final publication or independent conformance validation.</premis:eventDetail>
+          
+    </premis:eventDetailInformation>
+        
+    <premis:linkingAgentIdentifier>
+            
+      <premis:linkingAgentIdentifierType>local</premis:linkingAgentIdentifierType>
+            
+      <premis:linkingAgentIdentifierValue>agent:EmailToPDFA</premis:linkingAgentIdentifierValue>
+          
+    </premis:linkingAgentIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>object:child:1:Fwd_ Emergency Meeting of Affordable Housing Advisory Committee_000002_1s.pdf</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+        
+    <premis:linkingObjectIdentifier>
+            
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+            
+      <premis:linkingObjectIdentifierValue>record:uuid:996c7b52-0cae-4fe7-ad7f-f80fdee39744</premis:linkingObjectIdentifierValue>
+          
+    </premis:linkingObjectIdentifier>
+      
+  </premis:event>
+  <premis:agent>
+        
+    <premis:agentIdentifier>
+            
+      <premis:agentIdentifierType>local</premis:agentIdentifierType>
+            
+      <premis:agentIdentifierValue>agent:EmailToPDFA</premis:agentIdentifierValue>
+          
+    </premis:agentIdentifier>
+        
+    <premis:agentName>EmailToPDFA</premis:agentName>
+        
+    <premis:agentType>software</premis:agentType>
+      
+  </premis:agent>
+  
+</premis:premis>

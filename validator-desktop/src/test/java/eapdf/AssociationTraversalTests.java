@@ -24,12 +24,11 @@ class AssociationTraversalTests {
     assertEquals(Set.of(spec), found);
   }
 
-  @Test void objectBudgetStillStopsExcessiveGraphs() {
+  @Test void legacyObjectBudgetDoesNotCutOffGraphs() {
     COSArray root = new COSArray();
     for (int i = 0; i < 1001; i++) root.add(new COSDictionary());
-    var error = assertThrows(java.io.IOException.class, () -> EaPdfChecks.scanAssociations(root,
+    assertDoesNotThrow(() -> EaPdfChecks.scanAssociations(root,
         Collections.newSetFromMap(new IdentityHashMap<>()), Collections.newSetFromMap(new IdentityHashMap<>()), 1000));
-    assertTrue(error.getMessage().contains("1000-container"));
   }
   @Test void boundedDiscoveryMatchesCanonicalGraphAssociationsOnRealArchives() throws Exception {
     for(String source:java.util.List.of("../examples/pst/pst_quality-attached-message_1m.pdf","../examples/eml/eml_Agenda_and_timeline_slides_1s.pdf")) {
@@ -38,7 +37,7 @@ class AssociationTraversalTests {
         Set<COSDictionary> expected=EaPdfChecks.identitySet();
         EaPdfChecks.scanAssociations(doc.getDocumentCatalog().getCOSObject(),expected,EaPdfChecks.identitySet(),1000000);
         assertEquals(expected,PdfAssociationScanner.collect(path,doc,1000000));
-        assertThrows(java.io.IOException.class,()->PdfAssociationScanner.collect(path,doc,1));
+        assertEquals(expected,PdfAssociationScanner.collect(path,doc,1));
       }
     }
   }

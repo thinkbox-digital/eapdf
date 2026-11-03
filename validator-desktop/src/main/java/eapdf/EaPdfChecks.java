@@ -184,7 +184,7 @@ final class EaPdfChecks {
       var factory = DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
       factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-      factory.setAttribute("http://www.oracle.com/xml/jaxp/properties/maxElementDepth", "64");
+      factory.setAttribute("http://www.oracle.com/xml/jaxp/properties/maxElementDepth", "0");
       factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
       factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
       xml = factory.newDocumentBuilder().parse(new ByteArrayInputStream(BoundedPdfStreams.bytes(document.getDocumentCatalog().getMetadata().getCOSObject(), BoundedPdfStreams.metadataLimit()))).getDocumentElement();
@@ -396,7 +396,7 @@ final class EaPdfChecks {
     if (outline.getFirstChild() != null) pending.add(outline.getFirstChild());
     while (!pending.isEmpty()) {
       PDOutlineItem item = pending.removeLast();
-      if (!visited.add(item.getCOSObject()) || ++visits > InspectionBudget.nodes(document)) throw new IOException("Outline tree is cyclic or exceeds the inspection limit");
+      if (!visited.add(item.getCOSObject())) throw new IOException("Outline tree contains a cycle or repeated node");
       PDPage page = item.findDestinationPage(document);
       if (page != null && pageNumbers.containsKey(page.getCOSObject())) outlinePages.add(pageNumbers.get(page.getCOSObject()));
       if (item.getNextSibling() != null) pending.add(item.getNextSibling());
@@ -531,7 +531,7 @@ final class EaPdfChecks {
 
   private void readNameTree(COSDictionary tree, Set<COSDictionary> seen, int depth) throws IOException {
     if (tree == null) return;
-    if (depth > 256 || ++visits > InspectionBudget.nodes(document) || !seen.add(tree)) throw new IOException("EmbeddedFiles tree is cyclic or exceeds the inspection limit");
+    if (!seen.add(tree)) throw new IOException("EmbeddedFiles tree contains a cycle or repeated node");
     COSBase names = get(tree, "Names");
     if (names instanceof COSArray array) {
       if (array.size() % 2 != 0) throw new IOException("EmbeddedFiles name tree has an unmatched entry");
@@ -571,7 +571,6 @@ final class EaPdfChecks {
     value = resolve(value);
     // Primitive values cannot contain an associated-file dictionary.
     if (!(value instanceof COSDictionary || value instanceof COSArray) || !seen.add(value)) return;
-    if (seen.size() > limit) throw new IOException("PDF object traversal exceeds the " + limit + "-container inspection limit");
     pending.add(value);
   }
 
@@ -619,7 +618,7 @@ final class EaPdfChecks {
     String rootId = first == null ? "0" : folderId(first);
     while (!pending.isEmpty()) {
       Folder entry = pending.removeFirst(); COSDictionary folder = entry.node();
-      if (!seenFolders.add(folder) || seenFolders.size() > InspectionBudget.nodes(document) || entry.depth() > 256)
+      if (!seenFolders.add(folder))
         throw new java.io.IOException("Cyclic or excessive collection folder tree");
       COSBase value = get(folder, "Name");
       String filename = string(value);
@@ -665,7 +664,7 @@ final class EaPdfChecks {
       if (!nameTreeSpecs.contains(file.spec()) || sourceIdentities.contains(file.spec()) || "RF".equals(file.relationship()) || "Supplement".equals(file.relationship()) || !seen.add(file.stream())) continue;
       // Check measured decoded size before allocating or opening an embedded PDF.
       if (!children.accepts(file.size(), depth)) {
-        report.unavailable("COLLECTION_CHILD_VALIDATION", "Collection validation exceeded its child depth, count or byte limit.");
+        report.unavailable("COLLECTION_CHILD_VALIDATION", "Collection child size is invalid or its byte accounting exceeds numeric capacity.");
         report.unavailable("COLLECTION_CONTENT_TYPES", "Some collection members could not be inspected within the child budget.");
         limited = true; break;
       }
@@ -683,7 +682,7 @@ final class EaPdfChecks {
           if (child.getDocumentCatalog().getMetadata() != null) {
             var factory = DocumentBuilderFactory.newInstance(); factory.setNamespaceAware(true);
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            factory.setAttribute("http://www.oracle.com/xml/jaxp/properties/maxElementDepth", "64");
+            factory.setAttribute("http://www.oracle.com/xml/jaxp/properties/maxElementDepth", "0");
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, ""); factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
             Element metadata = factory.newDocumentBuilder().parse(new ByteArrayInputStream(BoundedPdfStreams.bytes(child.getDocumentCatalog().getMetadata().getCOSObject(), BoundedPdfStreams.metadataLimit()))).getDocumentElement();
             Map<String, String> identification = new LinkedHashMap<>();

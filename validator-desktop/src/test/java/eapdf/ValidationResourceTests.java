@@ -129,8 +129,9 @@ class ValidationResourceTests {
         assertTrue(children.accepts(300L * 1024 * 1024, 0));
         for (int i = 0; i < 300; i++) assertTrue(children.accepts(1, 0));
         long before = children.bytes; int count = children.count;
-        assertFalse(children.accepts(Long.MAX_VALUE, 0)); assertFalse(children.accepts(1, 8));
+        assertFalse(children.accepts(Long.MAX_VALUE, 0));
         assertEquals(before, children.bytes); assertEquals(count, children.count);
+        assertTrue(children.accepts(1, 1000));
     }
     @Test void glyphInventoryIsNotEvictedForPdfa1() {
         StaticContainers.clearAllContainers();

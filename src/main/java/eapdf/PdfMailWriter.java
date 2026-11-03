@@ -56,7 +56,6 @@ class PdfMailWriter {
 static final EapdfConfig CONFIG = EapdfConfig.get();
 static final String EMBEDDED_LINK_PREFIX = "https://eapdf.local/attachment/";
 static final String EMBEDDED_BADGE_LINK_PREFIX = EMBEDDED_LINK_PREFIX + "badge/";
-static final float BRANDING_FOOTER_BOTTOM = 26f;
 static final Set<String> PDF17_STRUCTURE_ROLES = Set.of("Art", "BlockQuote", "TOC", "TOCI", "Index", "Private", "Quote", "Note", "Reference", "BibEntry", "Code");
 static final ConcurrentMap<String, String> FAILED_REMOTE_ASSET_URLS = new ConcurrentHashMap<>();
 static final FSUriResolver REMOTE_ASSET_URI_RESOLVER = new RemoteAssetUriResolver();
@@ -66,6 +65,8 @@ static final ThreadLocal<Set<String>> RENDERED_IMAGES = new ThreadLocal<>();
 static final ThreadLocal<Map<String, String>> ORIENTED_IMAGE_URIS = new ThreadLocal<>();
 
 static {
+  // Lossless compression only; preserve an explicit PDFBox override.
+  System.getProperties().putIfAbsent("org.apache.pdfbox.filter.deflatelevel", "9");
   configureRendererLogging();
 }
 
@@ -377,6 +378,11 @@ static class CollectionRunSummary {
     this.folderCount = folderCount;
     this.messageCount = messageCount;
   }
+
+  String countsText() {
+    return String.format(java.util.Locale.US, "%,d %s across %,d %s", messageCount,
+        messageCount == 1 ? "message" : "messages", folderCount, folderCount == 1 ? "folder" : "folders");
+  }
 }
 
 static class FindingAidRow {
@@ -555,27 +561,8 @@ static String attachmentTextWithBadgeHtml(AssociatedFile af) {
   return attachmentDisplayHtml(af);
 }
 
-static String projectBrandingLogoUri() {
-  try {
-    Path optimized = Common.resolveExistingPath("assets/thinkbox_footer_optimized.png", "thinkbox_footer_optimized.png");
-    if (optimized != null) return optimized.toAbsolutePath().toUri().toString();
-    Path p = Common.resolveExistingPath("assets/thinkbox_footer.png", "thinkbox_footer.png");
-    if (p != null) return p.toAbsolutePath().toUri().toString();
-    Path scaled = Common.resolveExistingPath("assets/thinkbox_footer_scaled.png", "thinkbox_footer_scaled.png");
-    if (scaled != null) return scaled.toAbsolutePath().toUri().toString();
-  } catch (Exception ignored) {}
-  String bundledFooter = Common.bundledFooterUri();
-  if (!bundledFooter.isBlank()) return bundledFooter;
-  return "";
-}
-
 static String pdfaComplianceLabel() {
   return "PDF/A-4f";
-}
-
-static void appendBrandingBlock(StringBuilder s, String eaPdfProfile) {
-  // Footer is drawn with PDFBox after HTML rendering so it always uses the
-  // actual page width and the same @page margins, independent of email HTML.
 }
 
 static byte[] renderHtmlPdf(String html, String baseUri, String fontPath, EmailRecord r, boolean debug) throws Exception {
@@ -661,7 +648,7 @@ static byte[] renderXhtmlPdf(String xhtml, String baseUri, String fontPath, bool
   // Final assembly supplies EA-PDF identification, associated files and 4f XMP.
   builder.usePdfAConformance(PdfRendererBuilder.PdfAConformance.PDFA_4_A);
   builder.useColorProfile(Files.readAllBytes(Path.of(Common.resolveIccPath(null))));
-  builder.useFont(new File(fontPath), "ArchiveFont");
+  FontSupport.register(builder, new File(fontPath), "ArchiveFont");
   EmailRecord renderRecord = ACTIVE_RENDER_RECORD.get();
   builder.usePdfUaAccessibility(pdfUaFeaturesEnabled() || (renderRecord != null && !Common.nz(renderRecord.headerTagMarker).isBlank()), 2);
   xhtml = FontSupport.configure(builder, fontPath, xhtml, ACTIVE_RENDER_RECORD.get());
@@ -686,14 +673,9 @@ static byte[] renderXhtmlPdf(String xhtml, String baseUri, String fontPath, bool
         float dotsPerPoint = renderer.getDotsPerPoint();
         float width = (float) Math.ceil((page.getWidth(context) + paintedWidth - availableWidth) / dotsPerPoint) + 1f;
         float height = page.getHeight(context) / dotsPerPoint;
-        String bottom = "";
-        if (CONFIG.branding.enabled && renderRecord.associatedFiles.stream()
-            .noneMatch(file -> file != null && file.emailAttachment)) {
-          bottom = "margin-bottom:" + (brandingFooterTop(new PDRectangle(width, height)) + 12f) + "pt;";
-        }
         Document fitted = Jsoup.parse(xhtml, "", Parser.xmlParser());
         fitted.outputSettings().syntax(Document.OutputSettings.Syntax.xml).prettyPrint(false);
-        fitted.head().appendElement("style").text("@page {size:" + width + "pt " + height + "pt;" + bottom + "}");
+        fitted.head().appendElement("style").text("@page {size:" + width + "pt " + height + "pt;}");
         fittedXhtml = fitted.outerHtml();
       }
     }
@@ -730,12 +712,7 @@ static String buildPlainTextFallbackXhtml(String html) throws Exception {
 }
 
 static String messagePageStyle(EmailRecord record) throws Exception {
-  String bottom = "";
-  if (CONFIG.branding.enabled && record != null
-      && record.associatedFiles.stream().noneMatch(file -> file != null && file.emailAttachment)) {
-    bottom = " margin-bottom: " + (brandingFooterTop(PDRectangle.LETTER) + 12f) + "pt;";
-  }
-  return "@page { size: letter; margin: 0.65in;" + bottom + " }";
+  return "@page { size: letter; margin: 0.65in; }";
 }
 
 static int detectPrimaryContentWidthPx(String emailHtml) {
@@ -848,13 +825,6 @@ static String buildRenderHtml(EmailRecord r, boolean debug, Path assetDir, Strin
   s.append(".att-meta { color: #72675b; font-weight: normal; }");
   s.append(".message-delimiter { margin-top: 22px; page-break-inside: avoid; width: 100%; }");
   s.append(".message-delimiter-label { font-size: 8.5pt; color: #7f7462; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }");
-  s.append(".branding-box { border: 1px solid #cdbd9f; overflow: hidden; position: relative; width: 100%; box-sizing: border-box; }");
-  s.append(".branding-image { display: block; width: 100%; height: auto; }");
-  s.append(".branding-overlay { position: absolute; left: 24px; top: 14px; max-width: 72%; }");
-  s.append(".branding-overlay-inner { background: #ffffff; border: 1px solid #cdbd9f; padding: 7px 10px; }");
-  s.append(".branding-line { margin: 0; }");
-  s.append(".branding-title { font-size: 10pt; font-weight: bold; color: #1f3f5b; }");
-  s.append(".branding-subtitle { font-size: 8.5pt; color: #5f5544; margin-top: 2px; }");
   s.append(".hdr-table th, .hdr-table td { vertical-align: top; }");
   s.append(".pagebreak { page-break-before: always; }");
   s.append(emailStyles);
@@ -935,7 +905,6 @@ static String buildRenderHtml(EmailRecord r, boolean debug, Path assetDir, Strin
   }
   s.append("</div>");
   }
-  if (CONFIG.branding.enabled) appendBrandingBlock(s, "1" + chooseEaPdfConformance(r, profileOverride));
   s.append("</body></html>");
 
   String out = SemanticStructure.headerHtml(Common.stripInvalidXml(s.toString()), r.headerTagMarker);
@@ -1467,7 +1436,7 @@ private static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, E
       doc.getDocument().setVersion(2.0f);
       drawInlineImageFallback(doc, r, debug);
       addOmittedAttachmentAnnotations(doc, r, fontPath);
-      if (CONFIG.branding.enabled) drawBrandingFooter(doc, fontPath, "1" + chooseEaPdfConformance(r, profileOverride), r.renderContentWidthPx);
+      if (CONFIG.branding.enabled) drawBrandingBanner(doc, fontPath, "1" + chooseEaPdfConformance(r, profileOverride));
       clearImageInterpolation(doc);
       drawPageContext(doc, fontPath);
       setDocumentInfo(doc, r);
@@ -1486,16 +1455,18 @@ private static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, E
       normalizePageContentStreams(doc);
       SemanticStructure.balanceParentTree(doc);
       if (destination != null) {
-        if (outermost) Common.writeOuterPdfAtomically(destination, temporary -> doc.save(temporary.toFile()), expected);
-        else Common.writePdfAtomically(destination, temporary -> doc.save(temporary.toFile()), expected);
+        if (outermost) Common.writeOuterPdfAtomically(destination, temporary -> PdfFontMetadata.save(doc, temporary.toFile()), expected);
+        else Common.writePdfAtomically(destination, temporary -> PdfFontMetadata.save(doc, temporary.toFile()), expected);
         return new SingleMessageBuildResult(null, premisBytes);
       }
       ByteArrayOutputStream finalized = new ByteArrayOutputStream();
-      doc.save(finalized);
+      PdfFontMetadata.save(doc, finalized);
       byte[] bytes = finalized.toByteArray();
-      try (PDDocument serialized = Loader.loadPDF(new org.apache.pdfbox.io.RandomAccessReadBuffer(bytes),
-          org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
-        PdfCreationValidator.validate(serialized, expected);
+      if (EapdfConfig.get().validateOnCreation) {
+        try (PDDocument serialized = Loader.loadPDF(new org.apache.pdfbox.io.RandomAccessReadBuffer(bytes),
+            org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
+          PdfCreationValidator.validate(serialized, expected);
+        }
       }
       return new SingleMessageBuildResult(bytes, premisBytes);
     } finally {
@@ -1533,7 +1504,10 @@ static byte[] buildArchiveMessagePdfBytes(EmailRecord r, String fontPath, boolea
       Common.dbg(r, "wrote debug log=" + dbgFile);
     }
 
-    byte[] rendered = renderHtmlPdf(html, assetDir.toUri().toString(), fontPath, r, debug);
+    byte[] rendered;
+    FontSupport.ARCHIVE_FONTS.set(true);
+    try { rendered = renderHtmlPdf(html, assetDir.toUri().toString(), fontPath, r, debug); }
+    finally { FontSupport.ARCHIVE_FONTS.remove(); }
     if (debug) Common.dbg(r, "rendered pdf bytes=" + rendered.length);
     try (PDDocument doc = Loader.loadPDF(rendered)) {
       SemanticStructure.headerFields(doc, r.headerTagMarker);
@@ -1542,7 +1516,7 @@ static byte[] buildArchiveMessagePdfBytes(EmailRecord r, String fontPath, boolea
       clearImageInterpolation(doc);
 
       ByteArrayOutputStream finalized = new ByteArrayOutputStream();
-      doc.save(finalized);
+      PdfFontMetadata.save(doc, finalized);
       return finalized.toByteArray();
     }
   } finally {
@@ -1654,13 +1628,12 @@ private static ArchiveBuildResult saveArchiveDocument(Path temporary, Path out, 
   if (findingAidEnabled) {
     findingAid = PdfFindingAidSupport.buildFindingAidPdf(findingAidRows, archiveProfile, runSummary, fontPath, false, excelFilename);
     findingAidBytes = new ByteArrayOutputStream();
-    findingAid.document.save(findingAidBytes);
+    PdfFontMetadata.save(findingAid.document, findingAidBytes);
   }
   try (PDDocument archive = new PDDocument(CompactStreamCache::new)) {
     try {
       archive.setVersion(2.0f);
       archive.getDocument().setVersion(2.0f);
-      BrandingFooterResources footer = CONFIG.branding.enabled ? loadBrandingFooterResources(archive, fontPath) : null;
       int pageCursor = 1;
       int findingAidPages = 0;
       if (findingAidEnabled && findingAidBytes != null) {
@@ -1676,12 +1649,12 @@ private static ArchiveBuildResult saveArchiveDocument(Path temporary, Path out, 
         try (PDDocument part = Loader.loadPDF(rendered.pdfBytes)) {
           int startPage = archive.getNumberOfPages() + 1;
           MessageSegment segment = new MessageSegment(rendered.record, startPage, startPage + part.getNumberOfPages() - 1);
-          AppendedPages appended = appendClonedPagesWithLast(archive, part, segment, resources);
-          drawBrandingFooter(archive, footer, "1" + archiveProfile, appended.lastPage());
+          appendClonedPagesWithLast(archive, part, segment, resources);
           segments.add(segment);
         }
       });
       ConversionProgress.stage("assembling");
+      if (CONFIG.branding.enabled) drawBrandingBanner(archive, fontPath, "1" + archiveProfile);
       setDocumentInfo(archive, records.get(0));
       configureArchiveCatalog(archive, archiveProfile);
       applyPageLabels(archive, findingAidPages, false);
@@ -1709,8 +1682,10 @@ private static ArchiveBuildResult saveArchiveDocument(Path temporary, Path out, 
       normalizePageContentStreams(archive);
       Files.createDirectories(out.getParent() == null ? Paths.get(".") : out.getParent());
       SemanticStructure.balanceParentTree(archive);
+      ArchiveFontSubsets.apply(archive);
       ConversionProgress.saving(temporary);
-      archive.save(temporary.toFile());
+      // Larger bounded groups improve lossless compression of repeated archive structures.
+      PdfFontMetadata.save(archive, temporary.toFile(), new org.apache.pdfbox.pdfwriter.compress.CompressParameters(2000));
     } finally {
       PdfDocumentParts.releaseAllocator(archive);
     }
@@ -1784,7 +1759,7 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
   try (PDDocument archive = findingAid.document) {
     archive.setVersion(2.0f);
     archive.getDocument().setVersion(2.0f);
-    if (CONFIG.branding.enabled) drawBrandingFooter(archive, fontPath, "1" + collectionProfile, 0);
+    if (CONFIG.branding.enabled) drawBrandingBanner(archive, fontPath, "1" + collectionProfile);
     clearImageInterpolation(archive);
     setDocumentInfo(archive, records.get(0));
     configureArchiveCatalog(archive, collectionProfile);
@@ -1803,8 +1778,8 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
     Common.writeOuterPdfAtomically(out, temporary -> {
       SemanticStructure.balanceParentTree(archive);
       ConversionProgress.saving(temporary);
-      archive.save(temporary.toFile());
-      ConversionProgress.stage("checking");
+      PdfFontMetadata.save(archive, temporary.toFile());
+      ConversionProgress.stage(EapdfConfig.get().validateOnCreation ? "checking" : "writing");
       // Release the collection scratch streams before reopening and checking the saved PDF.
       archive.close();
       PdfCollectionSupport.repairSavedTopLevelCollection(temporary, folders, members, debug, expected);
@@ -1914,68 +1889,28 @@ static void endArtifact(PDPageContentStream cs) throws IOException {
   cs.endMarkedContent();
 }
 
-private record BrandingFooterResources(PDImageXObject image, PDType0Font font) {}
-
-private static BrandingFooterResources loadBrandingFooterResources(PDDocument doc, String fontPath) throws Exception {
-  String logoUri = projectBrandingLogoUri();
-  if (Common.nz(logoUri).isBlank()) return null;
-
-  BufferedImage img;
-  try (InputStream in = new BufferedInputStream(new java.net.URI(logoUri).toURL().openStream())) {
-    img = javax.imageio.ImageIO.read(in);
-  }
-  if (img == null) return null;
-  PDImageXObject image = LosslessFactory.createFromImage(doc, img);
-  image.getCOSObject().setBoolean(COSName.INTERPOLATE, false);
-  return new BrandingFooterResources(image, loadUiFont(doc, fontPath));
-}
-
-static void drawBrandingFooter(PDDocument doc, String fontPath, String eaPdfProfile, int contentWidthPx) throws Exception {
+// Draw once after document assembly, inside the existing first-page top margin.
+// Text and vector artwork keep branding compact without embedding a raster image.
+static void drawBrandingBanner(PDDocument doc, String fontPath, String eaPdfProfile) throws Exception {
   if (doc == null || doc.getNumberOfPages() == 0) return;
-  drawBrandingFooter(doc, loadBrandingFooterResources(doc, fontPath), eaPdfProfile);
-}
-
-private static void drawBrandingFooter(PDDocument doc, BrandingFooterResources footer, String eaPdfProfile) throws Exception {
-  if (footer == null) return;
-  drawBrandingFooter(doc, footer, eaPdfProfile, doc.getPage(doc.getNumberOfPages() - 1));
-}
-
-private static void drawBrandingFooter(PDDocument doc, BrandingFooterResources footer, String eaPdfProfile, PDPage page) throws Exception {
-  if (footer == null || page == null) return;
-  PDImageXObject pdImage = footer.image();
-  PDType0Font font = footer.font();
-
-  String safeProfile = Common.nz(eaPdfProfile).isBlank() ? "1s" : Common.nz(eaPdfProfile);
-  PDRectangle box = page.getMediaBox();
+  PDPage page = doc.getPage(0);
+  PDRectangle box = page.getCropBox();
+  PDType0Font font = loadUiFont(doc, fontPath);
   float margin = 46.8f;
   float x = box.getLowerLeftX() + margin;
-  float y = box.getLowerLeftY() + BRANDING_FOOTER_BOTTOM;
-
-  float imageWidth = box.getWidth() - 2f * margin;
-  float imageHeight = imageWidth * pdImage.getHeight() / Math.max(1f, pdImage.getWidth());
-  float textX = x + 18f;
-  float textWidthAvailable = imageWidth * 0.72f - 36f;
-  String title = "Email converted by ThinkBox EMailToPDF";
-  String subtitle = Common.productLabel() + "; EA-PDF 1.0 " + safeProfile + " and " + pdfaComplianceLabel() + ".";
-  float titleSize = Math.min(13f, 13f * textWidthAvailable / Math.max(1f, textWidth(font, 13f, title)));
-  float subtitleSize = Math.min(9f, 9f * textWidthAvailable / Math.max(1f, textWidth(font, 9f, subtitle)));
-
+  float y = box.getUpperRightY() - 32f;
+  float width = box.getWidth() - 2f * margin;
+  String label = "Email converted by ThinkBox | " + Common.productLabel()
+      + "; EA-PDF 1.0 " + eaPdfProfile;
+  float size = Math.min(8f, 8f * (width - 16f) / Math.max(1f, textWidth(font, 8f, label)));
   try (PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
     beginArtifact(cs);
-    cs.drawImage(pdImage, x, y, imageWidth, imageHeight);
-    cs.setNonStrokingColor(java.awt.Color.WHITE);
-    FontSupport.draw(cs, font, titleSize, textX, y + imageHeight - 30f, title);
-    FontSupport.draw(cs, font, subtitleSize, textX, y + imageHeight - 47f, subtitle);
+    cs.setNonStrokingColor(new java.awt.Color(239, 243, 247));
+    cs.addRect(x, y, width, 18f);
+    cs.fill();
+    cs.setNonStrokingColor(new java.awt.Color(31, 63, 91));
+    FontSupport.draw(cs, font, size, x + (width - textWidth(font, size, label)) / 2f, y + 5f, label);
     endArtifact(cs);
-  }
-}
-
-static float brandingFooterTop(PDRectangle box) throws Exception {
-  String uri = projectBrandingLogoUri();
-  if (uri.isBlank()) return 0f;
-  try (InputStream input = new URI(uri).toURL().openStream()) {
-    BufferedImage image = javax.imageio.ImageIO.read(input);
-    return image == null ? 0f : BRANDING_FOOTER_BOTTOM + (box.getWidth() - 93.6f) * image.getHeight() / Math.max(1f, image.getWidth());
   }
 }
 
@@ -2230,6 +2165,14 @@ static void addCollectionLogicalStructure(PDDocument doc) throws IOException {
   PdfCollectionSupport.addCollectionLogicalStructure(doc);
 }
 
+static void setCompressedMetadata(PDDocument doc, String xmp) throws IOException {
+  PDMetadata metadata = new PDMetadata(doc);
+  try (OutputStream output = metadata.createOutputStream(COSName.FLATE_DECODE)) {
+    output.write(xmp.getBytes(StandardCharsets.UTF_8));
+  }
+  doc.getDocumentCatalog().setMetadata(metadata);
+}
+
 static void setPdfA3Metadata(PDDocument doc, String iccPath, EmailRecord r) throws Exception {
   setPdfA3Metadata(doc, iccPath, r, null);
 }
@@ -2237,9 +2180,7 @@ static void setPdfA3Metadata(PDDocument doc, String iccPath, EmailRecord r) thro
 static void setPdfA3Metadata(PDDocument doc, String iccPath, EmailRecord r, String profileOverride) throws Exception {
   PDDocumentCatalog cat = doc.getDocumentCatalog();
   String xmp = buildXmpMetadata(r, profileOverride);
-  PDMetadata meta = new PDMetadata(doc);
-  meta.importXMPMetadata(xmp.getBytes(StandardCharsets.UTF_8));
-  cat.setMetadata(meta);
+  setCompressedMetadata(doc, xmp);
 
   try (InputStream icc = Files.newInputStream(Paths.get(iccPath))) {
     PDOutputIntent oi = new PDOutputIntent(doc, icc);
@@ -2259,9 +2200,7 @@ static void setPdfA3Metadata(PDDocument doc, String iccPath, List<EmailRecord> r
 static void setPdfA3Metadata(PDDocument doc, String iccPath, List<EmailRecord> records, String archiveProfile, boolean includeFindingAidIdentity) throws Exception {
   PDDocumentCatalog cat = doc.getDocumentCatalog();
   String xmp = buildXmpMetadata(records, archiveProfile, includeFindingAidIdentity);
-  PDMetadata meta = new PDMetadata(doc);
-  meta.importXMPMetadata(xmp.getBytes(StandardCharsets.UTF_8));
-  cat.setMetadata(meta);
+  setCompressedMetadata(doc, xmp);
 
   try (InputStream icc = Files.newInputStream(Paths.get(iccPath))) {
     PDOutputIntent oi = new PDOutputIntent(doc, icc);
@@ -3210,7 +3149,7 @@ static Map<String, PDComplexFileSpecification> embedAssociatedFiles(PDDocument d
     setEmbeddedChecksum(ef, md5);
 
     COSDictionary efd = ef.getCOSObject();
-    efd.setInt(COSName.SIZE, af.size());
+
 
     COSDictionary params = (COSDictionary)efd.getDictionaryObject(COSName.PARAMS);
     if (params == null) {
@@ -3235,6 +3174,7 @@ static Map<String, PDComplexFileSpecification> embedAssociatedFiles(PDDocument d
     if (debug) Common.dbg(r, "embedded file filename=" + fname + " mime=" + mime + " afRelationship=" + rel + " bytes=" + af.size());
   }
 
+  if (afArray.size() == 0) catd.removeItem(COSName.getPDFName("AF"));
   efs.setNames(nameMap);
   names.setEmbeddedFiles(efs);
   cat.setNames(names);
@@ -3293,7 +3233,7 @@ static EmbeddedFileBindings embedAssociatedFiles(PDDocument doc, List<EmailRecor
     setEmbeddedChecksum(ef, md5);
 
     COSDictionary efd = ef.getCOSObject();
-    efd.setInt(COSName.SIZE, af.size());
+
 
     COSDictionary params = (COSDictionary)efd.getDictionaryObject(COSName.PARAMS);
     if (params == null) {
@@ -3320,6 +3260,7 @@ static EmbeddedFileBindings embedAssociatedFiles(PDDocument doc, List<EmailRecor
     ConversionProgress.advance("embedding");
   }
 
+  if (afArray.size() == 0) catd.removeItem(COSName.getPDFName("AF"));
   efs.setNames(nameMap);
   names.setEmbeddedFiles(efs);
   cat.setNames(names);
@@ -3376,7 +3317,7 @@ static void addOmittedAttachmentAnnotations(PDDocument doc, EmailRecord record, 
   PDPage page = null;
   float positionY = 0;
   float margin = 46.8f;
-  float bottomLimit = CONFIG.branding.enabled ? Math.max(margin, brandingFooterTop(PDRectangle.LETTER) + 12f) : margin;
+  float bottomLimit = margin;
   for (AssociatedFile file : attachments) {
     String filename = Common.portablePdfFilename(file.filename);
     List<String> filenameLines = wrapAttachmentLabel(font, filename, PDRectangle.LETTER.getWidth() - 2 * margin - 20f);
@@ -3639,7 +3580,7 @@ static Map<String, PageLinkTarget> addFolderIndexPages(PDDocument doc, PDType0Fo
       float pageWidth = page.getMediaBox().getWidth();
       float pageHeight = page.getMediaBox().getHeight();
       float margin = 46f;
-      float top = pageHeight - margin;
+      float top = pageHeight - margin - (CONFIG.branding.enabled && doc.getNumberOfPages() == 1 ? 14f : 0f);
       float rowHeight = 18f;
       float y = top;
 
@@ -3648,7 +3589,7 @@ static Map<String, PageLinkTarget> addFolderIndexPages(PDDocument doc, PDType0Fo
           "EA-PDF 1" + collectionProfile + " single-document navigation. Select a folder to jump to its in-document email list.");
       y = drawText(cs, font, 10f, margin, y - 4f, "Harvested email(s): " + runSummary.harvestedEmails);
       y = drawText(cs, font, 10f, margin, y - 2f,
-          "Run stats: " + runSummary.messageCount + " messages across " + runSummary.folderCount + " folders");
+          "Run stats: " + runSummary.countsText());
       y = drawText(cs, font, 10f, margin, y - 2f, "Generated: " + runSummary.generatedAt);
       y -= 12f;
       drawRule(cs, margin, y, pageWidth - margin, y);
@@ -3698,7 +3639,7 @@ static Map<EmailRecord, PageLinkTarget> addFolderSummaryPages(PDDocument doc, PD
       float pageWidth = page.getMediaBox().getWidth();
       float pageHeight = page.getMediaBox().getHeight();
       float margin = 36f;
-      float top = pageHeight - margin;
+      float top = pageHeight - margin - (CONFIG.branding.enabled && doc.getNumberOfPages() == 1 ? 14f : 0f);
       float rowHeight = 24f;
       float y = top;
 
@@ -3933,7 +3874,7 @@ static void addEmbeddedPlan(PDDocument doc, COSArray afArray, Map<String, PDComp
 
   COSDictionary efd = ef.getCOSObject();
   efd.setName(COSName.SUBTYPE, mime);
-  efd.setInt(COSName.SIZE, bytes.length);
+
   COSDictionary params = (COSDictionary)efd.getDictionaryObject(COSName.PARAMS);
   if (params == null) {
     params = new COSDictionary();

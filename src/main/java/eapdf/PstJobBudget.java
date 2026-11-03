@@ -34,7 +34,6 @@ final class PstJobBudget {
     budget.defaults.put("eapdf.workerHeapBytes", heap);
     budget.defaults.put("eapdf.workerAddressBytes", Math.max(4L * 1024 * 1024 * 1024, heap + 4L * 1024 * 1024 * 1024));
     budget.defaults.put("eapdf.maxMetadataBytes", Math.min(heap / 8, bytes / 2 + 32L * 1024 * 1024));
-    budget.defaults.put("eapdf.maxMessages", messages);
     budget.defaults.put("eapdf.maxTempFiles", Math.min(1500000, Math.max(100000, messages * 6)));
     // Scratch contains expanded streams, rendered pages and staged outputs together.
     // PST size is not an upper bound on this expansion. Reserve disk headroom;
@@ -42,9 +41,6 @@ final class PstJobBudget {
     budget.defaults.put("eapdf.maxTempBytes", space);
     budget.defaults.put("eapdf.maxOutputBytes", space / 2);
     budget.defaults.put("eapdf.jobTimeoutSeconds", Math.min(86400, Math.max(600, messages * 2)));
-    budget.defaults.put("eapdf.maxPages", Math.min(2000000, messages * 20));
-    budget.defaults.put("eapdf.maxTotalPages", Math.min(4000000, messages * 40));
-    budget.defaults.put("eapdf.maxTotalImagePixels", Math.min(4_000_000_000_000L, messages * 16_000_000));
     System.out.println("Large email input processing: " + bytes + " input bytes; memory and work allowances sized to this input.");
     return budget;
   }

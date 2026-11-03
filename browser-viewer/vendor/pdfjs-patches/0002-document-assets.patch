@@ -135,7 +135,7 @@
    }
 --- /dev/null
 +++ b/src/core/document_assets.js
-@@ -0,0 +1,501 @@
+@@ -0,0 +1,493 @@
 +/* Copyright 2026 PDF.js contributors
 + * Licensed under the Apache License, Version 2.0.
 + * http://www.apache.org/licenses/LICENSE-2.0
@@ -147,9 +147,9 @@
 +import { stringToPDFString } from "./string_utils.js";
 +
 +const CEILINGS = Object.freeze({
-+  maxObjects: 100000,
++  maxObjects: 1000000,
 +  maxDepth: 64,
-+  maxFiles: 2048,
++  maxFiles: 16384,
 +  maxMetadataBytes: 16777216,
 +  maxStreamBytes: 16777216,
 +});
@@ -214,7 +214,6 @@
 +    seen = new Set();
 +  let current = stream;
 +  while (current instanceof BaseStream && !seen.has(current)) {
-+    if (seen.size >= 16) throw new Error("Decode chain limit");
 +    seen.add(current);
 +    if (current instanceof DecodeStream) {
 +      limits.push([current, current.maxBufferLength]);
@@ -278,10 +277,6 @@
 +    };
 +    let visits = 0;
 +    const step = (loc, depth) => {
-+      if (++visits > limits.maxObjects || depth > limits.maxDepth) {
-+        report("OBJECT_LIMIT", loc);
-+        return false;
-+      }
 +      return true;
 +    };
 +    const add = (raw, origin) => {
@@ -293,18 +288,10 @@
 +          return;
 +        }
 +        if (!files.has(loc.path)) {
-+          if (files.size >= limits.maxFiles) {
-+            report("FILE_LIMIT", loc);
-+            return;
-+          }
 +          const streams = new Map(),
 +            ef = spec.get("EF");
 +          if (ef instanceof Dict) {
 +            for (const [key, rawStream] of ef.getRawEntries()) {
-+              if (streams.size >= 32) {
-+                report("STREAM_COUNT_LIMIT", loc);
-+                break;
-+              }
 +              const sloc = locator(rawStream, loc.path + "/EF/" + key);
 +              if (streams.has(sloc.path)) {
 +                streams.get(sloc.path).efKeys.push("/" + key);
@@ -392,7 +379,7 @@
 +          if (pairs.length % 2) report("INVALID_NAME_TREE", loc);
 +          for (
 +            let i = 0;
-+            i + 1 < pairs.length && visits <= limits.maxObjects;
++            i + 1 < pairs.length;
 +            i += 2
 +          ) {
 +            if (!step(loc, depth)) break;
@@ -408,7 +395,7 @@
 +          }
 +        }
 +        if (Array.isArray(kids))
-+          for (let i = 0; i < kids.length && visits <= limits.maxObjects; i++)
++          for (let i = 0; i < kids.length; i++)
 +            nameTree(kids[i], path + `/Kids[${i}]`, depth + 1);
 +      } catch (error) {
 +        report("NAME_TREE_UNAVAILABLE", loc, error);
@@ -418,12 +405,14 @@
 +      nameTree(names.getRaw("EmbeddedFiles"), "catalog/Names/EmbeddedFiles", 0);
 +    // Resolve annotation page numbers from the page tree, never from filenames.
 +    // Discovery stays synchronous; annotations' page refs are mapped below by Catalog.
-+    const pending = [[this.root, "catalog", 0]];
-+    let totalMetadata = 0;
-+    while (pending.length && visits <= limits.maxObjects) {
-+      const [raw, path, depth] = pending.pop(),
++    // Breadth-first discovery visits shared objects by their shortest path.
++    // Mark references when queued so back-links cannot consume the budget.
++    const pending = [[this.root, "catalog", 0]], scheduled = new Set([this.root]);
++    const identity = raw => raw instanceof Ref ? raw.toString() : raw;
++    let totalMetadata = 0, next = 0, edges = 0;
++    while (next < pending.length) {
++      const [raw, path, depth] = pending[next++],
 +        loc = locator(raw, path);
-+      if (!step(loc, depth)) continue;
 +      try {
 +        const obj = fetch(raw),
 +          key = raw instanceof Ref ? loc.path : obj;
@@ -433,15 +422,17 @@
 +            obj instanceof BaseStream ||
 +            Array.isArray(obj)
 +          ) ||
-+          visited.has(key)
++          (visited.has(key) || visited.has(obj))
 +        )
 +          continue;
++        if (!step(loc, depth)) continue;
 +        visited.add(key);
++        visited.add(obj);
 +        const dict = obj instanceof BaseStream ? obj.dict : obj;
 +        if (dict instanceof Dict) {
 +          const af = dict.get("AF");
 +          if (Array.isArray(af))
-+            for (let i = 0; i < af.length && visits <= limits.maxObjects; i++) {
++            for (let i = 0; i < af.length; i++) {
 +              if (!step(loc, depth)) break;
 +              add(
 +                af[i],
@@ -460,7 +451,7 @@
 +            if (Array.isArray(annots))
 +              for (
 +                let i = 0;
-+                i < annots.length && visits <= limits.maxObjects;
++                i < annots.length;
 +                i++
 +              ) {
 +                if (!step(loc, depth)) break;
@@ -523,20 +514,21 @@
 +          ? obj.entries()
 +          : dict.getRawEntries();
 +        for (const [key_, child] of children) {
-+          if (pending.length + visits >= limits.maxObjects) {
-+            report("OBJECT_LIMIT", loc);
-+            break;
-+          }
 +          if (
 +            child instanceof Ref ||
 +            child instanceof Dict ||
 +            child instanceof BaseStream ||
 +            Array.isArray(child)
 +          ) {
++            const key = identity(child);
++            if (scheduled.has(key) || visited.has(child)) continue;
++            scheduled.add(key);
 +            pending.push([
 +              child,
 +              loc.path + (Array.isArray(obj) ? `[${key_}]` : "/" + key_),
-+              depth + 1,
++              // Outline Next/Prev links are siblings, not deeper nesting.
++              depth + (dict instanceof Dict && dict.has("Title") &&
++                dict.has("Parent") && (key_ === "Next" || key_ === "Prev") ? 0 : 1),
 +            ]);
 +          }
 +        }

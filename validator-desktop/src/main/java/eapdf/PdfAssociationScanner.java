@@ -76,7 +76,6 @@ final class PdfAssociationScanner extends PDFParser {
           continue;
         }
         if(!(value instanceof COSDictionary||value instanceof COSArray)||!local.add(value))continue;
-        if(++containers>limit)throw new IOException("PDF object traversal exceeds the "+limit+"-container inspection limit");
         if(value instanceof COSDictionary dict) {
           COSBase af=EaPdfChecks.resolve(dict.getItem(COSName.getPDFName("AF")));
           if(af instanceof COSArray array)for(int i=0;i<array.size();i++) {

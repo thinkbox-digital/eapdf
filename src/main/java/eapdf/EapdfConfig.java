@@ -56,6 +56,7 @@ class EapdfConfig {
 
   SigningConfig signing = new SigningConfig();
   int configVersion = 1;
+  boolean validateOnCreation = true;
   String creator = "";
   BrandingConfig branding = new BrandingConfig();
   FindingAidConfig findingAid = new FindingAidConfig();

@@ -258,7 +258,9 @@ final class PageContentChecks {
   private void pageContext() {
     Map<COSDictionary, List<String>> candidates = new IdentityHashMap<>();
     Map<String, Integer> frequency = new HashMap<>();
-    for (var page : pageTexts.pages()) {
+    // Text extraction may omit pages without /Contents; they still need context assessment.
+    for (PDPage documentPage : document.getPages()) {
+      COSDictionary page = documentPage.getCOSObject();
       List<String> lines = pageTexts.get(page).lines().map(EaPdfChecks::normal).filter(line -> !line.isEmpty()).toList();
       var chosen = new java.util.LinkedHashSet<String>();
       chosen.addAll(lines.subList(0, Math.min(3, lines.size())));
@@ -373,7 +375,7 @@ final class PageContentChecks {
 
   private void contentSets(COSDictionary node, Set<COSDictionary> visited, int depth) throws IOException {
     if (node == null) return;
-    if (depth > 256 || !visited.add(node)) throw new IOException("DPart tree is cyclic or too deep");
+    if (!visited.add(node)) throw new IOException("DPart tree is cyclic or too deep");
     COSBase children = get(node, "DParts");
     if (children != null) { for (COSDictionary child : dictionaries(children)) contentSets(child, visited, depth + 1); return; }
     COSDictionary start = dict(node, "Start"), end = dict(node, "End");
@@ -387,7 +389,6 @@ final class PageContentChecks {
   }
 
   private void parse(PDContentStream stream, PDResources resources, COSDictionary scope, Page result, List<Sequence> stack, int depth) throws IOException {
-    if (depth > 256) throw new IOException("Form XObjects are too deeply nested");
     scopePages.computeIfAbsent(scope, ignored -> identitySet()).add(currentPage);
     if (scope instanceof COSStream) objectLocations.computeIfAbsent(scope, ignored -> identitySet()).add(currentPage);
     PDFStreamParser parser = new PDFStreamParser(stream);
@@ -396,7 +397,6 @@ final class PageContentChecks {
     try {
       Object token;
       while ((token = parser.parseNextToken()) != null) {
-        if (++count > instructionLimit) throw new IOException("Content inspection exceeds its instruction limit");
         if (token instanceof COSBase operand) { operands.add(operand); continue; }
         if (!(token instanceof Operator operator)) continue;
         String op = operator.getName(); instruction++;
@@ -602,7 +602,7 @@ final class PageContentChecks {
     COSDictionary root = dict(document.getDocumentCatalog().getCOSObject(), "DPartRoot");
     Set<COSDictionary> seen = identitySet();
     for (COSDictionary node = part; node != null && node != root; node = dict(node, "Parent")) {
-      if (node instanceof COSStream || !seen.add(node) || seen.size() > 256) return false;
+      if (node instanceof COSStream || !seen.add(node)) return false;
       COSDictionary metadata = dict(node, "DPM");
       if (get(node, "DPM") != null && (metadata == null || metadata instanceof COSStream)) return false;
       if (get(metadata, "Mail_GUID") != null || get(metadata, "Mail_MessageID") != null) return false;
@@ -654,7 +654,6 @@ final class PageContentChecks {
   private void structure(COSBase value, COSDictionary parent, COSDictionary page, int depth) throws IOException {
     boolean indirect = value instanceof COSObject;
     value = resolve(value);
-    if (depth > 256 || structureSeen.size() > InspectionBudget.nodes(document)) throw new IOException("Structure exceeds the inspection limit");
     if (value instanceof COSArray array) { for (COSBase child : array) structure(child, parent, page, depth + 1); return; }
     if (value instanceof COSInteger integer && page != null && integer.longValue() >= 0 && integer.longValue() <= Integer.MAX_VALUE) { owner(page, integer.intValue(), parent); return; }
     if (!(value instanceof COSDictionary dictionary)) {
@@ -726,7 +725,7 @@ final class PageContentChecks {
 
   private List<Integer> numbers(COSDictionary node, Set<COSDictionary> seen, int depth) throws IOException {
     if (node == null) return List.of();
-    if (depth > 256 || seen.size() > InspectionBudget.nodes(document) || !seen.add(node)) throw new IOException("ParentTree is cyclic or too deep");
+    if (!seen.add(node)) throw new IOException("ParentTree is cyclic or too deep");
     COSBase rawNumbers = get(node, "Nums"), rawKids = get(node, "Kids");
     if (rawNumbers != null && rawKids != null) errors.add("ParentTree node has both Nums and Kids");
     List<Integer> keys = new ArrayList<>();
@@ -758,9 +757,20 @@ final class PageContentChecks {
     collect(value, out, 0); return out;
   }
   private static void collect(COSBase value, List<COSDictionary> out, int depth) {
-    if (depth > 256) throw new IllegalArgumentException("Nested array exceeds the inspection limit");
-    value = resolve(value);
-    if (value instanceof COSDictionary dictionary) out.add(dictionary);
-    else if (value instanceof COSArray array) for (COSBase child : array) collect(child, out, depth + 1);
+    record Visit(COSBase value, boolean exit) {}
+    var pending = new java.util.ArrayDeque<Visit>();
+    var active = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<COSArray, Boolean>());
+    if (value != null) pending.push(new Visit(value, false));
+    while (!pending.isEmpty()) {
+      Visit visit = pending.pop();
+      COSBase current = resolve(visit.value());
+      if (current instanceof COSDictionary dictionary) out.add(dictionary);
+      else if (current instanceof COSArray array) {
+        if (visit.exit()) { active.remove(array); continue; }
+        if (!active.add(array)) throw new IllegalArgumentException("Cyclic nested array");
+        pending.push(new Visit(array, true));
+        for (int i = array.size() - 1; i >= 0; i--) if (array.get(i) != null) pending.push(new Visit(array.get(i), false));
+      }
+    }
   }
 }

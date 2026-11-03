@@ -1,0 +1,29 @@
+{
+  "version": "1.30.3",
+  "installer_url": "https://software.verapdf.org/releases/arlington/1.30/verapdf-arlington-1.30.3-installer.zip",
+  "installer_sha256": "2d277ba69b7bdc601536368ee00984bfd3767a90f2bb9bd57994d593f7e589ec",
+  "jar_sha256": "9b1a36ffd2b6cde310bfabecbcfc7ef314d7e71ced1d69c0fd03aa35701b3ece",
+  "model_revision": "c48b363e9b78902deea03e958693c09339248a3a",
+  "pdf20_profile_sha256": "4288ea5e29278d88a96ff0ea809b22a8f9e6b53518d17628c46131a57354b163",
+  "extensions": [
+    "EAPDF_1"
+  ],
+  "release_notes": "https://github.com/veraPDF/veraPDF-arlington-tools/blob/master/RELEASENOTES.md",
+  "implementation_notes": "https://github.com/veraPDF/veraPDF-arlington-tools/blob/master/README.md",
+  "report_adapter": {
+    "sources_url": "https://repo.maven.apache.org/maven2/org/verapdf/core-arlington/1.30.3/core-arlington-1.30.3-sources.jar",
+    "sources_sha256": "32a34ab8e355f79f1d5716d6889fda5e76ba949926588078d318722115d4095b",
+    "patched_source_sha256": "1a63d25b527e6db42a246e6204402c299f42c2ff68302871ac6f14769878fb43",
+    "purpose": "Remove the hard-coded 10000-result retention ceiling; no model rules changed"
+  },
+  "model_adapter": {
+    "sources_url": "https://repo.maven.apache.org/maven2/org/verapdf/validation-model-arlington/1.30.3/validation-model-arlington-1.30.3-sources.jar",
+    "sources_sha256": "a11c68c22db4fde8b27d2f3f76123412377783969ca55af848e902de61be945f",
+    "patched_sources": {
+      "GFAEmbeddedFileParameter": "63156a449ac40c8df50cef023563848ef94ba30a5337efd4eab473e38a40acdd",
+      "GFAAFEmbeddedFileParameter": "cc47a1819b4a77d6e88282f73f95feb77df380258abbaec27b7bc9f716ae04d4",
+      "GFANumberTreeNodesArrayEntry": "94d890962c73af1d7ee7f5735df3ac3c7454035775f47540afdc5f56b345a98f"
+    },
+    "purpose": "Measure binary CheckSum bytes and pass the dictionary parent through number-tree Kids arrays; no profile rules changed"
+  }
+}

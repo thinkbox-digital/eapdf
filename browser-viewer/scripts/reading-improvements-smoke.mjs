@@ -31,7 +31,7 @@ try{
  assert.ok(await page.evaluate(()=>document.querySelector('#canvas').getBoundingClientRect().width<=document.querySelector('#viewport').clientWidth));
  assert.ok(await page.locator('#text-layer').textContent());checks.push('fit width and selectable text');
  await open('tests/inspection/controls/s-bad-checksum.pdf');
- await page.locator('[data-file-id]').first().click();await ready();assert.match(await page.locator('#diagnostics').textContent(),/checksum differs/);assert.match(await page.locator('#status').textContent(),/checksum mismatch/);checks.push('extraction refreshes checksum warning');
+ await page.locator('[data-file-id]').first().click();await ready();assert.equal(await page.locator('#diagnostics').count(),0);assert.match(await page.locator('#status').textContent(),/checksum mismatch/);checks.push('extraction refreshes checksum warning');
  await open('../examples/pst/pst_quality-attached-message_1m.pdf');
  assert.equal(await page.getByRole('button',{name:'Find email sources',exact:true}).count(),0);
  const linked=await page.evaluate(()=>[...document.querySelectorAll('[data-message-id]')].map(b=>b.dataset.messageId));assert.ok(linked.length>1);

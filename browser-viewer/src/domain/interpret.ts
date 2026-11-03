@@ -145,7 +145,7 @@ export function interpret(input:InterpretationInput):{inspection:InspectionResul
     pdfaPart:xmp.declaration(NS.pdfa,'part'),pdfaConformance:xmp.declaration(NS.pdfa,'conformance'),pdfaRevision:xmp.declaration(NS.pdfa,'rev'),
     eapdfVersion:xmp.declaration(NS.id,'version'),eapdfRevision:xmp.declaration(NS.id,'rev'),declaredProfile:profile,validationStatus:'not-evaluated'},pageCount:input.pageCount,parts,messages,files,metadataRecords:xmp.records,collection,diagnostics,limits,
     coverage:{metadata:xmp.state,documentParts:input.parts.status==='partial'?(input.parts.diagnostics.some(d=>d.code.includes('LIMIT'))?'unavailable':'invalid'):input.parts.status,
-      associatedFiles:assets.diagnostics.some(d=>d.code==='OBJECT_LIMIT')?'unavailable':'present',collection:assets.diagnostics.some(d=>d.code==='FOLDER_CYCLE')?'invalid':col.state,
+      associatedFiles:assets.diagnostics.some(d=>['OBJECT_LIMIT','FILE_LIMIT','OBJECT_UNAVAILABLE','FILE_UNAVAILABLE','NAME_TREE_UNAVAILABLE','NAME_TREE_CYCLE','INVALID_NAME_TREE','INVALID_AF_ARRAY','INVALID_FILESPEC'].includes(d.code))?'unavailable':'present',collection:assets.diagnostics.some(d=>d.code==='FOLDER_CYCLE')?'invalid':col.state,
       fullEmailHeaders:'not-evaluated',logicalStructure:'not-evaluated',sourceEmailParsing:'not-evaluated',contentStreamAssociations:'not-evaluated',conformance:'not-evaluated'}};
   return {inspection,details:xmp.details};
 }

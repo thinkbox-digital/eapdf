@@ -1,6 +1,6 @@
 {
   "name": "eapdf-browser-viewer",
-  "version": "0.5.0-beta.5",
+  "version": "0.5.0-beta.6",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
@@ -18,7 +18,7 @@
     "verify:pdfjs": "node scripts/pdfjs-patch.mjs",
     "test:m2": "npm run build && node --test tests/document-parts.test.mjs && npm run test:parts",
     "test:parts": "node scripts/document-parts-smoke.mjs",
-    "test": "npm run build && node --test tests/*.test.mjs && npm run test:browser && npm run test:parts && npm run test:ui && npm run test:reading && npm run test:downloads",
+    "test": "npm run build && node --test tests/*.test.mjs && npm run test:browser && npm run test:parts && npm run test:ui && npm run test:reading && npm run test:downloads && npm run test:retry && npm run test:loading && npm run test:associations && npm run test:inspection-warning && npm run test:supplements",
     "test:browser": "node scripts/browser-smoke.mjs",
     "test:firefox": "node scripts/firefox-smoke.mjs",
     "verify:licenses": "node scripts/licenses.mjs",
@@ -28,6 +28,11 @@
     "test:beta": "node scripts/beta-smoke.mjs",
     "package:beta": "npm run build && python3 scripts/package-beta.py",
     "test:downloads": "node scripts/download-smoke.mjs",
+    "test:supplements": "node scripts/supplement-smoke.mjs",
+    "test:inspection-warning": "node scripts/inspection-warning-smoke.mjs",
+    "test:loading": "node scripts/loading-smoke.mjs",
+    "test:associations": "node scripts/association-smoke.mjs",
+    "test:retry": "node scripts/retry-smoke.mjs",
     "test:reading": "node scripts/reading-improvements-smoke.mjs"
   },
   "dependencies": {

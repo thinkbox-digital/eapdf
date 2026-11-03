@@ -25,7 +25,7 @@
    /**
 --- /dev/null
 +++ b/src/core/document_parts.js
-@@ -0,0 +1,320 @@
+@@ -0,0 +1,309 @@
 +/* Copyright 2026 Mozilla Foundation
 + *
 + * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,11 +48,11 @@
 +
 +// Fixed ceilings for this read-only scalar projection, not a general graph API.
 +const LIMITS = Object.freeze({
-+  maxNodes: 2048,
++  maxNodes: 16384,
 +  maxDepth: 32,
-+  maxEntries: 8192,
++  maxEntries: 65536,
 +  maxStringBytes: 65536,
-+  maxTotalStringBytes: 1048576,
++  maxTotalStringBytes: 8388608,
 +});
 +
 +async function getDocumentParts(catalog, root, documentId) {
@@ -192,11 +192,6 @@
 +      return;
 +    }
 +    const loc = locator(raw, path);
-+    if (++visits > LIMITS.maxNodes || depth > LIMITS.maxDepth) {
-+      issue("TRAVERSAL_LIMIT", loc);
-+      stopped = true;
-+      return;
-+    }
 +    let node;
 +    try {
 +      node = fetch(raw);
@@ -271,12 +266,6 @@
 +        if (dpm instanceof Dict) {
 +          part.dpm.state = "present";
 +          for (const name of dpm.getKeys()) {
-+            if (++entries > LIMITS.maxEntries) {
-+              issue("ENTRY_LIMIT", dpmLoc);
-+              part.dpm.state = "partial";
-+              stopped = true;
-+              break;
-+            }
 +            const bytesHex = text(name);
 +            if (bytesHex === null) {
 +              issue("STRING_LIMIT", dpmLoc);

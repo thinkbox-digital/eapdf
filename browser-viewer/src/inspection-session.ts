@@ -18,6 +18,8 @@ export class InspectionSession {
   constructor(options:Partial<InspectionLimits>={}){
     const limits={...DEFAULT_LIMITS};
     for(const key of Object.keys(limits) as (keyof InspectionLimits)[]){
+      // Retired content-count settings are accepted for compatibility, but ignored.
+      if(['maxObjects','maxParts','maxTreeDepth','maxChildDepth','maxChildren'].includes(key))continue;
       const n=options[key]??limits[key];if(!Number.isSafeInteger(n)||n<0||n>limits[key])throw new Error('Invalid inspection limit: '+key);limits[key]=n;
     }
     this.limits=Object.freeze(limits);
@@ -57,7 +59,7 @@ export class InspectionSession {
             if(stream.mimeType.value!=='application/pdf')continue;
             const bytes=payloads.get(stream.locator.path),childId=bytes?'sha256:'+await sha256(bytes):null;
             let child:ChildDocument;
-            if(!bytes||depth>=this.limits.maxChildDepth||this.childCount>=this.limits.maxChildren||[...ancestors,documentId].includes(childId??'')){
+            if(!bytes||[...ancestors,documentId].includes(childId??'')){
               child={fileId:file.id,stream:stream.locator,documentId:childId,state:'unavailable',reason:'Child bytes unavailable or collection resource/cycle limit reached.',inspection:null};
             }else{
               this.childCount++;

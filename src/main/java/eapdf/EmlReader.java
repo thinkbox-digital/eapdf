@@ -253,20 +253,26 @@ class EmlReader {
   }
 
   static void checkMimeStructure(Part part, int depth, long[] totals) throws Exception {
-    ProcessingLimits.checkMime(depth, ++totals[0]);
-    if (part.isMimeType("multipart/*")) {
-      Multipart multipart = (Multipart) part.getContent();
-      ProcessingLimits.checkMime(depth, totals[0] + multipart.getCount());
-      for (int index = 0; index < multipart.getCount(); index++) checkMimeStructure(multipart.getBodyPart(index), depth + 1, totals);
-    } else if (part.isMimeType("message/rfc822") && part.getContent() instanceof Part nested) {
-      checkMimeStructure(nested, depth + 1, totals);
-    } else {
-      try (InputStream input = part.getInputStream()) {
-        byte[] buffer = new byte[8192];
-        int count;
-        while ((count = input.read(buffer)) != -1) {
-          totals[1] += count;
-          ProcessingLimits.checkMessage(totals[1], "decoded MIME contents");
+    var pending = new java.util.ArrayDeque<Part>();
+    var seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<Part, Boolean>());
+    pending.push(part);
+    while (!pending.isEmpty()) {
+      Part current = pending.pop();
+      ProcessingLimits.checkCancelled();
+      if (!seen.add(current)) throw Common.fail("Cyclic MIME structure");
+      totals[0]++;
+      if (current.isMimeType("multipart/*")) {
+        Multipart multipart = (Multipart) current.getContent();
+        for (int i = multipart.getCount() - 1; i >= 0; i--) pending.push(multipart.getBodyPart(i));
+      } else if (current.isMimeType("message/rfc822") && current.getContent() instanceof Part nested) {
+        pending.push(nested);
+      } else {
+        try (InputStream input = current.getInputStream()) {
+          byte[] buffer = new byte[8192]; int count;
+          while ((count = input.read(buffer)) != -1) {
+            totals[1] += count;
+            ProcessingLimits.checkMessage(totals[1], "decoded MIME contents");
+          }
         }
       }
     }

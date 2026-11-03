@@ -722,15 +722,39 @@ final class SemanticStructure {
     return "P";
   }
 
+  private static void bindAnnotationPage(PDDocument document, COSDictionary owner,
+                                         COSDictionary annotation, PDPage page) throws IOException {
+    Deque<COSBase> pending = new ArrayDeque<>();
+    Set<COSBase> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+    pending.add(owner);
+    while (!pending.isEmpty()) {
+      COSBase value = pending.removeFirst();
+      if (value instanceof org.apache.pdfbox.cos.COSObject reference) value = reference.getObject();
+      if (value == null || !seen.add(value)) continue;
+      if (value instanceof COSArray array) {
+        for (COSBase child : array) pending.addLast(child);
+      } else if (value instanceof COSDictionary element) {
+        if ("OBJR".equals(element.getNameAsString(COSName.TYPE))) {
+          if (dictionary(element.getDictionaryObject(COSName.OBJ)) == annotation)
+            element.setItem(COSName.PG, PdfDocumentParts.indirect(document, page.getCOSObject()));
+        } else {
+          COSBase children = element.getDictionaryObject(COSName.K);
+          if (children != null) pending.addLast(children);
+        }
+      }
+    }
+  }
+
   private static void attachAnnotations(PDDocument document, COSDictionary tree, COSDictionary contentSet,
                                          COSArray children, PDPage page) throws IOException {
     for (var annotation : page.getAnnotations()) {
       if (annotation.getCOSObject().containsKey(COSName.getPDFName("StructParent"))) {
-        if (PdfMailWriter.pdfUaFeaturesEnabled()
-            || annotation instanceof org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment) {
-          int key = annotation.getCOSObject().getInt(COSName.getPDFName("StructParent"));
-          COSDictionary owner = dictionary(parentValue(parents(document, tree), key));
-          if (owner != null) {
+        int key = annotation.getCOSObject().getInt(COSName.getPDFName("StructParent"));
+        COSDictionary owner = dictionary(parentValue(parents(document, tree), key));
+        if (owner != null) {
+          bindAnnotationPage(document, owner, annotation.getCOSObject(), page);
+          if (PdfMailWriter.pdfUaFeaturesEnabled()
+              || annotation instanceof org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment) {
             if (annotation instanceof org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment)
               owner.setName(COSName.S, "Annot");
             if (PdfMailWriter.pdfUaFeaturesEnabled() && owner.containsKey(COSName.ALT)) {

@@ -262,7 +262,7 @@ class AttachmentProfilePolicyTests {
       PdfMailWriter.writeEaPdfA3(singleOutput, single, TestSupport.fontPath(), TestSupport.iccPath(), false, tempDir, 1);
       try (PDDocument document = Loader.loadPDF(singleOutput.toFile())) {
         Assertions.assertTrue(files(document).isEmpty());
-        Assertions.assertEquals(0, document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.getPDFName("AF")).size());
+        Assertions.assertFalse(document.getDocumentCatalog().getCOSObject().containsKey(COSName.getPDFName("AF")));
       }
       Assertions.assertTrue(java.nio.file.Files.exists(singleOutput.resolveSibling(PdfFindingAidSupport.premisFilename(singleOutput))));
       Path archiveOutput = tempDir.resolve("isolated_archive.pdf");

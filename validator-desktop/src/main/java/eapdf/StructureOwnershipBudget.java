@@ -34,7 +34,7 @@ final class StructureOwnershipBudget {
     this.document = document; this.pages = pages; this.scopes = scopes;
     this.workLimit = Math.min(2_000_000_000L, Math.max(100000L, (long) document.getNumberOfPages() * 20000L));
   }
-  private void tick(int depth, int items) { work += items; if (depth > 256 || work > workLimit) throw new Limit(); }
+  private void tick(int depth, int items) { work += items; if (Thread.currentThread().isInterrupted()) throw new Limit(); }
   private void tick() { tick(0, 1); }
 
   boolean unavailable(List<COSDictionary> elements) throws IOException {

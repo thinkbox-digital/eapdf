@@ -203,17 +203,20 @@ class MsgReader {
 
   static void checkCompressedRtf(Path path) throws Exception {
     try (var storage = new POIFSFileSystem(path.toFile(), true)) {
-      var pending = new java.util.ArrayDeque<java.util.Map.Entry<org.apache.poi.poifs.filesystem.DirectoryEntry, Integer>>();
-      pending.add(java.util.Map.entry(storage.getRoot(), 0)); int count = 0;
+      var pending = new java.util.ArrayDeque<org.apache.poi.poifs.filesystem.DirectoryEntry>();
+      var seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<org.apache.poi.poifs.filesystem.DirectoryEntry, Boolean>());
+      pending.add(storage.getRoot());
       while (!pending.isEmpty()) {
         var item = pending.removeFirst();
-        if (item.getValue() > 32) throw Common.fail("MSG storage nesting exceeds the processing limit");
-        for (var entry : item.getKey()) {
-          if (++count > 10000) throw Common.fail("MSG storage entry count exceeds the processing limit");
+        ProcessingLimits.checkCancelled();
+        if (!seen.add(item)) throw Common.fail("Cyclic MSG storage");
+        for (var entry : item) {
+          ProcessingLimits.checkCancelled();
           if (entry instanceof org.apache.poi.poifs.filesystem.DirectoryEntry directory)
-            pending.add(java.util.Map.entry(directory, item.getValue() + 1));
+            pending.add(directory);
           else if (entry instanceof org.apache.poi.poifs.filesystem.DocumentEntry document
-              && "__substg1.0_10090102".equalsIgnoreCase(entry.getName())) {
+              && "__substg1.0_10090102".equalsIgnoreCase(entry.getName())
+              && !"__nameid_version1.0".equalsIgnoreCase(item.getName())) {
             ProcessingLimits.checkMessage(document.getSize(), "compressed MSG RTF");
             try (var input = new org.apache.poi.poifs.filesystem.DocumentInputStream(document)) {
               com.pff.EaPdfPstProperties.checkRtfHeader(input.readNBytes(16), document.getSize(), ProcessingLimits.bodyCharacters());

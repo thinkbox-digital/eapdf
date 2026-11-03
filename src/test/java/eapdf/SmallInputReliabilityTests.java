@@ -40,15 +40,15 @@ class SmallInputReliabilityTests {
     }
   }
 
-  @Test void nestedAttachedMessagesAreRejectedAtConfiguredDepth() {
+  @Test void nestedAttachedMessagesArePreservedBeyondFormerDepthCutoff() {
     String before = System.getProperty("eapdf.maxMimeDepth");
     try {
       System.setProperty("eapdf.maxMimeDepth", "4");
       String raw = "Content-Type: text/plain\r\n\r\nLeaf";
       for (int i = 0; i < 20; i++) raw = "Content-Type: message/rfc822\r\n\r\n" + raw;
       byte[] nested = raw.getBytes(StandardCharsets.UTF_8);
-      var error = assertThrows(Common.UserFacingException.class, () -> parse(nested));
-      assertTrue(error.getMessage().contains("MIME structure exceeds"));
+      var record = assertDoesNotThrow(() -> parse(nested));
+      assertArrayEquals(nested, record.sourceBytes);
     } finally { if (before == null) System.clearProperty("eapdf.maxMimeDepth"); else System.setProperty("eapdf.maxMimeDepth", before); }
   }
 

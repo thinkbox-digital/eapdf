@@ -1,5 +1,542 @@
 # Development status and restart guide
 
+**Version update — 2026-11-03:** Creator and standalone validator source
+versions are `1.6.0-beta.8`; reader source version is `0.5.0-beta.6`.
+This update includes the accumulated full-content processing, source association,
+reader, Accessibility and Arlington repairs below. Existing examples retain
+their actual beta.7 build provenance and validation hashes. Published beta.7
+download links remain unchanged until a new GitHub Release is published.
+The final quality gate passes: clean reproducible creator/validator builds,
+Java tests, and five real-input fidelity, visual and standalone validation
+regressions. Reader unit and browser integration suites pass; the stale Reading
+Notes assertion now checks the retained checksum warning. All seven Arlington
+regressions pass. Reviewed visual baselines reflect the compact branding and
+reclaimed footer space; the pixel threshold is unchanged and timestamp masks
+follow the relocated generated-time row. Evidence is retained locally under
+`output/version-beta8-quality-final/` and `output/version-beta8-review/`.
+Local CLI, GUI and validator distributions are rebuilt at beta.8.
+
+**Arlington integration and repairs — 2026-11-03 (complete):**
+All **88 PDFs in `out/` PASS** the pinned Arlington checker with the documented
+implementation corrections: zero deviations, deprecations or incomplete jobs.
+All **34 example PDFs PASS** as well. The runner verified that every audited
+PDF remained unchanged. Reports include full raw results, logs, file hashes,
+per-file summaries and aggregated findings:
+`output/arlington-repair-2026-11-03/out-arlington/` and
+`output/arlington-repair-2026-11-03/examples-arlington-complete/`.
+
+Generator fixes write integral FontWeight values as integers, remove deprecated
+PDF 2.0 CIDSet after completing font subsets, retain file sizes only in the
+proper Params dictionary, retain collection counts/sizes in CI and ordering in
+Sort, and omit empty AF arrays in isolated profiles. Font programs, glyphs,
+attachment bytes and folder metadata remain preserved. This supersedes the
+older CIDSet compatibility decision for newly generated PDF 2.0 documents.
+Both CLI and GUI distributions and their checksums are updated.
+
+The baseline had 88 DEVIATIONS. Its reports and exact artifacts remain under
+`output/arlington-2026-11-03/`. Two verified veraPDF implementation defects were
+corrected using pinned released sources: binary CheckSum lengths are measured
+in bytes, and number-tree children receive their parent dictionary through the
+Kids array. The Arlington profile XML and rule predicates are unchanged; no
+rules were disabled. Negative controls still reject 15/17-byte checksums and
+forbidden root Limits. The reporting adapter also removes the upstream hidden
+10,000-result retention ceiling. See [checker scope and reproducible corrections](ARLINGTON_VALIDATION.md).
+Arlington checks on-disk PDFs; embedded PDF payloads are not separately opened.
+This result is not a full-batch Java EA-PDF/PDF/A or accessibility certification.
+
+All 82 eligible inputs regenerated with Accessibility on and creation checks
+skipped, followed by the separate Arlington audit. Six PST inputs over
+300,000,000 bytes remain excluded. All 88 original source hashes match.
+Conversion logs, source/output inventories and readable size tables are under
+`output/arlington-repair-2026-11-03/`; current tables are also in `out/`.
+The final creator additionally fixes isolated profiles; the retained-source
+`out/` batch and final example builds are identified separately in `builds.json`.
+Early collision-suffixed filenames are retained with their matching references;
+the preserved baseline was separated and the final inventory reconciled.
+
+The 24-example profile matrix passes standalone Java EA-PDF, PDF/A and selected
+ISO structure checks; all eight finding-aid companions pass PDF/A. The full
+1,433-message Enron example also passes Java validation after increasing the
+report/scratch execution allowances; the initial incomplete attempt is retained.
+The missing-date negative example retains its expected MESSAGE_SENT_XMP failure
+and PDF/A PASS. Creator verification: 406 tests, four skipped, no remaining
+failures/errors after the affected-test rerun. Seven Arlington regression tests
+pass. Temporary builds/probes are cleaned, retained evidence is in the repair
+report directory, and validation staging is empty.
+
+**Clean output regeneration, validation skipped — 2026-11-03 (complete):**
+The user requested cleaning `out/`, regenerating all eligible inputs, skipping
+creation validation, and reporting source/output sizes and profiles. The prior
+large-PST validation and its finalization job were stopped; retained reports
+must not be interpreted as completed validation of the new outputs. Old `out/`
+PDFs were removed. Prior logs and unmodified debug files were retained under
+`output/clean-regeneration-2026-11-03/`.
+
+The new batch uses Accessibility on, explicit annotation page references,
+1s for EML/MSG and singleton Drafts.mbox, 1m for other MBOX, and 1c for PST.
+The previous exclusion of PST files over 300,000,000 bytes remains in force.
+`validateOnCreation` defaults to true; only the batch configuration sets it
+false. Both serialized-file and in-memory child creation checks are bypassed;
+receipts say SKIPPED and preservation comparison NOT_RUN. Atomic publication,
+byte-integrity checks and resource safeguards remain active. No standalone
+validation is run. These outputs must not be described as validation PASS.
+Creator build: 405 tests, four skipped, no failures/errors.
+
+All 82 eligible inputs were regenerated successfully: 82 primary PDFs and six
+finding-aid PDFs. Six PSTs over 300 MB were skipped. All 88 source hashes match.
+The largest PST completed in 658.74 seconds. This is a conversion result, not
+a validation PASS. The distribution also corrects a stale checking-stage label
+for skipped checks; the batch manifest retains the actual creator build hash.
+Logs/settings/statuses: `output/clean-regeneration-2026-11-03/`.
+`out/FILE_SIZES.md` and `out/file-sizes.csv` list every input,
+primary-PDF size and profile in readable decimal units (KB/MB/GB); both CSV
+reports also retain exact byte counts. `out/output-files.csv` itemizes all primary PDFs,
+finding aids and XML/XLSX sidecars. Exact bytes and source/output hashes are
+retained. Earlier output paths and checkpoints below are historical.
+
+**Accuracy and completeness:** Resource limits are execution safeguards, not
+permission to omit content. A result is complete only when all required content
+and checks have been examined. Reaching a limit must produce an explicit
+INCOMPLETE result; it must not be reported as PASS or silently truncate the
+inventory. Completeness claims below apply only to the named files and measured
+coverage. They do not establish support for arbitrary file sizes or counts.
+For the current regeneration, content cutoffs are removed and affected validation
+is rerun; resource allowances may be adjusted, with prior attempts retained. Any unresolved
+limit or unavailable source evidence remains explicitly incomplete.
+
+**Explicit annotation page references — 2026-11-03:** A reported Arlington
+`ObjectReference.Pg is missing` warning/error prompted inspection of the local
+`acute-dev_1m.pdf`. Its 85 OBJRs omitted direct `/Pg`, but every immediate parent
+supplied it; this is permitted by the current
+[Arlington ObjectReference model](https://github.com/pdf-association/arlington-pdf-model/blob/master/tsv/latest/ObjectReference.tsv).
+The screenshot reported 219 instances, so its exact generated version/checker
+has not been reproduced. The creator now writes an explicit indirect `/Pg` on
+existing renderer annotation references using actual page annotation membership,
+including links spanning pages. This removes the dependency on parent-page
+interpretation without changing referenced annotations. CIDSet deprecation
+warnings remain subject to the existing documented compatibility decision.
+
+The Accessibility-enabled replacement is
+`out/objr-repair-2026-11-03/acute-dev/acute-dev_1m.pdf`.
+All 85 references have explicit correct pages; Java EA-PDF and PDF/A checks PASS.
+The source hash is retained in the regeneration inventory. The creator suite
+runs 404 tests, four skipped, no failures/errors, including the multi-page
+annotation regression. Evidence: `output/regeneration-2026-11-03/objr-repair/`.
+Existing bulk PDFs and their original validation reports are preserved.
+
+**Regeneration preference — 2026-11-03:** Accessibility is enabled in the project
+configuration and must be enabled for future file regenerations, including custom
+configurations. Runs already in progress retain their recorded settings. The GUI
+checkbox now reads `Accessibility`; its tooltip retains the distinction between
+enabling features and establishing PDF/UA conformance.
+
+**Current work: full-content processing and regeneration — 2026-11-03:**
+The user authorized reader development and requested no content cutoffs.
+Creator message, MIME-part, page and aggregate image-count stops are removed.
+Java validation no longer stops at fixed file, child-PDF, object, role-chain,
+metadata-record, comparison-work or nesting counts. Reader inspection, XMP,
+child navigation, supplement association, CSV, search and bookmarks likewise
+have no fixed content-count cutoffs. MIME preflight, native MSG inventory,
+nested-array inspection and bookmark rendering use explicit work queues.
+Cycles remain checked. Streaming paths release extraction reservations after use;
+already processed bytes and characters do not consume a lifetime allowance.
+Per-stream allocation, retained cache/results and active-resource limits remain. Actual memory/stack exhaustion, byte budgets, disk
+allowances, cancellation and timeouts must produce explicit failure/incompleteness.
+Legacy reader count/depth fields remain in the inspection contract for compatibility
+but no longer stop traversal. User-requested source selection remains applicable:
+six PSTs exceeding 300,000,000 bytes are intentionally excluded from this batch.
+
+Creator: 404 tests, four skipped, no failures/errors. Java validator: 254 tests,
+nine skipped, no failures/errors, including 10,000-level shared-array traversal
+and actual-cycle rejection. PDF.js patches: 20 source tests and 133 selected
+upstream specs, zero failures (one upstream OffscreenCanvas skip). Reader type,
+contract and focused browser checks pass; the unrelated third-party BFO test
+fixture is absent and explicitly skipped. All 53 reader unit tests and 13 UI cases/17 message selections pass. A separate
+edge fixture verifies all 1,034 bookmarks, including depth 33. Final bulk
+validation is still running. Evidence and build hashes:
+`output/regeneration-2026-11-03/no-cutoffs-*` and `live-resource-*`.
+The resource-accounting regression processes nine 8 KiB files after a failed
+oversized read under an 8 KiB concurrent extraction allowance. Supplement
+association also releases reservations on success, failure and cancellation.
+
+All 82 eligible real inputs have been converted; all 88 original hashes match.
+Outputs: `out/regenerated-2026-11-03/{eml,msg,mbox,pst}/<input-stem>/`.
+Individual emails use 1s, multi-message MBOX uses 1m, and PST uses 1c;
+`Drafts.mbox` contains one message and uses 1s. Conversion logs, source hashes,
+initial reports and retry evidence are retained. All outputs are being revalidated
+with the updated standalone Java validator, two sources concurrently. The largest
+PST has 15,856 messages and 41,627 embedded files; its initial validation was
+INCOMPLETE at the former file-count cutoff. The final run has passed that point
+and is checking child PDFs. `full-validation-settings.json` records resource
+allowances; `full-validation/` preserves the new reports separately. Final results
+must be reconciled from per-source status files, not the initial batch summary.
+
+The 24-profile example matrix has been refreshed with Accessibility enabled
+and explicit annotation page references; an independent 50-PDF audit (including
+collection children) finds all 88 annotation references correctly paged. All
+24 PDFs pass Java validation and all eight finding aids pass PDF/A. The full
+1,433-message Enron example and existing missing-date negative fixture were also
+regenerated; the latter intentionally retains `MESSAGE_SENT_XMP` failure and
+PDF/A PASS. Native MSG named-property streams are no longer mistaken for RTF
+bodies; affected input retries and their initial attempts are retained.
+
+Supplement linking is implemented: all 1,190 transport-header files in the retained
+1,909-message collection match the exact independently established owners.
+Two child workers rotate after 16 children to bound cumulative worker allocation;
+this batching does not stop the scan. Byte/time exhaustion or ambiguous evidence
+leaves ownership explicitly unresolved. Failure, cancellation, refresh and worker
+cleanup checks pass. Evidence: `output/banner-xmp-review-2026-11-03/`
+`supplement-owner-verification.json` and `supplement-rotating-opening.json`.
+
+The following dated checkpoints are historical; their old count/depth ceilings
+are superseded by the policy above.
+
+**Reading Notes removed; full discovery verified for five named PDFs — 2026-11-03:**
+The Reading Notes panel and all user-facing references to it are removed.
+Detailed inspection diagnostics are retained through `console.debug`. Incomplete
+file discovery uses the local warning `Some embedded files could not be listed.`
+An email selection with unresolved ownership uses `Some files could not be linked
+to an email.` Checksums and unavailable metadata retain concise contextual warnings.
+
+The generic PDF.js asset scan now queues shared objects once, uses breadth-first
+traversal, and treats bookmark Next/Prev links as siblings rather than nested
+children. Real archives also exceeded the old finite capacities: the current
+browser ceiling is 1,000,000 objects, 16,384 files and 16,000,000 scanned edges;
+structural depth remains 64. Document-part projection allows 16,384 node/array
+visits, 65,536 DPM entries and 8 MiB aggregate raw strings; depth remains 32 and
+individual raw strings remain capped at 64 KiB. Lower caller-supplied object
+limits still work; excessive/deep graphs remain explicitly incomplete. File
+limits and other failed discovery paths now mark coverage incomplete instead of
+silently reporting complete coverage.
+
+Independent MuPDF filespec/stream inventories match every filename, decoded size
+and file multiplicity for five real PDFs; available computed hashes also match.
+This reference includes associated attachments outside the name tree. The first
+name-tree-only reference missed one such real attachment and was superseded by
+the explicit filespec inventory. Every source email has exactly one known owner.
+All five final runs report complete associated-file and document-part coverage.
+
+| Input PDF | Embedded files found | Source emails with unique owners | Full opening, seconds |
+|---|---:|---:|---:|
+| 0.31 MB PST sample | 15 | 7 | 0.51 |
+| 9.23 MB Enron archive | 1,435 | 1,433 | 6.31 |
+| 35.15 MB prior Enron archive | 1,435 | 1,433 | 32.87 |
+| 91.21 MB Enron collection | 2,866 | 1,433 | 7.81 |
+| 320.78 MB PST collection | 5,008 | 1,909 | 29.83 |
+
+These are single final-build warm-cache Chromium trials, with other tests running;
+not controlled performance averages. Earlier faster measurements stopped at the
+old scan limits and must not be described as complete inspection. The two large
+collections previously stopped at 2,048 files. Final measurements, input hashes,
+coverage, ownership and panel-absence assertions are in `discovery-accepted-*`.
+
+The PST's 1,190 supplements are all native transport-header files. Their unresolved
+viewer ownership is a matching limitation, not missing data or an inherently
+unrecoverable relationship. All start with the Microsoft Internet Headers marker,
+which the current strict source-header parser rejects. After recognizing it,
+310 have a unique Message-ID match; the other 880 have different transport and
+exported-source IDs. An independent check of all 1,909 child PDFs proves that
+**all 1,190 supplements have one unique owner, with zero ambiguous/unmatched cases**:
+match byte-identical header copies in the child catalog AF, require its explicit
+single-email profile, and match its source bytes to the uniquely owned outer
+source. This initial cross-PDF proof is now implemented as described in the current
+checkpoint above. No filename/order matching or silent ownership guesses were added.
+
+Verification: 20 source-patch tests pass; 133 selected upstream specs have zero
+failures and one Node OffscreenCanvas skip. Type/contract checks, 45 unit tests,
+13 UI cases/17 message selections, warning-panel removal/debug-output checks,
+source-association differential checks and browser document-part checks pass.
+PDF.js bundles were rebuilt from the hash-verified pinned archive; patch/test and
+bundle hashes were updated. Local browser builds are refreshed; nothing published.
+
+Evidence in `output/banner-xmp-review-2026-11-03/`: `discovery-expected.json`,
+`discovery-accepted-opening.json`, `discovery-accepted-verification.json`, source
+rebuild and test logs, `transport-header-link-analysis.json`,
+`transport-header-child-links.json`, and `verify_transport_header_child_links.py`.
+Intermediate limited scans and failed fixture/setup checks are retained separately.
+The standalone comparison is reproducible with `scripts/discovery-reference.py`
+and `scripts/discovery-check.mjs` in `browser-viewer/`.
+
+
+**Compression savings across real inputs — 2026-11-03:**
+The full Enron MBOX (2.22 MB, 1,433 emails) now produces a 9.24 MB branded PDF,
+versus the earlier 35.15 MB user output: about 74% smaller. The controlled,
+matching-font/settings unbranded comparison is 34.63 MB to 9.23 MB: 73.3% smaller.
+The earlier user output was signed and had an additional page, so the controlled
+comparison is the stronger evidence. Source emails are preserved byte-for-byte.
+
+Matched small-input regression outputs below compare the retained November 3
+optimization and metadata/branding checkpoints. The baseline already includes
+earlier compression/font work; these percentages are additional savings, not
+claims for the entire optimization series. Main PDFs only; decimal KB/MB.
+
+| Real input | Total input bytes | Combined-email PDF before → after | Reduction | Individual PDFs reduction | Collection PDF reduction |
+|---|---:|---:|---:|---:|---:|
+| Two EMLs | 4,288 | 107.8 → 88.6 KB | 17.8% | 24.1% | 25.0% |
+| Two MSGs with attachments | 378,880 | 630.8 → 610.5 KB | 3.2% | 5.1% | 4.7% |
+| Small MBOX | 2,826 | 90.0 → 68.4 KB | 24.0% | 30.1% | 29.5% |
+| Seven-message PST | 2,302,976 | 202.7 → 171.1 KB | 15.6% | 23.8% | 21.5% |
+
+Savings come from shared/subsetted archive fonts, compressed PDF objects and
+embedded streams, compressed XMP, and compact once-per-output branding. Enron's
+stored font programs fell from 19.64 MB to 43.5 KB; the later metadata/branding
+step reduced its PDF from 12.26 MB to 9.23 MB (24.7%). Attachment-heavy inputs
+benefit less. No matched large-PST or Gmail output-size comparison is established;
+large viewer benchmarks measure speed, not compression. The previously measured
+43% PST heap reduction is a memory result, not an output-size saving.
+
+Exact comparisons for all six profiles, source hashes and checkpoint paths are
+in `output/banner-xmp-review-2026-11-03/compression-savings.json`.
+
+
+**Recovered session completion — 2026-11-03:**
+The prior thread remains indexed under the old `convert` directory; work resumed
+in `eapdf`. The viewer opening stall was traced with stage timings and a Chromium
+CPU profile to `BrowserSession.associateFiles()`: extracting each unresolved
+source email reparsed all archive XMP and rebuilt the entire interpretation.
+Association now collects the same bounded extraction/hash facts and interprets
+once per batch, only when facts changed. Individual attachment reads still
+refresh immediately. Extraction limits, cancellation and unavailable-evidence
+handling remain in place. The real-file differential test compares batched and
+eager interpretation for four Enron source emails, including an injected read
+failure: ownership, hashes, diagnostics and metadata details match exactly;
+XML parses drop from five to one (four to one with the failure).
+
+Final opening benchmark: fresh offline headless Chromium 156 extension context
+per trial, two trials per file/variant, alternating variant order, warm filesystem
+cache. Controls remove only the loading-dialog presentation. All 20 trials
+completed without page errors. Times below are means in seconds; file sizes use
+decimal MB. The first rendered page remains behind the modal until opening ends.
+
+| PDF size / source | First page, dialog | Fully open, dialog | Fully open, control |
+|---|---:|---:|---:|
+| 0.31 MB PST sample | 0.35 | 0.52 | 0.56 |
+| 9.23 MB compressed Enron 1m | 1.10 | 5.59 | 5.41 |
+| 35.15 MB prior Enron 1m | 1.19 | 10.48 | 10.13 |
+| 91.21 MB Enron collection | 0.91 | 6.30 | 6.50 |
+| 320.78 MB PST collection | 1.26 | 13.12 | 12.43 |
+
+Before batching, the 9.23 MB archive exceeded 150 seconds with the dialog; fresh
+control runs without it exceeded 45 seconds for both the 9.23 MB and 320.78 MB
+files. Those timeouts are retained as incomplete runs, not successful timings.
+The evidence identifies a shared association bottleneck, not the dialog itself
+as its cause. Two warm-cache trials are diagnostic measurements, not a general
+performance guarantee; Firefox timing and cold-cache behavior were not measured.
+
+Viewer type/contract checks, 45 unit tests, loading and retry browser checks pass.
+The initial final-build UI check could not save its report because `test-results/`
+was absent after the move; the setup failure log is retained, and the directory
+was created for a fresh run. The final rerun passes UI/navigation, exact saved
+attachment bytes, offline cancellation, loading-dialog and page-retry checks.
+The association differential regression is included in `npm test`, along with the
+loading checks. Final builds are in `browser-viewer/dist/{chromium,firefox}`.
+
+Local creator CLI/GUI JARs and SHA-256 sidecars in `dist/` now contain the final
+centered banner and finding-aid spacing adjustment. The retained targeted build
+passed nine geometry/finding-aid/collection/archive tests. A fresh bounded Enron
+conversion produces 9,238,302 bytes and 1,943 pages, with one centered banner,
+clear heading spacing and `1,433 messages across 1 folder`. All 1,433 embedded
+EMLs match the previously verified unbranded output byte-for-byte. Standalone
+Java validation reports EA-PDF PASS and PDF/A PASS, zero failures and 30
+recommendations. The validated example is `examples/mbox/mbox_enron_1m.pdf`.
+
+Evidence: `output/banner-xmp-review-2026-11-03/` contains
+`viewer-resumed-diagnostic.json` and its CPU profile, `viewer-before-control.json`,
+`viewer-final-opening.json` (source hashes and all stage timings), association and
+UI logs, `centered-creator-build.log`, `centered-conversion.log`,
+`centered-geometry.json`, `centered-source-comparison.json`, and
+`centered-validation.json` with its log and summary. No release was published.
+
+
+**Compact branding, compressed metadata and review fixes — 2026-11-03:**
+Creator outputs now use an 18-point-high text/vector ThinkBox banner once, in the
+first page's existing top margin. Archives no longer repeat branding per email or
+reserve large footers; collection children and separate finding aids each get
+one banner. Branding-off remains supported. Finding-aid and collection run counts
+now use comma grouping and singular/plural nouns, for example
+`1,433 messages across 1 folder`.
+
+Final PDF/A-4/4f XMP streams use lossless Flate compression. The matching unbranded
+Enron run is **9,231,511 bytes (9.23 MB)** versus 12,263,708 bytes before this change.
+Its stored XMP is 371,491 bytes. The decoded XMP round-trip test preserves exact
+UTF-8 bytes, including non-ASCII text; regenerated documents still get fresh IDs
+and timestamps. PDF-aware metadata readers decode the stream normally; raw-byte
+XMP scanners may no longer find it. All 1,433 embedded emails match prior bytes
+and independent MBOXRD decoding, and all 1,943 pages match prior text and pixels
+at 108 DPI, masking only the generated timestamp. Standalone Java validation
+passes EA-PDF and PDF/A-4f (zero failures, 30 recommendations).
+
+`PageContentChecks.pageContext()` now builds candidates from every document page
+through `PageTextStore.get()`. Pages omitted by extraction receive the existing
+page-context WARNs, not a null dereference or automatic pass. The separate
+`EmptyPageContextTests` cover absent and explicitly empty streams, leading,
+trailing and middle empty pages, all populated pages, zero pages, exact one-based
+`pages_unassessed` for both recommendation codes, subsequent checks, and full
+validation without `VALIDATION_ERROR`. Namespace tests remain separate. Genuine
+extraction/storage exceptions are not caught or replaced with empty text.
+
+Creator full suite: **395 tests, 4 skips, zero failures/errors**. Validator:
+**252 tests, 9 skips, zero failures/errors**, including ten new empty-page cases;
+the focused empty-page/namespace run also passes. Real EML/MSG/MBOX/PST conversion
+matrix: **24 combinations / 42 main PDFs**, all standalone Java PASS. Recursive
+inspection of **102 generated PDFs**, including children/finding aids, confirms
+one first-page banner and compressed XMP. Count wording received a subsequent
+focused finding-aid/collection test run.
+
+Viewer README and font-source notice now match the canonical PDF.js 6.5.438 /
+`0a4153349dc473ba950fc17941c5ca7eda43c1de` pin. `verify:pdfjs` also checks current
+documentation, package/lock versions and integrity, and both bundle headers.
+Seven drift regression tests pass, and CI runs verification plus these tests.
+Historical M0/M2 references remain unchanged; source patches and bundles were
+not rebuilt. Current installation instructions precede historical notes and link
+explicitly to beta.7's two viewer ZIPs and examples ZIP; all three filenames were
+verified against GitHub's release API. A release checklist requires tag/asset
+existence checks. No GitHub release or extension-store publication was performed.
+
+Evidence: `output/banner-xmp-review-2026-11-03/` retains source hashes, conversion
+logs, Java reports, test summaries, browser checks and the API response. Initial
+conversion runs overlapped JAR packaging and are explicitly retained as incomplete
+setup runs; accepted reruns use a stable packaged JAR.
+
+**Review of the seven supplied findings — 2026-11-03:**
+
+| Finding | Current assessment |
+|---|---|
+| Large archive limits | Open, but “fixed 512 MiB default” is historical. Heap selection now considers available host/cgroup memory and controller heap. Fixed 64 MiB work files and 256 descriptors remain; large Enron validation still uses explicit expanded finite limits. |
+| PST fractional sent time | Confirmed: the warning discloses loss; exact native fractions are not yet retained in Sent metadata. |
+| Native MSG comparison | Partially implemented since the cited V85 record: native fields, dates, recipients and supported attachments are compared. Missing transport history, unsupported storage and ambiguous evidence remain unavailable. |
+| Original-record completeness | Writer-entry inventory protects final output against that snapshot, but does not prove complete reader enumeration or pre-dispatch ownership/provenance. |
+| Creator receipts | Correctly say PDF/A and full EA-PDF `NOT_RUN`; preservation checks are not independent conformance validation. Retain separate Java reports. |
+| Skipped cases | Current suites still skip 4 creator fixture cases and 9 validator cases (8 fixture cases plus interactive desktop). |
+| Full upstream PDF.js suite | Still outside the focused patch tests. Pin verification is not full upstream regression testing or source reproduction. |
+
+Detailed source references and next steps are in
+`output/banner-xmp-review-2026-11-03/screenshot-review.json`. These findings were
+examined; no broad resource-policy, PST timestamp, native-MSG or receipt feature
+change is claimed by this checkpoint.
+
+**Enron space-usage update and generator optimization — 2026-11-03:**
+The exact 2,220,104-byte `in/enron.mbox` now produces a **12,263,708-byte
+(12.26 MB / 11.70 MiB)** `1m` archive. The previous user output was
+35,154,522 bytes (33.53 MiB): **65.1% smaller**. The controlled unchanged-build
+baseline with matching options/font was 34,625,535 bytes: **64.6% smaller**.
+The validated example is `examples/mbox/mbox_enron_1m.pdf` in both checkouts.
+
+| Final output component | Stored bytes |
+|---|---:|
+| Font programs (4 shared subsets, including generated text) | 43,545 |
+| XMP metadata | 3,403,677 |
+| Page content streams | 2,926,870 |
+| Compressed PDF object streams | 3,411,467 |
+| Cross-reference stream | 534,141 |
+| Original emails | 1,096,249 |
+| Embedded PREMIS XML | 348,600 |
+| Embedded spreadsheet | 91,000 |
+
+Fonts previously occupied 19,642,233 bytes. The writer now shares full rendering
+fonts within `m`/`mi` archives and subsets them once using the union of all page
+usage. Glyph collection is keyed by the PDF dictionary, not Java wrapper identity;
+a failed earlier prototype proved that distinction and was rejected. Existing
+subsets, unusual encodings, and large fallback-font registration keep their safe
+paths. Final archive object streams use bounded groups of 2,000 objects, and
+lossless Flate level 9 is the default (explicit PDFBox overrides are honored).
+`c`/`ci` outer embedded files now use Flate compression: the real Enron collection
+had 2,866 streams with correct decoded sizes/MD5s and **7,181,400 bytes** of
+measured stream savings. Its 52,716,303-byte test output used branding disabled,
+so it is not a like-for-like size comparison with the earlier branded collection.
+Source-sharing between container and children was discussed but not changed.
+
+Verification: all 1,943 pages match a fresh unchanged-build baseline in extracted
+text and 108-DPI pixels, masking only the first-page generated timestamp. All
+1,433 embedded emails are byte-identical to baseline and their headers/bodies
+match an independent MBOXRD decode (7 messages require mailbox unquoting).
+The earlier signed user PDF has 1,944 pages and is not the visual baseline;
+original signed files were not modified, and test conversions are unsigned.
+Final archive and full collection pass standalone Java EA-PDF/PDF-A checks.
+Initial resource-limited validator runs remain explicitly INCOMPLETE; expanded,
+finite-limit runs pass. Creator suite: 394 tests, 4 skips, zero failures/errors.
+The independent five-case EML/MSG/MBOX/PST quality gate passes. All six profiles
+pass for small real EML, MSG, MBOX and PST inputs: 24 combinations / 42 PDFs,
+plus 8 final archive-packing rechecks. Gmail uses the same writer but was not
+live-tested. These are scoped preservation checks, not universal certification.
+
+CLI/GUI JARs and SHA-256 sidecars in both local `dist/` folders are updated;
+reload the GUI to use them. Published releases are unchanged. An additional
+re-save experiment reached 12,234,660 bytes; the supported generator output and
+stats above are 12,263,708 bytes. All logs, hashes, source/visual comparisons,
+validation reports, rejected-experiment evidence and detailed statistics are in
+the public checkout's `output/enron-optimization-2026-11-03/` (`summary.json`,
+`space-usage.json`, `final-packed-size-breakdown.json`).
+
+**GUI controls rebuild — 2026-11-03:** Removed Debug checkboxes and their
+argument wiring from Local and Gmail tabs in the public source. CLI debug
+support and Details logging remain intact. Creator package tests pass. A desktop
+smoke check against the built GUI JAR verified both absence of Debug checkboxes
+and actual/minimum window dimensions of 1200x955. Both checkouts' creator CLI/GUI
+JARs and checksums are updated. Close and relaunch existing GUI processes to load
+the replacement. Build log: public checkout
+`output/jar-rebuild-2026-11-03/gui-controls-build.log`.
+
+**Local JAR rebuild — 2026-11-03:** Rebuilt creator CLI/GUI and standalone
+validator from the public checkout. Creator package tests pass (393 tests,
+4 skips, zero failures/errors); validator packaging verification passes.
+Both checkouts' `dist/` JARs and SHA-256 sidecars are synchronized. GUI minimum
+size is 1200x955; signing password focus and friendly wrong-password handling
+are included. Debug controls remain unchanged. Published release bundles are
+unchanged. Build logs and checksums: public checkout
+`output/jar-rebuild-2026-11-03/`.
+
+**Exact Enron collection size audit — 2026-11-03:** Read-only analysis of the
+91,207,186-byte public-checkout `out/enron_1c.pdf` (SHA-256
+`b8f0403e978b7358aebdeacba2e3b2d66863a0bd668f02843ee05dbe46bf1fd6`)
+against the 2,220,104-byte `in/enron.mbox` confirms 1,433 plain-text messages,
+no MIME attachments/images, and 1,433 generated child PDFs. Child font programs
+consume 34,152,899 bytes; the identical 1200x300 branding image consumes
+18,494,298 bytes across children. Child XMP is 7,797,314 bytes and outer XMP
+3,455,423 bytes. All 1,433 originals occur both inside children and at collection
+level. Outer embedded PDFs and email streams are unfiltered; independent zlib
+measurement suggests 8,718,331 bytes of stream savings there, before PDF
+serialization. This is a compression estimate, not a validated replacement PDF.
+No generator changes, reconversion, or validation were performed in this audit;
+the original conversion receipt says PDF/A and EA-PDF validation NOT_RUN.
+Evidence, source/output hashes, analysis script, and copied conversion log/receipt:
+public checkout `output/enron-size-audit-2026-11-03/`.
+
+**Signing password prompt — 2026-11-03:** Public-checkout source now requests
+password-field focus when the dialog gains keyboard focus. Incorrect PKCS12
+passwords produce “Incorrect signing certificate password. Please try again.”
+Nested exception lines no longer overwrite the main GUI error; full technical
+output remains in Details. Compilation and PdfSigningTests pass, including the
+wrong-password message assertion. Desktop focus was not runtime-tested; creator
+JARs have not been rebuilt.
+
+**Viewer loading dialog — 2026-11-03:** The public checkout now shows an
+Opening EA-PDF dialog after one second while opening an archive. The email tree
+stays hidden until ready. Cancel and Escape stop the active session; opening
+errors appear in the dialog. Progress is indeterminate. TypeScript/contract
+checks and both browser builds pass. Chromium loading lifecycle and existing
+Retry regression checks pass; Firefox runtime was not retested. Local unpacked
+builds in both checkouts are updated; reload the extension and reopen its viewer
+tab. Published ZIPs are unchanged. Regression: `browser-viewer/scripts/loading-smoke.mjs`
+in the public checkout.
+
+**Missing-date demonstration — 2026-11-03:** Created
+`examples/eml/eml_missing_date_1s.pdf` from a derivative of the real Agenda EML
+with only its top-level Date header removed. The original is unchanged. First-page
+inspection confirms the INCOMPLETE SOURCE banner and missing-sent-date explanation.
+Java validation: PDF/A PASS; EA-PDF FAIL (one finding), intentionally defective
+source demonstration, not a conforming regression example. Source hashes, conversion
+log, Java report and preview are in `output/missing-date-example-2026-11-03/`.
+
+**Retry page visibility — 2026-11-03 (local fix):** The viewer now hides Retry
+page until the current page fails to render. Background page failures are tracked
+separately; successful rendering, navigation and closing hide the control. Invalid
+file/opening errors do not expose it. Both browser builds compile; 38 existing unit
+tests and a new Chromium regression pass, including injected render failure,
+prefetch failure, successful retry, navigation, close and invalid-file opening.
+Updated unpacked builds are in `browser-viewer/dist/` in the public checkout.
+Reload the extension to use the fix. Published release ZIPs are unchanged.
+
 **Documentation website — 2026-11-02:** Added Material for MkDocs at
 https://thinkbox-digital.github.io/eapdf/. The public repository remains the home
 for source, issues, Releases and Packages. Website chapters are generated from
@@ -59,7 +596,7 @@ rules or release binaries changed.
 
 Separate observation during fixture preparation: a page with no content stream
 exposed a null lookup in `PageContentChecks.pageContext`; this is outside the
-missing-file CI correction and needs a focused runtime regression/fix.
+missing-file CI correction. Fixed on 2026-11-03 with separate empty-page regressions; see the current checkpoint above.
 
 **Release 1.6.0-beta.7 / viewer 0.5.0-beta.5 — 2026-11-02:**
 Published on GitHub as a prerelease. Release includes updated creator CLI/GUI and standalone validator

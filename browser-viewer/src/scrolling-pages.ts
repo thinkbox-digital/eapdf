@@ -1,4 +1,4 @@
-import type {PDFDocumentProxy,RenderTask} from 'pdfjs-dist';
+import type {PDFDocumentProxy,PDFPageProxy,RenderTask} from 'pdfjs-dist';
 import type {BrowserDocument} from './browser-session.js';
 import {PageText} from './page-text.js';
 
@@ -80,7 +80,8 @@ export class ScrollingPages {
   private retained=new Set<PageSlot>();
   private pending:{epoch:number;promise:Promise<void>}|undefined;
   constructor(private viewport:HTMLElement,private surface:HTMLElement,
-    private onPage:(page:number)=>void,private onError:(message:string)=>void){
+    private onPage:(page:number)=>void,private onError:(message:string)=>void,
+    private onRenderState:(page:number,failed:boolean)=>void=()=>{}){
     viewport.addEventListener('scroll',()=>this.schedule(),{passive:true});
     new ResizeObserver(()=>this.schedule()).observe(viewport);
   }
@@ -175,8 +176,9 @@ export class ScrollingPages {
       if(epoch!==this.epoch)return;
       if(slot.ready||(focused&&slot.number!==center))continue;
       if(Math.abs(slot.number-this.active)>2)continue;
-      const page=await doc.run(doc.pdf.getPage(slot.number));
+      let page:PDFPageProxy|undefined;
       try{
+        page=await doc.run(doc.pdf.getPage(slot.number));
         if(epoch!==this.epoch)return;
         const view=page.getViewport({scale:this.scale}),ratio=Math.min(devicePixelRatio||1,2);
         const anchor=this.slot(this.active)??slot,before=anchor.box.getBoundingClientRect().top;
@@ -213,12 +215,12 @@ export class ScrollingPages {
             })();});slot.links.append(link);
           }
         }catch{if(epoch===this.epoch)slot.links.dataset.unavailable='true';}
-        slot.ready=true;slot.box.dataset.rendered='true';
+        slot.ready=true;slot.box.dataset.rendered='true';this.onRenderState(slot.number,false);
       }catch(error){
-        if(epoch!==this.epoch)return;this.release(slot);
+        if(epoch!==this.epoch)return;this.release(slot);this.onRenderState(slot.number,true);
         slot.box.querySelector('.page-placeholder')!.textContent=`Unable to display page ${slot.number}: ${error instanceof Error?error.message:String(error)}`;
         if(slot.number===this.active)throw error;
-      }finally{page.cleanup();}
+      }finally{page?.cleanup();}
     }
     if(!focused&&epoch===this.epoch&&center!==this.active)this.schedule();
   }

@@ -102,25 +102,30 @@ test('complex DPM values are typed without traversing cyclic dictionaries', asyn
   assert.deepEqual(JSON.parse(JSON.stringify(r)), r);
 });
 
-test('depth, visit, DPM entry and string limits return explicit partial results', async () => {
+test('legacy traversal counts do not truncate; string byte budgets remain explicit', async () => {
   for (const mode of ['depth', 'visits', 'entries', 'string', 'total-strings']) {
     const f = fixture();
+    const limits = (await f.inspect()).limits;
     let expected;
     if (mode === 'depth') {
       let kids = []; for (let i = 0; i < 50; i++) kids = [kids];
       f.part.set('DParts', kids); expected = 'TRAVERSAL_LIMIT';
     } else if (mode === 'visits') {
-      f.part.set('DParts', Array(3000).fill(f.partRef)); expected = 'TRAVERSAL_LIMIT';
+      f.part.set('DParts', Array(limits.maxNodes + 1).fill(f.partRef)); expected = 'TRAVERSAL_LIMIT';
     } else {
       const dpm = f.dict({}); f.part.set('DPM', dpm);
-      if (mode === 'entries') { for (let i = 0; i < 9000; i++) dpm.set('K' + i, 1); expected = 'ENTRY_LIMIT'; }
+      if (mode === 'entries') { for (let i = 0; i <= limits.maxEntries; i++) dpm.set('K' + i, 1); expected = 'ENTRY_LIMIT'; }
       if (mode === 'string') { dpm.set('Large', 'a'.repeat(65537)); expected = 'STRING_LIMIT'; }
-      if (mode === 'total-strings') { for (let i = 0; i < 20; i++) dpm.set('K' + i, 'a'.repeat(65536)); expected = 'STRING_LIMIT'; }
+      if (mode === 'total-strings') { for (let i = 0; i <= limits.maxTotalStringBytes / limits.maxStringBytes; i++) dpm.set('K' + i, 'a'.repeat(limits.maxStringBytes)); expected = 'STRING_LIMIT'; }
     }
     const r = await f.inspect();
-    assert.equal(r.status, 'partial', mode);
-    assert.ok(r.diagnostics.some(d => d.code === expected), mode);
-    assert.ok(r.parts.length <= r.limits.maxNodes);
+    if (mode === 'string' || mode === 'total-strings') {
+      assert.equal(r.status, 'partial', mode);
+      assert.ok(r.diagnostics.some(d => d.code === expected), mode);
+    } else {
+      assert.ok(!r.diagnostics.some(d => d.code === expected), mode);
+      if (mode === 'entries') assert.equal(r.parts[0].dpm.entries.length, limits.maxEntries + 1);
+    }
   }
 });
 

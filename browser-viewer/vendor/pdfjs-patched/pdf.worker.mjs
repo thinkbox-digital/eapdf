@@ -39021,9 +39021,9 @@ class FileSpec {
 
 
 const CEILINGS = Object.freeze({
-  maxObjects: 100000,
+  maxObjects: 1000000,
   maxDepth: 64,
-  maxFiles: 2048,
+  maxFiles: 16384,
   maxMetadataBytes: 16777216,
   maxStreamBytes: 16777216
 });
@@ -39076,7 +39076,6 @@ function boundedBytes(stream, maximum) {
     seen = new Set();
   let current = stream;
   while (current instanceof BaseStream && !seen.has(current)) {
-    if (seen.size >= 16) throw new Error("Decode chain limit");
     seen.add(current);
     if (current instanceof DecodeStream) {
       limits.push([current, current.maxBufferLength]);
@@ -39138,10 +39137,6 @@ class DocumentAssets {
     };
     let visits = 0;
     const step = (loc, depth) => {
-      if (++visits > limits.maxObjects || depth > limits.maxDepth) {
-        report("OBJECT_LIMIT", loc);
-        return false;
-      }
       return true;
     };
     const add = (raw, origin) => {
@@ -39153,18 +39148,10 @@ class DocumentAssets {
           return;
         }
         if (!files.has(loc.path)) {
-          if (files.size >= limits.maxFiles) {
-            report("FILE_LIMIT", loc);
-            return;
-          }
           const streams = new Map(),
             ef = spec.get("EF");
           if (ef instanceof Dict) {
             for (const [key, rawStream] of ef.getRawEntries()) {
-              if (streams.size >= 32) {
-                report("STREAM_COUNT_LIMIT", loc);
-                break;
-              }
               const sloc = locator(rawStream, loc.path + "/EF/" + key);
               if (streams.has(sloc.path)) {
                 streams.get(sloc.path).efKeys.push("/" + key);
@@ -39232,7 +39219,7 @@ class DocumentAssets {
           kids = node.get("Kids");
         if (Array.isArray(pairs)) {
           if (pairs.length % 2) report("INVALID_NAME_TREE", loc);
-          for (let i = 0; i + 1 < pairs.length && visits <= limits.maxObjects; i += 2) {
+          for (let i = 0; i + 1 < pairs.length; i += 2) {
             if (!step(loc, depth)) break;
             add(pairs[i + 1], origin("name-tree", {
               ...loc,
@@ -39240,27 +39227,32 @@ class DocumentAssets {
             }, null, fetch(pairs[i])));
           }
         }
-        if (Array.isArray(kids)) for (let i = 0; i < kids.length && visits <= limits.maxObjects; i++) nameTree(kids[i], path + `/Kids[${i}]`, depth + 1);
+        if (Array.isArray(kids)) for (let i = 0; i < kids.length; i++) nameTree(kids[i], path + `/Kids[${i}]`, depth + 1);
       } catch (error) {
         report("NAME_TREE_UNAVAILABLE", loc, error);
       }
     };
     if (names instanceof Dict && names.has("EmbeddedFiles")) nameTree(names.getRaw("EmbeddedFiles"), "catalog/Names/EmbeddedFiles", 0);
-    const pending = [[this.root, "catalog", 0]];
-    let totalMetadata = 0;
-    while (pending.length && visits <= limits.maxObjects) {
-      const [raw, path, depth] = pending.pop(),
+    const pending = [[this.root, "catalog", 0]],
+      scheduled = new Set([this.root]);
+    const identity = raw => raw instanceof Ref ? raw.toString() : raw;
+    let totalMetadata = 0,
+      next = 0,
+      edges = 0;
+    while (next < pending.length) {
+      const [raw, path, depth] = pending[next++],
         loc = locator(raw, path);
-      if (!step(loc, depth)) continue;
       try {
         const obj = fetch(raw),
           key = raw instanceof Ref ? loc.path : obj;
-        if (!(obj instanceof Dict || obj instanceof BaseStream || Array.isArray(obj)) || visited.has(key)) continue;
+        if (!(obj instanceof Dict || obj instanceof BaseStream || Array.isArray(obj)) || visited.has(key) || visited.has(obj)) continue;
+        if (!step(loc, depth)) continue;
         visited.add(key);
+        visited.add(obj);
         const dict = obj instanceof BaseStream ? obj.dict : obj;
         if (dict instanceof Dict) {
           const af = dict.get("AF");
-          if (Array.isArray(af)) for (let i = 0; i < af.length && visits <= limits.maxObjects; i++) {
+          if (Array.isArray(af)) for (let i = 0; i < af.length; i++) {
             if (!step(loc, depth)) break;
             add(af[i], origin(obj === this.root ? "catalog-af" : "object-af", {
               ...loc,
@@ -39269,7 +39261,7 @@ class DocumentAssets {
           } else if (af !== undefined) report("INVALID_AF_ARRAY", loc);
           if (dict.get("Type") instanceof Name && dict.get("Type").name === "Page") {
             const annots = dict.get("Annots");
-            if (Array.isArray(annots)) for (let i = 0; i < annots.length && visits <= limits.maxObjects; i++) {
+            if (Array.isArray(annots)) for (let i = 0; i < annots.length; i++) {
               if (!step(loc, depth)) break;
               const annot = fetch(annots[i]);
               if (annot instanceof Dict && annot.get("Subtype") instanceof Name && annot.get("Subtype").name === "FileAttachment") {
@@ -39307,12 +39299,11 @@ class DocumentAssets {
         }
         const children = Array.isArray(obj) ? obj.entries() : dict.getRawEntries();
         for (const [key_, child] of children) {
-          if (pending.length + visits >= limits.maxObjects) {
-            report("OBJECT_LIMIT", loc);
-            break;
-          }
           if (child instanceof Ref || child instanceof Dict || child instanceof BaseStream || Array.isArray(child)) {
-            pending.push([child, loc.path + (Array.isArray(obj) ? `[${key_}]` : "/" + key_), depth + 1]);
+            const key = identity(child);
+            if (scheduled.has(key) || visited.has(child)) continue;
+            scheduled.add(key);
+            pending.push([child, loc.path + (Array.isArray(obj) ? `[${key_}]` : "/" + key_), depth + (dict instanceof Dict && dict.has("Title") && dict.has("Parent") && (key_ === "Next" || key_ === "Prev") ? 0 : 1)]);
           }
         }
       } catch (error) {
@@ -39401,11 +39392,11 @@ class DocumentAssets {
 
 
 const LIMITS = Object.freeze({
-  maxNodes: 2048,
+  maxNodes: 16384,
   maxDepth: 32,
-  maxEntries: 8192,
+  maxEntries: 65536,
   maxStringBytes: 65536,
-  maxTotalStringBytes: 1048576
+  maxTotalStringBytes: 8388608
 });
 async function getDocumentParts(catalog, root, documentId) {
   const result = {
@@ -39539,11 +39530,6 @@ async function getDocumentParts(catalog, root, documentId) {
       return;
     }
     const loc = locator(raw, path);
-    if (++visits > LIMITS.maxNodes || depth > LIMITS.maxDepth) {
-      issue("TRAVERSAL_LIMIT", loc);
-      stopped = true;
-      return;
-    }
     let node;
     try {
       node = fetch(raw);
@@ -39610,12 +39596,6 @@ async function getDocumentParts(catalog, root, documentId) {
         if (dpm instanceof Dict) {
           part.dpm.state = "present";
           for (const name of dpm.getKeys()) {
-            if (++entries > LIMITS.maxEntries) {
-              issue("ENTRY_LIMIT", dpmLoc);
-              part.dpm.state = "partial";
-              stopped = true;
-              break;
-            }
             const bytesHex = text(name);
             if (bytesHex === null) {
               issue("STRING_LIMIT", dpmLoc);

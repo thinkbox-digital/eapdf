@@ -61,4 +61,42 @@ class MarkedContentRepairTests {
       assertEquals(visible, new PDFTextStripper().getText(document));
     }
   }
+  @Test
+  void importedAnnotationReferencesUseTheirActualPages() throws Exception {
+    try (PDDocument document = new PDDocument()) {
+      PDPage first = new PDPage(), second = new PDPage();
+      document.addPage(first); document.addPage(second);
+      COSDictionary original = new COSDictionary();
+      COSDictionary root = PdfMailWriter.structElem("Document", original, first);
+      COSDictionary owner = PdfMailWriter.structElem("Link", root, first);
+      COSArray references = new COSArray(), numbers = new COSArray();
+      for (int index = 0; index < 2; index++) {
+        PDPage page = document.getPage(index);
+        var annotation = new org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink();
+        annotation.getCOSObject().setInt(COSName.getPDFName("StructParent"), index);
+        page.getAnnotations().add(annotation);
+        COSDictionary reference = new COSDictionary();
+        reference.setName(COSName.TYPE, "OBJR");
+        reference.setItem(COSName.OBJ, annotation.getCOSObject());
+        references.add(reference);
+        numbers.add(COSInteger.get(index)); numbers.add(owner);
+      }
+      owner.setItem(COSName.K, references);
+      root.setItem(COSName.K, owner);
+      original.setItem(COSName.K, root);
+      COSDictionary parents = new COSDictionary();
+      parents.setItem(COSName.NUMS, numbers);
+      original.setItem(COSName.getPDFName("ParentTree"), parents);
+      COSDictionary tree = new COSDictionary();
+      COSDictionary contentSet = PdfMailWriter.structElem("Mail_ContentSet", tree, first);
+      SemanticStructure.attach(document, tree, contentSet, original, 0, 1);
+      for (int index = 0; index < 2; index++) {
+        COSDictionary reference = assertInstanceOf(COSDictionary.class, references.getObject(index));
+        assertInstanceOf(COSObject.class, reference.getItem(COSName.PG));
+        assertSame(document.getPage(index).getCOSObject(), reference.getDictionaryObject(COSName.PG));
+        assertSame(document.getPage(index).getAnnotations().get(0).getCOSObject(), reference.getDictionaryObject(COSName.OBJ));
+      }
+    }
+  }
+
 }

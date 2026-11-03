@@ -60,6 +60,13 @@ class CollectionPortfolioTests {
 
       var embeddedNames = TestSupport.embeddedFileNames(doc);
       Assertions.assertEquals(6, embeddedNames.size());
+      for (var file : AttachmentProfilePolicyTests.files(doc).values()) {
+        var embedded = file.getEmbeddedFileUnicode();
+        Assertions.assertEquals(COSName.FLATE_DECODE, embedded.getCOSObject().getDictionaryObject(COSName.FILTER));
+        byte[] decoded = embedded.toByteArray();
+        Assertions.assertEquals(decoded.length, embedded.getSize());
+        Assertions.assertEquals(Common.md5Hex(decoded), ((org.apache.pdfbox.cos.COSString) embedded.getCOSObject().getCOSDictionary(COSName.PARAMS).getDictionaryObject(COSName.CHECK_SUM)).toHexString().toLowerCase(java.util.Locale.ROOT));
+      }
       Assertions.assertFalse(embeddedNames.contains("Finding_Aid.pdf"));
       Assertions.assertFalse(embeddedNames.stream().anyMatch(name -> name.endsWith("_index.xlsx")));
       Assertions.assertFalse(embeddedNames.contains("test_1c_finding_aid.pdf"));

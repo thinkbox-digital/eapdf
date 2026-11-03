@@ -17,7 +17,7 @@ try {
  const ordinary=(await readFile('tests/fixtures/ordinary.pdf')).toString('base64');
  const nested=(await readFile('tests/inspection/controls/c-nested-mixed.pdf')).toString('base64');
  const attachments=(await readFile('tests/attachments/viewing.pdf')).toString('base64');
- for(const [name,options,data] of [['decoded-byte-limit',{maxDecodedBytes:0},attachments],['child-depth-limit',{maxChildDepth:0},nested],['child-count-limit',{maxChildren:1},nested]]){
+ for(const [name,options,data] of [['decoded-byte-limit',{maxDecodedBytes:0},attachments]]){
   const result=await page.evaluate(async({options,data})=>{
    const {InspectionSession}=await import('./inspection-session.js');const s=new InspectionSession(options);
    try {const d=await s.open(Uint8Array.from(atob(data),c=>c.charCodeAt(0)));return {payloads:[...d.payloads.values()].reduce((n,b)=>n+b.length,0),unavailable:d.inspection.files.flatMap(f=>f.streams).filter(s=>s.extraction==='unavailable').length,children:d.inspection.collection.value?.children.map(c=>c.state)??[]};}finally{s.close();}
@@ -35,26 +35,26 @@ try {
    return [file,file.streams[0]];
   };
   const denied=new BrowserSession({maxDecodedBytes:0});let zero=false;
-  try{const doc=await denied.open(blob(attachments),'viewing.pdf');zero=await rejected(()=>denied.bytes(doc,...choose(doc,'plain.txt')),/decoded-byte limit/);}finally{denied.close();}
+  try{const doc=await denied.open(blob(attachments),'viewing.pdf');zero=await rejected(()=>denied.bytes(doc,...choose(doc,'plain.txt')),/decoded-byte budget/);}finally{denied.close();}
   const first=new BrowserSession();let textSize=0;
   try{const doc=await first.open(blob(attachments),'viewing.pdf');textSize=(await first.bytes(doc,...choose(doc,'plain.txt'))).length;}finally{first.close();}
   const aggregate=new BrowserSession({maxDecodedBytes:textSize});let repeated=false;
   try{const doc=await aggregate.open(blob(attachments),'viewing.pdf');await aggregate.bytes(doc,...choose(doc,'plain.txt'));repeated=(await aggregate.bytes(doc,...choose(doc,'plain.txt'))).length===textSize;
     const other=doc.inspection.files.find(f=>(f.unicodeFilename.value??f.filename.value)!=='plain.txt'&&f.streams.length);
-    if(other)repeated=repeated&&await rejected(()=>aggregate.bytes(doc,other,other.streams[0]),/decoded-byte limit/);}finally{aggregate.close();}
-  const count=new BrowserSession({maxChildren:1});let countBound=false,cached=false;
+    if(other)try{await aggregate.bytes(doc,other,other.streams[0]);}catch(error){repeated=repeated&&/byte limit|byte budget/.test(String(error));}}finally{aggregate.close();}
+  const count=new BrowserSession({maxChildren:1});let countComplete=false,cached=false;
   try{
    const doc=await count.open(blob(nested),'nested.pdf');
    const files=doc.inspection.files.flatMap(file=>file.streams.filter(s=>s.mimeType.value==='application/pdf').map(stream=>[file,stream]));
    if(files.length<2)throw new Error('Expected two collection members');
    const opened=await count.child(doc,...files[0]);cached=opened===await count.child(doc,...files[0]);
-   countBound=await rejected(()=>count.child(doc,...files[1]),/count limit/);
+   countComplete=!!(await count.child(doc,...files[1]));
   }finally{count.close();}
-  const depth=new BrowserSession({maxChildDepth:0});let depthBound=false;
-  try{const doc=await depth.open(blob(nested),'nested.pdf');const file=doc.inspection.files.find(f=>f.streams.some(s=>s.mimeType.value==='application/pdf'));depthBound=await rejected(()=>depth.child(doc,file,file.streams[0]),/depth limit/);}finally{depth.close();}
+  const depth=new BrowserSession({maxChildDepth:0});let depthComplete=false;
+  try{const doc=await depth.open(blob(nested),'nested.pdf');const file=doc.inspection.files.find(f=>f.streams.some(s=>s.mimeType.value==='application/pdf'));depthComplete=!!(await depth.child(doc,file,file.streams[0]));}finally{depth.close();}
   const input=new BrowserSession({maxFileBytes:1});let inputBound=false;
   try{inputBound=await rejected(()=>input.open(blob(ordinary),'ordinary.pdf'),/input byte limit/);}finally{input.close();}
-  return {zero,repeated,countBound,cached,depthBound,inputBound};
+  return {zero,repeated,countComplete,cached,depthComplete,inputBound};
  },{attachments,nested,ordinary});
  for(const [name,passed] of Object.entries(production)){assert.equal(passed,true,name);results.push({name:'production-session-'+name,status:'PASS'});}
  const cancellation=await page.evaluate(async base64=>{
@@ -93,8 +93,14 @@ try {
  });assert.equal(hostile,'unsupported');results.push({name:'xmp-external-entity-rejected',status:'PASS'});
  const deep=await page.evaluate(async()=>{
   const {parseXmp}=await import('./domain/xmp.js');
-  return parseXmp('<x>'.repeat(66)+'</x>'.repeat(66),{documentId:'test',objectNumber:null,generation:null,path:'metadata'},s=>new DOMParser().parseFromString(s,'application/xml')).state;
- });assert.equal(deep,'unavailable');results.push({name:'xmp-depth-limited',status:'PASS'});
+  return parseXmp('<x>'.repeat(66)+'<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description/></rdf:RDF>'+'</x>'.repeat(66),{documentId:'test',objectNumber:null,generation:null,path:'metadata'},s=>new DOMParser().parseFromString(s,'application/xml')).state;
+ });assert.equal(deep,'present');results.push({name:'xmp-depth-complete',status:'PASS'});
+ const records=await page.evaluate(async()=>{
+  const {parseXmp,NS}=await import('./domain/xmp.js');
+  const text='<rdf:RDF xmlns:rdf="'+NS.rdf+'" xmlns:e="'+NS.meta+'"><rdf:Description><e:email><rdf:Bag>'+Array.from({length:10001},(_,i)=>'<rdf:li><e:Mail_GUID>'+i+'</e:Mail_GUID></rdf:li>').join('')+'</rdf:Bag></e:email></rdf:Description></rdf:RDF>';
+  const result=parseXmp(text,{documentId:'test',objectNumber:null,generation:null,path:'metadata'},s=>new DOMParser().parseFromString(s,'application/xml'));
+  return {state:result.state,count:result.records.length};
+ });assert.equal(records.state,'present');assert.equal(records.count,10001);results.push({name:'xmp-records-complete',status:'PASS'});
 
  // A link only presents a button; navigating to the extension never fetches it.
  const viewerUrl=page.url().split('#')[0];

@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MetadataLimitTests {
     @TempDir Path directory;
-    @Test void deepMetadataIsUnavailableAndSourceRemainsUnchanged() throws Exception {
+    @Test void deepMetadataIsInspectedAndSourceRemainsUnchanged() throws Exception {
         Path original = Path.of("../examples/eml/eml_Agenda_and_timeline_slides_1s.pdf");
         byte[] before = Files.readAllBytes(original);
         Path file = directory.resolve("deep.pdf");
@@ -21,7 +21,7 @@ class MetadataLimitTests {
         }
         var result = JavaValidation.validate(file);
         var items = result.getAsJsonArray("items");
-        assertTrue(items.asList().stream().map(v->v.getAsJsonObject())
+        assertFalse(items.asList().stream().map(v->v.getAsJsonObject())
             .anyMatch(v->"EAPDF_XMP_UNCHECKED".equals(v.get("code").getAsString()) && "WARN".equals(v.get("level").getAsString())));
         assertFalse(items.asList().stream().map(v->v.getAsJsonObject())
             .anyMatch(v->"EAPDF_XMP_UNCHECKED".equals(v.get("code").getAsString()) && "FAIL".equals(v.get("level").getAsString())));

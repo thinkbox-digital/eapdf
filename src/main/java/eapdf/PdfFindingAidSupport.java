@@ -108,7 +108,7 @@ final class PdfFindingAidSupport {
       try (PDPageContentStream content = new PDPageContentStream(document, page)) {
         PdfMailWriter.drawText(content, font, 20f, 46.8f, 565f, "Email Collection");
         PdfMailWriter.drawText(content, font, 11f, 46.8f, 535f, "EA-PDF 1" + profile + " collection");
-        PdfMailWriter.drawText(content, font, 11f, 46.8f, 515f, summary.messageCount + " messages across " + summary.folderCount + " folders");
+        PdfMailWriter.drawText(content, font, 11f, 46.8f, 515f, summary.countsText());
         PdfMailWriter.drawText(content, font, 11f, 46.8f, 495f, "Open the contained email PDFs from the attachments panel.");
       }
       ProcessingLimits.accountPages(document.getNumberOfPages());
@@ -147,8 +147,7 @@ final class PdfFindingAidSupport {
     final float tableHeaderHeight = 16f;
     final float minRowHeight = 18f;
     final float tableTopGap = 14f;
-    final float bottomLimit = reserveBranding && PdfMailWriter.CONFIG.branding.enabled
-        ? Math.max(margin + 20f, PdfMailWriter.brandingFooterTop(pageRect) + 12f) : margin + 20f;
+    final float bottomLimit = margin + 20f;
     // A subject can use a full row on a continuation page instead of an arbitrary four lines.
     final int subjectMaxLines = Math.max(1, (int) ((pageHeight - margin - 6f - tableTopGap
         - tableHeaderHeight - bottomLimit - 8f) / (textSize + 2f)));
@@ -184,6 +183,8 @@ final class PdfFindingAidSupport {
         float y = pageHeight - margin;
 
         if (currentPageNumber == 1) {
+          // A 20-point heading extends above its baseline; keep it below the banner.
+          if (PdfMailWriter.CONFIG.branding.enabled) y -= 14f;
           y = drawFindingAidHeader(cs, font, margin, y, titleSize, textSize, lineGap, profile, runSummary, collectionMode);
         } else {
           y -= 6f;
@@ -239,8 +240,7 @@ final class PdfFindingAidSupport {
         .append(collectionMode ? " collection." : " archive.")
         .append("</p>");
     s.append("<p><strong>Harvested email(s):</strong> ").append(Common.escapeHtml(runSummary.harvestedEmails)).append("</p>");
-    s.append("<p><strong>Run stats:</strong> ").append(runSummary.messageCount).append(" messages across ")
-        .append(runSummary.folderCount).append(" folders</p>");
+    s.append("<p><strong>Run stats:</strong> ").append(runSummary.countsText()).append("</p>");
     s.append("<p><strong>Generated:</strong> ").append(Common.escapeHtml(runSummary.generatedAt)).append("</p>");
     appendFindingAidTable(s, rows, includeFolderColumn);
     s.append("</body></html>");
@@ -313,9 +313,8 @@ final class PdfFindingAidSupport {
           + "<xmp:CreateDate>" + now + "</xmp:CreateDate><xmp:ModifyDate>" + now + "</xmp:ModifyDate>"
           + "<xmp:MetadataDate>" + now + "</xmp:MetadataDate></rdf:Description>"
           + PdfMailWriter.pdfUaIdentification() + "</rdf:RDF></x:xmpmeta><?xpacket end=\"w\"?>";
-      var metadata = new org.apache.pdfbox.pdmodel.common.PDMetadata(document);
-      metadata.importXMPMetadata(xmp.getBytes(StandardCharsets.UTF_8));
-      catalog.setMetadata(metadata);
+      PdfMailWriter.setCompressedMetadata(document, xmp);
+      if (PdfMailWriter.CONFIG.branding.enabled) PdfMailWriter.drawBrandingBanner(document, fontPath, "1" + profile);
       try (var icc = Files.newInputStream(Path.of(iccPath))) {
         var intent = new org.apache.pdfbox.pdmodel.graphics.color.PDOutputIntent(document, icc);
         intent.setInfo("sRGB IEC61966-2.1");
@@ -340,7 +339,7 @@ final class PdfFindingAidSupport {
         catalog.getCOSObject().setItem(COSName.STRUCT_TREE_ROOT, PdfDocumentParts.indirect(document, tree));
       }
       ByteArrayOutputStream output = new ByteArrayOutputStream();
-      document.save(output);
+      PdfFontMetadata.save(document, output);
       ProcessingLimits.checkOutput(output.size());
       return output.toByteArray();
     }
@@ -544,7 +543,7 @@ final class PdfFindingAidSupport {
     beginText(cs, font, textSize, margin, y, "Harvested email(s): " + Common.nz(runSummary.harvestedEmails));
     y -= lineGap;
     beginText(cs, font, textSize, margin, y,
-        "Run stats: " + runSummary.messageCount + " messages across " + runSummary.folderCount + " folders");
+        "Run stats: " + runSummary.countsText());
     y -= lineGap;
     beginText(cs, font, textSize, margin, y, "Generated: " + Common.nz(runSummary.generatedAt));
 

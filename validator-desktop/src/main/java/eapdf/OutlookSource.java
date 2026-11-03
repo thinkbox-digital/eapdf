@@ -45,7 +45,7 @@ final class OutlookSource {
   }
 
   private Core core(DirectoryNode root) throws IOException {
-    if (entries(root, 0) > 100000) return null;
+    entries(root, 0);
     byte[] properties = propertyTable(stream(root, "__properties_version1.0"), 32);
     codepage = integer(properties, 0x3ffd0003, 32);
     String messageClass = text(root, "001A").toLowerCase(java.util.Locale.ROOT);
@@ -73,7 +73,7 @@ final class OutlookSource {
   }
 
   private Evidence read(DirectoryNode root) throws IOException {
-    if (entries(root, 0) > 100000) return null;
+    entries(root, 0);
     byte[] properties = propertyTable(stream(root, "__properties_version1.0"), 32);
     codepage = integer(properties, 0x3ffd0003, 32);
     String headers = text(root, "007D");
@@ -157,7 +157,7 @@ final class OutlookSource {
   static java.util.Map<String, String> standaloneContent(byte[] bytes) throws IOException {
     try (var storage = new POIFSFileSystem(new ByteArrayInputStream(bytes))) {
       var reader = new OutlookSource(bytes.length);
-      if (reader.entries(storage.getRoot(), 0) > 100000) throw new IOException("MSG storage exceeds inspection limit");
+      reader.entries(storage.getRoot(), 0);
       var content = new java.util.TreeMap<String, String>();
       reader.storageContent(storage.getRoot(), "", content, true);
       return content;
@@ -239,15 +239,16 @@ final class OutlookSource {
     return java.util.Map.copyOf(result);
   }
 
-  private int entries(DirectoryNode directory, int depth) throws IOException {
-    if (depth > 256) throw new IOException("MSG storage depth exceeds inspection limit");
-    int total = 0;
-    for (Entry entry : directory) {
-      total++;
-      if (entry instanceof DirectoryNode child) total += entries(child, depth + 1);
-      if (total > 100000) throw new IOException("MSG inventory exceeds inspection limit");
+  private void entries(DirectoryNode directory, int depth) throws IOException {
+    var pending = new java.util.ArrayDeque<DirectoryNode>();
+    var seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<DirectoryNode, Boolean>());
+    pending.add(directory);
+    while (!pending.isEmpty()) {
+      DirectoryNode current = pending.removeFirst();
+      if (!seen.add(current)) throw new IOException("Cyclic MSG storage");
+      if (Thread.currentThread().isInterrupted()) throw new java.io.InterruptedIOException("MSG inspection cancelled");
+      for (Entry entry : current) if (entry instanceof DirectoryNode child) pending.add(child);
     }
-    return total;
   }
 
   private byte[] stream(DirectoryNode directory, String name) throws IOException {

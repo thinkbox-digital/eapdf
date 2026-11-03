@@ -185,7 +185,6 @@ final class LogicalStructureChecks {
 
   private void walk(COSBase value, Entry parent, int depth) throws IOException {
     value = resolve(value);
-    if (depth > 256 || entries.size() >= InspectionBudget.nodes(document)) throw new IOException("Structure tree exceeds the inspection limit");
     if (value instanceof COSArray array) { for (COSBase child : array) walk(child, parent, depth + 1); return; }
     if (!(value instanceof COSDictionary dictionary) || get(dictionary, "S") == null) return;
     if (!seen.add(dictionary)) throw new IOException("Structure tree contains a repeated or cyclic element");

@@ -56,10 +56,11 @@ rendering API. Tree order is preserved, not sorted by page index.
 
 ## Limits and failure behavior
 
-The reader caps total node/array visits at 2,048, nesting depth at 32, DPM entries
-at 8,192, individual raw strings at 65,536 bytes, and total raw strings at
-1,048,576 bytes. Repeated nodes/arrays stop traversal with a diagnostic. Other
-siblings can still be returned unless the global traversal budget is exhausted.
+Node/array visits, nesting depth and DPM entry counts have no fixed cutoff.
+Individual raw strings remain bounded at 65,536 bytes, with an 8,388,608-byte
+aggregate string budget. Repeated nodes/arrays produce a diagnostic; other
+siblings remain inspectable. Legacy count/depth fields in the returned limits
+object are retained for compatibility but do not stop traversal.
 Null/invalid roots, bad parent references, invalid DPM containers, bad page
 references, unavailable strings and complex values remain distinguishable.
 

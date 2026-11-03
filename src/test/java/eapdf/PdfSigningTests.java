@@ -95,7 +95,8 @@ class PdfSigningTests {
   @Test void badCredentialsAndUnsuitableCertificatesStopSigning() throws Exception {
     Identity identity = identity("RSA", Instant.now().plusSeconds(86400), KeyUsage.digitalSignature);
     var cfg = store(identity, "valid.p12", true);
-    assertThrows(IOException.class, () -> PdfSigning.load(cfg, "wrong".toCharArray()));
+    assertEquals("Incorrect signing certificate password. Please try again.",
+        assertThrows(IOException.class, () -> PdfSigning.load(cfg, "wrong".toCharArray())).getMessage());
     assertThrows(Common.UserFacingException.class, () -> PdfSigning.load(cfg, PASSWORD));
     cfg.alias = "unknown"; assertThrows(Common.UserFacingException.class, () -> PdfSigning.load(cfg, PASSWORD));
     cfg.alias = "test"; assertNotNull(PdfSigning.load(cfg, PASSWORD));

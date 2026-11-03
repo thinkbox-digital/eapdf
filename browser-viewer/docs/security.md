@@ -38,21 +38,20 @@ pages, within a combined 32-million-pixel canvas budget; the remaining pages use
 lightweight placeholders. This is a canvas allocation limit, not a total-process
 memory guarantee.
 Root input is capped at 512 MiB before hashing. Decoded embedded streams are capped
-at 32 MiB each and 128 MiB cumulatively per browser session, including failed reservations and uncached repeated reads. Successful reads have
+at 32 MiB each and 512 MiB of concurrent extraction reservations per browser session. Completed and failed reads release their reservations. Successful reads have
 a 32 MiB LRU cache; cached reads return copies and do not consume another decode
 reservation. The recovery-only Reopen PDF action explicitly closes all workers and resets
-limits; it also resets navigation to the root. At most 128 child PDFs and eight nested child
-levels are retained in a session. Repeated opens of the same child reuse it.
+limits; it also resets navigation to the root. Child count and nesting depth have no fixed cutoff. Repeated opens of the same
+child reuse it; ancestor cycles are rejected.
 Concurrent opens are capped at three. Metadata inspection retains a 16 MiB
-per-stream ceiling, XML depth 64 and 100,000
-XML nodes. Unavailable metadata is reported in Reading notes and blocks CSV export.
+per-stream byte ceiling. XML node, depth and record counts do not stop inspection. Unavailable metadata produces a concise warning and blocks CSV export; details are logged to the browser debug console.
 Collection CSV exports enumerate actual child messages, omitting parent index
 records; repeated identities in distinct children are retained. Ordinary PDF.js
 decoding, including page rendering, stops before allocating more than 64 MiB for a single decode buffer or
 256 MiB of cumulative buffer growth per document worker. Image decode is capped
 at 16 million pixels and PDF.js canvas area at 64 MiB. Explicit linked downloads
 stream at most 64 MiB and time out after 30 seconds; Content-Length is not trusted
-as the actual byte count. XML inspection stops at 64 levels/100,000 nodes.
+as the actual byte count. Resource exhaustion remains explicit; no complete inventory is claimed after an interrupted scan.
 These fixed ceilings may reject valid, large or unusually encoded documents.
 Resource ceilings and unsupported formats are listed in beta-release.md. PDF.js
 rendering and browser image decoding remain complex parsers; these controls are
@@ -64,7 +63,7 @@ PDF/A, EA-PDF or ISO conformance.
 Verified in this checkpoint: offline UI and viewing tests in both browsers;
 HTML/SVG remain text; exact downloaded bytes; oversized image rejection; truncated
 text disclosure; missing and corrupt attachments; zero decoded-byte allowance;
-child-depth/count limits; pending worker cancellation; cancellation during input
+legacy child-depth/count settings being ignored; pending worker cancellation; cancellation during input
 hashing; timeout recovery; rejected external XMP entities. The pinned PDF.js core
 checks also verify decompression allocation limits and cycle termination. Full
 upstream rendering/integration suites and independent penetration review remain
@@ -78,8 +77,9 @@ and ZIPs. Do not update dependency versions or frozen expectations merely to
 silence failures. `npm audit` reported zero advisories on 2026-10-31; this is a
 point-in-time registry result, not a permanent guarantee.
 
-Collection search uses an isolated bounded session and reads at most 2,000 pages,
-10 million characters and 500 matching pages. Its results identify incomplete
+Collection search uses an isolated session with a 120-second deadline and a
+10-million-character budget for retained results. Released page text does not
+consume a cumulative allowance; page and match counts have no fixed cutoff. Its results identify incomplete
 coverage; they never imply that unreadable children were searched. Legacy header-only
 source association requires a unique exact Message-ID, complete bounded headers,
 and no contradictory declared stream checksum. It is identification evidence,

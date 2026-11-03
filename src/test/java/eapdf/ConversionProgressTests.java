@@ -104,7 +104,7 @@ class ConversionProgressTests {
   Path staged=directory.resolve("staged.pdf"); Files.writeString(staged,"final signed bytes");
   try {
    ConversionProgress.attach(workspace);
-   ConversionProgress.creationChecked(directory.resolve("out/mail.pdf"),staged,null);
+   ConversionProgress.creationChecked(directory.resolve("out/mail.pdf"),staged,null,true);
    ConversionProgress.diagnostics(java.util.Map.of("message identity", "Reduced rendering: plain text"));
    var receipt=read().getAsJsonArray("creation_receipts").get(0).getAsJsonObject();
    assertEquals(Common.digestHex(staged,"SHA-256"),receipt.get("sha256").getAsString());
@@ -124,7 +124,7 @@ class ConversionProgressTests {
   Path staged=directory.resolve("staged.pdf"); Files.writeString(staged,"bytes");
   try {
    ConversionProgress.attach(workspace);
-   ConversionProgress.creationChecked(directory.resolve("out/mail.pdf"),staged,null);
+   ConversionProgress.creationChecked(directory.resolve("out/mail.pdf"),staged,null,true);
    supervisor.finish("FAILED");
    assertEquals("NOT_CONFIRMED",read().getAsJsonArray("creation_receipts").get(0).getAsJsonObject().get("publication").getAsString());
   } finally {ConversionProgress.detach();}

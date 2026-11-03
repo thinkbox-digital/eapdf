@@ -4,39 +4,14 @@ Packages accompany EA-PDF 1.6.0-beta.7 on GitHub. They are unsigned; Chromium
 uses Load unpacked and Firefox uses temporary installation. No store approval
 is claimed. Reload the extension and reopen its tab after replacing files.
 
-The [current README](../README.md) describes viewing, file ownership, search,
-finding-aid exports and limits. The material below is historical; where
-it differs, the current README and security boundaries take precedence.
-
-> Unreleased security checkpoint (2026-10-31): production sessions now use fixed
-> ceilings: 512 MiB root input, 32 MiB embedded stream, 128 MiB aggregate extracted
-> bytes, 128 child PDFs and eight child levels. Linked downloads stop at 64 MiB/30 s.
-> PDF.js decoding is bounded in normal rendering as well as attachment extraction.
-> Older resource figures below describe the earlier beta. See
-> [current security boundaries](security.md) and the repository
-> [hardening record](../../docs/security/HARDENING.md). Published packages have not
-> been replaced by this local checkpoint.
-
-# Viewer beta 0.4.0-beta.1
-
-The beta displays EA-PDF pages, document information and embedded files. It does not
-validate conformance. The local 0.3.1 update improves folder navigation and reduces
-the height of the header and toolbar. The opened-PDF count and Document
-Information conformance row have been removed. The duplicate Message section
-has also been removed. Download-only files retain their Download button without
-the extra explanatory line. Reading notes describe problems
-encountered while reading the file; they are hidden when there are none.
-
-The earlier 0.3.2 update made zoom buttons move in 10% steps while preserving the horizontal viewing position. Scrolling an m/mi file now follows the current message in the left pane. Both browser interaction suites pass.
-
 ## Install or update
 
 Download the packages from the
-[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.3).
+[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.7).
 Local packages are also in `browser-viewer/releases/`.
 
-- `eapdf-viewer-0.4.0-beta.1-chromium.zip`
-- `eapdf-viewer-0.4.0-beta.1-firefox.zip`
+- `eapdf-viewer-0.5.0-beta.5-chromium.zip`
+- `eapdf-viewer-0.5.0-beta.5-firefox.zip`
 
 Extract the appropriate ZIP. Chromium: open `chrome://extensions`, enable
 Developer mode, choose **Load unpacked**, then select the extracted directory.
@@ -50,9 +25,40 @@ new one. No Java, Python, Node or server is needed to use either extension.
 
 ## Example emails
 
-The current [examples](../../examples/README.md) were rebuilt on 2026-10-29 from
-real EML, MSG, PST and MBOX correspondence. All 24 profile files pass standalone
-Java validation. The [beta.2 example download](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.2/ea-pdf-examples-1.6.0-beta.2.zip) includes all four formats and their manifests. These examples predate the beta.3 creator-identity correction.
+Download [the beta.7 examples](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.7/ea-pdf-examples-1.6.0-beta.7.zip), or see the [example inventory](../../examples/README.md).
+
+## Release checklist
+
+Before publishing installation guidance, query the GitHub release API for each
+explicit prerelease tag and verify that every documented download filename exists
+in its assets. Check both viewer ZIPs and the examples ZIP; do not replace these
+links with `/latest`, which excludes prereleases. Run `npm run verify:pdfjs` too.
+
+## Historical release notes
+
+The [current README](../README.md) describes viewing, file ownership, search,
+finding-aid exports and limits. The material below is historical; where
+it differs, the current README and security boundaries take precedence.
+
+> Unreleased security checkpoint (2026-10-31): production sessions now use fixed
+> ceilings: 512 MiB root input, 32 MiB embedded stream, 512 MiB concurrently extracted
+> bytes. Child count and depth do not impose content cutoffs. Linked downloads stop at 64 MiB/30 s.
+> PDF.js decoding is bounded in normal rendering as well as attachment extraction.
+> Older resource figures below describe the earlier beta. See
+> [current security boundaries](security.md) and the repository
+> [hardening record](../../docs/security/HARDENING.md). Published packages have not
+> been replaced by this local checkpoint.
+
+### Viewer beta 0.4.0-beta.1
+
+The beta displays EA-PDF pages, document information and embedded files. It does not
+validate conformance. The local 0.3.1 update improves folder navigation and reduces
+the height of the header and toolbar. The opened-PDF count and Document
+Information conformance row have been removed. The duplicate Message section
+has also been removed. Download-only files retain their Download button without
+the extra explanatory line. Reading Notes was removed in the current local build; diagnostic details go to the browser debug console.
+
+The earlier 0.3.2 update made zoom buttons move in 10% steps while preserving the horizontal viewing position. Scrolling an m/mi file now follows the current message in the left pane. Both browser interaction suites pass.
 
 ## Open files and attachments
 
@@ -64,7 +70,7 @@ The left panel lists documents and messages. Folders start collapsed. A small
 chevron and folder icon indicate a folder with children; the chevron points down
 when open. Empty folders and file/message rows have no expand marker. Opening
 a file from the Embedded files panel reveals its folder in the tree. The right panel shows **Embedded files**, with file types, sizes and available
-actions, followed by Document information and any Reading notes.
+actions, followed by Document information. Short warnings appear beside content that could not be fully read.
 
 **Open PDF** beside an embedded file opens it in the main viewer. Its own
 embedded files are available in the same right panel. Repeat to open deeper
@@ -128,11 +134,11 @@ This is a practical safeguard, not a guarantee that every file below it will fit
 in memory. Large compressed streams still need decoded memory. Resource failures
 are reported; there is no claim of unlimited file size.
 
-Nesting is limited to 64 levels. Generic graph inspection still limits discovery
-to 2,048 files and 100,000 objects. Loading/inspection/extraction operations time
+File, object, edge and nesting counts do not cut off graph inspection.
+Loading/inspection/extraction operations time
 out after 60 seconds; page operations after 30 seconds. Page and image rendering
 use a 16-million-pixel limit. Text attachment display is capped at 2 MiB. Search
-stops at 2,000 pages or ten million characters and reports incomplete results.
+checks all pages within a 120-second deadline; collection search also bounds retained results to ten million characters. Exhaustion is reported as incomplete.
 
 ## Verified scope
 

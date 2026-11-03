@@ -77,3 +77,15 @@ test('CSV rejects invalid attachment counts, conflicting counts and unidentified
  const d=doc();d.inspection.metadataRecords=[{id:'a',kind:'attachment',owners:{state:'ambiguous',value:null},fields:{Filename:present('a.txt')}}];
  await assert.rejects(run(d),/ownership/);
 });
+
+test('CSV exports all rows beyond the former 100000-row cutoff',async()=>{
+  const d=doc();d.inspection.messages=Array(100001).fill(d.inspection.messages[0]);
+  const result=await run(d);assert.equal(result.rows,100001);
+  assert.equal((await result.blob.text()).split('\r\n').length,100003);
+});
+test('CSV visits every collection member beyond the former 1000-PDF cutoff',async()=>{
+  const d=doc('collection.pdf');const ids=Array.from({length:1001},(_,i)=>String(i));
+  d.inspection.collection={state:'present',value:{folders:[],entries:ids.map(fileId=>({fileId,folderIds:{state:'present',value:[]}}))}};
+  d.inspection.files=ids.map(member);
+  const result=await run(d,async(_,f)=>doc(f.id+'.pdf'));assert.equal(result.rows,1001);
+});

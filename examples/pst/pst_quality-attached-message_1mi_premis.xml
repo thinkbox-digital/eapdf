@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<premis:premis xmlns:premis="http://www.loc.gov/premis/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0">
+  <premis:object xsi:type="premis:file">
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>object:pst_quality-attached-message_1mi.pdf</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectCharacteristics>
+      <premis:compositionLevel>0</premis:compositionLevel>
+      <premis:format>
+        <premis:formatDesignation>
+          <premis:formatName>PDF</premis:formatName>
+          <premis:formatVersion>2.0</premis:formatVersion>
+        </premis:formatDesignation>
+      </premis:format>
+    </premis:objectCharacteristics>
+    <premis:originalName>pst_quality-attached-message_1mi.pdf</premis:originalName>
+  </premis:object>
+  <premis:object xsi:type="premis:file">
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>record:uuid:c56514c4-b6ae-4372-9cd4-bdd6f51589d6</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>&lt;530D9CAC.5080901@gmail.com&gt;</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectCharacteristics>
+      <premis:compositionLevel>0</premis:compositionLevel>
+      <premis:format>
+        <premis:formatDesignation>
+          <premis:formatName>message/rfc822</premis:formatName>
+        </premis:formatDesignation>
+      </premis:format>
+    </premis:objectCharacteristics>
+    <premis:originalName>Re: Feature Generators</premis:originalName>
+  </premis:object>
+  <premis:object xsi:type="premis:file">
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>record:uuid:9496860e-9f39-449a-88b2-d7cc4001a125</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>&lt;1393363252.28814.YahooMailNeo@web140906.mail.bf1.yahoo.com&gt;</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectCharacteristics>
+      <premis:compositionLevel>0</premis:compositionLevel>
+      <premis:format>
+        <premis:formatDesignation>
+          <premis:formatName>message/rfc822</premis:formatName>
+        </premis:formatDesignation>
+      </premis:format>
+    </premis:objectCharacteristics>
+    <premis:originalName>Re: init tokenizer fails: "Bad type in putfield/putstatic"</premis:originalName>
+  </premis:object>
+  <premis:object xsi:type="premis:file">
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>record:uuid:c5760805-60f5-44e4-889e-8d274399a393</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>&lt;CAJ+FrY6C_Hp_b-Pzx2VqUqnonx9Dei8kcXDV7j1wPT99mNKsuA@mail.gmail.com&gt;</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectCharacteristics>
+      <premis:compositionLevel>0</premis:compositionLevel>
+      <premis:format>
+        <premis:formatDesignation>
+          <premis:formatName>message/rfc822</premis:formatName>
+        </premis:formatDesignation>
+      </premis:format>
+    </premis:objectCharacteristics>
+    <premis:originalName>Feature Generators</premis:originalName>
+  </premis:object>
+  <premis:object xsi:type="premis:file">
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>record:uuid:52340d60-bbe9-4b15-97ab-f44ac8fdac27</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>&lt;JIRA.12697327.1393405059550.107997.1393417219950@arcas&gt;</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectCharacteristics>
+      <premis:compositionLevel>0</premis:compositionLevel>
+      <premis:format>
+        <premis:formatDesignation>
+          <premis:formatName>message/rfc822</premis:formatName>
+        </premis:formatDesignation>
+      </premis:format>
+    </premis:objectCharacteristics>
+    <premis:originalName>[jira] [Resolved] (TIKA-1249) Vcard files detection</premis:originalName>
+  </premis:object>
+  <premis:object xsi:type="premis:file">
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>record:uuid:ddeec4e5-2f19-40ff-9134-230a361b5b18</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>&lt;JIRA.12697352.1393416577650.107951.1393416740976@arcas&gt;</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectCharacteristics>
+      <premis:compositionLevel>0</premis:compositionLevel>
+      <premis:format>
+        <premis:formatDesignation>
+          <premis:formatName>message/rfc822</premis:formatName>
+        </premis:formatDesignation>
+      </premis:format>
+    </premis:objectCharacteristics>
+    <premis:originalName>[jira] [Commented] (TIKA-1250) Process loops infintely processing a CHM file</premis:originalName>
+  </premis:object>
+  <premis:object xsi:type="premis:file">
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>record:uuid:5a83ceca-2808-4f4a-9efb-ae8b9c1b232f</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>&lt;343897812.110224025.1393276474157.JavaMail.root@abmas02.marketo.org&gt;</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectCharacteristics>
+      <premis:compositionLevel>0</premis:compositionLevel>
+      <premis:format>
+        <premis:formatDesignation>
+          <premis:formatName>message/rfc822</premis:formatName>
+        </premis:formatDesignation>
+      </premis:format>
+    </premis:objectCharacteristics>
+    <premis:originalName>[WEBINAR] - "Introducing Couchbase Server 2.5"</premis:originalName>
+  </premis:object>
+  <premis:object xsi:type="premis:file">
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>local</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>record:uuid:f2a3f85a-6aa7-4cac-8b48-9960fbc20024</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectIdentifier>
+      <premis:objectIdentifierType>Message-ID</premis:objectIdentifierType>
+      <premis:objectIdentifierValue>&lt;2915856a7d3449e68529f3e61b8d26bc@pf.gov.br&gt;</premis:objectIdentifierValue>
+    </premis:objectIdentifier>
+    <premis:objectCharacteristics>
+      <premis:compositionLevel>0</premis:compositionLevel>
+      <premis:format>
+        <premis:formatDesignation>
+          <premis:formatName>message/rfc822</premis:formatName>
+        </premis:formatDesignation>
+      </premis:format>
+    </premis:objectCharacteristics>
+    <premis:originalName>FW: First email</premis:originalName>
+  </premis:object>
+  <premis:event>
+    <premis:eventIdentifier>
+      <premis:eventIdentifierType>local</premis:eventIdentifierType>
+      <premis:eventIdentifierValue>event:conversion:pst_quality-attached-message_1mi.pdf</premis:eventIdentifierValue>
+    </premis:eventIdentifier>
+    <premis:eventType>normalization</premis:eventType>
+    <premis:eventDateTime>2026-11-03T23:31:37Z</premis:eventDateTime>
+    <premis:eventDetailInformation>
+      <premis:eventDetail>Prepared EA-PDF 1mi content for serialization; this event does not attest final publication or independent conformance validation. Mail_GUID=uuid:c56514c4-b6ae-4372-9cd4-bdd6f51589d6: PST preprocessing: exported the selected message to RFC 822 from /media/lepore/Work/thinkbox/eapdf/in/quality-attached-message.pst; the original PST container and unexported storage properties are not embedded. Mail_GUID=uuid:9496860e-9f39-449a-88b2-d7cc4001a125: PST preprocessing: exported the selected message to RFC 822 from /media/lepore/Work/thinkbox/eapdf/in/quality-attached-message.pst; the original PST container and unexported storage properties are not embedded. Mail_GUID=uuid:c5760805-60f5-44e4-889e-8d274399a393: PST preprocessing: exported the selected message to RFC 822 from /media/lepore/Work/thinkbox/eapdf/in/quality-attached-message.pst; the original PST container and unexported storage properties are not embedded. Mail_GUID=uuid:52340d60-bbe9-4b15-97ab-f44ac8fdac27: PST preprocessing: exported the selected message to RFC 822 from /media/lepore/Work/thinkbox/eapdf/in/quality-attached-message.pst; the original PST container and unexported storage properties are not embedded. Mail_GUID=uuid:ddeec4e5-2f19-40ff-9134-230a361b5b18: PST preprocessing: exported the selected message to RFC 822 from /media/lepore/Work/thinkbox/eapdf/in/quality-attached-message.pst; the original PST container and unexported storage properties are not embedded. Mail_GUID=uuid:5a83ceca-2808-4f4a-9efb-ae8b9c1b232f: PST preprocessing: exported the selected message to RFC 822 from /media/lepore/Work/thinkbox/eapdf/in/quality-attached-message.pst; the original PST container and unexported storage properties are not embedded. Mail_GUID=uuid:f2a3f85a-6aa7-4cac-8b48-9960fbc20024: PST preprocessing: exported the selected message to RFC 822 from /media/lepore/Work/thinkbox/eapdf/in/quality-attached-message.pst; the original PST container and unexported storage properties are not embedded.</premis:eventDetail>
+    </premis:eventDetailInformation>
+    <premis:linkingAgentIdentifier>
+      <premis:linkingAgentIdentifierType>local</premis:linkingAgentIdentifierType>
+      <premis:linkingAgentIdentifierValue>agent:EmailToPDFA</premis:linkingAgentIdentifierValue>
+    </premis:linkingAgentIdentifier>
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>object:pst_quality-attached-message_1mi.pdf</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>record:uuid:c56514c4-b6ae-4372-9cd4-bdd6f51589d6</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>record:uuid:9496860e-9f39-449a-88b2-d7cc4001a125</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>record:uuid:c5760805-60f5-44e4-889e-8d274399a393</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>record:uuid:52340d60-bbe9-4b15-97ab-f44ac8fdac27</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>record:uuid:ddeec4e5-2f19-40ff-9134-230a361b5b18</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>record:uuid:5a83ceca-2808-4f4a-9efb-ae8b9c1b232f</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+    <premis:linkingObjectIdentifier>
+      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
+      <premis:linkingObjectIdentifierValue>record:uuid:f2a3f85a-6aa7-4cac-8b48-9960fbc20024</premis:linkingObjectIdentifierValue>
+    </premis:linkingObjectIdentifier>
+  </premis:event>
+  <premis:agent>
+    <premis:agentIdentifier>
+      <premis:agentIdentifierType>local</premis:agentIdentifierType>
+      <premis:agentIdentifierValue>agent:EmailToPDFA</premis:agentIdentifierValue>
+    </premis:agentIdentifier>
+    <premis:agentName>EmailToPDFA</premis:agentName>
+    <premis:agentType>software</premis:agentType>
+  </premis:agent>
+</premis:premis>

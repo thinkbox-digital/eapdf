@@ -77,15 +77,15 @@ final class ConversionProgress {
   }
 
   /** Records only checks actually performed by the creator, on final (possibly signed) bytes. */
-  static void creationChecked(Path destination, Path bytes, PreservationInventory expected) throws Exception {
+  static void creationChecked(Path destination, Path bytes, PreservationInventory expected, boolean checked) throws Exception {
     var p = active;
     if (p == null) return;
     JsonObject receipt = new JsonObject();
     receipt.addProperty("file", destination.toAbsolutePath().normalize().toString());
     receipt.addProperty("sha256", Common.digestHex(bytes, "SHA-256"));
     receipt.addProperty("size_bytes", Files.size(bytes));
-    receipt.addProperty("creation_checks", "PASS");
-    receipt.addProperty("preservation_comparison", expected == null ? "NOT_RUN" : "PASS");
+    receipt.addProperty("creation_checks", checked ? "PASS" : "SKIPPED");
+    receipt.addProperty("preservation_comparison", !checked || expected == null ? "NOT_RUN" : "PASS");
     receipt.addProperty("preservation_scope", "Compared with normalized reader records; not independent proof of source completeness");
     receipt.addProperty("pdfa_validation", "NOT_RUN");
     receipt.addProperty("eapdf_validation", "NOT_RUN");

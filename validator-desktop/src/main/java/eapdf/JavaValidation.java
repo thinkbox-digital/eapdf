@@ -62,7 +62,7 @@ public final class JavaValidation {
         report.write(output);
         session.completed();
         code = "PASS".equals(text(report.summary(), "status")) ? 0 : 2;
-      } catch (OutOfMemoryError error) {
+      } catch (OutOfMemoryError | StackOverflowError error) {
         session.failed("Validation ran out of memory; no complete compliance verdict was produced.");
       } catch (Exception error) {
         session.failed("Validation could not finish: " + error);
@@ -129,16 +129,9 @@ public final class JavaValidation {
   static final class Children {
     int count;
     long bytes;
-    final long maxDepth = limit("VALIDATOR_CHILD_MAX_DEPTH", 8);
-    final long maxCount = limit("VALIDATOR_CHILD_MAX_COUNT", 250_000);
-    final long maxBytes = limit("VALIDATOR_CHILD_MAX_BYTES", 64L * 1024 * 1024 * 1024);
     boolean accepts(long size, int depth) {
-      if (depth >= maxDepth || count >= maxCount || size < 0 || size > maxBytes - bytes) return false;
+      if (size < 0 || size > Long.MAX_VALUE - bytes) return false;
       count++; bytes += size; return true;
-    }
-    private static long limit(String name, long fallback) {
-      String value = System.getProperty(name, System.getenv(name));
-      return value == null || value.isBlank() ? fallback : Math.max(1, Long.parseLong(value));
     }
     final Set<String> active = new LinkedHashSet<>();
     final Map<String, JsonObject> cache = new LinkedHashMap<>(32, 0.75f, true) {

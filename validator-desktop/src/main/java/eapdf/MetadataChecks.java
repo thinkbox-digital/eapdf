@@ -732,16 +732,10 @@ final class MetadataChecks {
       Set<COSDictionary> associated = identitySet();
       List<COSDictionary> contexts = new ArrayList<>(); contexts.add(part); contexts.add(dict(part, "DPM"));
       for (var page : pageIndex.range(part)) {
-        if (++work > InspectionBudget.nodes(document)) {
-          report.unavailable("DPM_ATTACHMENT_MEDIA_TYPE_MATCH_SOURCE", "Attachment-rendering page inspection reached its limit.", details); return;
-        }
         contexts.add(page.getCOSObject());
       }
       for (COSDictionary context : contexts) if (get(context, "AF") instanceof org.apache.pdfbox.cos.COSArray array)
         for (COSBase value : array) {
-          if (++work > InspectionBudget.nodes(document)) {
-            report.unavailable("DPM_ATTACHMENT_MEDIA_TYPE_MATCH_SOURCE", "Attachment-rendering association inspection reached its limit.", details); return;
-          }
           if (resolve(value) instanceof COSDictionary spec && "Source".equals(name(get(spec, "AFRelationship")))) associated.add(spec);
         }
       Set<String> types = new java.util.LinkedHashSet<>();
@@ -772,7 +766,6 @@ final class MetadataChecks {
   }
 
   private void collectBodies(Part part, List<String> types, int depth) throws Exception {
-    if (depth > 256) throw new java.io.IOException("Original MIME body inventory is too deeply nested");
     String base = baseMedia(part.getContentType());
     if ("attachment".equalsIgnoreCase(part.getDisposition()) || Set.of("message/rfc822", "message/global").contains(base)
         || part.getFileName() != null && !Set.of("text/plain", "text/html").contains(base)) return;
@@ -916,7 +909,6 @@ final class MetadataChecks {
   }
 
   private Set<String> candidateFailures(Element email, Source source) {
-    if (++candidateComparisons > Math.min(32_000_000L, Math.max(100000L, (long)emails.size() * 128))) { report.unavailable("MESSAGE_SOURCE_COVERAGE", "Source candidate comparisons exceed the inspection limit."); return Set.of(); }
     JavaValidation.Report candidate = new JavaValidation.Report(report.path);
     // Reuse the archive indexes and MIME inventory in this dedicated comparison
     // probe. Rebuilding them once per email would restore quadratic work.
@@ -1418,7 +1410,6 @@ final class MetadataChecks {
     return "Mail_SizeInBytes".equals(property) ? source.file().size() : originalAttachments(source).size();
   }
   private void inspectMime(Part part, List<NativeAttachment> out, int depth) throws Exception {
-    if (depth > 256 || out.size() > 100000) throw new java.io.IOException("Original MIME inventory exceeds its inspection limit");
     String contentType = part.getContentType();
     String base = baseMedia(contentType);
     boolean attachment = "attachment".equalsIgnoreCase(part.getDisposition()) || Set.of("message/rfc822", "message/global").contains(base)

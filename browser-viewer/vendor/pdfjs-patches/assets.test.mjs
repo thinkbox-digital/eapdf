@@ -48,7 +48,7 @@ test('object and collection cycles stop; user limits cannot exceed ceilings',()=
   const f=fixture(), folder=f.dict({ID:0,Name:'Root'}); folder.set('Next',folder);
   f.root.set('Self',f.root);f.root.set('Collection',f.dict({Folders:folder}));
   assert.ok(f.reader.inspect().diagnostics.some(d=>d.code==='FOLDER_CYCLE'));
-  assert.ok(f.reader.inspect({maxObjects:1}).diagnostics.some(d=>d.code==='OBJECT_LIMIT'));
+  assert.equal(f.reader.inspect({maxObjects:1}).files.length,1);
   assert.throws(()=>f.reader.inspect({maxObjects:Infinity}),/Invalid/);
 });
 
@@ -74,4 +74,41 @@ test('normal decoder instances share a finite per-worker allocation budget',asyn
   const first=new DecodeStream();first.ensureBuffer(1024);
   assert.throws(()=>new DecodeStream().ensureBuffer(1),/Worker decoded-stream allocation limit/);
  }finally{DecodeStream.remainingBudget=previous;}
+});
+
+
+test('shared back-links do not exhaust object budget or hide later files',()=>{
+ const f=fixture(), shared=f.dict({}), pages=[];
+ for(let i=0;i<200;i++)pages.push(f.dict({Parent:shared,Resources:shared}));
+ shared.set('Kids',pages);f.root.set('Pages',shared);
+ const result=f.reader.inspect({maxObjects:500});
+ assert.equal(result.files.length,1);
+ assert.ok(!result.diagnostics.some(d=>d.code==='OBJECT_LIMIT'));
+});
+test('short paths win over long cyclic paths to shared objects',()=>{
+ const f=fixture(), chain=f.dict({});let tail=chain;
+ for(let i=0;i<70;i++){const next=f.dict({});tail.set('Next',next);tail=next;}
+ tail.set('Back',f.root);f.root.set('Chain',chain);
+ // Every node is directly reachable; DFS can otherwise report a false depth limit.
+ let node=chain,index=0;while(node){f.root.set('Direct'+index++,node);node=node.get('Next');}
+ const result=f.reader.inspect();
+ assert.ok(!result.diagnostics.some(d=>d.code==='OBJECT_LIMIT'));
+ assert.equal(result.files.length,1);
+});
+test('deep graphs and duplicate edge lists are fully traversed',()=>{
+ const f=fixture(),chain=f.dict({});f.root.set('Chain',chain);let tail=chain;
+ for(let i=0;i<100;i++){const next=f.dict({});tail.set('Next',next);tail=next;}
+ assert.ok(!f.reader.inspect().diagnostics.some(d=>d.code==='OBJECT_LIMIT'));
+ const g=fixture();g.root.set('Repeated',Array(2000).fill(g.root));
+ assert.ok(!g.reader.inspect({maxObjects:100}).diagnostics.some(d=>d.code==='OBJECT_LIMIT'));
+});
+
+test('long bookmark sibling lists do not count as nested depth',()=>{
+ const f=fixture(),outline=f.dict({}),first=f.dict({Title:'First',Parent:outline});
+ f.root.set('Outlines',outline);outline.set('First',first);let previous=first;
+ for(let i=0;i<200;i++){const next=f.dict({Title:'Bookmark',Parent:outline,Prev:previous});previous.set('Next',next);previous=next;}
+ previous.set('AF',[Ref.get(3,1)]);
+ const result=f.reader.inspect();
+ assert.ok(!result.diagnostics.some(d=>d.code==='OBJECT_LIMIT'));
+ assert.equal(result.files[0].origins.length,3,'association at end of sibling chain discovered');
 });

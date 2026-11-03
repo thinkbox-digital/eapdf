@@ -311,15 +311,22 @@ class Common {
     OutputTransaction.write(destination, temporary -> {
       ProcessingLimits.checkCancelled();
       writer.write(temporary);
-      if (outermost) ConversionProgress.stage("checking");
-      PdfCreationValidator.validate(temporary, expected, outermost);
+      boolean checked = EapdfConfig.get().validateOnCreation;
+      if (checked) {
+        if (outermost) ConversionProgress.stage("checking");
+        PdfCreationValidator.validate(temporary, expected, outermost);
+      } else if (outermost) {
+        System.out.println("[validation] Creation checks skipped by configuration.");
+      }
       if (outermost && EapdfConfig.get().signing.enabled) {
         ConversionProgress.stage("signing");
         PdfSigning.signConfigured(temporary);
-        ConversionProgress.stage("checking_signature_output");
-        PdfCreationValidator.validate(temporary, expected, outermost);
+        if (checked) {
+          ConversionProgress.stage("checking_signature_output");
+          PdfCreationValidator.validate(temporary, expected, outermost);
+        }
       }
-      if (outermost) ConversionProgress.creationChecked(destination, temporary, expected);
+      if (outermost) ConversionProgress.creationChecked(destination, temporary, expected, checked);
       ProcessingLimits.checkCancelled();
     });
   }

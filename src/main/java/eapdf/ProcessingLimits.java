@@ -20,10 +20,6 @@ final class ProcessingLimits {
         Math.max(1024, Runtime.getRuntime().maxMemory() / 16));
   }
 
-  static int messages() {
-    return (int)Math.min(Integer.MAX_VALUE, setting("eapdf.maxMessages", "EAPDF_MAX_MESSAGES", 10000));
-  }
-
   static long metadataBytes() {
     return Math.min(setting("eapdf.maxMetadataBytes", "EAPDF_MAX_METADATA_BYTES", 32L * 1024 * 1024),
         Math.max(1024, Runtime.getRuntime().maxMemory() / 8));
@@ -40,10 +36,7 @@ final class ProcessingLimits {
 
   static void checkMime(int depth, long parts) {
     checkCancelled();
-    long maxDepth = Math.min(64, setting("eapdf.maxMimeDepth", "EAPDF_MAX_MIME_DEPTH", 32));
-    long maxParts = setting("eapdf.maxMimeParts", "EAPDF_MAX_MIME_PARTS", 2000);
-    if (depth > maxDepth || parts > maxParts) throw Common.fail("MIME structure exceeds the processing limit (depth "
-        + maxDepth + ", parts " + maxParts + ")");
+
   }
 
   static void checkImage(int width, int height) {
@@ -56,7 +49,7 @@ final class ProcessingLimits {
   }
 
   static void checkCount(long size) {
-    if (size > messages()) throw Common.fail("Export exceeds the processing limit of " + messages() + " messages/inputs");
+    checkCancelled();
   }
 
   static void checkOutput(long size) {
@@ -66,8 +59,7 @@ final class ProcessingLimits {
   }
 
   static void checkPages(long pages) {
-    long limit = setting("eapdf.maxPages", "EAPDF_MAX_PAGES", 10000);
-    if (pages > limit) throw Common.fail("PDF exceeds the page limit of " + limit);
+    checkCancelled();
   }
 
   static void checkFont(java.nio.file.Path path) throws IOException {
@@ -79,15 +71,14 @@ final class ProcessingLimits {
     checkPages(pages);
     Common.JobReport job = Common.ACTIVE_JOB.get();
     if (job == null) return;
-    long limit = setting("eapdf.maxTotalPages", "EAPDF_MAX_TOTAL_PAGES", 20000);
-    if (job.renderedPages.addAndGet(pages) > limit) throw Common.fail("Conversion exceeds the aggregate page limit of " + limit);
+    job.renderedPages.addAndGet(pages);
   }
 
   static void accountImage(long pixels) {
     Common.JobReport job = Common.ACTIVE_JOB.get();
     if (job == null) return;
-    long limit = setting("eapdf.maxTotalImagePixels", "EAPDF_MAX_TOTAL_IMAGE_PIXELS", 64000000);
-    if (job.imagePixels.addAndGet(pixels) > limit) throw Common.fail("Conversion exceeds the aggregate image limit of " + limit + " pixels");
+    checkCancelled();
+    job.imagePixels.addAndGet(pixels);
   }
 
   static void checkBody(String value, String context) {

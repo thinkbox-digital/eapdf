@@ -329,7 +329,7 @@ final class PreservationInventory {
 
   private static void listedFiles(PDNameTreeNode<PDComplexFileSpecification> node, Set<COSDictionary> files,
                                   Set<COSDictionary> seen, Map<COSDictionary, Set<Long>> placements, int depth) throws Exception {
-    require(depth <= 64 && seen.add(node.getCOSObject()), "Embedded-file name tree is cyclic or too deep");
+    require(seen.add(node.getCOSObject()), "Embedded-file name tree is cyclic or too deep");
     ProcessingLimits.checkCancelled();
     if (node.getNames() != null) for (var entry : node.getNames().entrySet()) {
       PDComplexFileSpecification file = entry.getValue();

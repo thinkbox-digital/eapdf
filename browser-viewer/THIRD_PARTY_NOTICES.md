@@ -23,7 +23,7 @@ The upstream download now returns 404; the original source archive was recovered
 unchanged from the [Cygwin source distribution](https://www.sourceware.org/pub/cygwin/noarch/release/liberation-fonts/liberation-fonts-1.07.4-1-src.tar.xz).
 Archive SHA-256: `ad98b7498dc2992f7f0868f79b65ce4a720a3acdb63ab3f1f1cb6881117a5406`.
 PDF.js confirms these are unmodified 1.07.4 fonts in its
-[pinned source README](https://github.com/mozilla/pdf.js/blob/d0991a0d53f3bb3a7307e3b83f279c1d117aafb3/external/standard_fonts/README.md).
+[pinned source README](https://github.com/mozilla/pdf.js/blob/0a4153349dc473ba950fc17941c5ca7eda43c1de/external/standard_fonts/README.md).
 Retain the separate notices and source archive when redistributing the extension.
 
 Development tools are not copied into the extension: TypeScript 5.9.3,

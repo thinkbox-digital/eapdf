@@ -20,7 +20,7 @@
     "enabled": false
   },
   "accessibility": {
-    "addPdfUaFeatures": false,
+    "addPdfUaFeatures": true,
     "markInfoMarked": true,
     "language": "en",
     "readingDirection": "L2R",
