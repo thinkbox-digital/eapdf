@@ -1,3 +1,15 @@
+Beta.8 release publication — 2026-11-04
+
+https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.8
+
+Creator/validator 1.6.0-beta.8; reader 0.5.0-beta.6.
+All 13 downloadable assets verified against GitHub SHA-256 digests.
+Public prerelease; release notes remain brief. Current download links updated.
+Examples/manual retain their recorded editions and provenance.
+Local evidence: output/release-1.6.0-beta.8/asset-verification.json and published-release.json.
+
+Earlier launch record follows.
+
 Public launch — 2 November 2026
 
 Repository: https://github.com/thinkbox-digital/eapdf

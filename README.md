@@ -363,7 +363,7 @@ Current config-controlled feature areas include:
 - finding aid / Excel embedding behavior
 - PDF/UA-style catalog features
 - PREMIS embedding and sidecar output
-- optional [outer-file digital signatures](docs/DIGITAL_SIGNATURES.md) (local build; not yet in the published release)
+- optional [outer-file digital signatures](docs/DIGITAL_SIGNATURES.md)
 
 Supporting configuration files live under [`config/`](config/).
 
