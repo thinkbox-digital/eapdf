@@ -1,5 +1,16 @@
 # Development status and restart guide
 
+**GitHub release — 2026-11-04:** Publishing `v1.6.0-beta.8` as a prerelease
+with creator/validator beta.8, reader `0.5.0-beta.6`, and 13 downloadable assets.
+The user clarified the standing instruction: “bump and push to GitHub” includes
+publishing the corresponding GitHub Release; this is recorded in AGENTS.md.
+The code commit passed GitHub Conversion quality and Documentation workflows.
+Assets use the previously verified reproducible JARs, current unsigned reader
+packages, public configuration, and validated examples with their original
+provenance. The manual/specification-review documents retain their beta.7
+editions. Release-binary license inventories cover Java and the reader.
+Local packaging and upload-verification evidence: `output/release-1.6.0-beta.8/`.
+
 **Version update — 2026-11-03:** Creator and standalone validator source
 versions are `1.6.0-beta.8`; reader source version is `0.5.0-beta.6`.
 This update includes the accumulated full-content processing, source association,

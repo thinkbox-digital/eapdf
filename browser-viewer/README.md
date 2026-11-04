@@ -1,6 +1,6 @@
 # EA-PDF browser viewer — beta 0.5.0-beta.6
 
-Current source version: `0.5.0-beta.6` (EA-PDF `1.6.0-beta.8`). Published download links below retain their released versions.
+Current release: `0.5.0-beta.6` (EA-PDF `1.6.0-beta.8`).
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
 6.5.438 and retains the existing Chromium/Firefox architecture.
@@ -33,7 +33,7 @@ shown after an operation error; it clears cached documents and reopens the root.
 Passwords are not persisted. External PDF links and executable actions remain
 inactive, and HTML/email previews are inert text.
 
-Packages are **0.5.0-beta.5**, distributed with EA-PDF 1.6.0-beta.7 on GitHub.
+Packages are **0.5.0-beta.6**, distributed with EA-PDF 1.6.0-beta.8 on GitHub.
 They remain unsigned and are not extension-store releases. See
 [implementation and verification](docs/reading-improvements.txt).
 

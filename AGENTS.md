@@ -26,6 +26,7 @@ Rules:
 - Work on EA-PDF creation, validation, and reader development; the user authorized reader development on 2026-11-03
 - Do not add new features without the user's express permission
 - Keep output text plain and succinct
+- When the user asks to bump and push to GitHub, also publish the corresponding GitHub Release with versioned distributable assets and checksums; use prerelease status for beta versions.
 - Keep GitHub release notes brief: versions, a few user-visible changes, essential setup information, and beta status. Put implementation details, benchmarks, test counts, and audit evidence in project documentation.
 - Do not modify CLI arguments unless asked
 - Preserve existing debug output
