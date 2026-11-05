@@ -19,7 +19,9 @@ export async function checkScrolling(browser){
  };
  // Use page-number entry to jump once, then real DOM scrolling in both directions.
  const source=resolve('tests/attachments/source/pst_first_message_legacy.pdf'),before=hash(await readFile(source));
- await browser.open(source);assert.equal((await state()).total,'of 5');assert.equal((await state()).width,816);
+ await browser.open(source);
+ // Pixel-size checks explicitly select 100%; opening now defaults to Fit width.
+ await browser.evaluate(()=>{const z=document.querySelector('#zoom');z.value='1';z.dispatchEvent(new Event('change'));});await browser.ready();assert.equal((await state()).total,'of 5');assert.equal((await state()).width,816);
  for(let number=2;number<=5;number++){
   // Transfer the next index from the current page rather than evaluating generated code.
   await browser.evaluate(()=>{const p=document.querySelector('#page');p.dataset.scrollTest=String(Number(p.value)+1);});
@@ -43,6 +45,7 @@ export async function checkScrolling(browser){
  // second 13–14, final 150–151. Front matter has no email owner.
  for(const suffix of ['m','mi']){
   await browser.open(resolve(suffix==='m'?'tests/attachments/source/pst_sample_1m.pdf':'../tests/quality/fixtures/pst_native_attachment_scope_legacy.pdf'));
+  await browser.evaluate(()=>{const z=document.querySelector('#zoom');z.value='1';z.dispatchEvent(new Event('change'));});await browser.ready();
   const ids=await browser.evaluate(()=>[...document.querySelectorAll('#tree [data-message-id]')].map(b=>b.dataset.messageId));
   const selected=()=>browser.evaluate(()=>document.querySelector('#tree [aria-current]')?.dataset.messageId??null);
   const files=()=>browser.evaluate(()=>[...document.querySelectorAll('#files [data-file-id]')].map(b=>b.dataset.fileId));

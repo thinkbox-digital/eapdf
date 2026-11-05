@@ -19,9 +19,9 @@ try{
  const position=await page.locator('#message-filter').boundingBox();await page.locator('#navigation-panel').evaluate(panel=>{panel.scrollTop=1500;});assert.deepEqual(await page.locator('#message-filter').boundingBox(),position);
  const timings=[];
  for(const query of ['medicaid','budget']){
-  await page.locator('#search-status').evaluate(e=>{e.textContent='';});
-  const started=Date.now();await page.locator('#message-filter').fill(query);await page.waitForFunction(()=>/^\d+ matching emails/.test(document.querySelector('#search-status').textContent),null,{timeout:180000});
-  const status=await page.locator('#search-status').textContent();assert.match(status,/All reachable email metadata searched/);timings.push({query,ms:Date.now()-started,status});
+  await page.locator('#filter-status').evaluate(e=>{e.textContent='';});
+  const started=Date.now();await page.locator('#message-filter').fill(query);await page.waitForFunction(()=>/^\d+ matching emails/.test(document.querySelector('#filter-status').textContent),null,{timeout:180000});
+  const status=await page.locator('#filter-status').textContent();assert.match(status,/All reachable email metadata searched/);timings.push({query,ms:Date.now()-started,status});
  }
  assert.equal(await page.evaluate(()=>window.openCount),before,'filtering must reuse the completed archive scan');
  await page.locator('#filter-results button').first().click();await ready();assert.match(await page.locator('#status').textContent(),/Page 1 of/);

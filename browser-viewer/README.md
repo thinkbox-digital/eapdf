@@ -1,6 +1,7 @@
 # EA-PDF browser viewer — beta 0.5.0-beta.8
 
 Current release: `0.5.0-beta.8` (EA-PDF `1.6.0-beta.9`).
+The local presentation redesign retains that version for review and is not published.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
 6.5.438 and retains the existing Chromium/Firefox architecture.
@@ -19,15 +20,18 @@ come from email metadata, so a `ci` finding aid does not claim that original
 attachment bytes are embedded. Unreadable or conflicting information prevents a
 misleading complete export. Export covers the selected PDF and its children.
 
-The redundant Email Details pane, printing, user-controlled rotation and custom
-keyboard navigation/shortcuts have been removed. Standard browser controls and
-native Tab/Enter behavior remain. Intrinsic PDF page orientation is respected.
+The redundant Email Details pane, printing and user-controlled rotation remain
+removed. Intrinsic PDF page orientation is respected. Search opens from the header
+or Ctrl/Cmd+F; Enter and Shift+Enter move between matches, and Escape closes the
+panel. The message tree supports native Tab/Enter disclosure controls and arrow-key
+movement. The original viewer tagline is unchanged.
 
-**Find emails** searches subject, sender, recipients and date across unopened
+The persistent **Filter by subject, sender or date** field filters the message list
+using subject, sender, recipients and date across unopened
 collection members. It caches bounded metadata, shows incomplete coverage, and
 opens the exact matching email. No page rendering is needed while indexing.
 Download requests are spaced to avoid Chromium blocking rapid download bursts.
-**Whole collection** text search also inspects unopened collection PDFs, with
+**All files** text search also inspects unopened collection PDFs, with
 cancellation and explicit coverage limits. **Reopen PDF** is a recovery action
 shown after an operation error; it clears cached documents and reopens the root.
 Passwords are not persisted. External PDF links and executable actions remain
@@ -42,9 +46,10 @@ messages and collection children, read document information and download embedde
 files. The same TypeScript interface uses bundled PDF.js in both browsers.
 No Java, server, native host or network connection is needed at runtime.
 
-The earlier 0.3.1 update started folders collapsed, uses folder chevrons, removes
-the opened-PDF count and duplicate Message panel, and reduces header/toolbar
-spacing. Inspection problems use short warnings beside the affected content; detailed diagnostics are available in the browser debug console.
+Folders now start expanded and can be collapsed with their chevrons. File groups
+show real counts; email sources and attachments start expanded, while other and
+technical files start collapsed. Empty files show a notice and a disabled download
+button. File actions have consistent labelled icons. Inspection problems use short warnings beside the affected content; detailed diagnostics are available in the browser debug console.
 
 [Install the local beta and view attachments](docs/beta-release.md). Packages are
 in `releases/`; the [current checkpoint](docs/beta-release.md#verified-scope) records tests and limits.
@@ -72,26 +77,29 @@ expanded Document Information by default. See the beta guide for current checks.
   PDFs report an error. Other folders still require an explicit selection.
 - The left panel lists documents, messages and collection folders. A PDF containing
   one email uses one subject row and shows all its embedded files. Folders start
-  collapsed; only folders with children have expand chevrons.
+  expanded; only folders with children have expand chevrons.
 - Select a message to see its uniquely owned body page and files. If no
   page mapping is known, the document remains visible with an explicit explanation.
 - Select a document name to see all its files, including files with unknown owners.
-- **Open PDF** opens an embedded PDF in the main viewer, with its own files and data.
-  **Parent PDF** returns to its containing PDF; breadcrumbs allow earlier destinations.
+- The file-row **View** icon opens an embedded PDF in the main viewer, with its
+  own files and data. The **Return to parent PDF** icon returns to its containing
+  PDF; the tree also provides document navigation.
 - **View** opens image or text attachments. Office files use normal browser download
   handling. Downloads save the exact stored bytes; files never open automatically.
-- File categories use shaded heading bars and bordered groups to distinguish
-  Email attachments, Email sources, and Technical and supporting files.
-- **Find emails** results show the matching filename without the collection prefix.
-  Multi-message PDFs also show the subject to distinguish emails within that file.
-- **Browse messages** and **Search results** separate navigation from collection
-  matches. **Hide pane**, **Show messages**, and **Show files & info** control the
-  side panes; their original widths are preserved.
-- Select and copy page text. Choose **This PDF** or **Whole collection**, then
-  **Search** (or Enter) to select the first match. **Next match** and **Previous
-  match** navigate existing results. Collection results group matching pages under
-  one matching filename, without repeating the collection name or a subject heading.
-  Excerpts highlight the query; the active result stays visible. Esc clears the search.
+- Files appear in collapsible groups with real counts. Email sources and attachments
+  start expanded; other and technical files start collapsed. View and Download use
+  labelled icon buttons. Empty files show a warning and cannot be downloaded.
+- The always-visible message filter shows matching subjects with sender and date.
+  It does not change the PDF text search. The Messages and Files panes have hide/show
+  controls. Wide windows retain 27% / 46% / 27% proportions; medium windows show one
+  270-pixel sidebar; compact windows use full-width panes over the reader.
+- PDFs open at **Fit width** and refit when the window or panes change. Manual zoom
+  remains fixed when resizing. Rendered PDF content is unchanged.
+- **Search** in the header, or Ctrl/Cmd+F, opens a search panel. Choose **This PDF**
+  or **All files**. Enter moves to the next match; Shift+Enter moves to the previous
+  match. Escape closes the panel without discarding results. Clearing the input
+  clears results and highlights. Collection results show the matching filename
+  once, with highlighted excerpts, inside the panel.
 - **Export metadata CSV** downloads one row per message from the currently displayed
   PDF and recursively from its embedded collection PDFs. Columns: PDF, Folder paths, From, To, Cc, Bcc, Subject, Sent, Message-ID, Attachment count, Attachment names. Mail GUID is not exported. Values come from
   EA-PDF metadata; missing values stay blank, and dates retain their stored format.

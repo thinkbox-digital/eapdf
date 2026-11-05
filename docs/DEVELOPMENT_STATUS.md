@@ -1,5 +1,64 @@
 # Development status and restart guide
 
+**Viewer presentation redesign — 2026-11-05 (local, not published):**
+The header now groups Open PDF beside the brand, the current filename, Search,
+CSV export and Close. Search uses a keyboard-accessible popover rather than a
+permanent row. Message rows show subjects with sender/date metadata; the persistent
+filter remains separate from text search. Files have collapsible categories,
+consistent labelled View/Download icons, empty-file notices and selection details.
+The footer omits “Declared”. The existing tagline is unchanged. The presentation changes are committed locally and have not been pushed.
+The redesign does not change PDF parsing, extraction, rendering, or CSV logic.
+The earlier large-file investigation remains separate and is not claimed fixed.
+Acceptance checks use real EML, two-message/three-page MBOX, and seven-message/
+20-file PST examples at 1440×900 and 1100×900. An isolated copy of the EML fixture
+covers an empty attachment; original source hashes are retained and unchanged.
+Automated checks cover accessible names, contrast, hit targets, visible focus,
+keyboard search, navigation, exact downloads and CSV export. Native disclosure/
+button semantics are retained with supplemental arrow keys; medium windows use
+one sidebar at a time. PDF-body/header reformatting remains out of scope and would
+require generator changes. Before/after screenshots are retained as local test
+artifacts; `npm run test:redesign` regenerates the after screenshots and report.
+
+**Responsive viewer — 2026-11-05 (local, not published):**
+PDFs open at Fit width and refit when the viewport or side panes change; manual
+zoom stays fixed. Desktop sidebars retain their equal 27% widths. Medium windows
+show one sidebar at a time; phone and short landscape layouts use full-width,
+keyboard-accessible panes over the reader. Selecting a message or pressing Escape
+closes a compact pane. Controls wrap without separating the zoom buttons.
+Verified at 1600×1000, 1366×768, 1024×768, 768×1024, 390×844, 320×568,
+and 844×390, including fitting, overflow, focus, pane switching, and manual zoom.
+The existing design/search regression also passes. Viewer tagline is unchanged.
+
+**Large-archive loading fixes — 2026-11-05 (local, not published):**
+Background subject indexing no longer blocks collection opening; progress and
+cancellation remain separate from document navigation. Completed background file
+associations are adopted by the displayed document. Viewer branding is unchanged.
+Large flat archives use single-pass page maps, reclaim temporary structural
+decoder buffers, and index metadata/file associations instead of repeatedly
+scanning whole lists. Preview prefetch waits for initial inspection. Catalog
+metadata allowance is 128 MiB; initial inspection allows five minutes for at
+least 10,000 pages. The 227 MB real PST-derived archive opened in 119 seconds
+with all 23,173 emails, 47,609 pages, and 5,008 embedded files; metadata,
+document-part, and associated-file coverage were present with no diagnostics.
+This is a reader inspection result, not a conformance validation verdict.
+The 1.29 GB archive's original cross-reference limit/whole-file string failure
+is corrected. Compact cross-reference storage, bounded parsed-object caching,
+and lazy compressed-object parsing reach its first page without crashing. An
+extended diagnostic completed the initial 16.4-million-object inventory in about
+12 minutes, then encountered repeated inventories during file association; the
+16-minute overall test timed out. The production five-minute inspection limit
+remains unchanged while this repeated-work failure is investigated. Do not claim
+that file loads completely yet.
+Targeted verification so far: 55 viewer unit tests, 27 independent semantic
+fixtures, association equivalence, progressive loading, and loading cancellation
+checks pass. The validator now accepts preserved comment-only recipient headers
+when no structured mailbox exists; all 31 focused rule tests pass. The full Java
+validator suite also passes: 263 tests, nine optional skips, no failures/errors.
+Missing source
+Date headers, two malformed table structures in the Schiavo collection, and the
+large flat archive's ISO structure-validation memory exhaustion remain distinct
+findings; they are not resolved by the reader changes.
+
 **Portable test fixtures and public documentation — 2026-11-05:**
 Removed the BFO-specific beta smoke check and its unused fixture descriptor.
 All 16 remaining resource, cancellation, and security checks pass offline.
@@ -67,44 +126,19 @@ The later smoke-test cleanup removed the local-only BFO dependency; all
 16 remaining resource, cancellation, and security checks pass.
 The Schiavo collection is 4,303,585,642 bytes, 8,618,346 bytes above this ceiling.
 
-**Remaining large PSTs — 2026-11-04 (converted; validation running):**
-All five previously skipped PSTs converted successfully: 218,790 emails total.
-All five source hashes are unchanged after conversion. New documents publish
-directly into the PST output folder, with profile suffixes and no deeper folders. Logs,
-JSON, validation reports and the new size table stay outside the generated-document directory.
-
-Evidence: local verification records.
-Successful conversion sizes/times: local verification records.
-The 105,034-message Schiavo PST uses 1ci to avoid assembling all pages in one
-large document; the other outputs use 1m/1mi. There are five new primary PDFs,
-one finding-aid PDF and one spreadsheet index. Conversion used four jobs and
-an 8 GiB heap; Accessibility on, PREMIS/signing off, creation-time validation skipped.
-Initial launcher-cap failure and cancelled profile attempts remain in the evidence
-folders. Only completed outputs were published.
-
-Standalone Java validation is now running sequentially with a 12 GiB heap
-(previously 6 GiB) and 48 GiB virtual-address allowance. Nine PDFs are queued:
-the six new PDFs, the earlier large-PST trial, the earlier large collection,
-and its finding-aid PDF/A check. This is not an all-pass validation claim.
-Progress and reports are retained locally. A queued final report will update this entry and write the
-combined integrity audit, full size table and validation exceptions when finished.
-
-**Validation checkpoint — 2026-11-05:**
-Three of nine queued PDFs have finished validation with the 12 GiB heap.
-Nov–Dec 2005 (1m): PDF/A PASS, EA-PDF FAIL with three missing Sent metadata
-findings (MESSAGE_SENT_XMP). Jan–Jun 2004 (1mi): PDF/A PASS, zero failed
-checks, overall INCOMPLETE because source information and attachment associations
-cannot be fully established. Jan–Jun 2005 (1m): PDF/A PASS, EA-PDF FAIL with
-three missing To XMP properties where the validator finds source To values
-(MESSAGE_CORE_FIELDS_SOURCE_REQUIRED). These six failed checks are metadata
-findings, not memory-exhaustion failures.
-
-The Schiavo 1ci collection is actively validating embedded PDFs: roughly 86,400
-child checks started after nine hours. Its root PDF/A check passed; this does
-not establish the complete collection's conformance. Five PDFs remain queued.
-The three finished runs have no memory-exhaustion termination. See the run's
-`validation/0`, `validation/1`, `validation/2` reports for final findings and
-`validation/3/validation.log` for live collection progress.
+**Remaining large PSTs — 2026-11-04 (finished, see validation results):**
+Converted 5 of the five previously skipped PSTs. Conversion uses four jobs, an 8 GiB heap, Accessibility on, PREMIS/signing off,
+and creation-time validation skipped. Documents are grouped in the PST output folder;
+logs, size tables and validation reports are retained locally.
+The 105,034-message Schiavo PST uses 1ci to keep rendered emails in separate
+embedded PDFs; other new outputs use 1m/1mi. Initial launcher-cap failure and
+cancelled profile attempts are preserved in the run evidence directory.
+Standalone Java validation uses a 12 GiB heap and 48 GiB virtual-address
+allowance, including retries of the earlier resource-limited PST reports.
+Combined source outcomes: VALIDATION_INCOMPLETE: 4, VALIDATION_FAILED: 7, VALIDATED_PASS: 77.
+Combined PDF/output validation outcomes: INCOMPLETE: 4, FAIL: 7, PASS: 182, NOT_APPLICABLE: 29.
+Integrity audit: 88 source hashes and 222 output hashes checked; no changes.
+Detailed size tables and validation exceptions are retained locally.
 
 **Future bulk output layout — 2026-11-04:**
 The user requested that future bulk `in/` → the generated-document directory runs publish documents directly

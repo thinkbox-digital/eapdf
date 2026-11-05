@@ -18,7 +18,7 @@
     "verify:pdfjs": "node scripts/pdfjs-patch.mjs",
     "test:m2": "npm run build && node --test tests/document-parts.test.mjs && npm run test:parts",
     "test:parts": "node scripts/document-parts-smoke.mjs",
-    "test": "npm run build && node --test tests/*.test.mjs && npm run test:browser && npm run test:parts && npm run test:ui && npm run test:reading && npm run test:downloads && npm run test:retry && npm run test:loading && npm run test:associations && npm run test:inspection-warning && npm run test:supplements && npm run test:export && npm run test:allocation && npm run test:navigation && npm run test:collection-matches && npm run test:design",
+    "test": "npm run build && node --test tests/*.test.mjs && npm run test:browser && npm run test:parts && npm run test:ui && npm run test:reading && npm run test:downloads && npm run test:retry && npm run test:loading && npm run test:associations && npm run test:inspection-warning && npm run test:supplements && npm run test:export && npm run test:allocation && npm run test:navigation && npm run test:collection-matches && npm run test:design && npm run test:progressive && npm run test:responsive && npm run test:redesign",
     "test:browser": "node scripts/browser-smoke.mjs",
     "test:firefox": "node scripts/firefox-smoke.mjs",
     "verify:licenses": "node scripts/licenses.mjs",
@@ -38,7 +38,10 @@
     "test:allocation": "node scripts/allocation-recovery-smoke.mjs",
     "test:navigation": "node scripts/navigation-refresh-smoke.mjs",
     "test:collection-matches": "node scripts/collection-match-smoke.mjs",
-    "test:design": "node scripts/viewer-design-smoke.mjs"
+    "test:design": "node scripts/viewer-design-smoke.mjs",
+    "test:progressive": "node scripts/progressive-loading-smoke.mjs",
+    "test:responsive": "node scripts/responsive-smoke.mjs",
+    "test:redesign": "node scripts/redesign-smoke.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "6.5.438"

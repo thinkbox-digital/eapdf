@@ -11,32 +11,33 @@ try{
  await page.goto(`chrome-extension://${new URL(worker.url()).host}/viewer.html`);
  const ready=()=>page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false',null,{timeout:120000});
  const fixture=resolve('../examples/pst/pst_quality-attached-message_1c.pdf');await page.locator('#file').setInputFiles(fixture);await ready();
- const initialSubjects=await page.locator('#tree button[data-embedded-file-id]').allTextContents();
+ await page.waitForFunction(()=>document.querySelector('#subject-index-status').textContent.startsWith('Subjects ready'),null,{timeout:120000});
+ const initialSubjects=await page.locator('#tree button[data-embedded-file-id] .message-subject').allTextContents();
  assert.ok(initialSubjects.includes('Feature Generators'),'subjects must appear before opening child PDFs');
  assert.ok(!initialSubjects.some(label=>label==='Feature Generators_000006_1s.pdf'));
  const dimensions=()=>page.evaluate(()=>{const box=id=>document.querySelector(id).getBoundingClientRect();return {workspace:box('#workspace').width,left:box('#navigation-panel').width,right:box('#details-panel').width,reader:box('.reader-pane').width,footer:box('footer').bottom,overflow:document.documentElement.scrollWidth>innerWidth};});
  const desktop=await dimensions();assert.equal(desktop.left,432);assert.equal(desktop.right,432);assert.equal(desktop.reader,736);assert.equal(desktop.overflow,false);assert.ok(desktop.footer<=1050);
- await page.locator('#search-scope').selectOption('collection');await page.locator('#search').fill('email');await page.locator('#search-submit').click();await ready();
- assert.equal(await page.locator('#results-tab').getAttribute('aria-selected'),'true');assert.equal(await page.locator('#browse-panel').isVisible(),false);
+ await page.locator('#open-search').click();await page.locator('#search-scope').selectOption('collection');await page.locator('#search').fill('email');await page.locator('#search-submit').click();await ready();
+ assert.equal(await page.locator('#results-tab').getAttribute('aria-selected'),'true');assert.equal(await page.locator('#browse-panel').isVisible(),true);
  const groups=await page.locator('.result-heading').allTextContents();assert.ok(groups.length>1);assert.ok(groups.every(name=>!name.includes('pst_quality-attached-message_1c.pdf')));assert.ok(await page.locator('.match-excerpt mark').count()>0);
  const count=await page.locator('.collection-hit').count();assert.ok(count>=groups.length);assert.equal(await page.locator('.result-heading .tree-icon').count(),groups.length);
  await page.locator('#find').click();await ready();assert.match(await page.locator('#search-status').innerText(),/^Match 2 of/);
  await page.locator('#search-submit').click();await ready();assert.match(await page.locator('#search-status').innerText(),/^Match 1 of/);
  await page.locator('.collection-hit').last().click();await ready();assert.equal(await page.locator('.collection-hit[aria-current]').count(),1);
  const selected=await page.locator('.collection-hit[aria-current]').innerText();assert.ok(selected.includes('Viewing'));
- const activeBox=await page.locator('.collection-hit[aria-current]').boundingBox(),panelBox=await page.locator('#navigation-panel').boundingBox();assert.ok(activeBox.y+activeBox.height<=panelBox.y+panelBox.height+1);
- await page.locator('#results-tab').focus();await page.keyboard.press('ArrowLeft');assert.equal(await page.locator('#browse-tab').getAttribute('aria-selected'),'true');assert.ok(await page.locator('#message-filter').isVisible());
+ const activeBox=await page.locator('.collection-hit[aria-current]').boundingBox(),panelBox=await page.locator('#search-panel').boundingBox();assert.ok(activeBox.y+activeBox.height<=panelBox.y+panelBox.height+1);
+ await page.locator('#close-search').click();assert.ok(await page.locator('#message-filter').isVisible());
  await page.locator('#message-filter').fill('Feature');await page.locator('#filter-results button').first().waitFor();
  const filtered=await page.locator('#filter-results').innerText();assert.ok(!filtered.includes('pst_quality-attached-message_1c.pdf'));assert.ok(!filtered.includes(' / '));
  assert.equal(await page.locator('#filter-results small').count(),0,'single-message files should not repeat the subject');
- const destination=await page.locator('#filter-results button').first().innerText();await page.locator('#filter-results button').first().click();await ready();assert.equal(await page.locator('#breadcrumbs button').last().innerText(),destination);
- await page.locator('#results-tab').click();
+ const destination=await page.locator('#filter-results button .message-subject').first().innerText();await page.locator('#filter-results button').first().click();await ready();assert.equal(await page.locator('#tree [aria-current] .message-subject').last().innerText(),destination);
+ await page.locator('#open-search').click();
  await page.locator('.collection-hit').last().click();await ready();
- const categories=await page.locator('.file-category-heading').allTextContents();assert.ok(categories.includes('Email sources'));assert.ok(categories.includes('Technical and supporting files'));
+ const categories=await page.locator('.file-category-heading>span:not(.badge)').allTextContents();assert.ok(categories.includes('Email sources'));assert.ok(categories.includes('Technical and supporting files'));
  assert.equal(categories[0],'Email sources');assert.equal(await page.locator('.file-owner').count(),0);
- assert.equal(await page.locator('#document-info').count(),0);assert.match(await page.locator('#declared-profile').innerText(),/Declared EA-PDF 1s/);
- const premis=page.locator('.file-card').filter({has:page.locator('.file-name',{hasText:/premis\.xml$/i})});assert.ok(await premis.count()>0);assert.equal(await premis.first().locator('xpath=../..').locator('.file-category-heading').innerText(),'Technical and supporting files');
- assert.ok(await page.locator('.file-category>ul .file-card').count()>0);
+ assert.equal(await page.locator('#document-info').count(),0);assert.match(await page.locator('#declared-profile').innerText(),/EA-PDF 1s/);
+ const premis=page.locator('.file-card').filter({has:page.locator('.file-name',{hasText:/premis\.xml$/i})});assert.ok(await premis.count()>0);assert.equal(await premis.first().locator('xpath=../../..').locator('.file-category-heading>span:not(.badge)').innerText(),'Technical and supporting files');
+ assert.ok(await page.locator('.file-category details>ul .file-card').count()>0);
  assert.equal(await page.locator('.app-header #breadcrumbs').count(),0);
  assert.equal(await page.locator('.reader-pane #breadcrumbs').count(),1);
  assert.equal(await page.locator('.global-actions #export-csv').count(),1);
@@ -45,13 +46,14 @@ try{
  assert.ok(await page.locator('.file-actions button .tree-icon').count()>0);
  assert.equal(await page.locator('#back').getAttribute('aria-label'),'Return to parent PDF');
 
+ await page.locator('#close-search').click();
  for(const [hide,show,panel] of [['toggle-navigation','show-navigation','navigation-panel'],['toggle-details','show-details','details-panel']]){
   await page.locator('#'+hide).click();assert.equal(await page.locator('#'+panel).isVisible(),false);assert.equal(await page.evaluate(()=>document.activeElement.id),show);
   await page.locator('#'+show).click();assert.ok(await page.locator('#'+panel).isVisible());assert.equal(await page.evaluate(()=>document.activeElement.id),hide);
  }
  await mkdir('test-results',{recursive:true});await page.screenshot({path:'test-results/viewer-design-desktop.png',fullPage:true});
- await page.setViewportSize({width:900,height:950});const medium=await dimensions();assert.equal(medium.left,270);assert.equal(medium.right,270);assert.equal(medium.overflow,false);
+ await page.setViewportSize({width:900,height:950});const medium=await dimensions();assert.equal(medium.left,270);assert.equal(medium.right,0);assert.equal(medium.overflow,false);
  await page.setViewportSize({width:600,height:950});assert.equal((await dimensions()).overflow,false);await page.screenshot({path:'test-results/viewer-design-narrow.png',fullPage:true});
  await page.locator('#close').click();assert.equal(await page.locator('#results-tab').isDisabled(),true);assert.equal(await page.locator('#browse-tab').getAttribute('aria-selected'),'true');
- assert.deepEqual(errors,[]);const report={status:'PASS',desktop,medium,groups,matchingPages:count,checks:['equal 27% sidebars','filename-only search groups and metadata results','filter destinations preserved','distinct file-category headers','highlighted excerpts','search returns to first match','keyboard tabs','pane focus and restore controls','no horizontal overflow','closing resets results']};await writeFile('test-results/viewer-design.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
+ assert.deepEqual(errors,[]);const report={status:'PASS',desktop,medium,groups,matchingPages:count,checks:['equal 27% sidebars','filename-only search groups and metadata results','filter destinations preserved','distinct file-category headers','highlighted excerpts','search returns to first match','search popover keeps message filtering available','pane focus and restore controls','no horizontal overflow','closing resets results']};await writeFile('test-results/viewer-design.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
 }finally{await context.close();}

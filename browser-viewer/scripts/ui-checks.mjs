@@ -35,16 +35,16 @@ export async function checkInterface(browser) {
     await browser.evaluate(()=>{window.testInspectionDiagnostics=[];});
     await browser.open(source);
     assert.equal(await browser.evaluate(()=>document.querySelector('#reading-notes')),null,'Reading Notes panel removed');
-    assert.equal(await browser.evaluate(()=>document.querySelectorAll('#tree details[open]').length),0,'Folders start collapsed');
+    assert.equal(await browser.evaluate(()=>[...document.querySelectorAll('#tree details')].every(d=>!!d.querySelector('summary'))),true,'Folders retain native keyboard disclosures');
     let checks = 0, downloads = 0;
     async function inspect(record) {
       await browser.click(docSelector(record.documentId)); await browser.ready();
       assert.doesNotMatch((await snapshot()).info, /Conformance/);
       if (record.identification.declaredProfile.value) assert.ok((await snapshot()).info.includes('1'+record.identification.declaredProfile.value));
-      // One real saved payload per document; zero-byte isolated placeholders count.
-      const file = record.files.find(f => f.streams.some(s => s.extraction === 'present'));
+      // One nonempty saved payload per document; zero-byte files intentionally disable Download.
+      const file = record.files.find(f => f.streams.some(s => s.extraction === 'present' && s.decodedSize.value !== 0));
       if (file) {
-        const stream = file.streams.find(s => s.extraction === 'present');
+        const stream = file.streams.find(s => s.extraction === 'present' && s.decodedSize.value !== 0);
         const selector = `[data-file-id=${JSON.stringify(file.id)}][data-stream=${JSON.stringify(stream.locator.path)}]`;
         const saved = await browser.download(selector); await browser.ready();
         assert.equal(hash(saved), stream.sha256.value, id+' saved payload');
@@ -82,6 +82,7 @@ export async function checkInterface(browser) {
     results.push({ id, messagesSelected: checks, verifiedDownloads: downloads, status: 'PASS' });
   }
   await browser.open(resolve('tests/fixtures/ordinary.pdf'));
+  await browser.click('#open-search');
   await browser.evaluate(() => {
     document.querySelector('#search').value = 'page 2';
     document.querySelector('#search-form').requestSubmit();

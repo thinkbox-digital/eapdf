@@ -44,6 +44,7 @@ let searchSession:BrowserSession|undefined;
 let browseSession:BrowserSession|undefined;
 let browseEpoch=0;
 const browseCompleted=new WeakSet<BrowserDocument>();
+const browseMessageCounts=new WeakMap<BrowserDocument,number>();
 const browseDisplay=new WeakMap<BrowserDocument,Map<string,Record<string,string>>>();
 const browseSubjects=new WeakMap<BrowserDocument,Map<string,string>>();
 type CollectionResults={root:BrowserDocument;query:string;result:Awaited<ReturnType<typeof searchCollection>>;index:number;occurrence:number;total:number};
@@ -138,7 +139,7 @@ async function render(ticket:number,followMessage=true):Promise<void>{
   }catch(error){if(ticket===generation&&current===doc)failedPages.add(pageNumber);throw error;}
 }
 
-function markSelection(node:HTMLElement|undefined):void {for(const n of tree.querySelectorAll('[aria-current]'))n.removeAttribute('aria-current');node?.setAttribute('aria-current','true');for(let parent=node?.parentElement;parent&&parent!==tree;parent=parent.parentElement)if(parent instanceof HTMLDetailsElement)parent.open=true;}
+function markSelection(node:HTMLElement|undefined):void {for(const n of tree.querySelectorAll('[aria-current]'))n.removeAttribute('aria-current');node?.setAttribute('aria-current','true');for(let parent=node?.parentElement;parent&&parent!==tree;parent=parent.parentElement)if(parent instanceof HTMLDetailsElement)parent.open=true;else if(parent.tagName==='UL'&&parent.hidden){parent.hidden=false;parent.parentElement?.querySelector(':scope > .document-disclosure')?.setAttribute('aria-expanded','true');}}
 // Update selection only: following the page must never navigate back to a
 // message's first page. Cache ownership instead of rescanning DParts on scroll.
 function syncMessageToPage():void {
@@ -177,7 +178,7 @@ function showInformation(doc:BrowserDocument):void {
   profile.textContent=id.declaredProfile.value?`EA-PDF ${id.eapdfVersion.value??'?'}${id.declaredProfile.value}`:'No EA-PDF profile declared';profile.hidden=false;
   for(const diagnostic of doc.inspection.diagnostics)console.debug('[EA-PDF inspection]',doc.name,diagnostic);
   breadcrumbs(doc);element('header-filename').textContent=doc.name;element('header-filename').title=doc.name;
-  let root=doc;while(root.parent)root=root.parent;element('message-count').textContent=String(root.inspection.messages.length);
+  let root=doc;while(root.parent)root=root.parent;element('message-count').textContent=String(browseMessageCounts.get(root)??root.inspection.messages.length);
 }
 function refreshInspection(doc:BrowserDocument):void {
   if(current!==doc)return;showInformation(doc);showFiles(doc,singleMessage(doc)?undefined:selectedMessage(doc));
@@ -197,7 +198,7 @@ function showFiles(doc:BrowserDocument,message?:MailMessage):void {
   element('files-title').textContent=message||singleMessage(doc)?'Files in this email':'Files in this PDF';
   const detailList=element('selection-details');detailList.replaceChildren();
   const selectedMessage=message??singleMessage(doc),metadata=selectedMessage?doc.details.get(selectedMessage.metadataRecordId):undefined;
-  const source=selected.find(f=>f.afRelationship.value==='Source');
+  const source=selectedMessage?selected.find(f=>f.afRelationship.value==='Source'):undefined;
   const collection=doc.parent?.inspection.collection.value;const folderNames=new Set<string>();
   if(collection)for(const entry of collection.entries.filter(e=>e.fileId===doc.parentFileId))for(let id of entry.folderIds.value??[]){const names:string[]=[],seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);const folder=collection.folders.find(f=>f.id===id);if(!folder)break;if(folder.name.value)names.unshift(folder.name.value);id=folder.parentId??'';}if(names.length)folderNames.add(names.join(' / '));}
   for(const [key,value]of [['Source file',source?fileLabel(source):doc.name],['Message-ID',selectedMessage?.internetMessageId.value],['Folder',[...folderNames].join('; ')||metadata?.Folder||metadata?.['Folder paths']]])if(value){detailList.append(text('dt',key!),text('dd',value));}
@@ -215,7 +216,7 @@ function showFiles(doc:BrowserDocument,message?:MailMessage):void {
     for(const stream of file.streams){
       const size=stream.decodedSize.value??stream.declaredSize.value;
       const facts=text('span',sizeLabel(size)+(file.streams.length>1?' · '+stream.efKeys.join('/'):'') );facts.className='file-size';heading.append(facts);
-      const actions=text('div','');actions.className='file-actions';row.append(actions);
+      const actions=text('div','');actions.className='file-actions';if(file.streams.length>1){row.classList.add('multiple-streams');actions.setAttribute('role','group');actions.setAttribute('aria-label',stream.efKeys.join('/'));const streamLabel=text('span',stream.efKeys.join('/'));streamLabel.className='stream-label';actions.append(streamLabel);}row.append(actions);
       const save=button(file.afRelationship.value==='Source'&&/\.eml$/i.test(fileLabel(file))?'Download email (.eml)':'Download',()=>void operation(async ticket=>{status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);await saveBlob(new Blob([new Uint8Array(data)],{type:'application/octet-stream'}),fileLabel(file),()=>check(ticket));check(ticket);refreshInspection(doc);status.textContent=`Download requested: ${fileLabel(file)} (${sizeLabel(data.length)}).${doc.inspection.diagnostics.some(d=>d.code==='CHECKSUM_MISMATCH')?' Warning: recorded checksum mismatch.':''}`;}));save.replaceChildren(treeIcon('download'));save.classList.add('icon-button');save.setAttribute('aria-label',`Download ${fileLabel(file)}`);save.title=`Download ${fileLabel(file)}`;save.dataset.fileId=file.id;save.dataset.stream=stream.locator.path;actions.append(save);
       if(size===0){save.dataset.unavailable='true';save.disabled=true;save.setAttribute('aria-disabled','true');const note=text('p','This file is empty. The original may have been empty, or this is a placeholder.');note.className='file-note empty-file-notice';const warning=treeIcon('warning');warning.removeAttribute('aria-hidden');warning.setAttribute('role','img');warning.setAttribute('aria-label','Warning');note.prepend(warning);row.append(note);}
       else if(canView(file,stream)){
@@ -233,7 +234,7 @@ function showFiles(doc:BrowserDocument,message?:MailMessage):void {
   else {
     const groups=new Map<string,AssociatedFile[]>();
     for(const file of selected){const category=fileCategory(file),name=category==='Archive files'?'Other files':category;const group=groups.get(name)??[];group.push(file);groups.set(name,group);}
-    for(const [name,group]of groups){const section=text('li',''),disclosure=text('details',''),heading=text('summary',''),title=text('span',name),count=text('span',String(group.length)),items=text('ul','');section.className='file-category';heading.className='file-category-heading';count.className='badge';heading.append(title,count);disclosure.open=name==='Email sources'||name==='Email attachments';disclosure.append(heading,items);section.append(disclosure);list.append(section);for(const file of group)items.append(createFile(file));}
+    for(const [name,group]of groups){const section=text('li',''),disclosure=text('details',''),heading=text('summary',''),title=text('span',name),count=text('span',String(group.length)),items=text('ul','');section.className='file-category';heading.className='file-category-heading';count.className='badge';const chevron=treeIcon('right');chevron.classList.add('disclosure-icon');heading.append(chevron,title,count);disclosure.open=name==='Email sources'||name==='Email attachments';disclosure.append(heading,items);section.append(disclosure);list.append(section);for(const file of group)items.append(createFile(file));}
   }
 }
 function singleMessage(doc:BrowserDocument):MailMessage|undefined {
@@ -357,7 +358,7 @@ function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
         await isolated.associateFiles(copy);checkIndex();
         main.adoptAssociations(doc,isolated,copy);if(current===doc)refreshInspection(doc);
       }
-      checkIndex();browseCompleted.add(doc);
+      checkIndex();browseCompleted.add(doc);browseMessageCounts.set(doc,indexed.messages.length);
       const collection=doc.inspection.collection.value;if(collection)for(const summary of nodes.get(doc)?.querySelectorAll<HTMLElement>('summary[data-folder-id]')??[]){const members=new Set<string>();for(const entry of collection.entries)for(let id of entry.folderIds.value??[]){const seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);if(id===summary.dataset.folderId)members.add(entry.fileId);id=collection.folders.find(f=>f.id===id)?.parentId??'';}}const count=indexed.messages.filter(m=>m.path[0]&&members.has(m.path[0].fileId)).length;const pill=text('span',String(count));pill.className='folder-count';summary.querySelector('.folder-count')?.remove();summary.append(pill);}
       element('subject-index-status').textContent=indexed.incomplete.length?`Subjects partially indexed: ${indexed.incomplete.join(' ')}`:`Subjects ready · ${indexed.messages.length} emails.`;
       element('subject-index-cancel').hidden=true;element('subject-index-progress').dataset.complete=String(!indexed.incomplete.length);element('message-count').textContent=String(indexed.messages.length);return indexed;
@@ -398,7 +399,7 @@ function documentTree(doc:BrowserDocument):HTMLLIElement {
   if(collection){
     for(const folder of collection.folders)folders.set(folder.id,text('ul',''));
     for(const folder of collection.folders){
-      const item=text('li',''),details=text('details',''),label=text('summary',folder.name.value??'Folder');label.dataset.folderId=folder.id;label.prepend(treeIcon('folder'));details.open=true;details.append(label,folders.get(folder.id)!);folderRows.push(details);item.append(details);
+      const item=text('li',''),details=text('details',''),label=text('summary',folder.name.value??'Folder');label.dataset.folderId=folder.id;const chevron=treeIcon('right');chevron.classList.add('disclosure-icon');label.prepend(chevron,treeIcon('folder'));details.open=true;details.append(label,folders.get(folder.id)!);folderRows.push(details);item.append(details);
       const seen=new Set([folder.id]);let p=folder.parentId,valid=true;
       while(p){if(seen.has(p)){valid=false;break;}seen.add(p);const ancestor=collection.folders.find(f=>f.id===p);if(!ancestor){valid=false;break;}p=ancestor.parentId;}
       (valid&&folder.parentId?folders.get(folder.parentId)!:list).append(item);
@@ -432,8 +433,11 @@ function documentTree(doc:BrowserDocument):HTMLLIElement {
       items.forEach((item,index)=>positions.set(pdfKey(item.file,item.stream),{list:virtual,index}));
     }else for(const item of items)target.append(makePdf(item));
   }
-  // Empty folders have no disclosure control. All other folders start closed.
-  for(const details of folderRows)if(!details.querySelector(':scope > ul')!.children.length){const label=text('div','');label.className='folder-label';label.append(...details.querySelector('summary')!.childNodes);details.replaceWith(label);}
+  // Empty folders have no disclosure control; populated folders start expanded.
+  for(const details of folderRows)if(!details.querySelector(':scope > ul')!.children.length){const label=text('div','');label.className='folder-label';label.append(...details.querySelector('summary')!.childNodes);label.querySelector('.disclosure-icon')?.remove();details.replaceWith(label);}
+  if([...row.children].some(child=>child.tagName==='UL'&&child.children.length)){
+    const toggle=button('',()=>{const expanded=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',String(expanded));for(const child of row.children)if(child.tagName==='UL')(child as HTMLElement).hidden=!expanded;});toggle.className='document-disclosure icon-button';toggle.setAttribute('aria-label',`Expand or collapse ${doc.name}`);toggle.title=`Expand or collapse ${doc.name}`;toggle.setAttribute('aria-expanded','true');toggle.append(treeIcon('right'));open.classList.add('has-disclosure');row.classList.add('document-row');row.append(toggle);
+  }
   return row;
 }
 async function openFile(file:Blob,name:string):Promise<void>{

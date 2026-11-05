@@ -30,9 +30,9 @@ try {
     evaluate: fn => page.evaluate(fn),
     workerCount: async () => page.workers().length,
     ready,
-    click: selector => page.locator(selector).first().click(),
+    click: async selector => {if(selector.includes('data-file-id')||selector.includes('data-view-file-id'))await page.locator('#files details').evaluateAll(ds=>ds.forEach(d=>d.open=true));await page.locator(selector).first().click();},
     open: async path => { await page.locator('#file').setInputFiles(path); await ready(); assert.equal(await page.locator('#canvas').isVisible(),true,await page.locator('#status').textContent()); },
-    download: async selector => { const event = page.waitForEvent('download'); await page.locator(selector).click(); let download;try{download=await event;}catch(error){throw new Error(`Download failed for ${selector}; ${await page.locator('#status').textContent()}; ${await page.locator('#breadcrumbs').textContent()}`,{cause:error});}return readFile(await download.path()); },
+    download: async selector => { if(selector.includes('data-file-id'))await page.locator('#files details').evaluateAll(ds=>ds.forEach(d=>d.open=true));const event = page.waitForEvent('download'); await page.locator(selector).click(); let download;try{download=await event;}catch(error){throw new Error(`Download failed for ${selector}; ${await page.locator('#status').textContent()}; ${await page.locator('#breadcrumbs').textContent()}`,{cause:error});}return readFile(await download.path()); },
   };
   const results = await checkInterface(adapter);
     const reading=await checkReadingTools(adapter);await writeFile('test-results/reading-tools-chromium.json',JSON.stringify(reading,null,2)+'\n');
@@ -42,6 +42,7 @@ try {
   await writeFile('test-results/trip-attachments-chromium.json',JSON.stringify(trip,null,2)+'\n');
   const scrolling = await checkScrolling(adapter);
   await adapter.open(resolve('tests/attachments/source/pst_first_message_legacy.pdf'));
+  await page.locator('#zoom').selectOption('1');await ready();
   const viewport=await page.locator('#viewport').boundingBox();await page.mouse.move(viewport.x+viewport.width/2,viewport.y+viewport.height/2);await page.mouse.wheel(0,1100);
   await page.waitForFunction(()=>Number(document.querySelector('#page').value)>1&&document.querySelector('#canvas').closest('.pdf-page').dataset.rendered==='true');
   scrolling.checks.push('Native mouse wheel advances the visible page and counter');
