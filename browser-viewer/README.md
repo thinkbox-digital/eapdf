@@ -1,6 +1,6 @@
-# EA-PDF browser viewer — beta 0.5.0-beta.6
+# EA-PDF browser viewer — beta 0.5.0-beta.8
 
-Current release: `0.5.0-beta.6` (EA-PDF `1.6.0-beta.8`).
+Current release: `0.5.0-beta.8` (EA-PDF `1.6.0-beta.9`).
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
 6.5.438 and retains the existing Chromium/Firefox architecture.
@@ -33,7 +33,7 @@ shown after an operation error; it clears cached documents and reopens the root.
 Passwords are not persisted. External PDF links and executable actions remain
 inactive, and HTML/email previews are inert text.
 
-Packages are **0.5.0-beta.6**, distributed with EA-PDF 1.6.0-beta.8 on GitHub.
+Packages are **0.5.0-beta.8** in `releases/` and accompany EA-PDF **1.6.0-beta.9** on GitHub.
 They remain unsigned and are not extension-store releases. See
 [implementation and verification](docs/reading-improvements.txt).
 
@@ -80,11 +80,20 @@ expanded Document Information by default. See the beta guide for current checks.
   **Parent PDF** returns to its containing PDF; breadcrumbs allow earlier destinations.
 - **View** opens image or text attachments. Office files use normal browser download
   handling. Downloads save the exact stored bytes; files never open automatically.
-- Select and copy page text. **Find next** searches the current PDF and highlights
-  matches. Esc clears the search. It does not search all embedded children.
+- File categories use shaded heading bars and bordered groups to distinguish
+  Email attachments, Email sources, and Technical and supporting files.
+- **Find emails** results show the matching filename without the collection prefix.
+  Multi-message PDFs also show the subject to distinguish emails within that file.
+- **Browse messages** and **Search results** separate navigation from collection
+  matches. **Hide pane**, **Show messages**, and **Show files & info** control the
+  side panes; their original widths are preserved.
+- Select and copy page text. Choose **This PDF** or **Whole collection**, then
+  **Search** (or Enter) to select the first match. **Next match** and **Previous
+  match** navigate existing results. Collection results group matching pages under
+  one matching filename, without repeating the collection name or a subject heading.
+  Excerpts highlight the query; the active result stays visible. Esc clears the search.
 - **Export metadata CSV** downloads one row per message from the currently displayed
-  PDF and recursively from its embedded collection PDFs. Columns: containing PDF
-  path, From, To, Cc, Bcc, Subject, Sent, Message-ID and Mail GUID. Values come from
+  PDF and recursively from its embedded collection PDFs. Columns: PDF, Folder paths, From, To, Cc, Bcc, Subject, Sent, Message-ID, Attachment count, Attachment names. Mail GUID is not exported. Values come from
   EA-PDF metadata; missing values stay blank, and dates retain their stored format.
   Raw address headers take precedence when available. CSV uses UTF-8 with a BOM;
   formula-like cells receive a leading apostrophe for spreadsheet safety.
@@ -239,7 +248,7 @@ The checked-in Python, schema and fixture data are excluded from both packages.
 
 ## Limits
 
-The interactive viewer caps root PDFs at 512 MiB, individual extracted streams at
+The interactive viewer caps root PDFs at 4 GiB, individual extracted streams at
 32 MiB and concurrent extraction reservations at 512 MiB. Child count and depth do not impose
 content cutoffs. Successful extraction uses a 32 MiB cache. Each reading session retains
 at most three active PDF workers; isolated CSV/search work can use three more.

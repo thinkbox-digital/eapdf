@@ -1,17 +1,22 @@
-# Viewer 0.5.0-beta.6 — GitHub prerelease (2026-11-04)
+# Viewer 0.5.0-beta.8 — GitHub prerelease (2026-11-05)
 
-Packages accompany EA-PDF 1.6.0-beta.8 on GitHub. They are unsigned; Chromium
-uses Load unpacked and Firefox uses temporary installation. No store approval
-is claimed. Reload the extension and reopen its tab after replacing files.
+Packages accompany EA-PDF 1.6.0-beta.9.
+
+- Clearer file groups, equal-width sidebars, and grouped document controls.
+- Faster collection search, navigation, and finding-aid exports.
+- Search matches keep the document and file panes synchronized.
+- Root PDF input ceiling increased to 4 GiB.
+
+Unsigned browser packages; manual installation is required.
 
 ## Install or update
 
 Download the packages from the
-[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.8).
+[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.9).
 Local packages are also in `browser-viewer/releases/`.
 
-- `eapdf-viewer-0.5.0-beta.6-chromium.zip`
-- `eapdf-viewer-0.5.0-beta.6-firefox.zip`
+- `eapdf-viewer-0.5.0-beta.8-chromium.zip`
+- `eapdf-viewer-0.5.0-beta.8-firefox.zip`
 
 Extract the appropriate ZIP. Chromium: open `chrome://extensions`, enable
 Developer mode, choose **Load unpacked**, then select the extracted directory.
@@ -25,7 +30,7 @@ new one. No Java, Python, Node or server is needed to use either extension.
 
 ## Example emails
 
-Download [the beta.8 example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.8/ea-pdf-examples-1.6.0-beta.8.zip), or see the [example inventory](../../examples/README.md).
+Download [the beta.9 example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/ea-pdf-examples-1.6.0-beta.9.zip), or see the [example inventory](../../examples/README.md).
 
 ## Release checklist
 

@@ -54,7 +54,17 @@ try {
   try{const doc=await depth.open(blob(nested),'nested.pdf');const file=doc.inspection.files.find(f=>f.streams.some(s=>s.mimeType.value==='application/pdf'));depthComplete=!!(await depth.child(doc,file,file.streams[0]));}finally{depth.close();}
   const input=new BrowserSession({maxFileBytes:1});let inputBound=false;
   try{inputBound=await rejected(()=>input.open(blob(ordinary),'ordinary.pdf'),/input byte limit/);}finally{input.close();}
-  return {zero,repeated,countComplete,cached,depthComplete,inputBound};
+  // Exercise the real size gate without allocating a multi-gigabyte buffer.
+  const largeInput=new BrowserSession();let limitDefault=false,limitEdge=false,limitAbove=false;
+  try{
+   const cap=4*1024**3;limitDefault=largeInput.limits.maxFileBytes===cap;
+   let read=false;
+   const sized=size=>({size,arrayBuffer:async()=>{read=true;throw new Error('size-gate-accepted');}});
+   limitEdge=await rejected(()=>largeInput.open(sized(cap),'at-limit.pdf'),/size-gate-accepted/)&&read;
+   read=false;
+   limitAbove=await rejected(()=>largeInput.open(sized(cap+1),'above-limit.pdf'),/input byte limit/)&&!read;
+  }finally{largeInput.close();}
+  return {zero,repeated,countComplete,cached,depthComplete,inputBound,limitDefault,limitEdge,limitAbove};
  },{attachments,nested,ordinary});
  for(const [name,passed] of Object.entries(production)){assert.equal(passed,true,name);results.push({name:'production-session-'+name,status:'PASS'});}
  const cancellation=await page.evaluate(async base64=>{

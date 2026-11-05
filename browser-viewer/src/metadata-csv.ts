@@ -8,12 +8,15 @@ export function csvCell(value:string):string {
   return '"'+value.replaceAll('"','""')+'"';
 }
 // Folder names come from the collection tree, not from PDF filenames.
-function memberFolders(inspection:InspectionResult,fileId:string):string[]{
+function folderIndex(inspection:InspectionResult):(fileId:string)=>string[]{
   const collection=inspection.collection.value!;
   if(inspection.diagnostics.some(d=>d.code.includes('FOLDER')))throw new Error('Collection folder structure is incomplete; no CSV was downloaded.');
   const folders=new Map(collection.folders.map(f=>[f.id,f]));
+  const entries=new Map<string,typeof collection.entries[number][]>();
+  for(const entry of collection.entries){const list=entries.get(entry.fileId)??[];list.push(entry);entries.set(entry.fileId,list);}
+  return fileId=>{
   const paths=new Set<string>();
-  for(const entry of collection.entries.filter(e=>e.fileId===fileId)){
+  for(const entry of entries.get(fileId)??[]){
     if(entry.folderIds.state!=='present'||entry.folderIds.value.length>1)throw new Error('Collection folder membership is ambiguous; no CSV was downloaded.');
     if(!entry.folderIds.value.length){paths.add('');continue;}
     let id:string|null=entry.folderIds.value[0]!,names:string[]=[];const seen=new Set<string>();
@@ -29,6 +32,7 @@ function memberFolders(inspection:InspectionResult,fileId:string):string[]{
   }
   if(!paths.size||paths.size>256)throw new Error('Collection folder memberships are unavailable or excessive; no CSV was downloaded.');
   return [...paths];
+  };
 }
 function attachmentIndex(inspection:InspectionResult):(message:MailMessage)=>[string,string]{
   const records=new Map(inspection.metadataRecords.map(r=>[r.id,r]));
@@ -52,12 +56,12 @@ function attachmentIndex(inspection:InspectionResult):(message:MailMessage)=>[st
 }
 export async function metadataCsv(root:BrowserDocument,
   child:(parent:BrowserDocument,file:AssociatedFile,stream:EmbeddedStream)=>Promise<BrowserDocument>,
-  check:()=>void,progress:(count:number)=>void):Promise<{blob:Blob;rows:number}> {
+  check:()=>void,progress:(count:number,documentName?:string)=>void,release:(doc:BrowserDocument)=>void|Promise<void>=()=>{}):Promise<{blob:Blob;rows:number}> {
   const chunks:string[]=['\uFEFF'+['PDF','Folder paths','From','To','Cc','Bcc','Subject','Sent','Message-ID','Attachment count','Attachment names'].map(csvCell).join(',')+'\r\n'];
   let rows=0,documents=0,bytes=0;
   const encoder=new TextEncoder();
   async function visit(doc:BrowserDocument,path:string,folderPaths:string[]):Promise<void>{
-    check();documents++;
+    check();documents++;progress(rows,doc.name);
     const inspection=doc.inspection;
     if(inspection.diagnostics.some(d=>/^XMP_.*LIMIT$/.test(d.code))||
       !['present','missing'].includes(inspection.coverage.metadata)||
@@ -82,14 +86,13 @@ export async function metadataCsv(root:BrowserDocument,
     if(collection.value){
       if(inspection.coverage.associatedFiles!=='present')throw new Error(`Collection files are unavailable in ${path}.`);
       let members=0;
+      const memberIds=new Set(collection.value.entries.map(e=>e.fileId)),folders=folderIndex(inspection);
       for(const file of inspection.files){
-        if(!collection.value.entries.some(e=>e.fileId===file.id))continue;
+        if(!memberIds.has(file.id))continue;
         if(!file.streams.length&&/\.pdf$/i.test(fileLabel(file)))throw new Error(`Missing embedded PDF: ${fileLabel(file)}.`);
         for(const stream of file.streams){
           if(stream.mimeType.value?.split(';')[0]?.toLowerCase()!=='application/pdf'&&!/\.pdf$/i.test(fileLabel(file)))continue;
-          check();const nested=await child(doc,file,stream);check();
-          members++;
-          const localFolders=memberFolders(inspection,file.id),combined=new Set<string>();
+          const localFolders=folders(file.id),combined=new Set<string>();
           for(const parent of folderPaths)for(const local of localFolders){
             const path=[parent,local].filter(Boolean).join('/');
             if(path.length>16384)throw new Error('Nested folder path is too long; no CSV was downloaded.');
@@ -97,7 +100,10 @@ export async function metadataCsv(root:BrowserDocument,
             if(combined.size>256)throw new Error('Too many folder paths for one email; no CSV was downloaded.');
           }
           if([...combined].reduce((n,p)=>n+p.length,0)>256*1024)throw new Error('Folder path text exceeds export limits; no CSV was downloaded.');
-          await visit(nested,path+' / '+nested.name,[...combined]);
+          check();progress(rows,fileLabel(file));
+          const nested=await child(doc,file,stream);members++;
+          try{check();await visit(nested,path+' / '+nested.name,[...combined]);}
+          finally{await release(nested);}
         }
       }
       if(!members)throw new Error(`No readable collection PDFs in ${path}; no CSV was downloaded.`);

@@ -37,7 +37,7 @@ test('unreadable children, inspection limits, empty metadata and cancellation do
  const d=doc();d.inspection.diagnostics=[{code:'XMP_RECORD_LIMIT'}];await assert.rejects(run(d),/fully read/);
  const empty=doc();empty.inspection.messages=[];await assert.rejects(run(empty),/No email metadata/);
  await assert.rejects(run(doc(),undefined,()=>{throw Error('Cancelled');}),/Cancelled/);
- const c=doc();c.inspection.collection={state:'present',value:{folders:[],entries:[{fileId:'a',folderIds:{state:'present',value:[]}}]}};c.inspection.files=[{id:'a',streams:[{mimeType:{value:'application/pdf'}}]}];
+ const c=doc();c.inspection.collection={state:'present',value:{folders:[],entries:[{fileId:'a',folderIds:{state:'present',value:[]}}]}};c.inspection.files=[{id:'a',unicodeFilename:{value:'a.pdf'},streams:[{mimeType:{value:'application/pdf'}}]}];
  await assert.rejects(run(c,async()=>{throw Error('Unreadable child');}),/Unreadable child/);
 });
 const present=value=>({state:'present',value});
@@ -88,4 +88,18 @@ test('CSV visits every collection member beyond the former 1000-PDF cutoff',asyn
   d.inspection.collection={state:'present',value:{folders:[],entries:ids.map(fileId=>({fileId,folderIds:{state:'present',value:[]}}))}};
   d.inspection.files=ids.map(member);
   const result=await run(d,async(_,f)=>doc(f.id+'.pdf'));assert.equal(result.rows,1001);
+});
+
+test('collection export releases each child before opening the next, including failures',async()=>{
+ const root=collection('root.pdf',[],['a','b'].map(fileId=>({fileId,folderIds:present([])})),['a','b'].map(member));
+ const events=[];
+ const result=await metadataCsv(root,async(_,f)=>{events.push('open '+f.id);return doc(f.id);},()=>{},()=>{},d=>events.push('release '+d.name));
+ assert.equal(result.rows,2);assert.deepEqual(events,['open a','release a','open b','release b']);
+ const released=[];await assert.rejects(metadataCsv(root,async()=>{const d=doc('bad');d.inspection.coverage.metadata='unavailable';return d;},()=>{},()=>{},d=>released.push(d.name)),/fully read/);
+ assert.deepEqual(released,['bad']);
+});
+test('progress reports the child before awaiting its inspection',async()=>{
+ const root=collection('root.pdf',[],[{fileId:'a',folderIds:present([])}],[member('a')]);
+ let last;
+ await metadataCsv(root,async()=>{assert.deepEqual(last,[0,'a.pdf']);return doc('a.pdf');},()=>{},(...p)=>{last=p;});
 });

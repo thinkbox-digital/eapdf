@@ -655,8 +655,29 @@ final class EaPdfChecks {
         && filename.chars().noneMatch(point -> "/\\:*\"<>|".indexOf(point) >= 0 || point == 0) && !filename.endsWith(".");
   }
 
+  private static boolean identifiedEmail(Path temporary) throws Exception {
+        boolean identified = false;
+        try (PDDocument child = IndexedPdfLoader.load(temporary, org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
+          if (child.getDocumentCatalog().getMetadata() != null) {
+            var factory = DocumentBuilderFactory.newInstance(); factory.setNamespaceAware(true);
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setAttribute("http://www.oracle.com/xml/jaxp/properties/maxElementDepth", "0");
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, ""); factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+            Element metadata = factory.newDocumentBuilder().parse(new ByteArrayInputStream(BoundedPdfStreams.bytes(child.getDocumentCatalog().getMetadata().getCOSObject(), BoundedPdfStreams.metadataLimit()))).getDocumentElement();
+            Map<String, String> identification = new LinkedHashMap<>();
+            for (Element element : descendants(metadata)) if (is(element, RDF, "Description")) {
+              for (Element property : children(element)) if (ID.equals(property.getNamespaceURI()) && simple(property)) identification.put(property.getLocalName(), property.getTextContent());
+              for (String property : List.of("version", "rev", "conformance")) if (element.hasAttributeNS(ID, property)) identification.put(property, element.getAttributeNS(ID, property));
+            }
+            identified = "1".equals(identification.get("version")) && "2024".equals(identification.get("rev")) && PROFILES.contains(identification.getOrDefault("conformance", ""));
+          }
+        } catch (IOException error) { /* An unreadable PDF cannot establish the required member type. */ }
+    return identified;
+  }
+
   private void children(MetadataChecks metadataChecks) throws Exception {
     if (!container()) { report.supported("COLLECTION_CHILD_VALIDATION", "COLLECTION_CONTENT_TYPES"); return; }
+    if (depth == 0 && CollectionValidationPool.enabled()) { parallelChildren(metadataChecks); return; }
     int inspected = 0;
     boolean limited = false, countEvidenceComplete = true;
     Set<COSStream> seen = identitySet(); Set<COSDictionary> sourceIdentities = identitySet(); sourceIdentities.addAll(sourceSpecs);
@@ -677,22 +698,7 @@ final class EaPdfChecks {
           input.transferTo(output);
         }
         hash = HexFormat.of().formatHex(digest.digest());
-        boolean identified = false;
-        try (PDDocument child = IndexedPdfLoader.load(temporary, org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
-          if (child.getDocumentCatalog().getMetadata() != null) {
-            var factory = DocumentBuilderFactory.newInstance(); factory.setNamespaceAware(true);
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            factory.setAttribute("http://www.oracle.com/xml/jaxp/properties/maxElementDepth", "0");
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, ""); factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-            Element metadata = factory.newDocumentBuilder().parse(new ByteArrayInputStream(BoundedPdfStreams.bytes(child.getDocumentCatalog().getMetadata().getCOSObject(), BoundedPdfStreams.metadataLimit()))).getDocumentElement();
-            Map<String, String> identification = new LinkedHashMap<>();
-            for (Element element : descendants(metadata)) if (is(element, RDF, "Description")) {
-              for (Element property : children(element)) if (ID.equals(property.getNamespaceURI()) && simple(property)) identification.put(property.getLocalName(), property.getTextContent());
-              for (String property : List.of("version", "rev", "conformance")) if (element.hasAttributeNS(ID, property)) identification.put(property, element.getAttributeNS(ID, property));
-            }
-            identified = "1".equals(identification.get("version")) && "2024".equals(identification.get("rev")) && PROFILES.contains(identification.getOrDefault("conformance", ""));
-          }
-        } catch (IOException error) { /* An unreadable PDF cannot establish the required member type. */ }
+        boolean identified = identifiedEmail(temporary);
         report.check("COLLECTION_CONTENT_TYPES", identified, "Every non-source collection member must be an EA-PDF.", Map.of("file", file.name()));
         typeChecked = true;
         boolean pdf = "application/pdf".equalsIgnoreCase(file.mediaType());
@@ -726,6 +732,101 @@ final class EaPdfChecks {
     if (!report.seen.contains("COLLECTION_CONTENT_TYPES")) report.check("COLLECTION_CONTENT_TYPES", true, "No contained non-source file contradicts EA-PDF identification.", null);
     if (!limited || inspected > 0) report.check("COLLECTION_CHILD_VALIDATION", inspected > 0, "A collection requires identifiable email PDF members.", Map.of("count", inspected));
     if (metadataChecks != null) metadataChecks.finishChildren(!limited && countEvidenceComplete && inspected > 0);
+  }
+
+  private record ChildWork(Embedded file, Path path, String hash, boolean identified,
+      boolean eligible, boolean recursive, java.util.concurrent.Future<CollectionValidationPool.Result> future, Exception error) { }
+
+  private ChildWork prepareChild(Embedded file, CollectionValidationPool pool) {
+    Path temporary = null;
+    try {
+      temporary = org.apache.pdfbox.io.IOUtils.createProtectedTempFile(Path.of(System.getProperty("java.io.tmpdir")), "eapdf-validator-child-", ".pdf");
+      var digest = MessageDigest.getInstance("SHA-256");
+      try (var input = file.open(); var output = new java.security.DigestOutputStream(Files.newOutputStream(temporary), digest)) { input.transferTo(output); }
+      String hash = HexFormat.of().formatHex(digest.digest());
+      boolean identified = identifiedEmail(temporary);
+      boolean pdf = "application/pdf".equalsIgnoreCase(file.mediaType());
+      if (!pdf) try (var input = Files.newInputStream(temporary)) {
+        pdf = new String(input.readNBytes(5), java.nio.charset.StandardCharsets.US_ASCII).equals("%PDF-");
+      }
+      boolean eligible = get(file.spec(), "CI") != null || pdf, recursive = children.active.contains(hash);
+      java.util.concurrent.Future<CollectionValidationPool.Result> future = null;
+      if (eligible && !recursive) {
+        var cached = children.cache.get(hash);
+        if (cached != null) future = java.util.concurrent.CompletableFuture.completedFuture(new CollectionValidationPool.Result(cached, 0, 0));
+        else {
+          Set<String> lineage = new LinkedHashSet<>(children.active); lineage.add(hash);
+          future = pool.submit(temporary, lineage, depth + 1);
+        }
+      }
+      return new ChildWork(file, temporary, hash, identified, eligible, recursive, future, null);
+    } catch (Exception error) { return new ChildWork(file, temporary, null, false, false, false, null, error); }
+  }
+
+  /** Stage parent streams serially; validate at most four children in isolated JVMs. */
+  private void parallelChildren(MetadataChecks metadataChecks) throws Exception {
+    Set<COSStream> seen = identitySet(); Set<COSDictionary> sources = identitySet(); sources.addAll(sourceSpecs);
+    List<Embedded> members = new ArrayList<>();
+    for (Embedded file : files) if (nameTreeSpecs.contains(file.spec()) && !sources.contains(file.spec())
+        && !"RF".equals(file.relationship()) && !"Supplement".equals(file.relationship()) && seen.add(file.stream())) members.add(file);
+    int inspected = 0, completed = 0;
+    boolean limited = false, evidence = true;
+    var pending = new java.util.ArrayDeque<ChildWork>();
+    var staged = new HashSet<Path>();
+    long lastProgress = 0;
+    try (var pool = new CollectionValidationPool()) {
+      int next = 0;
+      while (next < members.size() || !pending.isEmpty()) {
+        while (!limited && next < members.size() && pending.size() < CollectionValidationPool.WINDOW) {
+          Embedded file = members.get(next++);
+          if (!children.accepts(file.size(), depth)) {
+            report.unavailable("COLLECTION_CHILD_VALIDATION", "Collection child size is invalid or its byte accounting exceeds numeric capacity.");
+            report.unavailable("COLLECTION_CONTENT_TYPES", "Some collection members could not be inspected within the child budget.");
+            limited = true; break;
+          }
+          ChildWork work = prepareChild(file, pool); pending.add(work);
+          if (work.path() != null) staged.add(work.path());
+        }
+        if (pending.isEmpty()) break;
+        ChildWork work = pending.remove(); boolean typeChecked = false;
+        try {
+          if (work.error() != null) throw work.error();
+          report.check("COLLECTION_CONTENT_TYPES", work.identified(), "Every non-source collection member must be an EA-PDF.", Map.of("file", work.file().name()));
+          typeChecked = true;
+          if (!work.eligible()) { evidence = false; continue; }
+          inspected++;
+          if (work.recursive()) {
+            report.check("COLLECTION_CHILD_VALIDATION", false, "Recursive collection child detected.", Map.of("file", work.file().name()));
+            evidence = false; continue;
+          }
+          CollectionValidationPool.Result checked = work.future().get();
+          children.count = Math.addExact(children.count, checked.descendants()); children.bytes = Math.addExact(children.bytes, checked.bytes());
+          var result = checked.report(); children.cache.put(work.hash(), result);
+          String status = JavaValidation.text(result.getAsJsonObject("summary"), "status");
+          if (metadataChecks != null) metadataChecks.childCounts(result);
+          if ("INCOMPLETE".equals(status)) report.unavailable("COLLECTION_CHILD_VALIDATION", "Contained email validation is incomplete: " + work.file().name());
+          report.add("FAIL".equals(status) ? "FAIL" : "PASS".equals(status) ? "PASS" : "WARN", "COLLECTION_CHILD_VALIDATION",
+              "Contained email result: " + status, Map.of("file", work.file().name(), "sha256", work.hash(), "result", result));
+        } catch (InterruptedException error) {
+          Thread.currentThread().interrupt(); throw new java.util.concurrent.CancellationException("Collection validation cancelled");
+        } catch (Exception error) {
+          evidence = false;
+          report.unavailable("COLLECTION_CHILD_VALIDATION", "Contained email validation could not finish: " + error);
+          if (!typeChecked) report.unavailable("COLLECTION_CONTENT_TYPES", "The member type could not be checked: " + error);
+        } finally {
+          // Interrupted tasks are stopped by pool.close() before their inputs are removed below.
+          if (work.path() != null && !Thread.currentThread().isInterrupted()) { Files.deleteIfExists(work.path()); staged.remove(work.path()); }
+          completed++;
+          if (System.nanoTime() - lastProgress >= 1_000_000_000L || completed == members.size()) {
+            ValidationSession.collectionProgress(completed, members.size()); lastProgress = System.nanoTime();
+          }
+        }
+        if (limited && pending.isEmpty()) break;
+      }
+    } finally { for (Path path : staged) Files.deleteIfExists(path); }
+    if (!report.seen.contains("COLLECTION_CONTENT_TYPES")) report.check("COLLECTION_CONTENT_TYPES", true, "No contained non-source file contradicts EA-PDF identification.", null);
+    if (!limited || inspected > 0) report.check("COLLECTION_CHILD_VALIDATION", inspected > 0, "A collection requires identifiable email PDF members.", Map.of("count", inspected));
+    if (metadataChecks != null) metadataChecks.finishChildren(!limited && evidence && inspected > 0);
   }
 
   private void documentParts() throws Exception {

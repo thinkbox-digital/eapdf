@@ -33,8 +33,18 @@ final class ValidationSession implements AutoCloseable {
     }
     static void stage(String stage, Path file) {
         ValidationSession session = current;
-        if (session == null) return;
+        if (session == null) {
+            if (Boolean.getBoolean("eapdf.validator.childWorker")) System.out.println("[validation] " + stage + " — " + file.getFileName());
+            return;
+        }
         session.stage = stage; session.detail = file.getFileName().toString();
+        session.updateProgress();
+    }
+    static void collectionProgress(int completed, int total) {
+        ValidationSession session = current;
+        if (session == null) return;
+        session.stage = "Checking embedded email PDFs";
+        session.detail = completed + " of " + total + " collection members finished; four processes";
         session.updateProgress();
     }
     static void pdfaFinished(JsonObject result) {

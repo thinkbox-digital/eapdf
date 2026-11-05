@@ -106,6 +106,22 @@ final class ConversionProgress {
     }
   }
 
+  static void importReceipts(Path snapshot) throws Exception {
+    var p = active;
+    if (p == null) return;
+    if (Files.size(snapshot) > ProcessingLimits.metadataBytes()) throw Common.fail("Worker progress exceeds the metadata budget");
+    JsonArray receipts = JsonParser.parseString(Files.readString(snapshot)).getAsJsonObject().getAsJsonArray("creation_receipts");
+    synchronized (p) {
+      for (var receipt : receipts) {
+        long size = receipt.toString().length() * 2L;
+        if (size > ProcessingLimits.metadataBytes() - p.receiptBytes)
+          throw Common.fail("Conversion receipts exceed the metadata budget");
+        p.creationReceipts.add(receipt); p.receiptBytes += size;
+      }
+      p.emit(true);
+    }
+  }
+
   static void diagnostics(Map<String, String> warnings) {
     Map<String, ConversionDiagnostic> entries = new TreeMap<>();
     warnings.forEach((key, text) -> entries.put(key, new ConversionDiagnostic(

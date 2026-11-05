@@ -42,6 +42,23 @@ The creator now places archive-wide front matter at document level; its CLI is
 unchanged. This validator does not display emails,
 follow links or connect to email accounts.
 
+## Collection processing
+
+Collection members are checked by four persistent JVM processes. The coordinator
+reads the parent PDF serially, stages at most eight members, and merges child
+reports in collection order. Nested collections stay within the assigned worker;
+there is no recursive process multiplication. Every PDF/A, ISO 32005 and EA-PDF
+check still runs. Worker errors remain incomplete findings, never successful checks.
+
+Workers recycle after 128 child PDFs to release accumulated parser/JIT state.
+Each defaults to one quarter of the coordinator heap, bounded between 128 MiB
+and 1 GiB (four workers therefore use up to 4 GiB of Java heap in addition to
+the coordinator). `VALIDATOR_CHILD_HEAP_MIB` overrides the per-worker allowance.
+`VALIDATOR_CHILD_PROCESSES=1` selects the serial path for comparisons; the normal
+value is `4`. These are environment variables or Java system properties, not
+new command-line arguments. Cancellation stops workers and removes staged files.
+Progress reports include completed and total collection members.
+
 ## Build
 
 From the repository root, using Java 21 and Maven:

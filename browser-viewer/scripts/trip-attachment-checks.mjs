@@ -8,7 +8,7 @@ export async function checkTripAttachments(browser){
  const expected=JSON.parse(await readFile('tests/attachments/trip-info.json','utf8'));
  const source=resolve(expected.sourcePath);assert.equal(hash(await readFile(source)),expected.sourceSha256);
  await browser.open(source);
- const target=await browser.evaluate(()=>{const b=[...document.querySelectorAll('[data-embedded-file-id]')].find(b=>b.textContent.endsWith('TRIP INFO_000046_1s.pdf'));return {file:b.dataset.embeddedFileId,stream:b.dataset.embeddedStream};});
+ const target=await browser.evaluate(()=>{const b=[...document.querySelectorAll('[data-embedded-file-id]')].find(b=>b.title.endsWith('TRIP INFO_000046_1s.pdf'));return {file:b.dataset.embeddedFileId,stream:b.dataset.embeddedStream};});
  await expandFolders(browser);
  await browser.click(`[data-embedded-file-id=${JSON.stringify(target.file)}][data-embedded-stream=${JSON.stringify(target.stream)}]`);await browser.ready();
  assert.equal(await browser.evaluate(()=>document.querySelector('#canvas').closest('.pdf-page').getAttribute('aria-label')),'Page 1 of 2');

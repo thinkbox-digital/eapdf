@@ -28,10 +28,11 @@ test('email ownership requires one complete syntactically valid source Message-I
 });
 test('collection search preserves member paths and reports unreadable children as incomplete',async()=>{
   const doc=(name,text,collection)=>({name,pdf:{numPages:1,getPage:async()=>({getTextContent:async()=>({items:[{str:text}]}),cleanup(){}})},run:p=>p,inspection:{collection:collection?{state:'present',value:{}}:{state:'missing',value:null},coverage:{associatedFiles:'present'},files:[]}});
-  const root=doc('root','cover',true),child=doc('child','wanted email',false);
+  const root=doc('root','cover',true),child=doc('child','wanted email wanted',false);
   root.inspection.files=[{id:'a',filename:{value:'a.pdf'},unicodeFilename:{value:null},streams:[{mimeType:{value:'application/pdf'},locator:{path:'one'}}]},{id:'b',filename:{value:'b.pdf'},unicodeFilename:{value:null},streams:[{mimeType:{value:'application/pdf'},locator:{path:'two'}}]}];
-  const result=await searchCollection({child:async(_d,f)=>{if(f.id==='b')throw new Error('broken child');return child;}},root,'wanted',()=>{},()=>{});
-  assert.equal(result.matches.length,1);assert.deepEqual(result.matches[0].path,[{fileId:'a',streamPath:'one'}]);assert.match(result.incomplete[0],/broken child/);
+  const released=[];
+  const result=await searchCollection({release:async d=>{released.push(d);},child:async(_d,f,_s,refresh)=>{assert.equal(refresh,false);if(f.id==='b'){assert.deepEqual(released,[child]);throw new Error('broken child');}return child;}},root,'wanted',()=>{},()=>{});
+  assert.equal(result.matches.length,1);assert.equal(result.matches[0].count,2);assert.deepEqual(result.matches[0].path,[{fileId:'a',streamPath:'one'}]);assert.match(result.incomplete[0],/broken child/);
 });
 
 test('structure rendering accepts deep trees and rejects cycles or excessive text',()=>{
@@ -53,9 +54,9 @@ test('email index visits unopened collection members without reading page text a
   const leaf={name:'same.pdf',inspection:{collection:{state:'missing'},coverage:{metadata:'present'},diagnostics:[],messages:[{id:'m',metadataRecordId:'r'}]},details:new Map([['r',{Subject:'Wanted',From:'Someone',Sent:'2026-11-02'}]])};
   const file=id=>({id,filename:{value:'same.pdf'},unicodeFilename:{value:null},streams:[{mimeType:{value:'application/pdf'},locator:{path:id}}]});
   const root={name:'root.pdf',inspection:{collection:{state:'present',value:{entries:[{fileId:'a'},{fileId:'b'},{fileId:'broken'}]}},coverage:{metadata:'present',associatedFiles:'present'},diagnostics:[],files:['a','b','broken','unrelated'].map(file)}};
-  const visited=[];
-  const result=await indexMessages({child:async(_parent,f)=>{visited.push(f.id);if(f.id==='broken')throw new Error('unreadable');return leaf;}},root,()=>{},()=>{});
-  assert.deepEqual(visited,['a','b','broken']);assert.equal(result.messages.length,2);
+  const visited=[],released=[];
+  const result=await indexMessages({release:async d=>{released.push(d);},child:async(_parent,f,_stream,refresh)=>{assert.equal(refresh,false);assert.equal(released.length,visited.length);visited.push(f.id);if(f.id==='broken')throw new Error('unreadable');return leaf;}},root,()=>{},()=>{});
+  assert.deepEqual(visited,['a','b','broken']);assert.deepEqual(released,[leaf,leaf]);assert.equal(result.messages.length,2);
   assert.deepEqual(result.messages.map(m=>m.path[0].fileId),['a','b']);assert.equal(result.messages[0].messageId,'m');assert.match(result.messages[0].searchText,/wanted someone/);assert.match(result.incomplete[0],/unreadable/);
   await assert.rejects(indexMessages({},root,()=>{throw new Error('cancelled');},()=>{}),/cancelled/);
 });

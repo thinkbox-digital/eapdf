@@ -106,6 +106,13 @@ public class EapdfGui {
 
     frame.setMinimumSize(new Dimension(1200, 955));
     frame.pack();
+    var screen = frame.getGraphicsConfiguration().getBounds();
+    var screenInsets = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(frame.getGraphicsConfiguration());
+    int availableWidth = screen.width - screenInsets.left - screenInsets.right;
+    int availableHeight = screen.height - screenInsets.top - screenInsets.bottom;
+    frame.setMinimumSize(new Dimension(Math.min(1200, availableWidth), Math.min(955, availableHeight)));
+    frame.setSize(Math.min((int)Math.round(frame.getWidth() * 1.2), availableWidth),
+        Math.min((int)Math.round(frame.getHeight() * 1.2), availableHeight));
     frame.setLocationRelativeTo(null);
     frame.setVisible(true);
   }
@@ -361,7 +368,11 @@ public class EapdfGui {
 
   static int showSigningPasswordDialog(Component parent, JPasswordField password) {
     String title = "Signing certificate password";
-    var pane = new JOptionPane(password, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+    var pane = new JOptionPane(password, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION) {
+      @Override public void selectInitialValue() {
+        password.requestFocusInWindow();
+      }
+    };
     var dialog = pane.createDialog(parent, title);
     int titleWidth = password.getFontMetrics(password.getFont()).stringWidth(title);
     dialog.setMinimumSize(new Dimension(Math.max(440, titleWidth + 160), dialog.getHeight()));

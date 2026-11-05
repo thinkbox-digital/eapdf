@@ -1,6 +1,6 @@
 {
   "name": "eapdf-browser-viewer",
-  "version": "0.5.0-beta.6",
+  "version": "0.5.0-beta.8",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
@@ -18,7 +18,7 @@
     "verify:pdfjs": "node scripts/pdfjs-patch.mjs",
     "test:m2": "npm run build && node --test tests/document-parts.test.mjs && npm run test:parts",
     "test:parts": "node scripts/document-parts-smoke.mjs",
-    "test": "npm run build && node --test tests/*.test.mjs && npm run test:browser && npm run test:parts && npm run test:ui && npm run test:reading && npm run test:downloads && npm run test:retry && npm run test:loading && npm run test:associations && npm run test:inspection-warning && npm run test:supplements",
+    "test": "npm run build && node --test tests/*.test.mjs && npm run test:browser && npm run test:parts && npm run test:ui && npm run test:reading && npm run test:downloads && npm run test:retry && npm run test:loading && npm run test:associations && npm run test:inspection-warning && npm run test:supplements && npm run test:export && npm run test:allocation && npm run test:navigation && npm run test:collection-matches && npm run test:design",
     "test:browser": "node scripts/browser-smoke.mjs",
     "test:firefox": "node scripts/firefox-smoke.mjs",
     "verify:licenses": "node scripts/licenses.mjs",
@@ -33,7 +33,12 @@
     "test:loading": "node scripts/loading-smoke.mjs",
     "test:associations": "node scripts/association-smoke.mjs",
     "test:retry": "node scripts/retry-smoke.mjs",
-    "test:reading": "node scripts/reading-improvements-smoke.mjs"
+    "test:reading": "node scripts/reading-improvements-smoke.mjs",
+    "test:export": "node scripts/export-smoke.mjs",
+    "test:allocation": "node scripts/allocation-recovery-smoke.mjs",
+    "test:navigation": "node scripts/navigation-refresh-smoke.mjs",
+    "test:collection-matches": "node scripts/collection-match-smoke.mjs",
+    "test:design": "node scripts/viewer-design-smoke.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "6.5.438"

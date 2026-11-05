@@ -34,16 +34,22 @@ try{
      if(JSON.stringify(before)!==JSON.stringify(after))throw new Error('Owners lost on refresh');
      await session.associateFiles(doc);
     }
-    results.push({mode,error,children,count:supplements.length,linked:supplements.filter(f=>f.owners.value?.length===1).length,diagnostics:doc.inspection.diagnostics.map(d=>d.code)});
+    const scannedChildren=children,cached=session.cachedMessageIndex(doc);let cacheMatches;
+    if(mode==='success'){
+      const {indexMessages}=await import('./message-index.js'),reference=new BrowserSession({},{reuseWorker:true});
+      try{const root=await reference.open(input,input.name);const expected=await indexMessages(reference,root,()=>{},()=>{});cacheMatches=JSON.stringify(cached)===JSON.stringify(expected);}
+      finally{reference.close();}
+    }
+    results.push({mode,error,children:scannedChildren,cached:!!cached,cacheMatches,count:supplements.length,linked:supplements.filter(f=>f.owners.value?.length===1).length,diagnostics:doc.inspection.diagnostics.map(d=>d.code)});
    }finally{if(proto)proto.getDocumentAssets=original;session.close();}
   }
   return results;
  });
  for(const r of results){
   assert.ok(r.count>0,'fixture has supplements');
-  if(r.mode==='success'){assert.equal(r.error,undefined);assert.equal(r.linked,r.count);assert.equal(r.children,7,'one scan, reused after refresh');}
-  else if(r.mode==='cancel')assert.match(r.error,/cancelled/);
-  else {assert.equal(r.linked,0);assert.ok(r.diagnostics.includes('SUPPLEMENT_ASSOCIATION_INCOMPLETE'));}
+  if(r.mode==='success'){assert.equal(r.error,undefined);assert.equal(r.linked,r.count);assert.equal(r.children,7,'one scan, reused after refresh');assert.equal(r.cacheMatches,true,'cached index equals independent full scan');}
+  else if(r.mode==='cancel'){assert.match(r.error,/cancelled/);assert.equal(r.cached,false);}
+  else {assert.equal(r.cached,false);assert.equal(r.linked,0);assert.ok(r.diagnostics.includes('SUPPLEMENT_ASSOCIATION_INCOMPLETE'));}
   console.log(JSON.stringify(r));
  }
  await page.waitForTimeout(100);assert.equal(page.workers().length,0,'all document workers disposed');

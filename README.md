@@ -8,16 +8,16 @@
 
 Convert email into EA-PDF files using Java, PDFBox, and XMP metadata.
 
-Current beta version: `1.6.0-beta.8`
+Current beta version: `1.6.0-beta.9`
 
 The separate [browser viewer beta](browser-viewer/docs/beta-release.md) opens local
 EA-PDF files and embedded PDFs recursively in Firefox and Chromium. It also
 shows metadata, image and text attachments, with normal downloads for Office files.
-Viewer version `0.5.0-beta.6` includes collection-wide email search, CSV finding
+Viewer version `0.5.0-beta.8` includes collection-wide email search, CSV finding
 aids with folder and attachment details, and paced file downloads. Installation and tested limits
 are documented in that guide.
 
-Latest release: [v1.6.0-beta.8](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.8). Java 21 or later is required.
+Latest release: [v1.6.0-beta.9](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.9). Java 21 or later is required.
 
 For the current proof of concept, see [the short demo guide](docs/CREATOR_DEMO.md). Runnable creator and standalone-validator builds are available from the release linked above.
 
@@ -122,7 +122,7 @@ All six profiles currently use PDF 2.0 / PDF/A-4f output in this generator. Sele
 
 ## Release Downloads
 
-Version `1.6.0-beta.8` is a beta for ordinary email creation and validation.
+Version `1.6.0-beta.9` is a beta for ordinary email creation and validation.
 Large archives require sufficient RAM. Further large-PST campaigns are outside
 the current work scope; previous results and source limitations are retained.
 Large-output signing retains its separate verification status. See
@@ -130,12 +130,12 @@ Large-output signing retains its separate verification status. See
 
 | Download | Purpose |
 | --- | --- |
-| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.8/emailtopdfa-1.6.0-beta.8-gui.jar) | Convert local email sources through the desktop app. |
-| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.8/emailtopdfa-1.6.0-beta.8.jar) | Run local email and Gmail workflows from the command line. |
-| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.8/eapdf-validator-1.6.0-beta.8.jar) | Validate a PDF using the bundled Java engines and current rules. |
-| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.8/eapdf-viewer-0.5.0-beta.6-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
-| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.8/eapdf-viewer-0.5.0-beta.6-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
-| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.8/ea-pdf-examples-1.6.0-beta.8.zip) | Refreshed input-named examples and PDF/A finding-aid sidecars, with source hashes and validation receipts. |
+| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/emailtopdfa-1.6.0-beta.9-gui.jar) | Convert local email sources through the desktop app. |
+| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/emailtopdfa-1.6.0-beta.9.jar) | Run local email and Gmail workflows from the command line. |
+| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/eapdf-validator-1.6.0-beta.9.jar) | Validate a PDF using the bundled Java engines and current rules. |
+| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/eapdf-viewer-0.5.0-beta.8-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
+| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/eapdf-viewer-0.5.0-beta.8-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
+| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/ea-pdf-examples-1.6.0-beta.9.zip) | Refreshed input-named examples and PDF/A finding-aid sidecars, with source hashes and validation receipts. |
 
 Each JAR includes its runtime libraries. The release also includes the updated specification-author review document, license notices and `SHA256SUMS.txt`. Run a desktop app with `java -jar downloaded-file.jar`.
 
@@ -160,8 +160,8 @@ mvn package
 
 Artifacts:
 
-- CLI fat jar: `target/emailtopdfa-1.6.0-beta.8.jar`
-- GUI fat jar: `target/emailtopdfa-1.6.0-beta.8-gui.jar`
+- CLI fat jar: `target/emailtopdfa-1.6.0-beta.9.jar`
+- GUI fat jar: `target/emailtopdfa-1.6.0-beta.9-gui.jar`
 
 The current creator build is also available in `dist/`:
 
@@ -177,19 +177,19 @@ running web process to load a changed application or creator JAR selection.
 Convert a local email source:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.8.jar eapdf.EmailToPDFA --jobs 2 file.eml
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.9.jar eapdf.EmailToPDFA --jobs 2 file.eml
 ```
 
 Write output to a custom directory:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.8.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.9.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
 ```
 
 Generate an archive profile:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.8.jar eapdf.EmailToPDFA \
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.9.jar eapdf.EmailToPDFA \
   --jobs 2 --archive-profile m \
   --archive-output archive_1m.pdf \
   file.mbox
@@ -206,10 +206,14 @@ RAM. The desktop validator sizes its child worker automatically. CLI progress an
 compact summaries are saved beside the full report.
 
 For conversion work, use bounded parallel processing and the Java validator.
-`--jobs` enables the creator’s existing parallel archive/collection rendering and
-processing of multiple input files; it does not parallelize standalone extraction
-from one PST. Allow sufficient heap for the requested workers: the existing
-default limits budget roughly 1 GiB per rendering worker. The Python validator
+`--jobs` enables parallel archive/collection rendering, processing of multiple
+input files, and separate JVM rendering processes for per-email output from a
+MBOX or PST. Each source is parsed once; PST messages stream to available workers
+and their staged payloads are released after rendering. Outputs publish only after
+every worker succeeds. Process count and child heaps are
+bounded by CPU and available memory; `--jobs 1` keeps sequential rendering.
+PST extraction itself remains sequential. Allow sufficient heap
+for the requested workers; archive rendering budgets roughly 1 GiB per worker. The Python validator
 remains available for its regression tests and explicitly requested comparisons
 or diagnostics.
 
@@ -233,7 +237,7 @@ python validator_web.py
 Launch the desktop GUI:
 
 ```bash
-java -jar target/emailtopdfa-1.6.0-beta.8-gui.jar
+java -jar target/emailtopdfa-1.6.0-beta.9-gui.jar
 ```
 
 Tracked examples are grouped by source format under [`examples/`](examples/):
@@ -545,7 +549,7 @@ To include generated-PDF checks for all six profiles, build the JAR and run:
 
 ```bash
 mvn package
-EAPDF_GENERATOR_CLASSPATH="$PWD/target/emailtopdfa-1.6.0-beta.8.jar" \
+EAPDF_GENERATOR_CLASSPATH="$PWD/target/emailtopdfa-1.6.0-beta.9.jar" \
   python3 -B -m unittest discover -s tests -v
 ```
 

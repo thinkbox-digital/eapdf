@@ -11,6 +11,14 @@ try{
   const page=await context.newPage();
   await page.goto(`chrome-extension://${new URL(worker.url()).host}/viewer.html`);
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  const cancelledPreparation=await page.evaluate(async()=>{
+    const {BrowserSession}=await import('./browser-session.js');const session=new BrowserSession();
+    const blob=new Blob([new Uint8Array(16*1024**2)]);let release;
+    blob.arrayBuffer=()=>new Promise(resolve=>{release=resolve;});
+    const opening=session.open(blob,'cancel-before-transfer.pdf');session.close();release(new ArrayBuffer(0));
+    try{await opening;return false;}catch(error){return /cancelled/i.test(error.message)&&session.pending.size===0;}
+  });
+  assert.equal(cancelledPreparation,true,'cancellation during buffer preparation must not start a PDF worker');
   await page.evaluate(async()=>{
     const {BrowserSession}=await import('./browser-session.js');
     const original=BrowserSession.prototype.open;

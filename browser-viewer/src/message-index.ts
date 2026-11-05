@@ -32,7 +32,9 @@ export async function indexMessages(session:BrowserSession,root:BrowserDocument,
           check();if(stopped)return;
           if(stream.mimeType.value?.split(';')[0]?.toLowerCase()!=='application/pdf'&&!/\.pdf$/i.test(fileLabel(file)))continue;
           count++;
-          try{const child=await session.child(doc,file,stream);check();await visit(child,[...path,{fileId:file.id,streamPath:stream.locator.path}],name+' / '+fileLabel(file));}
+          try{const child=await session.child(doc,file,stream,false);
+            try{check();await visit(child,[...path,{fileId:file.id,streamPath:stream.locator.path}],name+' / '+fileLabel(file));}
+            finally{await session.release(child);}}
           catch(error){check();problem(`${fileLabel(file)}: ${error instanceof Error?error.message:String(error)}`);}
         }
       }

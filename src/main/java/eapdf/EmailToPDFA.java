@@ -295,6 +295,7 @@ public class EmailToPDFA {
   static void processPst(String input, String outDir, String fontPath, String iccPath, String globalId,
                          List<String> archiveEmails, boolean debug, String debugDir, AtomicInteger seq,
                          boolean multiInput, boolean omitSource) throws Exception {
+    if (PstProcesses.convert(input, outDir, fontPath, iccPath, globalId, archiveEmails, debug, debugDir, seq, multiInput, omitSource)) return;
     int workers = PdfMailWriter.renderParallelism(Integer.MAX_VALUE);
     ExecutorService pool = Common.newWorkers(workers);
     Deque<Future<?>> pending = new ArrayDeque<>();
@@ -326,6 +327,11 @@ public class EmailToPDFA {
     if (recs.isEmpty()) throw Common.fail("no messages found in input: " + input);
     System.out.println("input: " + input + " messages: " + recs.size());
     String inputStem = Common.safeFileStem(Paths.get(input).getFileName().toString().replaceFirst("\\.[^.]+$", ""));
+    if (!multiInput && input.toLowerCase(Locale.ROOT).endsWith(".mbox")
+        && MboxProcesses.convert(input, recs, outDir, fontPath, iccPath, debug, debugDir, omitSource)) {
+      seq.addAndGet(recs.size());
+      return;
+    }
     int localIndex = 0;
     for (EmailRecord r : recs) {
       localIndex++;

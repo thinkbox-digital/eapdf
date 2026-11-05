@@ -41,6 +41,23 @@ final class OutputTransaction implements AutoCloseable {
     return Path.of(entry.staged());
   }
 
+  synchronized void adopt(Path manifest, Path childDirectory) throws Exception {
+    if (Files.size(manifest) > ProcessingLimits.metadataBytes()) throw Common.fail("Output manifest exceeds the metadata limit");
+    Entry[] completed = new Gson().fromJson(Files.readString(manifest), Entry[].class);
+    if (completed == null) throw new IOException("Missing child output manifest");
+    for (Entry entry : completed) {
+      Path source = Path.of(entry.staged()).toAbsolutePath().normalize();
+      Path destination = Path.of(entry.destination()).toAbsolutePath().normalize();
+      if (!source.startsWith(childDirectory.toAbsolutePath().normalize())
+          || !Files.isRegularFile(source, LinkOption.NOFOLLOW_LINKS) || entries.containsKey(destination)
+          || Files.size(source) != entry.size() || !Common.digestHex(source, "SHA-256").equals(entry.sha256()))
+        throw new IOException("Invalid child output manifest");
+      Path target = stage(destination);
+      if (target.equals(destination)) throw new IOException("Child destination is inside working storage");
+      Files.move(source, target);
+    }
+  }
+
   static Path readable(Path destination) {
     OutputTransaction transaction = active;
     if (transaction == null) return destination;

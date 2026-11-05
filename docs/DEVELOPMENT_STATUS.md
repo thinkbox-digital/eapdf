@@ -1,5 +1,567 @@
 # Development status and restart guide
 
+**Beta.9 release — 2026-11-05 (verified for publication):**
+Creator and validator bumped to 1.6.0-beta.9; viewer to 0.5.0-beta.8.
+Includes the recent MBOX/PST process workers, four-process collection validation,
+viewer performance and interface fixes, and the 4 GiB viewer input ceiling.
+Release builds use isolated temporary directories; the active Schiavo run keeps
+its recorded beta.8 executable and continues unchanged. Full-archive validation
+is still pending, with the earlier failures/incomplete results retained below.
+Verification: creator 390 tests (four optional skips), validator 262 tests
+(nine optional skips), zero failures/errors; 55 viewer unit tests and four
+Chromium integration suites passed. Five real-input conversion/fidelity/visual
+regressions and Java validation passed. Documentation: 25 pages checked.
+The collection-match smoke instrumentation now excludes background subject
+indexing from its text-search count. The full beta smoke suite still requires
+the absent `output/bfo.pdf` fixture; no full Firefox runtime claim is made.
+Release evidence: `output/release-1.6.0-beta.9/`.
+The publishing policy now requires distributable assets for every requested
+GitHub push and retains only the current release and its immediate predecessor.
+
+**Four-process collection validation — 2026-11-05 (installed; Schiavo restarted):**
+At the user's request, the serial Schiavo validation was cancelled and its streamed
+partial findings and logs preserved under
+`output/remaining-large-pst-2026-11-04/cancelled-serial-schiavo/`.
+The queue was held until the new executable passed verification. Schiavo has now
+restarted from the beginning with the new validator, followed by the remaining
+queued PDFs. Previously completed reports are reused.
+
+Collection children now use four persistent JVM processes, at most eight staged
+members, ordered report merging and serial nested collections. Workers recycle
+after 128 members. The current run uses a 12 GiB coordinator heap plus four
+1 GiB child heaps; no PDF/A, ISO 32005 or EA-PDF checks are skipped. Worker crashes,
+timeouts and missing reports remain incomplete findings. CLI arguments unchanged.
+
+Verification: 262 tests, zero failures/errors, nine optional skips. All findings
+match the serial path for three real collections. A separate 256-member Schiavo
+comparison took 50.75 s serial versus 28.24 s with four processes (1.80x), with
+identical findings. Small collections can be slower because of process startup;
+this benchmark is not a promise of the same full-archive speedup.
+Evidence, source/output hashes, reports and benchmark harness:
+`output/validator-four-process-2026-11-05/`. Updated distributable:
+`dist/eapdf-validator.jar` (SHA-256
+`5c6656bb06ef2d6ca6d21cdec9703f7168a7aae4a3efdd9ad695e58b9c18d9bc`).
+
+**Viewer input limit — 2026-11-05:**
+Raised BrowserSession maxFileBytes from 512 MiB to 4 GiB (4,294,967,296 bytes)
+and updated the viewer README. Both local beta.7 browser packages rebuilt.
+Twelve focused browser input/resource/cancellation checks passed, including the
+4 GiB size gate and rejection at 4 GiB + 1 byte without allocating large buffers.
+This verifies the size gate, not successful parsing of an actual 4 GiB PDF.
+The full beta smoke test is blocked by its absent `output/bfo.pdf` fixture.
+Evidence: `output/viewer-input-limit-2026-11-05/checks.json`.
+The Schiavo collection is 4,303,585,642 bytes, 8,618,346 bytes above this ceiling.
+
+**Remaining large PSTs — 2026-11-04 (converted; validation running):**
+All five previously skipped PSTs converted successfully: 218,790 emails total.
+All five source hashes are unchanged after conversion. New documents publish
+straight into `out/pst/`, with profile suffixes and no deeper folders. Logs,
+JSON, validation reports and the new size table stay outside `out/`.
+
+Evidence: `output/remaining-large-pst-2026-11-04/`.
+Successful conversion sizes/times: `output/remaining-large-pst-2026-11-04/CONVERSION_SIZES.md`.
+The 105,034-message Schiavo PST uses 1ci to avoid assembling all pages in one
+large document; the other outputs use 1m/1mi. There are five new primary PDFs,
+one finding-aid PDF and one spreadsheet index. Conversion used four jobs and
+an 8 GiB heap; Accessibility on, PREMIS/signing off, creation-time validation skipped.
+Initial launcher-cap failure and cancelled profile attempts remain in the evidence
+folders. Only completed outputs were published.
+
+Standalone Java validation is now running sequentially with a 12 GiB heap
+(previously 6 GiB) and 48 GiB virtual-address allowance. Nine PDFs are queued:
+the six new PDFs, the earlier large-PST trial, the earlier large collection,
+and its finding-aid PDF/A check. This is not an all-pass validation claim.
+Current state: `active-validation.json`, `status.json`, and `validation/` in the run
+evidence directory. A queued final report will update this entry and write the
+combined integrity audit, full size table and validation exceptions when finished.
+
+**Validation checkpoint — 2026-11-05:**
+Three of nine queued PDFs have finished validation with the 12 GiB heap.
+Nov–Dec 2005 (1m): PDF/A PASS, EA-PDF FAIL with three missing Sent metadata
+findings (MESSAGE_SENT_XMP). Jan–Jun 2004 (1mi): PDF/A PASS, zero failed
+checks, overall INCOMPLETE because source information and attachment associations
+cannot be fully established. Jan–Jun 2005 (1m): PDF/A PASS, EA-PDF FAIL with
+three missing To XMP properties where the validator finds source To values
+(MESSAGE_CORE_FIELDS_SOURCE_REQUIRED). These six failed checks are metadata
+findings, not memory-exhaustion failures.
+
+The Schiavo 1ci collection is actively validating embedded PDFs: roughly 86,400
+child checks started after nine hours. Its root PDF/A check passed; this does
+not establish the complete collection's conformance. Five PDFs remain queued.
+The three finished runs have no memory-exhaustion termination. See the run's
+`validation/0`, `validation/1`, `validation/2` reports for final findings and
+`validation/3/validation.log` for live collection progress.
+
+**Future bulk output layout — 2026-11-04:**
+The user requested that future bulk `in/` → `out/` runs publish documents directly
+in the four type folders (`eml`, `msg`, `mbox`, `pst`), with no deeper subfolders.
+Logs, JSON/progress manifests and validation reports belong in `output/<run>/`.
+Use isolated staging for concurrent conversions, then publish only final document
+artifacts into the appropriate flat type folder. Recorded in `AGENTS.md`.
+
+**Large-PST trial and final audit — 2026-11-04 (finished):**
+Converted `in/pst_24_GovernFJan-MAr2003.pst` (434.90 MB), all 34,601 discovered
+emails, to a 564.32 MB profile 1m PDF in 28 min 12 sec (+29.76% size).
+Standalone Java validation ran out of memory with a 6 GiB heap after 148 seconds;
+its result is INCOMPLETE, with no PDF/A or EA-PDF compliance verdict.
+Source warnings are retained; conversion completion does not establish conformance.
+Evidence: `output/large-pst-trial-2026-11-04/`.
+
+Combined regeneration: 83 inputs converted; five oversized PSTs remain skipped.
+There are 159 primary EA-PDFs, 28 finding-aid PDFs and 28 spreadsheet indexes.
+PDF validation outcomes: 180 PASS, three FAIL, three INCOMPLETE and one ERROR
+(the largest collection's finding-aid PDF/A check did not finish).
+The final audit verified all 88 original source hashes and 215 output hashes,
+with no changed files or unlisted PDFs. Size/profile table: `out/FILE_SIZES.md`;
+exceptions: `out/VALIDATION_EXCEPTIONS.md`; audit:
+`output/large-pst-trial-2026-11-04/combined-audit.json`.
+
+**Clean regeneration — 2026-11-04 (complete, with validation exceptions):**
+The user authorized emptying `out/` and regenerating `in/`. Inventoried and hashed
+88 sources; six PSTs over 300,000,000 bytes are excluded, leaving 82 eligible inputs.
+Prior output metadata/logs were retained; old outputs were removed. Accessibility
+is on, PREMIS/signing off. Creation-time validation remains skipped; standalone
+Java validation follows generation, with PDF/A-only interpretation for finding aids.
+Two inputs convert concurrently, each using four jobs and a 4 GiB heap allowance.
+
+All six profiles are represented. Enron remains 1m. The largest PST is 1ci; other
+PSTs cover c/m/mi/s/si. EML/MSG singleton m/mi assignments were corrected to
+s/si because m/mi require at least two emails. Failed first attempts are retained.
+Primary output filenames carry their export profile. Final size/profile/status
+reports are in `out/FILE_SIZES.md`, `out/file-sizes.csv`, and
+`out/output-files.csv`. Batch evidence: `output/regeneration-2026-11-04/`.
+Validation exceptions remain; this is not an all-pass corpus.
+All 82 eligible inputs now have outputs: 158 primary PDFs, 28 finding-aid PDFs
+and 28 spreadsheet indexes. All 88 source hashes are unchanged. Standard-budget
+validation retries resolved Enron, April PST and July PST resource failures.
+The 15,856-message 1ci collection underwent exhaustive child validation via
+`validate-largest.py`; it uses 6 GiB heap, 128 MiB metadata, 512 MiB stream and
+32,768 open-file allowances. Its final marker is `completion-verified.json`.
+That run ended INCOMPLETE after approximately 15,289 child checks: the JVM
+could not allocate native memory in C2 compilation under its 10 GiB address-space
+budget, despite about 17 GiB system memory being available. Root PDF/A passed,
+but there is no complete EA-PDF verdict. Crash diagnostics are retained in
+`largest-validation/jvm-crash/`; the additional PST trial is summarized above.
+Batch source outcomes: 77 PASS, three validation failures (Drafts.mbox, msg.mbox,
+and the May PST), two incomplete (nested-attachment MSG and the largest collection),
+six intentionally skipped. All conversions succeeded; these are validation outcomes.
+Generation and validation scripts/logs are retained in their evidence directories.
+
+
+**Browse subjects and future generation naming — 2026-11-04:**
+Browse collection entries now show the single email's subject before a child PDF
+is clicked. Initial opening prepares subject labels using the existing supplement
+association metadata index when available; otherwise an isolated metadata scan
+builds the labels before the tree is shown. The same index is reused by Find emails.
+Filenames remain tooltips and fallbacks for unavailable subjects; multi-email or
+nested collection containers retain file labels. Search result filename behavior
+is unchanged. The layout regression verifies subject labels before opening children. The broader
+UI regression passes 13 cases, 17 message selections, exact-byte attachment
+downloads, navigation and cancellation.
+Local Chromium/Firefox beta.7 packages and hashes are rebuilt; evidence is in
+`output/viewer-browse-subjects-2026-11-04/`.
+
+For future generated outputs, append the export profile to each filename, such as
+`_1s.pdf` or `_1c.pdf`. Full `in/` → `out/` regenerations should use suitable profiles
+and a representative mix across input types. This standing instruction is recorded
+in `AGENTS.md`; no regeneration or converter naming-policy change was performed in
+this viewer task. Existing accessibility-on, PREMIS-off and PST-over-300-MB exclusion
+preferences remain applicable unless the user changes them.
+
+
+**Files pane filename cleanup — 2026-11-04 (local beta.7):**
+Removed the redundant “Files stored in …” line from the Files pane, including
+empty file lists. The Embedded files heading and count remain.
+
+
+**Files pane and footer cleanup — 2026-11-04 (local beta.7):**
+Original email sources sort first, including in large virtualized lists. Embedded
+PREMIS XML (identified by PREMIS filenames or MIME types) joins Technical and
+supporting files even when its stored AF relationship is not Supplement. This is
+viewer grouping only; stored PDF relationships and payloads are unchanged.
+Single-email PDFs omit redundant ownership links. Multi-email document views retain
+subject-based ownership links, with an email number only as an unnamed fallback.
+
+Removed Document information from the sidebar. The active document's declared
+EA-PDF profile now appears beside the viewer version in the footer and resets on
+close. The user-requested removal of “Conformance not evaluated” is applied;
+“Declared” distinguishes file metadata from an independent validation result.
+The broader UI regression passes 13 cases, 17 message selections and exact-byte
+downloads. Layout checks verify source-first ordering, PREMIS grouping, no redundant owner
+labels, the removed panel and the footer profile. Chromium/Firefox local beta.7
+packages and checksums are rebuilt. Evidence: `output/viewer-files-footer-2026-11-04/`.
+
+
+**Search details, reset and page-number fixes — 2026-11-04 (local beta.7):**
+Collection search now explicitly synchronizes the matching page's email ownership
+before highlighting. Files & information follows result clicks and Next/Previous
+within multi-message PDFs, including when Browse messages is hidden. File ownership
+updates no longer depend on a mounted navigation row. Hidden browse rows do not
+scroll the search results pane.
+
+Removed the duplicate document heading; the breadcrumb is the sole filename display
+above the document. Pane restore buttons still appear when either side pane is
+hidden. Clearing the search input (including Escape) clears cached collection
+results, highlights and counts, disables the results tab and returns to Browse.
+The page-number input fits at least four digits and expands for larger page counts.
+
+Build and browser regressions pass: real 1,433-message Enron archive ownership on
+result click/Next/Previous, four-digit page input fit, search clearing/retry,
+collection search cache/cancellation, and desktop/medium/narrow layout and pane
+restoration. Evidence: `output/viewer-match-details-2026-11-04/`.
+Chromium and Firefox local beta.7 packages and checksums are rebuilt. Reload the
+extension and reopen the viewer. No version bump or GitHub publication requested.
+
+
+
+**Viewer layout refinement — 2026-11-04 (local beta.7):**
+Applied the reviewed GUI refinements. Messages and Files & information now have
+matching 27% widths (285 px minimum; 270 px each at medium widths). Narrow screens
+still stack the panes. Sidebars use a subtle gray; the white document sits on a
+slightly darker canvas. Open PDF stays beside the simplified brand, while Export
+and Close sit at the right. Breadcrumbs moved above the document, and page/zoom
+controls form one fixed, centered toolbar with a labeled Parent action.
+
+Search titles allow two lines with the full title on hover; metadata is lighter
+and matches use bold highlighting. File rows are flat with file-type icons and
+right-aligned, visibly labeled View/Download actions. Distinct category bars remain;
+redundant per-file category labels are removed only in grouped lists. Large virtual
+lists retain their per-file roles. File owners retain full labels in tooltips.
+
+Desktop/medium/narrow layout and navigation checks pass, including equal widths,
+keyboard pane restoration, first-match navigation and filename-only results.
+The broader UI regression passes 13 cases and 17 message selections; all 16
+download checks preserve exact bytes, with cancellation and queue recovery.
+Evidence and screenshots: `output/viewer-refinement-2026-11-04/`.
+Local Chromium and Firefox beta.7 packages are rebuilt; no version bump or
+GitHub publication was requested for this refinement.
+
+**PST process rendering — 2026-11-04 (local converter build):**
+Per-email PST output now uses the bounded persistent JVM workers previously used
+for MBOX. One reader streams records to whichever worker is available; each worker
+has at most one outstanding message, and parent staged payloads are released when
+rendering finishes. Parsing itself remains sequential. Source files, supplemental
+headers, output numbering and staged all-or-nothing publication are preserved.
+Existing archive/collection rendering is unchanged; `--jobs 1`, insufficient
+memory, or an unsupervised call retain the existing in-process path. CLI arguments
+are unchanged. Child errors, cancellation and existing processing budgets abort
+publication; this adds no content truncation.
+
+30 targeted tests pass, including PST payload serialization, seven-message source
+preservation, global output numbering, payload release, child failure cleanup,
+MBOX regression, supervision, progress and CPU budgeting.
+
+Real PST benchmarks used `--jobs 4`, a 2 GiB parent heap, accessibility enabled,
+PREMIS and signing disabled, and creation checks enabled:
+
+| Input | Messages | Threads | Processes | Speedup |
+| --- | ---: | ---: | ---: | ---: |
+| `test.pst` | 71 | 8.7 s | 8.2 s | 1.07× |
+| `pst_14_05+May+2003+Public+2.pst` | 1,795 | 419.8 s | 85.0 s | 4.94× |
+
+For the larger PST, completion throughput by quarters was 10.35/5.66/3.69/2.94
+emails/s with threads versus 23.80/31.52/30.51/31.22 with processes. No progressive
+slowdown was observed in this process run. Timings include startup and publication;
+quarter rates end at rendering completion. Both runs requested four jobs, but the
+existing heap budget allowed two render threads, versus four 409 MiB process heaps.
+This is a practical before/after comparison, not equal-worker isolation of cause.
+Peak sampled process-tree RSS was 750.5 MiB with threads and 2,839.8 MiB with
+processes; parent heap size is not a total-memory cap. Small PSTs gain little.
+
+All 3,732 produced PDFs have PASS creation receipts and PUBLISHED status; input
+hashes remain unchanged. Standalone Java validation completed for all 3,732 PDFs:
+all pass PDF/A; 3,726 pass EA-PDF checks. Three source messages fail the same
+`MESSAGE_CORE_FIELDS_SOURCE_REQUIRED` rule for `To` in both baseline and process
+outputs (six failed PDFs total): message indexes 415, 793 and 1,752. These are
+pre-existing metadata failures, not missing messages or a process regression.
+Exact files/findings are retained in `validation-summary.json`; no incomplete
+validation runs remain. Local CLI/GUI JARs and checksums are updated; restart the
+GUI to use the new workers. No release or version bump was requested. Evidence,
+source hashes, benchmark scripts, logs and reports are retained in
+`output/pst-process-benchmark-2026-11-04/`; existing `out/` files are untouched.
+
+
+**Viewer 0.5.0-beta.7 — 2026-11-04 (local beta):**
+The viewer version and lockfile are bumped to `0.5.0-beta.7`; browser manifests
+use `0.5.0.7`. This includes design A and the following review corrections:
+embedded-file categories now have shaded heading bars and bordered groups,
+and both Find emails and collection text search display the matching filename
+without the parent collection path. Single-message filter results no longer
+repeat the subject; multi-message PDFs retain subject labels for disambiguation.
+Stored traversal paths and file associations are unchanged.
+
+The build, 55 unit tests, design checks, collection-match navigation and reading
+regressions pass. The filter regression explicitly verifies no root filename or
+parent path in results and confirms the selected filename opens the correct PDF.
+Evidence: `output/viewer-categories-2026-11-04/`. Chromium and Firefox local ZIPs
+are rebuilt in `browser-viewer/releases/`, with hashes in `beta-builds.json`.
+This is a viewer-only local bump; no GitHub push or release was requested.
+
+
+**Viewer design A implemented — 2026-11-04 (local build):**
+The production viewer now uses the approved Thinkbox slate-blue palette
+(`#4C566F`) and organized header/search/page controls. Original pane widths remain
+22% / center / 27%, with 220/285 px minimums and the existing 200/270 px medium
+layout. Open PDF sits next to the viewer name; pane-local Hide controls have
+explicit Show messages / Show files & info restore buttons with focus transfer.
+Browse messages and Search results use keyboard-accessible tabs; the email
+filter remains fixed above the scrolling browse list.
+
+Collection matches are grouped by exact file/stream traversal path. Each group
+shows one child filename (or nested relative path), without a repeated subject
+or root collection filename. Collection-cover hits use “Collection overview”.
+Excerpts are distinct, safely highlighted text; page/occurrence counts and the
+active Viewing indicator are visible. Next/Previous retain cached search behavior
+and keep the active result in view. Search/Enter selects the first match again.
+
+Build, 55 unit tests, the collection-match suite, and the broad Chromium UI suite
+pass (13 UI cases, 17 message selections, exact downloads, offline operation and
+cancellation). The new `npm --prefix browser-viewer run test:design` checks real
+collection output, grouped labels, highlights, tab keys, pane focus, original
+widths, no horizontal overflow at 1600/900/600 px, and reset on closing.
+Screenshots and logs: `output/viewer-design-a-2026-11-04/`. Both unpacked browser
+builds are refreshed under `browser-viewer/dist/`; reload the extension and open
+a new viewer tab. No version bump or GitHub release was requested.
+
+
+**Viewer GUI design concepts — 2026-11-04 (review mockups):**
+Mockup A has been revised following review: Thinkbox logo slate blue
+(`#4C566F`) replaces teal; desktop pane widths match the production viewer
+(22% messages, 27% information, with 220/285 px minimums; 200/270 px below
+1000 px). Search-result groups show the child filename once, without a separate
+duplicated subject heading. The collection filename stays in the top bar only.
+Updated A screenshots and dimension/interaction checks are beside the HTML.
+
+Three standalone interactive concepts are available at
+[`mockups/viewer-2026-11-04/index.html`](mockups/viewer-2026-11-04/index.html):
+A, a balanced three-pane workspace (recommended); B, a reading-focused two-pane
+layout with an information drawer; and C, a wider search-results workspace.
+All show the collection filename once, group matching pages under the child
+file, separate filenames from highlighted excerpts, and label pane controls
+where they act. Sample data and document previews are explicitly illustrative.
+No production viewer changes were made for this design request.
+
+The mockups support sample searches, match navigation, message filtering,
+keyboard tab selection, and pane visibility. Chromium screenshots at 1600×1050
+and 600×950, interaction checks, and selected text contrast checks are stored
+beside the HTML. These checks do not constitute a full accessibility audit.
+
+
+**Single-MBOX multi-process rendering — 2026-11-04 (local build):**
+`--jobs` now uses separate JVM render workers for per-email (`s`/`si`) output
+from a single MBOX. The GUI already requests four jobs. Parsing and source
+inventory reconciliation happen once; workers read shared staged payloads and
+retain original message indices, source bytes and MBOX provenance. CPU, available
+memory and configured heap bound process count and child heaps. `--jobs 1` stays
+sequential. Archive/collection and multiple-input paths retain their existing
+behavior. No CLI options were added.
+
+Each child has private staging and progress. The coordinator combines completion
+counts, receipts and diagnostics, verifies and adopts child manifests, and lets
+the existing supervisor publish only after all children succeed. Child failure
+aborts publication; parent watchdogs and cleanup terminate workers. Existing
+per-file diagnostic logs remain available even after failure.
+
+Real input `in/enron.mbox`, 1,433 emails, was converted with identical settings:
+profile `s`, Accessibility on, PREMIS off, creation checks on, signing off,
+2 GiB coordinator heap. Four child JVMs used 409 MiB each. The four-process run
+took **53.0 seconds**; sequential took **269.5 seconds** (**5.1× faster**).
+This is a local two-run comparison, not a signed-GUI timing guarantee.
+
+| Completed-email quarter | Sequential emails/s | Four-process emails/s |
+| --- | ---: | ---: |
+| First 358 | 8.56 | 20.98 |
+| Next 358 | 7.26 | 40.81 |
+| Next 358 | 5.31 | 44.24 |
+| Final 359 | 3.78 | 33.94 |
+
+Quarter times run from launch through each completion boundary, so the first
+includes startup/parsing; final publication is included only in total time.
+Sequential throughput declines about 56% from first to last quarter. Parallel
+throughput dips about 23% from third to last quarter, rather than declining
+throughout. The last quarter also contains larger messages. Growing progress
+receipt JSON is reread/rewritten repeatedly in ConversionProgress; this is a
+plausible accumulating cost, not a separately profiled causal measurement.
+Splitting rendering among processes also splits their receipt histories.
+
+All 2,866 creation checks passed, all published file sizes/hashes match receipts,
+filename sets match, and the source SHA-256 is unchanged. No conversion warnings.
+All 2,866 PDFs also pass the standalone Java validator; individual compressed
+reports are retained. The 26 targeted process/provenance, progress, supervision
+and CPU-budget tests pass. The local CLI and GUI JARs and their checksums are
+updated; restart the GUI to use the change. No release was published. Temporary Maven builds avoid target/. Evidence, exact source/configuration
+hashes, timestamped logs, per-run progress, outputs and Java reports are retained
+under `output/mbox-process-benchmark-2026-11-04/`; existing `/out` was preserved.
+A final memory-availability cap was added after the timed runs; it leaves the
+benchmarked 409 MiB child allocation unchanged and is covered by regression tests.
+
+
+**Desktop GUI focus and opening size — 2026-11-04 (local build):**
+The signing-password dialog now overrides its initial-selection behavior to
+focus the password field rather than the default OK button. The original Swing
+probe observed JButton focus; the corrected packaged GUI keeps JPasswordField
+focus after window activation and the initial-selection callback. The previous
+delayed focus request alone did not prevent the button from gaining focus.
+The initial window width and height are increased by 20%, capped to the usable
+screen area; verified 1440×1146 on a 2512×1440 usable desktop.
+
+Built with Maven using a temporary build directory, without changing target/.
+The local `dist/emailtopdfa-gui.jar` and checksum are updated; restart the GUI to
+use the changes. Runtime probes and artifact hash are retained under
+`output/gui-focus-size-2026-11-04/`. No GitHub release was published.
+
+Publication/threading clarification: a supervised conversion writes completed
+files into its private staging outputs directory and publishes the set only
+after the conversion worker succeeds. The observed Enron run staged beneath
+`/tmp/eapdf-worker-16905368224003326100/outputs`, then completed 1,433/1,433 emails
+and cleaned up that directory. At the time of that run, single-MBOX per-email conversion was
+sequential within one worker JVM, even with `--jobs 4`. The later multi-process
+implementation and benchmark are described above.
+
+**Collection match navigation — 2026-11-04 (local build):**
+Collection search now automatically opens, scrolls to and highlights its first
+match. Previously it only populated a result list, while Next Match started the
+whole search again and Previous Match searched the current PDF. Next/Previous
+now use a cached collection result cursor, visit every occurrence on a page,
+advance across matching pages/documents, and wrap in both directions. The status
+shows the occurrence number and total. Result-list selections update the same
+cursor. Empty results are cached too; changing the query or opening a new document
+starts a new scan. Incomplete scans remain explicitly labelled incomplete.
+
+The real April collection search for `medicaid` found **59 occurrences on 33
+pages**, with complete coverage. The first result became visible and highlighted;
+Next Match took **239 ms** and Previous returned to the first result, with exactly
+one collection scan. The initial search took 108.1 seconds in this UI run,
+including opening its isolated session and navigating to the first result.
+The input hash remains `b28469ac4308b91effd8e756f0695bf49d0cfbfc9cb46951c1ce6d2bdcb80eb7`.
+
+Build, 55 unit tests, reader and navigation regressions pass. The dedicated browser
+test covers first-result navigation from an open child, active highlighting,
+multiple occurrences, next/previous, wraparound, list selection, empty results,
+query changes, cancellation/retry and document replacement. Run
+`npm --prefix browser-viewer run test:collection-matches`; the optional large-file
+check is `node browser-viewer/scripts/collection-match-large.mjs`.
+Evidence: `output/collection-match-navigation-2026-11-04/`.
+The unpacked reader is rebuilt; no new GitHub release has been published.
+
+**Collection search and pinned filter — 2026-11-04 (local build):**
+The left-pane heading and Find emails field now stay fixed while the message
+list scrolls. Verified fixed position and clickability at desktop/narrow widths
+and while scrolling the real April archive.
+
+Find emails reuses complete metadata from the archive's source/supplement
+association scan. On the April collection, the first filter took **250 ms**
+(`medicaid`, seven matches) and the next **234 ms** (`budget`, 46 matches),
+including the existing 200 ms typing delay. Neither filter opened another PDF;
+a result navigated to the correct email. Cached metadata is published only after
+a complete, unambiguous scan of all searchable member PDFs and is bounded by
+the existing index memory budget. Missing members, partial scans, unsupported
+structures or an oversized cache fall back to full indexing; no partial cache
+is presented as complete. A regression compares the cache exactly with an
+independent full index, including order, labels and destinations.
+
+Both fallback indexing and full collection text search now avoid repeated
+parent interpretation, reuse child workers in batches and release each completed
+child. The full April fallback index visited/released all **1,909 children in
+68.0 seconds**. Text search visited/released all 1,909 children and searched
+**3,456 pages in 89.3 seconds**, finding 33 matching pages for `medicaid` with
+no incomplete results. Existing search budgets remain unchanged. Baseline
+observations were stopped after approximately 23 seconds: only eight metadata
+children or seven text-search children had opened, with one full parent refresh
+per child; these are partial observations, not completed baseline timings.
+
+Build, 55 unit tests, reader/search-destination checks, source/supplement cache
+checks, navigation and allocation-recovery regressions pass. All real-file runs
+used SHA-256 `b28469ac4308b91effd8e756f0695bf49d0cfbfc9cb46951c1ce6d2bdcb80eb7`.
+Evidence: `output/reader-search-2026-11-04/`. Optional real-file probes:
+`node browser-viewer/scripts/collection-search-profile.mjs` and
+`node browser-viewer/scripts/filter-profile.mjs`. The unpacked reader is rebuilt;
+GitHub release assets have not been updated.
+
+**Future generation preference — 2026-11-04:** Omit optional PREMIS from future
+conversion and example-regeneration outputs by setting `premis.enabled: false`,
+including in custom run configurations. This disables PREMIS embedding and its
+sidecars. The checked-in configuration already uses this setting. Accessibility
+remains enabled. Recorded in AGENTS.md; no files were regenerated for this update.
+
+**Message navigation performance — 2026-11-04 (local build):**
+Measured five first-time child-email opens in the same April collection used
+for the allocation-error regression. Before this fix, transitions took
+2.811–4.258 seconds (mean 3.435 seconds); parent metadata reinterpretation alone
+accounted for 2.444–3.763 seconds each. After the fix, the same transitions take
+0.312–0.460 seconds (mean 0.382 seconds), about 9× faster in this local Chromium
+sample. Timings exclude initial archive opening and are not a guarantee for
+all messages or machines. Both runs used the same PDF SHA-256.
+
+Click and scroll navigation retain newly extracted facts without reparsing the
+parent archive on each child open. Returning to the parent refreshes its metadata
+once; explicit byte/metadata requests also refresh pending facts, including cache
+hits. Reopening an evicted child uses the same deferred path. Checksum reporting,
+source associations, and allocation recovery are preserved. The parent refresh
+may still take several seconds when returning to the archive itself.
+
+Build, 55 unit tests, navigation metadata equivalence/checksum tests, reader,
+allocation recovery, export, and forward/backward folder-scrolling checks pass.
+The focused regression is `npm --prefix browser-viewer run test:navigation`;
+optional real-file timing is `NAV_LABEL=after node browser-viewer/scripts/navigation-smoke.mjs`.
+Measurements, hashes and logs: `output/reader-navigation-2026-11-04/`.
+The unpacked reader is rebuilt; GitHub assets have not been republished.
+
+**Reader allocation recovery — 2026-11-04 (local build):**
+Reproduced the screenshot error in
+`pst_21_04+April+2003+Public+2_1c.pdf` when opening
+`(no subject)_000009_1s.pdf`. The parent PDF worker exhausted its cumulative
+256 MiB decoded-stream allocation budget during archive processing; that
+counter includes historical allocations, not just currently retained memory.
+Subsequent extraction reused the exhausted worker and failed.
+
+Extraction now replaces an exhausted worker and retries once from the original
+PDF, preserving metadata and all existing worker/stream limits. Concurrent
+requests share recovery, cancellation stops it, and a second failure remains an
+explicit error. Concurrent cache replacements also account for retained bytes
+correctly. The exact April archive now opens the selected email and adjacent
+`(no subject)_000013_1s.pdf` successfully. Its SHA-256 is
+`b28469ac4308b91effd8e756f0695bf49d0cfbfc9cb46951c1ce6d2bdcb80eb7`.
+Targeted browser tests verify byte-identical extraction, shared recovery,
+a single retry for persistent exhaustion, unchanged stream limits and cancellation.
+Reproduce these with `npm --prefix browser-viewer run test:allocation`; the
+optional exact-file regression is `node browser-viewer/scripts/allocation-smoke.mjs`.
+Build, 55 unit tests, export, source-association and download regressions pass
+(including 16 byte-identical downloads).
+Evidence is retained in `output/reader-allocation-2026-11-04/`.
+The unpacked reader is rebuilt; this fix has not been published to GitHub.
+
+**Finding-aid export repair — 2026-11-04 (local build, not yet released):**
+CSV export now opens an immediate progress dialog showing processed emails,
+current document and elapsed time, with Cancel/Escape support that leaves the
+reader open. The progress text reserves three lines and scrolls for longer names,
+so filename changes do not resize the dialog or move its Cancel button.
+Flat PDFs reuse loaded metadata. Collections index memberships
+once, avoid reinterpreting the parent for each child, and release completed
+children. Export-only workers are reused in batches of 16 children per depth;
+the parent worker is refreshed after 256 extractions. These are cleanup intervals,
+not content cutoffs. Existing byte/path safeguards remain unchanged.
+
+The real May PST collection (`out/pst/pst_14_05+May+2003+Public+2/`)
+is 136,677,875 bytes (130.35 MiB). Chromium exported all **1,795 messages in
+135.4 seconds**, with the dialog visible after **231 ms**; initial file opening
+was measured separately at 20.5 seconds. The CSV is 621,841 bytes. The message
+count and PDF SHA-256 match the original conversion receipt. This local test
+file was selected by size; the user has not confirmed it is their reported file.
+No released-version speedup ratio is claimed. An intermediate per-child-worker
+run timed out after ten minutes; intermediate shared-worker runs exposed
+cumulative allocation exhaustion, addressed by periodic worker cleanup.
+
+Build and 55 unit tests pass, along with browser export, reading and loading
+regressions. Coverage includes immediate dialog, Cancel/Escape, no partial
+cancellation download, retry after failure, flat metadata reuse, child cleanup
+and worker reuse. Reproduce the small export regression with
+`npm --prefix browser-viewer run test:export`; the optional real-file benchmark
+is `node browser-viewer/scripts/export-large-smoke.mjs` (`EXPORT_PDF` overrides
+its input). Evidence, source/CSV hashes, screenshot and logs are retained in
+`output/finding-aid-export-2026-11-04/`. The unpacked reader build is updated;
+GitHub release assets are unchanged.
+
 **GitHub release — 2026-11-04 (published):** Published [`v1.6.0-beta.8`](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.8) as a prerelease
 with creator/validator beta.8, reader `0.5.0-beta.6`, and 13 downloadable assets.
 The user clarified the standing instruction: “bump and push to GitHub” includes

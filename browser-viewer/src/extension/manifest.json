@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EA-PDF viewer beta",
-  "version": "0.5.0.6",
+  "version": "0.5.0.8",
   "description": "View local EA-PDF messages, collections and embedded files. Conformance is not evaluated.",
   "action": {
     "default_title": "Open EA-PDF viewer",

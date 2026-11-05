@@ -18,7 +18,7 @@ try{
   await page.goto(url);await page.waitForFunction(()=>!document.querySelector('#file').disabled);
   assert.match(await page.locator('#empty-state').textContent(),/Read email preserved in PDF/);
   assert.doesNotMatch(await page.locator('#empty-state').textContent(),/complete|authentic/i);
-  assert.match(await page.locator('footer').textContent(),/Conformance not evaluated/);
+  assert.doesNotMatch(await page.locator('footer').textContent(),/Conformance not evaluated/);
   const results=await page.evaluate(async()=>{
     const {parseXmp,NS}=await import('./domain/xmp.js');
     const {metadataCsv}=await import('./metadata-csv.js');
@@ -62,7 +62,7 @@ try{
   await page.locator('#file').setInputFiles(resolve('tests/inspection/source-examples/eml/eml_sample_1si.pdf'));await ready();
   assert.match(await page.locator('#files').textContent(),/zero bytes/);
   assert.doesNotMatch(await page.locator('#files').textContent(),/are omitted in isolated/);
-  assert.match(await page.locator('footer').textContent(),/Conformance not evaluated/);
+  assert.doesNotMatch(await page.locator('footer').textContent(),/Conformance not evaluated/);
   checks.push('isolated-placeholder-does-not-assert-source-absence');
   // Exercise the real PDF.js object limit, then check the existing UI's empty list.
   await page.evaluate(async()=>{

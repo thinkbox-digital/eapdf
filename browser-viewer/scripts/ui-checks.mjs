@@ -17,7 +17,7 @@ export async function checkInterface(browser) {
   });
   const snapshot = () => browser.evaluate(() => ({
     status: document.querySelector('#status').textContent,
-    info: document.querySelector('#document-info').textContent,
+    info: document.querySelector('#declared-profile').textContent,
     notes: JSON.stringify(window.testInspectionDiagnostics),
     tree: document.querySelector('#tree').textContent,
     visible: !document.querySelector('#canvas').hidden,
