@@ -14,10 +14,10 @@ import {setupLinkedOpening} from './linked-opening.js';
 function element<T extends HTMLElement>(id:string):T {const node=document.getElementById(id);if(!node)throw new Error('Missing element: '+id);return node as T;}
 function text<K extends keyof HTMLElementTagNameMap>(tag:K,value:string){const node=document.createElement(tag);node.textContent=value;return node;}
 function button(label:string,action:()=>void){const node=text('button',label);node.type='button';node.addEventListener('click',action);return node;}
-function treeIcon(kind:'folder'|'message'|'document'|'attachment'|'code'|'view'|'download'):SVGSVGElement {
+function treeIcon(kind:'folder'|'message'|'document'|'attachment'|'code'|'view'|'download'|'search'|'close'|'left'|'right'|'up'|'minus'|'plus'|'warning'):SVGSVGElement {
   const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
   icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('aria-hidden','true');icon.setAttribute('focusable','false');icon.classList.add('tree-icon');
-  const paths=kind==='attachment'?['M8 13l7-7a3 3 0 0 1 4 4L9 20a5 5 0 0 1-7-7L12 3','M5 15l9-9']:kind==='code'?['m8 6-6 6 6 6M16 6l6 6-6 6M14 3l-4 18']:kind==='view'?['M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z','M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0']:kind==='download'?['M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5']:kind==='folder'?['M3 7V5h6l2 2h10v13H3Z','M3 10h18l-3 10H3Z']:kind==='message'?['M3 5h18v14H3Z','m3 6 9 7 9-7']:['M5 3h9l5 5v13H5Z','M14 3v6h5M8 13h8M8 17h8'];
+  const paths=kind==='search'?['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14','m15 15 6 6']:kind==='close'?['m6 6 12 12M18 6 6 18']:kind==='left'?['m15 5-7 7 7 7']:kind==='right'?['m9 5 7 7-7 7']:kind==='up'?['m5 12 7-7 7 7M12 5v15']:kind==='minus'?['M5 12h14']:kind==='plus'?['M5 12h14M12 5v14']:kind==='warning'?['m12 3 10 18H2Z','M12 9v5M12 17v1']:kind==='attachment'?['M8 13l7-7a3 3 0 0 1 4 4L9 20a5 5 0 0 1-7-7L12 3','M5 15l9-9']:kind==='code'?['m8 6-6 6 6 6M16 6l6 6-6 6M14 3l-4 18']:kind==='view'?['M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z','M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0']:kind==='download'?['M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5']:kind==='folder'?['M3 7V5h6l2 2h10v13H3Z','M3 10h18l-3 10H3Z']:kind==='message'?['M3 5h18v14H3Z','m3 6 9 7 9-7']:['M5 3h9l5 5v13H5Z','M14 3v6h5M8 13h8M8 17h8'];
   paths.forEach((d,index)=>{const path=document.createElementNS(icon.namespaceURI,'path');path.setAttribute('d',d);if(kind==='folder')path.setAttribute('class',index?'folder-open':'folder-closed');icon.append(path);});
   return icon;
 }
@@ -28,7 +28,7 @@ const search=element<HTMLInputElement>('search'),searchStatus=element('search-st
 const attachmentViewer=new AttachmentViewer();
 const failedPages=new Set<number>();
 const pages=new ScrollingPages(viewport,surface,number=>{
-  pageNumber=number;syncMessageToPage();if(current){savedPages.set(current,number);status.textContent=`${current.name} — Page ${number} of ${current.pdf.numPages}`;}controls();
+  pageNumber=number;syncMessageToPage();if(current){savedPages.set(current,number);status.textContent=`${current.name} · Page ${number} of ${current.pdf.numPages}`;}controls();
 },message=>{status.textContent=`Unable to display PDF: ${message}`;},(number,failed)=>{
   if(failed)failedPages.add(number);else failedPages.delete(number);controls();
 });
@@ -42,10 +42,14 @@ element('export-cancel').addEventListener('click',()=>cancelExport?.());
 exportDialog.addEventListener('cancel',event=>{event.preventDefault();cancelExport?.();});
 let searchSession:BrowserSession|undefined;
 let browseSession:BrowserSession|undefined;
+let browseEpoch=0;
+const browseCompleted=new WeakSet<BrowserDocument>();
+const browseDisplay=new WeakMap<BrowserDocument,Map<string,Record<string,string>>>();
 const browseSubjects=new WeakMap<BrowserDocument,Map<string,string>>();
 type CollectionResults={root:BrowserDocument;query:string;result:Awaited<ReturnType<typeof searchCollection>>;index:number;occurrence:number;total:number};
 let collectionResults:CollectionResults|undefined;
-let session:BrowserSession|undefined,current:BrowserDocument|undefined,busy=false,generation=0,pageNumber=1,editingPage=false;
+let session:BrowserSession|undefined,current:BrowserDocument|undefined,busy=false,generation=0,pageNumber=1,editingPage=false,renderedZoom=1;
+let renderedViewportWidth=0,renderedViewportHeight=0;
 const nodes=new Map<BrowserDocument,HTMLLIElement>(),savedMessages=new Map<BrowserDocument,string|undefined>(),savedPages=new Map<BrowserDocument,number>();
 type PdfLink={file:AssociatedFile;stream:EmbeddedStream};
 const pdfKey=(file:AssociatedFile,stream:EmbeddedStream)=>JSON.stringify([file.id,stream.locator.path]);
@@ -69,11 +73,13 @@ function controls():void {
   element('retry').hidden=!available||!failedPages.has(pageNumber);
   for(const id of ['retry','restart','find-previous','search-submit'])element<HTMLButtonElement>(id).disabled=busy||!available;
   element<HTMLButtonElement>('back').disabled=busy||!current?.parent;
-  element<HTMLButtonElement>('zoom-out').disabled=busy||!available||Number(zoom.value)<=0.5;
-  element<HTMLButtonElement>('zoom-in').disabled=busy||!available||zoom.selectedIndex>=zoom.options.length-1;
+  element<HTMLButtonElement>('zoom-out').disabled=busy||!available||(zoom.value.startsWith('fit-')?renderedZoom:Number(zoom.value))<=0.5;
+  element<HTMLButtonElement>('zoom-in').disabled=busy||!available||(zoom.value.startsWith('fit-')?renderedZoom:Number(zoom.value))>=2;
   element<HTMLButtonElement>('close').disabled=!session;
   for(const b of document.querySelectorAll<HTMLButtonElement>('#tree button,#files button,#breadcrumbs button'))b.disabled=busy||b.dataset.unavailable==='true';
   if(!editingPage||document.activeElement!==pageInput){pageInput.value=String(pageNumber);pageInput.removeAttribute('aria-invalid');editingPage=false;}
+  for(const id of ['previous','next','back','zoom-in','zoom-out']){const control=element<HTMLButtonElement>(id);control.setAttribute('aria-disabled',String(control.disabled));}
+  element<HTMLButtonElement>('open-search').disabled=!available;
   pageInput.style.width=`calc(${Math.max(4,String(current?.pdf.numPages??0).length)}ch + 1.5rem)`;
   element('pages').textContent=`of ${current?.pdf.numPages??0}`;
   viewport.setAttribute('aria-busy',String(busy));
@@ -97,15 +103,27 @@ function close():void {
   metadataEpoch++;metadataSession?.close();metadataSession=undefined;metadataIndex=undefined;clearTimeout(filterTimer);
   filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;filter.value='';tree.hidden=false;
   for(const list of virtualLists)list.close();virtualLists.clear();fileList?.close();fileList=undefined;
-  cancelLinked();browseSession?.close();browseSession=undefined;searchSession?.close();searchSession=undefined;exportSession?.close();exportSession=undefined;
+  cancelLinked();stopBrowseIndex();element('subject-index-progress').hidden=true;searchSession?.close();searchSession=undefined;exportSession?.close();exportSession=undefined;
   generation++;searchEpoch++;collectionResults=undefined;failedPages.clear();finder.clear();pages.clear();attachmentViewer.close();session?.close();session=undefined;current=undefined;
   nodes.clear();savedPages.clear();savedMessages.clear();busy=false;pageNumber=1;editingPage=false;
   element('restart').hidden=true;empty.hidden=false;element('collection-results').hidden=true;element('collection-matches').replaceChildren();element('outline').replaceChildren();element('outline-panel').hidden=true;
   for(const panel of [tree,files,element('breadcrumbs')])panel.replaceChildren();
   element('declared-profile').textContent='';element('declared-profile').hidden=true;
+  element('header-filename').textContent='';element('header-filename').title='';element('message-count').textContent='0';element('selection-details').replaceChildren();element('files-title').textContent='Files in this PDF';closeSearch(false);
   element('file-count').textContent='0';search.value='';searchStatus.textContent='';
   element<HTMLButtonElement>('results-tab').disabled=true;navigationTab('browse');
   status.textContent='Closed. Open or drop a PDF to begin.';controls();
+}
+async function pageScale(doc:Pick<BrowserDocument,'pdf'|'run'>,number:number):Promise<number>{
+  if(!zoom.value.startsWith('fit-'))return Number(zoom.value)*PDF_TO_CSS;
+  const page=await doc.run(doc.pdf.getPage(number));
+  try{
+    const size=page.getViewport({scale:1}),style=getComputedStyle(viewport);
+    const width=viewport.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)-2;
+    const height=viewport.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom)-2;
+    const scale=width/size.width;
+    return Math.max(.01,zoom.value==='fit-page'?Math.min(scale,height/size.height):scale);
+  }finally{page.cleanup();}
 }
 async function render(ticket:number,followMessage=true):Promise<void>{
   const doc=current;if(!doc||!session)return;
@@ -113,10 +131,10 @@ async function render(ticket:number,followMessage=true):Promise<void>{
   try{
     await session.ensure(doc);check(ticket);
     status.textContent=`Rendering page ${pageNumber}…`;
-    let scale=Number(zoom.value)*PDF_TO_CSS;
-    if(zoom.value.startsWith('fit-')){const page=await doc.run(doc.pdf.getPage(pageNumber));try{const v=page.getViewport({scale:1});scale=(viewport.clientWidth-60)/v.width;if(zoom.value==='fit-page')scale=Math.min(scale,(viewport.clientHeight-60)/v.height);}finally{page.cleanup();}check(ticket);}
-    empty.hidden=true;await pages.show(doc,Math.max(0.1,scale),pageNumber,search.value);check(ticket);
-    empty.hidden=true;status.textContent=`${doc.name} — Page ${pageNumber} of ${doc.pdf.numPages}`;savedPages.set(doc,pageNumber);if(followMessage)syncMessageToPage();
+    const scale=await pageScale(doc,pageNumber);check(ticket);
+    renderedViewportWidth=viewport.clientWidth;renderedViewportHeight=viewport.clientHeight;
+    empty.hidden=true;await pages.show(doc,scale,pageNumber,search.value);check(ticket);renderedZoom=scale/PDF_TO_CSS;
+    empty.hidden=true;status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages}`;savedPages.set(doc,pageNumber);if(followMessage)syncMessageToPage();
   }catch(error){if(ticket===generation&&current===doc)failedPages.add(pageNumber);throw error;}
 }
 
@@ -156,9 +174,10 @@ function breadcrumbs(doc:BrowserDocument):void {
 }
 function showInformation(doc:BrowserDocument):void {
   const id=doc.inspection.identification,profile=element('declared-profile');
-  profile.textContent=id.declaredProfile.value?`Declared EA-PDF ${id.eapdfVersion.value??'?'}${id.declaredProfile.value}`:'No EA-PDF profile declared';profile.hidden=false;
+  profile.textContent=id.declaredProfile.value?`EA-PDF ${id.eapdfVersion.value??'?'}${id.declaredProfile.value}`:'No EA-PDF profile declared';profile.hidden=false;
   for(const diagnostic of doc.inspection.diagnostics)console.debug('[EA-PDF inspection]',doc.name,diagnostic);
-  breadcrumbs(doc);
+  breadcrumbs(doc);element('header-filename').textContent=doc.name;element('header-filename').title=doc.name;
+  let root=doc;while(root.parent)root=root.parent;element('message-count').textContent=String(root.inspection.messages.length);
 }
 function refreshInspection(doc:BrowserDocument):void {
   if(current!==doc)return;showInformation(doc);showFiles(doc,singleMessage(doc)?undefined:selectedMessage(doc));
@@ -175,42 +194,46 @@ function fileCategory(file:AssociatedFile):string {
 const fileCategoryOrder=['Email sources','Email attachments','Archive files','Technical and supporting files'];
 function showFiles(doc:BrowserDocument,message?:MailMessage):void {
   fileList?.close();fileList=undefined;files.replaceChildren();const selected=doc.inspection.files.filter(f=>!message||f.owners.value?.includes(message.id)).sort((a,b)=>fileCategoryOrder.indexOf(fileCategory(a))-fileCategoryOrder.indexOf(fileCategory(b)));element('file-count').textContent=String(selected.length);
-  if(message){const note=text('p','Files for this email. Select the document name for all files stored in this PDF.');note.className='file-note';files.append(note);}
+  element('files-title').textContent=message||singleMessage(doc)?'Files in this email':'Files in this PDF';
+  const detailList=element('selection-details');detailList.replaceChildren();
+  const selectedMessage=message??singleMessage(doc),metadata=selectedMessage?doc.details.get(selectedMessage.metadataRecordId):undefined;
+  const source=selected.find(f=>f.afRelationship.value==='Source');
+  const collection=doc.parent?.inspection.collection.value;const folderNames=new Set<string>();
+  if(collection)for(const entry of collection.entries.filter(e=>e.fileId===doc.parentFileId))for(let id of entry.folderIds.value??[]){const names:string[]=[],seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);const folder=collection.folders.find(f=>f.id===id);if(!folder)break;if(folder.name.value)names.unshift(folder.name.value);id=folder.parentId??'';}if(names.length)folderNames.add(names.join(' / '));}
+  for(const [key,value]of [['Source file',source?fileLabel(source):doc.name],['Message-ID',selectedMessage?.internetMessageId.value],['Folder',[...folderNames].join('; ')||metadata?.Folder||metadata?.['Folder paths']]])if(value){detailList.append(text('dt',key!),text('dd',value));}
   if(doc.inspection.coverage.associatedFiles!=='present'){const note=text('p','Some embedded files could not be listed.');note.className='file-note';files.append(note);}
   if(message&&doc.inspection.diagnostics.some(d=>d.code==='FILE_EMAIL_ASSOCIATION_MISSING')){const note=text('p','Some files could not be linked to an email.');note.className='file-note';files.append(note);}
   if(!selected.length){if(doc.inspection.coverage.associatedFiles==='present'){const note=text('p',message&&doc.inspection.files.length?'No files are associated with this email in the PDF.':'No embedded files in this selection.');note.className='muted';files.append(note);}}
   const list=text('ul','');files.append(list);
   const createFile=(file:AssociatedFile)=>{
-    const row=text('li','');row.className='file-card';const label=text('strong',fileLabel(file));label.className='file-name';label.title=fileLabel(file);const icon=treeIcon(/\.eml$/i.test(fileLabel(file))?'message':/\.(xml|json|html?)$/i.test(fileLabel(file))?'code':file.afRelationship.value!=='Supplement'&&file.afRelationship.value!=='Source'&&file.owners.value?.length?'attachment':'document');icon.classList.add('file-icon');row.append(icon,label);
+    const row=text('li','');row.className='file-card';const label=text('strong',fileLabel(file));label.className='file-name';label.title=fileLabel(file);const icon=treeIcon(/\.eml$/i.test(fileLabel(file))?'message':/\.(xml|json|html?)$/i.test(fileLabel(file))?'code':file.afRelationship.value!=='Supplement'&&file.afRelationship.value!=='Source'&&file.owners.value?.length?'attachment':'document');icon.classList.add('file-icon');const heading=text('div','');heading.className='file-heading';heading.append(label);row.append(icon,heading);
     const category=fileCategory(file);
     if(selected.length>256){const role=text('p',category);role.className='file-role';row.append(role);}
-    if(!message&&doc.inspection.messages.length>1)for(const id of file.owners.value??[]){
-      const index=doc.inspection.messages.findIndex(m=>m.id===id),owner=doc.inspection.messages[index];if(!owner)continue;
-      const label=doc.details.get(owner.metadataRecordId)?.Subject||owner.internetMessageId.value||`Email ${index+1}`;
-      const link=button(label,()=>void operation(ticket=>showDocument(doc,ticket,owner)));link.className='file-owner';link.title=label;row.append(link);
-    }
+    const owner=doc.inspection.messages.find(m=>file.owners.value?.includes(m.id));
+    const description=(owner?doc.details.get(owner.metadataRecordId)?.Subject:undefined);
+    if(description&&description!==fileLabel(file)){const detail=text('p',description);detail.className='file-description';detail.title=description;row.append(detail);}
     for(const stream of file.streams){
-      const size=stream.decodedSize.value??stream.declaredSize.value,type=stream.mimeType.value?.split(';')[0]||fileLabel(file).split('.').at(-1)?.toUpperCase()||'File';
-      const facts=text('p',`${type} · ${sizeLabel(size)}${file.streams.length>1?' · '+stream.efKeys.join('/'):''}`);facts.className='file-facts';row.append(facts);
+      const size=stream.decodedSize.value??stream.declaredSize.value;
+      const facts=text('span',sizeLabel(size)+(file.streams.length>1?' · '+stream.efKeys.join('/'):'') );facts.className='file-size';heading.append(facts);
       const actions=text('div','');actions.className='file-actions';row.append(actions);
-      const save=button(file.afRelationship.value==='Source'&&/\.eml$/i.test(fileLabel(file))?'Download email (.eml)':'Download',()=>void operation(async ticket=>{status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);await saveBlob(new Blob([new Uint8Array(data)],{type:'application/octet-stream'}),fileLabel(file),()=>check(ticket));check(ticket);refreshInspection(doc);status.textContent=`Download requested: ${fileLabel(file)} (${sizeLabel(data.length)}).${doc.inspection.diagnostics.some(d=>d.code==='CHECKSUM_MISMATCH')?' Warning: recorded checksum mismatch.':''}`;}));save.prepend(treeIcon('download'));save.title=`Download ${fileLabel(file)}`;save.dataset.fileId=file.id;save.dataset.stream=stream.locator.path;actions.append(save);
-      if(size===0){const note=text('p','Empty embedded file (zero bytes). It may be an empty original or a placeholder.');note.className='file-note';row.append(note);}
+      const save=button(file.afRelationship.value==='Source'&&/\.eml$/i.test(fileLabel(file))?'Download email (.eml)':'Download',()=>void operation(async ticket=>{status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);await saveBlob(new Blob([new Uint8Array(data)],{type:'application/octet-stream'}),fileLabel(file),()=>check(ticket));check(ticket);refreshInspection(doc);status.textContent=`Download requested: ${fileLabel(file)} (${sizeLabel(data.length)}).${doc.inspection.diagnostics.some(d=>d.code==='CHECKSUM_MISMATCH')?' Warning: recorded checksum mismatch.':''}`;}));save.replaceChildren(treeIcon('download'));save.classList.add('icon-button');save.setAttribute('aria-label',`Download ${fileLabel(file)}`);save.title=`Download ${fileLabel(file)}`;save.dataset.fileId=file.id;save.dataset.stream=stream.locator.path;actions.append(save);
+      if(size===0){save.dataset.unavailable='true';save.disabled=true;save.setAttribute('aria-disabled','true');const note=text('p','This file is empty. The original may have been empty, or this is a placeholder.');note.className='file-note empty-file-notice';const warning=treeIcon('warning');warning.removeAttribute('aria-hidden');warning.setAttribute('role','img');warning.setAttribute('aria-label','Warning');note.prepend(warning);row.append(note);}
       else if(canView(file,stream)){
         const view=button(isPdf(file,stream)?'Open PDF':'View',()=>void operation(async ticket=>{
           if(isPdf(file,stream)){await openChild(doc,file,stream,ticket);return;}
-          status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);refreshInspection(doc);await attachmentViewer.open(data,fileLabel(file),stream.mimeType.value??'');check(ticket);status.textContent=`${doc.name} — Page ${pageNumber} of ${doc.pdf.numPages}`;
-        }));view.className='view-action';view.prepend(treeIcon('view'));view.title=`${isPdf(file,stream)?'Open':'View'} ${fileLabel(file)}`;view.dataset.viewFileId=file.id;view.dataset.viewStream=stream.locator.path;actions.prepend(view);
+          status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);refreshInspection(doc);await attachmentViewer.open(data,fileLabel(file),stream.mimeType.value??'');check(ticket);status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages}`;
+        }));view.className='view-action';view.replaceChildren(treeIcon('view'));view.classList.add('icon-button');view.setAttribute('aria-label',`View ${fileLabel(file)}`);view.title=`${isPdf(file,stream)?'Open':'View'} ${fileLabel(file)}`;view.dataset.viewFileId=file.id;view.dataset.viewStream=stream.locator.path;actions.prepend(view);
       }
     }
     if(!file.streams.length){const note=text('p','Embedded content is missing or cannot be read.');note.className='file-note';row.append(note);}
-    for(const b of row.querySelectorAll<HTMLButtonElement>('button'))b.disabled=busy;
+    for(const b of row.querySelectorAll<HTMLButtonElement>('button'))b.disabled=busy||b.dataset.unavailable==='true';
     return row;
   };
   if(selected.length>256)fileList=new VirtualList(list,files.closest('aside')!,selected,createFile,220);
   else {
     const groups=new Map<string,AssociatedFile[]>();
-    for(const file of selected){const name=fileCategory(file);const group=groups.get(name)??[];group.push(file);groups.set(name,group);}
-    for(const [name,group]of groups){const section=text('li',''),heading=text('h3',name),items=text('ul','');section.className='file-category';heading.className='file-category-heading';section.append(heading,items);list.append(section);for(const file of group)items.append(createFile(file));}
+    for(const file of selected){const category=fileCategory(file),name=category==='Archive files'?'Other files':category;const group=groups.get(name)??[];group.push(file);groups.set(name,group);}
+    for(const [name,group]of groups){const section=text('li',''),disclosure=text('details',''),heading=text('summary',''),title=text('span',name),count=text('span',String(group.length)),items=text('ul','');section.className='file-category';heading.className='file-category-heading';count.className='badge';heading.append(title,count);disclosure.open=name==='Email sources'||name==='Email attachments';disclosure.append(heading,items);section.append(disclosure);list.append(section);for(const file of group)items.append(createFile(file));}
   }
 }
 function singleMessage(doc:BrowserDocument):MailMessage|undefined {
@@ -218,13 +241,13 @@ function singleMessage(doc:BrowserDocument):MailMessage|undefined {
 }
 async function showDocument(doc:BrowserDocument,ticket:number,message?:MailMessage,node?:HTMLElement,edge?:-1|1):Promise<void>{
   message??=singleMessage(doc);
-  await session!.ensure(doc);await session!.associateFiles(doc);check(ticket);message=message?doc.inspection.messages.find(m=>m.id===message!.id):undefined;if(current!==doc)finder.clear();if(current)savedPages.set(current,pageNumber);current=doc;editingPage=false;savedMessages.set(doc,message?.id);
+  await session!.ensure(doc);if(!doc.inspection.collection.value)await session!.associateFiles(doc);check(ticket);message=message?doc.inspection.messages.find(m=>m.id===message!.id):undefined;if(current!==doc)finder.clear();if(current)savedPages.set(current,pageNumber);current=doc;editingPage=false;savedMessages.set(doc,message?.id);
   const destinations=message?messagePages(doc.inspection,message):[];pageNumber=edge===1?1:edge===-1?doc.pdf.numPages:destinations[0]??savedPages.get(doc)??1;
   markSelection(node??nodes.get(doc)?.querySelector<HTMLButtonElement>(':scope > button')??undefined);showInformation(doc);showFiles(doc,singleMessage(doc)?undefined:message);searchStatus.textContent='';
   await render(ticket,false);
   await showOutline(doc,ticket);
   if(edge===-1)viewport.scrollTop=viewport.scrollHeight-viewport.clientHeight;
-  if(edge){nodes.get(doc)?.querySelector('button')?.scrollIntoView({block:'nearest'});status.textContent=`${doc.name} — Page ${pageNumber} of ${doc.pdf.numPages} · ${edge===1?'Next':'Previous'} file in this folder`;}
+  if(edge){nodes.get(doc)?.querySelector('button')?.scrollIntoView({block:'nearest'});status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages} · ${edge===1?'Next':'Previous'} file in this folder`;}
   if(message&&!destinations.length)status.textContent+=' — Message page mapping unavailable; showing document page.';
   if(doc.inspection.coverage.metadata==='unavailable'){
     status.textContent+=' — Email metadata unavailable.';
@@ -232,7 +255,6 @@ async function showDocument(doc:BrowserDocument,ticket:number,message?:MailMessa
 }
 async function openChild(parent:BrowserDocument,file:AssociatedFile,stream:EmbeddedStream,ticket:number,edge?:-1|1):Promise<void>{
   status.textContent=`Opening ${fileLabel(file)}…`;const child=await session!.child(parent,file,stream,false);check(ticket);
-  await prepareBrowseSubjects(child,ticket);check(ticket);
   const lazy=lazyPdfs.get(parent)?.get(pdfKey(file,stream));
   if(lazy)lazy.list.rowAt(lazy.index);
   let row=nodes.get(child);
@@ -242,6 +264,7 @@ async function openChild(parent:BrowserDocument,file:AssociatedFile,stream:Embed
   }
   const single=!child.inspection.collection.value&&child.inspection.messages.length===1?child.inspection.messages[0]:undefined;
   await showDocument(child,ticket,single,row.querySelector('button')??undefined,edge);
+  prepareBrowseSubjects(child,ticket);
 }
 // An edge gesture changes files only inside the immediate containing folder.
 function scrollFile(direction:-1|1):boolean {
@@ -291,36 +314,79 @@ viewport.addEventListener('touchend',event=>{
   const start=touchStart,touch=event.changedTouches[0];touchStart=undefined;if(!start||!touch)return;
   const delta=start.y-touch.clientY;if(delta>40&&start.bottom)scrollFile(1);else if(delta< -40&&start.top)scrollFile(-1);
 },{passive:true});
-async function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):Promise<void> {
-  if(!doc.inspection.collection.value||browseSubjects.has(doc))return;
-  await session!.associateFiles(doc);check(ticket);
-  let indexed=session!.cachedMessageIndex(doc);
-  if(!indexed){
-    const isolated=new BrowserSession({},{reuseWorker:true});browseSession=isolated;
+function stopBrowseIndex():void {
+  browseEpoch++;browseSession?.close();browseSession=undefined;
+  metadataIndex=undefined;
+  element('subject-index-status').textContent='Subject indexing stopped. Unread subjects still show filenames.';
+  element('subject-index-cancel').hidden=true;
+}
+element('subject-index-cancel').addEventListener('click',stopBrowseIndex);
+function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
+  if(!doc.inspection.collection.value||browseCompleted.has(doc)||browseSession)return;
+  const main=session!,epoch=++browseEpoch,isolated=new BrowserSession({},{reuseWorker:true});browseSession=isolated;
+  const subjects=browseSubjects.get(doc)??new Map<string,string>();browseSubjects.set(doc,subjects);
+  const counts=new Map<string,number>();const display=new Map<string,Record<string,string>>();browseDisplay.set(doc,display);
+  const checkIndex=()=>{check(ticket);if(epoch!==browseEpoch)throw new Error('Subject indexing cancelled.');};
+  const update=(messages:readonly IndexedMessage[])=>{
+    checkIndex();
+    for(const message of messages){
+      if(message.path.length!==1)continue;
+      const step=message.path[0]!,key=JSON.stringify([step.fileId,step.streamPath]),count=(counts.get(key)??0)+1;counts.set(key,count);
+      if(count===1){subjects.set(key,message.label);display.set(key,{From:message.sender??'',Sent:message.sent??''});}else{subjects.delete(key);display.delete(key);}
+    }
+    // Update mounted rows in place, preserving focus, expansion and scroll position.
+    for(const node of nodes.get(doc)?.querySelectorAll<HTMLButtonElement>('[data-embedded-file-id]')??[]){
+      const label=subjects.get(JSON.stringify([node.dataset.embeddedFileId,node.dataset.embeddedStream]));
+      node.querySelector('.message-text')?.remove();messageLabel(node,label||node.title,display.get(JSON.stringify([node.dataset.embeddedFileId,node.dataset.embeddedStream])));if(label){node.querySelector('.tree-icon')?.replaceWith(treeIcon('message'));}
+    }
+  };
+  element('subject-index-progress').hidden=false;element('subject-index-progress').dataset.complete='false';element('subject-index-cancel').hidden=false;
+  element('subject-index-status').textContent='Reading subjects in the background… You can browse now.';
+  const work=(async()=>{
     try{
-      const blob=await session!.sourceBlob(doc);check(ticket);
-      const copy=await isolated.open(blob,doc.name);check(ticket);
-      indexed=await indexMessages(isolated,copy,()=>check(ticket),count=>{status.textContent=`Reading email subjects · ${count} emails…`;});
+      // Yield so the loaded document and enabled controls paint before indexing starts.
+      await new Promise(resolve=>setTimeout(resolve,0));checkIndex();
+      let indexed=main.cachedMessageIndex(doc);
+      if(indexed)update(indexed.messages);
+      else{
+        const blob=await main.sourceBlob(doc);checkIndex();const copy=await isolated.open(blob,doc.name);checkIndex();
+        indexed=await indexMessages(isolated,copy,checkIndex,count=>{
+          checkIndex();element('subject-index-status').textContent=`Reading subjects · ${count} emails. You can browse now.`;
+        },update);
+        checkIndex();element('subject-index-status').textContent=`Subjects read · ${indexed.messages.length} emails. Linking supporting files…`;
+        await isolated.associateFiles(copy);checkIndex();
+        main.adoptAssociations(doc,isolated,copy);if(current===doc)refreshInspection(doc);
+      }
+      checkIndex();browseCompleted.add(doc);
+      const collection=doc.inspection.collection.value;if(collection)for(const summary of nodes.get(doc)?.querySelectorAll<HTMLElement>('summary[data-folder-id]')??[]){const members=new Set<string>();for(const entry of collection.entries)for(let id of entry.folderIds.value??[]){const seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);if(id===summary.dataset.folderId)members.add(entry.fileId);id=collection.folders.find(f=>f.id===id)?.parentId??'';}}const count=indexed.messages.filter(m=>m.path[0]&&members.has(m.path[0].fileId)).length;const pill=text('span',String(count));pill.className='folder-count';summary.querySelector('.folder-count')?.remove();summary.append(pill);}
+      element('subject-index-status').textContent=indexed.incomplete.length?`Subjects partially indexed: ${indexed.incomplete.join(' ')}`:`Subjects ready · ${indexed.messages.length} emails.`;
+      element('subject-index-cancel').hidden=true;element('subject-index-progress').dataset.complete=String(!indexed.incomplete.length);element('message-count').textContent=String(indexed.messages.length);return indexed;
     }finally{isolated.close();if(browseSession===isolated)browseSession=undefined;}
-  }
-  check(ticket);const grouped=new Map<string,string[]>();
-  for(const message of indexed.messages){
-    if(message.path.length!==1)continue;
-    const step=message.path[0]!,key=JSON.stringify([step.fileId,step.streamPath]),labels=grouped.get(key)??[];
-    labels.push(message.label);grouped.set(key,labels);
-  }
-  browseSubjects.set(doc,new Map([...grouped].filter(([,labels])=>labels.length===1).map(([key,labels])=>[key,labels[0]!])));
-  if(!doc.parent)metadataIndex=Promise.resolve(indexed);
+  })();
+  if(!doc.parent)metadataIndex=work;
+  void work.catch(error=>{
+    if(ticket!==generation||epoch!==browseEpoch)return;
+    if(!doc.parent&&metadataIndex===work)metadataIndex=undefined;
+    element('subject-index-status').textContent=`Subject indexing could not finish: ${error instanceof Error?error.message:String(error)}`;
+    element('subject-index-cancel').hidden=true;
+  });
+}
+
+function messageLabel(node:HTMLButtonElement,label:string,details?:Record<string,string>):void {
+  const content=text('span',''),subject=text('span',label);content.className='message-text';subject.className='message-subject';subject.title=label;content.append(subject);
+  const secondary=[details?.From||details?.['Raw-From'],details?.Sent].filter(Boolean).join(' · ');
+  if(secondary){const meta=text('span',''),sender=text('span',details?.From||details?.['Raw-From']||''),date=text('span',details?.Sent?.match(/^\d{4}-\d{2}-\d{2}/)?.[0]||details?.Sent||'');meta.className='message-meta';meta.title=secondary;sender.className='message-sender';date.className='message-date';meta.append(sender);if(date.textContent)meta.append(text('span','·'),date);content.append(meta);}
+  for(const child of [...node.childNodes])if(child.nodeType===Node.TEXT_NODE)child.remove();node.append(content);
 }
 function documentTree(doc:BrowserDocument):HTMLLIElement {
   const single=singleMessage(doc),label=single?(doc.details.get(single.metadataRecordId)?.Subject||doc.name):doc.name;
-  const row=text('li',''),open=button(label,()=>void operation(ticket=>showDocument(doc,ticket,single,open)));open.dataset.documentId=doc.inspection.documentId;open.title=doc.name;if(single)open.dataset.messageId=single.id;open.prepend(treeIcon(single?'message':'document'));row.append(open);nodes.set(doc,row);
+  const row=text('li',''),open=button(label,()=>void operation(ticket=>showDocument(doc,ticket,single,open)));open.dataset.documentId=doc.inspection.documentId;open.title=doc.name;if(single)open.dataset.messageId=single.id;open.prepend(treeIcon(single?'message':'document'));messageLabel(open,label,single?doc.details.get(single.metadataRecordId):undefined);open.classList.add('root-document');row.append(open);nodes.set(doc,row);
   const list=text('ul','');row.append(list);const collection=doc.inspection.collection.value;
   // Collection metadata describes the member emails, not body pages in the cover PDF.
   if(!collection&&!single){
     const makeMessage=(message:MailMessage,index:number)=>{
       const item=text('li',''),label=doc.details.get(message.metadataRecordId)?.Subject??`Message ${index+1}`;
-      const choose=button(label,()=>void operation(ticket=>showDocument(doc,ticket,message,choose)));choose.disabled=busy;choose.dataset.messageId=message.id;choose.prepend(treeIcon('message'));item.append(choose);return item;
+      const choose=button(label,()=>void operation(ticket=>showDocument(doc,ticket,message,choose)));choose.disabled=busy;choose.dataset.messageId=message.id;choose.prepend(treeIcon('message'));messageLabel(choose,label,doc.details.get(message.metadataRecordId));item.append(choose);return item;
     };
     if(doc.inspection.messages.length>256){
       const virtual=new VirtualList(list,tree.closest('aside')!,doc.inspection.messages,makeMessage,40);
@@ -332,7 +398,7 @@ function documentTree(doc:BrowserDocument):HTMLLIElement {
   if(collection){
     for(const folder of collection.folders)folders.set(folder.id,text('ul',''));
     for(const folder of collection.folders){
-      const item=text('li',''),details=text('details',''),label=text('summary',folder.name.value??'Folder');label.prepend(treeIcon('folder'));details.append(label,folders.get(folder.id)!);folderRows.push(details);item.append(details);
+      const item=text('li',''),details=text('details',''),label=text('summary',folder.name.value??'Folder');label.dataset.folderId=folder.id;label.prepend(treeIcon('folder'));details.open=true;details.append(label,folders.get(folder.id)!);folderRows.push(details);item.append(details);
       const seen=new Set([folder.id]);let p=folder.parentId,valid=true;
       while(p){if(seen.has(p)){valid=false;break;}seen.add(p);const ancestor=collection.folders.find(f=>f.id===p);if(!ancestor){valid=false;break;}p=ancestor.parentId;}
       (valid&&folder.parentId?folders.get(folder.parentId)!:list).append(item);
@@ -356,7 +422,7 @@ function documentTree(doc:BrowserDocument):HTMLLIElement {
     for(const [child,existing] of nodes)if(child.parent===doc&&child.parentFileId===file.id&&child.parentStreamPath===stream.locator.path)return existing;
     const subject=browseSubjects.get(doc)?.get(pdfKey(file,stream));
     const item=text('li',''),openFile=button(subject||fileLabel(file),()=>void operation(ticket=>openChild(doc,file,stream,ticket)));
-    openFile.disabled=busy;openFile.dataset.embeddedFileId=file.id;openFile.dataset.embeddedStream=stream.locator.path;openFile.title=fileLabel(file);openFile.prepend(treeIcon(subject?'message':'document'));item.append(openFile);return item;
+    openFile.disabled=busy;openFile.dataset.embeddedFileId=file.id;openFile.dataset.embeddedStream=stream.locator.path;openFile.title=fileLabel(file);openFile.prepend(treeIcon(subject?'message':'document'));messageLabel(openFile,subject||fileLabel(file),browseDisplay.get(doc)?.get(pdfKey(file,stream)));item.append(openFile);return item;
   };
   for(const [target,items] of groups){
     if(items.length>256){
@@ -371,7 +437,7 @@ function documentTree(doc:BrowserDocument):HTMLLIElement {
   return row;
 }
 async function openFile(file:Blob,name:string):Promise<void>{
-  if(busy)return;close();element('linked-file').hidden=true;session=new BrowserSession();const active=session;
+  if(busy)return;close();zoom.value='fit-width';element('linked-file').hidden=true;session=new BrowserSession();const active=session;
   await operation(async ticket=>{
     status.textContent=`Opening ${name}…`;
     tree.hidden=true;
@@ -380,10 +446,9 @@ async function openFile(file:Blob,name:string):Promise<void>{
     element('loading-cancel').textContent='Cancel';
     loadingTimer=setTimeout(()=>{if(ticket===generation)loadingDialog.showModal();},1000);
     try {
-    const doc=await active.open(file,name,fraction=>{if(ticket===generation)status.textContent=`Inspecting ${name} · ${Math.round(fraction*100)}%`;},null,undefined,undefined,async preview=>{check(ticket);empty.hidden=true;await pages.show(preview,PDF_TO_CSS,1,'');check(ticket);status.textContent='First page ready. Email and file inspection continues…';});check(ticket);
-    await prepareBrowseSubjects(doc,ticket);check(ticket);
-    tree.append(documentTree(doc));zoom.value='1';await showDocument(doc,ticket);
-    if(ticket===generation)finishLoading();
+    const doc=await active.open(file,name,fraction=>{if(ticket===generation)status.textContent=`Inspecting ${name} · ${Math.round(fraction*100)}%`;},null,undefined,undefined,async preview=>{check(ticket);empty.hidden=true;await pages.show(preview,await pageScale(preview,1),1,'',false);check(ticket);status.textContent='First page ready. Email and file inspection continues…';},message=>{check(ticket);status.textContent=message;element('loading-message').textContent=message;});check(ticket);
+    tree.append(documentTree(doc));await showDocument(doc,ticket);
+    if(ticket===generation){finishLoading();prepareBrowseSubjects(doc,ticket);}
     } catch(error) {
       if(ticket===generation){
         clearTimeout(loadingTimer);loadingTimer=undefined;
@@ -455,7 +520,10 @@ pageInput.addEventListener('keydown',event=>{
 });
 zoom.addEventListener('change',()=>void operation(ticket=>render(ticket,false)));
 for(const [id,step]of [['zoom-out',-1],['zoom-in',1]] as const)element(id).addEventListener('click',()=>void operation(async ticket=>{
-  zoom.selectedIndex=Math.max(2,Math.min(zoom.options.length-1,zoom.selectedIndex+step));await render(ticket,false);
+  const displayed=zoom.value.startsWith('fit-')?renderedZoom:Number(zoom.value);
+  const levels=[...zoom.options].map(option=>Number(option.value)).filter(Number.isFinite);
+  const next=step>0?levels.find(value=>value>displayed+.0001):levels.findLast(value=>value<displayed-.0001);
+  if(next!==undefined)zoom.value=String(next);await render(ticket,false);
 }));
 function clearSearch():void {
   searchEpoch++;searchSession?.close();collectionResults=undefined;finder.clear();pages.highlight('');
@@ -463,7 +531,7 @@ function clearSearch():void {
   element<HTMLButtonElement>('results-tab').disabled=true;navigationTab('browse');
 }
 search.addEventListener('input',()=>{if(!search.value.trim())clearSearch();});
-search.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();search.value='';clearSearch();}});
+search.addEventListener('keydown',event=>{if(event.key==='Escape'){if(!event.defaultPrevented){event.preventDefault();closeSearch();}}else if(event.key==='Enter'){event.preventDefault();void (element<HTMLSelectElement>('search-scope').value==='collection'?findInCollection(event.shiftKey?-1:1):findMatch(event.shiftKey?-1:1));}});
 async function showOutline(doc:BrowserDocument,ticket:number):Promise<void>{
   const panel=element('outline-panel'),list=element('outline');list.replaceChildren();panel.hidden=true;
   try{const entries=await doc.run(doc.pdf.getOutline());check(ticket);if(current!==doc||!entries)return;let count=0;
@@ -502,9 +570,9 @@ async function showCollectionMatch(cached:CollectionResults,index:number,occurre
     if(Number(node.dataset.matchIndex)===index)node.setAttribute('aria-current','true');else node.removeAttribute('aria-current');
   }
   const active=element('collection-matches').querySelector<HTMLElement>('button[aria-current]');
-  if(active&&!element('collection-results').hidden&&!element('navigation-panel').hidden){
-    const panel=element('navigation-panel'),bounds=panel.getBoundingClientRect(),box=active.getBoundingClientRect();
-    const top=bounds.top+(panel.querySelector('.navigation-header')?.getBoundingClientRect().height??0);
+  if(active&&!element('collection-results').hidden){
+    const panel=element('search-panel'),bounds=panel.getBoundingClientRect(),box=active.getBoundingClientRect();
+    const top=bounds.top;
     if(box.top<top)panel.scrollTop-=Math.ceil(top-box.top);
     else if(box.bottom>bounds.bottom)panel.scrollTop+=Math.ceil(box.bottom-bounds.bottom);
   }
@@ -600,31 +668,29 @@ async function filterMessages():Promise<void>{
     const main=session,isolated=new BrowserSession({},{reuseWorker:true});metadataSession=isolated;
     metadataIndex=(async()=>{try{
       const blob=await main.sourceBlob(root);checkIndex();const copy=await isolated.open(blob,root.name);checkIndex();
-      return await indexMessages(isolated,copy,checkIndex,count=>{if(filter.value.trim())searchStatus.textContent=`Reading email list · ${count} emails…`;});
+      return await indexMessages(isolated,copy,checkIndex,count=>{if(filter.value.trim())element('filter-status').textContent=`Reading email list · ${count} emails…`;});
     }finally{isolated.close();if(metadataSession===isolated)metadataSession=undefined;}})();
   }
-  searchStatus.textContent='Finding emails…';
+  element('filter-status').textContent='Finding emails…';
   try{
     const result=await metadataIndex;checkIndex();if(revision!==filterRevision||query!==filter.value.trim().toLowerCase())return;
     const matches=result.messages.filter(m=>m.searchText.includes(query));
     const messageCounts=new Map<string,number>();
     for(const item of result.messages){const key=JSON.stringify(item.path);messageCounts.set(key,(messageCounts.get(key)??0)+1);}
     const create=(item:IndexedMessage)=>{const row=text('li',''),name=item.document.split(' / ').at(-1)!;
-      const choose=button(name,()=>void operation(async active=>{
+      const choose=button(item.label,()=>void operation(async active=>{
       let doc=root;
       for(const step of item.path){const file=doc.inspection.files.find(f=>f.id===step.fileId),stream=file?.streams.find(s=>s.locator.path===step.streamPath);
         if(!file||!stream)throw new Error('Email destination is no longer available.');await openChild(doc,file,stream,active);doc=current!;}
       const message=doc.inspection.messages.find(m=>m.id===item.messageId);if(!message)throw new Error('Email metadata is no longer available.');
       filter.value='';filterResults.hidden=true;tree.hidden=false;await showDocument(doc,active,message);
-    }));choose.title=name;row.append(choose);
-      // Multi-message PDFs still need a message label to distinguish destinations.
-      if((messageCounts.get(JSON.stringify(item.path))??0)>1)row.append(text('small',item.label));
+    }));choose.title=name;choose.prepend(treeIcon('message'));messageLabel(choose,item.label,{From:item.sender??'',Sent:item.sent??''});row.append(choose);
       return row;};
     if(matches.length>256)filterList=new VirtualList(filterResults,tree.closest('aside')!,matches,create,60);else for(const item of matches)filterResults.append(create(item));
-    searchStatus.textContent=`${matches.length} matching emails. ${result.incomplete.length?'Search incomplete: '+result.incomplete.join(' '):'All reachable email metadata searched.'}`;
-  }catch(error){if(ticket===generation&&epoch===metadataEpoch&&revision===filterRevision){metadataIndex=undefined;searchStatus.textContent=`Email search could not finish: ${error instanceof Error?error.message:String(error)}`;}}
+    element('filter-status').textContent=`${matches.length} matching emails. ${result.incomplete.length?'Search incomplete: '+result.incomplete.join(' '):'All reachable email metadata searched.'}`;
+  }catch(error){if(ticket===generation&&epoch===metadataEpoch&&revision===filterRevision){metadataIndex=undefined;element('filter-status').textContent=`Email search could not finish: ${error instanceof Error?error.message:String(error)}`;}}
 }
-filter.addEventListener('input',()=>{filterRevision++;clearTimeout(filterTimer);if(!filter.value.trim()){filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;tree.hidden=false;searchStatus.textContent='';return;}filterTimer=setTimeout(()=>void filterMessages(),200);});
+filter.addEventListener('input',()=>{filterRevision++;clearTimeout(filterTimer);if(!filter.value.trim()){filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;tree.hidden=false;element('filter-status').textContent='';return;}filterTimer=setTimeout(()=>void filterMessages(),200);});
 cancelLinked=setupLinkedOpening(openFile,message=>{status.textContent=message;});
 status.textContent='Open or drop a PDF to begin.';controls();
 
@@ -633,8 +699,8 @@ function navigationTab(mode:'browse'|'results'):void {
   for(const name of ['browse','results'] as const){
     const tab=element<HTMLButtonElement>(name+'-tab');tab.setAttribute('aria-selected',String(name===mode));tab.tabIndex=name===mode?0:-1;
   }
-  element('browse-panel').hidden=mode!=='browse';element('collection-results').hidden=mode!=='results';
-  document.querySelector<HTMLElement>('.message-filter')!.hidden=mode!=='browse';
+  element('browse-panel').hidden=false;element('collection-results').hidden=mode!=='results';
+  document.querySelector<HTMLElement>('.message-filter')!.hidden=false;if(mode==='results')openSearch(false);
 }
 for(const name of ['browse','results'] as const){
   const tab=element(name+'-tab');tab.addEventListener('click',()=>navigationTab(name));
@@ -643,15 +709,73 @@ for(const name of ['browse','results'] as const){
     navigationTab(other);element(other+'-tab').focus();
   });
 }
-for(const [hideId,showId,panel,flag]of [['toggle-navigation','show-navigation','navigation-panel','hide-navigation'],['toggle-details','show-details','details-panel','hide-details']] as const){
-  const setHidden=(hidden:boolean)=>{
-    element(panel).hidden=hidden;element(hideId).setAttribute('aria-expanded',String(!hidden));element(showId).hidden=!hidden;
-    element('workspace').classList.toggle(flag,hidden);element(hidden?showId:hideId).focus();
-    if(current&&!busy&&zoom.value.startsWith('fit-'))void operation(ticket=>render(ticket,false));
-  };
-  element(hideId).addEventListener('click',()=>setHidden(true));element(showId).addEventListener('click',()=>setHidden(false));
-}
+type LayoutMode='wide'|'medium'|'compact';
+type Pane='navigation'|'details';
+const panePreferences:Record<LayoutMode,Record<Pane,boolean>>={wide:{navigation:false,details:false},medium:{navigation:false,details:true},compact:{navigation:true,details:true}};
+const layoutForWindow=():LayoutMode=>innerWidth<800||(innerHeight<500&&innerWidth<1200)?'compact':innerWidth<1200?'medium':'wide';
+let layoutMode=layoutForWindow();
 let resizeTimer:ReturnType<typeof setTimeout>|undefined;
-window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(current&&!busy&&zoom.value.startsWith('fit-'))void operation(ticket=>render(ticket,false));},150);});
+function scheduleFit():void {
+  clearTimeout(resizeTimer);
+  if(!current||!zoom.value.startsWith('fit-'))return;
+  resizeTimer=setTimeout(()=>{
+    if(busy){scheduleFit();return;}
+    if(viewport.clientWidth===renderedViewportWidth&&(zoom.value!=='fit-page'||viewport.clientHeight===renderedViewportHeight))return;
+    if(current&&zoom.value.startsWith('fit-'))void operation(async ticket=>{
+      // A viewport refit does not change the selected message or its diagnostics.
+      const message=status.textContent;await render(ticket,false);status.textContent=message;
+    });
+  },150);
+}
+function applyPaneLayout():void {
+  const workspace=element('workspace');workspace.dataset.layout=layoutMode;
+  document.querySelector<HTMLElement>('.reader-pane')!.inert=layoutMode==='compact'&&(!panePreferences.compact.navigation||!panePreferences.compact.details);
+  for(const pane of ['navigation','details'] as const){
+    const hidden=panePreferences[layoutMode][pane],panel=element(pane+'-panel'),show=element('show-'+pane),toggle=element('toggle-'+pane);
+    const restoreFocus=hidden&&panel.contains(document.activeElement);
+    panel.hidden=hidden;show.hidden=!hidden;toggle.setAttribute('aria-expanded',String(!hidden));show.setAttribute('aria-expanded',String(!hidden));
+    workspace.classList.toggle('hide-'+pane,hidden);
+    if(restoreFocus)show.focus();
+  }
+}
+function setPaneHidden(pane:Pane,hidden:boolean,focus=true):void {
+  const preferences=panePreferences[layoutMode];preferences[pane]=hidden;
+  if(!hidden&&layoutMode!=='wide')preferences[pane==='navigation'?'details':'navigation']=true;
+  applyPaneLayout();
+  if(focus)element((hidden?'show-':'toggle-')+pane).focus();
+  scheduleFit();
+}
+for(const pane of ['navigation','details'] as const){
+  element('toggle-'+pane).addEventListener('click',()=>setPaneHidden(pane,true));
+  element('show-'+pane).addEventListener('click',()=>setPaneHidden(pane,false));
+}
+applyPaneLayout();
+window.addEventListener('keydown',event=>{
+  if(event.defaultPrevented||event.key!=='Escape'||layoutMode!=='compact'||document.querySelector('dialog[open]'))return;
+  const pane=(['navigation','details'] as const).find(p=>!panePreferences.compact[p]);
+  if(pane){event.preventDefault();setPaneHidden(pane,true);}
+});
+window.addEventListener('resize',()=>{
+  const next=layoutForWindow();if(next!==layoutMode){layoutMode=next;applyPaneLayout();}
+  scheduleFit();
+});
+new ResizeObserver(scheduleFit).observe(viewport);
+element('navigation-panel').addEventListener('click',event=>{
+  const target=event.target instanceof Element?event.target.closest<HTMLButtonElement>('#tree button,#filter-results button,.collection-hit,#outline button'):null;
+  if(layoutMode==='compact'&&target&&!target.disabled){setPaneHidden('navigation',true,false);viewport.focus();}
+},{capture:true});
 
 element('search-scope').addEventListener('change',()=>{const collection=element<HTMLSelectElement>('search-scope').value==='collection';search.placeholder=collection?'Find across collection PDFs…':'Find in this PDF…';search.setAttribute('aria-label',collection?'Find across collection PDFs':'Find in this PDF');});
+
+function openSearch(focus=true):void {element('search-panel').hidden=false;element('open-search').setAttribute('aria-expanded','true');if(focus)search.focus();}
+function closeSearch(focus=true):void {element('search-panel').hidden=true;element('open-search').setAttribute('aria-expanded','false');if(focus)element('open-search').focus();}
+element('open-search').addEventListener('click',()=>openSearch());element('close-search').addEventListener('click',()=>closeSearch());
+window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='f'&&!document.querySelector('dialog[open]')){event.preventDefault();openSearch();}else if(event.key==='Escape'&&!element('search-panel').hidden){event.preventDefault();closeSearch();}},{capture:true});
+for(const [id,kind]of [['close','close'],['close-search','close'],['previous','left'],['next','right'],['find-previous','left'],['find','right'],['toggle-navigation','left'],['toggle-details','right'],['back','up'],['zoom-out','minus'],['zoom-in','plus']] as const){const control=element(id);if(!control.hasAttribute('aria-label'))control.setAttribute('aria-label',control.textContent!.trim());if(!control.title)control.title=control.getAttribute('aria-label')!;control.replaceChildren(treeIcon(kind));control.classList.add('icon-button');}
+for(const [id,kind]of [['open-search','search'],['export-csv','download']] as const)element(id).prepend(treeIcon(kind));
+document.querySelector('.open-file')!.prepend(treeIcon('folder'));
+// Native buttons/disclosures retain their semantics; arrows supplement Tab navigation.
+tree.addEventListener('keydown',event=>{const target=event.target;if(!(target instanceof HTMLElement))return;const visible=[...tree.querySelectorAll<HTMLElement>('button,summary')].filter(node=>node.getClientRects().length&&!node.closest('[hidden]')),index=visible.indexOf(target);if(index<0)return;let next:HTMLElement|undefined;
+ if(event.key==='ArrowDown')next=visible[index+1];else if(event.key==='ArrowUp')next=visible[index-1];else if(event.key==='Home')next=visible[0];else if(event.key==='End')next=visible.at(-1);else if(event.key==='ArrowRight'&&target.tagName==='SUMMARY'){(target.parentElement as HTMLDetailsElement).open=true;event.preventDefault();}else if(event.key==='ArrowLeft'){const parent=target.closest('details');if(parent){parent.open=false;next=parent.querySelector('summary')!;}}
+ if(next){event.preventDefault();next.focus();}
+});

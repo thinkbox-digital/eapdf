@@ -1,10 +1,10 @@
 import type {BrowserDocument,BrowserSession} from './browser-session.js';
 import {fileLabel} from './navigation.js';
 import type {SearchStep} from './collection-search.js';
-export type IndexedMessage={path:SearchStep[];messageId:string;label:string;document:string;searchText:string};
+export type IndexedMessage={path:SearchStep[];messageId:string;label:string;document:string;searchText:string;sender?:string;sent?:string};
 export type MessageIndex={messages:IndexedMessage[];incomplete:string[]};
 /** Retain only bounded display metadata; release the isolated PDF session after indexing. */
-export async function indexMessages(session:BrowserSession,root:BrowserDocument,check:()=>void,progress:(count:number)=>void):Promise<MessageIndex>{
+export async function indexMessages(session:BrowserSession,root:BrowserDocument,check:()=>void,progress:(count:number)=>void,discovered?:(messages:readonly IndexedMessage[])=>void):Promise<MessageIndex>{
   const messages:IndexedMessage[]=[],incomplete:string[]=[];let characters=0,stopped=false;
   const problem=(value:string)=>{incomplete.push(value);};
   async function visit(doc:BrowserDocument,path:SearchStep[],name:string):Promise<void>{
@@ -13,14 +13,16 @@ export async function indexMessages(session:BrowserSession,root:BrowserDocument,
     if(!['present','missing'].includes(i.coverage.metadata)||i.diagnostics.some(d=>/^XMP_.*LIMIT$/.test(d.code)||['XMP_RECORD_STRUCTURE','XMP_DISPLAY_VALUE_UNAVAILABLE','XMP_DISPLAY_VALUE_AMBIGUOUS'].includes(d.code)))problem(`${name}: some email metadata could not be read.`);
     if(!['present','missing'].includes(i.collection.state)){problem(`${name}: collection structure could not be read.`);return;}
     if(!i.collection.value){
+      const first=messages.length;
       for(const m of i.messages){
         check();const data=doc.details.get(m.metadataRecordId)??{};
         const label=data.Subject||doc.name,searchText=['Subject','From','Raw-From','To','Raw-To','Sent'].map(k=>data[k]??'').join(' ').toLowerCase();
         characters+=label.length+name.length+searchText.length;
         if(characters>8_000_000){problem('Email metadata search limit reached.');stopped=true;return;}
-        messages.push({path,messageId:m.id,label,document:name,searchText});
+        messages.push({path,messageId:m.id,label,document:name,searchText,sender:data.From||data['Raw-From'],sent:data.Sent});
         if(messages.length%250===0){progress(messages.length);await new Promise(resolve=>setTimeout(resolve,0));check();}
       }
+      discovered?.(messages.slice(first));
     }else{
       if(i.coverage.associatedFiles!=='present'){problem(`${name}: collection files could not be fully read.`);return;}
       const members=new Set(i.collection.value.entries.map(e=>e.fileId)),available=new Set(i.files.map(f=>f.id));let count=0;
