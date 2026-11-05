@@ -1,7 +1,11 @@
 # Development status and restart guide
 
-**Beta.9 release — 2026-11-05 (verified for publication):**
-Creator and validator bumped to 1.6.0-beta.9; viewer to 0.5.0-beta.8.
+**Beta.9 release — 2026-11-05 (published):**
+Published [v1.6.0-beta.9](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.9)
+with creator and validator 1.6.0-beta.9 and viewer 0.5.0-beta.8.
+All 13 release assets match GitHub upload SHA-256 digests and sizes.
+Only beta.9 and beta.8 releases remain; beta.7 was deleted after verification,
+with Git tags and history preserved.
 Includes the recent MBOX/PST process workers, four-process collection validation,
 viewer performance and interface fixes, and the 4 GiB viewer input ceiling.
 Release builds use isolated temporary directories; the active Schiavo run keeps

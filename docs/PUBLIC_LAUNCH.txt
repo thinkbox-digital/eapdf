@@ -1,9 +1,10 @@
-Beta.9 release preparation — 2026-11-05
+Beta.9 release publication — 2026-11-05
 
 https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.9
 
 Creator/validator 1.6.0-beta.9; reader 0.5.0-beta.8.
-Release assets will be verified against GitHub SHA-256 digests before publication.
+All 13 downloadable assets verified against GitHub SHA-256 digests.
+Only beta.9 and beta.8 releases retained; older release deleted after verification.
 Public prerelease; release notes remain brief. Current download links updated.
 Examples/manual retain their recorded editions and provenance.
 Local evidence: output/release-1.6.0-beta.9/asset-verification.json and published-release.json.
