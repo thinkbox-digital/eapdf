@@ -19,7 +19,7 @@ Official Google references used for the setup steps:
 
 The user-authorized account was checked with read-only access. Three inbox messages produced individual PDFs, an archive and a collection; another message supplied a PDF attachment. All outputs and collection children pass the existing EA-PDF, PDF/A and selected ISO checks. Original email and attachment bytes match. Repeating the three-message export skips completed outputs.
 
-For this account, the working Google Java token store was `~/StoredCredential`; its directory is supplied with `--token-dir`. The separate `~/.gmail_token_store/StoredCredential` copy was expired. Verification used temporary private credential/token copies and left the originals untouched. Private sample PDFs are in `output/gmail-live-review/`. No email was sent, deleted, relabeled or marked read.
+For this account, the working Google Java token store was `~/StoredCredential`; its directory is supplied with `--token-dir`. The separate `~/.gmail_token_store/StoredCredential` copy was expired. Verification used temporary private credential/token copies and left the originals untouched. Private sample PDFs are in local verification records. No email was sent, deleted, relabeled or marked read.
 
 ## What This Workflow Does
 
@@ -46,7 +46,7 @@ Set `EAPDF_GMAIL_RESUME_DIR` to a private directory before running the same Gmai
 
 ```bash
 export EAPDF_GMAIL_RESUME_DIR="$HOME/.local/share/emailtopdfa/gmail-resume"
-java -cp dist/emailtopdfa.jar eapdf.GmailDownloadToPdf --folder INBOX --out-pdf out/gmail
+java -cp dist/emailtopdfa.jar eapdf.GmailDownloadToPdf --folder INBOX --out-pdf /tmp/eapdf-gmail
 ```
 
 The existing credential discovery and OAuth settings still apply. `-Deapdf.gmailResumeDir=/private/path` is the equivalent JVM setting.
@@ -157,7 +157,7 @@ java -cp dist/emailtopdfa.jar eapdf.GmailDownloadToPdf \
 java -cp dist/emailtopdfa.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --archive-profile m \
-  --archive-output out/gmail_inbox_1m.pdf
+  --archive-output /tmp/eapdf-gmail-inbox_1m.pdf
 ```
 
 ### Use An Explicit Credentials File

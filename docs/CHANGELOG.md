@@ -134,7 +134,7 @@ This is a beta for ordinary email creation and validation on the tested Linux se
 - Gmail setup documentation in [GMAIL.md](/media/lepore/Work/thinkbox/convert/docs/GMAIL.md)
 - searchable workflow decision tree PDF in [eapdf_decision_tree.pdf](/media/lepore/Work/thinkbox/convert/docs/eapdf_decision_tree.pdf)
 - feature inventory in [FEATURES.md](/media/lepore/Work/thinkbox/convert/docs/FEATURES.md)
-- per-file logs in [out/logs](/media/lepore/Work/thinkbox/convert/out/logs)
+- per-file logs in local per-file logs
 - per-file validation report links in the web validator
 - MBOX reader support
 - Twitter import support for CSV and JSONL exports

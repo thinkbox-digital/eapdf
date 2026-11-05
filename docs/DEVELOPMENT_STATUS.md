@@ -1,5 +1,16 @@
 # Development status and restart guide
 
+**Portable test fixtures and public documentation — 2026-11-05:**
+Removed the BFO-specific beta smoke check and its unused fixture descriptor.
+All 16 remaining resource, cancellation, and security checks pass offline.
+Public prose no longer links to unpublished generated documents or local audit
+paths; results remain summarized here and in tracked review documents.
+The GitHub quality failure was caused by six collection-process tests relying
+on local-only conversions. They now use tracked real-input examples and fail
+explicitly if a required example is absent. All six focused checks passed
+with zero failures and zero skips. The documentation site also passes all
+25 page/link checks.
+
 **Beta.9 release — 2026-11-05 (published):**
 Published [v1.6.0-beta.9](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.9)
 with creator and validator 1.6.0-beta.9 and viewer 0.5.0-beta.8.
@@ -16,16 +27,16 @@ Verification: creator 390 tests (four optional skips), validator 262 tests
 Chromium integration suites passed. Five real-input conversion/fidelity/visual
 regressions and Java validation passed. Documentation: 25 pages checked.
 The collection-match smoke instrumentation now excludes background subject
-indexing from its text-search count. The full beta smoke suite still requires
-the absent `output/bfo.pdf` fixture; no full Firefox runtime claim is made.
-Release evidence: `output/release-1.6.0-beta.9/`.
+indexing from its text-search count. At release time, the full beta smoke suite
+was not completed because a local-only fixture was missing. That dependency
+has since been removed and all 16 remaining checks pass. No full Firefox
+runtime claim is made.
 The publishing policy now requires distributable assets for every requested
 GitHub push and retains only the current release and its immediate predecessor.
 
 **Four-process collection validation — 2026-11-05 (installed; Schiavo restarted):**
 At the user's request, the serial Schiavo validation was cancelled and its streamed
-partial findings and logs preserved under
-`output/remaining-large-pst-2026-11-04/cancelled-serial-schiavo/`.
+partial findings and logs preserved locally.
 The queue was held until the new executable passed verification. Schiavo has now
 restarted from the beginning with the new validator, followed by the remaining
 queued PDFs. Previously completed reports are reused.
@@ -42,7 +53,7 @@ comparison took 50.75 s serial versus 28.24 s with four processes (1.80x), with
 identical findings. Small collections can be slower because of process startup;
 this benchmark is not a promise of the same full-archive speedup.
 Evidence, source/output hashes, reports and benchmark harness:
-`output/validator-four-process-2026-11-05/`. Updated distributable:
+local verification records. Updated distributable:
 `dist/eapdf-validator.jar` (SHA-256
 `5c6656bb06ef2d6ca6d21cdec9703f7168a7aae4a3efdd9ad695e58b9c18d9bc`).
 
@@ -52,18 +63,18 @@ and updated the viewer README. Both local beta.7 browser packages rebuilt.
 Twelve focused browser input/resource/cancellation checks passed, including the
 4 GiB size gate and rejection at 4 GiB + 1 byte without allocating large buffers.
 This verifies the size gate, not successful parsing of an actual 4 GiB PDF.
-The full beta smoke test is blocked by its absent `output/bfo.pdf` fixture.
-Evidence: `output/viewer-input-limit-2026-11-05/checks.json`.
+The later smoke-test cleanup removed the local-only BFO dependency; all
+16 remaining resource, cancellation, and security checks pass.
 The Schiavo collection is 4,303,585,642 bytes, 8,618,346 bytes above this ceiling.
 
 **Remaining large PSTs — 2026-11-04 (converted; validation running):**
 All five previously skipped PSTs converted successfully: 218,790 emails total.
 All five source hashes are unchanged after conversion. New documents publish
-straight into `out/pst/`, with profile suffixes and no deeper folders. Logs,
-JSON, validation reports and the new size table stay outside `out/`.
+directly into the PST output folder, with profile suffixes and no deeper folders. Logs,
+JSON, validation reports and the new size table stay outside the generated-document directory.
 
-Evidence: `output/remaining-large-pst-2026-11-04/`.
-Successful conversion sizes/times: `output/remaining-large-pst-2026-11-04/CONVERSION_SIZES.md`.
+Evidence: local verification records.
+Successful conversion sizes/times: local verification records.
 The 105,034-message Schiavo PST uses 1ci to avoid assembling all pages in one
 large document; the other outputs use 1m/1mi. There are five new primary PDFs,
 one finding-aid PDF and one spreadsheet index. Conversion used four jobs and
@@ -75,8 +86,7 @@ Standalone Java validation is now running sequentially with a 12 GiB heap
 (previously 6 GiB) and 48 GiB virtual-address allowance. Nine PDFs are queued:
 the six new PDFs, the earlier large-PST trial, the earlier large collection,
 and its finding-aid PDF/A check. This is not an all-pass validation claim.
-Current state: `active-validation.json`, `status.json`, and `validation/` in the run
-evidence directory. A queued final report will update this entry and write the
+Progress and reports are retained locally. A queued final report will update this entry and write the
 combined integrity audit, full size table and validation exceptions when finished.
 
 **Validation checkpoint — 2026-11-05:**
@@ -97,9 +107,9 @@ The three finished runs have no memory-exhaustion termination. See the run's
 `validation/3/validation.log` for live collection progress.
 
 **Future bulk output layout — 2026-11-04:**
-The user requested that future bulk `in/` → `out/` runs publish documents directly
+The user requested that future bulk `in/` → the generated-document directory runs publish documents directly
 in the four type folders (`eml`, `msg`, `mbox`, `pst`), with no deeper subfolders.
-Logs, JSON/progress manifests and validation reports belong in `output/<run>/`.
+Logs, JSON/progress manifests and validation reports belong in local verification records.
 Use isolated staging for concurrent conversions, then publish only final document
 artifacts into the appropriate flat type folder. Recorded in `AGENTS.md`.
 
@@ -109,19 +119,19 @@ emails, to a 564.32 MB profile 1m PDF in 28 min 12 sec (+29.76% size).
 Standalone Java validation ran out of memory with a 6 GiB heap after 148 seconds;
 its result is INCOMPLETE, with no PDF/A or EA-PDF compliance verdict.
 Source warnings are retained; conversion completion does not establish conformance.
-Evidence: `output/large-pst-trial-2026-11-04/`.
+Evidence: local verification records.
 
 Combined regeneration: 83 inputs converted; five oversized PSTs remain skipped.
 There are 159 primary EA-PDFs, 28 finding-aid PDFs and 28 spreadsheet indexes.
 PDF validation outcomes: 180 PASS, three FAIL, three INCOMPLETE and one ERROR
 (the largest collection's finding-aid PDF/A check did not finish).
 The final audit verified all 88 original source hashes and 215 output hashes,
-with no changed files or unlisted PDFs. Size/profile table: `out/FILE_SIZES.md`;
-exceptions: `out/VALIDATION_EXCEPTIONS.md`; audit:
-`output/large-pst-trial-2026-11-04/combined-audit.json`.
+with no changed files or unlisted PDFs. Size/profile table: local generated documents;
+exceptions: local generated documents; audit:
+local verification records.
 
 **Clean regeneration — 2026-11-04 (complete, with validation exceptions):**
-The user authorized emptying `out/` and regenerating `in/`. Inventoried and hashed
+The user authorized emptying the generated-document directory and regenerating `in/`. Inventoried and hashed
 88 sources; six PSTs over 300,000,000 bytes are excluded, leaving 82 eligible inputs.
 Prior output metadata/logs were retained; old outputs were removed. Accessibility
 is on, PREMIS/signing off. Creation-time validation remains skipped; standalone
@@ -132,8 +142,8 @@ All six profiles are represented. Enron remains 1m. The largest PST is 1ci; othe
 PSTs cover c/m/mi/s/si. EML/MSG singleton m/mi assignments were corrected to
 s/si because m/mi require at least two emails. Failed first attempts are retained.
 Primary output filenames carry their export profile. Final size/profile/status
-reports are in `out/FILE_SIZES.md`, `out/file-sizes.csv`, and
-`out/output-files.csv`. Batch evidence: `output/regeneration-2026-11-04/`.
+reports are in local generated documents, local generated documents, and
+local generated documents. Batch evidence: local verification records.
 Validation exceptions remain; this is not an all-pass corpus.
 All 82 eligible inputs now have outputs: 158 primary PDFs, 28 finding-aid PDFs
 and 28 spreadsheet indexes. All 88 source hashes are unchanged. Standard-budget
@@ -163,10 +173,10 @@ is unchanged. The layout regression verifies subject labels before opening child
 UI regression passes 13 cases, 17 message selections, exact-byte attachment
 downloads, navigation and cancellation.
 Local Chromium/Firefox beta.7 packages and hashes are rebuilt; evidence is in
-`output/viewer-browse-subjects-2026-11-04/`.
+local verification records.
 
 For future generated outputs, append the export profile to each filename, such as
-`_1s.pdf` or `_1c.pdf`. Full `in/` → `out/` regenerations should use suitable profiles
+`_1s.pdf` or `_1c.pdf`. Full `in/` → the generated-document directory regenerations should use suitable profiles
 and a representative mix across input types. This standing instruction is recorded
 in `AGENTS.md`; no regeneration or converter naming-policy change was performed in
 this viewer task. Existing accessibility-on, PREMIS-off and PST-over-300-MB exclusion
@@ -193,7 +203,7 @@ close. The user-requested removal of “Conformance not evaluated” is applied;
 The broader UI regression passes 13 cases, 17 message selections and exact-byte
 downloads. Layout checks verify source-first ordering, PREMIS grouping, no redundant owner
 labels, the removed panel and the footer profile. Chromium/Firefox local beta.7
-packages and checksums are rebuilt. Evidence: `output/viewer-files-footer-2026-11-04/`.
+packages and checksums are rebuilt. Evidence: local verification records.
 
 
 **Search details, reset and page-number fixes — 2026-11-04 (local beta.7):**
@@ -212,7 +222,7 @@ The page-number input fits at least four digits and expands for larger page coun
 Build and browser regressions pass: real 1,433-message Enron archive ownership on
 result click/Next/Previous, four-digit page input fit, search clearing/retry,
 collection search cache/cancellation, and desktop/medium/narrow layout and pane
-restoration. Evidence: `output/viewer-match-details-2026-11-04/`.
+restoration. Evidence: local verification records.
 Chromium and Firefox local beta.7 packages and checksums are rebuilt. Reload the
 extension and reopen the viewer. No version bump or GitHub publication requested.
 
@@ -236,7 +246,7 @@ Desktop/medium/narrow layout and navigation checks pass, including equal widths,
 keyboard pane restoration, first-match navigation and filename-only results.
 The broader UI regression passes 13 cases and 17 message selections; all 16
 download checks preserve exact bytes, with cancellation and queue recovery.
-Evidence and screenshots: `output/viewer-refinement-2026-11-04/`.
+Evidence and screenshots: local verification records.
 Local Chromium and Firefox beta.7 packages are rebuilt; no version bump or
 GitHub publication was requested for this refinement.
 
@@ -282,7 +292,7 @@ Exact files/findings are retained in `validation-summary.json`; no incomplete
 validation runs remain. Local CLI/GUI JARs and checksums are updated; restart the
 GUI to use the new workers. No release or version bump was requested. Evidence,
 source hashes, benchmark scripts, logs and reports are retained in
-`output/pst-process-benchmark-2026-11-04/`; existing `out/` files are untouched.
+local verification records; existing generated documents are untouched.
 
 
 **Viewer 0.5.0-beta.7 — 2026-11-04 (local beta):**
@@ -297,7 +307,7 @@ Stored traversal paths and file associations are unchanged.
 The build, 55 unit tests, design checks, collection-match navigation and reading
 regressions pass. The filter regression explicitly verifies no root filename or
 parent path in results and confirms the selected filename opens the correct PDF.
-Evidence: `output/viewer-categories-2026-11-04/`. Chromium and Firefox local ZIPs
+Evidence: local verification records. Chromium and Firefox local ZIPs
 are rebuilt in `browser-viewer/releases/`, with hashes in `beta-builds.json`.
 This is a viewer-only local bump; no GitHub push or release was requested.
 
@@ -323,7 +333,7 @@ pass (13 UI cases, 17 message selections, exact downloads, offline operation and
 cancellation). The new `npm --prefix browser-viewer run test:design` checks real
 collection output, grouped labels, highlights, tab keys, pane focus, original
 widths, no horizontal overflow at 1600/900/600 px, and reset on closing.
-Screenshots and logs: `output/viewer-design-a-2026-11-04/`. Both unpacked browser
+Screenshots and logs: local verification records. Both unpacked browser
 builds are refreshed under `browser-viewer/dist/`; reload the extension and open
 a new viewer tab. No version bump or GitHub release was requested.
 
@@ -395,7 +405,7 @@ reports are retained. The 26 targeted process/provenance, progress, supervision
 and CPU-budget tests pass. The local CLI and GUI JARs and their checksums are
 updated; restart the GUI to use the change. No release was published. Temporary Maven builds avoid target/. Evidence, exact source/configuration
 hashes, timestamped logs, per-run progress, outputs and Java reports are retained
-under `output/mbox-process-benchmark-2026-11-04/`; existing `/out` was preserved.
+in local records; existing generated documents were preserved.
 A final memory-availability cap was added after the timed runs; it leaves the
 benchmarked 409 MiB child allocation unchanged and is covered by regression tests.
 
@@ -412,7 +422,7 @@ screen area; verified 1440×1146 on a 2512×1440 usable desktop.
 Built with Maven using a temporary build directory, without changing target/.
 The local `dist/emailtopdfa-gui.jar` and checksum are updated; restart the GUI to
 use the changes. Runtime probes and artifact hash are retained under
-`output/gui-focus-size-2026-11-04/`. No GitHub release was published.
+local verification records. No GitHub release was published.
 
 Publication/threading clarification: a supervised conversion writes completed
 files into its private staging outputs directory and publishes the set only
@@ -445,7 +455,7 @@ multiple occurrences, next/previous, wraparound, list selection, empty results,
 query changes, cancellation/retry and document replacement. Run
 `npm --prefix browser-viewer run test:collection-matches`; the optional large-file
 check is `node browser-viewer/scripts/collection-match-large.mjs`.
-Evidence: `output/collection-match-navigation-2026-11-04/`.
+Evidence: local verification records.
 The unpacked reader is rebuilt; no new GitHub release has been published.
 
 **Collection search and pinned filter — 2026-11-04 (local build):**
@@ -477,7 +487,7 @@ per child; these are partial observations, not completed baseline timings.
 Build, 55 unit tests, reader/search-destination checks, source/supplement cache
 checks, navigation and allocation-recovery regressions pass. All real-file runs
 used SHA-256 `b28469ac4308b91effd8e756f0695bf49d0cfbfc9cb46951c1ce6d2bdcb80eb7`.
-Evidence: `output/reader-search-2026-11-04/`. Optional real-file probes:
+Evidence: local verification records. Optional real-file probes:
 `node browser-viewer/scripts/collection-search-profile.mjs` and
 `node browser-viewer/scripts/filter-profile.mjs`. The unpacked reader is rebuilt;
 GitHub release assets have not been updated.
@@ -508,7 +518,7 @@ Build, 55 unit tests, navigation metadata equivalence/checksum tests, reader,
 allocation recovery, export, and forward/backward folder-scrolling checks pass.
 The focused regression is `npm --prefix browser-viewer run test:navigation`;
 optional real-file timing is `NAV_LABEL=after node browser-viewer/scripts/navigation-smoke.mjs`.
-Measurements, hashes and logs: `output/reader-navigation-2026-11-04/`.
+Measurements, hashes and logs: local verification records.
 The unpacked reader is rebuilt; GitHub assets have not been republished.
 
 **Reader allocation recovery — 2026-11-04 (local build):**
@@ -532,7 +542,7 @@ Reproduce these with `npm --prefix browser-viewer run test:allocation`; the
 optional exact-file regression is `node browser-viewer/scripts/allocation-smoke.mjs`.
 Build, 55 unit tests, export, source-association and download regressions pass
 (including 16 byte-identical downloads).
-Evidence is retained in `output/reader-allocation-2026-11-04/`.
+Evidence is retained in local verification records.
 The unpacked reader is rebuilt; this fix has not been published to GitHub.
 
 **Finding-aid export repair — 2026-11-04 (local build, not yet released):**
@@ -546,7 +556,7 @@ children. Export-only workers are reused in batches of 16 children per depth;
 the parent worker is refreshed after 256 extractions. These are cleanup intervals,
 not content cutoffs. Existing byte/path safeguards remain unchanged.
 
-The real May PST collection (`out/pst/pst_14_05+May+2003+Public+2/`)
+The real May PST collection (local generated documents)
 is 136,677,875 bytes (130.35 MiB). Chromium exported all **1,795 messages in
 135.4 seconds**, with the dialog visible after **231 ms**; initial file opening
 was measured separately at 20.5 seconds. The CSV is 621,841 bytes. The message
@@ -563,7 +573,7 @@ and worker reuse. Reproduce the small export regression with
 `npm --prefix browser-viewer run test:export`; the optional real-file benchmark
 is `node browser-viewer/scripts/export-large-smoke.mjs` (`EXPORT_PDF` overrides
 its input). Evidence, source/CSV hashes, screenshot and logs are retained in
-`output/finding-aid-export-2026-11-04/`. The unpacked reader build is updated;
+local verification records. The unpacked reader build is updated;
 GitHub release assets are unchanged.
 
 **GitHub release — 2026-11-04 (published):** Published [`v1.6.0-beta.8`](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.8) as a prerelease
@@ -575,7 +585,7 @@ Assets use the previously verified reproducible JARs, current unsigned reader
 packages, public configuration, and validated examples with their original
 provenance. The manual/specification-review documents retain their beta.7
 editions. Release-binary license inventories cover Java and the reader.
-Local packaging and upload-verification evidence: `output/release-1.6.0-beta.8/`.
+Local packaging and upload-verification evidence: local verification records.
 All 13 assets are uploaded; GitHub SHA-256 digests match every local artifact.
 Publication confirmed at 2026-11-04T12:42:00Z; the release is public and marked prerelease.
 
@@ -592,17 +602,16 @@ Notes assertion now checks the retained checksum warning. All seven Arlington
 regressions pass. Reviewed visual baselines reflect the compact branding and
 reclaimed footer space; the pixel threshold is unchanged and timestamp masks
 follow the relocated generated-time row. Evidence is retained locally under
-`output/version-beta8-quality-final/` and `output/version-beta8-review/`.
+local verification records.
 Local CLI, GUI and validator distributions are rebuilt at beta.8.
 
 **Arlington integration and repairs — 2026-11-03 (complete):**
-All **88 PDFs in `out/` PASS** the pinned Arlington checker with the documented
+All **88 PDFs in the generated-document directory PASS** the pinned Arlington checker with the documented
 implementation corrections: zero deviations, deprecations or incomplete jobs.
 All **34 example PDFs PASS** as well. The runner verified that every audited
 PDF remained unchanged. Reports include full raw results, logs, file hashes,
 per-file summaries and aggregated findings:
-`output/arlington-repair-2026-11-03/out-arlington/` and
-`output/arlington-repair-2026-11-03/examples-arlington-complete/`.
+local verification records.
 
 Generator fixes write integral FontWeight values as integers, remove deprecated
 PDF 2.0 CIDSet after completing font subsets, retain file sizes only in the
@@ -613,7 +622,7 @@ older CIDSet compatibility decision for newly generated PDF 2.0 documents.
 Both CLI and GUI distributions and their checksums are updated.
 
 The baseline had 88 DEVIATIONS. Its reports and exact artifacts remain under
-`output/arlington-2026-11-03/`. Two verified veraPDF implementation defects were
+local verification records. Two verified veraPDF implementation defects were
 corrected using pinned released sources: binary CheckSum lengths are measured
 in bytes, and number-tree children receive their parent dictionary through the
 Kids array. The Arlington profile XML and rule predicates are unchanged; no
@@ -627,9 +636,9 @@ All 82 eligible inputs regenerated with Accessibility on and creation checks
 skipped, followed by the separate Arlington audit. Six PST inputs over
 300,000,000 bytes remain excluded. All 88 original source hashes match.
 Conversion logs, source/output inventories and readable size tables are under
-`output/arlington-repair-2026-11-03/`; current tables are also in `out/`.
+local verification records; current tables are also in the generated-document directory.
 The final creator additionally fixes isolated profiles; the retained-source
-`out/` batch and final example builds are identified separately in `builds.json`.
+the generated-document directory batch and final example builds are identified separately in `builds.json`.
 Early collision-suffixed filenames are retained with their matching references;
 the preserved baseline was separated and the final inventory reconciled.
 
@@ -644,12 +653,12 @@ pass. Temporary builds/probes are cleaned, retained evidence is in the repair
 report directory, and validation staging is empty.
 
 **Clean output regeneration, validation skipped — 2026-11-03 (complete):**
-The user requested cleaning `out/`, regenerating all eligible inputs, skipping
+The user requested cleaning the generated-document directory, regenerating all eligible inputs, skipping
 creation validation, and reporting source/output sizes and profiles. The prior
 large-PST validation and its finalization job were stopped; retained reports
-must not be interpreted as completed validation of the new outputs. Old `out/`
+must not be interpreted as completed validation of the new outputs. Old generated-document
 PDFs were removed. Prior logs and unmodified debug files were retained under
-`output/clean-regeneration-2026-11-03/`.
+local verification records.
 
 The new batch uses Accessibility on, explicit annotation page references,
 1s for EML/MSG and singleton Drafts.mbox, 1m for other MBOX, and 1c for PST.
@@ -666,10 +675,10 @@ finding-aid PDFs. Six PSTs over 300 MB were skipped. All 88 source hashes match.
 The largest PST completed in 658.74 seconds. This is a conversion result, not
 a validation PASS. The distribution also corrects a stale checking-stage label
 for skipped checks; the batch manifest retains the actual creator build hash.
-Logs/settings/statuses: `output/clean-regeneration-2026-11-03/`.
-`out/FILE_SIZES.md` and `out/file-sizes.csv` list every input,
+Logs/settings/statuses: local verification records.
+local generated documents and local generated documents list every input,
 primary-PDF size and profile in readable decimal units (KB/MB/GB); both CSV
-reports also retain exact byte counts. `out/output-files.csv` itemizes all primary PDFs,
+reports also retain exact byte counts. local generated documents itemizes all primary PDFs,
 finding aids and XML/XLSX sidecars. Exact bytes and source/output hashes are
 retained. Earlier output paths and checkpoints below are historical.
 
@@ -696,11 +705,11 @@ interpretation without changing referenced annotations. CIDSet deprecation
 warnings remain subject to the existing documented compatibility decision.
 
 The Accessibility-enabled replacement is
-`out/objr-repair-2026-11-03/acute-dev/acute-dev_1m.pdf`.
+local generated documents.
 All 85 references have explicit correct pages; Java EA-PDF and PDF/A checks PASS.
 The source hash is retained in the regeneration inventory. The creator suite
 runs 404 tests, four skipped, no failures/errors, including the multi-page
-annotation regression. Evidence: `output/regeneration-2026-11-03/objr-repair/`.
+annotation regression. Evidence: local verification records.
 Existing bulk PDFs and their original validation reports are preserved.
 
 **Regeneration preference — 2026-11-03:** Accessibility is enabled in the project
@@ -733,13 +742,13 @@ contract and focused browser checks pass; the unrelated third-party BFO test
 fixture is absent and explicitly skipped. All 53 reader unit tests and 13 UI cases/17 message selections pass. A separate
 edge fixture verifies all 1,034 bookmarks, including depth 33. Final bulk
 validation is still running. Evidence and build hashes:
-`output/regeneration-2026-11-03/no-cutoffs-*` and `live-resource-*`.
+local verification records and `live-resource-*`.
 The resource-accounting regression processes nine 8 KiB files after a failed
 oversized read under an 8 KiB concurrent extraction allowance. Supplement
 association also releases reservations on success, failure and cancellation.
 
 All 82 eligible real inputs have been converted; all 88 original hashes match.
-Outputs: `out/regenerated-2026-11-03/{eml,msg,mbox,pst}/<input-stem>/`.
+Outputs: local generated documents.
 Individual emails use 1s, multi-message MBOX uses 1m, and PST uses 1c;
 `Drafts.mbox` contains one message and uses 1s. Conversion logs, source hashes,
 initial reports and retry evidence are retained. All outputs are being revalidated
@@ -764,7 +773,7 @@ Supplement linking is implemented: all 1,190 transport-header files in the retai
 Two child workers rotate after 16 children to bound cumulative worker allocation;
 this batching does not stop the scan. Byte/time exhaustion or ambiguous evidence
 leaves ownership explicitly unresolved. Failure, cancellation, refresh and worker
-cleanup checks pass. Evidence: `output/banner-xmp-review-2026-11-03/`
+cleanup checks pass. Evidence: local verification records
 `supplement-owner-verification.json` and `supplement-rotating-opening.json`.
 
 The following dated checkpoints are historical; their old count/depth ceilings
@@ -828,7 +837,7 @@ source-association differential checks and browser document-part checks pass.
 PDF.js bundles were rebuilt from the hash-verified pinned archive; patch/test and
 bundle hashes were updated. Local browser builds are refreshed; nothing published.
 
-Evidence in `output/banner-xmp-review-2026-11-03/`: `discovery-expected.json`,
+Evidence in local verification records: `discovery-expected.json`,
 `discovery-accepted-opening.json`, `discovery-accepted-verification.json`, source
 rebuild and test logs, `transport-header-link-analysis.json`,
 `transport-header-child-links.json`, and `verify_transport_header_child_links.py`.
@@ -865,7 +874,7 @@ large viewer benchmarks measure speed, not compression. The previously measured
 43% PST heap reduction is a memory result, not an output-size saving.
 
 Exact comparisons for all six profiles, source hashes and checkpoint paths are
-in `output/banner-xmp-review-2026-11-03/compression-savings.json`.
+in local verification records.
 
 
 **Recovered session completion — 2026-11-03:**
@@ -919,7 +928,7 @@ EMLs match the previously verified unbranded output byte-for-byte. Standalone
 Java validation reports EA-PDF PASS and PDF/A PASS, zero failures and 30
 recommendations. The validated example is `examples/mbox/mbox_enron_1m.pdf`.
 
-Evidence: `output/banner-xmp-review-2026-11-03/` contains
+Evidence: local verification records contains
 `viewer-resumed-diagnostic.json` and its CPU profile, `viewer-before-control.json`,
 `viewer-final-opening.json` (source hashes and all stage timings), association and
 UI logs, `centered-creator-build.log`, `centered-conversion.log`,
@@ -972,7 +981,7 @@ explicitly to beta.7's two viewer ZIPs and examples ZIP; all three filenames wer
 verified against GitHub's release API. A release checklist requires tag/asset
 existence checks. No GitHub release or extension-store publication was performed.
 
-Evidence: `output/banner-xmp-review-2026-11-03/` retains source hashes, conversion
+Evidence: local verification records retains source hashes, conversion
 logs, Java reports, test summaries, browser checks and the API response. Initial
 conversion runs overlapped JAR packaging and are explicitly retained as incomplete
 setup runs; accepted reruns use a stable packaged JAR.
@@ -990,7 +999,7 @@ setup runs; accepted reruns use a stable packaged JAR.
 | Full upstream PDF.js suite | Still outside the focused patch tests. Pin verification is not full upstream regression testing or source reproduction. |
 
 Detailed source references and next steps are in
-`output/banner-xmp-review-2026-11-03/screenshot-review.json`. These findings were
+local verification records. These findings were
 examined; no broad resource-policy, PST timestamp, native-MSG or receipt feature
 change is claimed by this checkpoint.
 
@@ -1044,7 +1053,7 @@ reload the GUI to use them. Published releases are unchanged. An additional
 re-save experiment reached 12,234,660 bytes; the supported generator output and
 stats above are 12,263,708 bytes. All logs, hashes, source/visual comparisons,
 validation reports, rejected-experiment evidence and detailed statistics are in
-the public checkout's `output/enron-optimization-2026-11-03/` (`summary.json`,
+the public checkout's local verification records (`summary.json`,
 `space-usage.json`, `final-packed-size-breakdown.json`).
 
 **GUI controls rebuild — 2026-11-03:** Removed Debug checkboxes and their
@@ -1054,7 +1063,7 @@ smoke check against the built GUI JAR verified both absence of Debug checkboxes
 and actual/minimum window dimensions of 1200x955. Both checkouts' creator CLI/GUI
 JARs and checksums are updated. Close and relaunch existing GUI processes to load
 the replacement. Build log: public checkout
-`output/jar-rebuild-2026-11-03/gui-controls-build.log`.
+local verification records.
 
 **Local JAR rebuild — 2026-11-03:** Rebuilt creator CLI/GUI and standalone
 validator from the public checkout. Creator package tests pass (393 tests,
@@ -1063,10 +1072,10 @@ Both checkouts' `dist/` JARs and SHA-256 sidecars are synchronized. GUI minimum
 size is 1200x955; signing password focus and friendly wrong-password handling
 are included. Debug controls remain unchanged. Published release bundles are
 unchanged. Build logs and checksums: public checkout
-`output/jar-rebuild-2026-11-03/`.
+local verification records.
 
 **Exact Enron collection size audit — 2026-11-03:** Read-only analysis of the
-91,207,186-byte public-checkout `out/enron_1c.pdf` (SHA-256
+91,207,186-byte public-checkout local generated documents (SHA-256
 `b8f0403e978b7358aebdeacba2e3b2d66863a0bd668f02843ee05dbe46bf1fd6`)
 against the 2,220,104-byte `in/enron.mbox` confirms 1,433 plain-text messages,
 no MIME attachments/images, and 1,433 generated child PDFs. Child font programs
@@ -1079,7 +1088,7 @@ serialization. This is a compression estimate, not a validated replacement PDF.
 No generator changes, reconversion, or validation were performed in this audit;
 the original conversion receipt says PDF/A and EA-PDF validation NOT_RUN.
 Evidence, source/output hashes, analysis script, and copied conversion log/receipt:
-public checkout `output/enron-size-audit-2026-11-03/`.
+public checkout local verification records.
 
 **Signing password prompt — 2026-11-03:** Public-checkout source now requests
 password-field focus when the dialog gains keyboard focus. Incorrect PKCS12
@@ -1105,7 +1114,7 @@ with only its top-level Date header removed. The original is unchanged. First-pa
 inspection confirms the INCOMPLETE SOURCE banner and missing-sent-date explanation.
 Java validation: PDF/A PASS; EA-PDF FAIL (one finding), intentionally defective
 source demonstration, not a conforming regression example. Source hashes, conversion
-log, Java report and preview are in `output/missing-date-example-2026-11-03/`.
+log, Java report and preview are in local verification records.
 
 **Retry page visibility — 2026-11-03 (local fix):** The viewer now hides Retry
 page until the current page fails to render. Background page failures are tracked
@@ -1214,7 +1223,7 @@ inside unopened c/ci members. Full Firefox attachment/security tests and large-f
 benchmarks were not rerun. No large PST conversions were performed. Creator and
 validator code/JARs are unchanged in this viewer step. Packages are local, unsigned
 and unpublished. See [viewer details](../browser-viewer/docs/reading-improvements.txt)
-and retained logs in `output/viewer-next-2026-11-02/`.
+and retained logs in local verification records.
 
 **Viewing demonstration, finding aids and example cleanup — 2026-11-02:**
 Local viewer **0.5.0-beta.3** focuses on reading, folders, search, zoom, file
@@ -1319,7 +1328,7 @@ beta.6 CLI, GUI and validator JARs and checksums.
 [Verification and limitations](improvement/release-1.6.0-beta.6/summary.json) ·
 [User manual](EA-PDF_User_Manual.pdf).
 Local release bundle: `dist/releases/1.6.0-beta.6/`.
-Evidence: `output/release-beta6-2026-11-02/`.
+Evidence: local verification records.
 Large PST exports remain excluded. Native PST fractional seconds still become
 whole seconds in reconstructed message/PDF dates, with an explicit warning.
 PST/MBOX containers are not embedded. Viewer binaries remain 0.4.0-beta.2;
@@ -1348,7 +1357,7 @@ The expanded gate passes: creator 357 tests/4 documented skips; validator
 including packaging 244/9; 19 independent checker tests; all five fresh PDFs pass
 content, visual, standalone Java EA-PDF and veraPDF checks. All three JARs match
 repeat clean builds. No large PST exports. Current tested JARs:
-`output/format-quality-2026-11-02/release-gate-verified/artifacts/`.
+local verification records.
 [Results and limitations](improvement/format-quality-2026-11-02/summary.json) ·
 [Gate instructions](QUALITY_GATE.txt) ·
 [Independent source evidence](../tests/quality/provenance.txt).
@@ -1370,7 +1379,7 @@ gate passes: creator 353 tests/4 explicit skips; validator including packaging
 visual, EA-PDF and veraPDF checks. Three JARs reproduce byte for byte. This gate
 excludes the optional large-corpus test class and performs no large PST exports.
 [Changes, evidence and limits](improvement/payload-quality-2026-11-02/summary.json).
-Current tested JARs: output/payload-quality-2026-11-02/release-gate/artifacts/.
+Current tested JARs: local verification records.
 Temporary builds and superseded phase-one JAR copies are removed; their hashes
 and test records remain. Existing dist/ and published releases are unchanged.
 
@@ -1401,7 +1410,7 @@ run remotely. Full local suites: creator 368 tests/4 skips; validator including
 packaging 244/9; Python 1,276/43; no failures/errors. No large PST exports.
 [How to run and interpret the gate](QUALITY_GATE.txt) ·
 [Verification and limitations](improvement/quality-phase1-2026-11-02/summary.json).
-Evidence and tested JARs: output/quality-phase1-2026-11-02/release-gate/.
+Evidence and tested JARs: local verification records.
 The new independent oracle is deliberately limited to two EML examples;
 broader format/layout coverage, architecture, streaming and fuzzing remain.
 Existing dist/ and published releases are unchanged. Task-owned temporary
@@ -1413,7 +1422,7 @@ target dropdowns, the PDF/A-only execution/report branches and scope plumbing
 are removed. The manual is updated and passes PDF/A validation. The tested Java
 validator is installed in local `dist/` with its checksum; the published beta.5
 release is unchanged. Full Java/Python suites and a real 229-rule EA-PDF check
-pass. Evidence: `output/remove-sidecar-validation-2026-11-02/`.
+pass. Evidence: local verification records.
 
 **Specification decision brief — 2026-11-02:** the 18-page
 [Word document for the experts](../EA_PDF_Specification_Questions_for_Experts.docx)
@@ -1443,7 +1452,7 @@ remains a veraPDF prerequisite on the finished bytes; applicable ISO/TS 32005
 checks remain separate. The source inventory retains 301 records and 418 linked
 contexts. [Plain-language results](improvement/rule-refinement-2026-10-31/summary.txt)
 · [Rule migration](improvement/rule-refinement-2026-10-31/top-level-rule-migration.txt)
-· [Verification](../output/rule-refinement-2026-10-31/verification.json).
+· Verification (local artifact; not distributed).
 
 At the user's request, all three **local `dist/` JARs are updated**, with matching
 checksums and build records. Their embedded version remains `1.6.0-beta.4`;
@@ -1474,7 +1483,7 @@ file. Two historical headerless MSG fixtures have stronger recipient evidence
 in Python; Java conservatively leaves that comparison unverified.
 
 Candidates, real outputs, logs, screenshots, source snapshots and test receipts
-are retained in `output/rule-refinement-2026-10-31/`. Temporary task builds and
+are retained in local verification records. Temporary task builds and
 staging are cleaned after retention. The earlier 213-rule checkpoint remains
 historical evidence, not acceptance evidence for the new catalogue. Original
 working files and the source delta preserve the preexisting dirty workspace.
@@ -1530,8 +1539,7 @@ validation. All 78 selected originals retain their recorded hashes. Larger PSTs
 remain excluded. The three JARs reproduce byte for byte.
 
 Tested local candidates and evidence are in
-`output/records-fixes-2026-10-31/candidate/` and
-`output/records-fixes-2026-10-31/verification.json`. Embedded candidate version
+local verification records. Embedded candidate version
 labels remain beta.4; these are unreleased corrections, distinct from the public
 beta.4 binaries. Root `dist/`, GitHub releases and store submissions are unchanged.
 The three missing-date MBOX failures and one uncertain MSG source binding from
@@ -1724,7 +1732,7 @@ are unchanged. Set `creator` in the configuration for persistence across session
 The creator suite and targeted Java/Python validator tests pass. A fresh real EML
 conversion with an explicit test organization passes full Java validation and
 preserves the original source hash. Local JARs are installed; restart GUIs.
-Evidence and counts: `output/creator-identity-2026-10-29/summary.json`.
+Evidence and counts: local verification records.
 Beta.3 packages these corrections; the 24 standard example PDFs were refreshed
 on 2026-10-30, as recorded above.
 
@@ -1742,7 +1750,7 @@ Checks: **20 creator/index tests and 17 validator tests pass**. Both local JARs
 were rebuilt and installed; restart open GUIs. The live signing-dialog interaction
 check was inconclusive; focus acceptance remains a manual check. PST 16 has not
 been reconverted on this fix. Published beta.2 assets and example PDFs are unchanged.
-Evidence: `output/spreadsheet-dialog-namespace-2026-10-29/`.
+Evidence: local verification records.
 
 **Latest external large-PST run:** the six recorded results and PST 16 conversion log supersede earlier
 successful spot checks for acceptance of the current corpus run.
@@ -1766,7 +1774,7 @@ Missing source evidence, genuine metadata failures and unfinished validation
 remain separate outcomes. Full seven-file verification, native comparisons,
 large-output signing and complete signed validation remain outstanding.
 
-Reports: `output/large-pst-beta/pst/*/result.json` and referenced logs/reports.
+Reports: local verification records and referenced logs/reports.
 Release checks and artifact hashes: `docs/improvement/release-1.6.0-beta.3/summary.json`.
 
 **Beta.3 verification:** 348 creator tests (four missing-source skips), 191 Java
@@ -1819,7 +1827,7 @@ The previous failure with the older validator remains recorded separately.
 
 **External large-run handoff:** run `bash scripts/rebuild_large_psts.sh` from the
 repository. It recreates PSTs 06, 16, 20, 22, 23, 24 and 25 under
-`output/large-pst-beta/`, one archive at a time with four rendering jobs, and
+local verification records, one archive at a time with four rendering jobs, and
 runs standalone Java validation after each conversion. Matching completed work
 is reused on restart. Source/build/PDF/report hashes and logs are retained.
 Exit 2 means at least one result requires review, including source-caused
@@ -1835,7 +1843,7 @@ copy for EA-PDF checks. Each upstream pass now ends its own working thread first
 A live memory check confirms the retained veraPDF objects dropped from 66.9 million
 to six. PDF/A and ISO 32005 pass, with zero EA-PDF failures. The overall result
 remains **INCOMPLETE** because some source comparisons cannot be resolved; details
-are below. Evidence: `output/beta-gap-repair-2026-10-28/upstream-context-retention/`.
+are below. Evidence: local verification records.
 
 The main repairs are implemented. Full corpus verification is still in progress;
 this is not yet a completed beta acceptance report.
@@ -1961,10 +1969,10 @@ human accessibility certification is made.
 
 ## Evidence and restart
 
-- Evidence root: `output/beta-gap-repair-2026-10-28/`.
-- Live current ledger: `output/beta-gap-repair-2026-10-28/current-corpus-snapshot.json`
+- Evidence root: local verification records.
+- Live current ledger: local verification records
   refreshes every 30 seconds from matching current-build per-input receipts.
-- Main corpus ledger: `output/beta-gap-corpus-2026-10-28/run-results.json`; each input
+- Main corpus ledger: local verification records; each input
   directory has its own `result.json`, original-source hash, conversion log and
   Java report. The main runner merges independent sweeps during its final complete pass; use
   the live snapshot and per-input progress while the runs overlap.
@@ -1978,7 +1986,7 @@ human accessibility certification is made.
 - Earlier PST 23 report/source-date diagnosis: `pst23-before-native-mailbox/`.
 - GUI report: `large-report-gui-model/`; collection: `real-collection-over-256/`;
   signing: `large-signing/`; current parity: `parity/summary-context.json`.
-- PDF/UA reports: `output/pdfua2-examples-2026-10-28/beta-gap-parent-lookup/summary.json`.
+- PDF/UA reports: local verification records.
 - Memory/CPU: `resource-observations.jsonl` and `resource-peaks.json` under the
   evidence root. These are per-process high-water marks and sampled stages,
   not a sum of simultaneous peak memory.
@@ -2028,7 +2036,7 @@ Desktop rule summaries are synchronized. Java: 190 tests, zero failures/errors, 
 zero failures/errors, one optional skip. Current EML 1s and 1c examples pass full
 Java validation, including collection children. DPart End, provenance and CIDSet policy
 clarifications preserve existing behavior. Verification and build identities are
-recorded in `output/rule-mapping-repair-2026-10-29/`. The running large-PST batch
+recorded in local verification records. The running large-PST batch
 continues with its frozen earlier validator; its reports do not establish results
 for this new build. No creator change, regeneration or GitHub publication is part
 of this repair.
@@ -2074,7 +2082,7 @@ or current-file validation results.
 
 **Full PST regenerated successfully — 2026-10-28, 19:19 local:** The fixed
 creator completed all **34,601 emails** and published
-`output/pst-memory-repair-2026-10-28/pst24-fixed/pst_24_1m.pdf` in **22 minutes
+the local sample PDF in **22 minutes
 53 seconds**, exit code 0. Normal creator checks, including original-source
 inventory reconciliation, passed. Source-data warnings remain recorded in
 `conversion.log`: 9,549 normalized date warnings, 8,992 conflicting Message-ID
@@ -2113,7 +2121,7 @@ remain unchanged. The full suite passes: **168 tests, zero failures/errors, one
 existing skip**. The real 71-email PST report has an identical summary, PDF/A
 result and complete finding multiset compared with the prior validator; only
 finding order differs. `dist/eapdf-validator.jar` and its build manifest are
-updated. Evidence: `output/validator-loader-2026-10-28/`.
+updated. Evidence: local verification records.
 The full PST regeneration under `pst24-fixed` has completed; this standalone
 build was used for both incomplete independent validation attempts described above.
 
@@ -2125,7 +2133,7 @@ logs remain intact. The earlier cancellation-approval block is resolved.
 The original `in/pst_24_GovernFJan-MAr2003.pst` is being regenerated with the
 tested creator, four requested jobs, disk-backed working storage and automatic
 memory sizing. New output and live progress:
-`output/pst-memory-repair-2026-10-28/pst24-fixed/` (`progress.json` and
+local verification records (`progress.json` and
 `conversion.log`). The expected final filename is `pst_24_1m.pdf`. The input
 SHA-256 and frozen creator JAR hash are recorded in `source.json`. The frozen
 running JAR is `/tmp/eapdf-pst-regenerate-20261028/creator.jar`; retain it until
@@ -2161,7 +2169,7 @@ Java validation, signing or publication. It does not establish a completed job.
 requested jobs passes its normal source-inventory checks and standalone Java
 PDF/A/EA-PDF validation (81 warnings, zero failures). Source and diagnostic PDF
 hashes are unchanged. Evidence and failed-prototype diagnostics:
-`output/checker-speed-2026-10-28/summary.json`, full-check logs/progress, test
+local verification records, full-check logs/progress, test
 reports and real-PST source/conversion/validation records in that directory.
 
 At the time of this earlier diagnostic, automatic approval review rejected
@@ -2181,7 +2189,7 @@ full collections. CPU activity is not evidence of useful forward progress here.
 No final PDF is published and standalone validation has not started. The saved
 unvalidated copy remains available; investigation should focus on the checker,
 not repeat rendering. The process was left running. Evidence:
-`output/pst-memory-repair-2026-10-28/pst24-disk/checking-status.json` and
+local verification records and
 `checking-status-threads.txt` in the same directory.
 
 **Viewer page-number entry — 2026-10-28:** At the user's request, the Page
@@ -2206,7 +2214,7 @@ loading compressed objects from `PdfCreationValidator.documentDictionaries`
 during `validateXmpEncoding`; heap use fluctuates substantially. This is a
 separate checking performance/memory issue, and **full conversion/validation
 success is not claimed**. A hashed `unvalidated-working-copy.pdf` is retained
-in `output/pst-memory-repair-2026-10-28/pst24-disk/` so a checking retry need not
+in local verification records so a checking retry need not
 repeat rendering. It is a diagnostic copy, not published validated output.
 `size-fix-verification.json` records the evidence; `checking-threads*.txt` hold
 live thread traces. The worker was not launched with a debugger connection, so
@@ -2228,7 +2236,7 @@ all 34,601 emails, with `java.io.IOException: File too large` while writing XMP
 metadata into the shared stream cache. Its native per-file limit was 3,479,175,168
 bytes, derived from the final-output allowance but incorrectly applied to scratch
 files too. No final PDF was published. Logs and `result.json` remain under
-`output/pst-memory-repair-2026-10-28/pst24-adaptive/`.
+local verification records.
 
 Native per-file limits now allow the temporary-storage budget as well as the
 output budget; final-output limits remain separately enforced. Large PST work
@@ -2242,11 +2250,11 @@ using that working root.
 4 GiB and continued enforcement of the smaller final-output limit. A fresh
 71-email real PST with four jobs passes standalone Java EA-PDF/PDF/A validation
 and PDF/UA-2 machine checks. The progress-only candidate also passed real EML
-validation. Logs, source hashes and reports: `output/stage-progress-2026-10-28/`.
+validation. Logs, source hashes and reports: local verification records.
 GUI status updates are compiled; an interactive desktop check has not been run.
 
 The full 34,601-email retry is running with four jobs and disk-backed scratch at
-`output/pst-memory-repair-2026-10-28/pst24-disk/`; follow its `progress.json` or
+local verification records; follow its `progress.json` or
 `conversion.log`. Standalone Java validation is queued after successful conversion.
 Full large-file completion is still unproven. Earlier running-status notes below
 are historical and are superseded by this failed attempt and replacement run.
@@ -2261,7 +2269,7 @@ All **30 focused regressions pass**. A fresh Accessibility-enabled conversion of
 all 71 real emails in `in/test.pst`, using four jobs, passes standalone Java
 EA-PDF and PDF/A validation and veraPDF PDF/UA-2 machine checks. Validation retains
 81 warnings and has zero failures; source bytes are unchanged. Evidence, source
-hash, conversion log and reports: `output/tagging-lookup-2026-10-28/`.
+hash, conversion log and reports: local verification records.
 The current 34,601-email PST run remains on its frozen earlier JAR and has not
 been restarted. This removes the observed repeated lookup, but a whole-conversion
 speedup has not yet been measured and large-PST completion remains unproven.
@@ -2292,15 +2300,15 @@ and page numbering. These now use forward traversal/indexed references, preservi
 labels. All **30 focused regressions pass**. A fresh conversion of all 71 real
 messages in `in/test.pst` reports 71/71 COMPLETED and passes standalone Java PDF/A
 and EA-PDF validation. Both local creator JARs in `dist/` are updated. Evidence:
-`output/progress-refresh-2026-10-28/`. The running large PST uses its frozen earlier
+local verification records. The running large PST uses its frozen earlier
 JAR and is not restarted or modified by this installation.
 
 **PST restart, progress counts and memory settings — 2026-10-28:** At the user's
 request, the earlier 4 GiB PST 24 trial was cancelled; its logs remain under
-`output/pst-memory-repair-2026-10-28/pst24-compact/`. The replacement run uses
+local verification records. The replacement run uses
 four rendering jobs, the lookup fixes, and an automatically chosen **10,782 MiB
 (about 10.5 GiB) Java heap**. It is running under
-`output/pst-memory-repair-2026-10-28/pst24-adaptive/`.
+local verification records.
 Its `progress.json` now updates automatically with completed emails, exact total
 when known, and current stage. No complete large-PST result is established yet.
 
@@ -2317,7 +2325,7 @@ jobs, show **71/71 COMPLETED**, and pass standalone Java PDF/A and EA-PDF checks
 `in/2.eml` shows **1/1 COMPLETED** and passes PDF/UA-2 machine checks with
 Accessibility enabled. The two premature renderer title/description warnings
 are now suppressed by diagnostic ID; ordinary renderer logs and other warnings
-are retained. Evidence: `output/progress-memory-2026-10-28/`.
+are retained. Evidence: local verification records.
 
 The stopped trial reported about 52 seconds of GC time after 60 minutes, while
 runtime stacks showed long assembly scans. Memory was tight, but those figures
@@ -2339,10 +2347,9 @@ children. RSA/EC, altered bytes, trailing modifications, bad credentials, atomic
 failure handling and signature reads beyond 2 GiB are covered by regression tests.
 The latter is a sparse-file range test, not a full multi-gigabyte signing run.
 All **24 normal unsigned examples** were also regenerated and pass Java validation.
-Reports: `output/signing-2026-10-28/final/` and
-`output/real-examples-signing-disabled-2026-10-28/`. An initial child-signing error
+Reports: local verification records. An initial child-signing error
 was caught and corrected; its rejected results remain under
-`output/signing-2026-10-28/initial-child-signing-diagnostic/`.
+local verification records.
 
 The local `dist/emailtopdfa.jar` and `dist/emailtopdfa-gui.jar` are updated;
 GitHub assets are unchanged. [Setup and limits](DIGITAL_SIGNATURES.md).
@@ -2354,17 +2361,17 @@ are not implemented. GUI controls compile, but an interactive desktop walkthroug
 has not been performed. Large-PST completion remains unresolved separately.
 
 **User signing/accessibility check — 2026-10-28:** The exact GUI output
-`output/message_000001_3.pdf` from `in/2.eml`, with Accessibility and signing
+the local sample PDF from `in/2.eml`, with Accessibility and signing
 enabled, passes standalone Java PDF/A and EA-PDF validation and veraPDF PDF/UA-2
 machine validation. Independent `pdfsig` verification confirms a valid signature
 covering the complete file; its certificate issuer is unknown to that checker.
 The renderer's missing-title/description warnings concern the intermediate PDF;
 the creator adds final metadata afterward. They are not final-file UA results.
 Reports and checked-file hashes:
-`output/signing-2026-10-28/user-2eml-accessible-check/`.
+local verification records.
 The earlier `_2.pdf` had Accessibility disabled: PDF/A and EA-PDF pass, but a forced
 UA-2 check fails identification, destination and table rules. Those results are
-separately retained in `output/signing-2026-10-28/user-2eml-check/`.
+separately retained in local verification records.
 
 **Incomplete source recovery — 2026-10-28:** Missing sent dates and missing PST
 attachment data now produce clearly marked output instead of stopping the whole
@@ -2386,7 +2393,7 @@ LibPST 0.6.76 export also does not recover that attachment. This does not conclu
 distinguish missing original data from a reader limitation. The warning now says
 “Attachment data could not be recovered from the original PST file.” The review
 PDF has been regenerated with this wording. Evidence is retained in
-`output/pst-memory-repair-2026-10-28/`.
+local verification records.
 
 **Real-source checks:** All three previously rejected MBOX files (`Drafts.mbox`,
 `mbox_01_fmt_720_MBOX_quoted.mbox`, and `msg.mbox`) now convert, including through the
@@ -2395,7 +2402,7 @@ also converts with its remaining attachment preserved. Across applicable profile
 **18 PDFs were created: all pass PDF/A; 14 fail mandatory sent-date checks and four
 are INCOMPLETE for the missing attachment.** The PST check covers this message,
 not the whole archive. Original source hashes are unchanged. Logs, reports,
-hashes and the reproduction harness are in `output/incomplete-source-2026-10-28/`.
+hashes and the reproduction harness are in local verification records.
 
 Review examples:
 
@@ -2405,7 +2412,7 @@ Review examples:
 **Earlier source-recovery build (superseded by the signing build above):** All **24 normal real-email examples** have
 been regenerated with four rendering jobs and pass standalone Java PDF/A and
 EA-PDF checks, including collection children. Reports are in
-`output/real-examples-source-warnings-final-2026-10-28/`. Creator regression results:
+local verification records. Creator regression results:
 **312 tests, zero failures**; Java validator: **168 tests, zero failures, one desktop
 skip**; **36 focused Python regressions pass**. The local creator, GUI and validator
 JARs in `dist/` are updated. GitHub assets are unchanged. The two warning examples
@@ -2420,7 +2427,7 @@ corrected; invalid child entries still fail. Human accessibility review remains
 outstanding. The earlier **35 saved example PDFs** passed PDF/UA-2 machine checks
 (24 normal examples, eight finding aids, one alias, and two incomplete-source
 examples). That audit predates the latest unsigned-example rebuild and is not
-a validation of its new bytes. Reports: `output/pdfua2-examples-2026-10-28/final-source-warnings/`.
+a validation of its new bytes. Reports: local verification records.
 
 **Memory repair in progress — 2026-10-28:** A controlled comparison using the
 same 600 real PST messages (1,070 pages) reduced retained Java heap from
@@ -2441,7 +2448,7 @@ page-tree and filename scans during assembly; targeted lookup fixes have passed 
 percentage yet.
 The memory changes are now included in the local signing build in `dist/`;
 that does not establish full large-PST success. Measurements and run logs:
-`output/pst-memory-repair-2026-10-28/`.
+local verification records.
 
 **Large-PST assembly speed fixes — 2026-10-28:** Runtime stacks showed repeated
 page-tree traversal and case-folded filename scans. Document-part construction now
@@ -2452,7 +2459,7 @@ timings, not a whole-PST speed claim. All 30 focused regressions pass. The repai
 creator converted all 71 messages in `in/test.pst` using four rendering jobs;
 standalone Java PDF/A and EA-PDF validation both PASS. These speed fixes are now installed in `dist/` and included in the restarted
 PST 24 trial described above.
-Evidence: `output/pst-memory-repair-2026-10-28/speed-real-pst/` and the
+Evidence: local verification records and the
 `lookup-baseline.log` / `lookup-repaired.log` files in its parent directory.
 
 **Large PSTs remain unresolved:** The older strict-policy reruns failed on a
@@ -2461,7 +2468,7 @@ exhausted their 4 GiB Java heaps. PST 24 first hit its metadata allowance; a cor
 retry then also exhausted its 4 GiB heap during rendering. The older batch has now finished: PST 25 hit its metadata allowance and PST 16
 also exhausted its heap. Those runs predate the
 new incomplete-source policy and are not evidence of a complete repaired corpus.
-See `output/pst-rerun-2026-10-28/` for individual results. Next priorities are the
+See local verification records for individual results. Next priorities are the
 large-PST memory failures and full reruns with the repaired creator. Outermost-file
 signing is now implemented as described above.
 
@@ -2511,7 +2518,7 @@ not current acceptance requirements. No validator rules or veraPDF checks were d
 
 **Fresh creator accuracy review completed — 2026-10-25:** Generated and compared **100 ordinary emails: 4 EML, 6 MSG, 78 from two PST mailboxes and 12 live Gmail emails**. Fixed a real subject-decoding error that left MIME encoding text in the visible subject and XMP. Both creator apps now decode the original header once; Gmail filenames use the corrected subject. Original email bytes are preserved.
 
-**Validator fixes and delivery:** Java now compares the corrected subject properly and counts decoded email-attachment bytes rather than base64 wire bytes. Web no longer invents a mailbox from a whole quoted display-name token. All three `dist/` JARs are updated. **277 creator and 154 Java validator checks pass.** Python runs **1,182 tests: 1,142 pass and 40 optional checks skip**. Both engines agree on **198,942 rule outcomes across 934 reports**. All fresh ordinary outputs pass PDF/A with no EA-PDF failures; two MSGs retain known incomplete source checks. Gmail parent/all twelve children and all six unchanged public samples PASS. The public old subject control FAILs the subject rule; its corrected counterpart fully PASSes. [Review and numerical evidence](improvement/creator-fidelity-review/README.md). Example: `output/creator-review/fidelity/Decoded subject.pdf`.
+**Validator fixes and delivery:** Java now compares the corrected subject properly and counts decoded email-attachment bytes rather than base64 wire bytes. Web no longer invents a mailbox from a whole quoted display-name token. All three `dist/` JARs are updated. **277 creator and 154 Java validator checks pass.** Python runs **1,182 tests: 1,142 pass and 40 optional checks skip**. Both engines agree on **198,942 rule outcomes across 934 reports**. All fresh ordinary outputs pass PDF/A with no EA-PDF failures; two MSGs retain known incomplete source checks. Gmail parent/all twelve children and all six unchanged public samples PASS. The public old subject control FAILs the subject rule; its corrected counterpart fully PASSes. [Review and numerical evidence](improvement/creator-fidelity-review/README.md). Example: the local sample PDF.
 
 **Content preservation:** All 22 directly retained originals are exact; 78 reconstructed PST exports retain their selected native body text. Checked 84 by-value asset occurrences, five stored pictures and 440 readable address/date fields. Across 210 owned body pages, 99 emails render identically; only the repaired Gmail subject changes its email's pages. Private Gmail details are excluded from project evidence; only numerical summaries are published. Gmail access was read-only and credential originals are unchanged.
 
@@ -2533,7 +2540,7 @@ not current acceptance requirements. No validator rules or veraPDF checks were d
 
 **Native property checks:** Both validators now compare known native Subject, Message-ID, size, attachment count and submission-time facts for one represented email with one MSG original and no attachment storages. This adds partial checks for **eight ordinary inputs**. Missing headers are not reconstructed and full header/body/address comparisons remain INCOMPLETE. Verified zero padding is ignored; truncated nonzero property records remain unavailable. Four old PDF controls now correctly fail known native metadata contradictions; their bytes are unchanged. Three change from INCOMPLETE to FAIL, and one already failed.
 
-**Verification and delivery:** All three `dist/` JARs updated. **274 creator and 136 Java validator checks pass.** Python runs **1,171 tests: 1,131 pass and 40 optional checks skip**. Both engines agree on **193,191 rule outcomes across 907 reports**: the original 875 reports plus 31 current MSG outputs and the previous bad-date output. All 31 current MSG outputs pass PDF/A with zero EA-PDF failures: 12 full PASS and 19 retain source-comparison INCOMPLETE. The old bad-date PDF now FAILs the Sent comparison in both engines. Fresh web checks cover all 32 real cases; corpus upstream reports are reused only for identical bytes, while Java upstream checks are fresh. The exact single JAR also passes through its GUI. Rulebook, existing samples and protected PDFs are unchanged. [Changes and evidence](improvement/validator-msg-native/README.md). Review: `output/creator-review/msg-native/Correct Outlook sent date.pdf`.
+**Verification and delivery:** All three `dist/` JARs updated. **274 creator and 136 Java validator checks pass.** Python runs **1,171 tests: 1,131 pass and 40 optional checks skip**. Both engines agree on **193,191 rule outcomes across 907 reports**: the original 875 reports plus 31 current MSG outputs and the previous bad-date output. All 31 current MSG outputs pass PDF/A with zero EA-PDF failures: 12 full PASS and 19 retain source-comparison INCOMPLETE. The old bad-date PDF now FAILs the Sent comparison in both engines. Fresh web checks cover all 32 real cases; corpus upstream reports are reused only for identical bytes, while Java upstream checks are fresh. The exact single JAR also passes through its GUI. Rulebook, existing samples and protected PDFs are unchanged. [Changes and evidence](improvement/validator-msg-native/README.md). Review: the local sample PDF.
 
 **Next:** Review the isolated sample's ambiguous empty attachment placeholders. Remaining MSG format limits, the three specification interpretation questions and very large archive limits remain explicit. Distribution remains deferred.
 
@@ -2541,7 +2548,7 @@ not current acceptance requirements. No validator rules or veraPDF checks were d
 
 **Creator fixes found by these checks:** Two real MSG files stored recipients in a different order from their original headers. The creator now follows that header order when both lists contain exactly the same recipient occurrences, retaining native names and mailbox values. Both corrected outputs **PASS** full Java/web validation; both previous outputs correctly **FAIL**. A web parsing error for a valid folded quoted display name is also repaired. Java now recognizes the same existing Outlook redirect links as web validation; no PDF links are added.
 
-**Verification and delivery:** All three `dist/` JARs updated. **273 creator and 130 Java validator checks pass.** Python runs **1,169 tests: 1,129 pass and 40 optional checks skip**. Both engines agree on **189,357 rule outcomes across 889 reports**: the existing 875 corpus reports plus 14 real MSG cases. Java corpus upstream checks use the exact delivered JAR; web corpus results reuse verified upstream reports for identical PDF bytes. All 14 MSG cases received fresh full web checks. The standalone JAR passes through its actual GUI from a folder containing only the JAR. Across 31 MSG inputs, native bodies, source/attachment bytes, subjects, sent dates, names and mailbox values are unchanged. Rulebook, existing samples and protected PDFs are unchanged. [Changes and evidence](improvement/validator-msg-source/README.md). Review: `output/creator-review/msg-validation/Recipient order.pdf`.
+**Verification and delivery:** All three `dist/` JARs updated. **273 creator and 130 Java validator checks pass.** Python runs **1,169 tests: 1,129 pass and 40 optional checks skip**. Both engines agree on **189,357 rule outcomes across 889 reports**: the existing 875 corpus reports plus 14 real MSG cases. Java corpus upstream checks use the exact delivered JAR; web corpus results reuse verified upstream reports for identical PDF bytes. All 14 MSG cases received fresh full web checks. The standalone JAR passes through its actual GUI from a folder containing only the JAR. Across 31 MSG inputs, native bodies, source/attachment bytes, subjects, sent dates, names and mailbox values are unchanged. Rulebook, existing samples and protected PDFs are unchanged. [Changes and evidence](improvement/validator-msg-source/README.md). Review: the local sample PDF.
 
 **Next:** Continue source comparisons for MSG files whose email fields are stored only as Outlook properties. The isolated attachment-evidence limit, three specification interpretation questions and very large archive limits also remain. Distribution remains deferred.
 
@@ -2627,43 +2634,43 @@ The creator and frozen Python validator are unchanged. No GitHub push or release
 
 **C134 stored picture body preserved; work continues:** A stored Outlook picture could still be discarded when its HTML used a matching web address. The readable-body check now recognizes that the picture is already available inside the message. Unrelated pictures still allow the supplied text fallback. Both apps updated.
 
-**C134 checks:** Twelve focused Java checks pass. A normal valid controlled MSG now shows its native picture through the public CLI, with exact original message/JPEG/attachment and unchanged attachment-page pixels. The false unavailable-image warning is gone. PDF/A and selected ISO PASS; the same retained-MSG source-comparison/applicability INCOMPLETE limits remain. All 31 supplied MSG and 20 cached Gmail content/asset fingerprints stay unchanged. Six C132 samples unchanged; last full suite C132: 262 passes. Frozen V85 and default large-file validation memory limit remain. [Results](improvement/creator-poc-day5/c134/result.json). Review: `output/creator-review/c134/Stored picture body.pdf`.
+**C134 checks:** Twelve focused Java checks pass. A normal valid controlled MSG now shows its native picture through the public CLI, with exact original message/JPEG/attachment and unchanged attachment-page pixels. The false unavailable-image warning is gone. PDF/A and selected ISO PASS; the same retained-MSG source-comparison/applicability INCOMPLETE limits remain. All 31 supplied MSG and 20 cached Gmail content/asset fingerprints stay unchanged. Six C132 samples unchanged; last full suite C132: 262 passes. Frozen V85 and default large-file validation memory limit remain. [Results](improvement/creator-poc-day5/c134/result.json). Review: the local sample PDF.
 
 **C132–C133 creator fixes; work continues:** The 1,433-email archive now shares its footer resources. Size falls from 70.5 MB to 40.4 MB (42.67%), with the same 512 MB creator heap. Every original email and all 2,106 page appearances are preserved, apart from the finding aid's expected run timestamp. A supplied Outlook email also regains its missing stored picture. Both apps updated; all six standard samples refreshed.
 
-**Checks and limits:** C132 full Java suite: 262 passes. C133 focused suite: 12 passes; all 31 MSG content/attachment fingerprints unchanged. The restored picture uses the exact native JPEG bytes, with the original MSG, both attachments, all text and the attachment-page pixels unchanged. PDF/A and selected ISO pass; retained-MSG comparison stays INCOMPLETE. The complete large archive PASSes frozen checks with explicitly expanded trusted-input limits (2 GB external heap; 10 million objects/depth 8,192). Default 512 MB veraPDF still runs out of memory. Five standard samples PASS; isolated 1mi retains its known comparison INCOMPLETE, with all six passing PDF/A/selected ISO. No validator changes. [Archive results](improvement/creator-poc-day5/c132/result.json), [Outlook results](improvement/creator-poc-day5/c133/result.json). Review: `output/creator-review/c132/` and `output/creator-review/c133/Stored Outlook picture.pdf`.
+**Checks and limits:** C132 full Java suite: 262 passes. C133 focused suite: 12 passes; all 31 MSG content/attachment fingerprints unchanged. The restored picture uses the exact native JPEG bytes, with the original MSG, both attachments, all text and the attachment-page pixels unchanged. PDF/A and selected ISO pass; retained-MSG comparison stays INCOMPLETE. The complete large archive PASSes frozen checks with explicitly expanded trusted-input limits (2 GB external heap; 10 million objects/depth 8,192). Default 512 MB veraPDF still runs out of memory. Five standard samples PASS; isolated 1mi retains its known comparison INCOMPLETE, with all six passing PDF/A/selected ISO. No validator changes. [Archive results](improvement/creator-poc-day5/c132/result.json), [Outlook results](improvement/creator-poc-day5/c133/result.json). Review: local verification records and the local sample PDF.
 
 **C130 missing readable body restored; work continues:** Invisible spacing could make an image-only HTML body look readable to the creator. When its images needed the web, the PDF could omit a useful supplied text body. The existing fallback now ignores invisible formatting when checking for words. Readable HTML and embedded images keep their priority. Both apps updated.
 
-**C130 checks:** 38 focused Java checks pass, including EML/MSG originals and native image priority. The corrected payment example now shows the missing amount and reference, retains exact original bytes and PASSes existing EA-PDF/PDF-A/selected ISO checks. The reproduction is a normal valid controlled email; existing 31 MSG and 20 checked Gmail record/asset fingerprints remain unchanged. Six C124 samples unchanged; last full suite C124, 252 passes. Frozen V85 and prior limits retained. [Results](improvement/creator-poc-day5/c130/result.json). Review: `output/creator-review/c130/Payment reminder.pdf`.
+**C130 checks:** 38 focused Java checks pass, including EML/MSG originals and native image priority. The corrected payment example now shows the missing amount and reference, retains exact original bytes and PASSes existing EA-PDF/PDF-A/selected ISO checks. The reproduction is a normal valid controlled email; existing 31 MSG and 20 checked Gmail record/asset fingerprints remain unchanged. Six C124 samples unchanged; last full suite C124, 252 passes. Frozen V85 and prior limits retained. [Results](improvement/creator-poc-day5/c130/result.json). Review: the local sample PDF.
 
 **C129 valid email characters preserved; work continues:** The cleanup code could turn valid HTML apostrophes and currency symbols into fragments such as `39;` and `A3;120`. It now preserves those character references. The text fallback decodes HTML once, while literal code examples in plain emails stay literal. Both apps updated, retaining the C128 Gmail PDF/A repairs.
 
-**C129 checks:** 35 focused Java checks pass. A normal valid HTML example now displays the intended apostrophes, pound sign, ampersand and reference, with exact original bytes and PASS EA-PDF/PDF-A/selected ISO. The same structural checks also pass the old incorrect display, so this repair adds needed content-fidelity evidence. All 78 PST record/export fingerprints, 31 MSG content/attachment multisets and 20 checked Gmail record fingerprints remain unchanged. No supplied raw-HTML case of the padded form is claimed. Six C124 samples unchanged; last full suite remains C124, 252 passes. Frozen V85 and known limits retained. [Results](improvement/creator-poc-day5/c129/result.json). Review: `output/creator-review/c129/Project approval.pdf`.
+**C129 checks:** 35 focused Java checks pass. A normal valid HTML example now displays the intended apostrophes, pound sign, ampersand and reference, with exact original bytes and PASS EA-PDF/PDF-A/selected ISO. The same structural checks also pass the old incorrect display, so this repair adds needed content-fidelity evidence. All 78 PST record/export fingerprints, 31 MSG content/attachment multisets and 20 checked Gmail record fingerprints remain unchanged. No supplied raw-HTML case of the padded form is claimed. Six C124 samples unchanged; last full suite remains C124, 252 passes. Frozen V85 and known limits retained. [Results](improvement/creator-poc-day5/c129/result.json). Review: the local sample PDF.
 
 **C128 real Gmail PDF/A failures fixed; work continues:** Three emails in a real 20-email Gmail export produced invalid PDF text maps because of an invisible word-joining character. Rendering now uses its permitted equivalent; original emails and stored metadata stay unchanged. The creator also avoids unreadable-body warnings for alternatives it did not use. Genuinely unsupported calendar sections still warn. Both apps updated.
 
-**C128 checks:** 33 focused Java checks pass. The complete 20-email collection, including every child PDF, now PASSes existing EA-PDF/PDF-A/selected ISO checks. All 20 originals, seven image attachments and 23 folder placements are exact; every child's page images are unchanged. A shareable invitation improves from PDF/A FAIL to full PASS, with identical page images and exact source. Gmail access was read-only; private data remains private and temporary credentials were removed. Six C124 samples remain unchanged. Last full suite: C124, 252 passes. Frozen V85 and prior comparison/resource limits remain. [Results](improvement/creator-poc-day5/c128/result.json). Public review: `output/creator-review/c128/Meeting invitation.pdf`.
+**C128 checks:** 33 focused Java checks pass. The complete 20-email collection, including every child PDF, now PASSes existing EA-PDF/PDF-A/selected ISO checks. All 20 originals, seven image attachments and 23 folder placements are exact; every child's page images are unchanged. A shareable invitation improves from PDF/A FAIL to full PASS, with identical page images and exact source. Gmail access was read-only; private data remains private and temporary credentials were removed. Six C124 samples remain unchanged. Last full suite: C124, 252 passes. Frozen V85 and prior comparison/resource limits remain. [Results](improvement/creator-poc-day5/c128/result.json). Public review: the local sample PDF.
 
 **C127 native PST thread reference retained; work continues:** One supplied PST reply stored its thread reference outside the transport headers. That value was missing from the reconstructed source email. The creator now retains it through the existing source export. Both apps updated, including the C126 recipient and Outlook reply fixes below.
 
-**C127 checks:** 32 focused Java checks pass. The actual corrected reply and seven-email collection PASS existing EA-PDF/PDF-A/selected ISO checks. All 78 PST messages retain the same headers, bodies and native assets; 77 exported sources are byte-identical and one gains only its exact missing References line. Reply page pixels/text are unchanged. All native reply fields in the 79-message check, including the attached email, are accounted for. Six C124 samples remain unchanged. Last full suite: C124, 252 passes. Frozen V85 and known comparison/resource limits remain. [Results](improvement/creator-poc-day5/c127/result.json). Review files: `output/creator-review/c127/`.
+**C127 checks:** 32 focused Java checks pass. The actual corrected reply and seven-email collection PASS existing EA-PDF/PDF-A/selected ISO checks. All 78 PST messages retain the same headers, bodies and native assets; 77 exported sources are byte-identical and one gains only its exact missing References line. Reply page pixels/text are unchanged. All native reply fields in the 79-message check, including the attached email, are accounted for. Six C124 samples remain unchanged. Last full suite: C124, 252 passes. Frozen V85 and known comparison/resource limits remain. [Results](improvement/creator-poc-day5/c127/result.json). Review files: local verification records.
 
 **C126 creator header fixes; work continues:** PST recipient groups could become one invalid address, leaving To and Cc out of the PDF metadata. The normal PST path now uses the existing group parser. Three supplied Outlook replies also lost their native reply fields when transport headers were absent; those stored fields now reach the existing metadata and email reconstruction paths. Both apps updated.
 
-**C126 checks:** 40 focused Java checks pass. The reproduced PST file improves from two mandatory failures to PASS EA-PDF/PDF-A/selected ISO. Three real MSG reply PDFs recover their reply metadata with exact originals and identical page pixels/text; PDF/A and selected ISO pass, with the existing MSG comparison INCOMPLETE retained. All 31 MSG and 78 PST content/source/attachment fingerprints stay unchanged. Six C124 samples remain unchanged. Last full suite: C124, 252 passes. Frozen V85 and large-file validation limits unchanged. [Results](improvement/creator-poc-day5/c126/result.json). Review files: `output/creator-review/c126/`.
+**C126 checks:** 40 focused Java checks pass. The reproduced PST file improves from two mandatory failures to PASS EA-PDF/PDF-A/selected ISO. Three real MSG reply PDFs recover their reply metadata with exact originals and identical page pixels/text; PDF/A and selected ISO pass, with the existing MSG comparison INCOMPLETE retained. All 31 MSG and 78 PST content/source/attachment fingerprints stay unchanged. Six C124 samples remain unchanged. Last full suite: C124, 252 passes. Frozen V85 and large-file validation limits unchanged. [Results](improvement/creator-poc-day5/c126/result.json). Review files: local verification records.
 
 **C124 dropped PST delivery headers preserved; work continues:** Reconstructed PST emails retained core fields but discarded stored delivery and other headers. The supplied PST loses37Received lines from21emails. Retained source sets now also preserve the exact stored header block as UTF-8 text, including headers from attached emails. Existing source-file support is reused. Reconstructed EML bytes, displayed bodies and email attachment counts remain unchanged. Isolated profiles retain their existing omission policy. Both apps and all six samples refreshed.
 
-**C124 checks:** Complete Java suite: 252 passes. All 78 real PST record/content/source/attachment fingerprints unchanged; all 77 supplied header blocks exact, including87Received lines. Actual71-message retained archive preserves71 header files; a real7-message collection and its children preserve6. Collection and all six samples pass PDF/A/selected ISO with zero mandatory failures; five samples overall PASS, isolated1mi keeps its known comparison INCOMPLETE. Corner icons remain absent on the reported email pages. Frozen V85 and C122's large-file validator limit unchanged. [Results](improvement/creator-poc-day5/c124/result.json). Collection example: `output/creator-review/c124/Native PST collection.pdf`. Continue substantial creator preservation work until stopped.
+**C124 checks:** Complete Java suite: 252 passes. All 78 real PST record/content/source/attachment fingerprints unchanged; all 77 supplied header blocks exact, including87Received lines. Actual71-message retained archive preserves71 header files; a real7-message collection and its children preserve6. Collection and all six samples pass PDF/A/selected ISO with zero mandatory failures; five samples overall PASS, isolated1mi keeps its known comparison INCOMPLETE. Corner icons remain absent on the reported email pages. Frozen V85 and C122's large-file validator limit unchanged. [Results](improvement/creator-poc-day5/c124/result.json). Collection example: the local sample PDF. Continue substantial creator preservation work until stopped.
 
 **C122 mailbox creation memory failure repaired; work continues:** The real 1,433-message mailbox rendered but ran out of memory during final checks. The writer still held the complete open archive and its object cache while reopening the saved PDF. Archive writing now returns and releases those references before the same final checks run. Both apps include the repair; no heap increase or skipped check.
 
-**C122 checks:** 39 focused archive/policy/preservation/naming Java checks pass. The full mailbox now finishes in 177 seconds at the same 512 MB heap: 2,106 pages and all 1,433 original exported emails exact. Normal 20-message retained/isolated archives PASS existing EA-PDF/PDF-A/selected ISO checks. The separate full-file validator could not finish this large file: its veraPDF run exhausted 512 MB and its object traversal hit an existing bound. Its actual FAIL/uncompleted result is retained; whole-file conformance is not claimed. Frozen V85 unchanged; C120 samples unchanged; last full Java suite C117: 250 passes. [Results and runtime evidence](improvement/creator-poc-day5/c122/result.json). Smaller review files: `output/creator-review/c122/`. Continue core creation work until stopped.
+**C122 checks:** 39 focused archive/policy/preservation/naming Java checks pass. The full mailbox now finishes in 177 seconds at the same 512 MB heap: 2,106 pages and all 1,433 original exported emails exact. Normal 20-message retained/isolated archives PASS existing EA-PDF/PDF-A/selected ISO checks. The separate full-file validator could not finish this large file: its veraPDF run exhausted 512 MB and its object traversal hit an existing bound. Its actual FAIL/uncompleted result is retained; whole-file conformance is not claimed. Frozen V85 unchanged; C120 samples unchanged; last full Java suite C117: 250 passes. [Results and runtime evidence](improvement/creator-poc-day5/c122/result.json). Smaller review files: local verification records. Continue core creation work until stopped.
 
 **C120–C121 date and output preservation fixes; work continues:** Valid dates ending in comments such as `(PST)` no longer generate false invalid-date warnings or unnecessary Raw-Sent metadata. All 1,433 supplied mailbox dates are recognized, with identical source/header/body/instant/asset hashes. Monthly exports now use the existing numbered-filename safeguard instead of replacing earlier monthly PDFs. Both apps include both fixes and retain the corner-icon correction.
 
-**C120–C121 checks:** 32 focused date/preservation Java checks and two existing archive-naming checks pass. Actual date example retains identical page pixels/text/source; Raw-Sent assessment improves from WARN to PASS. Both repeated monthly single-email and multi-email runs preserve earlier files; all four PDFs PASS EA-PDF/PDF-A/selected ISO with exact originals. All six standard samples refreshed with C120; known isolated PST `1mi` comparison INCOMPLETE remains. Frozen V85 unchanged; last full Java suite remains C117: 250 passes. [Date results](improvement/creator-poc-day5/c120/result.json), [monthly results](improvement/creator-poc-day5/c121/result.json). Reviews: `output/creator-review/c120/` and `c121/`. Continue substantial creator work until stopped.
+**C120–C121 checks:** 32 focused date/preservation Java checks and two existing archive-naming checks pass. Actual date example retains identical page pixels/text/source; Raw-Sent assessment improves from WARN to PASS. Both repeated monthly single-email and multi-email runs preserve earlier files; all four PDFs PASS EA-PDF/PDF-A/selected ISO with exact originals. All six standard samples refreshed with C120; known isolated PST `1mi` comparison INCOMPLETE remains. Frozen V85 unchanged; last full Java suite remains C117: 250 passes. [Date results](improvement/creator-poc-day5/c120/result.json), [monthly results](improvement/creator-poc-day5/c121/result.json). Reviews: local verification records and `c121/`. Continue substantial creator work until stopped.
 
 **C118 unwanted corner icon removed:** The creator added a duplicate native attachment marker to the top-right corner of each email. That duplicate is removed. Each attachment retains one visible native record on the email's attachment continuation, within the same body rendering as required by EA-PDF. Filename lists remain plain text. Both apps and all six standard samples are refreshed.
 
@@ -2673,87 +2680,87 @@ The creator and frozen Python validator are unchanged. No GitHub push or release
 
 **User scope:** EA-PDF creation and validation only. No EA-PDF reader work. No new features without the user's express permission. Prioritize accurate output for ordinary email inputs.
 
-**Current samples — C113:** Regenerated the six standard files in `examples/` and the `output/sample_1s.pdf` alias using the current C112 creator. Five PASS existing checks; isolated PST `1mi` retains its known attachment native-byte comparison INCOMPLETE. All six pass PDF/A and selected ISO checks. Finding aids and workbooks pass their existing checks. Protected Agenda/BFO comparison PDFs remain unchanged. [Refresh results](improvement/creator-poc-day5/c113/result.json). Creator work remains active; a missing supplied plain Outlook body has been reproduced next.
+**Current samples — C113:** Regenerated the six standard files in `examples/` and the the local sample PDF alias using the current C112 creator. Five PASS existing checks; isolated PST `1mi` retains its known attachment native-byte comparison INCOMPLETE. All six pass PDF/A and selected ISO checks. Finding aids and workbooks pass their existing checks. Protected Agenda/BFO comparison PDFs remain unchanged. [Refresh results](improvement/creator-poc-day5/c113/result.json). Creator work remains active; a missing supplied plain Outlook body has been reproduced next.
 
 **Current — C117 mailbox folders and multi-folder collections repaired; work continues:** Mailbox imports now preserve accented, Chinese and encoded folder names. The final collection check exposed a larger failure: messages assigned to several folders were copied into several child PDFs and rejected. Each email is now stored once, with every folder assignment preserved through the standard collection structure. Both apps include these fixes.
 
-**C117 checks:** Complete Java suite: 250 passes. Mailbox archive/collection and retained/isolated overlapping-folder collections PASS existing EA-PDF/PDF-A/selected ISO checks. Five folder entries share three unique email PDFs; all assignments, original/attachment bytes, isolation policy and three unique PREMIS child objects are verified. Same-folder repeats and independent duplicate children remain rejected without replacing earlier output. Frozen V85 is unchanged. [Results](improvement/creator-poc-day5/c117/result.json). Examples: `output/creator-review/c117/`. C113 samples and prior comparison limits remain. Focused work continues until stopped.
+**C117 checks:** Complete Java suite: 250 passes. Mailbox archive/collection and retained/isolated overlapping-folder collections PASS existing EA-PDF/PDF-A/selected ISO checks. Five folder entries share three unique email PDFs; all assignments, original/attachment bytes, isolation policy and three unique PREMIS child objects are verified. Same-folder repeats and independent duplicate children remain rejected without replacing earlier output. Frozen V85 is unchanged. [Results](improvement/creator-poc-day5/c117/result.json). Examples: local verification records. C113 samples and prior comparison limits remain. Focused work continues until stopped.
 
 **C116 automatic archive overwrite repaired:** Separate folders with the same email filenames could produce the same automatic archive name and erase the earlier export. Automatic archive and collection names now gain a numbered suffix when needed. The helper is shared with automatic Gmail archives; ordinary app commands reach the same path. Both apps include the fix.
 
-**C116 checks:** Complete Java suite: 247 passes. Actual public CLI archive and collection pairs keep earlier PDFs and sidecars unchanged. All four PDFs PASS existing EA-PDF/PDF-A/selected ISO checks, with both original emails exact. Explicitly selected archive destinations retain their existing replacement behavior. No live Gmail API rerun. [Results](improvement/creator-poc-day5/c116/result.json). Examples: `output/creator-review/c116/`. C113 samples and known source-comparison limits remain. Focused creator work continues until stopped.
+**C116 checks:** Complete Java suite: 247 passes. Actual public CLI archive and collection pairs keep earlier PDFs and sidecars unchanged. All four PDFs PASS existing EA-PDF/PDF-A/selected ISO checks, with both original emails exact. Explicitly selected archive destinations retain their existing replacement behavior. No live Gmail API rerun. [Results](improvement/creator-poc-day5/c116/result.json). Examples: local verification records. C113 samples and known source-comparison limits remain. Focused creator work continues until stopped.
 
 **C115 supplied Outlook sender name retained:** The supplied Outlook message with two attachments stores the sender name Kees, but the parser ignored it and the creator printed only the address. Native sender names are now retained when they belong to the selected author. A delegate's different name is not assigned to the author. Both apps include the fix.
 
-**C115 checks:** 15 focused Java checks pass. Actual supplied-message and delegate PDFs pass PDF/A/selected ISO with no mandatory failures, exact original MSG bytes and both native attachments. Known retained-MSG source comparison remains INCOMPLETE. [Results](improvement/creator-poc-day5/c115/result.json). Examples: `output/creator-review/c115/`. A separate audit finds all 25 stored Unicode subjects unchanged and correct. C113 standard samples retain checked bytes. Last full suite C110:239 passes. Focused work continues until stopped.
+**C115 checks:** 15 focused Java checks pass. Actual supplied-message and delegate PDFs pass PDF/A/selected ISO with no mandatory failures, exact original MSG bytes and both native attachments. Known retained-MSG source comparison remains INCOMPLETE. [Results](improvement/creator-poc-day5/c115/result.json). Examples: local verification records. A separate audit finds all 25 stored Unicode subjects unchanged and correct. C113 standard samples retain checked bytes. Last full suite C110:239 passes. Focused work continues until stopped.
 
 **C114 missing Outlook invoice body repaired:** Outlook HTML emails could omit a stored readable plain body when their only image needed the web. MSG reading now uses the existing readable-alternative rule after collecting attachments. The invoice amount and deadline appear. Readable HTML and embedded image bodies keep their priority; original MSG bytes remain exact. Both apps include the fix.
 
-**C114 checks:** 16 focused Java checks pass. Actual fallback and embedded-image PDFs pass PDF/A/selected ISO with no mandatory failures and exact originals; retained-MSG source comparison remains INCOMPLETE. All 30 existing ordinary Outlook body/original/native asset hashes remain unchanged. [Results](improvement/creator-poc-day5/c114/result.json). Examples: `output/creator-review/c114/`. C113 standard samples retain checked bytes; last full Java suite remains C110:239 passes. Focused creator work continues until told to stop.
+**C114 checks:** 16 focused Java checks pass. Actual fallback and embedded-image PDFs pass PDF/A/selected ISO with no mandatory failures and exact originals; retained-MSG source comparison remains INCOMPLETE. All 30 existing ordinary Outlook body/original/native asset hashes remain unchanged. [Results](improvement/creator-poc-day5/c114/result.json). Examples: local verification records. C113 standard samples retain checked bytes; last full Java suite remains C110:239 passes. Focused creator work continues until told to stop.
 
 **C112 cut-off email table columns repaired:** A normal 900px table lost its sixth column and part of its fifth at the page boundary. The creator now measures the laid-out content and gives wide messages a wide enough page, retaining authored layout and text size. Footer clearance follows the actual page width. Normal messages keep their page size and pixels. Both apps include the fix.
 
-**C112 checks:** 26 focused Java checks pass. Wide single, long table, mixed-width archive and collection PASS existing EA-PDF/PDF-A/selected ISO checks. Original emails match exactly; all 45 last-column row values remain, without footer overlap. A normal 600px table has identical page size and pixels. [Results](improvement/creator-poc-day5/c112/result.json). Before/after examples: `output/creator-review/c112/`. Last full Java suite C110:239 passes. Focused creator work remains active until told to stop.
+**C112 checks:** 26 focused Java checks pass. Wide single, long table, mixed-width archive and collection PASS existing EA-PDF/PDF-A/selected ISO checks. Original emails match exactly; all 45 last-column row values remain, without footer overlap. A normal 600px table has identical page size and pixels. [Results](improvement/creator-poc-day5/c112/result.json). Before/after examples: local verification records. Last full Java suite C110:239 passes. Focused creator work remains active until told to stop.
 
 **C110 PST author corrected:** Without transport headers, a message sent on someone else's behalf could identify the delegate as its author. The creator now uses the supplied native author address and name. Incomplete author records keep the existing sender fallback, preserving stored Exchange addresses. Both local apps include the fix.
 
-**C110 checks:** Complete Java suite: 239 passes. Corrected-author PDF and ordinary seven-message PST archive PASS existing EA-PDF/PDF-A/selected ISO checks. All 78 existing PST body, exported-message and attachment hashes remain identical. Native PST bytes remain unchanged. [Results](improvement/creator-poc-day5/c110/result.json). Examples: `output/creator-review/c110/`. Existing MSG and isolated PST comparison limits remain. Focused creator work continues until told to stop.
+**C110 checks:** Complete Java suite: 239 passes. Corrected-author PDF and ordinary seven-message PST archive PASS existing EA-PDF/PDF-A/selected ISO checks. All 78 existing PST body, exported-message and attachment hashes remain identical. Native PST bytes remain unchanged. [Results](improvement/creator-poc-day5/c110/result.json). Examples: local verification records. Existing MSG and isolated PST comparison limits remain. Focused creator work continues until told to stop.
 
 **C109 missing Outlook sender address repaired:** Internal Exchange messages can keep the sender's SMTP address in native properties without internet transport headers. The parser ignored those properties, leaving just a name. The creator now recovers the supplied address, respects represented-author identity and keeps existing parsed mailboxes unchanged. Both local apps include the fix.
 
-**C109 checks:** 13 focused Java checks pass. Actual internal Exchange and transport-header PDFs pass PDF/A and selected ISO with zero mandatory failures. Original MSG and attachment bytes match exactly. The known retained-MSG source comparison remains INCOMPLETE. [Results](improvement/creator-poc-day5/c109/result.json). Examples: `output/creator-review/c109/`. Last full Java suite remains C104:229 passes. Focused creator work continues until told to stop.
+**C109 checks:** 13 focused Java checks pass. Actual internal Exchange and transport-header PDFs pass PDF/A and selected ISO with zero mandatory failures. Original MSG and attachment bytes match exactly. The known retained-MSG source comparison remains INCOMPLETE. [Results](improvement/creator-poc-day5/c109/result.json). Examples: local verification records. Last full Java suite remains C104:229 passes. Focused creator work continues until told to stop.
 
 **C108 missing readable email body repaired:** Hidden HTML summary text could block the supplied plain body even when the HTML depended on unavailable web images. The creator now uses the readable alternative in that case. Visible HTML and CSS display overrides retain their priority. The original message stays exact. Both local apps include the fix.
 
-**C108 checks:** 28 focused Java checks pass. Actual fallback and visible-override PDFs PASS existing EA-PDF, PDF/A and selected ISO checks, with exact original email bytes. [Results](improvement/creator-poc-day5/c108/result.json). Before/after examples: `output/creator-review/c108/`. Last full Java suite remains C104:229 passes. Focused creator work remains active until told to stop.
+**C108 checks:** 28 focused Java checks pass. Actual fallback and visible-override PDFs PASS existing EA-PDF, PDF/A and selected ISO checks, with exact original email bytes. [Results](improvement/creator-poc-day5/c108/result.json). Before/after examples: local verification records. Last full Java suite remains C104:229 passes. Focused creator work remains active until told to stop.
 
 **C106 Outlook attachment names preserved:** Declared-encoding attachment names could still become garbled even though their file bytes survived. Native Cyrillic/Western filenames now survive in visible lists, XMP and embedded file specs; attached MSG names use the parent message encoding too. Recovery matches original parser names and exact payload bytes, keeping file identity intact. Both local apps include the fix.
 
-**C106 checks:** 16 focused Java checks pass. Actual Cyrillic, Western and attached-message examples pass PDF/A and selected ISO checks with zero mandatory failures; original MSG bytes and native payload/storage contents are preserved. Retained-MSG comparisons remain INCOMPLETE. [Results](improvement/creator-poc-day5/c106/result.json). Before/after examples: `output/creator-review/c106/`. Last full suite remains C104: 229 passes. Continuous focused creator work remains active.
+**C106 checks:** 16 focused Java checks pass. Actual Cyrillic, Western and attached-message examples pass PDF/A and selected ISO checks with zero mandatory failures; original MSG bytes and native payload/storage contents are preserved. Retained-MSG comparisons remain INCOMPLETE. [Results](improvement/creator-poc-day5/c106/result.json). Before/after examples: local verification records. Last full suite remains C104: 229 passes. Continuous focused creator work remains active.
 
 **C105 PST non-email items excluded:** The same false-email problem also existed inside PST handling. Known non-email Outlook items are now reported as skipped and excluded from message counts. All inspected items still count against processing limits. A non-email embedded object cannot be reconstructed as a fabricated attached email; unsupported objects produce an explicit error. MSG/PST share the same item-class check. Both local apps are current.
 
-**C105 checks:** 17 focused Java checks pass. Controlled native item state proves the former false RFC822 reconstruction is blocked without changing the original PST. All 78 existing real PST messages retain identical body/export/attachment hashes. The actual seven-message archive PASSes frozen EA-PDF, PDF/A and selected ISO checks. [Results](improvement/creator-poc-day5/c105/result.json). Review: `output/creator-review/c105/`. Last full suite remains C104: 229 passes. Continuous core creator work remains active.
+**C105 checks:** 17 focused Java checks pass. Controlled native item state proves the former false RFC822 reconstruction is blocked without changing the original PST. All 78 existing real PST messages retain identical body/export/attachment hashes. The actual seven-message archive PASSes frozen EA-PDF, PDF/A and selected ISO checks. [Results](improvement/creator-poc-day5/c105/result.json). Review: local verification records. Last full suite remains C104: 229 passes. Continuous core creator work remains active.
 
 **C104 non-email Outlook objects no longer become emails:** The input detector previously accepted any OLE `.msg` object as an email. A real contact beside one email produced two EA-PDF emails. Contacts, contact lists, appointments, tasks, sticky notes and journal entries are now recognized as non-email objects. Directory conversion reports them as skipped; direct non-email input fails clearly. Meeting requests, delivery reports and legacy email classes remain accepted. Both local apps are current.
 
-**C104 checks:** All 229 existing Java checks pass after the source/metadata changes. The real mixed folder now produces one email PDF and reports the skipped contact. That PDF retains its exact MSG source and native attachment; PDF/A and selected ISO PASS with no mandatory failures and the known MSG comparison INCOMPLETE. [Results](improvement/creator-poc-day5/c104/result.json). Review: `output/creator-review/c104/`. Continue core creator work until explicitly told to stop.
+**C104 checks:** All 229 existing Java checks pass after the source/metadata changes. The real mixed folder now produces one email PDF and reports the skipped contact. That PDF retains its exact MSG source and native attachment; PDF/A and selected ISO PASS with no mandatory failures and the known MSG comparison INCOMPLETE. [Results](improvement/creator-poc-day5/c104/result.json). Review: local verification records. Continue core creator work until explicitly told to stop.
 
 **C103 grouped-recipient metadata repaired:** Valid named recipient groups were written as one combined `mailto:` value, producing mandatory `MESSAGE_TO_FOAF` and `MESSAGE_CC_FOAF` failures. Group members now have individual mailbox metadata. Original group headers and source bytes stay exact; empty groups do not invent recipients. PST header recovery uses the same corrected parsing. Both local apps are refreshed.
 
-**C103 checks:** 25 focused Java checks pass. Grouped and undisclosed-recipient singles, an archive and a collection PASS frozen EA-PDF, PDF/A and selected ISO checks, including collection children. Before/after examples: `output/creator-review/c103/`. [Results](improvement/creator-poc-day5/c103/result.json). Continue core creator work until explicitly told to stop.
+**C103 checks:** 25 focused Java checks pass. Grouped and undisclosed-recipient singles, an archive and a collection PASS frozen EA-PDF, PDF/A and selected ISO checks, including collection children. Before/after examples: local verification records. [Results](improvement/creator-poc-day5/c103/result.json). Continue core creator work until explicitly told to stop.
 
 **C102 valid Outlook date fallback repaired:** A valid MSG with a native submission timestamp but no transport headers previously crashed before reaching its fallback. It now uses that stored timestamp. Supplied transport dates retain their existing precedence; no conversion-time date is invented. Both local apps include the fix.
 
-**C102 checks:** 17 focused Java checks pass. The public CLI creates the repaired email with the correct displayed date, metadata instant and exact original bytes. PDF/A and selected ISO PASS with no mandatory failures; retained MSG comparisons remain INCOMPLETE. [Results](improvement/creator-poc-day5/c102/result.json). Review file: `output/creator-review/c102/Native sent date.pdf`. Work continues on a reproduced grouped-recipient metadata failure.
+**C102 checks:** 17 focused Java checks pass. The public CLI creates the repaired email with the correct displayed date, metadata instant and exact original bytes. PDF/A and selected ISO PASS with no mandatory failures; retained MSG comparisons remain INCOMPLETE. [Results](improvement/creator-poc-day5/c102/result.json). Review file: the local sample PDF. Work continues on a reproduced grouped-recipient metadata failure.
 
 **C101 Outlook participant names fixed:** Native ANSI sender/recipient names and display-only recipient names now honor the declared message encoding. The same supplied Cyrillic names previously appeared as garbled Latin characters in headers and structured metadata. Known mailbox addresses and exact original MSG bytes stay unchanged. Both local apps include this and the preceding missing-body/PST body-selection fixes.
 
-**C101 checks:** 15 focused Java checks pass. Actual before/after PDF shows corrected names; PDF/A and selected ISO PASS with no mandatory EA-PDF failures. Retained MSG comparisons remain INCOMPLETE. [Results](improvement/creator-poc-day5/c101/result.json). Review examples: `output/creator-review/c101/`.
+**C101 checks:** 15 focused Java checks pass. Actual before/after PDF shows corrected names; PDF/A and selected ISO PASS with no mandatory EA-PDF failures. Retained MSG comparisons remain INCOMPLETE. [Results](improvement/creator-poc-day5/c101/result.json). Review examples: local verification records.
 
 **C100 source check:** Converted 23 additional ordinary message-class MSGs and three existing EMLs. All 26 pass PDF/A and selected ISO checks. All MSGs have zero mandatory failures; two EMLs PASS. The older `test4.eml` has no sender and a fully quoted Cc token; its frozen-validator `MESSAGE_CC_XMP` failure is retained and outside this ordinary-input pass. [Recorded outcomes](improvement/creator-poc-day5/c100/result.json). Continue significant creator work until explicitly told to stop.
 
 **C99 PST body selection fixed:** PST conversion now honors the stored native plain/RTF/HTML body type. It previously preferred any stored HTML, even when the native body was plain or RTF. Native RTF now remains in reconstructed source exports when other alternatives exist. Missing declared body forms report a fallback. Only PstReader changed from C98; CLI and default PST retention policy are unchanged. Both local apps are refreshed.
 
-**C99 checks:** 41 focused Java checks pass. Three controlled retained-source body examples and their collection PASS frozen EA-PDF, PDF/A and selected ISO checks, including collection children. The 78 real messages in the existing PST fixtures retain identical body, exported-source and attachment hashes. Review examples: `output/creator-review/c99/`. Last complete suite: C97, 216 passes. [Results](improvement/creator-poc-day5/c99/result.json). Work remains active until the user explicitly says stop.
+**C99 checks:** 41 focused Java checks pass. Three controlled retained-source body examples and their collection PASS frozen EA-PDF, PDF/A and selected ISO checks, including collection children. The 78 real messages in the existing PST fixtures retain identical body, exported-source and attachment hashes. Review examples: local verification records. Last complete suite: C97, 216 passes. [Results](improvement/creator-poc-day5/c99/result.json). Work remains active until the user explicitly says stop.
 
 **C98 missing email body fixed:** An unrelated photo attachment could prevent the supplied plain-text alternative from being rendered when HTML depended entirely on unavailable web images. The body text now appears. HTML that can actually use an embedded image keeps that image. Original email and photo bytes remain exact. Only EmlReader changed; this path is shared by EML, Gmail and MBOX. Both local apps are refreshed.
 
-**C98 checks:** 20 focused Java checks pass. The repaired email and matching-image control both PASS frozen EA-PDF, PDF/A and selected ISO checks. Before/after examples: `output/creator-review/c98/`. Last complete Java suite remains C97: 216 passes. [Results](improvement/creator-poc-day5/c98/result.json). Continuous creator work remains active until the user says stop; beta checkpoints no longer end work.
+**C98 checks:** 20 focused Java checks pass. The repaired email and matching-image control both PASS frozen EA-PDF, PDF/A and selected ISO checks. Before/after examples: local verification records. Last complete Java suite remains C97: 216 passes. [Results](improvement/creator-poc-day5/c98/result.json). Continuous creator work remains active until the user says stop; beta checkpoints no longer end work.
 
 **C97 prior beta review:** Completed the requested priority review on the C96 creator. Seven fresh outputs cover ordinary HTML/RTF/plain MSG emails, multiple attachments, an attached email, a small MBOX and a seven-message PST. All pass PDF/A and selected ISO checks with zero mandatory EA-PDF failures. Both mailbox archives PASS EA-PDF; the five retained-MSG comparisons keep their known INCOMPLETE result. No further significant creator defect was reproduced in these cases.
 
-**Data and batch checks:** Independently inspected native compound-file streams: all five original MSGs and seven by-value attachments match exactly; the embedded Outlook message retains its storage contents with the required standalone header expansion. Both MBOX messages retain their content bytes; separator-newline handling is recorded. All 216 Java checks pass, including parallel naming, rollback, previous-output protection and interruption cleanup. Prior live Gmail and six-profile sample results remain inherited; their reader/writer behavior was unaffected by C96's MSG text decoding. [Results and limits](improvement/creator-poc-day5/c97/result.json). Review files: `output/creator-review/c97/`.
+**Data and batch checks:** Independently inspected native compound-file streams: all five original MSGs and seven by-value attachments match exactly; the embedded Outlook message retains its storage contents with the required standalone header expansion. Both MBOX messages retain their content bytes; separator-newline handling is recorded. All 216 Java checks pass, including parallel naming, rollback, previous-output protection and interruption cleanup. Prior live Gmail and six-profile sample results remain inherited; their reader/writer behavior was unaffected by C96's MSG text decoding. [Results and limits](improvement/creator-poc-day5/c97/result.json). Review files: local verification records.
 
 **Current instruction:** Continue in priority order until told to stop or the code reaches viable beta quality for ordinary email creation. The latest user instruction restores that stopping point. Corner cases, minor polish, new features and reader work remain excluded. Distribution preparation remains deferred.
 
 **C96 plain-text Outlook body fixed:** ANSI MSG bodies now use their declared message encoding. A valid Russian email previously came out as garbled Latin characters; a Western European email lost punctuation and its euro sign. Both now render the supplied text correctly and retain exact original MSG bytes. Unicode bodies keep their existing decoding. Reused the existing Subject decoder for the body; only `MsgReader` changed from C95. Both local apps are refreshed.
 
-**C96 checks:** 17 focused Java checks pass. The two actual generated PDFs pass PDF/A and selected ISO checks with no mandatory EA-PDF failures. Retained MSG comparisons remain honestly INCOMPLETE in the frozen validator. [Results](improvement/creator-poc-day5/c96/result.json). Review examples: `output/creator-review/c96/`. At C96, the last full suite was C95 (214 passes); C97 now supersedes it with 216 passes. No distribution or release-preparation work was added.
+**C96 checks:** 17 focused Java checks pass. The two actual generated PDFs pass PDF/A and selected ISO checks with no mandatory EA-PDF failures. Retained MSG comparisons remain honestly INCOMPLETE in the frozen validator. [Results](improvement/creator-poc-day5/c96/result.json). Review examples: local verification records. At C96, the last full suite was C95 (214 passes); C97 now supersedes it with 216 passes. No distribution or release-preparation work was added.
 
 **C95 creator fixes retained:** Recovered missing MSG recipient mailboxes from supplied transport headers, stopped rejecting a readable MSG with zero padding, and repaired broken structure references in later pages of HTML email. The last defect was found using the user-authorized live Gmail account. The repaired four-page PDF has identical page pixels, text, original email and attachment bytes. Only `MsgReader` and `SemanticStructure` production classes changed from C93.
 
-**Live Gmail checked:** Three inbox messages convert individually, as an archive and as a collection; a fourth email includes a native PDF attachment. All outputs and collection children PASS the frozen EA-PDF, PDF/A and selected ISO checks. All 13 retained original streams and the native attachment match live source bytes. Repeating the three-message export skips all completed outputs correctly. Gmail access was read-only. Private review PDFs: `output/gmail-live-review/`. Working credential copies and private staging are removed after verification; originals remain in the user's home directory.
+**Live Gmail checked:** Three inbox messages convert individually, as an archive and as a collection; a fourth email includes a native PDF attachment. All outputs and collection children PASS the frozen EA-PDF, PDF/A and selected ISO checks. All 13 retained original streams and the native attachment match live source bytes. Repeating the three-message export skips all completed outputs correctly. Gmail access was read-only. Private review PDFs: local verification records. Working credential copies and private staging are removed after verification; originals remain in the user's home directory.
 
 **C95 delivery (historical):** Both apps in `dist/` include all three fixes. Complete Java suite: 214 passes; focused checks: 22 passes. The 34 genuine MSG files in the existing corpus now parse; one non-MSG file is skipped. The previously rejected Outlook example preserves its original and both attachments exactly. Six saved examples are refreshed: five PASS; isolated PST `1mi` retains its reviewed INCOMPLETE. All six pass PDF/A and selected ISO checks. C93's Python results remain inherited: 1121 passes / 40 optional integration skips. [Results and limits](improvement/creator-poc-day5/c95/delivery-result.json), [Gmail results](improvement/creator-poc-day5/c95/gmail-result.json), [run guide](CREATOR_DEMO.md).
 
@@ -3113,7 +3120,7 @@ For collections, existing `embedPdfInCollections` requests a PDF sidecar, while 
 
 Current build: `/tmp/eapdf-collection-sidecars-20261017/build/`; logs: `/tmp/eapdf-collection-sidecars-{build,python,samples}.log`; reports: `/tmp/eapdf-collection-sidecars-20261017/{integration,samples}/`. [Current sidecar evidence](reimplementation/collection-sidecars-evidence.json) records source/JAR/sample hashes, exact suite totals and validation summaries. The former failing R13 review candidates were moved to `/tmp/eapdf-collection-sidecars-20261017/superseded-direct-xlsx-review/`. R13's output-policy question and default collection rejection are resolved; its earlier evidence remains historical. No work remains on this sidecar correction. External standards/human/live-account/platform/deployment acceptance requirements still apply. All older checkpoint records below are historical.
 
-**Previous checkpoint — R12 collection finding aids/indexes embedded only:** Removed the four separate collection finding-aid PDF/XLSX files. Regeneration no longer extracts or publishes collection auxiliaries and deletes stale collection auxiliary sample paths after validation. `examples/` now contains **only six primary sample PDFs**, plus the existing single-message alias under `output/`. For c/ci, `excelEnabled` or `embedExcel` places the XLSX inside the root finding-aid EA-PDF and implies that PDF; no external finding-aid PDF or XLSX is created. `excelEnabled` remains an external XLSX option only for flat archives. The existing container PREMIS policy is separate and unchanged; default samples have it disabled and publish no sidecars.
+**Previous checkpoint — R12 collection finding aids/indexes embedded only:** Removed the four separate collection finding-aid PDF/XLSX files. Regeneration no longer extracts or publishes collection auxiliaries and deletes stale collection auxiliary sample paths after validation. `examples/` now contains **only six primary sample PDFs**, plus the existing single-message alias in local records. For c/ci, `excelEnabled` or `embedExcel` places the XLSX inside the root finding-aid EA-PDF and implies that PDF; no external finding-aid PDF or XLSX is created. `excelEnabled` remains an external XLSX option only for flat archives. The existing container PREMIS policy is separate and unchanged; default samples have it disabled and publish no sidecars.
 
 **R12 verification (historical):** Maven package **131 Java tests** and packaged supervised/publication/packaging **four Python tests** pass, zero failures/errors/skips. The c/ci regression enables Excel with both other embedding flags disabled and verifies that only the collection PDF is published and its finding-aid PDF contains a valid XLSX. All **six regenerated primary PDF/A/EA-PDF checks** and **four recursive child checks** PASS, zero FAIL/INCOMPLETE. Current sample and alias hashes, nested ZIP checks, five changed source/test/script entries and JAR hashes: [embedded-only-index-evidence.json](reimplementation/embedded-only-index-evidence.json). The earlier full Python 140-test snapshots remain historical; the full Python suite was not rerun in this targeted correction.
 
@@ -3266,7 +3273,7 @@ The durable [additional-rules evidence](reimplementation/additional-rules-eviden
 
 ### Samples and scope
 
-`scripts/regenerate_email_samples.py` generates and independently validates before replacing the six `examples/sample_1*.pdf` primary outputs. 1s/1si/1c/1ci use `in/email/test3.eml`; 1m/1mi use `in/email/test.pst`. Collection `_finding_aid.pdf` and `_index.xlsx` are embedded only; regeneration does not write extracted copies into `examples/` and removes any stale collection auxiliary paths. The embedded finding-aid PDF is a standalone EA-PDF describing an explicitly generated index message. Existing `output/sample_1s.pdf` is a byte-identical alias of the regenerated 1s example. Legacy Facebook/Twitter sample PDFs were explicitly removed during the requested cleanup because their generators/fixtures are absent; unrelated imported/saved PDFs were not changed. Historical reports in `VALIDATION_RESULTS.md` do not describe newly regenerated output automatically.
+`scripts/regenerate_email_samples.py` generates and independently validates before replacing the six `examples/sample_1*.pdf` primary outputs. 1s/1si/1c/1ci use `in/email/test3.eml`; 1m/1mi use `in/email/test.pst`. Collection `_finding_aid.pdf` and `_index.xlsx` are embedded only; regeneration does not write extracted copies into `examples/` and removes any stale collection auxiliary paths. The embedded finding-aid PDF is a standalone EA-PDF describing an explicitly generated index message. Existing the local sample PDF is a byte-identical alias of the regenerated 1s example. Legacy Facebook/Twitter sample PDFs were explicitly removed during the requested cleanup because their generators/fixtures are absent; unrelated imported/saved PDFs were not changed. Historical reports in `VALIDATION_RESULTS.md` do not describe newly regenerated output automatically.
 
 ## 6. Reproduction and verification still required
 
@@ -3428,11 +3435,6 @@ This is the expanded `git status --porcelain=v1 --untracked-files=all` inventory
 ?? fixed.md
 ?? in/Agenda and timeline slides.eml
 ?? in/email/test3_old.eml
-?? output/Agenda and timeline slides_000001.pdf
-?? output/bfo.pdf
-?? output/sample_1s.pdf
-?? output/thinkbox_old.pdf
-?? output/uiuc.pdf
 ?? requirements-docs.txt
 ?? scripts/regenerate_email_samples.py
 ?? src/main/java/eapdf/ConversionSupervisor.java

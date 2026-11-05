@@ -12,8 +12,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class CollectionValidationPoolTests {
     private static Path collection(String name) {
-        Path result = Path.of("..", "out", "mbox", name, name + (name.equals("enron-sample") ? "_1ci.pdf" : "_1c.pdf")).toAbsolutePath().normalize();
-        org.junit.jupiter.api.Assumptions.assumeTrue(Files.isRegularFile(result), "Real in/ conversion is required");
+        Path result = Path.of("..", "examples", name).toAbsolutePath().normalize();
+        assertTrue(Files.isRegularFile(result), "Tracked real-input example is required: " + result);
         return result;
     }
     private static String hash(Path path) throws Exception {
@@ -38,7 +38,7 @@ class CollectionValidationPoolTests {
             return new JsonPrimitive(value.getAsString().replaceAll("[^\\s\"']*eapdf-validator-child-[0-9]+\\.pdf", "CHILD.pdf"));
         return value;
     }
-    @ParameterizedTest @ValueSource(strings={"31018", "enron-sample", "msg"})
+    @ParameterizedTest @ValueSource(strings={"mbox/mbox_enron-sample_1c.pdf", "mbox/mbox_enron-sample_1ci.pdf", "pst/pst_quality-attached-message_1c.pdf"})
     void realCollectionsRetainEverySerialFinding(String name) throws Exception {
         Path input = collection(name); String before = hash(input);
         String old = System.getProperty("VALIDATOR_CHILD_PROCESSES");
@@ -48,7 +48,7 @@ class CollectionValidationPoolTests {
             System.setProperty("VALIDATOR_CHILD_PROCESSES", "4"); start = System.nanoTime();
             JsonObject parallel = JavaValidation.validate(input); long parallelMillis = (System.nanoTime()-start)/1_000_000;
             if (!normalized(serial).equals(normalized(parallel))) {
-                Path evidence = Path.of(System.getProperty("java.io.tmpdir"), "parallel-validation-difference-" + name); Files.createDirectories(evidence);
+                Path evidence = Path.of(System.getProperty("java.io.tmpdir"), "parallel-validation-difference-" + input.getFileName()); Files.createDirectories(evidence);
                 Files.writeString(evidence.resolve("serial.json"), normalized(serial).toString());
                 Files.writeString(evidence.resolve("parallel.json"), normalized(parallel).toString());
                 fail("Serial/parallel findings differ; evidence: " + evidence);
@@ -58,7 +58,7 @@ class CollectionValidationPoolTests {
         } finally { if (old == null) System.clearProperty("VALIDATOR_CHILD_PROCESSES"); else System.setProperty("VALIDATOR_CHILD_PROCESSES", old); }
     }
     @Test void fourProcessesRunAndNestedCollectionsDoNotSpawnMore() throws Exception {
-        Path input = collection("enron-sample");
+        Path input = collection("mbox/mbox_enron-sample_1ci.pdf");
         List<Long> pids;
         try (var pool = new CollectionValidationPool()) {
             var futures = new ArrayList<Future<CollectionValidationPool.Result>>();
@@ -74,7 +74,7 @@ class CollectionValidationPoolTests {
         for (long pid : pids) assertFalse(ProcessHandle.of(pid).map(ProcessHandle::isAlive).orElse(false));
     }
     @Test void crashedWorkerCannotProduceAPassingResult() throws Exception {
-        Path input = collection("31018");
+        Path input = collection("pst/pst_quality-attached-message_1c.pdf");
         try (var pool = new CollectionValidationPool()) {
             var job = pool.submit(input, Set.of(hash(input)), 1);
             long deadline = System.nanoTime()+TimeUnit.SECONDS.toNanos(10);
@@ -85,7 +85,7 @@ class CollectionValidationPoolTests {
         }
     }
     @Test void closeStopsActiveAndQueuedJobs() throws Exception {
-        Path input = collection("31018");
+        Path input = collection("pst/pst_quality-attached-message_1c.pdf");
         var pool = new CollectionValidationPool(); var jobs = new ArrayList<Future<CollectionValidationPool.Result>>();
         List<Long> pids;
         try {

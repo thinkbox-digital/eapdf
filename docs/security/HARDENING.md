@@ -3,7 +3,7 @@
 This is an **unreleased local checkpoint** covering the email creator, standalone
 Java validator, Python/web validator and browser viewer. Published beta.4 JARs and
 viewer beta.1 downloads have not been replaced. Candidate artifacts and detailed
-logs are retained under `output/security-review-2026-10-31/`.
+logs are retained in local records.
 
 ## Changes
 
@@ -77,7 +77,7 @@ resource-limited workers. A conformance PASS is not an attachment safety verdict
 ## Verification and limits
 
 The later records-workflow corrections and revised manual are recorded in
-`output/records-fixes-2026-10-31/verification.json` and summarized in
+local verification records and summarized in
 [development status](../DEVELOPMENT_STATUS.md). That checkpoint adds explicit
 PDF/A-only sidecar assessment, inherited-limit startup repairs and bounded Docker
 client headroom. Its candidate artifacts are separate from published/root `dist`

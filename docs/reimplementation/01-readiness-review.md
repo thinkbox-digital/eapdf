@@ -81,7 +81,7 @@ This is a partial-accessibility feature defect, not proof that PDF/UA is require
 
 Static review identifies unbounded Java MIME recursion in `EmlReader`, decoding via `getContent`/`readAllBytes` before some checks, full image decoding to inspect dimensions (`PdfMailWriter.sniffImageSize`), and worker shutdown that waits until termination without an overall deadline (`Common.stopWorkers`). A small compressed image can require much more memory than its encoded source size. Java acceptance limits do not establish a pixel, recursion, wall-clock, output-size or temporary-disk budget.
 
-Web subprocess memory/time/file-size restrictions provide additional containment; CLI/GUI callers do not automatically receive that boundary. No destructive decompression-bomb or exhaustion load test was run. Required correction: budget decoded bytes, pixels, MIME depth/parts, pages, output/temp bytes and runtime; use an isolated worker process with termination and cleanup for untrusted inputs. Test cancellation and disk exhaustion safely.
+Web subprocess memory/time/file-size restrictions provide additional containment; CLI/GUI callers do not automatically receive that boundary. No destructive decompression-bomb or exhaustion load test was run. Required correction: budget decoded bytes, pixels, MIME depth/parts, pages, local verification records bytes and runtime; use an isolated worker process with termination and cleanup for untrusted inputs. Test cancellation and disk exhaustion safely.
 
 ### R9 — Release/coverage gaps requiring explicit decisions
 

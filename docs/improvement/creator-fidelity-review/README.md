@@ -133,7 +133,7 @@ comparison rows and diagnostics remain outside project evidence.
 - [Creator CLI](../../../dist/emailtopdfa.jar)
 - [Creator GUI](../../../dist/emailtopdfa-gui.jar)
 - [Standalone validator](../../../dist/eapdf-validator.jar)
-- [Corrected subject PDF](../../../output/creator-review/fidelity/Decoded%20subject.pdf)
+- Corrected subject PDF (local artifact; not distributed)
 - [Shareable source email](Subject%20decoding.eml)
 - [Build and source hashes](evidence.json)
 - [Preservation comparison](preservation.json)

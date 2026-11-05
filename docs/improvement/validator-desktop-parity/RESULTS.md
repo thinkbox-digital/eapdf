@@ -44,8 +44,8 @@ The comparison establishes parity with the existing web engine, not independent 
 | examples/sample_1mi.pdf | INCOMPLETE | INCOMPLETE | PASS | PASS |
 | examples/sample_1s.pdf | PASS | PASS | PASS | PASS |
 | examples/sample_1si.pdf | PASS | PASS | PASS | PASS |
-| output/Agenda and timeline slides_000001.pdf | PASS | PASS | PASS | PASS |
-| output/bfo.pdf | FAIL | FAIL | PASS | PASS |
+| Historical Agenda attachment sample | PASS | PASS | PASS | PASS |
+| Historical BFO sample | FAIL | FAIL | PASS | PASS |
 
 ## All 213 active rule codes
 

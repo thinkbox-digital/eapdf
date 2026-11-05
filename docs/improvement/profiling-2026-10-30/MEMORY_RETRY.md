@@ -39,7 +39,7 @@ the existing passes. [Hash-matched completed-run evidence](largest-memory-retry.
 
 Private evidence, commands, source/PDF/JAR hashes, per-second samples and the
 standalone Java validation report are retained in
-`output/performance-fixes-2026-10-30/largest-memory-retry-104805/`.
+local verification records.
 Scratch used disk under `.generator_web_tmp` and was removed after completion.
 No OOM heap dump was needed. The complete standalone report is about 2.4 GiB.
 IntelliJ’s available run configurations did not expose a validator entry point.
@@ -138,14 +138,14 @@ checks. All 22 retained real-email matrix outputs pass standalone Java EA-PDF an
 PDF/A validation with identical per-code/per-level finding counts and PDF/A
 assertion totals. Original source and PDF hashes are unchanged. No explicit
 PDF/UA-2 rerun or largest-file saving is claimed for this candidate. Candidate
-evidence is in `output/performance-fixes-2026-10-30/path-candidate-acceptance/`;
+evidence is in local verification records;
 the build log is retained with the large retry. The combined path/compact-store
 candidate repeats all these checks and three focused identity tests after the
 extra collision cases were added. Its frozen SHA-256 is
 `d56757391e755bda27293a64fd38ce2bc306dd24762ec18839bfca23789c1998`.
 [Candidate acceptance evidence](memory-candidate-acceptance.json) links the hashes,
 counts and real-identity probe results. Its private evidence is retained under
-`output/performance-fixes-2026-10-30/compact-candidate-acceptance/`.
+local verification records.
 These intermediate candidates did not replace the installed validator or the
 largest retry's JAR.
 
@@ -163,7 +163,7 @@ per-code/per-level outcomes, PDF/A assertion totals and source/PDF hashes. Its
 SHA-256 is `fbd8f93aa88fa80e2d4ced63466c3b897ca2c9db5c4e5bd98a670ab4ed7902a5`.
 [Final candidate evidence](memory-resource-cache-acceptance.json) identifies source
 hashes and retained logs/reports. Its private artifacts are in
-`output/performance-fixes-2026-10-30/memory-final-candidate-acceptance/`.
+local verification records.
 Its own largest-file run now completes with identical per-code/per-level finding
 counts and both upstream assertion totals: 5,395.27 seconds and 23.16 GiB peak
 RSS. Source/PDF hashes match and scratch is removed. These are non-isolated local

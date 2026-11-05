@@ -91,7 +91,7 @@ Config-gated features include:
 
 ## Logging And Debugging
 
-- per-file logs in [out/logs](/media/lepore/Work/thinkbox/convert/out/logs)
+- per-file logs in local per-file logs
 - optional debug output directories
 - validation HTML reports in [validation](/media/lepore/Work/thinkbox/convert/validation)
 

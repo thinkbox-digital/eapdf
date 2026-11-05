@@ -62,6 +62,6 @@ Existing logging, including the nonfatal Log4j-provider message during validatio
 is retained. Packaging success is separate from large-file conformance acceptance.
 
 Logs and the clean-directory launch/report evidence are retained under
-`output/performance-fixes-2026-10-30/`, including
+local verification records, including
 `validator-distributable-build.log`, `validator-zip-test.log` and
 `packaging-clean-smoke/result.json`. GitHub release assets were not changed.

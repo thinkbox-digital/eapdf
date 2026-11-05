@@ -75,8 +75,8 @@ The same email and Agenda are also saved as `weekly-review-archive.pdf` and `wee
 | Readable styles beside an unsupported rule | `dist/demo/inputs/Shared email styles.eml` | `dist/demo/Shared email styles.pdf` |
 | Paragraph alignment requested by CSS | `dist/demo/inputs/Paragraph alignment.eml` | `dist/demo/Paragraph alignment.pdf` |
 | Visible text with a color override | `dist/demo/inputs/Text color.eml` | `dist/demo/Text color.pdf` |
-| Email with a PowerPoint attachment | `in/Agenda and timeline slides.eml` | `output/creator-preview/single/Agenda and timeline slides_000001.pdf` |
-| HTML, table, inline image and international text | `output/creator-preview/collection-input/Projects/Project update.eml` | `output/creator-preview/html/Project update — résumé_000001.pdf` |
+| Email with a PowerPoint attachment | `in/Agenda and timeline slides.eml` | Generated locally; not distributed |
+| HTML, table, inline image and international text | Local demonstration input; not distributed | Generated locally; not distributed |
 | Three-page email with 44 numbered items | `dist/demo/inputs/Project review notes.eml` | `dist/demo/Long email.pdf` |
 | Full attachment names, including a name that wraps | `dist/demo/inputs/Attachment review.eml` | `dist/demo/Attachment review.pdf` |
 | A block image with text below | `dist/demo/inputs/Block image.eml` | `dist/demo/Block image.pdf` |
@@ -100,12 +100,12 @@ The same email and Agenda are also saved as `weekly-review-archive.pdf` and `wee
 | A long document URL | `dist/demo/inputs/Project decisions.eml` | `dist/demo/Long URL.pdf` |
 | An exported filename without spaces | `dist/demo/inputs/Project export.eml` | `dist/demo/Long filename.pdf` |
 | Chinese subjects and source filenames | `dist/demo/inputs/International/` | `dist/demo/International email 1.pdf` and `International email 2.pdf` |
-| Outlook message with an attachment | `in/HtmlSampleEmailWithAttachment.msg` | `output/creator-preview/msg/HtmlSampleEmailWithAttachment_000001.pdf` |
+| Outlook message with an attachment | `in/HtmlSampleEmailWithAttachment.msg` | Generated locally; not distributed |
 | A real Outlook reply thread | `in/2019.10.10a additional comments and questions for DEP.msg` | `dist/demo/Outlook thread.pdf` |
 | Outlook RTF body and attachment | `in/RtfSampleEmailWithAttachment.msg` | `dist/demo/RTF email.pdf` |
-| Small PST | `src/test/resources/eapdf/email/attached-message.pst` | Seven PDFs in `output/creator-preview/pst/` |
-| One archive PDF | `output/creator-preview/collection-input/` | `output/creator-preview/archive/demo-archive.pdf` |
-| Folder collection | The same input folder | `output/creator-preview/collection/demo-collection.pdf` |
+| Small PST | `src/test/resources/eapdf/email/attached-message.pst` | Seven PDFs generated locally |
+| One archive PDF | Local demonstration input; not distributed | Generated locally; not distributed |
+| Folder collection | The same input folder | Generated locally; not distributed |
 
 For the Agenda example, the **Body** and **Attachments** bookmarks identify its sections. The original EML is available in the document attachments panel. File lists show plain filenames, with one attachment per line.
 
@@ -133,7 +133,7 @@ Legacy email background, text and existing link colors are retained, including w
 
 ```bash
 java -jar dist/emailtopdfa.jar --out out "in/Agenda and timeline slides.eml"
-java -jar dist/emailtopdfa.jar --out out --archive-profile c "output/creator-preview/collection-input"
+java -jar dist/emailtopdfa.jar --out /tmp/eapdf-demo --archive-profile c "in/enron-sample.mbox"
 ```
 
 CLI arguments are unchanged.
@@ -164,7 +164,7 @@ A ready-made selection of PDFs and an app screenshot is in `dist/demo/`. The Age
 - The existing validator cannot fully compare headers from retained MSG files. Such a result is reported as incomplete, even when the PDF/A and structure checks pass.
 - PST single-email output retains exported messages and native attachments by default (`s`). Choose `si` to omit originals explicitly.
 - The finding aid and filename lists are intentionally plain text. Native attachment handling remains the viewer's responsibility.
-- C95 live Gmail checks pass for four authorized emails, including a PDF attachment, single/archive/collection output and resume. Private review PDFs are in `output/gmail-live-review/`; large-mailbox acceptance remains open.
+- C95 live Gmail checks pass for four authorized emails, including a PDF attachment, single/archive/collection output and resume. Private review PDFs are in local verification records; large-mailbox acceptance remains open.
 - These outputs are unsigned. Full accessibility certification and signing are outside the main demo work.
 
 The long-subject collection also has `long-subjects-collection_finding_aid.pdf` and `long-subjects-collection_index.xlsx` beside it. Its printed index retains both final decisions without links.

@@ -79,7 +79,7 @@ empty attachment placeholders.
 - [Creator CLI](../../../dist/emailtopdfa.jar)
 - [Creator GUI](../../../dist/emailtopdfa-gui.jar)
 - [Standalone validator](../../../dist/eapdf-validator.jar)
-- [Corrected real Outlook example](../../../output/creator-review/msg-native/Correct%20Outlook%20sent%20date.pdf)
+- Corrected real Outlook example (local artifact; not distributed)
 - [Build, hashes and tests](evidence.json)
 - [Corpus comparison](comparison.json.gz)
 - [Real MSG comparisons](real-comparison.json)

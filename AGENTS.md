@@ -42,3 +42,5 @@ Rules:
 
 - For future generated outputs, append the export profile to the filename (for example, `_1s.pdf` or `_1c.pdf`). For full `in/` to `out/` regenerations, choose suitable profiles and include a representative mix of profiles across input types.
 - For future bulk `in/` to `out/` generations, publish generated documents directly under `out/eml/`, `out/msg/`, `out/mbox/`, and `out/pst/`, without per-input or other deeper subfolders. Keep logs, JSON manifests/progress files, and validation reports outside `out/`, in the run evidence directory under `output/`. Use isolated staging directories to prevent concurrent jobs from overwriting progress files before publishing final documents.
+
+- Public documentation must not cite or link to unpublished generated documents or evidence under the local output directories. Summarize verified results in tracked documentation; use published examples or release assets for downloadable files. Use explicit temporary destinations in command examples.

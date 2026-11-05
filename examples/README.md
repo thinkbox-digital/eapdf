@@ -39,7 +39,7 @@ were checked before and after regeneration. The demonstration creator identity
 is Thinkbox.DIGITAL, not the original email author.
 
 Conversion logs and Java reports are in
-`output/arlington-repair-2026-11-03/examples-final/`. These are local builds, not a newly
+local verification records. These are local builds, not a newly
 published GitHub release or independent certification.
 
 Older signed, accessibility and failing demonstrations are preserved unchanged
@@ -48,10 +48,10 @@ Two additional examples were also regenerated: `mbox/mbox_enron_1m.pdf`
 contains all 1,433 Enron messages and passes Java validation;
 `eml/eml_missing_date_1s.pdf` is an explicitly negative fixture with the expected
 EA-PDF failure `MESSAGE_SENT_XMP` and PDF/A PASS. Their evidence is in
-`output/arlington-repair-2026-11-03/extra-examples/`.
+local verification records.
 
 All 34 current example PDFs pass the documented corrected Arlington checker.
-Reports: `output/arlington-repair-2026-11-03/examples-arlington-complete/`.
+Reports: local verification records.
 This separate object-model audit does not change the negative example’s expected
 EA-PDF failure. See [checker scope and corrections](../docs/ARLINGTON_VALIDATION.md).
 

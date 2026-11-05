@@ -98,4 +98,4 @@ moves from y=104–116 to y=118–130, keeping Run stats visible and checked.
 Independent source/content/attachment expectations and Java EA-PDF/PDF/A
 validation pass unchanged. The 0.1% pixel threshold is unchanged; the test
 runner still never updates references. Before/after hashes, rendered pages and
-review evidence are retained locally in output/version-beta8-review/.
+review evidence are retained locally.

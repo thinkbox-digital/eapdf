@@ -1,11 +1,9 @@
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
-import {createHash} from 'node:crypto';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 process.chdir(fileURLToPath(new URL('../',import.meta.url)));
-const hash=b=>createHash('sha256').update(b).digest('hex');
 const extension=resolve('dist/chromium');
 const context=await chromium.launchPersistentContext('',{headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{channel:'chromium'}),args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`]});
 const results=[];
@@ -84,17 +82,6 @@ try {
   const {loadManagedPdf}=await import('./pdfjs-adapter.js');const m=loadManagedPdf(Uint8Array.from(atob(base64),c=>c.charCodeAt(0)));
   try{await m.run(m.task.promise);await m.run(new Promise(()=>{}),10);return false;}catch(e){return String(e).includes('timed out');}finally{m.close();}
  },ordinary);assert.equal(timeout,true);results.push({name:'worker-timeout',status:'PASS'});
- const bfo=JSON.parse(await readFile('tests/attachments/bfo.json','utf8')),bytes=await readFile(bfo.sourcePath);assert.equal(hash(bytes),bfo.sourceSha256);
- const actual=await page.evaluate(async base64=>{
-  const {InspectionSession}=await import('./inspection-session.js');const {sha256}=await import('./domain/hashes.js');const s=new InspectionSession();
-  try{const d=await s.open(Uint8Array.from(atob(base64),c=>c.charCodeAt(0))),m=d.inspection.messages[0];return {pages:d.pdf.numPages,messages:d.inspection.messages.length,profile:d.inspection.identification.declaredProfile.value,guid:await sha256(new TextEncoder().encode(m?.mailGuid.value??'')),subject:await sha256(new TextEncoder().encode(d.details.get(m?.metadataRecordId)?.Subject??'')),files:d.inspection.files.length,validation:d.inspection.identification.validationStatus};}finally{s.close();}
- },bytes.toString('base64'));
- assert.equal(actual.pages,bfo.pages);assert.equal(actual.messages,1);assert.equal(actual.profile,bfo.profile);assert.equal(actual.guid,bfo.mailGuidSha256);assert.equal(actual.subject,bfo.subjectSha256);assert.equal(actual.validation,'not-evaluated');
- await page.locator('#file').setInputFiles(resolve(bfo.sourcePath));await page.waitForFunction(()=>!document.querySelector('#canvas').hidden&&document.querySelector('#viewport').getAttribute('aria-busy')==='false');
- assert.equal(await page.locator('[data-message-id]').count(),1);await page.locator('[data-message-id]').click();await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
- assert.equal(await page.locator('#metadata').count(),0);
- assert.equal(await page.locator('#canvas').isVisible(),true);
- results.push({name:'third-party-bfo',status:'PASS',sourceSha256:bfo.sourceSha256,pages:actual.pages,messages:actual.messages,files:actual.files,limit:'No BodyRendering DPart in supplied file; document information and manual pages available, no guessed body destination.'});
  // All DTD/HTML strings remain data, including under the extension origin.
  const hostile=await page.evaluate(async()=>{
   const {parseXmp,NS}=await import('./domain/xmp.js');
@@ -122,5 +109,5 @@ try {
  results.push({name:'linked-opening-needs-explicit-action',status:'PASS'});
  assert.deepEqual(requests,[]);assert.deepEqual(errors,[]);
  await mkdir('test-results',{recursive:true});await writeFile('test-results/beta-hardening.json',JSON.stringify({status:'PASS',browser:context.browser()?.version(),results,httpRequests:0,pageErrors:0},null,2)+'\n');
- console.log(`PASS: ${results.length} resource, cancellation and third-party checks; offline.`);
+ console.log(`PASS: ${results.length} resource, cancellation and security checks; offline.`);
 }finally{await context.close();}

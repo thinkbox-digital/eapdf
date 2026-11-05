@@ -121,7 +121,7 @@ The service renders HTML; it is not a JSON REST API and has no stored user accou
 | GET `/generated/<id>` | UUID bearer capability; generated PDF inline |
 | GET `/validation-report/<id>` | UUID bearer capability; saved HTML report |
 
-Generation accepts relative upload names under a fresh staging root, rejects absolute/drive/parent paths and duplicate exclusive file creation, and only accepts supported mail suffixes. Output is confined to project `out/`, with per-request `.web-jobs/<uuid>`. PST uploads require aggregate profiles in this web workflow even though the CLI has a per-message path. Flask routes and forwarded-prefix handling must remain consistent behind a trusted proxy.
+Generation accepts relative upload names under a fresh staging root, rejects absolute/drive/parent paths and duplicate exclusive file creation, and only accepts supported mail suffixes. Output is confined to project the generated-document directory, with per-request `.web-jobs/<uuid>`. PST uploads require aggregate profiles in this web workflow even though the CLI has a per-message path. Flask routes and forwarded-prefix handling must remain consistent behind a trusted proxy.
 
 Uploads are deleted after processing. Result/job capability records are atomically stored under `.validator_web_tmp/registry`, including kind/path/expiry. Results survive worker restarts until expiry. Cross-process POSIX file locks limit active jobs; extra requests receive 429. Invalid input returns 400; oversized requests 413; unexpected/generation-process failures 500. A successful process alone can yield a generation PASS banner even if generated validation fails, so a replacement should use separate conversion and acceptance labels.
 

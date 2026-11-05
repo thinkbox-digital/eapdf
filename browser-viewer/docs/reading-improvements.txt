@@ -57,7 +57,7 @@ and work budgets, and reopens the original PDF at the beginning. No PDF is chang
 Verification and remaining work
 
 Current unit, independent interpretation, Chromium and Firefox results are in
-output/viewer-file-ownership and docs/improvement/viewer-file-ownership/summary.json.
+local verification records and docs/improvement/viewer-file-ownership/summary.json.
 Both c and ci CSV downloads are exercised in the browser with real PST examples.
 The real MBOX archive and individual-message conversions pass the Java validator,
 including PDF/A. All 24 renamed examples and eight PDF/A finding-aid sidecars were
@@ -94,5 +94,5 @@ byte-for-byte, plus cancellation and queue recovery. Chromium and Firefox readin
 checks find and open previously unopened c/ci email members. 38 Node tests pass.
 Firefox emits its known native shutdown warning after passing checks. Full Firefox
 attachment/security suites and large-file performance benchmarks were not rerun.
-Evidence is retained in output/viewer-next-2026-11-02. Packages are local, unsigned
+Evidence is retained in local verification records. Packages are local, unsigned
 and unpublished. Printing, rotation tools and custom shortcuts remain out of scope.

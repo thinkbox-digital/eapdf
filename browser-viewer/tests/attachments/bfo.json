@@ -1,9 +1,0 @@
-{
-  "sourcePath": "../output/bfo.pdf",
-  "sourceSha256": "cf7e3669ad5994439a999e3ad37f02503fe05755fe8c5fc74d091f9695114efb",
-  "pages": 3,
-  "profile": "s",
-  "mailGuidSha256": "a4faab91eb9574c30f0ee39c06ccddf66a463fbd7e67957596fa3e1967955b99",
-  "subjectSha256": "320efcb4a1b623de344f9ebbfc9ea8d1a7c7c17523af7972ce17e1f702fd434a",
-  "reference": "Direct pikepdf/ElementTree inspection of document RDF email properties; no content copied."
-}

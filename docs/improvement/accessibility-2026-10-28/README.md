@@ -45,7 +45,7 @@ with 40 optional skips; Python was not rerun for these Java-only creator changes
 
 All **24 real examples** were rebuilt using four requested rendering jobs and
 pass standalone Java validation. Their manifests retain source and output hashes;
-logs and reports are in `output/real-examples-final-2026-10-28/`.
+logs and reports are in local verification records.
 
 Isolated timing checks: allocating 5,000 distinct embedded filenames fell from
 3,586 ms to 12 ms, with matching results. Running 2,000 font-coverage scans on
@@ -76,5 +76,5 @@ rose from about 7 GB to 13 GB. Active PDFBox scratch storage was not removed.
 
 Full results: [verification.json](verification.json). Detailed Java reports,
 audit scripts, timing logs and GUI evidence are retained in
-`output/accessibility-repair-2026-10-28/`. Memory-relocation status is in
-`output/pst-large-repair-2026-10-28/shared-memory-cleanup.json`.
+local verification records. Memory-relocation status is in
+local verification records.

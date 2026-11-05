@@ -106,7 +106,7 @@ characters and embedded font/ToUnicode presence have explicit regression coverag
   Generic image alternatives and complex reading order still require human review.
 
 Results are recorded in `verification.json`. Local private logs, source hashes,
-full Java reports and PDF/UA-2 reports are under `output/openhtmltopdf-1.1.105/`.
+full Java reports and PDF/UA-2 reports are in local records.
 The earlier raw dependency rebuild failed hash comparison because of volatile
 Bnd manifest fields. Packaging normalization corrected that reproducibility
 failure; a second independent source/cache rebuild reproduced all final hashes.

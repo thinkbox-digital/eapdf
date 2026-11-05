@@ -218,11 +218,11 @@ remains available for its regression tests and explicitly requested comparisons
 or diagnostics.
 
 Run the separate [Arlington object-model audit](docs/ARLINGTON_VALIDATION.md)
-locally on the PDFs in `out/`:
+locally on the published example PDFs:
 
 ```bash
 python3 scripts/install_arlington.py
-python3 scripts/validate_arlington.py out --reports output/arlington --jobs 2
+python3 scripts/validate_arlington.py examples --reports /tmp/eapdf-arlington --jobs 2
 ```
 
 This uses a pinned standalone Java checker and preserves per-file reports and
@@ -276,7 +276,7 @@ To use the local verified build and retain detailed validation reports:
 ```bash
 EAPDF_GENERATOR_CLASSPATH="$PWD/dist/emailtopdfa.jar" \
 EAPDF_VALIDATOR_JAR="$PWD/dist/eapdf-validator.jar" \
-EAPDF_SAMPLE_REPORT_DIR="$PWD/output/examples-input-names-2026-11-02" \
+EAPDF_SAMPLE_REPORT_DIR="/tmp/eapdf-example-reports" \
 python3 -B scripts/regenerate_email_samples.py
 ```
 
@@ -288,8 +288,7 @@ rejects incorrect profiles,
 mandatory failures, incomplete required comparisons, and missing or failed PDF/A
 or selected ISO checks. The per-folder manifests record the actual results.
 
-The existing `output/eml_sample_1s.pdf` alias is updated from the EML example when
-present. Superseded generic `*_sample_1*` example paths are removed only after the
+Superseded generic `*_sample_1*` example paths are removed only after the
 complete replacement set passes. Temporary inputs and PDF candidates stay in
 `/tmp` and are removed on success or failure. Java child checks default to depth 8, 250,000 PDFs and 64 GiB of decoded child bytes; explicit `VALIDATOR_CHILD_MAX_*` settings still apply.
 
@@ -375,8 +374,8 @@ Supporting configuration files live under [`config/`](config/).
 
 Local per-email conversion keeps existing files and adds a numbered suffix when needed. Repeating an input creates another PDF. Explicit archive and collection output paths retain their existing replacement behavior.
 
-- generated PDFs: [`out/`](out/)
-- per-file generation logs: [`out/logs/`](out/logs/)
+Generated PDFs and per-file logs are stored locally, outside the published repository.
+
 - validation HTML reports: [`validation/`](validation/)
 
 ## Repository Layout
@@ -387,7 +386,6 @@ Local per-email conversion keeps existing files and adds a numbered suffix when 
 - [`docs/`](docs/) - user/operator documentation
 - [`in/`](in/) - local sample/test email inputs
 - [`scripts/`](scripts/) - helper scripts such as doc generation
-- [`out/`](out/) - generated outputs
 - [`validation/`](validation/) - saved validation reports
 
 ## Documentation
@@ -519,7 +517,7 @@ python3 -B scripts/run_real_world_corpus.py
 The runner converts every EML, MSG, PST and MBOX candidate recursively, uses two
 concurrent cases and up to two creator workers per case, and validates generated
 EA-PDFs with the standalone Java validator. It retains input hashes, output
-hashes, logs, and validation JSON under `output/real-world-2026-10-27/`.
+hashes, logs, and validation JSON in local records.
 It uses the JARs in `dist/`; `EAPDF_GENERATOR_CLASSPATH` and
 `EAPDF_VALIDATOR_JAR` can select isolated builds. Use `--output` for a new audit
 folder, or repeat `--only in/path/to/file` to rerun selected cases. Matching

@@ -12,10 +12,10 @@ Install the pinned checker:
 python3 scripts/install_arlington.py
 ```
 
-Check every PDF beneath `out/`:
+Check the published example PDFs:
 
 ```sh
-python3 scripts/validate_arlington.py out --reports output/arlington --jobs 2
+python3 scripts/validate_arlington.py examples --reports /tmp/eapdf-arlington --jobs 2
 ```
 
 The input may also be a single PDF. The runner reads inputs without modifying
@@ -58,7 +58,7 @@ The installer also builds `model-corrections` from the pinned released
 The profile XML and every rule predicate remain unchanged. Source and compiled
 class hashes are recorded in each audit. `tests/java/ArlingtonSemanticsRegression.java`
 checks 15-, 16- and 17-byte checksums and both root and child parent contexts.
-Baseline reports under `output/arlington-2026-11-03/full/` predate these semantic
+Baseline reports in local records predate these semantic
 corrections; later reports explicitly record the additional adapter. A PASS
 therefore means PASS with the documented corrected implementation, not an
 unmodified upstream binary.

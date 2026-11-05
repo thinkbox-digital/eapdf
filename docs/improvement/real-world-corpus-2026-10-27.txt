@@ -176,8 +176,8 @@ Reproduction and evidence
 
 Run: python3 -B scripts/run_real_world_corpus.py
 Use bounded parallel processing and the standalone Java validator.
-Output/evidence: output/real-world-2026-10-27/
-Original baseline: output/real-world-2026-10-27/baseline-evidence/run-results.json
+Output/evidence: local verification records
+Original baseline: local verification records
 Each case retains source/output hashes, conversion logs and validation JSON.
 
 Microsoft's PST descriptions used to verify the two library corrections:
@@ -225,9 +225,9 @@ These are observed run times, not a controlled performance benchmark.
 
 The local creator, creator GUI and Java validator JARs in dist/ were rebuilt.
 No public release was published. Current corpus outputs and Java reports are
-under output/real-world-2026-10-27/final/. Every successfully converted current
+in local records. Every successfully converted current
 file also passed the independent qpdf/pikepdf CIDSet check.
-Complete JUnit reports are retained under output/real-world-2026-10-27/test-reports/.
+Complete JUnit reports are retained in local records.
 
 Historical reports are retained outside final/. Earlier Java passes did not
 detect the deprecated CIDSet entries and are not substituted for the new font
@@ -236,7 +236,7 @@ performance investigation; their reports are superseded by the completed final r
 
 The machine-readable report beside this file records input/output hashes, build
 hashes, complete per-case results, processing settings and evidence paths.
-The 128 MiB metadata retries are under output/real-world-2026-10-27/large-budget/.
+The 128 MiB metadata retries are in local records.
 Normal corpus runs used two concurrent cases, up to two render workers per case,
 a 2 GiB creator worker heap and a 3 GiB validator heap. The separate larger-budget
 batch used one concurrent case. Example refresh used one concurrent format with

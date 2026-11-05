@@ -41,7 +41,7 @@ Recommended order
    reduced without changing output semantics. Increasing heap alone is unproven.
    Acceptance: the completed large PDF yields a full independent report within a
    stated resource budget, preserving the original file and its warnings.
-   Evidence: output/pst-memory-repair-2026-10-28/pst24-fixed/result.json,
+   Evidence: local verification records,
    validation-outcome.json, validation-memory-retry.json and thread traces.
 
 3. Fix validation scalability beyond veraPDF. CONFIRMED CODE; TIMING UNMEASURED.

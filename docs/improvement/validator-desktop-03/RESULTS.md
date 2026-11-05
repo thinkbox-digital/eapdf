@@ -76,8 +76,8 @@ These are port gaps; no creator or reader feature is proposed.
 | examples/sample_1mi.pdf | INCOMPLETE | INCOMPLETE | PASS | PASS |
 | examples/sample_1s.pdf | PASS | INCOMPLETE | PASS | PASS |
 | examples/sample_1si.pdf | PASS | INCOMPLETE | PASS | PASS |
-| output/Agenda and timeline slides_000001.pdf | PASS | INCOMPLETE | PASS | PASS |
-| output/bfo.pdf | FAIL | FAIL | PASS | PASS |
+| Historical Agenda attachment sample | PASS | INCOMPLETE | PASS | PASS |
+| Historical BFO sample | FAIL | FAIL | PASS | PASS |
 
 ## All 225 rule codes
 

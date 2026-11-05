@@ -103,7 +103,7 @@ outputs are included, but the explicit PDF/UA-2 profile was not rerun in this
 continuation. The fresh suite includes both cache-eviction equivalence tests,
 including the missing-font negative case. [Hash-matched continuation evidence](cache-acceptance.json).
 Logs, reports, the frozen candidate and runner remain in
-`output/performance-fixes-2026-10-30/cache-acceptance-continuation/`;
+local verification records;
 the temporary Maven build has been removed.
 
 The subsequent path/identity/property-cache candidate passes **199 validator
@@ -199,13 +199,13 @@ reliably; selecting the document name still exposes all embedded files.
 
 Private PDFs, tokens, screenshots, logs, JFR recordings, per-second samples,
 source hashes and standalone Java reports stay ignored under
-`output/performance-fixes-2026-10-30/`. `control/` is the matched seven-input
+local verification records. `control/` is the matched seven-input
 control series; `after/` contains the first performance candidate; `automatic/`
 exercises the merged renderer and new default budgets; `combined/` is the
 largest-PST acceptance series; `final-matrix/` uses frozen combined artifacts.
 `metadata-probes/` distinguishes failed, intermediate and final stage probes.
 `artifacts/sha256.json` identifies the retained final candidate JARs.
-Earlier baseline evidence remains under `output/profiling-2026-10-30-*/`.
+Earlier baseline evidence remains in local records.
 
 Build without writing the repository's `target/`:
 
@@ -215,7 +215,7 @@ mvn -f validator-desktop/pom.xml -Deapdf.build.directory=/tmp/eapdf-validator-bu
 python3 scripts/profile_eapdf_pipeline.py \
   --creator /tmp/eapdf-creator-build/emailtopdfa-1.6.0-beta.3.jar \
   --validator /tmp/eapdf-validator-build/eapdf-validator.jar \
-  --output output/profile-new-run
+  --output /tmp/eapdf-profile-new-run
 ```
 
 Select cases with repeated `--case`; `--automatic-budget` exercises the new creator

@@ -30,7 +30,7 @@ Twelve ordinary normal/accessibility profiles and six international-message prof
 
 All six primary samples are regenerated with the repaired C01 creator. All pass actual PDF/A and the verified ISO profile, with zero mandatory failures. V85 EA-PDF returns PASS for 1s, 1si, 1c and 1ci, including both collection children. The 71-message PST 1m and 1mi samples remain INCOMPLETE: structure ownership exceeds the validator traversal budget; 1m also has unavailable original Cc/Bcc normalization, and 1mi has unavailable native attachment consistency. These results supersede earlier saved-sample statuses below.
 
-Both collection finding-aid PDFs pass PDF/A; both XLSX sidecars contain workbooks. Archive m/mi embedded indexes and the identical `output/sample_1s.pdf` alias are retained. A fresh isolated Maven package passes 165 Java tests. Validator code/rules and the standard sample helper are unchanged. [Exact published hashes, reports and reproduction](improvement/creator-samples-c01/README.md). Sample regeneration is complete; full archive acceptance remains open.
+Both collection finding-aid PDFs pass PDF/A; both XLSX sidecars contain workbooks. Archive m/mi embedded indexes and the identical local sample PDF alias are retained. A fresh isolated Maven package passes 165 Java tests. Validator code/rules and the standard sample helper are unchanged. [Exact published hashes, reports and reproduction](improvement/creator-samples-c01/README.md). Sample regeneration is complete; full archive acceptance remains open.
 
 ## Current B12 verification — 2026-10-18
 
@@ -138,7 +138,7 @@ All six primary samples were regenerated from the original EML/PST fixtures usin
 | `sample_1c_finding_aid.pdf`, `sample_1ci_finding_aid.pdf` | PASS (PDF/A-4) | Ordinary index sidecars; no embedded files or synthetic EML |
 | `sample_1c_index.xlsx`, `sample_1ci_index.xlsx` | N/A | Valid separate XLSX workbooks |
 
-The `output/sample_1s.pdf` alias matches its example. Full Maven package: **132 tests pass**. Packaged Python: **140 run, 139 pass, one optional PREMIS schema check skipped** because no official XSD was configured. The Java creator gate and Python validator were not relaxed. [Current evidence](reimplementation/collection-sidecars-evidence.json) records hashes and validation summaries; raw reports are under `/tmp/eapdf-collection-sidecars-20261017/`. Earlier failing review PDFs were retired to its `superseded-direct-xlsx-review/` directory. All records below are historical.
+The local sample PDF alias matches its example. Full Maven package: **132 tests pass**. Packaged Python: **140 run, 139 pass, one optional PREMIS schema check skipped** because no official XSD was configured. The Java creator gate and Python validator were not relaxed. [Current evidence](reimplementation/collection-sidecars-evidence.json) records hashes and validation summaries; raw reports are under `/tmp/eapdf-collection-sidecars-20261017/`. Earlier failing review PDFs were retired to its `superseded-direct-xlsx-review/` directory. All records below are historical.
 
 ## Earlier R13 direct-XLSX review — 2026-10-17
 
@@ -155,7 +155,7 @@ Six review PDFs are under `.eapdf-direct-xlsx-review-20261017/`. Published sampl
 
 ## Earlier regenerated supported email samples — 2026-10-17
 
-All six primary examples (`sample_1s.pdf`, `sample_1si.pdf`, `sample_1m.pdf`, `sample_1mi.pdf`, `sample_1c.pdf`, `sample_1ci.pdf`) were regenerated from `in/email/test3.eml` / `in/email/test.pst` using the current creator. Each receives independent PDF/A **PASS** and automated EA-PDF **PASS**, including the new file-set, collection-content and UTF-8 rules. Both contained email PDFs in the collection samples pass independently. The existing `output/sample_1s.pdf` alias has identical validated bytes.
+All six primary examples (`sample_1s.pdf`, `sample_1si.pdf`, `sample_1m.pdf`, `sample_1mi.pdf`, `sample_1c.pdf`, `sample_1ci.pdf`) were regenerated from `in/email/test3.eml` / `in/email/test.pst` using the current creator. Each receives independent PDF/A **PASS** and automated EA-PDF **PASS**, including the new file-set, collection-content and UTF-8 rules. Both contained email PDFs in the collection samples pass independently. The existing local sample PDF alias has identical validated bytes.
 
 Collections no longer embed miscellaneous finding-aid PDFs, spreadsheets or container PREMIS (§7.6). Four enabled collection sidecars are published beside the samples: `_finding_aid.pdf` and `_index.xlsx` for `1c` and `1ci`. Copied finding-aid PDF sidecars are auxiliary PDFs, not standalone EA-PDF examples. Legacy Facebook/Twitter PDFs are retained as historical; their current generators and source fixtures are deleted. Other imported/historical PDFs were not overwritten.
 
@@ -163,7 +163,7 @@ Regeneration reports: `/tmp/eapdf-additional-rules-20261017/verified-samples`. F
 
 Audit date: 2026-10-16; creator release: `1.4.0`.
 
-## Focused `output/sample_1s.pdf` repair
+## Focused local sample PDF repair
 
 The requested output has been recreated from `in/email/test3.eml` using the
 current creator. Its final independent PDF/A and local EA-PDF reports are PASS,
@@ -182,14 +182,14 @@ Maven packaging passes 97 Java tests; the fast Python run passes its applicable
 checks (110 discovered, three opt-in generator integrations skipped).
 
 The original requested output and other sample files were removed externally
-during this follow-up. Only `output/sample_1s.pdf` is recreated; other removed
+during this follow-up. Only the local sample PDF is recreated; other removed
 samples remain untouched. The inventory below is the earlier audit snapshot,
-not a live directory listing. Its old `output/sample_1s.pdf` failure is superseded
+not a live directory listing. Its old the local sample PDF failure is superseded
 by this focused repair.
 
 ## Scope and outcome
 
-The inventory covers all 26 PDFs found in `examples/`, `output/`, `out/`,
+The inventory covers all 26 PDFs found in `examples/`, local verification records, the generated-document directory,
 `compare/`, `.validator_web_tmp/`, and the generated documentation diagram.
 Reference standards under `docs/reference/`, `target/`, and project debug
 directories are excluded. Identical BFO/UIUC copies share validation evidence.
@@ -230,31 +230,31 @@ are representative; full per-rule findings are retained in the audit reports.
 | Files | Main remaining defects |
 | --- | --- |
 | `.validator_web_tmp/01_bfo.pdf` | Imported/uploaded sample: DPart page coverage, native attachment metadata/annotations, identification, XMP and logical structure |
-| `compare/bfo.pdf`, `output/bfo.pdf` | Imported BFO sample: page 2 lacks its DPart link and content-set range; additional identification, XMP, attachment and logical-structure failures |
-| `compare/uiuc.pdf`, `output/uiuc.pdf` | Imported UIUC sample: page/content-set structure, core metadata, portable file specifications and native attachment annotations |
+| BFO sample and local duplicate | Imported BFO sample: page 2 lacks its DPart link and content-set range; additional identification, XMP, attachment and logical-structure failures |
+| UIUC sample and local duplicate | Imported UIUC sample: page/content-set structure, core metadata, portable file specifications and native attachment annotations |
 | `compare/thinkbox.pdf` | Old creator output: DPart/XMP/structure, native attachment matching and textual rather than binary embedded MD5 |
-| `output/thinkbox_old.pdf` | Historical creator output: DPart/XMP/structure, native attachment metadata/annotations and embedded MD5 format |
+| Historical creator output | Historical creator output: DPart/XMP/structure, native attachment metadata/annotations and embedded MD5 format |
 | `examples/sample_facebook_1m.pdf` | Legacy social example: identity, body media type, DPart/XMP/structure, attachment preservation and embedded MD5 format |
 | `examples/sample_twitter_1m.pdf` | Legacy social example: identity, DPart/XMP/structure, attachment preservation and embedded MD5 format |
-| `out/Agenda and timeline slides_000001.pdf`, `output/Agenda and timeline slides_000001.pdf` | Old attachment payload/type metadata and embedded MD5 format |
-| `out/test_1c.pdf` | Old collection and contained email failures; embedded MD5 format |
-| `output/sample_1s.pdf` | Old native attachment payload/type metadata and embedded MD5 format |
-| `output/sample_1si.pdf` | Old isolated attachment metadata and embedded MD5 format |
-| `output/sample_1m.pdf` | Old native attachment/type metadata, invalid-date Raw-Sent handling and embedded MD5 format |
-| `output/sample_1mi.pdf` | Old isolated attachment metadata, portable file specifications and embedded MD5 format |
-| `output/sample_1c.pdf` | Old collection/contained email failures and embedded MD5 format |
-| `output/sample_1ci.pdf` | Old collection/contained email failures and embedded MD5 format |
+| Agenda attachment sample (local copies) | Old attachment payload/type metadata and embedded MD5 format |
+| Historical collection sample | Old collection and contained email failures; embedded MD5 format |
+| Historical 1s sample | Old native attachment payload/type metadata and embedded MD5 format |
+| Historical 1si sample | Old isolated attachment metadata and embedded MD5 format |
+| Historical 1m sample | Old native attachment/type metadata, invalid-date Raw-Sent handling and embedded MD5 format |
+| Historical 1mi sample | Old isolated attachment metadata, portable file specifications and embedded MD5 format |
+| Historical 1c sample | Old collection/contained email failures and embedded MD5 format |
+| Historical 1ci sample | Old collection/contained email failures and embedded MD5 format |
 
 These files are not silently marked conforming or rewritten by validation.
-The safety reviewer blocked replacement of historical `output/` and `out/`
+The safety reviewer blocked replacement of historical local verification records and the generated-document directory
 artifacts pending explicit approval because replacing them could destroy
 comparison evidence or original content. They remain unchanged. Imported
 third-party PDFs require source-aware repair/recreation rather than relabeling
 metadata. The legacy social readers and their original fixtures have been
 removed from the working tree; faithful regeneration is not currently available.
 
-The duplicate diagrams `docs/eapdf_decision_tree.pdf` and
-`out/eapdf_decision_tree.pdf` are documentation, not email archives.
+The diagram `docs/eapdf_decision_tree.pdf` and its local duplicate are
+documentation, not email archives.
 
 ## Repaired copies and evidence
 
@@ -269,7 +269,7 @@ the historical files:
   All 71 contained PDFs pass PDF/A; 67 receive overall PASS and four INCOMPLETE,
   with no contained FAIL results.
 - The current six `examples/sample_1*.pdf` files provide validated regenerations
-  of the canonical EML/PST profile samples; historical `output/` copies are not
+  of the canonical EML/PST profile samples; historical local copies are not
   replaced without approval.
 
 Detailed machine-readable/HTML evidence is temporary and may need preserving

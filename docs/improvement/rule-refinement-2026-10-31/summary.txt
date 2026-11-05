@@ -56,4 +56,4 @@ Limits that remain:
 
 Read verification.json for the evidence index and implementation-map.json for
 R1–R9. Detailed outputs, reports, logs, screenshots, source snapshots and local
-candidates are retained in output/rule-refinement-2026-10-31/.
+candidates are retained in local verification records.
