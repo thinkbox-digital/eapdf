@@ -99,6 +99,7 @@ class WebParityRegressionTests {
     "validator-collection-names/implicit-root-alias.pdf, COLLECTION_FILENAMES_UNIQUE_CASEFOLD, FAIL"
   })
   void agreesWithWebEngineForRepairedChecks(String file, String code, String expected) {
+    org.junit.jupiter.api.Assumptions.assumeTrue(java.nio.file.Files.isDirectory(Path.of("..", "tests", "fixtures", "eapdf")), "Optional local regression corpus is not installed");
     var result = JavaValidation.validate(Path.of("..", "tests", "fixtures", "eapdf").resolve(file));
     Map<String, Integer> rank = Map.of("MISSING", -1, "N/A", 0, "PASS", 1, "WARN", 2, "FAIL", 3);
     String actual = result.getAsJsonArray("items").asList().stream().map(value -> value.getAsJsonObject())

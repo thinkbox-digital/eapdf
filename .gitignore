@@ -41,36 +41,6 @@ in/email/test3_old.eml
 *.py[cod]
 .pytest_cache/
 
-# Historical full reports/binary snapshots are kept in the local archive.
-docs/improvement/**/*.html
-docs/improvement/**/*.zip
-docs/improvement/**/*.log
-docs/improvement/**/*.stderr
-scripts/facebook_debug/
-
-# Keep bulky historical working evidence local; publish compact review receipts.
-/docs/improvement/**
-!/docs/improvement/**/
-!/docs/improvement/**/*.md
-!/docs/improvement/**/*.py
-!/docs/improvement/**/*.java
-!/docs/improvement/**/*.patch
-!/docs/improvement/**/evidence.json
-!/docs/improvement/**/results.json
-!/docs/improvement/**/result.json
-!/docs/improvement/**/summary.json
-!/docs/improvement/*.json
-!/docs/improvement/release-1.6.0-beta.1/verification.json
-!/docs/improvement/real-world-corpus-2026-10-27.txt
-!/docs/improvement/real-world-corpus-evidence-2026-10-27/*.json
-!/docs/improvement/specification-audit/*.json
-!/docs/improvement/specification-audit/*.txt
-!/docs/improvement/validator-85/*.json
-!/docs/improvement/creator-poc-day5/c1[23]?/*.json
-!/docs/improvement/coverage-exit-review/*.json
-!/docs/improvement/upstream-profile-execution/**/*.json
-/docs/improvement/**/integration-reports/
-
 # New local email corpora stay private; existing tracked fixtures remain tracked.
 /in/*
 !/in/enron-sample.mbox
@@ -102,3 +72,42 @@ scripts/facebook_debug/
 
 # Superseded local rule-drafting document, not part of the public distribution.
 /docs/reference/Validation requirements.docx
+
+# Internal development records and local regression corpus are not distributed.
+/tests/
+/docs/improvement/
+/docs/reimplementation/
+/docs/maintenance/
+/docs/mockups/
+/docs/DEVELOPMENT_STATUS.md
+/docs/EA_PDF_WORK_LOG.md
+/docs/EA_PDF_IMPROVEMENT_PLAN.md
+/docs/CREATOR_COVERAGE_REVIEW.md
+/docs/VALIDATION_RESULTS.md
+/docs/PUBLIC_LAUNCH.txt
+/docs/PUBLIC_READINESS.txt
+/docs/QUALITY_GATE.txt
+/docs/jar_howto.eml
+/docs/EA-PDF_User_Manual.pdfa-validation.json
+/docs/manual/build-receipt.json
+/docs/manual/screenshot-receipt.json
+/docs/manual/verapdf-cli-validation.json
+/docs/security/verification.json
+
+/EA_PDF_Objective_C_Implementation_Plan.md
+/browser-viewer/docs/baseline-git-status.txt
+/browser-viewer/docs/m0-results.md
+/browser-viewer/docs/m1-baseline-git-status.txt
+/browser-viewer/docs/m1-results.md
+/browser-viewer/docs/m2-baseline-git-status.txt
+/browser-viewer/docs/m2-results.md
+/browser-viewer/docs/m3-results.md
+/browser-viewer/docs/m4-results.md
+/browser-viewer/docs/m5-results.md
+/browser-viewer/docs/m6-results.md
+/browser-viewer/docs/navigation-results.md
+/browser-viewer/docs/reading-improvements.txt
+/browser-viewer/docs/release-0.3-results.md
+/browser-viewer/docs/scrolling-results.md
+/fixed.md
+/unfixed.md

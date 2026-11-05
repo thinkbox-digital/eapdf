@@ -52,11 +52,22 @@ uses the original 6.5.438 npm value, `0a475cb6-573c-46ed-869d-fa7c5839d995`, so 
 builds remain identical without rewriting output JavaScript. This is an existing
 build constant, not a generated runtime credential.
 
-Each reproduction runs 16 focused tests against the actual patched core and
+Each reproduction runs the focused patch tests against the actual patched core and
 133 upstream specs covering catalog, primitives, message handlers, streams, parsing,
 evaluation and XML. Of these, 132 pass and one requires OffscreenCanvas unavailable
 in Node (recorded pending). Patch 0002 also sets ordinary DecodeStream allocation
-ceilings: 64 MiB per buffer and 256 MiB cumulative growth per dedicated worker. The source
+ceilings: 64 MiB for ordinary buffers and a 256 MiB worker allocation allowance.
+The large-archive patches size cross-reference decoding from its validated layout,
+reclaim private structural decoder buffers after parsing, and store cross-reference
+records in sparse typed-array pages. Parsed-object caching retains 100,000
+entries with constant-time circular-queue eviction; evicted objects remain retrievable, and weak references preserve the
+identity of objects still used by page and structure readers. Complete archive
+walks yield periodically and release processed queue records. These cache
+policies do not limit the number of objects inspected.
+Catalog metadata inspection permits up to
+128 MiB with a scoped decoder allowance; ordinary 64 MiB buffer limits are restored
+after metadata extraction, and exhaustion remains explicit. Document-part and annotation mapping each
+use one page-tree scan instead of repeated page lookup. The source
 tests load upstream's pinned core-js Map support because Node 24 lacks
 Map.getOrInsertComputed, which is otherwise handled by upstream's legacy build.
 No polyfill is added to the browser package by this test setup. The full upstream
@@ -80,16 +91,9 @@ fails on any mismatch. It never silently updates expectations or artifacts.
 5. Reload the unpacked extension and reopen the viewer tab. Bundled code already
    loaded in a tab/worker does not automatically change when disk files change.
 
-The root application dependency lock and PDF.js asset pin are unchanged. Upstream
-build tools remain development-only; npm reports deprecation notices for several
-locked transitive packages. Updating those packages and a comprehensive security
-audit are outside this M2 API slice. All runtime Apache and font/codec notices are
-retained. No upstream acceptance is claimed. The current application API and attachment
-viewing pass in both tested browsers; see m6-results.md.
-
 The second patch, `0002-document-assets.patch`, adds generic associated-file,
 metadata and collection inspection and an opt-in DecodeStream allocation ceiling.
-Both patches are applied and hash-checked by the reproduction command. M6 rebuilt
+All patches listed in the manifest are applied and hash-checked by the reproduction command. M6 rebuilt
 the current stack byte-for-byte and reran all 13 focused and 73 selected upstream
 tests. The extension SBOM records the exact patch-manifest hash; build-info.json
 records every shipped file hash. The full upstream rendering suite is not part
@@ -99,3 +103,10 @@ The 0.5 viewer also packages the unmodified, hash-pinned upstream web component
 bundle solely for StructTreeLayerBuilder. It does not instantiate PDFViewer,
 PDFScriptingManager, or an annotation-action layer. The interpreter remains
 excluded. Returned structure trees are bounded before recursive DOM construction.
+
+Indirect attachment extraction refetches a private stream decoder for each request.
+After producing detached bytes (or reporting failure), it releases that decoder's
+buffer allocation. Borrowed direct streams remain intact. This avoids cumulative
+attachment buffers exhausting the worker allowance and restarting whole-archive
+inventories. Focused tests cover repeated exact-byte reads, failure cleanup and
+retained direct streams; whole-archive verification remains separate.

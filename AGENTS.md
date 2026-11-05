@@ -44,3 +44,6 @@ Rules:
 - For future bulk `in/` to `out/` generations, publish generated documents directly under `out/eml/`, `out/msg/`, `out/mbox/`, and `out/pst/`, without per-input or other deeper subfolders. Keep logs, JSON manifests/progress files, and validation reports outside `out/`, in the run evidence directory under `output/`. Use isolated staging directories to prevent concurrent jobs from overwriting progress files before publishing final documents.
 
 - Public documentation must not cite or link to unpublished generated documents or evidence under the local output directories. Summarize verified results in tracked documentation; use published examples or release assets for downloadable files. Use explicit temporary destinations in command examples.
+
+- Whenever the user requests a new version or a version bump, also bump the browser viewer version and rebuild both viewer packages.
+- Representative bulk samples must be balanced by output count: retain only a handful of standalone 1s/1si PDFs per input type, group EML/MSG sources into 1m/1mi archives, and use predominantly 1c/1ci/1m/1mi for PSTs. Preserve every source in the grouped/archive coverage.

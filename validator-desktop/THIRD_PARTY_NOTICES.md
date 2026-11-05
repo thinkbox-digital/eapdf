@@ -30,7 +30,7 @@ This app bundles these Java components:
 - The selected ISO 32005 XML profile: veraPDF Consortium, CC BY 4.0.
   Original attribution is retained in the XML. Source selection and provenance
   are documented in the repository's config/verapdf/README.md and
-  docs/improvement/verapdf-coverage/iso32005-profile.json.
+  config/verapdf/ISO-32005.json.
 - Apache POI 5.5.1 and its Commons/Log4j API dependencies: Apache License 2.0.
   Source: https://github.com/apache/poi.
 - Apache PDFBox / FontBox / pdfbox-io 3.0.8 and Commons Logging 1.4.0:

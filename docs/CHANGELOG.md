@@ -3,12 +3,19 @@
 This file tracks human-readable release history for the repository.
 
 Current beta version:
-- `1.5.0-beta.1`
+- `1.6.0-beta.10`
 
 Notes:
 - Release tracking starts here.
 - This changelog is meant to track feature-level changes for users and operators.
 - It does not replace commit history.
+
+## 1.6.0-beta.10 - 2026-11-05
+
+- Viewer 0.5.0-beta.9 improves large-archive loading and responsive navigation.
+- Show source-omission notices only for isolated profiles; simplify file details and empty-file controls.
+- Normalize tabs in CSV exports for spreadsheet import.
+- Remove internal development records and the local regression corpus from the public source distribution.
 
 ## 1.5.0-beta.1 - 2026-10-26
 

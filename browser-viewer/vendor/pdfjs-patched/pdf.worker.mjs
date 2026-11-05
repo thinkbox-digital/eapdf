@@ -3769,6 +3769,12 @@ class ImageResizer {
 
 
 const emptyBuffer = new Uint8Array(0);
+class DecodeStreamLimitError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "DecodeStreamLimitError";
+  }
+}
 class DecodeStream extends BaseStream {
   buffer = emptyBuffer;
   bufferLength = 0;
@@ -3797,7 +3803,7 @@ class DecodeStream extends BaseStream {
   }
   ensureBuffer(requested) {
     if (requested > this.maxBufferLength) {
-      throw new Error("Decoded stream byte limit exceeded");
+      throw new DecodeStreamLimitError("Decoded stream byte limit exceeded");
     }
     const buffer = this.buffer;
     if (requested <= buffer.byteLength) {
@@ -3809,7 +3815,7 @@ class DecodeStream extends BaseStream {
     }
     const boundedSize = Math.min(size, this.maxBufferLength);
     if (boundedSize - buffer.byteLength > DecodeStream.remainingBudget) {
-      throw new Error("Worker decoded-stream allocation limit exceeded");
+      throw new DecodeStreamLimitError("Worker decoded-stream allocation limit exceeded");
     }
     DecodeStream.remainingBudget -= boundedSize - buffer.byteLength;
     const buffer2 = new Uint8Array(boundedSize);
@@ -3973,6 +3979,17 @@ class StreamsSequenceStream extends DecodeStream {
       }
     }
     return baseStreamsBuf.length > 0 ? baseStreamsBuf : null;
+  }
+}
+function discardStructuralStream(stream) {
+  const seen = new Set();
+  while (stream instanceof DecodeStream && !seen.has(stream)) {
+    seen.add(stream);
+    DecodeStream.remainingBudget += stream.buffer.byteLength;
+    stream.buffer = new Uint8Array(0);
+    stream.bufferLength = 0;
+    stream.eof = true;
+    stream = stream.str;
   }
 }
 
@@ -39024,7 +39041,7 @@ const CEILINGS = Object.freeze({
   maxObjects: 1000000,
   maxDepth: 64,
   maxFiles: 16384,
-  maxMetadataBytes: 16777216,
+  maxMetadataBytes: 134217728,
   maxStreamBytes: 16777216
 });
 const locator = (raw, path) => ({
@@ -39062,7 +39079,7 @@ function scalar(value) {
     kind: "unsupported"
   };
 }
-function boundedBytes(stream, maximum) {
+function boundedBytes(stream, maximum, allowLargerBuffer = false) {
   if (!(stream instanceof BaseStream)) throw new Error("Not an embedded stream");
   if (failedDecoders.has(stream)) throw new Error("Previous decode failed; reopen the document to retry");
   const filter = stream.dict?.get("Filter");
@@ -39079,7 +39096,7 @@ function boundedBytes(stream, maximum) {
     seen.add(current);
     if (current instanceof DecodeStream) {
       limits.push([current, current.maxBufferLength]);
-      current.maxBufferLength = Math.min(current.maxBufferLength, maximum + 1);
+      current.maxBufferLength = allowLargerBuffer ? maximum + 1 : Math.min(current.maxBufferLength, maximum + 1);
     }
     current = current.str || current.stream;
   }
@@ -39116,7 +39133,7 @@ class DocumentAssets {
     this.root = root;
     this.registered = new Map();
   }
-  inspect(options = {}) {
+  async inspect(options = {}) {
     const limits = {};
     for (const [key, ceiling] of Object.entries(CEILINGS)) {
       const value = options[key] ?? ceiling;
@@ -39126,7 +39143,7 @@ class DocumentAssets {
     const files = new Map(),
       metadata = new Map(),
       diagnostics = [],
-      visited = new Set();
+      visitedObjects = new WeakSet();
     const fetch = raw => raw instanceof Ref ? this.catalog.xref.fetch(raw) : raw;
     const report = (code, loc, error) => {
       if (error instanceof MissingDataException) throw error;
@@ -39170,7 +39187,8 @@ class DocumentAssets {
                 declaredChecksum: scalar(params instanceof Dict ? params.get("CheckSum") : undefined)
               });
               if (valid) this.registered.set(loc.path + "|" + sloc.path, {
-                stream,
+                ref: rawStream instanceof Ref ? rawStream : null,
+                stream: rawStream instanceof Ref ? null : stream,
                 file: spec
               });else report("INVALID_EMBEDDED_STREAM", sloc);
             }
@@ -39233,22 +39251,25 @@ class DocumentAssets {
       }
     };
     if (names instanceof Dict && names.has("EmbeddedFiles")) nameTree(names.getRaw("EmbeddedFiles"), "catalog/Names/EmbeddedFiles", 0);
-    const pending = [[this.root, "catalog", 0]],
-      scheduled = new Set([this.root]);
-    const identity = raw => raw instanceof Ref ? raw.toString() : raw;
+    const pending = [[this.root, "catalog", 0]];
+    const scheduledRefs = new Set(),
+      scheduledObjects = new WeakSet([this.root]);
+    const scheduled = {
+      has: key => typeof key === "object" ? scheduledObjects.has(key) : scheduledRefs.has(key),
+      add: key => typeof key === "object" ? scheduledObjects.add(key) : scheduledRefs.add(key)
+    };
+    const identity = raw => raw instanceof Ref ? raw.gen === 0 ? raw.num : raw.toString() : raw;
     let totalMetadata = 0,
-      next = 0,
-      edges = 0;
-    while (next < pending.length) {
-      const [raw, path, depth] = pending[next++],
+      visitsSinceYield = 0;
+    while (pending.length) {
+      if (++visitsSinceYield % 512 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+      const [raw, path, depth] = pending.pop(),
         loc = locator(raw, path);
       try {
-        const obj = fetch(raw),
-          key = raw instanceof Ref ? loc.path : obj;
-        if (!(obj instanceof Dict || obj instanceof BaseStream || Array.isArray(obj)) || visited.has(key) || visited.has(obj)) continue;
+        const obj = fetch(raw);
+        if (!(obj instanceof Dict || obj instanceof BaseStream || Array.isArray(obj)) || visitedObjects.has(obj)) continue;
         if (!step(loc, depth)) continue;
-        visited.add(key);
-        visited.add(obj);
+        visitedObjects.add(obj);
         const dict = obj instanceof BaseStream ? obj.dict : obj;
         if (dict instanceof Dict) {
           const af = dict.get("AF");
@@ -39282,8 +39303,11 @@ class DocumentAssets {
                 text: null
               };
               metadata.set(mloc.path, item);
+              let metadataStream;
               try {
-                const data = boundedBytes(fetch(rawMeta), Math.max(0, Math.min(limits.maxMetadataBytes, limits.maxMetadataBytes * 4 - totalMetadata)));
+                if (DecodeStream.remainingBudget < limits.maxMetadataBytes + 1) this.catalog.xref.clearObjectStreamCache?.();
+                metadataStream = fetch(rawMeta);
+                const data = boundedBytes(metadataStream, Math.max(0, Math.min(limits.maxMetadataBytes, limits.maxMetadataBytes * 4 - totalMetadata)), true);
                 totalMetadata += data.length;
                 const encoding = data[0] === 255 && data[1] === 254 ? "utf-16le" : data[0] === 254 && data[1] === 255 ? "utf-16be" : "utf-8";
                 item.text = new TextDecoder(encoding, {
@@ -39292,20 +39316,24 @@ class DocumentAssets {
                 item.state = "present";
               } catch (error) {
                 report("METADATA_UNAVAILABLE", mloc, error);
+              } finally {
+                if (rawMeta instanceof Ref) discardStructuralStream(metadataStream);
               }
             }
             metadata.get(mloc.path).owners.push(loc);
           }
         }
         const children = Array.isArray(obj) ? obj.entries() : dict.getRawEntries();
+        const nextChildren = [];
         for (const [key_, child] of children) {
           if (child instanceof Ref || child instanceof Dict || child instanceof BaseStream || Array.isArray(child)) {
             const key = identity(child);
-            if (scheduled.has(key) || visited.has(child)) continue;
+            if (scheduled.has(key) || visitedObjects.has(child)) continue;
             scheduled.add(key);
-            pending.push([child, loc.path + (Array.isArray(obj) ? `[${key_}]` : "/" + key_), depth + (dict instanceof Dict && dict.has("Title") && dict.has("Parent") && (key_ === "Next" || key_ === "Prev") ? 0 : 1)]);
+            nextChildren.push([child, child instanceof Ref ? "" : loc.path + (Array.isArray(obj) ? `[${key_}]` : "/" + key_), depth + (dict instanceof Dict && dict.has("Title") && dict.has("Parent") && (key_ === "Next" || key_ === "Prev") ? 0 : 1)]);
           }
         }
+        for (let i = nextChildren.length - 1; i >= 0; i--) pending.push(nextChildren[i]);
       } catch (error) {
         report("OBJECT_UNAVAILABLE", loc, error);
       }
@@ -39382,7 +39410,16 @@ class DocumentAssets {
     if (!Number.isSafeInteger(maxBytes) || maxBytes < 0 || maxBytes > 536870912) throw new Error("Invalid extraction limit");
     const registered = this.registered.get(fileId + "|" + streamId);
     if (!registered) throw new Error("Stream is not a discovered EF target of this file");
-    return boundedBytes(registered.stream, maxBytes);
+    if (!registered.ref) return boundedBytes(registered.stream, maxBytes);
+    if (DecodeStream.remainingBudget < Math.min(maxBytes + 1, 64 * 1024 ** 2)) {
+      this.catalog.xref.clearObjectStreamCache?.();
+    }
+    const stream = this.catalog.xref.fetch(registered.ref);
+    try {
+      return boundedBytes(stream, maxBytes);
+    } finally {
+      discardStructuralStream(stream);
+    }
   }
 }
 
@@ -39506,6 +39543,7 @@ async function getDocumentParts(catalog, root, documentId) {
     kind: raw === undefined ? "missing" : raw instanceof Ref ? "reference" : "invalid",
     ref: ref(raw)
   });
+  let allPageIndices;
   async function pageIndex(raw) {
     if (!(raw instanceof Ref)) {
       throw new Error("Expected a page reference");
@@ -39513,6 +39551,20 @@ async function getDocumentParts(catalog, root, documentId) {
     const key = raw.toString();
     if (pageIndices.has(key)) {
       return pageIndices.get(key);
+    }
+    if (typeof catalog.getAllPageDicts === "function") {
+      if (!allPageIndices) {
+        allPageIndices = new Map();
+        for (const [index, [page, reference]] of await catalog.getAllPageDicts()) {
+          if (page instanceof Dict && reference instanceof Ref && Number.isInteger(index) && index >= 0 && index < catalog.numPages) {
+            allPageIndices.set(reference.toString(), index);
+          }
+        }
+      }
+      if (!allPageIndices.has(key)) {
+        throw new Error("Page reference is outside the document page tree");
+      }
+      return allPageIndices.get(key);
     }
     const index = await catalog.getPageIndex(raw);
     if (!Number.isInteger(index) || index < 0 || index >= catalog.numPages) {
@@ -39525,7 +39577,9 @@ async function getDocumentParts(catalog, root, documentId) {
     pageIndices.set(key, index);
     return index;
   }
+  let workSinceYield = 0;
   async function walk(raw, parent, path, depth, expectedParent) {
+    if (++workSinceYield % 256 === 0) await new Promise(resolve => setTimeout(resolve, 0));
     if (stopped) {
       return;
     }
@@ -41344,15 +41398,23 @@ class Catalog {
   }
   async getDocumentAssets(options) {
     this._documentAssets ??= new DocumentAssets(this, this.#catDict);
-    const result = this._documentAssets.inspect(options);
+    const result = await this._documentAssets.inspect(options);
+    let pageIndices;
     for (const file of result.files) {
       for (const origin of file.origins) {
         if (!origin.pageRef) continue;
         try {
           const pageRef = Ref.get(origin.pageRef.num, origin.pageRef.gen);
-          const index = await this.getPageIndex(pageRef);
-          const [, actual] = await this.getPageDict(index);
-          if (!isRefsEqual(actual, pageRef)) throw new Error("Detached page");
+          if (!pageIndices) {
+            pageIndices = new Map();
+            for (const [index, [page, reference]] of await this.getAllPageDicts()) {
+              if (page instanceof Dict && reference instanceof Ref) {
+                pageIndices.set(reference.toString(), index);
+              }
+            }
+          }
+          const index = pageIndices.get(pageRef.toString());
+          if (index === undefined) throw new Error("Detached page");
           origin.pageIndex = index;
         } catch (error) {
           if (error instanceof MissingDataException) throw error;
@@ -42268,6 +42330,7 @@ class Catalog {
     return shadow(this, "jsActions", actions);
   }
   async cleanup(manuallyTriggered = false) {
+    this.xref.clearObjectStreamCache();
     clearGlobalCaches();
     this.globalColorSpaceCache.clear();
     this.globalImageCache.clear(manuallyTriggered);
@@ -42412,7 +42475,9 @@ class Catalog {
       }
       map.set(pageIndex++, [error, null]);
     }
+    let workSinceYield = 0;
     while (queue.length > 0) {
+      if (++workSinceYield % 1024 === 0) await new Promise(resolve => setTimeout(resolve, 0));
       const queueItem = queue.at(-1);
       const {
         currentNode,
@@ -59193,9 +59258,115 @@ class CipherTransformFactory {
 
 
 
+
+class CompactXRefEntries {
+  #pages = new Map();
+  #other = new Map();
+  length = 0;
+  has(index) {
+    if (this.#other.has(index)) return true;
+    const page = this.#pages.get(Math.floor(index / 4096));
+    return !!page?.flags[index % 4096];
+  }
+  get(index) {
+    if (this.#other.has(index)) return this.#other.get(index);
+    const page = this.#pages.get(Math.floor(index / 4096)),
+      slot = index % 4096;
+    if (!page?.flags[slot]) return undefined;
+    const flags = page.flags[slot];
+    return {
+      offset: page.offsets[slot],
+      gen: page.generations[slot],
+      free: !!(flags & 1),
+      uncompressed: !!(flags & 2)
+    };
+  }
+  set(index, entry) {
+    if (!Number.isInteger(index) || index < 0 || index >= 4294967295) {
+      this.#other.set(index, entry);
+      return;
+    }
+    const key = Math.floor(index / 4096),
+      slot = index % 4096;
+    let page = this.#pages.get(key);
+    if (!page) {
+      page = {
+        offsets: new Float64Array(4096),
+        generations: new Float64Array(4096),
+        flags: new Uint8Array(4096)
+      };
+      this.#pages.set(key, page);
+    }
+    page.offsets[slot] = entry.offset;
+    page.generations[slot] = entry.gen;
+    page.flags[slot] = 4 | (entry.free ? 1 : 0) | (entry.uncompressed ? 2 : 0);
+    this.length = Math.max(this.length, index + 1);
+  }
+  clear() {
+    this.#pages.clear();
+    this.#other.clear();
+    this.length = 0;
+  }
+  *keys() {
+    for (const key of [...this.#pages.keys()].sort((a, b) => a - b)) {
+      const page = this.#pages.get(key);
+      for (let slot = 0; slot < 4096; slot++) if (page.flags[slot]) yield key * 4096 + slot;
+    }
+    yield* this.#other.keys();
+  }
+}
 class XRef {
   #cacheMap = new Map();
-  #entries = [];
+  #parsedCacheKeys = new Set();
+  #parsedCacheOrder = new Array(100000);
+  #parsedCacheNext = 0;
+  #liveObjects = new Map();
+  #releasedObjects = new FinalizationRegistry(({
+    num,
+    reference
+  }) => {
+    if (this.#liveObjects.get(num) === reference) this.#liveObjects.delete(num);
+  });
+  #cacheParsed(num, object) {
+    this.#cacheMap.set(num, object);
+    if (this.#parsedCacheKeys.has(num)) return;
+    if (this.#parsedCacheKeys.size === 100000) {
+      const oldest = this.#parsedCacheOrder[this.#parsedCacheNext];
+      this.#parsedCacheKeys.delete(oldest);
+      this.#cacheMap.delete(oldest);
+    }
+    this.#parsedCacheOrder[this.#parsedCacheNext] = num;
+    this.#parsedCacheNext = (this.#parsedCacheNext + 1) % 100000;
+    this.#parsedCacheKeys.add(num);
+  }
+  #rememberObject(num, object) {
+    if (object && typeof object === "object" && !(object instanceof BaseStream) && this.#liveObjects.get(num)?.deref() !== object) {
+      const reference = new WeakRef(object);
+      this.#liveObjects.set(num, reference);
+      this.#releasedObjects.register(object, {
+        num,
+        reference
+      });
+    }
+    return object;
+  }
+  #entries = new CompactXRefEntries();
+  #objectStreams = new Map();
+  #objectStreamBytes = 0;
+  #dropObjectStream(key, entry) {
+    this.#objectStreams.delete(key);
+    this.#objectStreamBytes -= entry.bytes;
+    if (!entry.retainsBytes) discardStructuralStream(entry.stream);
+  }
+  clearObjectStreamCache() {
+    for (const [key, entry] of this.#objectStreams) this.#dropObjectStream(key, entry);
+  }
+  #trimObjectStreams(reserve = false) {
+    while (this.#objectStreams.size && (this.#objectStreams.size > 1024 || this.#objectStreamBytes > 128 * 1024 * 1024 || reserve && DecodeStream.remainingBudget < 64 * 1024 * 1024)) {
+      const [key, entry] = this.#objectStreams.entries().next().value;
+      this.#dropObjectStream(key, entry);
+    }
+  }
   #newPersistentRefNum = null;
   #newTemporaryRefNum = null;
   #parsedWithRecovery = false;
@@ -59364,7 +59535,7 @@ class XRef {
         if (i === 0 && entry.free && first === 1) {
           first = 0;
         }
-        this.#entries[first + i] ??= entry;
+        if (!this.#entries.has(first + i)) this.#entries.set(first + i, entry);
       }
       tableState.entryNum = 0;
       tableState.streamPos = stream.pos;
@@ -59373,7 +59544,7 @@ class XRef {
       delete tableState.firstEntryNum;
       delete tableState.entryCount;
     }
-    if (this.#entries[0] && !this.#entries[0].free) {
+    if (this.#entries.get(0) && !this.#entries.get(0).free) {
       throw new FormatError("Invalid XRef table: unexpected first object");
     }
     return obj;
@@ -59386,6 +59557,18 @@ class XRef {
       } = stream;
       const byteWidths = dict.get("W");
       const range = dict.get("Index") || [0, dict.get("Size")];
+      if (Array.isArray(byteWidths) && byteWidths.length === 3 && byteWidths.every(w => Number.isSafeInteger(w) && w >= 0) && Array.isArray(range) && range.length % 2 === 0 && range.every(n => Number.isSafeInteger(n) && n >= 0)) {
+        const width = byteWidths.reduce((a, b) => a + b, 0);
+        const count = range.reduce((sum, n, i) => sum + (i % 2 ? n : 0), 0);
+        const needed = width * count + 65536;
+        if (width > 0 && Number.isSafeInteger(needed)) {
+          const seen = new Set();
+          for (let decoder = stream; decoder instanceof DecodeStream && !seen.has(decoder); decoder = decoder.str) {
+            seen.add(decoder);
+            decoder.maxBufferLength = Math.max(decoder.maxBufferLength, Math.min(needed, DecodeStream.remainingBudget + decoder.buffer.byteLength));
+          }
+        }
+      }
       this.streamState = {
         entryRanges: range,
         byteWidths,
@@ -59395,6 +59578,7 @@ class XRef {
     }
     this.readXRefStream(stream);
     delete this.streamState;
+    discardStructuralStream(stream);
     return stream.dict;
   }
   readXRefStream(stream) {
@@ -59458,7 +59642,7 @@ class XRef {
           default:
             throw new FormatError(`Invalid XRef entry type: ${type}`);
         }
-        this.#entries[first + i] ??= entry;
+        if (!this.#entries.has(first + i)) this.#entries.set(first + i, entry);
       }
       streamState.entryNum = 0;
       streamState.streamPos = stream.pos;
@@ -59507,8 +59691,13 @@ class XRef {
     const trailerBytes = new Uint8Array([116, 114, 97, 105, 108, 101, 114]);
     const startxrefBytes = new Uint8Array([115, 116, 97, 114, 116, 120, 114, 101, 102]);
     const xrefBytes = new Uint8Array([47, 88, 82, 101, 102]);
-    this.#entries.length = 0;
+    this.clearObjectStreamCache();
+    this.#entries.clear();
     this.#cacheMap.clear();
+    this.#parsedCacheKeys.clear();
+    this.#parsedCacheOrder.fill(undefined);
+    this.#parsedCacheNext = 0;
+    this.#liveObjects.clear();
     const stream = this.stream;
     stream.pos = 0;
     const buffer = stream.getBytes(),
@@ -59545,9 +59734,9 @@ class XRef {
         const startPos = position + token.length;
         let contentLength,
           updateEntries = false;
-        if (!this.#entries[num]) {
+        if (!this.#entries.get(num)) {
           updateEntries = true;
-        } else if (this.#entries[num].gen === gen) {
+        } else if (this.#entries.get(num).gen === gen) {
           try {
             const parser = new Parser({
               lexer: new Lexer(stream.makeSubStream(startPos))
@@ -59563,12 +59752,12 @@ class XRef {
           }
         }
         if (updateEntries) {
-          this.#entries[num] = {
+          this.#entries.set(num, {
             offset: position - stream.start,
             gen,
             free: false,
             uncompressed: true
-          };
+          });
         }
         gEndobjRegExp.lastIndex = startPos;
         const match = gEndobjRegExp.exec(bufferStr);
@@ -59676,8 +59865,8 @@ class XRef {
       return this.topDict;
     }
     if (!trailerDicts.length) {
-      for (const num in this.#entries) {
-        const entry = this.#entries[num];
+      for (const num of this.#entries.keys()) {
+        const entry = this.#entries.get(num);
         if (!entry) {
           continue;
         }
@@ -59746,7 +59935,7 @@ class XRef {
           this.startXRefQueue.push(obj.num);
         }
       } catch (e) {
-        if (e instanceof MissingDataException) {
+        if (e instanceof MissingDataException || e instanceof DecodeStreamLimitError) {
           throw e;
         }
         delete this._tableState;
@@ -59778,7 +59967,7 @@ class XRef {
     return count;
   }
   getEntry(i) {
-    const entry = this.#entries[i];
+    const entry = this.#entries.get(i);
     return entry && !entry.free && entry.offset ? entry : null;
   }
   fetchIfRef(obj, suppressEncryption = false) {
@@ -59789,16 +59978,17 @@ class XRef {
       throw new Error("ref object is not a reference");
     }
     const num = ref.num;
-    const cacheEntry = this.#cacheMap.get(num);
+    const strongEntry = this.#cacheMap.get(num);
+    const cacheEntry = strongEntry !== undefined ? strongEntry : this.#liveObjects.get(num)?.deref();
     if (cacheEntry !== undefined) {
       if (cacheEntry instanceof Dict && !cacheEntry.objId) {
         cacheEntry.objId = ref.toString();
       }
-      return cacheEntry;
+      return this.#rememberObject(num, cacheEntry);
     }
     let xrefEntry = this.getEntry(num);
     if (xrefEntry === null) {
-      return xrefEntry;
+      return this.#rememberObject(num, xrefEntry);
     }
     if (this.#pendingRefs.has(ref)) {
       this.#pendingRefs.remove(ref);
@@ -59818,7 +60008,7 @@ class XRef {
     } else if (xrefEntry instanceof BaseStream) {
       xrefEntry.dict.objId = ref.toString();
     }
-    return xrefEntry;
+    return this.#rememberObject(num, xrefEntry);
   }
   fetchUncompressed(ref, xrefEntry, suppressEncryption = false) {
     const gen = ref.gen;
@@ -59854,72 +60044,112 @@ class XRef {
     }
     xrefEntry = this.encrypt && !suppressEncryption ? parser.getObj(this.encrypt.createCipherTransform(num, gen)) : parser.getObj();
     if (!(xrefEntry instanceof BaseStream)) {
-      this.#cacheMap.set(num, xrefEntry);
+      this.#cacheParsed(num, xrefEntry);
     }
     return xrefEntry;
   }
   fetchCompressed(ref, xrefEntry, suppressEncryption = false) {
     const tableOffset = xrefEntry.offset;
-    const stream = this.fetch(Ref.get(tableOffset, 0));
-    if (!(stream instanceof BaseStream)) {
-      throw new FormatError("bad ObjStm stream");
+    let cached = this.#objectStreams.get(tableOffset);
+    if (!cached) {
+      this.#trimObjectStreams(true);
+      const stream = this.fetch(Ref.get(tableOffset, 0));
+      if (!(stream instanceof BaseStream)) throw new FormatError("bad ObjStm stream");
+      try {
+        const first = stream.dict.get("First"),
+          n = stream.dict.get("N");
+        if (!Number.isInteger(first) || first < 0 || !Number.isInteger(n) || n < 0) {
+          throw new FormatError("invalid first and n parameters for ObjStm stream");
+        }
+        const parser = new Parser({
+          lexer: new Lexer(stream),
+          xref: this,
+          allowStreams: true
+        });
+        const nums = new Array(n),
+          offsets = new Array(n);
+        for (let i = 0; i < n; i++) {
+          const num = parser.getObj(),
+            offset = parser.getObj();
+          if (!Number.isInteger(num) || !Number.isInteger(offset) || offset < 0 || i > 0 && offset < offsets[i - 1]) throw new FormatError("Invalid object stream header.");
+          nums[i] = num;
+          offsets[i] = offset;
+          const entry = this.getEntry(num);
+          if (entry?.offset === tableOffset && entry.gen !== i) {
+            entry.gen = i;
+            this.#entries.set(num, entry);
+            if (num === ref.num) xrefEntry.gen = i;
+          }
+        }
+        stream.getBytes();
+        let bytes = 0;
+        const seen = new Set();
+        for (let decoder = stream; decoder instanceof DecodeStream && !seen.has(decoder); decoder = decoder.str) {
+          seen.add(decoder);
+          bytes += decoder.buffer.byteLength;
+        }
+        cached = {
+          stream,
+          nums,
+          offsets,
+          start: (stream.start || 0) + first,
+          bytes,
+          retainsBytes: false
+        };
+        this.#objectStreams.set(tableOffset, cached);
+        this.#objectStreamBytes += bytes;
+      } catch (error) {
+        discardStructuralStream(stream);
+        throw error;
+      }
+    } else {
+      this.#objectStreams.delete(tableOffset);
+      this.#objectStreams.set(tableOffset, cached);
     }
-    const first = stream.dict.get("First");
-    const n = stream.dict.get("N");
-    if (!Number.isInteger(first) || !Number.isInteger(n)) {
-      throw new FormatError("invalid first and n parameters for ObjStm stream");
+    const {
+        stream,
+        nums,
+        offsets,
+        start
+      } = cached,
+      index = xrefEntry.gen;
+    if (!Number.isInteger(index) || index < 0 || index >= offsets.length) {
+      throw new XRefEntryException(`Bad (compressed) XRef entry: ${ref}`);
     }
-    let parser = new Parser({
-      lexer: new Lexer(stream),
-      xref: this,
-      allowStreams: true
-    });
-    const nums = new Array(n);
-    const offsets = new Array(n);
-    for (let i = 0; i < n; ++i) {
-      const num = parser.getObj();
-      if (!Number.isInteger(num)) {
-        throw new FormatError(`invalid object number in the ObjStm stream: ${num}`);
-      }
-      const offset = parser.getObj();
-      if (!Number.isInteger(offset)) {
-        throw new FormatError(`invalid object offset in the ObjStm stream: ${offset}`);
-      }
-      nums[i] = num;
-      const entry = this.getEntry(num);
-      if (entry?.offset === tableOffset && entry.gen !== i) {
-        entry.gen = i;
-      }
-      offsets[i] = offset;
-    }
-    const start = (stream.start || 0) + first;
-    const entries = new Array(n);
-    for (let i = 0; i < n; ++i) {
-      const length = i < n - 1 ? offsets[i + 1] - offsets[i] : undefined;
-      if (length < 0) {
-        throw new FormatError("Invalid offset in the ObjStm stream.");
-      }
-      parser = new Parser({
-        lexer: new Lexer(stream.makeSubStream(start + offsets[i], length, stream.dict)),
+    const length = index + 1 < offsets.length ? offsets[index + 1] - offsets[index] : undefined;
+    let object;
+    try {
+      const parser = new Parser({
+        lexer: new Lexer(stream.makeSubStream(start + offsets[index], length, stream.dict)),
         xref: this,
         allowStreams: true
       });
-      const obj = parser.getObj();
-      entries[i] = obj;
-      if (obj instanceof BaseStream) {
-        continue;
+      object = parser.getObj();
+      if (object === undefined) throw new XRefEntryException(`Bad (compressed) XRef entry: ${ref}`);
+      const pending = [object],
+        seen = new Set();
+      while (pending.length && !cached.retainsBytes) {
+        const value = pending.pop();
+        if (value instanceof BaseStream) {
+          cached.retainsBytes = true;
+          break;
+        }
+        if (seen.has(value)) continue;
+        if (Array.isArray(value)) {
+          seen.add(value);
+          for (const child of value) pending.push(child);
+        } else if (value instanceof Dict) {
+          seen.add(value);
+          for (const [, child] of value.getRawEntries()) pending.push(child);
+        }
       }
-      const num = nums[i],
-        entry = this.#entries[num];
-      if (entry && entry.offset === tableOffset && entry.gen === i) {
-        this.#cacheMap.set(num, obj);
-      }
+      const num = nums[index],
+        entry = this.#entries.get(num);
+      if (!(object instanceof BaseStream) && entry?.offset === tableOffset && entry.gen === index) this.#cacheParsed(num, object);
+      return object;
+    } finally {
+      this.#trimObjectStreams();
     }
-    xrefEntry = entries[xrefEntry.gen];
-    if (xrefEntry === undefined) {
-      throw new XRefEntryException(`Bad (compressed) XRef entry: ${ref}`);
-    }
-    return xrefEntry;
   }
   async fetchIfRefAsync(obj, suppressEncryption) {
     return obj instanceof Ref ? this.fetchAsync(obj, suppressEncryption) : obj;

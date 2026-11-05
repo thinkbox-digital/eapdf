@@ -1,6 +1,6 @@
-# EA-PDF browser viewer — beta 0.5.0-beta.8
+# EA-PDF browser viewer — beta 0.5.0-beta.9
 
-Current release: `0.5.0-beta.8` (EA-PDF `1.6.0-beta.9`).
+Current release: `0.5.0-beta.9` (EA-PDF `1.6.0-beta.10`).
 The local presentation redesign retains that version for review and is not published.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
@@ -24,7 +24,7 @@ The redundant Email Details pane, printing and user-controlled rotation remain
 removed. Intrinsic PDF page orientation is respected. Search opens from the header
 or Ctrl/Cmd+F; Enter and Shift+Enter move between matches, and Escape closes the
 panel. The message tree supports native Tab/Enter disclosure controls and arrow-key
-movement. The original viewer tagline is unchanged.
+movement. The viewer tagline is “Your email—complete, authentic, accessible, structured.”
 
 The persistent **Filter by subject, sender or date** field filters the message list
 using subject, sender, recipients and date across unopened
@@ -36,10 +36,6 @@ cancellation and explicit coverage limits. **Reopen PDF** is a recovery action
 shown after an operation error; it clears cached documents and reopens the root.
 Passwords are not persisted. External PDF links and executable actions remain
 inactive, and HTML/email previews are inert text.
-
-Packages are **0.5.0-beta.8** in `releases/` and accompany EA-PDF **1.6.0-beta.9** on GitHub.
-They remain unsigned and are not extension-store releases. See
-[implementation and verification](docs/reading-improvements.txt).
 
 A self-contained Firefox/Chromium extension for local PDFs. Open a file, select
 messages and collection children, read document information and download embedded
@@ -53,10 +49,6 @@ button. File actions have consistent labelled icons. Inspection problems use sho
 
 [Install the local beta and view attachments](docs/beta-release.md). Packages are
 in `releases/`; the [current checkpoint](docs/beta-release.md#verified-scope) records tests and limits.
-
-**Conformance is not evaluated.** A declared profile is metadata, not a validation
-result. Missing or ambiguous page/file associations are shown without guessing.
-The [M5 checkpoint](docs/m5-results.md) is retained as earlier evidence.
 
 The earlier 0.3.2 update made zoom buttons move in 10% steps while preserving the horizontal viewing position. Scrolling an m/mi file now follows the current message in the left pane. Both browser interaction suites pass.
 
@@ -276,15 +268,6 @@ inactive. File names and metadata are text, never HTML. Office files are downloa
 no Office rendering engine is included. Store signing/publication, other operating
 systems, older browsers and full accessibility acceptance remain untested. See
 [compatibility](docs/compatibility.md) and [security](docs/security.md).
-
-See [current results](docs/reading-improvements.txt). Earlier milestones below are
-historical evidence and describe the limits at those checkpoints.
-
-See [beta results](docs/m6-results.md), [M5 results](docs/m5-results.md), [M4 results](docs/m4-results.md),
-[M3 results](docs/m3-results.md), [M2 results](docs/m2-results.md),
-[M1 results](docs/m1-results.md) and the historical [M0 results](docs/m0-results.md).
-This directory contains the browser viewer; creator and validator modules live elsewhere in the repository.
-
 
 Supplement ownership in collections can also be established by exact byte
 identity: a single-email child must contain both the same source email and the

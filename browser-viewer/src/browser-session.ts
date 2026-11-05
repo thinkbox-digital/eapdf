@@ -28,7 +28,7 @@ export class BrowserSession {
   private readonly exportReads=new WeakMap<BrowserDocument,number>();
   private readonly exportWorkers=new Map<number,{worker:ReturnType<typeof createManagedWorker>;used:number}>();
   constructor(overrides:Partial<InspectionLimits>={},private readonly options:{reuseWorker?:boolean}={}) {
-    const ceilings={...DEFAULT_LIMITS,maxObjects:1_000_000,maxParts:16384,maxFileBytes:4*1024**3,maxStreamBytes:32*1024**2,maxDecodedBytes:512*1024**2,maxMetadataBytes:16*1024**2,maxChildDepth:8,maxChildren:128};
+    const ceilings={...DEFAULT_LIMITS,maxObjects:1_000_000,maxParts:16384,maxFileBytes:4*1024**3,maxStreamBytes:32*1024**2,maxDecodedBytes:512*1024**2,maxMetadataBytes:128*1024**2,maxChildDepth:8,maxChildren:128};
     const limits={...ceilings};
     for(const key of Object.keys(overrides) as (keyof InspectionLimits)[]){
       // Retired content-count settings are accepted for compatibility, but ignored.
@@ -47,7 +47,7 @@ export class BrowserSession {
   private clock=0;
   private check=()=>{if(this.closed)throw new Error('Document processing cancelled.');};
   close():void {this.closed=true;for(const {worker} of this.exportWorkers.values())worker.close();this.exportWorkers.clear();for(const worker of this.associationWorkers)worker.close();this.associationWorkers.clear();for(const managed of this.pending)managed.close();for(const [doc,entry]of this.entries){entry.managed?.close();doc.payloads.clear();doc.active=false;}this.entries.clear();this.pending.clear();this.extracted.clear();this.cachedBytes=0;}
-  async open(blob:Blob,name:string,progress?:(fraction:number)=>void,parent:BrowserDocument|null=null,fileId?:string,streamPath?:string,preview?:(doc:Pick<BrowserDocument,'pdf'|'run'>)=>Promise<void>):Promise<BrowserDocument>{
+  async open(blob:Blob,name:string,progress?:(fraction:number)=>void,parent:BrowserDocument|null=null,fileId?:string,streamPath?:string,preview?:(doc:Pick<BrowserDocument,'pdf'|'run'>)=>Promise<void>,stage?:(message:string)=>void):Promise<BrowserDocument>{
     this.check();
     if(blob.size>this.limits.maxFileBytes)throw new Error('PDF exceeds the configured input byte limit.');
     // Inventory traverses the entire archive. Range gaps restart that traversal.
@@ -68,21 +68,44 @@ export class BrowserSession {
     const hashing=sha256Blob(blob,()=>{this.check();if(managed.closed)throw new Error('Document is closed.');},progress);void hashing.catch(()=>{});
     try{
       const pdf=await managed.run(managed.task.promise,60000);this.check();
-      if(preview)await preview({pdf,run:managed.run});this.check();
+      const initialPageTimeout=pdf.numPages>=10000?120000:30000;
+      if(preview)await preview({pdf,run:operation=>managed.run(operation,initialPageTimeout)});this.check();
       const hash=await hashing;this.check();
       const id='sha256:'+hash,ancestors=parent?[...parent.ancestorIds,parent.inspection.documentId]:[];
       if(ancestors.includes(id))throw new Error('This embedded PDF points back to a parent document.');
       if(parent)this.childCount++;
-      const [parts,assets]=await managed.run(Promise.all([pdf.getDocumentParts(),pdf.getDocumentAssets({maxObjects:Math.max(1,this.limits.maxObjects),maxMetadataBytes:Math.max(1,this.limits.maxMetadataBytes)})]),60000);
+      // Large flat archives require a complete page and associated-file inventory.
+      const inspectionTimeout=pdf.numPages>=10000?900000:60000;
+      const [parts,assets]=await managed.run((async()=>{
+        // Sequential scans avoid evicting each other's compressed-object working sets.
+        stage?.("Reading email structure…");
+        const parts=await pdf.getDocumentParts();
+        stage?.("Inspecting embedded files…");
+        const assets=await pdf.getDocumentAssets({maxObjects:Math.max(1,this.limits.maxObjects),maxMetadataBytes:Math.max(1,this.limits.maxMetadataBytes)});
+        return [parts,assets] as const;
+      })(),inspectionTimeout);
       const header=/%PDF-(\d\.\d)/.exec(new TextDecoder('latin1').decode(await blob.slice(0,1024).arrayBuffer()))?.[1]??null;
       this.check();
       const entry:Entry={managed,blob:parent?undefined:blob,parts,assets,facts:new Map(),header,size:blob.size,lastUse:++this.clock};
+      stage?.("Reading email metadata…");
       const interpreted=interpret({documentId:id,byteLength:blob.size,headerVersion:header,pageCount:pdf.numPages,parts,assets,streams:entry.facts,limits:this.limits,parseXml:xml=>new DOMParser().parseFromString(xml,'application/xml')});
       const doc:BrowserDocument={pdf,...interpreted,payloads:new Map(),children:new Map(),run:managed.run,name,parent,parentFileId:fileId,parentStreamPath:streamPath,ancestorIds:ancestors,active:true};
       this.entries.set(doc,entry);this.pending.delete(managed);this.trim(doc);return doc;
     }catch(error){managed.close();this.pending.delete(managed);throw error;}
   }
   cachedMessageIndex(doc:BrowserDocument):MessageIndex|undefined{return this.entries.get(doc)?.messageIndex;}
+  adoptAssociations(doc:BrowserDocument,source:BrowserSession,copy:BrowserDocument):void {
+    this.check();source.check();
+    if(doc.inspection.documentId!==copy.inspection.documentId)throw new Error('Association results belong to a different PDF.');
+    const target=this.entries.get(doc),entry=source.entries.get(copy);
+    if(!target||!entry)throw new Error('Association document is no longer open.');
+    for(const [key,fact] of entry.facts)target.facts.set(key,fact);
+    target.supplementLinks=entry.supplementLinks;target.supplementError=entry.supplementError;
+    target.messageIndex=entry.messageIndex??target.messageIndex;
+    target.supplementScan=Promise.resolve();
+    this.refresh(doc);this.applySupplementLinks(doc);
+  }
+
   async associateFiles(doc:BrowserDocument):Promise<void>{
     this.check();let changed=false;
     for(const file of doc.inspection.files){
@@ -222,7 +245,7 @@ export class BrowserSession {
     const input=blob.size>=16*1024**2?new Uint8Array(await blob.arrayBuffer()):blob;this.check();
     const managed=loadManagedPdf(input);this.pending.add(managed);
     try{
-      const pdf=await managed.run(managed.task.promise,60000),assets=await managed.run(pdf.getDocumentAssets({maxObjects:Math.max(1,this.limits.maxObjects),maxMetadataBytes:Math.max(1,this.limits.maxMetadataBytes)}),60000);this.check();
+      const pdf=await managed.run(managed.task.promise,60000),assets=await managed.run(pdf.getDocumentAssets({maxObjects:Math.max(1,this.limits.maxObjects),maxMetadataBytes:Math.max(1,this.limits.maxMetadataBytes)}),pdf.numPages>=10000?900000:60000);this.check();
       entry.assets=assets;entry.managed=managed;entry.lastUse=++this.clock;doc.pdf=pdf;doc.run=managed.run;doc.active=true;this.trim(doc);
     }catch(error){managed.close();throw error;}finally{this.pending.delete(managed);}
   }
@@ -256,7 +279,7 @@ export class BrowserSession {
     const originalWorker=entry.managed;let data:Uint8Array;
     try{data=await extract();}catch(error){
       this.check();
-      // The worker budget counts lifetime allocations, including discarded buffers.
+      // Recover from allocation exhaustion without changing the stream limits.
       // Retry once in a fresh worker; keep all per-stream and worker limits intact.
       const exhausted=error instanceof Error&&error.message.includes('Worker decoded-stream allocation limit exceeded');
       if(!exhausted&&!entry.restarting&&entry.managed===originalWorker)throw error;

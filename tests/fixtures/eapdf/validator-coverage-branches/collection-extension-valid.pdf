@@ -1,202 +1,0 @@
-%PDF-1.7
-%¿÷¢ş
-1 0 obj
-<< /Collection 3 0 R /Extensions << /ADBE << /BaseVersion /1.7 /ExtensionLevel 5 >> >> /Lang (en-US) /MarkInfo << /Marked true >> /Metadata 4 0 R /OutputIntents [ 5 0 R ] /Pages 6 0 R /StructTreeRoot 7 0 R /Type /Catalog >>
-endobj
-2 0 obj
-<< /Author (EmailToPDFA 1.4.0) /CreationDate (D:20261019181900Z) /Creator (Independent fixture builder) /Keywords (EA-PDF) /ModDate (D:20261020120000Z) /Producer (EmailToPDFA 1.4.0 via OpenHTMLtoPDF + Apache PDFBox) /Subject (Archive description) /Title (Agenda and timeline slides) >>
-endobj
-3 0 obj
-<< /Folders 8 0 R /Reorder /adobe:Order /Schema 9 0 R /Sort 10 0 R /Type /Collection /View /T >>
-endobj
-4 0 obj
-<< /Subtype /XML /Type /Metadata /Length 12076 >>
-stream
-<?xpacket begin="ï»¿" id="W5M0MpCehiHzreSzNTczkc9d"?>
-<x:xmpmeta xmlns:x="adobe:ns:meta/">
-  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:pdf="http://ns.adobe.com/pdf/1.3/" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:pdfaid="http://www.aiim.org/pdfa/ns/id/" xmlns:pdfd="http://pdfa.org/declarations/" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:pdfmail="http://www.pdfa.org/eapdf/" xmlns:pdfmailid="http://www.pdfa.org/eapdf/ns/id/" xmlns:pdfmailmeta="http://www.pdfa.org/eapdf/ns/meta/">
-    <rdf:Description rdf:about="">
-      <dc:creator>
-        <rdf:Seq>
-          <rdf:li>EmailToPDFA 1.4.0</rdf:li>
-        </rdf:Seq>
-      </dc:creator>
-      <dc:format>application/pdf</dc:format>
-      <dc:title>
-        <rdf:Alt>
-          <rdf:li xml:lang="x-default">Agenda and timeline slides</rdf:li>
-        </rdf:Alt>
-      </dc:title>
-      <dc:description><rdf:Alt><rdf:li xml:lang="x-default">Archive description</rdf:li></rdf:Alt></dc:description>
-    </rdf:Description>
-    <rdf:Description rdf:about="">
-      <pdf:Producer>EmailToPDFA 1.4.0 via OpenHTMLtoPDF + Apache PDFBox</pdf:Producer>
-      <pdf:Keywords>EA-PDF</pdf:Keywords>
-    </rdf:Description>
-    <rdf:Description rdf:about="">
-      <xmp:CreateDate>2026-10-19T18:19:00Z</xmp:CreateDate>
-      <xmp:ModifyDate>2026-10-20T12:00:00Z</xmp:ModifyDate>
-      <xmp:MetadataDate>2026-10-19T18:19:00Z</xmp:MetadataDate>
-      <xmp:CreatorTool>Independent fixture builder</xmp:CreatorTool>
-    </rdf:Description>
-    <rdf:Description rdf:about="">
-      <pdfaid:part>3</pdfaid:part>
-      
-      <pdfaid:conformance>U</pdfaid:conformance>
-    </rdf:Description>
-    <rdf:Description rdf:about="">
-      <pdfmailid:version>1</pdfmailid:version>
-      <pdfmailid:rev>2024</pdfmailid:rev>
-      <pdfmailid:conformance>ci</pdfmailid:conformance>
-    </rdf:Description>
-    <rdf:Description rdf:about="">
-      
-    </rdf:Description>
-    <rdf:Description rdf:about="">
-      
-      
-      
-    </rdf:Description>
-  <rdf:Description rdf:about="" xmlns:pdfaExtension="http://www.aiim.org/pdfa/ns/extension/" xmlns:pdfaSchema="http://www.aiim.org/pdfa/ns/schema#" xmlns:pdfaProperty="http://www.aiim.org/pdfa/ns/property#" xmlns:pdfaType="http://www.aiim.org/pdfa/ns/type#" xmlns:pdfaField="http://www.aiim.org/pdfa/ns/field#"><pdfaExtension:schemas><rdf:Bag><rdf:li rdf:parseType="Resource"><pdfaSchema:schema>EA-PDF identification</pdfaSchema:schema><pdfaSchema:namespaceURI>http://www.pdfa.org/eapdf/ns/id/</pdfaSchema:namespaceURI><pdfaSchema:prefix>pdfmailid</pdfaSchema:prefix><pdfaSchema:property><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaProperty:name>version</pdfaProperty:name><pdfaProperty:valueType>Integer</pdfaProperty:valueType><pdfaProperty:category>internal</pdfaProperty:category><pdfaProperty:description>version</pdfaProperty:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaProperty:name>rev</pdfaProperty:name><pdfaProperty:valueType>Integer</pdfaProperty:valueType><pdfaProperty:category>internal</pdfaProperty:category><pdfaProperty:description>rev</pdfaProperty:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaProperty:name>conformance</pdfaProperty:name><pdfaProperty:valueType>Text</pdfaProperty:valueType><pdfaProperty:category>internal</pdfaProperty:category><pdfaProperty:description>conformance</pdfaProperty:description></rdf:li></rdf:Seq></pdfaSchema:property><pdfaSchema:valueType><rdf:Seq></rdf:Seq></pdfaSchema:valueType></rdf:li><rdf:li rdf:parseType="Resource"><pdfaSchema:schema>EA-PDF metadata</pdfaSchema:schema><pdfaSchema:namespaceURI>http://www.pdfa.org/eapdf/ns/meta/</pdfaSchema:namespaceURI><pdfaSchema:prefix>pdfmailmeta</pdfaSchema:prefix><pdfaSchema:property><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaProperty:name>email</pdfaProperty:name><pdfaProperty:valueType>Bag Email</pdfaProperty:valueType><pdfaProperty:category>internal</pdfaProperty:category><pdfaProperty:description>email</pdfaProperty:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaProperty:name>assets</pdfaProperty:name><pdfaProperty:valueType>Bag Asset</pdfaProperty:valueType><pdfaProperty:category>internal</pdfaProperty:category><pdfaProperty:description>assets</pdfaProperty:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaProperty:name>attachments</pdfaProperty:name><pdfaProperty:valueType>Bag Attachment</pdfaProperty:valueType><pdfaProperty:category>internal</pdfaProperty:category><pdfaProperty:description>attachments</pdfaProperty:description></rdf:li></rdf:Seq></pdfaSchema:property><pdfaSchema:valueType><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaType:type>Email</pdfaType:type><pdfaType:namespaceURI>http://www.pdfa.org/eapdf/ns/meta/</pdfaType:namespaceURI><pdfaType:prefix>pdfmailmeta</pdfaType:prefix><pdfaType:description>Email</pdfaType:description><pdfaType:field><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaField:name>Subject</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>Subject</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>Raw-From</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>Raw-From</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>Raw-To</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>Raw-To</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>Sent</pdfaField:name><pdfaField:valueType>Date</pdfaField:valueType><pdfaField:description>Sent</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>SizeInBytes</pdfaField:name><pdfaField:valueType>Integer</pdfaField:valueType><pdfaField:description>SizeInBytes</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>NumberAttachments</pdfaField:name><pdfaField:valueType>Integer</pdfaField:valueType><pdfaField:description>NumberAttachments</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>Mail_GUID</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>Mail_GUID</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>messageid</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>messageid</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>From</pdfaField:name><pdfaField:valueType>Seq Agent</pdfaField:valueType><pdfaField:description>From</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>To</pdfaField:name><pdfaField:valueType>Seq Agent</pdfaField:valueType><pdfaField:description>To</pdfaField:description></rdf:li></rdf:Seq></pdfaType:field></rdf:li><rdf:li rdf:parseType="Resource"><pdfaType:type>Asset</pdfaType:type><pdfaType:namespaceURI>http://www.pdfa.org/eapdf/ns/meta/</pdfaType:namespaceURI><pdfaType:prefix>pdfmailmeta</pdfaType:prefix><pdfaType:description>Asset</pdfaType:description><pdfaType:field><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaField:name>Filename</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>Filename</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>SizeInBytes</pdfaField:name><pdfaField:valueType>Integer</pdfaField:valueType><pdfaField:description>SizeInBytes</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>ContentType</pdfaField:name><pdfaField:valueType>MIMEType</pdfaField:valueType><pdfaField:description>ContentType</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>Checksum</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>Checksum</pdfaField:description></rdf:li></rdf:Seq></pdfaType:field></rdf:li><rdf:li rdf:parseType="Resource"><pdfaType:type>Attachment</pdfaType:type><pdfaType:namespaceURI>http://www.pdfa.org/eapdf/ns/meta/</pdfaType:namespaceURI><pdfaType:prefix>pdfmailmeta</pdfaType:prefix><pdfaType:description>Attachment</pdfaType:description><pdfaType:field><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaField:name>Filename</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>Filename</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>SizeInBytes</pdfaField:name><pdfaField:valueType>Integer</pdfaField:valueType><pdfaField:description>SizeInBytes</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>Content-Type</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>Content-Type</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>CheckSum</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>CheckSum</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>Mail_GUID</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>Mail_GUID</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>Description</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>Description</pdfaField:description></rdf:li></rdf:Seq></pdfaType:field></rdf:li><rdf:li rdf:parseType="Resource"><pdfaType:type>Agent</pdfaType:type><pdfaType:namespaceURI>http://xmlns.com/foaf/0.1/</pdfaType:namespaceURI><pdfaType:prefix>foaf</pdfaType:prefix><pdfaType:description>Agent</pdfaType:description><pdfaType:field><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaField:name>mbox</pdfaField:name><pdfaField:valueType>URI</pdfaField:valueType><pdfaField:description>mbox</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>name</pdfaField:name><pdfaField:valueType>ProperName</pdfaField:valueType><pdfaField:description>name</pdfaField:description></rdf:li></rdf:Seq></pdfaType:field></rdf:li></rdf:Seq></pdfaSchema:valueType></rdf:li><rdf:li rdf:parseType="Resource"><pdfaSchema:schema>PDF declarations</pdfaSchema:schema><pdfaSchema:namespaceURI>http://pdfa.org/declarations/</pdfaSchema:namespaceURI><pdfaSchema:prefix>pdfd</pdfaSchema:prefix><pdfaSchema:property><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaProperty:name>declarations</pdfaProperty:name><pdfaProperty:valueType>Bag Declaration</pdfaProperty:valueType><pdfaProperty:category>internal</pdfaProperty:category><pdfaProperty:description>declarations</pdfaProperty:description></rdf:li></rdf:Seq></pdfaSchema:property><pdfaSchema:valueType><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaType:type>Declaration</pdfaType:type><pdfaType:namespaceURI>http://pdfa.org/declarations/</pdfaType:namespaceURI><pdfaType:prefix>pdfd</pdfaType:prefix><pdfaType:description>Declaration</pdfaType:description><pdfaType:field><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaField:name>conformsTo</pdfaField:name><pdfaField:valueType>URI</pdfaField:valueType><pdfaField:description>conformsTo</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>claimData</pdfaField:name><pdfaField:valueType>Bag Claim</pdfaField:valueType><pdfaField:description>claimData</pdfaField:description></rdf:li></rdf:Seq></pdfaType:field></rdf:li><rdf:li rdf:parseType="Resource"><pdfaType:type>Claim</pdfaType:type><pdfaType:namespaceURI>http://pdfa.org/declarations/</pdfaType:namespaceURI><pdfaType:prefix>pdfd</pdfaType:prefix><pdfaType:description>Claim</pdfaType:description><pdfaType:field><rdf:Seq><rdf:li rdf:parseType="Resource"><pdfaField:name>claimBy</pdfaField:name><pdfaField:valueType>Text</pdfaField:valueType><pdfaField:description>claimBy</pdfaField:description></rdf:li><rdf:li rdf:parseType="Resource"><pdfaField:name>claimDate</pdfaField:name><pdfaField:valueType>Date</pdfaField:valueType><pdfaField:description>claimDate</pdfaField:description></rdf:li></rdf:Seq></pdfaType:field></rdf:li></rdf:Seq></pdfaSchema:valueType></rdf:li></rdf:Bag></pdfaExtension:schemas></rdf:Description></rdf:RDF>
-</x:xmpmeta>
-
-<?xpacket end="w"?>
-
-endstream
-endobj
-5 0 obj
-<< /DestOutputProfile 11 0 R /Info (sRGB IEC61966-2.1) /OutputCondition (sRGB IEC61966-2.1) /OutputConditionIdentifier (sRGB IEC61966-2.1) /RegistryName (http://www.color.org) /S /GTS_PDFA1 /Type /OutputIntent >>
-endobj
-6 0 obj
-<< /Count 1 /Kids [ 12 0 R ] /Type /Pages >>
-endobj
-7 0 obj
-<< /K 13 0 R /ParentTree 14 0 R /ParentTreeNextKey 1 /Type /StructTreeRoot >>
-endobj
-8 0 obj
-<< /Child 15 0 R /Free [ 0 2147483647 ] /ID 0 /ModDate (D:20261019142039-04'00') /Name (Collection) /Type /Folder >>
-endobj
-9 0 obj
-<< /Attachments 16 0 R /Bcc 17 0 R /Cc 18 0 R /FileName 19 0 R /From 20 0 R /Message-ID 21 0 R /Messages 22 0 R /Sent 23 0 R /Size 24 0 R /Subject 25 0 R /To 26 0 R /adobe:Order 27 0 R >>
-endobj
-10 0 obj
-<< /S [ /adobe:Order /FileName ] >>
-endobj
-11 0 obj
-<< /Filter /FlateDecode /N 3 /Length 2452 >>
-stream
-xœí™gPTY€ï{¯s ¡»É©ÉI¢„$ç$9Š
-t7™šFdpFIŠ ¢€AFQÅ€((`FeETT–Æ³U»µ[[µµ¶Ï÷¾:çÖ;ç¾ºUï«z È’YI©° IÜ4Ÿ‹=#$4Œ½p€H€
-0‘¬Ôd/ç °‚µàâı€÷{ºÿ¼ş/ƒÄNâ²€è+Ïæ¤²Vxç
-Ç²“Ø‚üŒ€3Ó’Ó €}V˜Î[p…ÙúÆYùÆÅ«küVø( 8RÌ*N	8j•©İfÅò’ é_Y¯ÊJæ­<_FĞKéÛ«!*Ø#†Ãåğ"Ó8lÆ¸µ×ºòòÿëşÇ}gç½µZ=Då_¹-å 0_€”ş•S= e7 ½å¢ĞU
-€Ô3V:/ã[µ:;  
- i  T€&ĞFÀX[àÜ7 ¡``Xx l»@(¥à ¨u 4ƒ6ptóà2¸n»`<|0^yğ,A„…È’†!5H2‚˜5äyB~P(Å@\(Ú
-í†Š 2¨ª‡š¡Ÿ sĞeè4=„& YèOèŒÀ$˜ËÃê°>Ì„í`8 ŞÇÀ)pœïƒ+áøÜ	_†oÁ£0~/  !"ˆ¢‹0Ä	C¢²)D*¤éA{™C>¢0(ŠÒEY¢\Q(*µUŒªFDu¢úQ÷P¨yÔW4-‡ÖA[ İĞ!èt&º ]nBw ¯¢GÑSè÷F£1Ã¸bB1ñ˜\L1æ0¦s	3Œ™Ä,`±Xi¬Ö
-ëÄ¦a°UØSØ‹ØìöˆSÄáœqa8..WkÁõâFpÓ¸%¼(^o÷Æ³ñÙø|#¾?…_"ˆ4V„ B<a¡’ĞF¸JxBxK$•‰æD_bq'±’xšx8AüH¢’´I¤pR:iééé!é-™LV'Û’ÃÈiä}äfòò3òšˆˆ›[d‡HH§ÈˆÈk
-¢F±£l¢äP*(g)w(s¢xQuQÑHÑí¢5¢çDÇEÄhb†bŞbIbÅb-b7Äf¨Xª:Õ‰Ê¦æSQ¯P'iM…æ@cÑvÓiWiSt]ƒîF§Ñ¤ÑçÅ©âÆâAâYâ5âÄùˆ„º„›D¢D‰Ä‰1‰O’ò’v’É½’m’#’‹R²R¶R©B©v©Q©OÒi'ééıÒ]ÒOeP2Ú2¾2™2Gd®ÊÌÉÒe-eY²…²gdÉÁrÚr~r¹rÇäåää]ä“å«ä¯ÈÏ)H(Ø*Ä+”+ô*Ì*Ò­ãË/*¾dˆ3ì‰ŒJF?c^INÉU)]©^iHiIYC9P9O¹]ù©
-A…©­R®Ò§2¯ª¨ê¥ºUµUõ‘^©«vHm@mQ]C=X}z—úŒ†”†›FF«ÆM²¦fŠfƒæ}-ŒS+Aë°Ö]mXÛD;V»Fû¬cª§sXgxzùîš†5ãº$];İİVİ	=	=O½<½.½×úªúaúûõô¿˜$4<6¤ºæöşi¤mÄ2ª1º¿–¼ÖyíµİkßësŒ?0¡™x™ì1é3ùbjfÊ3m35S5‹0«5gÒ™>Ìbæus´¹½ùóóæ-L-Ò,ÎXüa©k™`Ùb9³Ncg]ãºI+e«H«z+¾5Ã:Âú¨5ßFÉ&Ò¦Áæ¹­Š-Û¶ÉvÚNË.Şî”İk{{}‡ı¢ƒ…Ã6‡Kˆ£‹c¡ãÕ)Ğ©Úé™³²sŒs«ó¼‹‰K®Ë%W´«‡ë~×q7y7–[³Û¼»™û6÷~’‡¿GµÇsOmOgìåîuÀëÉzµõÜõ]ŞÀÛÍû€÷SŸŸ_|1¾>¾5¾/üı¶úøÓü7û·ø¿°(	x¨˜ØD	
-jZv.æ‡è‡l¹*Ú†
-k
-[Øà´áà†©p“ğ‚ğ±³6ŞØ$³)qÓ…Í”Í‘›ÏF #‚#Z">GzG6D.D¹EÕFÍ³X‡X¯Ø¶ìrö,ÇŠSÆ™¶Š.‹‰±Š93k[;çW÷&Ş5¾.~1Á;áDÂrbpb{.)"é—ÊMàöoQØ’µe8Y'¹ ™Ÿb‘r0eçÁkJ…R7¦v§ÑW>Òƒéšéß¥OdXgÔd|ÈÊ<›%–ÅÍÌÖÎŞ›=ãœs<•ËÊíÛª´u×Ö‰mvÛê·CÛ£¶÷íPÙ‘¿cj§ËÎ“»»vİÎ3È+Ë{·;xwO¾|şÎüÉï\¾k-)àŒï±ÜS÷=êû¸ï‡ö®İ[µ÷k!»ğf‘AQEÑçbVñÍ¨üay_ô¾¡Ó’#¥˜RnéØ~›ı'ËÄÊrÊ&xè,g”–¿;¸ùà
-ãŠºC„Cé‡ø••İUªU¥UŸ«c«GkìkÚkåj÷Ö.f9b{¤­N¾®¨îÓÑ¸£ê]ê;Ô*ae{ÑÔ8pœy¼¹I¦©¨éË	î	şI¿“ıÍfÍÍ-r-%­pkzëì©ğSwtü±»M·­¾]¢½è48~úåO?ñ8Ów–y¶ígµŸk;h…Pgvç|Wl¿;´{øœû¹¾Ë_ô~9q^é|Íñ%½„ŞüŞå‹9.%_š»sy²osßã+!Wî÷ûö]õ¸zıšóµ+v¯[]?ÃâÆ¹›Ì›]·LoušvÜ6¹İ1d:ÔyÇìN÷]ó»=Ãë†{GlF.ßs¼wí¾Ûı[£ëG‡ÇÇŒ‡ó°Ì<L|øæQÆ£¥Ç;Ÿ Ÿ>}ZñLîYÃ¯Z¿¶óMù&'Ÿû?<Éš|õ[êoŸ§ò__TL+N7ÏÍœŸu½ûrÃË©WÉ¯–æ
-~û½öµæëŸÿ°ıcp>d~êïÍòŸÅo¥ßxgü®oÁgáÙû¤÷K‹…¤?œüÈü8ğ)øÓôRægìçÊ/Z_z¾z|}²œ´¼,t¡]@èBº€Ğ„. t¡]@èBº€Ğş]`õ?ÎJ ‚Ë±q rğ¼@U5 êÑ PÂÓ8Yi‚*wƒµ%9››¶†‘ÊaDó8œÄlAíoX­
-
-endstream
-endobj
-12 0 obj
-<< /Contents 28 0 R /MediaBox [ 0 0 200 200 ] /Parent 6 0 R /Resources << >> /StructParents 0 /Type /Page >>
-endobj
-13 0 obj
-<< /K 29 0 R /P 7 0 R /Pg 12 0 R /S /Document /Type /StructElem >>
-endobj
-14 0 obj
-<< /Nums [ 0 [ 29 0 R ] ] >>
-endobj
-15 0 obj
-<< /CI 30 0 R /CreationDate (D:20261019142039-04'00') /ID 1 /Messages 1 /ModDate (D:20261019142039-04'00') /Name (Messages) /Parent 8 0 R /Size 61476 /Type /Folder >>
-endobj
-16 0 obj
-<< /E false /N (Attachments) /Subtype /N >>
-endobj
-17 0 obj
-<< /E false /N (Bcc) /Subtype /S >>
-endobj
-18 0 obj
-<< /E false /N (Cc) /Subtype /S >>
-endobj
-19 0 obj
-<< /E false /N (Folder Name) /Subtype /F >>
-endobj
-20 0 obj
-<< /E false /N (From) /Subtype /S >>
-endobj
-21 0 obj
-<< /E false /N (Message-ID) /Subtype /S >>
-endobj
-22 0 obj
-<< /E false /N (# of Messages) /Subtype /N >>
-endobj
-23 0 obj
-<< /E false /N (Sent) /Subtype /D >>
-endobj
-24 0 obj
-<< /E false /N (Size) /Subtype /Size >>
-endobj
-25 0 obj
-<< /E false /N (Subject) /Subtype /S >>
-endobj
-26 0 obj
-<< /E false /N (To) /Subtype /S >>
-endobj
-27 0 obj
-<< /E false /N (Order) /Subtype /N >>
-endobj
-28 0 obj
-<< /Filter /FlateDecode /Length 45 >>
-stream
-xœÓP°±Ñ÷uötQ0°³SprqV0PHW02 !0*JUHSpõu Ì;	n
-endstream
-endobj
-29 0 obj
-<< /K 0 /P 13 0 R /Pg 12 0 R /S /P /Type /StructElem >>
-endobj
-30 0 obj
-<< /Messages 1 /Size 61476 /adobe:Order 1.0 >>
-endobj
-xref
-0 31
-0000000000 65535 f 
-0000000015 00000 n 
-0000000254 00000 n 
-0000000555 00000 n 
-0000000667 00000 n 
-0000012826 00000 n 
-0000013054 00000 n 
-0000013114 00000 n 
-0000013207 00000 n 
-0000013339 00000 n 
-0000013542 00000 n 
-0000013594 00000 n 
-0000016125 00000 n 
-0000016250 00000 n 
-0000016333 00000 n 
-0000016378 00000 n 
-0000016561 00000 n 
-0000016621 00000 n 
-0000016673 00000 n 
-0000016724 00000 n 
-0000016784 00000 n 
-0000016837 00000 n 
-0000016896 00000 n 
-0000016958 00000 n 
-0000017011 00000 n 
-0000017067 00000 n 
-0000017123 00000 n 
-0000017174 00000 n 
-0000017228 00000 n 
-0000017345 00000 n 
-0000017417 00000 n 
-trailer << /Info 2 0 R /Root 1 0 R /Size 31 /ID [<31415926535897932384626433832795><31415926535897932384626433832795>] >>
-startxref
-17480
-%%EOF

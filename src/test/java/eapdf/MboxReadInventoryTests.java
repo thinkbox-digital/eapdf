@@ -13,6 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class MboxReadInventoryTests {
+  @org.junit.jupiter.api.BeforeEach void requireLocalCorpus() {
+    org.junit.jupiter.api.Assumptions.assumeTrue(Files.isRegularFile(Path.of("tests/fixtures/eapdf/batch13/inputs.json")), "Optional local regression corpus is not installed");
+  }
   static final Path INPUTS = Path.of("tests/fixtures/eapdf/batch13");
   @TempDir Path directory;
 

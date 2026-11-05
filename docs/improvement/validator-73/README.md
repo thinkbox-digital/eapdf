@@ -1,5 +1,0 @@
-# V73: Undecodable original headers and safe reports
-
-**V73 accepted — 2026-10-21:** Undecodable original mailbox and header values produce unavailable comparisons instead of invented text mismatches. Report copies escape unknown octets without changing retained bytes or internal evidence. Independent supplied-schema, known-presence and readable-field failures remain. **998 unit passes / 40 skips; 667 freshly checked custom cases; ten PDF/A/ISO controls, CLI/worker and 16 browser checks match.** All 657 prior hashes/statuses/failure sets remain. Seven unsupported FAIL results become INCOMPLETE. Creator repair remains deferred. [Evidence](improvement/validator-73/evidence.json).
-
-Seven new unsupported text failures become INCOMPLETE. Two independently invalid controls retain FAIL and valid UTF-8 remains PASS. Actual pinned PDF/A/ISO validation passes all ten exact-byte controls. CLI emits valid JSON and INCOMPLETE; worker retains the independent FAIL. All twelve retained creator failures remain. No legacy charset guessing, Unicode normalization or general malformed encoded-word certification is introduced.

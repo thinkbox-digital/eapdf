@@ -10,7 +10,7 @@ const results=[];
 try{
  await context.setOffline(true);const worker=context.serviceWorkers()[0]??await context.waitForEvent('serviceworker'),page=await context.newPage(),errors=[];
  page.on('pageerror',error=>errors.push(error.message));await page.goto(`chrome-extension://${new URL(worker.url()).host}/viewer.html`);
- assert.equal(await page.locator('#empty-state h2').innerText(),'Read email preserved in PDF.');
+ assert.equal(await page.locator('#empty-state h2').innerText(),'Your email—complete, authentic, accessible, structured.');
  await page.locator('#file').setInputFiles(resolve('../examples/pst/pst_quality-attached-message_1m.pdf'));
  const fitted=()=>page.waitForFunction(()=>{
   const v=document.querySelector('#viewport'),c=document.querySelector('#canvas'),s=getComputedStyle(v);

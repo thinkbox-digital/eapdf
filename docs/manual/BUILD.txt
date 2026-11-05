@@ -2,9 +2,6 @@ EA-PDF user manual: editing, building and screenshots
 
 The deliverable is ../EA-PDF_User_Manual.pdf (ordinary PDF/A-2b, not EA-PDF).
 user-manual.html is the editable, offline-readable source.
-../EA-PDF_User_Manual.pdfa-validation.json records bundled veraPDF verification.
-verapdf-cli-validation.json records an additional veraPDF CLI Docker check.
-build-receipt.json records input/artifact hashes. No private mailbox was used.
 
 Build from the repository root with Java 21 and requirements-docs.txt installed:
 
@@ -12,10 +9,8 @@ python3 -B scripts/manual/build_manual.py \
   --creator-jar /path/to/emailtopdfa.jar \
   --validator-jar /path/to/eapdf-validator.jar
 
-The defaults select root dist JARs. The beta.7 edition uses the released JARs.
-The exact tested JAR hashes are
-in build-receipt.json. The PDF builder uses embedded repository fonts, the system
-DejaVuSans-Bold.ttf (select another location with --bold-font), repository sRGB
+The defaults select root dist JARs. The builder uses embedded repository fonts,
+the system DejaVuSans-Bold.ttf (select another location with --bold-font), repository sRGB
 ICC, PDFBox/XMPBox, and the validator JAR's veraPDF engine. All intermediate
 layout/classes are private temporary files removed on success or failure.
 The same checked source/assets produced a byte-identical second PDF.

@@ -15,6 +15,7 @@ class RuleAlignmentTests {
 
   @ParameterizedTest @ValueSource(strings = {"m", "mi"})
   void ordinaryArchivesCompleteOwnershipWithDefaultLimits(String profile) {
+    org.junit.jupiter.api.Assumptions.assumeTrue(!"m".equals(profile) || java.nio.file.Files.isRegularFile(Path.of("..", "tests/quality/fixtures/pst_source_counts_legacy.pdf")), "Optional local regression corpus is not installed");
     var result = JavaValidation.validate("m".equals(profile) ? Path.of("..", "tests/quality/fixtures/pst_source_counts_legacy.pdf") : samplePath(profile));
     for (String code : java.util.List.of("CONTENT_SET_MAIL_CONTENTSET_TAGGED", "MAIL_CONTENTSET_ART_ONLY",
         "MAIL_MESSAGE_GUID_MATCH_DPM_XMP", "MAIL_CONTENTGROUP_CONTENTSETTYPE_MATCH_IF_PRESENT", "MAIL_CONTENTSET_SUBTYPE_MATCH_IF_PRESENT")) {

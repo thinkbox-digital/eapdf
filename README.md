@@ -8,39 +8,23 @@
 
 Convert email into EA-PDF files using Java, PDFBox, and XMP metadata.
 
-Current beta version: `1.6.0-beta.9`
+Current beta version: `1.6.0-beta.10`
 
 The separate [browser viewer beta](browser-viewer/docs/beta-release.md) opens local
 EA-PDF files and embedded PDFs recursively in Firefox and Chromium. It also
 shows metadata, image and text attachments, with normal downloads for Office files.
-Viewer version `0.5.0-beta.8` includes collection-wide email search, CSV finding
+Viewer version `0.5.0-beta.9` includes collection-wide email search, CSV finding
 aids with folder and attachment details, and paced file downloads. Installation and tested limits
 are documented in that guide.
 
-Latest release: [v1.6.0-beta.9](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.9). Java 21 or later is required.
+Latest release: [v1.6.0-beta.10](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.10). Java 21 or later is required.
 
 For the current proof of concept, see [the short demo guide](docs/CREATOR_DEMO.md). Runnable creator and standalone-validator builds are available from the release linked above.
 
-The [standalone Java validator](validator-desktop/README.md) builds into one JAR,
-with its libraries, rules and specification references included. The
-[prior full comparison](docs/improvement/validator-desktop-parity/RESULTS.md) verified all
-213 rule outcomes across 808 PDFs and 67 embedded reports. Overall PASS is enabled
-when required comparisons complete; existing unavailable-evidence limits remain.
-Current reexamination verification is recorded in the report linked below.
-The [current rulebook and GUI](docs/improvement/validator-rule-ordering/README.md)
-use 213 specification-ordered rules and counted groups for repeated findings.
-Runtime rule data is kept in `validator_rule_text.json`; audit records are
-[stored separately](docs/improvement/validator-rule-cleanup/README.md).
-
-For specification-author review, open the [current Word document](EA_PDF_Rule_Review_for_Specification_Authors.docx). It follows all 213 JSON rules in order and includes source quotations, complete table extracts and original table images. [Source evidence](docs/improvement/specification-audit/author-review-source-evidence.json) and [verification](docs/improvement/specification-audit/author-review-verification.json) accompany it.
-
-The [October 27 reexamination](docs/improvement/specification-audit/specification-reexamination-2026-10-27.txt)
-records 52 findings and working decisions, including document-wide front matter,
-PDF-version-specific collection navigation, and limits on source-fidelity evidence.
-[Implementation verification](docs/improvement/specification-audit/reexamination-verification-2026-10-27.json)
-records the current test results and six-profile agreement between validators.
-Refresh the Word review from the current JSON with
-`python3 -B scripts/sync_eapdf_author_review.py`.
+The [standalone Java validator](validator-desktop/README.md) builds into one JAR
+with its libraries, rules and specification references. It checks EA-PDF structure,
+metadata and available source relationships, alongside PDF/A validation.
+See [validation coverage and limitations](docs/VALIDATOR_COVERAGE.md).
 
 This codebase was produced with Codex/ChatGPT assistance and is not designed for production use without additional engineering, review, and hardening.
 
@@ -122,20 +106,14 @@ All six profiles currently use PDF 2.0 / PDF/A-4f output in this generator. Sele
 
 ## Release Downloads
 
-Version `1.6.0-beta.9` is a beta for ordinary email creation and validation.
-Large archives require sufficient RAM. Further large-PST campaigns are outside
-the current work scope; previous results and source limitations are retained.
-Large-output signing retains its separate verification status. See
-[development status](docs/DEVELOPMENT_STATUS.md) for the recorded results.
-
 | Download | Purpose |
 | --- | --- |
-| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/emailtopdfa-1.6.0-beta.9-gui.jar) | Convert local email sources through the desktop app. |
-| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/emailtopdfa-1.6.0-beta.9.jar) | Run local email and Gmail workflows from the command line. |
-| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/eapdf-validator-1.6.0-beta.9.jar) | Validate a PDF using the bundled Java engines and current rules. |
-| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/eapdf-viewer-0.5.0-beta.8-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
-| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/eapdf-viewer-0.5.0-beta.8-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
-| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/ea-pdf-examples-1.6.0-beta.9.zip) | Refreshed input-named examples and PDF/A finding-aid sidecars, with source hashes and validation receipts. |
+| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.10/emailtopdfa-1.6.0-beta.10-gui.jar) | Convert local email sources through the desktop app. |
+| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.10/emailtopdfa-1.6.0-beta.10.jar) | Run local email and Gmail workflows from the command line. |
+| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.10/eapdf-validator-1.6.0-beta.10.jar) | Validate a PDF using the bundled Java engines and current rules. |
+| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.10/eapdf-viewer-0.5.0-beta.9-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
+| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.10/eapdf-viewer-0.5.0-beta.9-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
+| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.10/ea-pdf-examples-1.6.0-beta.10.zip) | Refreshed input-named examples and PDF/A finding-aid sidecars, with source hashes and validation receipts. |
 
 Each JAR includes its runtime libraries. The release also includes the updated specification-author review document, license notices and `SHA256SUMS.txt`. Run a desktop app with `java -jar downloaded-file.jar`.
 
@@ -160,8 +138,8 @@ mvn package
 
 Artifacts:
 
-- CLI fat jar: `target/emailtopdfa-1.6.0-beta.9.jar`
-- GUI fat jar: `target/emailtopdfa-1.6.0-beta.9-gui.jar`
+- CLI fat jar: `target/emailtopdfa-1.6.0-beta.10.jar`
+- GUI fat jar: `target/emailtopdfa-1.6.0-beta.10-gui.jar`
 
 The current creator build is also available in `dist/`:
 
@@ -177,19 +155,19 @@ running web process to load a changed application or creator JAR selection.
 Convert a local email source:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.9.jar eapdf.EmailToPDFA --jobs 2 file.eml
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.10.jar eapdf.EmailToPDFA --jobs 2 file.eml
 ```
 
 Write output to a custom directory:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.9.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.10.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
 ```
 
 Generate an archive profile:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.9.jar eapdf.EmailToPDFA \
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.10.jar eapdf.EmailToPDFA \
   --jobs 2 --archive-profile m \
   --archive-output archive_1m.pdf \
   file.mbox
@@ -237,7 +215,7 @@ python validator_web.py
 Launch the desktop GUI:
 
 ```bash
-java -jar target/emailtopdfa-1.6.0-beta.9-gui.jar
+java -jar target/emailtopdfa-1.6.0-beta.10-gui.jar
 ```
 
 Tracked examples are grouped by source format under [`examples/`](examples/):
@@ -376,7 +354,6 @@ Local per-email conversion keeps existing files and adds a numbered suffix when 
 
 Generated PDFs and per-file logs are stored locally, outside the published repository.
 
-- validation HTML reports: [`validation/`](validation/)
 
 ## Repository Layout
 
@@ -386,22 +363,8 @@ Generated PDFs and per-file logs are stored locally, outside the published repos
 - [`docs/`](docs/) - user/operator documentation
 - [`in/`](in/) - local sample/test email inputs
 - [`scripts/`](scripts/) - helper scripts such as doc generation
-- [`validation/`](validation/) - saved validation reports
 
 ## Documentation
-
-- Implementation audit and resume checkpoint: [`docs/EA_PDF_WORK_LOG.md`](docs/EA_PDF_WORK_LOG.md)
-- Prioritized validator and creator work plan: [`docs/EA_PDF_IMPROVEMENT_PLAN.md`](docs/EA_PDF_IMPROVEMENT_PLAN.md)
-- Production-readiness review and language-independent rewrite reference: [`docs/reimplementation/README.md`](docs/reimplementation/README.md)
-- Features: [`docs/FEATURES.md`](docs/FEATURES.md)
-- Changelog: [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
-- Gmail setup: [`docs/GMAIL.md`](docs/GMAIL.md)
-- Third-party licensing notes: [`docs/THIRD_PARTY_LICENSES.md`](docs/THIRD_PARTY_LICENSES.md)
-- Release notices: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
-- Private GitHub sharing notes: [`docs/PRIVATE_GITHUB.md`](docs/PRIVATE_GITHUB.md)
-- Validator coverage: [`docs/VALIDATOR_COVERAGE.md`](docs/VALIDATOR_COVERAGE.md)
-- Web deployment notes: [`docs/DEPLOY_WEB.md`](docs/DEPLOY_WEB.md)
-- Workflow decision tree PDF: [`docs/eapdf_decision_tree.pdf`](docs/eapdf_decision_tree.pdf)
 
 ## Libraries And Dependency Versions
 
@@ -506,52 +469,17 @@ Important exceptions and release caveats:
 These are outstanding redistribution checks, not a licensing clearance. See
 [`docs/THIRD_PARTY_LICENSES.md`](docs/THIRD_PARTY_LICENSES.md) before shipping binaries.
 
-## Testing
+## Building
 
-Use the real input corpus under `in/` for future conversion regressions:
-
-```bash
-python3 -B scripts/run_real_world_corpus.py
-```
-
-The runner converts every EML, MSG, PST and MBOX candidate recursively, uses two
-concurrent cases and up to two creator workers per case, and validates generated
-EA-PDFs with the standalone Java validator. It retains input hashes, output
-hashes, logs, and validation JSON in local records.
-It uses the JARs in `dist/`; `EAPDF_GENERATOR_CLASSPATH` and
-`EAPDF_VALIDATOR_JAR` can select isolated builds. Use `--output` for a new audit
-folder, or repeat `--only in/path/to/file` to rerun selected cases. Matching
-successful conversions are reused; validation is rerun. Failed conversions and
-incomplete validation remain explicit in `run-results.json`; a completed batch
-is not a claim that every file passed. The runner leaves original inputs intact.
-
-See the [plain-language real-input report](docs/improvement/real-world-corpus-2026-10-27.txt)
-for fixes, unsupported evidence, missing source data and large-mailbox limits.
-The creator's real-input regression tests use these same files and skip explicitly
-when a corpus file is not installed. Synthetic tests supplement this coverage.
-
-Font subsetting uses PDFBox's normal save behavior. CIDSet absence is not an
-extra validation requirement: the [forthcoming PDF/A-4 revision changes “shall”
-to “should”](https://github.com/veraPDF/veraPDF-library/issues/1647#issuecomment-6457552448).
-The former forced-removal workaround and mandatory absence check were reverted.
-
-Requires JDK 21, Maven and Python 3. Install Python dependencies, then run the tests:
+Use Java 21 or later and Maven:
 
 ```bash
-python3 -m pip install -r requirements-web.txt
-mvn test
-python3 -B -m unittest discover -s tests -v
+mvn -Deapdf.build.directory=/tmp/eapdf-build package
+mvn -f validator-desktop/pom.xml -Deapdf.build.directory=/tmp/eapdf-validator-build package
 ```
 
-To include generated-PDF checks for all six profiles, build the JAR and run:
-
-```bash
-mvn package
-EAPDF_GENERATOR_CLASSPATH="$PWD/target/emailtopdfa-1.6.0-beta.9.jar" \
-  python3 -B -m unittest discover -s tests -v
-```
-
-PDF/A checks require Docker/veraPDF. See [development status](docs/DEVELOPMENT_STATUS.md) for detailed verification and [validator coverage](docs/VALIDATOR_COVERAGE.md) for limitations.
+See [Contributing](CONTRIBUTING.md) for development guidance and
+[validator coverage](docs/VALIDATOR_COVERAGE.md) for assessment limitations.
 
 ## Notes For GitHub Users
 

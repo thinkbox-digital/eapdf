@@ -46,7 +46,8 @@ export function interpret(input:InterpretationInput):{inspection:InspectionResul
     if(result.state==='ambiguous')diagnostic('AMBIGUOUS_MESSAGE_IDENTITY','ambiguous','More than one message matches the declared identity.',where);
     return result;
   };
-  const parts:Mutable<DocumentPart>[]=[];
+  const parts:Mutable<DocumentPart>[]=[],partById=new Map<string,Mutable<DocumentPart>>();
+  const badParents=new Set(input.parts.diagnostics.filter(d=>d.code==='PARENT_MISMATCH').map(d=>d.locator.path));
   for(const generic of input.parts.parts){
     const where=loc(generic.locator),dpm:Record<string,TextObservation>=Object.create(null);
     for(const entry of generic.dpm.entries){
@@ -54,13 +55,14 @@ export function interpret(input:InterpretationInput):{inspection:InspectionResul
       dpm[entry.key]=scalar(entry.value,{...where,path:where.path+'/DPM/'+entry.key},!identity&&entry.value.kind==='name'?'name':'string');
       if(identity&&dpm[entry.key]!.state==='invalid')diagnostic('INVALID_MESSAGE_IDENTITY','invalid','DPM identity must be a PDF string.',where);
     }
-    const parent=parts.find(p=>p.id===(generic.parent?id(generic.parent):null));
+    const parent=generic.parent?partById.get(id(generic.parent)):undefined;
     const guid=dpm.Mail_GUID??obs(),mid=dpm.Mail_MessageID??obs();
     let owners=guid.state!=='missing'||mid.state!=='missing'?owner(guid,mid,where):parent?.messageIds??obs<readonly string[]>();
-    if(input.parts.diagnostics.some(d=>d.code==='PARENT_MISMATCH'&&d.locator.path===generic.locator.path))owners=obs<readonly string[]>(null,{state:'unavailable',reason:'DPart ancestry is inconsistent.'});
+    if(badParents.has(generic.locator.path))owners=obs<readonly string[]>(null,{state:'unavailable',reason:'DPart ancestry is inconsistent.'});
     const ref=(r:{ref:{num:number;gen:number}|null})=>obs<readonly string[]>(r.ref?[documentId+`#object:${r.ref.num}:${r.ref.gen}`]:null,{evidence:[where]});
     parts.push({id:id(generic.locator),locator:where,parentId:generic.parent?id(generic.parent):null,declaredParent:ref(generic.declaredParent),childIds:generic.children.map(id),dpm,
       startReference:ref(generic.start),endReference:ref(generic.end),pageRange:generic.pageRange.state==='present'?obs({indexBase:0 as const,endInclusive:true as const,start:generic.pageRange.start!,end:generic.pageRange.end!},{basis:'derived',evidence:[where]}):obs(null,{state:generic.pageRange.state,evidence:[where]}),messageIds:owners});
+    partById.set(parts.at(-1)!.id,parts.at(-1)!);
   }
   const files:Mutable<AssociatedFile>[]=assets.files.map(f=>{
     const where=loc(f.locator);
@@ -78,20 +80,50 @@ export function interpret(input:InterpretationInput):{inspection:InspectionResul
       origins:f.origins.map(o=>({kind:o.kind,locator:loc(o.locator),pageIndex:o.pageIndex,nameTreeKey:scalar(o.nameTreeKey,loc(o.locator))})),embedding:f.embedding,streams,
       roles:obs<readonly string[]>(null,{state:'unavailable'}),owners:obs<readonly string[]>(null,{state:'unavailable'}),metadataRecordIds:[]};
   });
+  const addIndex=<T>(index:Map<string,T[]>,key:string,value:T)=>{const rows=index.get(key);if(rows)rows.push(value);else index.set(key,[value]);};
+  const checksumFiles=new Map<string,typeof files>(),nameFiles=new Map<string,typeof files>();
+  for(const file of files){
+    const hashes=new Set<string>(),names=new Set<string>();
+    for(const stream of file.streams){
+      const size=stream.decodedSize.value??stream.declaredSize.value,checksum=stream.computedMd5.value??stream.declaredMd5.value;
+      if(size===null)continue;
+      if(checksum!==null)hashes.add(JSON.stringify([size,checksum]));
+      for(const name of [file.filename.value,file.unicodeFilename.value])if(name!==null)names.add(JSON.stringify([size,name]));
+    }
+    for(const key of hashes)addIndex(checksumFiles,key,file);
+    for(const key of names)addIndex(nameFiles,key,file);
+  }
+  const recordById=new Map(xmp.records.map(record=>[record.id,record]));
+  const partsByObject=new Map<string,typeof parts>();
+  for(const part of parts)if(part.locator.objectNumber!==null)addIndex(partsByObject,`${part.locator.objectNumber}:${part.locator.generation}`,part);
+  // Sweep only annotation page positions. Overlapping ranges retain all owners,
+  // including unknown owners; no page-by-page expansion or sole-owner guesses.
+  const annotationPages=[...new Set(files.flatMap(file=>file.origins.filter(o=>o.kind==='annotation'&&o.pageIndex!==null).map(o=>o.pageIndex!)))].sort((a,b)=>a-b);
+  const events=parts.flatMap(part=>{const range=part.pageRange.value;return range?[{page:range.start,delta:1,owners:part.messageIds.value},{page:range.end+1,delta:-1,owners:part.messageIds.value}]:[];}).sort((a,b)=>a.page-b.page);
+  const pageOwners=new Map<number,{valid:boolean;candidates:string[]}>(),activeOwners=new Map<string,number>();
+  const invalidRange=parts.some(part=>part.pageRange.state==='invalid');let eventIndex=0,unknown=0;
+  for(const page of annotationPages){
+    while(eventIndex<events.length&&events[eventIndex]!.page<=page){const event=events[eventIndex++]!;
+      if(event.owners===null)unknown+=event.delta;
+      else for(const owner of event.owners){const count=(activeOwners.get(owner)??0)+event.delta;if(count)activeOwners.set(owner,count);else activeOwners.delete(owner);}
+    }
+    pageOwners.set(page,{valid:!invalidRange&&unknown===0,candidates:[...activeOwners.keys()]});
+  }
   for(const record of xmp.records){
     if(record.kind==='email'){record.owners=obs([record.id],{basis:'derived',evidence:[record.locator]});continue;}
     record.owners=record.kind==='attachment'?owner(field(record,'Mail_GUID'),field(record,'Message-ID'),record.locator,true):obs<readonly string[]>(null,{state:'unavailable',reason:'Source metadata does not supply a mandatory message link.'});
     const checksum=field(record,'CheckSum','Checksum'),size=field(record,'SizeInBytes').value,filename=field(record,'Filename').value;
-    const matches=files.filter(f=>f.streams.some(s=>size!==null&&/^\+?\d+$/.test(size)&&Number(size)===(s.decodedSize.value??s.declaredSize.value)&&
-      (checksum.value!==null?/^[0-9a-fA-F]{32}$/.test(checksum.value)&&checksum.value.toLowerCase()===(s.computedMd5.value??s.declaredMd5.value):filename!==null&&[f.filename.value,f.unicodeFilename.value].includes(filename))));
+    const matches=size!==null&&/^\+?\d+$/.test(size)?(checksum.value!==null
+      ?(/^[0-9a-fA-F]{32}$/.test(checksum.value)?checksumFiles.get(JSON.stringify([Number(size),checksum.value.toLowerCase()]))??[]:[])
+      :filename!==null?nameFiles.get(JSON.stringify([Number(size),filename]))??[]:[]):[];
     for(const f of matches)f.metadataRecordIds=[...f.metadataRecordIds,record.id];
     record.files=matches.length&&checksum.value===null?obs(null,{state:'unavailable',candidates:matches.map(f=>[f.id]),reason:'Filename and size are candidates, not a proven physical binding.'}):links(matches.map(f=>f.id),[record.locator],true);
     if(record.files.state==='ambiguous')diagnostic('AMBIGUOUS_FILE_BINDING','ambiguous','Several physical files match one metadata record.',record.locator);
   }
   for(const f of files){
-    const records=xmp.records.filter(r=>f.metadataRecordIds.includes(r.id)&&r.files.value?.length===1&&r.files.value[0]===f.id);
+    const records=f.metadataRecordIds.map(id=>recordById.get(id)!).filter(r=>r.files.value?.length===1&&r.files.value[0]===f.id);
     f.roles=links(records.map(r=>r.kind),[f.locator]);
-    const explicitParts=f.origins.filter(o=>o.kind==='object-af').flatMap(o=>parts.filter(p=>p.locator.objectNumber!==null&&p.locator.objectNumber===o.locator.objectNumber&&p.locator.generation===o.locator.generation));
+    const explicitParts=f.origins.filter(o=>o.kind==='object-af').flatMap(o=>partsByObject.get(`${o.locator.objectNumber}:${o.locator.generation}`)??[]);
     if(explicitParts.length){
       const owners=new Set(explicitParts.flatMap(p=>p.messageIds.value??[]));
       f.owners=explicitParts.every(p=>p.messageIds.value?.length)?links([...owners],[f.locator]):obs(null,{state:'unavailable',reason:'File association refers to an unidentified document part.'});
@@ -100,9 +132,8 @@ export function interpret(input:InterpretationInput):{inspection:InspectionResul
     const contexts=f.origins.filter(o=>o.kind==='annotation'),owners=new Set<string>();let unresolved=false;
     if(contexts.length){
       for(const o of contexts){
-        const candidates=new Set<string>();let valid=o.pageIndex!==null;
-        for(const p of parts){const range=p.pageRange.value;if(p.pageRange.state==='invalid')valid=false;
-          if(range&&o.pageIndex!==null&&range.start<=o.pageIndex&&range.end>=o.pageIndex){if(p.messageIds.value===null)valid=false;else p.messageIds.value.forEach(i=>candidates.add(i));}}
+        const context=o.pageIndex===null?undefined:pageOwners.get(o.pageIndex);
+        const candidates=new Set(context?.candidates??[]),valid=context?.valid??false;
         if(!valid||candidates.size!==1)unresolved=true;candidates.forEach(i=>owners.add(i));
       }
       f.owners=unresolved?obs(null,{state:owners.size>1?'ambiguous':'unavailable',candidates:[...owners].map(i=>[i]),reason:'Not every annotation context has a unique message owner.'}):links([...owners],[f.locator]);
@@ -120,10 +151,14 @@ export function interpret(input:InterpretationInput):{inspection:InspectionResul
     const verified=file.streams.every(stream=>{const fact=input.streams.get(stream.locator.path);return fact?.state==='present'&&fact.sourceMessageId&&(!stream.declaredMd5.value||stream.declaredMd5.value===fact.md5);});
     if(verified&&ids.size===1){const candidates=byMid.get([...ids][0]!)??[];if(candidates.length===1){file.owners=obs([candidates[0]!.id],{basis:'derived',evidence:[file.locator],reason:'Exact unique Message-ID in extracted email source.'});}}
   }
-  for(const message of messages){message.partIds=obs(parts.filter(p=>p.messageIds.value?.includes(message.id)).map(p=>p.id),{basis:'derived'});
-    const sources=files.filter(f=>f.afRelationship.value==='Source'&&f.owners.value?.includes(message.id));
+  const messageParts=new Map<string,string[]>(),messageSources=new Map<string,typeof files>(),messageAttachments=new Map<string,string[]>();
+  for(const part of parts)for(const owner of part.messageIds.value??[])addIndex(messageParts,owner,part.id);
+  for(const file of files)if(file.afRelationship.value==='Source')for(const owner of file.owners.value??[])addIndex(messageSources,owner,file);
+  for(const record of xmp.records)if(record.kind==='attachment')for(const owner of record.owners.value??[])addIndex(messageAttachments,owner,record.id);
+  for(const message of messages){message.partIds=obs(messageParts.get(message.id)??[],{basis:'derived'});
+    const sources=messageSources.get(message.id)??[];
     if(sources.length)message.sourceAssetIds=obs(sources.map(f=>f.id),{basis:'derived',evidence:sources.map(f=>f.locator)});
-    message.attachmentRecordIds=xmp.records.filter(r=>r.kind==='attachment'&&r.owners.value?.includes(message.id)).map(r=>r.id);}
+    message.attachmentRecordIds=messageAttachments.get(message.id)??[];}
   const col=assets.collection;
   const folders=col.folders.map(f=>({id:id(f.locator),locator:loc(f.locator),folderNumber:number(f.number,loc(f.locator)),name:scalar(f.name,loc(f.locator)),parentId:f.parent?documentId+'#'+f.parent:null,childIds:f.children.map(p=>documentId+'#'+p)}));
   const entries=files.flatMap(f=>f.origins.filter(o=>o.kind==='name-tree').map(o=>{

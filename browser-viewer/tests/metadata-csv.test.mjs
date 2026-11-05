@@ -9,7 +9,7 @@ test('CSV preserves quoted multiline Unicode fields and blank missing values',as
  const bytes=new Uint8Array(await result.blob.arrayBuffer());assert.deepEqual([...bytes.slice(0,3)],[239,187,191]);
 });
 test('spreadsheet formula prefixes are neutralized, including whitespace',()=>{
- for(const value of ['=1+1','+cmd','-2','@SUM(1)','  =1','\t=1','\n=1'])assert.equal(csvCell(value),'"\''+value+'"');
+ for(const value of ['=1+1','+cmd','-2','@SUM(1)','  =1','\t=1','\n=1'])assert.equal(csvCell(value),'"\''+value.replaceAll('\t',' ')+'"');
  assert.equal(csvCell('a,b'),'"a,b"');
 });
 test('long subjects are not truncated by CSV export',async()=>{
@@ -102,4 +102,17 @@ test('progress reports the child before awaiting its inspection',async()=>{
  const root=collection('root.pdf',[],[{fileId:'a',folderIds:present([])}],[member('a')]);
  let last;
  await metadataCsv(root,async()=>{assert.deepEqual(last,[0,'a.pdf']);return doc('a.pdf');},()=>{},(...p)=>{last=p;});
+});
+
+test('CSV replaces embedded tabs in all exported fields without changing the source metadata',async()=>{
+ const d=doc('mail\tarchive.pdf');
+ d.details.get('email').Subject='Hello\t\tworld';
+ d.details.get('email')['Raw-From']='Alice\t<a@example.org>';
+ d.inspection.messages[0].internetMessageId.value='<id\tpart>';
+ d.inspection.metadataRecords=[{id:'a',kind:'attachment',owners:present(['message']),fields:{Filename:present('file\tname.txt')}}];
+ const csv=await (await run(d)).blob.text();
+ assert.doesNotMatch(csv,/\t/);
+ for(const value of ['mail archive.pdf','Hello  world','Alice <a@example.org>','<id part>','file name.txt'])assert.ok(csv.includes(value));
+ assert.equal(d.details.get('email').Subject,'Hello\t\tworld');
+ assert.equal(csvCell('\t=1'),'"\' =1"');
 });

@@ -17,6 +17,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class CollectionChildAcceptanceTests {
+  @org.junit.jupiter.api.BeforeEach void requireLocalCorpus() {
+    org.junit.jupiter.api.Assumptions.assumeTrue(Files.isRegularFile(Path.of("tests/fixtures/eapdf/batch11/source.eml")), "Optional local regression corpus is not installed");
+  }
   @TempDir Path directory;
 
   byte[] collection(String profile) throws Exception {

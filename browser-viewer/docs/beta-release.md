@@ -1,6 +1,6 @@
-# Viewer 0.5.0-beta.8 — GitHub prerelease (2026-11-05)
+# Viewer 0.5.0-beta.9 — GitHub prerelease (2026-11-05)
 
-Packages accompany EA-PDF 1.6.0-beta.9.
+Packages accompany EA-PDF 1.6.0-beta.10.
 
 - Clearer file groups, equal-width sidebars, and grouped document controls.
 - Faster collection search, navigation, and finding-aid exports.
@@ -12,11 +12,11 @@ Unsigned browser packages; manual installation is required.
 ## Install or update
 
 Download the packages from the
-[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.9).
+[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.10).
 Local packages are also in `browser-viewer/releases/`.
 
-- `eapdf-viewer-0.5.0-beta.8-chromium.zip`
-- `eapdf-viewer-0.5.0-beta.8-firefox.zip`
+- `eapdf-viewer-0.5.0-beta.9-chromium.zip`
+- `eapdf-viewer-0.5.0-beta.9-firefox.zip`
 
 Extract the appropriate ZIP. Chromium: open `chrome://extensions`, enable
 Developer mode, choose **Load unpacked**, then select the extracted directory.
@@ -30,7 +30,7 @@ new one. No Java, Python, Node or server is needed to use either extension.
 
 ## Example emails
 
-Download [the beta.9 example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.9/ea-pdf-examples-1.6.0-beta.9.zip), or see the [example inventory](../../examples/README.md).
+Download [the beta.9 example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.10/ea-pdf-examples-1.6.0-beta.10.zip), or see the [example inventory](../../examples/README.md).
 
 ## Release checklist
 
@@ -140,8 +140,12 @@ in memory. Large compressed streams still need decoded memory. Resource failures
 are reported; there is no claim of unlimited file size.
 
 File, object, edge and nesting counts do not cut off graph inspection.
-Loading/inspection/extraction operations time
-out after 60 seconds; page operations after 30 seconds. Page and image rendering
+Loading and extraction operations time out after 60 seconds; page operations
+after 30 seconds. Initial preview operations allow two minutes for archives
+with at least 10,000 pages. Complete initial inspection and reactivation allow fifteen minutes for documents
+with at least 10,000 pages, retaining the 60-second deadline for smaller documents.
+Initial preview prefetch waits until inspection finishes. Catalog metadata has a
+128 MiB resource allowance; failures are reported rather than silently truncated. Page and image rendering
 use a 16-million-pixel limit. Text attachment display is capped at 2 MiB. Search
 checks all pages within a 120-second deadline; collection search also bounds retained results to ten million characters. Exhaustion is reported as incomplete.
 
@@ -161,21 +165,12 @@ Embedded files, removed duplicate panels and two 41-pixel top rows at 1600 × 10
 One Chromium run alongside Firefox missed a zero-byte download event; the
 isolated full rerun passed. This intermittent harness result is not claimed fixed.
 
-
 Chromium 156.0.8078.47 and Firefox 158.0.1 on Linux passed the same 13 interface
 cases, 17 message selections, 15 attachment cases, and new large-file/nested-PDF
 checks. These include a 40 MiB local PDF, a 20 MiB embedded PDF, seven nested
 levels with return navigation, and the real 71-message PST collection. Text
 selection, search highlighting and rotated text alignment are covered. The
 27 independent semantic expectations remain unchanged and pass.
-
-See [the current release evidence](release-0.3-results.md) and
-[the earlier navigation evidence](navigation-results.md). The supplied third-party BFO
-PDF also remains readable. Native browser menu clicks and the site-permission
-prompt require a manual acceptance check; automated tests verify the link banner
-and that it does not fetch automatically. Store signing, other operating systems,
-older browsers, accessibility acceptance and printing remain outside this
-beta checkpoint. This viewer does not certify EA-PDF or PDF/A compliance.
 
 ## Rebuild
 

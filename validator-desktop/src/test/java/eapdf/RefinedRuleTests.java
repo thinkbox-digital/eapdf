@@ -70,6 +70,30 @@ class RefinedRuleTests {
     }
   }
 
+  @ParameterizedTest @ValueSource(strings = {"(Recipient list suppressed)", "undisclosed-recipients:;", "recipient@example.org"})
+  void rawRecipientAlternativeRequiresNoKnownMailbox(String recipient) throws Exception {
+    try (var document = Loader.loadPDF(SAMPLE.toFile())) {
+      COSDictionary source = null;
+      for (COSBase value : (COSArray) get(document.getDocumentCatalog().getCOSObject(), "AF"))
+        if (resolve(value) instanceof COSDictionary spec && "Source".equals(name(get(spec, "AFRelationship")))) source = spec;
+      assertNotNull(source);
+      jakarta.mail.internet.MimeMessage message;
+      try (var input = stream(source).createInputStream()) {
+        message = new jakarta.mail.internet.MimeMessage(jakarta.mail.Session.getInstance(new Properties()), input);
+      }
+      message.setHeader("To", recipient);
+      try (var output = stream(source).createOutputStream(COSName.FLATE_DECODE)) { message.writeTo(output); }
+      var xml = metadata(document); var email = firstRecord(xml, "email");
+      var to = fieldElement(email, "To"); assertNotNull(to); email.removeChild(to);
+      var raw = xml.createElementNS(MAIL, "mail:Raw-To"); raw.setTextContent(recipient); email.appendChild(raw);
+      metadata(document, xml);
+      var fields = rows(inspect(document), "MESSAGE_CORE_FIELDS_SOURCE_REQUIRED").stream()
+          .filter(row -> "To".equals(JavaValidation.text(row.getAsJsonObject("details"), "field"))).toList();
+      assertFalse(fields.isEmpty());
+      assertEquals(recipient.contains("@"), level(fields, "FAIL"));
+    }
+  }
+
   @Test void matchingMetadataAndStreamOmissionsDoNotHideOriginalParameters() throws Exception {
     try (var document = Loader.loadPDF(SAMPLE.toFile())) {
       var xml = metadata(document); Element attachment = firstRecord(xml, "attachments");

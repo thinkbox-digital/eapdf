@@ -5,6 +5,9 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class ComparisonRegressionTests {
+  @org.junit.jupiter.api.BeforeEach void requireLocalCorpus() {
+    org.junit.jupiter.api.Assumptions.assumeTrue(java.nio.file.Files.isRegularFile(Path.of("../tests/fixtures/eapdf/upstream-issues/createdate-equal.pdf")), "Optional local regression corpus is not installed");
+  }
   private static final Path FIXTURES = Path.of("..", "tests", "fixtures", "eapdf");
 
   @Test void standardOperandMustStillMatchItsCustomStructureOwner() {

@@ -3,8 +3,10 @@ import type {AssociatedFile,EmbeddedStream,InspectionResult,MailMessage} from '.
 import {fileLabel} from './navigation.js';
 
 // Quote every field, preserve Unicode/newlines, and neutralize spreadsheet formulas.
+// Normalize tabs to spaces for spreadsheet importers that also split on tabs.
 export function csvCell(value:string):string {
   if(/^[\s\uFEFF]*[=+@-]/u.test(value)||/^[\t\r\n]/.test(value))value="'"+value;
+  value=value.replaceAll('\t',' ');
   return '"'+value.replaceAll('"','""')+'"';
 }
 // Folder names come from the collection tree, not from PDF filenames.

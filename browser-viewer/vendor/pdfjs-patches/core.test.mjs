@@ -133,3 +133,16 @@ test('MissingDataException propagates so PDFManager can fetch and retry', async 
   const f = fixture(); f.catalog.xref.fetch = () => { throw new MissingDataException(0, 100); };
   await assert.rejects(f.inspect(), MissingDataException);
 });
+
+test('large archives map page membership once instead of searching for each DPart',async()=>{
+ const f=fixture();let scans=0;
+ f.catalog.getAllPageDicts=async()=>{scans++;return new Map([[0,[f.dict({Type:Name.get('Page')}),f.pageRef]]]);};
+ f.catalog.getPageIndex=async()=>{throw new Error('Repeated page lookup');};
+ f.catalog.getPageDict=async()=>{throw new Error('Repeated page traversal');};
+ f.part.set('End',f.pageRef);
+ const result=await f.inspect();assert.equal(result.status,'present');assert.equal(scans,1);assert.equal(result.parts[0].pageRange.start,0);assert.equal(result.parts[0].pageRange.end,0);
+});
+test('one-pass page map rejects a detached DPart page reference',async()=>{
+ const f=fixture();f.catalog.getAllPageDicts=async()=>new Map([[0,[f.dict({Type:Name.get('Page')}),Ref.get(999,0)]]]);
+ const result=await f.inspect();assert.equal(result.parts[0].pageRange.state,'invalid');assert.ok(result.diagnostics.some(d=>d.code==='INVALID_PAGE_RANGE'));
+});

@@ -1,8 +1,0 @@
-{
-  "scope": "Remove repeated rule wording and generic audit notes from every row",
-  "browser_checks": 16,
-  "requirements_and_checker_unchanged": true,
-  "example": "pdfmailid:version = 1 (integer).",
-  "artifact_sha256": "287d1d7dcc0783f8f8b00a33b91cbef2f3797ad8e6348e6e2c2e486551cc6072",
-  "verification": "../../rule-browser-verification.json"
-}

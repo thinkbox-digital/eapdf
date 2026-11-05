@@ -1,0 +1,792 @@
+--- a/src/core/document_parts.js
++++ b/src/core/document_parts.js
+@@ -135,6 +135,7 @@
+           : "invalid",
+     ref: ref(raw),
+   });
++  let allPageIndices;
+   async function pageIndex(raw) {
+     if (!(raw instanceof Ref)) {
+       throw new Error("Expected a page reference");
+@@ -142,6 +143,23 @@
+     const key = raw.toString();
+     if (pageIndices.has(key)) {
+       return pageIndices.get(key);
++    }
++    // One page-tree traversal establishes membership and ordering. Repeating
++    // getPageDict for every DPart range is quadratic on flat page trees.
++    if (typeof catalog.getAllPageDicts === "function") {
++      if (!allPageIndices) {
++        allPageIndices = new Map();
++        for (const [index, [page, reference]] of await catalog.getAllPageDicts()) {
++          if (page instanceof Dict && reference instanceof Ref &&
++              Number.isInteger(index) && index >= 0 && index < catalog.numPages) {
++            allPageIndices.set(reference.toString(), index);
++          }
++        }
++      }
++      if (!allPageIndices.has(key)) {
++        throw new Error("Page reference is outside the document page tree");
++      }
++      return allPageIndices.get(key);
+     }
+     const index = await catalog.getPageIndex(raw);
+     if (!Number.isInteger(index) || index < 0 || index >= catalog.numPages) {
+@@ -159,7 +177,9 @@
+     pageIndices.set(key, index);
+     return index;
+   }
++  let workSinceYield = 0;
+   async function walk(raw, parent, path, depth, expectedParent) {
++    if (++workSinceYield % 256 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+     if (stopped) {
+       return;
+     }
+--- a/src/core/decode_stream.js
++++ b/src/core/decode_stream.js
+@@ -24,6 +24,10 @@
+ const emptyBuffer = new Uint8Array(0);
+ 
+ // Super class for the decoding streams.
++class DecodeStreamLimitError extends Error {
++  constructor(message) { super(message); this.name = "DecodeStreamLimitError"; }
++}
++
+ class DecodeStream extends BaseStream {
+   buffer = emptyBuffer;
+ 
+@@ -65,7 +69,7 @@
+ 
+   ensureBuffer(requested) {
+     if (requested > this.maxBufferLength) {
+-      throw new Error("Decoded stream byte limit exceeded");
++      throw new DecodeStreamLimitError("Decoded stream byte limit exceeded");
+     }
+     const buffer = this.buffer;
+     if (requested <= buffer.byteLength) {
+@@ -77,7 +81,7 @@
+     }
+     const boundedSize = Math.min(size, this.maxBufferLength);
+     if (boundedSize - buffer.byteLength > DecodeStream.remainingBudget) {
+-      throw new Error("Worker decoded-stream allocation limit exceeded");
++      throw new DecodeStreamLimitError("Worker decoded-stream allocation limit exceeded");
+     }
+     DecodeStream.remainingBudget -= boundedSize - buffer.byteLength;
+     const buffer2 = new Uint8Array(boundedSize);
+@@ -264,4 +268,19 @@
+   }
+ }
+ 
+-export { DecodeStream, StreamsSequenceStream };
++// These decoders are private to structural parsing. Once their objects have
++// been materialized, drop the temporary buffers and return their allocation
++// allowance. Do not charge every discarded object stream for the worker lifetime.
++function discardStructuralStream(stream) {
++  const seen = new Set();
++  while (stream instanceof DecodeStream && !seen.has(stream)) {
++    seen.add(stream);
++    DecodeStream.remainingBudget += stream.buffer.byteLength;
++    stream.buffer = new Uint8Array(0);
++    stream.bufferLength = 0;
++    stream.eof = true;
++    stream = stream.str;
++  }
++}
++
++export { DecodeStream, DecodeStreamLimitError, discardStructuralStream, StreamsSequenceStream };
+--- a/src/core/xref.js
++++ b/src/core/xref.js
+@@ -30,12 +30,110 @@
+   XRefParseException,
+ } from "./core_utils.js";
+ import { BaseStream } from "./base_stream.js";
++import { DecodeStream, DecodeStreamLimitError, discardStructuralStream } from "./decode_stream.js";
+ import { CipherTransformFactory } from "./crypto.js";
++
++// Xref streams in large archives contain millions of records. Keep numeric
++// fields in sparse typed-array pages instead of one JS object per record.
++class CompactXRefEntries {
++  #pages = new Map();
++  #other = new Map();
++  length = 0;
++  has(index) {
++    if (this.#other.has(index)) return true;
++    const page = this.#pages.get(Math.floor(index / 4096));
++    return !!page?.flags[index % 4096];
++  }
++  get(index) {
++    if (this.#other.has(index)) return this.#other.get(index);
++    const page = this.#pages.get(Math.floor(index / 4096)), slot = index % 4096;
++    if (!page?.flags[slot]) return undefined;
++    const flags = page.flags[slot];
++    return {offset: page.offsets[slot], gen: page.generations[slot],
++      free: !!(flags & 1), uncompressed: !!(flags & 2)};
++  }
++  set(index, entry) {
++    if (!Number.isInteger(index) || index < 0 || index >= 4294967295) { this.#other.set(index, entry); return; }
++    const key = Math.floor(index / 4096), slot = index % 4096;
++    let page = this.#pages.get(key);
++    if (!page) {
++      page = {offsets: new Float64Array(4096), generations: new Float64Array(4096), flags: new Uint8Array(4096)};
++      this.#pages.set(key, page);
++    }
++    page.offsets[slot] = entry.offset;
++    page.generations[slot] = entry.gen;
++    page.flags[slot] = 4 | (entry.free ? 1 : 0) | (entry.uncompressed ? 2 : 0);
++    this.length = Math.max(this.length, index + 1);
++  }
++  clear() { this.#pages.clear(); this.#other.clear(); this.length = 0; }
++  *keys() {
++    for (const key of [...this.#pages.keys()].sort((a,b) => a-b)) {
++      const page = this.#pages.get(key);
++      for (let slot = 0; slot < 4096; slot++) if (page.flags[slot]) yield key * 4096 + slot;
++    }
++    yield* this.#other.keys();
++  }
++}
+ 
+ class XRef {
+   #cacheMap = new Map();
+-
+-  #entries = [];
++  #parsedCacheKeys = new Set();
++  #parsedCacheOrder = new Array(100000);
++  #parsedCacheNext = 0;
++  #liveObjects = new Map();
++  #releasedObjects = new FinalizationRegistry(({num, reference}) => {
++    if (this.#liveObjects.get(num) === reference) this.#liveObjects.delete(num);
++  });
++
++  #cacheParsed(num, object) {
++    this.#cacheMap.set(num, object);
++    if (this.#parsedCacheKeys.has(num)) return;
++    // A fresh Set iterator starts at the beginning of its backing storage and
++    // repeatedly scans deleted slots. A ring preserves FIFO eviction in O(1).
++    if (this.#parsedCacheKeys.size === 100000) {
++      const oldest = this.#parsedCacheOrder[this.#parsedCacheNext];
++      this.#parsedCacheKeys.delete(oldest);
++      this.#cacheMap.delete(oldest);
++    }
++    this.#parsedCacheOrder[this.#parsedCacheNext] = num;
++    this.#parsedCacheNext = (this.#parsedCacheNext + 1) % 100000;
++    this.#parsedCacheKeys.add(num);
++  }
++
++  #rememberObject(num, object) {
++    // Keep identity for objects held by page/structure readers, while unused
++    // neighbours parsed from an object stream may leave the bounded cache.
++    if (object && typeof object === "object" && !(object instanceof BaseStream) &&
++        this.#liveObjects.get(num)?.deref() !== object) {
++      const reference = new WeakRef(object);
++      this.#liveObjects.set(num, reference);
++      this.#releasedObjects.register(object, {num, reference});
++    }
++    return object;
++  }
++
++  #entries = new CompactXRefEntries();
++  #objectStreams = new Map();
++  #objectStreamBytes = 0;
++
++  #dropObjectStream(key, entry) {
++    this.#objectStreams.delete(key);
++    this.#objectStreamBytes -= entry.bytes;
++    if (!entry.retainsBytes) discardStructuralStream(entry.stream);
++  }
++
++  clearObjectStreamCache() {
++    for (const [key, entry] of this.#objectStreams) this.#dropObjectStream(key, entry);
++  }
++
++  #trimObjectStreams(reserve = false) {
++    while (this.#objectStreams.size && (this.#objectStreams.size > 1024 ||
++        this.#objectStreamBytes > 128 * 1024 * 1024 ||
++        reserve && DecodeStream.remainingBudget < 64 * 1024 * 1024)) {
++      const [key, entry] = this.#objectStreams.entries().next().value;
++      this.#dropObjectStream(key, entry);
++    }
++  }
+ 
+   #newPersistentRefNum = null;
+ 
+@@ -305,7 +403,7 @@
+         if (i === 0 && entry.free && first === 1) {
+           first = 0;
+         }
+-        this.#entries[first + i] ??= entry;
++        if (!this.#entries.has(first + i)) this.#entries.set(first + i, entry);
+       }
+ 
+       tableState.entryNum = 0;
+@@ -317,7 +415,7 @@
+     }
+ 
+     // Sanity check: as per spec, first object must be free
+-    if (this.#entries[0] && !this.#entries[0].free) {
++    if (this.#entries.get(0) && !this.#entries.get(0).free) {
+       throw new FormatError("Invalid XRef table: unexpected first object");
+     }
+     return obj;
+@@ -330,6 +428,26 @@
+       const { dict, pos } = stream;
+       const byteWidths = dict.get("W");
+       const range = dict.get("Index") || [0, dict.get("Size")];
++      // Large archives can have a valid xref larger than the ordinary 64 MiB
++      // stream ceiling. Size this structural stream from its validated layout,
++      // while retaining the aggregate worker allocation budget.
++      if (Array.isArray(byteWidths) && byteWidths.length === 3 &&
++          byteWidths.every(w => Number.isSafeInteger(w) && w >= 0) &&
++          Array.isArray(range) && range.length % 2 === 0 &&
++          range.every(n => Number.isSafeInteger(n) && n >= 0)) {
++        const width = byteWidths.reduce((a, b) => a + b, 0);
++        const count = range.reduce((sum, n, i) => sum + (i % 2 ? n : 0), 0);
++        const needed = width * count + 65536; // Decoder block lookahead.
++        if (width > 0 && Number.isSafeInteger(needed)) {
++          const seen = new Set();
++          for (let decoder = stream; decoder instanceof DecodeStream && !seen.has(decoder); decoder = decoder.str) {
++            seen.add(decoder);
++            decoder.maxBufferLength = Math.max(decoder.maxBufferLength,
++              Math.min(needed, DecodeStream.remainingBudget + decoder.buffer.byteLength));
++          }
++        }
++      }
++
+ 
+       this.streamState = {
+         entryRanges: range,
+@@ -340,6 +458,7 @@
+     }
+     this.readXRefStream(stream);
+     delete this.streamState;
++    discardStructuralStream(stream);
+ 
+     return stream.dict;
+   }
+@@ -420,7 +539,7 @@
+           default:
+             throw new FormatError(`Invalid XRef entry type: ${type}`);
+         }
+-        this.#entries[first + i] ??= entry;
++        if (!this.#entries.has(first + i)) this.#entries.set(first + i, entry);
+       }
+ 
+       streamState.entryNum = 0;
+@@ -480,8 +599,13 @@
+     const xrefBytes = new Uint8Array([47, 88, 82, 101, 102]);
+ 
+     // Clear out any existing entries, since they may be bogus.
+-    this.#entries.length = 0;
++    this.clearObjectStreamCache();
++    this.#entries.clear();
+     this.#cacheMap.clear();
++    this.#parsedCacheKeys.clear();
++    this.#parsedCacheOrder.fill(undefined);
++    this.#parsedCacheNext = 0;
++    this.#liveObjects.clear();
+ 
+     const stream = this.stream;
+     stream.pos = 0;
+@@ -524,9 +648,9 @@
+         const startPos = position + token.length;
+         let contentLength,
+           updateEntries = false;
+-        if (!this.#entries[num]) {
++        if (!this.#entries.get(num)) {
+           updateEntries = true;
+-        } else if (this.#entries[num].gen === gen) {
++        } else if (this.#entries.get(num).gen === gen) {
+           // Before overwriting an existing entry, ensure that the new one won't
+           // cause *immediate* errors when it's accessed (fixes issue13783.pdf).
+           try {
+@@ -546,12 +670,12 @@
+           }
+         }
+         if (updateEntries) {
+-          this.#entries[num] = {
++          this.#entries.set(num, {
+             offset: position - stream.start,
+             gen,
+             free: false,
+             uncompressed: true,
+-          };
++          });
+         }
+ 
+         // Find the next "obj" string, rather than "endobj", to ensure that
+@@ -706,8 +830,8 @@
+       // In case, this.#entries is a sparse array we don't want to
+       // iterate over empty entries so we use the `in` operator instead of
+       // using for..of on entries() or a for with the array length.
+-      for (const num in this.#entries) {
+-        const entry = this.#entries[num];
++      for (const num of this.#entries.keys()) {
++        const entry = this.#entries.get(num);
+         if (!entry) {
+           continue;
+         }
+@@ -805,7 +929,9 @@
+           this.startXRefQueue.push(obj.num);
+         }
+       } catch (e) {
+-        if (e instanceof MissingDataException) {
++        if (e instanceof MissingDataException || e instanceof DecodeStreamLimitError) {
++          // Resource exhaustion is not damaged syntax: recovery would allocate
++          // a string for the entire file and hide the useful original error.
+           throw e;
+         }
+         // Don't let the state of a corrupt XRef table/stream, which is only
+@@ -847,7 +973,7 @@
+   }
+ 
+   getEntry(i) {
+-    const entry = this.#entries[i];
++    const entry = this.#entries.get(i);
+     return entry && !entry.free && entry.offset ? entry : null;
+   }
+ 
+@@ -864,20 +990,21 @@
+     // The XRef cache is populated with objects which are obtained through
+     // `Parser.getObj`, and indirectly via `Lexer.getObj`. Neither of these
+     // methods should ever return `undefined` (note the `assert` calls below).
+-    const cacheEntry = this.#cacheMap.get(num);
++    const strongEntry = this.#cacheMap.get(num);
++    const cacheEntry = strongEntry !== undefined ? strongEntry : this.#liveObjects.get(num)?.deref();
+     if (cacheEntry !== undefined) {
+       // In documents with Object Streams, it's possible that cached `Dict`s
+       // have not been assigned an `objId` yet (see e.g. issue3115r.pdf).
+       if (cacheEntry instanceof Dict && !cacheEntry.objId) {
+         cacheEntry.objId = ref.toString();
+       }
+-      return cacheEntry;
++      return this.#rememberObject(num, cacheEntry);
+     }
+     let xrefEntry = this.getEntry(num);
+ 
+     if (xrefEntry === null) {
+       // The referenced entry can be free.
+-      return xrefEntry;
++      return this.#rememberObject(num, xrefEntry);
+     }
+     // Prevent circular references, in corrupt PDF documents, from hanging the
+     // worker-thread. This relies, implicitly, on the parsing being synchronous.
+@@ -903,7 +1030,7 @@
+     } else if (xrefEntry instanceof BaseStream) {
+       xrefEntry.dict.objId = ref.toString();
+     }
+-    return xrefEntry;
++    return this.#rememberObject(num, xrefEntry);
+   }
+ 
+   fetchUncompressed(ref, xrefEntry, suppressEncryption = false) {
+@@ -958,94 +1085,74 @@
+           'fetchUncompressed: The "xrefEntry" cannot be undefined.'
+         );
+       }
+-      this.#cacheMap.set(num, xrefEntry);
++      this.#cacheParsed(num, xrefEntry);
+     }
+     return xrefEntry;
+   }
+ 
+   fetchCompressed(ref, xrefEntry, suppressEncryption = false) {
+     const tableOffset = xrefEntry.offset;
+-    const stream = this.fetch(Ref.get(tableOffset, 0));
+-    if (!(stream instanceof BaseStream)) {
+-      throw new FormatError("bad ObjStm stream");
+-    }
+-    const first = stream.dict.get("First");
+-    const n = stream.dict.get("N");
+-    if (!Number.isInteger(first) || !Number.isInteger(n)) {
+-      throw new FormatError("invalid first and n parameters for ObjStm stream");
+-    }
+-    let parser = new Parser({
+-      lexer: new Lexer(stream),
+-      xref: this,
+-      allowStreams: true,
+-    });
+-    const nums = new Array(n);
+-    const offsets = new Array(n);
+-    // read the object numbers to populate cache
+-    for (let i = 0; i < n; ++i) {
+-      const num = parser.getObj();
+-      if (!Number.isInteger(num)) {
+-        throw new FormatError(
+-          `invalid object number in the ObjStm stream: ${num}`
+-        );
+-      }
+-      const offset = parser.getObj();
+-      if (!Number.isInteger(offset)) {
+-        throw new FormatError(
+-          `invalid object offset in the ObjStm stream: ${offset}`
+-        );
+-      }
+-      nums[i] = num;
+-
+-      // The entry in the xref table is the object number followed by the index.
+-      // So if index (gen number) is not the same as the index (i), we fix it
+-      // (fixes bug 1978317).
+-      const entry = this.getEntry(num);
+-      if (entry?.offset === tableOffset && entry.gen !== i) {
+-        entry.gen = i;
+-      }
+-
+-      offsets[i] = offset;
+-    }
+-
+-    const start = (stream.start || 0) + first;
+-    const entries = new Array(n);
+-    // read stream objects for cache
+-    for (let i = 0; i < n; ++i) {
+-      const length = i < n - 1 ? offsets[i + 1] - offsets[i] : undefined;
+-      if (length < 0) {
+-        throw new FormatError("Invalid offset in the ObjStm stream.");
+-      }
+-      parser = new Parser({
+-        lexer: new Lexer(
+-          stream.makeSubStream(start + offsets[i], length, stream.dict)
+-        ),
+-        xref: this,
+-        allowStreams: true,
+-      });
+-
+-      const obj = parser.getObj();
+-      entries[i] = obj;
+-      if (obj instanceof BaseStream) {
+-        continue;
+-      }
+-      const num = nums[i],
+-        entry = this.#entries[num];
+-      if (entry && entry.offset === tableOffset && entry.gen === i) {
+-        if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+-          assert(
+-            obj !== undefined,
+-            'fetchCompressed: The "obj" cannot be undefined.'
+-          );
+-        }
+-        this.#cacheMap.set(num, obj);
+-      }
+-    }
+-    xrefEntry = entries[xrefEntry.gen];
+-    if (xrefEntry === undefined) {
++    let cached = this.#objectStreams.get(tableOffset);
++    if (!cached) {
++      this.#trimObjectStreams(true);
++      const stream = this.fetch(Ref.get(tableOffset, 0));
++      if (!(stream instanceof BaseStream)) throw new FormatError("bad ObjStm stream");
++      try {
++        const first = stream.dict.get("First"), n = stream.dict.get("N");
++        if (!Number.isInteger(first) || first < 0 || !Number.isInteger(n) || n < 0) {
++          throw new FormatError("invalid first and n parameters for ObjStm stream");
++        }
++        const parser = new Parser({lexer: new Lexer(stream), xref: this, allowStreams: true});
++        const nums = new Array(n), offsets = new Array(n);
++        for (let i = 0; i < n; i++) {
++          const num = parser.getObj(), offset = parser.getObj();
++          if (!Number.isInteger(num) || !Number.isInteger(offset) || offset < 0 ||
++              i > 0 && offset < offsets[i - 1]) throw new FormatError("Invalid object stream header.");
++          nums[i] = num; offsets[i] = offset;
++          const entry = this.getEntry(num);
++          if (entry?.offset === tableOffset && entry.gen !== i) {
++            entry.gen = i;
++            this.#entries.set(num, entry);
++            if (num === ref.num) xrefEntry.gen = i;
++          }
++        }
++        // Decode once, then parse only requested members. Eagerly parsing all
++        // neighbours repeatedly made sparse DPart access grow with archive size.
++        stream.getBytes();
++        let bytes = 0; const seen = new Set();
++        for (let decoder = stream; decoder instanceof DecodeStream && !seen.has(decoder); decoder = decoder.str) {
++          seen.add(decoder); bytes += decoder.buffer.byteLength;
++        }
++        cached = {stream, nums, offsets, start: (stream.start || 0) + first, bytes, retainsBytes: false};
++        this.#objectStreams.set(tableOffset, cached); this.#objectStreamBytes += bytes;
++      } catch (error) { discardStructuralStream(stream); throw error; }
++    } else {
++      // Refresh stream recency without retaining more decoded bytes.
++      this.#objectStreams.delete(tableOffset); this.#objectStreams.set(tableOffset, cached);
++    }
++    const {stream, nums, offsets, start} = cached, index = xrefEntry.gen;
++    if (!Number.isInteger(index) || index < 0 || index >= offsets.length) {
+       throw new XRefEntryException(`Bad (compressed) XRef entry: ${ref}`);
+     }
+-    return xrefEntry;
++    const length = index + 1 < offsets.length ? offsets[index + 1] - offsets[index] : undefined;
++    let object;
++    try {
++      const parser = new Parser({lexer: new Lexer(stream.makeSubStream(start + offsets[index], length, stream.dict)), xref: this, allowStreams: true});
++      object = parser.getObj();
++      if (object === undefined) throw new XRefEntryException(`Bad (compressed) XRef entry: ${ref}`);
++      // Malformed nested streams can retain slices of the decoded buffer.
++      const pending = [object], seen = new Set();
++      while (pending.length && !cached.retainsBytes) {
++        const value = pending.pop();
++        if (value instanceof BaseStream) { cached.retainsBytes = true; break; }
++        if (seen.has(value)) continue;
++        if (Array.isArray(value)) { seen.add(value); for (const child of value) pending.push(child); }
++        else if (value instanceof Dict) { seen.add(value); for (const [, child] of value.getRawEntries()) pending.push(child); }
++      }
++      const num = nums[index], entry = this.#entries.get(num);
++      if (!(object instanceof BaseStream) && entry?.offset === tableOffset && entry.gen === index) this.#cacheParsed(num, object);
++      return object;
++    } finally { this.#trimObjectStreams(); }
+   }
+ 
+   async fetchIfRefAsync(obj, suppressEncryption) {
+@@ -1069,4 +1176,4 @@
+   }
+ }
+ 
+-export { XRef };
++export { CompactXRefEntries, XRef };
+--- a/src/core/catalog.js
++++ b/src/core/catalog.js
+@@ -169,15 +169,23 @@
+ 
+   async getDocumentAssets(options) {
+     this._documentAssets ??= new DocumentAssets(this, this.#catDict);
+-    const result = this._documentAssets.inspect(options);
++    const result = await this._documentAssets.inspect(options);
++    let pageIndices;
+     for (const file of result.files) {
+       for (const origin of file.origins) {
+         if (!origin.pageRef) continue;
+         try {
+           const pageRef = Ref.get(origin.pageRef.num, origin.pageRef.gen);
+-          const index = await this.getPageIndex(pageRef);
+-          const [, actual] = await this.getPageDict(index);
+-          if (!isRefsEqual(actual, pageRef)) throw new Error("Detached page");
++          if (!pageIndices) {
++            pageIndices = new Map();
++            for (const [index, [page, reference]] of await this.getAllPageDicts()) {
++              if (page instanceof Dict && reference instanceof Ref) {
++                pageIndices.set(reference.toString(), index);
++              }
++            }
++          }
++          const index = pageIndices.get(pageRef.toString());
++          if (index === undefined) throw new Error("Detached page");
+           origin.pageIndex = index;
+         } catch (error) {
+           if (error instanceof MissingDataException) throw error;
+@@ -1317,6 +1325,7 @@
+   }
+ 
+   async cleanup(manuallyTriggered = false) {
++    this.xref.clearObjectStreamCache();
+     clearGlobalCaches();
+     this.globalColorSpaceCache.clear();
+     this.globalImageCache.clear(/* onlyData = */ manuallyTriggered);
+@@ -1505,7 +1514,9 @@
+       map.set(pageIndex++, [error, null]);
+     }
+ 
++    let workSinceYield = 0;
+     while (queue.length > 0) {
++      if (++workSinceYield % 1024 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+       const queueItem = queue.at(-1);
+       const { currentNode, posInKids } = queueItem;
+ 
+--- a/src/core/document_assets.js
++++ b/src/core/document_assets.js
+@@ -4,7 +4,7 @@
+  */
+ import { Dict, Name, Ref } from "./primitives.js";
+ import { BaseStream } from "./base_stream.js";
+-import { DecodeStream } from "./decode_stream.js";
++import { DecodeStream, discardStructuralStream } from "./decode_stream.js";
+ import { MissingDataException } from "./core_utils.js";
+ import { stringToPDFString } from "./string_utils.js";
+ 
+@@ -12,7 +12,7 @@
+   maxObjects: 1000000,
+   maxDepth: 64,
+   maxFiles: 16384,
+-  maxMetadataBytes: 16777216,
++  maxMetadataBytes: 134217728,
+   maxStreamBytes: 16777216,
+ });
+ const locator = (raw, path) => ({
+@@ -44,7 +44,7 @@
+   return { kind: "unsupported" };
+ }
+ 
+-function boundedBytes(stream, maximum) {
++function boundedBytes(stream, maximum, allowLargerBuffer = false) {
+   if (!(stream instanceof BaseStream))
+     throw new Error("Not an embedded stream");
+   if (failedDecoders.has(stream))
+@@ -79,7 +79,9 @@
+     seen.add(current);
+     if (current instanceof DecodeStream) {
+       limits.push([current, current.maxBufferLength]);
+-      current.maxBufferLength = Math.min(current.maxBufferLength, maximum + 1);
++      current.maxBufferLength = allowLargerBuffer
++        ? maximum + 1
++        : Math.min(current.maxBufferLength, maximum + 1);
+     }
+     current = current.str || current.stream;
+   }
+@@ -119,7 +121,7 @@
+     this.registered = new Map();
+   }
+ 
+-  inspect(options = {}) {
++  async inspect(options = {}) {
+     const limits = {};
+     for (const [key, ceiling] of Object.entries(CEILINGS)) {
+       const value = options[key] ?? ceiling;
+@@ -130,7 +132,7 @@
+     const files = new Map(),
+       metadata = new Map(),
+       diagnostics = [],
+-      visited = new Set();
++      visitedObjects = new WeakSet();
+     const fetch = raw =>
+       raw instanceof Ref ? this.catalog.xref.fetch(raw) : raw;
+     const report = (code, loc, error) => {
+@@ -181,7 +183,8 @@
+               });
+               if (valid)
+                 this.registered.set(loc.path + "|" + sloc.path, {
+-                  stream,
++                  ref: rawStream instanceof Ref ? rawStream : null,
++                  stream: rawStream instanceof Ref ? null : stream,
+                   file: spec,
+                 });
+               else report("INVALID_EMBEDDED_STREAM", sloc);
+@@ -266,30 +269,34 @@
+     if (names instanceof Dict && names.has("EmbeddedFiles"))
+       nameTree(names.getRaw("EmbeddedFiles"), "catalog/Names/EmbeddedFiles", 0);
+     // Resolve annotation page numbers from the page tree, never from filenames.
+-    // Discovery stays synchronous; annotations' page refs are mapped below by Catalog.
+-    // Breadth-first discovery visits shared objects by their shortest path.
+-    // Mark references when queued so back-links cannot consume the budget.
+-    const pending = [[this.root, "catalog", 0]], scheduled = new Set([this.root]);
+-    const identity = raw => raw instanceof Ref ? raw.toString() : raw;
+-    let totalMetadata = 0, next = 0, edges = 0;
+-    while (next < pending.length) {
+-      const [raw, path, depth] = pending[next++],
++    // Annotation page references are mapped below by Catalog.
++    // Visit related objects together to reuse compressed streams. Mark references
++    // when queued so shared back-links never repeat the traversal.
++    const pending = [[this.root, "catalog", 0]];
++    const scheduledRefs = new Set(), scheduledObjects = new WeakSet([this.root]);
++    const scheduled = {
++      has: key => typeof key === "object" ? scheduledObjects.has(key) : scheduledRefs.has(key),
++      add: key => typeof key === "object" ? scheduledObjects.add(key) : scheduledRefs.add(key),
++    };
++    const identity = raw => raw instanceof Ref ? (raw.gen === 0 ? raw.num : raw.toString()) : raw;
++    let totalMetadata = 0, visitsSinceYield = 0;
++    while (pending.length) {
++      if (++visitsSinceYield % 512 === 0) await new Promise(resolve => setTimeout(resolve, 0));
++      const [raw, path, depth] = pending.pop(),
+         loc = locator(raw, path);
+       try {
+-        const obj = fetch(raw),
+-          key = raw instanceof Ref ? loc.path : obj;
++        const obj = fetch(raw);
+         if (
+           !(
+             obj instanceof Dict ||
+             obj instanceof BaseStream ||
+             Array.isArray(obj)
+           ) ||
+-          (visited.has(key) || visited.has(obj))
++          visitedObjects.has(obj)
+         )
+           continue;
+         if (!step(loc, depth)) continue;
+-        visited.add(key);
+-        visited.add(obj);
++        visitedObjects.add(obj);
+         const dict = obj instanceof BaseStream ? obj.dict : obj;
+         if (dict instanceof Dict) {
+           const af = dict.get("AF");
+@@ -343,16 +350,22 @@
+                 text: null,
+               };
+               metadata.set(mloc.path, item);
++              let metadataStream;
+               try {
++                if (DecodeStream.remainingBudget < limits.maxMetadataBytes + 1) this.catalog.xref.clearObjectStreamCache?.();
++                metadataStream = fetch(rawMeta);
+                 const data = boundedBytes(
+-                  fetch(rawMeta),
++                  metadataStream,
+                   Math.max(
+                     0,
+                     Math.min(
+                       limits.maxMetadataBytes,
+                       limits.maxMetadataBytes * 4 - totalMetadata
+                     )
+-                  )
++                  ),
++                  // Metadata has its own validated allowance. The worker budget
++                  // still applies, and ordinary stream limits are restored below.
++                  true
+                 );
+                 totalMetadata += data.length;
+                 const encoding =
+@@ -367,6 +380,10 @@
+                 item.state = "present";
+               } catch (error) {
+                 report("METADATA_UNAVAILABLE", mloc, error);
++              } finally {
++                // Indirect streams are fetched fresh. The returned text owns its
++                // bytes; no decoder buffer is needed after metadata inspection.
++                if (rawMeta instanceof Ref) discardStructuralStream(metadataStream);
+               }
+             }
+             metadata.get(mloc.path).owners.push(loc);
+@@ -375,6 +392,7 @@
+         const children = Array.isArray(obj)
+           ? obj.entries()
+           : dict.getRawEntries();
++        const nextChildren = [];
+         for (const [key_, child] of children) {
+           if (
+             child instanceof Ref ||
+@@ -383,17 +401,18 @@
+             Array.isArray(child)
+           ) {
+             const key = identity(child);
+-            if (scheduled.has(key) || visited.has(child)) continue;
++            if (scheduled.has(key) || visitedObjects.has(child)) continue;
+             scheduled.add(key);
+-            pending.push([
++            nextChildren.push([
+               child,
+-              loc.path + (Array.isArray(obj) ? `[${key_}]` : "/" + key_),
++              child instanceof Ref ? "" : loc.path + (Array.isArray(obj) ? `[${key_}]` : "/" + key_),
+               // Outline Next/Prev links are siblings, not deeper nesting.
+               depth + (dict instanceof Dict && dict.has("Title") &&
+                 dict.has("Parent") && (key_ === "Next" || key_ === "Prev") ? 0 : 1),
+             ]);
+           }
+         }
++        for (let i = nextChildren.length - 1; i >= 0; i--) pending.push(nextChildren[i]);
+       } catch (error) {
+         report("OBJECT_UNAVAILABLE", loc, error);
+       }
+@@ -487,7 +506,19 @@
+     const registered = this.registered.get(fileId + "|" + streamId);
+     if (!registered)
+       throw new Error("Stream is not a discovered EF target of this file");
+-    return boundedBytes(registered.stream, maxBytes);
++    if (!registered.ref) return boundedBytes(registered.stream, maxBytes);
++    // XRef never caches indirect streams: this decoder belongs to this request.
++    // boundedBytes returns a detached copy, so its temporary decode buffers can
++    // be released on success and failure without invalidating returned bytes.
++    if (DecodeStream.remainingBudget < Math.min(maxBytes + 1, 64 * 1024 ** 2)) {
++      this.catalog.xref.clearObjectStreamCache?.();
++    }
++    const stream = this.catalog.xref.fetch(registered.ref);
++    try {
++      return boundedBytes(stream, maxBytes);
++    } finally {
++      discardStructuralStream(stream);
++    }
+   }
+ }
+ export { DocumentAssets, boundedBytes };

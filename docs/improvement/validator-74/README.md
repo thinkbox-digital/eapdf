@@ -1,5 +1,0 @@
-# V74: Unsupported originals and isolated provenance
-
-**V74 accepted — 2026-10-21:** Attached unsupported originals leave source-header comparisons INCOMPLETE. Isolated Source presence alone produces a provenance warning rather than an unsupported profile failure; isolated omission remains permitted. A matched EML remains verifiable in the presence of an extra unrendered original. **1008 unit passes / 40 skips; 675 freshly checked custom cases; eight PDF/A/ISO controls, CLI/worker and 16 browser checks match.** All 667 prior hashes/statuses/failure sets remain. One silent pass and two unsupported isolated-source failures become INCOMPLETE. Creator repair remains deferred. [Evidence](improvement/validator-74/evidence.json).
-
-A missing supported matched summary is an evidence gap when original Sources are attached. Source absence in isolated files remains allowed; extra unrendered original assets do not invalidate a supported source match. Pinned section3.1 p7 explains why Source presence cannot alone prove an isolated-profile violation. Complete preservation provenance and external original inventories remain unverified.

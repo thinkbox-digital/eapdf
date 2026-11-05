@@ -191,4 +191,4 @@ unmodified patches from Jia Liang's HTML-to-PDF-UA repository. Version
 Patch sources, immutable provenance, checksums and corresponding source JARs
 are supplied under `third_party/openhtmltopdf/` and `third_party/maven/`.
 The upstream LGPL-2.1-or-later license continues to apply. Rebuilding and
-resolution instructions are in `docs/improvement/openhtmltopdf-1.1.105/INTEGRATION.md`.
+resolution instructions are in `docs/RENDERER.md`.

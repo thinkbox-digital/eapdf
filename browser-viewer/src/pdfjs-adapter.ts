@@ -52,18 +52,18 @@ export function loadManagedPdf(data: Uint8Array | Blob, shared?:ReturnType<typeo
     maxImageSize:16_000_000,canvasMaxAreaInBytes:64*1024*1024});
   const passwordAbort=new AbortController();
   task.onPassword=(update:(password:string)=>void,reason:number)=>{void requestPassword(reason===pdfjs.PasswordResponses.INCORRECT_PASSWORD,passwordAbort.signal).then(password=>{if(!closed)update(password);}).catch(error=>close(error));};
-  let closed=false;
+  let closed=false,closedReason:Error|undefined;
   let rejectCancellation:(reason:Error)=>void = () => {};
   const cancelled=new Promise<never>((_,reject)=>{rejectCancellation=reject;});
   // Closing an idle document must not create an unhandled rejection.
   void cancelled.catch(()=>{});
   let disposed:Promise<void>=Promise.resolve();
   const close = (reason = new Error('Document processing cancelled.')) => {
-    if(closed)return disposed;closed=true;passwordAbort.abort();rejectCancellation(reason);
+    if(closed)return disposed;closed=true;closedReason=reason;passwordAbort.abort();rejectCancellation(reason);
     disposed=Promise.race([task.destroy().catch(()=>{}),owned.whenClosed]);if(!shared)owned.close();return disposed;
   };
   async function run<T>(operation: Promise<T>, milliseconds=30000): Promise<T> {
-    if(closed){void operation.catch(()=>{});throw new Error('Document is closed.');}
+    if(closed){void operation.catch(()=>{});throw closedReason??new Error('Document is closed.');}
     let timer:ReturnType<typeof setTimeout>|undefined;
     try{return await Promise.race([operation,cancelled,new Promise<never>((_,reject)=>{
       timer=setTimeout(()=>{const error=new Error('Document processing timed out; reopen to retry.');close(error);reject(error);},milliseconds);

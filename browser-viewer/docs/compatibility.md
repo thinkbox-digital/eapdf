@@ -14,13 +14,6 @@ The only browser-specific code is generated manifest configuration.
 | Older versions / Android | Not evaluated | Not evaluated |
 | Store signing / approval | Not performed | Not performed |
 
-M5 runs the same interpretation and interface in both browsers. Both actual
-extensions passed message/page navigation, all six profiles, nested collection
-children, exact downloaded bytes, missing/ambiguous association handling and
-in-document search while offline. See [current results](navigation-results.md) for the current
-commands, browser versions and remaining limits. Dedicated same-extension
-workers use the public PDF.js APIs plus the pinned generic patch stack.
-
 The Chromium manifest bundles all executable JavaScript and WebAssembly. It has
 no remote code, inline script, eval permission, sandbox page, content script or
 web-accessible resource declaration. CSP permits packaged resources and HTTP(S) fetch for explicitly opened PDF links;

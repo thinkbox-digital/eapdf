@@ -57,7 +57,6 @@ def main():
         version = ET.parse(ROOT/'validator-desktop/pom.xml').findtext('m:version', namespaces=ns)
         data = {'date': datetime.now(timezone.utc).isoformat(), 'version': version,
                 'scope': 'Verified executable packaging; large-file acceptance is documented separately.',
-                'evidence': 'docs/improvement/validator-packaging-2026-10-30.md',
                 'main_class': 'eapdf.ValidatorGui', 'java_release': 21,
                 'jars': {destination.name: checksum},
                 'source_hashes': {str(path.relative_to(ROOT)): sha(path) for path in paths if path.is_file()}}

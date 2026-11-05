@@ -56,29 +56,7 @@ controls are not conforming EA-PDF/PDF/A examples**.
 | s-dpart-cycle | Repeated DPart terminates traversal |
 | s-invalid-page-ref | Non-page Start reference invalid |
 
-Two existing repository negatives are also pinned: `validator-dpart-object-ranges/
-multi-reversed.pdf` and `validator-xmp-records/attachment-uri-checksum.pdf` under
-`tests/fixtures/eapdf/`. The first reverses **tree order** while each individual
-range remains readable; the oracle preserves 4–4, 3–3, 1–2 body ranges and reports
-no range diagnostic. The validator's separate ordering failure is not converted
-to an extraction result. The second preserves an invalid URI-valued checksum.
-Their adjacent `expectations.json` files establish original purpose and provenance.
-M0's original ordinary PDF completes the 27 records: no EA-PDF declaration is added.
-
 ## Interpretation sources
-
-- `docs/reference/EA-PDF-v1.pdf`: collection provisions, section 9.6/Tables 7–8
-  for DPart/DPM identities and content sets, and Tables 14–19 for catalog XMP,
-  source assets, messages and attachments. Namespace URIs are matched exactly.
-- `validate_eapdf.py`: `get_declared_pdf_version`, `flatten_email_records`,
-  `read_metadata_stream`, `get_dpart_nodes`, `walk_dpart_nodes`,
-  `flatten_dparts_entry`, `collect_body_content_sets`, `get_embedded_files`,
-  `parse_filespec`, `collect_file_attachment_annotations`, `collect_object_af_specs`,
-  `attachment_email_owners`, `dpart_message_identity` and collection folder logic.
-  The extractor imports none of these; the validator remains unchanged.
-- `docs/improvement/specification-audit/specification-reexamination-2026-10-27.txt`,
-  especially identity/source/attachment ambiguity discussions (findings 8–10).
-  Unresolved ownership is represented explicitly rather than resolved by guesswork.
 
 Source hashes make these references traceable even in this pre-existing dirty
 checkout. Repository HEAD at the start of M1 was

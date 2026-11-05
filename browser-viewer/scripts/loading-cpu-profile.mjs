@@ -11,16 +11,25 @@ try{
  cdp.on('Target.receivedMessageFromTarget',({message})=>{const m=JSON.parse(message),p=pending.get(m.id);if(p){pending.delete(m.id);m.error?p.reject(m.error):p.resolve(m.result);}});
  const send=(sessionId,method)=>new Promise((resolve,reject)=>{const id=++seq;pending.set(id,{resolve,reject});cdp.send('Target.sendMessageToTarget',{sessionId,message:JSON.stringify({id,method})}).catch(reject);});
  cdp.on('Target.attachedToTarget',({sessionId,targetInfo})=>{if(targetInfo.type==='worker'){sessions.push(sessionId);void send(sessionId,'Profiler.enable').then(()=>send(sessionId,'Profiler.start')).catch(()=>{});}});
+ await cdp.send('Profiler.enable');await cdp.send('Profiler.start');
  await cdp.send('Target.setAutoAttach',{autoAttach:true,waitForDebuggerOnStart:false,flatten:false});
+ let opening;
+ if(process.env.EAPDF_PROFILE_UI){
+  await page.locator('#file').setInputFiles(resolve(process.env.EAPDF_LARGE_PDF));
+  opening=page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false',{},{timeout:180000}).catch(String);
+ }else{
  await page.evaluate(async()=>{const {BrowserSession}=await import('./browser-session.js');window.profileSession=new BrowserSession();const i=document.createElement('input');i.id='profile-file';i.type='file';document.body.append(i);});
- await page.locator('#profile-file').setInputFiles(resolve('../out/pst/pst_21_04+April+2003+Public+2/pst_21_04+April+2003+Public+2_1c.pdf'));
- await page.evaluate(async()=>{window.profileDoc=await window.profileSession.open(document.querySelector('#profile-file').files[0],'April.pdf');});
+ await page.locator('#profile-file').setInputFiles(resolve(process.env.EAPDF_LARGE_PDF??'../examples/pst/pst_quality-attached-message_1ci.pdf'));
+ opening=page.evaluate(async()=>{try{window.profileDoc=await window.profileSession.open(document.querySelector('#profile-file').files[0],'Large archive.pdf');return 'opened';}catch(e){return String(e);}});
+ }
+ await Promise.race([opening,new Promise(resolve=>setTimeout(resolve,Number(process.env.EAPDF_PROFILE_MS??20000)))]);
  await mkdir('test-results',{recursive:true});
+ const main=await cdp.send('Profiler.stop');await writeFile('test-results/loading-main.cpuprofile',JSON.stringify(main.profile));
  for(const [index,session] of sessions.entries()){
   const {profile}=await send(session,'Profiler.stop');await writeFile(`test-results/loading-worker-${index}.cpuprofile`,JSON.stringify(profile));
   const nodes=new Map(profile.nodes.map(n=>[n.id,n])),totals=new Map();
   profile.samples?.forEach((id,i)=>{const node=nodes.get(id),frame=node.callFrame,key=`${frame.functionName||'(anonymous)'}:${frame.lineNumber+1}`;totals.set(key,(totals.get(key)??0)+(profile.timeDeltas?.[i]??0));});
   console.log(JSON.stringify([...totals].sort((a,b)=>b[1]-a[1]).slice(0,25)));
  }
- await page.evaluate(()=>window.profileSession.close());
+ await page.evaluate(()=>window.profileSession?window.profileSession.close():document.querySelector('#close').click());
 }finally{await context.close();}

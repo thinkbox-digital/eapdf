@@ -882,7 +882,8 @@ final class MetadataChecks {
       boolean rawOnly = false;
       if (Set.of("To", "From", "Cc", "Bcc").contains(property)) try {
         var addresses = sourceAddresses(SourceHeaders.originalText(header(message, property)));
-        rawOnly = addresses.length > 0;
+        // Comment-only and empty-group headers contain no structured mailbox.
+        rawOnly = true;
         for (var address : addresses) {
           var members = address.isGroup() ? address.getGroup(true) : new InternetAddress[]{address};
           for (var member : members) if (MailboxChecks.valid(member.getAddress())) rawOnly = false;

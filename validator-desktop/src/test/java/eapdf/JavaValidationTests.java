@@ -96,6 +96,7 @@ class JavaValidationTests {
 
   @ParameterizedTest @ValueSource(strings = {"orphan", "stale-next-key"})
   void rejectsDisconnectedParentTreeEntriesWithoutChangingThePdf(String mutation) throws Exception {
+    org.junit.jupiter.api.Assumptions.assumeTrue(java.nio.file.Files.isDirectory(Path.of("..", "tests", "fixtures", "eapdf")), "Optional local regression corpus is not installed");
     Path fixture = Path.of("..", "tests", "fixtures", "eapdf", "validator-table11", "valid.pdf");
     byte[] before = Files.readAllBytes(fixture);
     try (var document = Loader.loadPDF(fixture.toFile())) {
@@ -122,6 +123,7 @@ class JavaValidationTests {
   }
 
   @Test void invalidIdentificationStillReportsTheConcreteRequiredValue() {
+    org.junit.jupiter.api.Assumptions.assumeTrue(java.nio.file.Files.isDirectory(Path.of("..", "tests", "fixtures", "eapdf")), "Optional local regression corpus is not installed");
     for (var control : java.util.Map.of("version-float.pdf", "EAPDF_VERSION", "revision-array.pdf", "EAPDF_REV").entrySet()) {
       var report = JavaValidation.validate(Path.of("..", "tests", "fixtures", "eapdf", "validator-identification", control.getKey()));
       var failure = report.getAsJsonArray("items").asList().stream().map(value -> value.getAsJsonObject())
@@ -164,6 +166,7 @@ class JavaValidationTests {
 
   @ParameterizedTest @ValueSource(strings = {"3a", "3u", "4", "4e", "4f"})
   void bundledEngineChecksEveryAllowedFlavour(String flavour) {
+    org.junit.jupiter.api.Assumptions.assumeTrue(java.nio.file.Files.isDirectory(Path.of("..", "tests", "fixtures", "eapdf")), "Optional local regression corpus is not installed");
     Path controls = Path.of("..", "tests", "fixtures", "eapdf", "upstream-profile-controls");
     JsonObject valid = JavaValidation.pdfa(controls.resolve(flavour + "-valid.pdf"), null);
     assertEquals("PASS", valid.get("status").getAsString(), valid.toString());

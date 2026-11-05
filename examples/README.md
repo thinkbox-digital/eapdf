@@ -42,14 +42,6 @@ Conversion logs and Java reports are in
 local verification records. These are local builds, not a newly
 published GitHub release or independent certification.
 
-Older signed, accessibility and failing demonstrations are preserved unchanged
-as [historical regression fixtures](../tests/fixtures/eapdf/historical-examples/README.md).
-Two additional examples were also regenerated: `mbox/mbox_enron_1m.pdf`
-contains all 1,433 Enron messages and passes Java validation;
-`eml/eml_missing_date_1s.pdf` is an explicitly negative fixture with the expected
-EA-PDF failure `MESSAGE_SENT_XMP` and PDF/A PASS. Their evidence is in
-local verification records.
-
 All 34 current example PDFs pass the documented corrected Arlington checker.
 Reports: local verification records.
 This separate object-model audit does not change the negative example’s expected

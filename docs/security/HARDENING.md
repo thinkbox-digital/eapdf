@@ -1,4 +1,4 @@
-# Security hardening checkpoint — 2026-10-31
+# Security controls
 
 This is an **unreleased local checkpoint** covering the email creator, standalone
 Java validator, Python/web validator and browser viewer. Published beta.4 JARs and
@@ -74,41 +74,12 @@ These restrictions can reject valid third-party files; do not describe INCOMPLET
 as proof of nonconformance. PDF/A/structure engines have their own parsing inside
 resource-limited workers. A conformance PASS is not an attachment safety verdict.
 
-## Verification and limits
+## Limits
 
-The later records-workflow corrections and revised manual are recorded in
-local verification records and summarized in
-[development status](../DEVELOPMENT_STATUS.md). That checkpoint adds explicit
-PDF/A-only sidecar assessment, inherited-limit startup repairs and bounded Docker
-client headroom. Its candidate artifacts are separate from published/root `dist`
-binaries. Earlier receipts below identify their original checkpoint artifacts.
-
-See [verification receipt](verification.json) for exact final counts, artifacts,
-source hashes and recorded exclusions. Tests cover compressed expansion with false
-size declarations, aggregate repeat decoding, predictor allocation, unsupported
-filters, deep/DTD XMP, proxy spoofing/authentication, process timeouts/crashes,
-fast-worker storage overruns, worker cleanup and actual production BrowserSession
-limits. Ordinary EML/MSG/small-PST/MBOX examples are checked by the standalone Java
-validator. Large PST files are excluded at the user's direction.
-
-Creator and Java JAR builds, patched PDF.js bundles and browser packages are
-reproduced from independent temporary builds. Native Firefox and Chromium tests
-use fresh temporary installations. The browser's 27 reference semantic records
-remain unchanged; only the hash recording the hardened Python source is updated.
-Test skips and the earlier storage-monitor failure are recorded, not counted as
-passes. No numerical line/branch coverage percentage has been measured.
-
-This checkpoint is not full M6 public-release acceptance. Firefox store signing,
-Chrome/AMO approval, manual native permission-prompt acceptance, other platforms,
-complete upstream PDF.js rendering/integration tests and independent penetration
-review remain unverified. Firefox's existing host sandbox/GLib/shutdown warnings
-remain in logs despite successful tests. The supplied BFO document is the tested
-other-producer example; standard support does not establish interoperability with
-all producers. No antivirus, full OS filesystem/network sandbox, signature trust,
-revocation checking or conformance certification is claimed. Linux native Java
-limits require util-linux `prlimit`; other Java platforms retain JVM/time/storage
-limits without Linux address-space controls. Python CLI fails unavailable on
-platforms without POSIX `resource` support.
+Resource exhaustion or unavailable evidence produces an incomplete assessment.
+A conformance result does not establish attachment safety. Human accessibility,
+platform compatibility and provenance require separate assessment. Linux worker
+resource controls use util-linux `prlimit`; other platforms have different controls.
 
 ## Dependencies, updates and packaging
 
@@ -119,7 +90,7 @@ hashes separately from application artifact hashes. `packaging` is needed to run
 the inventory utility. Browser SBOMs, notices, license source material and hashes
 are inside both extension builds. Font and proprietary-branding notices remain
 in `third_party_licenses/`; local renderer corresponding source and replacement
-instructions remain in `docs/improvement/openhtmltopdf-1.1.105/INTEGRATION.md`.
+instructions remain in `docs/RENDERER.md`.
 The legacy stax-utils dependency lacks resolved license metadata and remains
 explicitly marked REVIEW REQUIRED; automatic inventory is not license clearance.
 

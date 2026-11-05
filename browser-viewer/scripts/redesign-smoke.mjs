@@ -55,7 +55,7 @@ try{
   if(shape==='pst')await page.waitForFunction(()=>document.querySelector('#subject-index-cancel').hidden,{timeout:90000});
   assert.equal(await page.locator('#message-count').textContent(),String(count));assert.equal(await page.locator('#search-panel').isVisible(),false);
   await page.keyboard.press('Tab');await page.locator('#open-search').focus();assert.deepEqual(await page.locator('#open-search').evaluate(e=>{const s=getComputedStyle(e);return [s.outlineWidth,s.outlineOffset,s.outlineColor];}),['2px','2px','rgb(31, 78, 140)']);
-  if(shape==='single'){const empty=page.locator('.file-card').filter({hasText:'This file is empty.'});assert.equal(await empty.count(),1);assert.equal(await empty.locator('[data-file-id]').isDisabled(),true);assert.equal(await empty.locator('[role=img][aria-label=Warning]').count(),1);}
+  if(shape==='single'){const notice=page.locator('.empty-file-notice');assert.equal(await notice.count(),0,'A zero-byte attachment in 1s must not claim source omission');assert.equal(await page.locator('.file-card').filter({hasText:'0 B'}).locator('button').count(),0);}
   for(const width of [1440,1100]){
    await page.setViewportSize({width,height:900});await page.waitForTimeout(350);await ready();await audit();
    const filename=`${shape}-${width}.png`;await page.screenshot({path:join(screens,filename)});report.screens.push(filename);
@@ -74,6 +74,14 @@ try{
   }
   report.checks.push(`${shape}: opening, responsive layout, target sizes, names, contrast, keyboard search, CSV, view/download`);
  }
+ for(const profile of ['s','si','m','mi','c','ci']){
+  const stem=['s','si'].includes(profile)?'eml_Agenda_and_timeline_slides':'eml_Agenda_and_timeline_slides_archive';
+  await page.locator('#file').setInputFiles(resolve(`../examples/eml/${stem}_1${profile}.pdf`));await ready();
+  await page.locator('#files details').evaluateAll(ds=>ds.forEach(d=>d.open=true));
+  const notices=page.locator('.empty-file-notice');assert.equal(await notices.count(),profile.endsWith('i')?1:0,`Source omission notice for 1${profile}`);
+  if(profile.endsWith('i')){assert.equal(await notices.textContent(),'This profile of EA-PDF does not embed source messages.');assert.equal(await notices.locator('xpath=ancestor::li[contains(@class,"file-card")]').count(),0);}
+ }
+ report.checks.push('Source-omission notice appears once for 1si/1mi/1ci and never for 1s/1m/1c, including a zero-byte non-isolated attachment');
  await page.locator('#file').setInputFiles(resolve('tests/inspection/controls/s-two-streams.pdf'));await ready();await page.locator('#files details').evaluateAll(ds=>ds.forEach(d=>d.open=true));
  const multiple=JSON.parse(await readFile('tests/inspection/expected/s-two-streams.json','utf8')).files.find(f=>f.streams.length>1);assert.ok(multiple);
  for(const stream of multiple.streams){const control=page.locator(`[data-file-id=${JSON.stringify(multiple.id)}][data-stream=${JSON.stringify(stream.locator.path)}]`),event=page.waitForEvent('download');await control.click();const bytes=await readFile(await(await event).path());assert.equal(createHash('sha256').update(bytes).digest('hex'),stream.sha256.value);await ready();}

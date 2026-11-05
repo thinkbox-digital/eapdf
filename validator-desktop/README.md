@@ -8,16 +8,6 @@ selected ISO 32005 profile are built into the JAR.
 
 ## Current state
 
-The earlier parity baseline matched the web validator's **213 rule outcomes across
-808 saved PDFs and 67 embedded-file reports**. The complete comparison also
-checks the actual PDF/A and selected ISO 32005 results, rule identifiers,
-object locations and error text. [Parity evidence](../docs/improvement/validator-desktop-parity/README.md).
-
-The October 27 reexamination updates both validators to use version-aware
-collection exit modes and independently verified document-wide content ownership.
-All six freshly generated profiles pass both engines with matching outcomes for
-all 213 rules. [Current decisions and verification](../docs/improvement/specification-audit/specification-reexamination-2026-10-27.txt).
-
 A file can now receive **PASS** when the required checks complete successfully.
 Actual violations produce **FAIL**. Required comparisons with unavailable evidence
 still produce **INCOMPLETE**. Operational errors, cancellation and timeouts also
@@ -33,14 +23,7 @@ parent-tree correspondence, attachment annotations and collection children.
 The existing limits on unsupported original-source formats, ambiguous ownership,
 large structure inspections and isolated attachment evidence remain visible.
 
-The selected upstream profile is unchanged. Fully upstream-owned checks run in
-the validation pipeline and are omitted from the EA-PDF rule list. Runtime rule data
-is in `validator_rule_text.json`; development review records are kept separately
-in `docs/improvement/specification-audit/validator-rule-review.json` and are not
-bundled in the JAR.
-The creator now places archive-wide front matter at document level; its CLI is
-unchanged. This validator does not display emails,
-follow links or connect to email accounts.
+The validator does not display emails, follow links, or connect to email accounts.
 
 ## Collection processing
 
@@ -81,11 +64,8 @@ python3 scripts/package_validator.py
 (cd dist && sha256sum -c eapdf-validator.jar.sha256)
 ```
 
-Run the checksum check from `dist/` (the checksum file names `eapdf-validator.jar`).
-The publisher uses a private temporary build and leaves the previous distributable
-intact if building or verification fails. Publish `eapdf-validator.jar`, never
-`original-eapdf-validator.jar` or a source/archive ZIP. Details and the tested
-checksum are in `docs/improvement/validator-packaging-2026-10-30.md`.
+Publish the executable `eapdf-validator.jar`, not the unshaded `original-` JAR.
+The packaging command verifies the build before replacing the distributable.
 
 ## Run
 

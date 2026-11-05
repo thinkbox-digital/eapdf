@@ -4,8 +4,6 @@ Current examples are organized by input format in [the example index](../example
 
 The creator has reached a viable beta checkpoint for common email files on the tested Linux setup.
 
-**C136 beta code checkpoint:** Current source repairs through C134; final full build passes265 Java checks. Both apps and all six `examples/sample_1*.pdf` files are current. All six samples pass PDF/A and the selected ISO checks; isolated1mi keeps its known attachment comparison INCOMPLETE. Retained MSG comparisons and default large-archive validation budgets remain limited. Distribution preparation stays deferred. [Status and limits](DEVELOPMENT_STATUS.md), [evidence](improvement/creator-poc-day5/c136/result.json).
-
 ## Supported proof-of-concept setup
 
 The current build is checked on Linux with Java 21 and `/usr/bin/prlimit`

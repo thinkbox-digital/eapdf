@@ -19,6 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.w3c.dom.Element;
 
 class AttachmentOwnerScopeTests {
+  @org.junit.jupiter.api.BeforeEach void requireLocalCorpus() {
+    org.junit.jupiter.api.Assumptions.assumeTrue(java.nio.file.Files.isRegularFile(Path.of("../tests/quality/fixtures/pst_native_attachment_scope_legacy.pdf")), "Optional local regression corpus is not installed");
+  }
   static final Path SAMPLE = Path.of("..", "tests/quality/fixtures/pst_native_attachment_scope_legacy.pdf");
 
   static List<Element> records(Element root, String field) {

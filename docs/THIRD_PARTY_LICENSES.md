@@ -143,7 +143,6 @@ Files:
 
 - [`assets/thinkbox_footer.png`](../assets/thinkbox_footer.png)
 - [`assets/thinkbox_footer_optimized.png`](../assets/thinkbox_footer_optimized.png)
-- [`assets/thinkbox_footer_scaled.png`](../assets/thinkbox_footer_scaled.png)
 - [`assets/thinkbox_logo.jpg`](../assets/thinkbox_logo.jpg)
 
 Status:

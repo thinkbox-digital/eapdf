@@ -1,7 +1,0 @@
-# V78: Non-SMTP source availability
-
-**V78 accepted — 2026-10-22:** Non-SMTP originals produce unavailable SMTP presence/normalization assessments, including coverage fallback. Exact literal raw preservation and understood SMTP subsets pass; known SMTP absence, changed supplied raw text and malformed FOAF still fail independently. **1046 unit passes / 40 skips; 715 freshly checked custom cases; eight non-SMTP and four positive collection PDF/A/ISO controls, CLI/worker and 16 browser checks match.** All 707 prior hashes/statuses/failure sets remain. Two unsupported failures become INCOMPLETE. Creator repair remains deferred. [Evidence](improvement/validator-78/evidence.json).
-
-Two false SMTP presence/count failures become INCOMPLETE. A wrong supplied raw field retains its independent RAW_FROM failure while its unsupported SMTP-presence failure is removed. Known mixed-SMTP absence and malformed supplied FOAF retain FAIL. Raw-preserved and known-SMTP-plus-raw alternatives pass. Four constructed normal/accessibility collections retain complete parent/child PASS. All twelve retained creator outputs keep known failures.
-
-first-pass/ is rejected evidence: its unit test exposed omission of the existing direct raw-fidelity predicate. Final root receipts and frozen inputs pass all gates; no first-pass acceptance is claimed. No directory lookup, invented mailbox, full source-normalization or creator acceptance is introduced.

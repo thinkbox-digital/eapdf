@@ -7,7 +7,7 @@ model; the selected predicates do not require PDF/UA conformance.
 
 This is not an officially published standalone profile. The retained upstream
 source, hashes and selection evidence are in
-[profile provenance](../../docs/improvement/verapdf-coverage/iso32005-profile.json).
+[profile provenance](ISO-32005.json).
 Upstream source project: [veraPDF validation profiles](https://github.com/veraPDF/veraPDF-validation-profiles).
 The upstream creator attribution is retained in both XML files.
 

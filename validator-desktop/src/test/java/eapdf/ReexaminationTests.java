@@ -10,6 +10,9 @@ import org.apache.pdfbox.cos.*;
 import org.junit.jupiter.api.Test;
 
 class ReexaminationTests {
+  @org.junit.jupiter.api.BeforeEach void requireLocalCorpus() {
+    org.junit.jupiter.api.Assumptions.assumeTrue(java.nio.file.Files.isRegularFile(Path.of("../tests/fixtures/eapdf/validator-contentset-parent/orphan-front-noncollection.pdf")), "Optional local regression corpus is not installed");
+  }
   private static final Path FIXTURE = Path.of("..", "tests", "fixtures", "eapdf",
       "validator-contentset-parent", "orphan-front-noncollection.pdf");
 

@@ -198,10 +198,9 @@ function showFiles(doc:BrowserDocument,message?:MailMessage):void {
   element('files-title').textContent=message||singleMessage(doc)?'Files in this email':'Files in this PDF';
   const detailList=element('selection-details');detailList.replaceChildren();
   const selectedMessage=message??singleMessage(doc),metadata=selectedMessage?doc.details.get(selectedMessage.metadataRecordId):undefined;
-  const source=selectedMessage?selected.find(f=>f.afRelationship.value==='Source'):undefined;
   const collection=doc.parent?.inspection.collection.value;const folderNames=new Set<string>();
   if(collection)for(const entry of collection.entries.filter(e=>e.fileId===doc.parentFileId))for(let id of entry.folderIds.value??[]){const names:string[]=[],seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);const folder=collection.folders.find(f=>f.id===id);if(!folder)break;if(folder.name.value)names.unshift(folder.name.value);id=folder.parentId??'';}if(names.length)folderNames.add(names.join(' / '));}
-  for(const [key,value]of [['Source file',source?fileLabel(source):doc.name],['Message-ID',selectedMessage?.internetMessageId.value],['Folder',[...folderNames].join('; ')||metadata?.Folder||metadata?.['Folder paths']]])if(value){detailList.append(text('dt',key!),text('dd',value));}
+  for(const [key,value]of [['Folder',[...folderNames].join('; ')||metadata?.Folder||metadata?.['Folder paths']]])if(value){detailList.append(text('dt',key!),text('dd',value));}
   if(doc.inspection.coverage.associatedFiles!=='present'){const note=text('p','Some embedded files could not be listed.');note.className='file-note';files.append(note);}
   if(message&&doc.inspection.diagnostics.some(d=>d.code==='FILE_EMAIL_ASSOCIATION_MISSING')){const note=text('p','Some files could not be linked to an email.');note.className='file-note';files.append(note);}
   if(!selected.length){if(doc.inspection.coverage.associatedFiles==='present'){const note=text('p',message&&doc.inspection.files.length?'No files are associated with this email in the PDF.':'No embedded files in this selection.');note.className='muted';files.append(note);}}
@@ -218,7 +217,7 @@ function showFiles(doc:BrowserDocument,message?:MailMessage):void {
       const facts=text('span',sizeLabel(size)+(file.streams.length>1?' · '+stream.efKeys.join('/'):'') );facts.className='file-size';heading.append(facts);
       const actions=text('div','');actions.className='file-actions';if(file.streams.length>1){row.classList.add('multiple-streams');actions.setAttribute('role','group');actions.setAttribute('aria-label',stream.efKeys.join('/'));const streamLabel=text('span',stream.efKeys.join('/'));streamLabel.className='stream-label';actions.append(streamLabel);}row.append(actions);
       const save=button(file.afRelationship.value==='Source'&&/\.eml$/i.test(fileLabel(file))?'Download email (.eml)':'Download',()=>void operation(async ticket=>{status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);await saveBlob(new Blob([new Uint8Array(data)],{type:'application/octet-stream'}),fileLabel(file),()=>check(ticket));check(ticket);refreshInspection(doc);status.textContent=`Download requested: ${fileLabel(file)} (${sizeLabel(data.length)}).${doc.inspection.diagnostics.some(d=>d.code==='CHECKSUM_MISMATCH')?' Warning: recorded checksum mismatch.':''}`;}));save.replaceChildren(treeIcon('download'));save.classList.add('icon-button');save.setAttribute('aria-label',`Download ${fileLabel(file)}`);save.title=`Download ${fileLabel(file)}`;save.dataset.fileId=file.id;save.dataset.stream=stream.locator.path;actions.append(save);
-      if(size===0){save.dataset.unavailable='true';save.disabled=true;save.setAttribute('aria-disabled','true');const note=text('p','This file is empty. The original may have been empty, or this is a placeholder.');note.className='file-note empty-file-notice';const warning=treeIcon('warning');warning.removeAttribute('aria-hidden');warning.setAttribute('role','img');warning.setAttribute('aria-label','Warning');note.prepend(warning);row.append(note);}
+      if(size===0){actions.remove();}
       else if(canView(file,stream)){
         const view=button(isPdf(file,stream)?'Open PDF':'View',()=>void operation(async ticket=>{
           if(isPdf(file,stream)){await openChild(doc,file,stream,ticket);return;}
@@ -230,11 +229,16 @@ function showFiles(doc:BrowserDocument,message?:MailMessage):void {
     for(const b of row.querySelectorAll<HTMLButtonElement>('button'))b.disabled=busy||b.dataset.unavailable==='true';
     return row;
   };
-  if(selected.length>256)fileList=new VirtualList(list,files.closest('aside')!,selected,createFile,220);
+  const declaredProfile=doc.inspection.identification.declaredProfile;
+  const isolated=declaredProfile.state==='present'&&['si','mi','ci'].includes(declaredProfile.value??'');
+  const emptyNotice=()=>{const note=text('p','This profile of EA-PDF does not embed source messages.');note.className='file-note empty-file-notice';const warning=treeIcon('warning');warning.removeAttribute('aria-hidden');warning.setAttribute('role','img');warning.setAttribute('aria-label','Warning');note.prepend(warning);return note;};
+  if(selected.length>256){if(isolated)list.before(emptyNotice());fileList=new VirtualList(list,files.closest('aside')!,selected,createFile,220);}
   else {
     const groups=new Map<string,AssociatedFile[]>();
     for(const file of selected){const category=fileCategory(file),name=category==='Archive files'?'Other files':category;const group=groups.get(name)??[];group.push(file);groups.set(name,group);}
-    for(const [name,group]of groups){const section=text('li',''),disclosure=text('details',''),heading=text('summary',''),title=text('span',name),count=text('span',String(group.length)),items=text('ul','');section.className='file-category';heading.className='file-category-heading';count.className='badge';const chevron=treeIcon('right');chevron.classList.add('disclosure-icon');heading.append(chevron,title,count);disclosure.open=name==='Email sources'||name==='Email attachments';disclosure.append(heading,items);section.append(disclosure);list.append(section);for(const file of group)items.append(createFile(file));}
+    if(isolated&&!groups.size)list.before(emptyNotice());
+    const noticeGroup=groups.has('Email attachments')?'Email attachments':groups.keys().next().value;
+    for(const [name,group]of groups){const section=text('li',''),disclosure=text('details',''),heading=text('summary',''),title=text('span',name),count=text('span',String(group.length)),items=text('ul','');section.className='file-category';heading.className='file-category-heading';count.className='badge';const chevron=treeIcon('right');chevron.classList.add('disclosure-icon');heading.append(chevron,title,count);disclosure.open=name==='Email sources'||name==='Email attachments'||name==='Technical and supporting files';disclosure.append(heading);if(isolated&&name===noticeGroup)disclosure.append(emptyNotice());disclosure.append(items);section.append(disclosure);list.append(section);for(const file of group)items.append(createFile(file));}
   }
 }
 function singleMessage(doc:BrowserDocument):MailMessage|undefined {

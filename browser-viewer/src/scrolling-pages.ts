@@ -12,6 +12,7 @@ export class ScrollingPages {
   private pdf:PDFDocumentProxy|undefined;
   private slots:PageSlot[]=[];
   private scale=1;
+  private prefetch=true;
   private defaultWidth=1;
   private defaultHeight=1;
   private sizes=new Map<number,{width:number;height:number}>();
@@ -96,7 +97,8 @@ export class ScrollingPages {
   highlight(query:string,match?:{page:number;index:number}):void {
     this.query=query;this.match=match;for(const slot of this.slots)if(slot.ready)slot.layer.highlight(query,match?.page===slot.number?match.index:undefined);
   }
-  async show(doc:Pick<BrowserDocument,'pdf'|'run'>,scale:number,page:number,query:string):Promise<void>{
+  async show(doc:Pick<BrowserDocument,'pdf'|'run'>,scale:number,page:number,query:string,prefetch=true):Promise<void>{
+    this.prefetch=prefetch;
     const sameDocument=this.doc===doc&&this.pdf===doc.pdf;
     const zooming=sameDocument&&this.scale!==scale;
     const previous=this.slot(this.active)?.box.getBoundingClientRect();
@@ -136,7 +138,7 @@ export class ScrollingPages {
     this.viewport.scrollTop+=slot.box.getBoundingClientRect().top-top-GAP;
   }
   private schedule():void {
-    if(this.frame||this.locked||!this.doc)return;
+    if(this.frame||this.locked||!this.doc||!this.prefetch)return;
     this.frame=requestAnimationFrame(()=>{
       this.frame=0;if(this.locked||!this.doc)return;
       const bounds=this.viewport.getBoundingClientRect();let selected=this.active,best=0;
