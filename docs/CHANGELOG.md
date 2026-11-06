@@ -3,12 +3,17 @@
 This file tracks human-readable release history for the repository.
 
 Current beta version:
-- `1.6.0-beta.13`
+- `1.6.0-beta.14`
 
 Notes:
 - Release tracking starts here.
 - This changelog is meant to track feature-level changes for users and operators.
 - It does not replace commit history.
+
+## 1.6.0-beta.14 - 2026-11-06
+
+- Label the signing-password field inside the dialog, including when the window title is hidden.
+- Rebuild viewer 0.5.0-beta.13 with the release.
 
 ## 1.6.0-beta.13 - 2026-11-06
 

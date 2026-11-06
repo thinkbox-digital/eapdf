@@ -368,7 +368,13 @@ public class EapdfGui {
 
   static int showSigningPasswordDialog(Component parent, JPasswordField password) {
     String title = "Signing certificate password";
-    var pane = new JOptionPane(password, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION) {
+    JLabel label = new JLabel("Signing certificate password:");
+    label.setLabelFor(password);
+    password.getAccessibleContext().setAccessibleName("Signing certificate password");
+    JPanel content = new JPanel(new BorderLayout(0, 8));
+    content.add(label, BorderLayout.NORTH);
+    content.add(password, BorderLayout.CENTER);
+    var pane = new JOptionPane(content, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION) {
       @Override public void selectInitialValue() {
         password.requestFocusInWindow();
       }
