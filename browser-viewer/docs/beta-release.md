@@ -1,6 +1,6 @@
-# Viewer 0.5.0-beta.9 — GitHub prerelease (2026-11-05)
+# Viewer 0.5.0-beta.10 — GitHub prerelease (2026-11-05)
 
-Packages accompany EA-PDF 1.6.0-beta.10.
+Packages accompany EA-PDF 1.6.0-beta.11.
 
 - Clearer file groups, equal-width sidebars, and grouped document controls.
 - Faster collection search, navigation, and finding-aid exports.
@@ -12,11 +12,11 @@ Unsigned browser packages; manual installation is required.
 ## Install or update
 
 Download the packages from the
-[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.10).
+[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.11).
 Local packages are also in `browser-viewer/releases/`.
 
-- `eapdf-viewer-0.5.0-beta.9-chromium.zip`
-- `eapdf-viewer-0.5.0-beta.9-firefox.zip`
+- `eapdf-viewer-0.5.0-beta.10-chromium.zip`
+- `eapdf-viewer-0.5.0-beta.10-firefox.zip`
 
 Extract the appropriate ZIP. Chromium: open `chrome://extensions`, enable
 Developer mode, choose **Load unpacked**, then select the extracted directory.
@@ -30,7 +30,7 @@ new one. No Java, Python, Node or server is needed to use either extension.
 
 ## Example emails
 
-Download [the beta.9 example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.10/ea-pdf-examples-1.6.0-beta.10.zip), or see the [example inventory](../../examples/README.md).
+Download [the beta.9 example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.11/ea-pdf-examples-1.6.0-beta.11.zip), or see the [example inventory](../../examples/README.md).
 
 ## Release checklist
 

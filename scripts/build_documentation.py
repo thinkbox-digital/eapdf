@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build the public site from an explicit set of existing documentation sources."""
 import argparse
+import json
 import logging
 import posixpath
 import re
@@ -52,7 +53,19 @@ def rewrite_links(text, source, destination):
     return re.sub(r'(!?\[[^\]\n]*\]\()([^\s)]+)(\))', replace, text)
 
 
+def check_release_versions():
+    current = (ROOT / 'VERSION').read_text().strip()
+    viewer = json.loads((ROOT / 'browser-viewer/package.json').read_text())['version']
+    for path in ('docs/manual/user-manual.html', 'docs/site/index.md', 'docs/site/downloads.md', *SOURCES):
+        text = (ROOT / path).read_text()
+        for version in re.findall(r'\b[01]\.\d+\.\d+-beta\.\d+\b', text):
+            expected = viewer if version.startswith('0.') else current
+            if version != expected:
+                raise ValueError(f'{path}: stale version {version}; expected {expected}')
+
+
 def assemble(destination):
+    check_release_versions()
     shutil.copytree(ROOT / 'docs/site', destination, dirs_exist_ok=True)
     for source, target in SOURCES.items():
         out = destination / target

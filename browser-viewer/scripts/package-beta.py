@@ -9,6 +9,8 @@ for browser in ['chromium','firefox']:
  build=root/'dist'/browser
  info=json.loads((build/'build-info.json').read_text())
  assert info['project']==version,'Build the current version before packaging'
+ manifest=json.loads((build/'manifest.json').read_text())
+ assert manifest['version']==version.replace('-beta.','.'),'Extension manifest version differs from package version'
  for name,digest in info['files'].items():
   assert hashlib.sha256((build/name).read_bytes()).hexdigest()==digest,name
  name=f'eapdf-viewer-{version}-{browser}.zip'

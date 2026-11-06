@@ -3,12 +3,17 @@
 This file tracks human-readable release history for the repository.
 
 Current beta version:
-- `1.6.0-beta.10`
+- `1.6.0-beta.11`
 
 Notes:
 - Release tracking starts here.
 - This changelog is meant to track feature-level changes for users and operators.
 - It does not replace commit history.
+
+## 1.6.0-beta.11 - 2026-11-06
+
+- Fix browser extension manifest versions and guard against stale package versions.
+- Update website and PDF manual release instructions; reject stale versions during website builds.
 
 ## 1.6.0-beta.10 - 2026-11-05
 

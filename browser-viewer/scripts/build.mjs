@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { extensionVersion } from './extension-version.mjs';
 import { makeSbom } from './sbom.mjs';
 import { verifyPatchedPdfjs } from './pdfjs-patch.mjs';
 
@@ -56,6 +57,7 @@ try {
     await cp('THIRD_PARTY_NOTICES.md', join(directory, 'THIRD_PARTY_NOTICES.md'));
     await cp('vendor/sources', join(directory, 'license-sources'), { recursive: true });
     const manifest = structuredClone(base);
+    manifest.version = extensionVersion(project.version);
     if (browser === 'chromium') {
       manifest.background = { service_worker: 'background.js', type: 'module' };
       manifest.minimum_chrome_version = '156';

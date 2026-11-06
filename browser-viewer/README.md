@@ -1,6 +1,6 @@
-# EA-PDF browser viewer — beta 0.5.0-beta.9
+# EA-PDF browser viewer — beta 0.5.0-beta.10
 
-Current release: `0.5.0-beta.9` (EA-PDF `1.6.0-beta.10`).
+Current release: `0.5.0-beta.10` (EA-PDF `1.6.0-beta.11`).
 The local presentation redesign retains that version for review and is not published.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
