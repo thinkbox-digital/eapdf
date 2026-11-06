@@ -211,7 +211,7 @@ public class EapdfGui {
     RunConfigControls configControls = buildRunConfigControls();
 
     addPathRow(panel, gc, 0, "Input file or folder", inputField, e -> choosePath(inputField, JFileChooser.FILES_AND_DIRECTORIES, false));
-    addPathRow(panel, gc, 1, "Output directory", outDirField, e -> choosePath(outDirField, JFileChooser.DIRECTORIES_ONLY, false, inputField));
+    addPathRow(panel, gc, 1, "Output directory (required)", outDirField, e -> choosePath(outDirField, JFileChooser.DIRECTORIES_ONLY, false, inputField));
     addRow(panel, gc, 2, "Profile", buildProfilePicker(profileBox, true));
     addRow(panel, gc, 3, "Features", buildRunConfigPanel(configControls));
 
@@ -235,11 +235,10 @@ public class EapdfGui {
         showError("That input path is not valid. Choose an email file or folder.");
         return;
       }
+      if (!requireOutputDirectory(outDirField)) return;
       List<String> args = new ArrayList<>();
-      if (!outDir.isBlank()) {
-        args.add("--out");
-        args.add(outDir);
-      }
+      args.add("--out");
+      args.add(outDir);
       args.add("--jobs");
       args.add("4");
 
@@ -323,7 +322,7 @@ public class EapdfGui {
     addPathRow(panel, gc, 1, "Credentials JSON", credentialsField, e -> choosePath(credentialsField, JFileChooser.FILES_ONLY, false));
     addPathRow(panel, gc, 2, "Token directory", tokenDirField, e -> choosePath(tokenDirField, JFileChooser.DIRECTORIES_ONLY, false, credentialsField));
     addRow(panel, gc, 3, "Folder / label", folderField);
-    addPathRow(panel, gc, 4, "Output directory", outDirField, e -> choosePath(outDirField, JFileChooser.DIRECTORIES_ONLY, false, credentialsField, tokenDirField));
+    addPathRow(panel, gc, 4, "Output directory (required)", outDirField, e -> choosePath(outDirField, JFileChooser.DIRECTORIES_ONLY, false, credentialsField, tokenDirField));
     addRow(panel, gc, 5, "Profile", buildProfilePicker(profileBox, false));
     addRow(panel, gc, 6, "Limit (0 = all)", limitSpinner);
     addRow(panel, gc, 7, "Unread filter", unreadOnlyBox);
@@ -339,6 +338,7 @@ public class EapdfGui {
         showError("Choose a Gmail credentials JSON file.");
         return;
       }
+      if (!requireOutputDirectory(outDirField)) return;
       List<String> args = new ArrayList<>();
       putFlag(args, "--user", userField.getText().trim(), "me");
       putFlag(args, "--credentials", credentials, null);
@@ -396,6 +396,13 @@ public class EapdfGui {
     }
   }
 
+  private boolean requireOutputDirectory(JTextField field) {
+    if (!field.getText().isBlank()) return true;
+    showError("Choose an output directory before starting conversion.");
+    field.requestFocusInWindow();
+    return false;
+  }
+
   private void runJavaMain(String label, String mainClass, List<String> args, RunConfigOverrides configOverrides) {
     if (running) {
       showError("A conversion is already running. Stop it first or wait for it to finish.");
@@ -406,7 +413,11 @@ public class EapdfGui {
     try {
       String outputFlag = mainClass.equals("eapdf.GmailDownloadToPdf") ? "--out-pdf" : "--out";
       int outputIndex = args.indexOf(outputFlag);
-      outputDirectory = launchDirectory.resolve(outputIndex >= 0 ? args.get(outputIndex + 1) : "out").normalize();
+      if (outputIndex < 0 || outputIndex + 1 >= args.size() || args.get(outputIndex + 1).isBlank()) {
+        showError("Choose an output directory before starting conversion.");
+        return;
+      }
+      outputDirectory = launchDirectory.resolve(args.get(outputIndex + 1)).normalize();
       if (Files.exists(outputDirectory) && !Files.isDirectory(outputDirectory)) {
         showError("The output path is a file. Choose a folder for the PDFs.");
         return;

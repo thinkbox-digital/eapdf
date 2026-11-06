@@ -1,6 +1,6 @@
-# EA-PDF browser viewer — beta 0.5.0-beta.14
+# EA-PDF browser viewer — beta 0.5.0-beta.15
 
-Current release: `0.5.0-beta.14` (EA-PDF `1.6.0-beta.15`).
+Current release: `0.5.0-beta.15` (EA-PDF `1.6.0-beta.16`).
 The local presentation redesign retains that version for review and is not published.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
@@ -43,7 +43,7 @@ files. The same TypeScript interface uses bundled PDF.js in both browsers.
 No Java, server, native host or network connection is needed at runtime.
 
 Folders now start expanded and can be collapsed with their chevrons. File groups
-show real counts; email sources, attachments, and technical/supporting files start expanded.
+show real counts; email sources, attachments, other files, and technical/supporting files start expanded.
 Empty files have no View or Download controls. Isolated profiles show one source-omission notice above the attachment groups. File actions have consistent labelled icons. Inspection problems use short warnings beside the affected content; detailed diagnostics are available in the browser debug console.
 
 [Install the local beta and view attachments](docs/beta-release.md). Packages are
@@ -75,7 +75,7 @@ in `releases/`; the [current checkpoint](docs/beta-release.md#verified-scope) re
   PDF; the tree also provides document navigation.
 - **View** opens image or text attachments. Office files use normal browser download
   handling. Downloads save the exact stored bytes; files never open automatically.
-- Files appear in collapsible groups with real counts. Email sources, attachments
+- Files appear in collapsible groups with real counts. Email sources, attachments, other files
   and technical/supporting files start expanded. View and Download use
   labelled icon buttons. Empty files have no View or Download controls; the source-omission notice appears only for isolated profiles.
 - The always-visible message filter shows matching subjects with sender and date.
