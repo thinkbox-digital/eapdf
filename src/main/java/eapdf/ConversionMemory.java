@@ -9,7 +9,7 @@ final class ConversionMemory {
   static final long MIB = 1024L * 1024, GIB = 1024 * MIB;
 
   static long availableBytes() {
-    long available = -1;
+    long available = System.getProperty("os.name", "").startsWith("Mac") ? macAvailableBytes() : -1;
     try {
       for (String line : Files.readAllLines(Path.of("/proc/meminfo"))) {
         if (line.startsWith("MemAvailable:")) {
@@ -24,6 +24,38 @@ final class ConversionMemory {
     available = containerAvailable(available, Path.of("/sys/fs/cgroup/memory.max"), Path.of("/sys/fs/cgroup/memory.current"));
     available = containerAvailable(available, Path.of("/sys/fs/cgroup/memory/memory.limit_in_bytes"), Path.of("/sys/fs/cgroup/memory/memory.usage_in_bytes"));
     return available;
+  }
+
+  private static long macAvailableBytes() {
+    Process process = null;
+    try {
+      process = new ProcessBuilder("/usr/bin/vm_stat").redirectErrorStream(true).start();
+      if (!process.waitFor(2, java.util.concurrent.TimeUnit.SECONDS) || process.exitValue() != 0) return -1;
+      return macAvailableBytes(new String(process.getInputStream().readNBytes(16384), java.nio.charset.StandardCharsets.US_ASCII));
+    } catch (InterruptedException error) {
+      Thread.currentThread().interrupt(); return -1;
+    } catch (Exception ignored) { return -1; }
+    finally { if (process != null) { if (process.isAlive()) process.destroyForcibly(); try { process.getInputStream().close(); } catch (Exception ignored) { } } }
+  }
+
+  static long macAvailableBytes(String statistics) {
+    try {
+      var pageSize = java.util.regex.Pattern.compile("page size of ([0-9]+) bytes").matcher(statistics);
+      if (!pageSize.find()) return -1;
+      long size = Long.parseLong(pageSize.group(1));
+      if (size <= 0) return -1;
+      long free = macPages(statistics, "free"), inactive = macPages(statistics, "inactive");
+      if (free < 0 || inactive < 0) return -1;
+      // Inactive pages are reclaimable candidates, not an allocation guarantee.
+      // Do not count active, wired, compressed or overlapping purgeable pages.
+      // automaticHeap still reserves at least half of this estimate.
+      return Math.multiplyExact(Math.addExact(free, inactive), size);
+    } catch (RuntimeException ignored) { return -1; }
+  }
+
+  private static long macPages(String statistics, String kind) {
+    var value = java.util.regex.Pattern.compile("(?m)^Pages " + kind + ":\\h*([0-9]+)\\.?\\h*$").matcher(statistics);
+    return value.find() ? Long.parseLong(value.group(1)) : -1;
   }
 
   static long containerAvailable(long available, Path limitPath, Path usedPath) {

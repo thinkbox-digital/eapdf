@@ -1,16 +1,16 @@
-# Viewer 0.5.0-beta.13 — GitHub prerelease (2026-11-06)
+# Viewer 0.5.0-beta.14 — GitHub prerelease (2026-11-06)
 
-Packages accompany EA-PDF 1.6.0-beta.14. This beta adds filtered-result scrolling:
+Packages accompany EA-PDF 1.6.0-beta.15. This beta adds filtered-result scrolling:
 selecting an email preserves the results, and forward/backward scrolling follows
 that list. Clearing the filter restores normal archive scrolling.
 
 ## Install or update
 
 Download the packages from the
-[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.14):
+[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.15):
 
-- `eapdf-viewer-0.5.0-beta.13-chromium.zip`
-- `eapdf-viewer-0.5.0-beta.13-firefox.zip`
+- `eapdf-viewer-0.5.0-beta.14-chromium.zip`
+- `eapdf-viewer-0.5.0-beta.14-firefox.zip`
 
 Extract the appropriate ZIP into a new directory. Chromium: open
 `chrome://extensions`, enable Developer mode, choose **Load unpacked**, then select
@@ -21,13 +21,13 @@ closes. No Java, Python, Node or server is needed to use either extension.
 
 Remove or disable the older installation. Reloading an old extracted directory
 does not download an update. Close old viewer tabs and open a new one. The footer
-shows `0.5.0-beta.13`; the browser's extension manager shows `0.5.0.13`.
+shows `0.5.0-beta.14`; the browser's extension manager shows `0.5.0.14`.
 For workspace builds, reload `browser-viewer/dist/chromium/` or reinstall
 `browser-viewer/dist/firefox/manifest.json`.
 
 ## Example emails
 
-Download [the example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.14/ea-pdf-examples-1.6.0-beta.14.zip),
+Download [the example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.15/ea-pdf-examples-1.6.0-beta.15.zip),
 or see the [example inventory](../../examples/README.md).
 
 ## Use and limitations

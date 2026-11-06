@@ -3,12 +3,17 @@
 This file tracks human-readable release history for the repository.
 
 Current beta version:
-- `1.6.0-beta.14`
+- `1.6.0-beta.15`
 
 Notes:
 - Release tracking starts here.
 - This changelog is meant to track feature-level changes for users and operators.
 - It does not replace commit history.
+
+## 1.6.0-beta.15 - 2026-11-06
+
+- Include inactive memory in the macOS conversion memory estimate, retaining the existing reserve.
+- Rebuild viewer 0.5.0-beta.14 with the release.
 
 ## 1.6.0-beta.14 - 2026-11-06
 
