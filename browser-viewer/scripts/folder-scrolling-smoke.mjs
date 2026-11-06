@@ -42,6 +42,31 @@ try{
   await edge(-1);assert.equal(await name(),names[0]);assert.match(await page.locator('#status').textContent(),/Beginning of messages in this folder/);
   console.log(`PASS ${profile}: forward/backward, first/last page, folder ends, momentum guard`);
  }
+ // Filtering must preserve the results and use their order across files and pages.
+ for(const profile of ['1c','1ci','1m','1mi']){
+  await open(resolve(`tests/inspection/source-examples/eml/eml_sample_${profile}.pdf`));
+  await page.locator('#message-filter').fill('@');
+  await page.waitForFunction(()=>document.querySelectorAll('#filter-results button').length>=2);
+  const results=page.locator('#filter-results button');
+  await results.first().click();await ready();
+  assert.equal(await page.locator('#message-filter').inputValue(),'@');
+  assert.equal(await results.first().getAttribute('aria-current'),'true');
+  await edge(1);assert.equal(await results.nth(1).getAttribute('aria-current'),'true');
+  await edge(-1);assert.equal(await results.first().getAttribute('aria-current'),'true');
+  await edge(-1);assert.match(await page.locator('#status').textContent(),/Beginning of filtered messages/);
+  await results.last().click();await ready();await edge(1);
+  assert.match(await page.locator('#status').textContent(),/End of filtered messages/);
+  const subject=await results.first().locator('.message-subject').count()?await results.first().locator('.message-subject').textContent():null;
+  if(subject){
+   await page.locator('#message-filter').fill(subject);
+   await page.waitForFunction(()=>document.querySelectorAll('#filter-results button').length===1);
+   await results.first().click();await ready();await edge(1);
+   assert.match(await page.locator('#status').textContent(),/End of filtered messages/);
+  }
+  await page.locator('#message-filter').fill('');await ready();
+  assert.equal(await page.locator('#filter-results').isVisible(),false);
+  console.log(`PASS ${profile}: retained filter, forward/backward result scrolling and result boundaries`);
+ }
  // Nested collection children are an explicit boundary, not a folder to enter automatically.
  await open(resolve('tests/inspection/controls/c-nested-mixed.pdf'));
  await page.locator('#tree [data-embedded-file-id]').filter({hasText:'archive.pdf'}).click();await ready();const archive=await name();

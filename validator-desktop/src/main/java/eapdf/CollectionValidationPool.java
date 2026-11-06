@@ -72,7 +72,6 @@ final class CollectionValidationPool implements AutoCloseable {
         final int number;
         volatile Process process;
         BufferedWriter requests;
-        BufferedReader replies;
         Path scratch;
         int used;
         Worker(int number) { this.number = number; }
@@ -97,33 +96,32 @@ final class CollectionValidationPool implements AutoCloseable {
                 .sorted().forEach(key -> command.add("-D" + key + "=" + System.getProperty(key)));
             command.addAll(List.of("-cp", System.getProperty("java.class.path"), CollectionValidationPool.class.getName(),
                 Long.toString(ProcessHandle.current().pid())));
-            process = new ProcessBuilder(command).redirectError(ProcessBuilder.Redirect.INHERIT).start();
+            process = new ProcessBuilder(command).redirectError(ProcessBuilder.Redirect.INHERIT).redirectOutput(ProcessBuilder.Redirect.INHERIT).start();
             requests = new BufferedWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8));
-            replies = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
             used = 0;
             System.out.println("[validation] Collection worker " + (number + 1) + " started: pid=" + process.pid() + ", heap=" + heap + " MiB");
         }
 
         Result validate(Path input, Set<String> ancestors, int depth) throws Exception {
             start();
-            Path output = scratch.resolve("result.json");
+            Path output = scratch.resolve("result.json"), response = scratch.resolve("response.json");
+            Files.deleteIfExists(response);
             String id = UUID.randomUUID().toString();
             JsonObject task = new JsonObject();
             task.addProperty("id", id); task.addProperty("input", input.toAbsolutePath().toString());
-            task.addProperty("output", output.toString()); task.addProperty("depth", depth);
+            task.addProperty("output", output.toString()); task.addProperty("response", response.toString()); task.addProperty("depth", depth);
             task.add("ancestors", JavaValidation.JSON.toJsonTree(ancestors));
             try {
                 requests.write(task.toString()); requests.newLine(); requests.flush();
                 long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(ValidationRuntime.timeoutSeconds(Files.size(input)));
-                while (!replies.ready()) {
+                while (!Files.isRegularFile(response)) {
                     if (Thread.currentThread().isInterrupted() || closed) throw new InterruptedException("Collection validation cancelled");
                     if (!process.isAlive()) throw new IOException("Collection worker exited before completing a child (exit " + process.exitValue() + ")");
                     if (System.nanoTime() > deadline) throw new IOException("Collection child validation exceeded its time allowance");
                     Thread.sleep(10);
                 }
-                String response = replies.readLine();
-                if (response == null) throw new IOException("Collection worker closed its response channel");
-                JsonObject ack = JsonParser.parseString(response).getAsJsonObject();
+                JsonObject ack;
+                try (var reader = Files.newBufferedReader(response)) { ack = JsonParser.parseReader(reader).getAsJsonObject(); }
                 if (!id.equals(JavaValidation.text(ack, "id"))) throw new IOException("Unexpected collection worker response");
                 if (!ack.get("ok").getAsBoolean()) throw new IOException(JavaValidation.text(ack, "error"));
                 JsonObject result;
@@ -135,7 +133,7 @@ final class CollectionValidationPool implements AutoCloseable {
                 return new Result(result, ack.get("count").getAsInt(), ack.get("bytes").getAsLong());
             } catch (Exception error) {
                 stop(); throw error;
-            } finally { Files.deleteIfExists(output); }
+            } finally { Files.deleteIfExists(output); Files.deleteIfExists(response); }
         }
 
         synchronized void stop() {
@@ -153,8 +151,7 @@ final class CollectionValidationPool implements AutoCloseable {
     /** Internal pipe protocol, not a public CLI option. */
     public static void main(String[] args) throws Exception {
         long parent = Long.parseLong(args[0]);
-        PrintStream protocol = System.out;
-        System.setOut(System.err); // Preserve diagnostics without corrupting the reply channel.
+        System.setOut(System.err); // Keep diagnostics; acknowledgements use an atomic file, never stdout.
         Thread watchdog = new Thread(() -> {
             try {
                 while (ProcessHandle.of(parent).map(ProcessHandle::isAlive).orElse(false)) Thread.sleep(1000);
@@ -181,7 +178,12 @@ final class CollectionValidationPool implements AutoCloseable {
                     } finally { Files.deleteIfExists(temporary); }
                     ack.addProperty("ok", true); ack.addProperty("count", children.count); ack.addProperty("bytes", children.bytes);
                 } catch (Exception error) { ack.addProperty("ok", false); ack.addProperty("error", error.toString()); }
-                protocol.println(ack); protocol.flush();
+                Path response = Path.of(JavaValidation.text(task, "response"));
+                Path temporary = Files.createTempFile(response.getParent(), ".child-response-", ".json");
+                try {
+                    Files.writeString(temporary, ack.toString(), StandardCharsets.UTF_8);
+                    ValidationSession.replace(temporary, response);
+                } finally { Files.deleteIfExists(temporary); }
             }
         }
     }

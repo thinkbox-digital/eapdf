@@ -1,6 +1,6 @@
-# EA-PDF browser viewer — beta 0.5.0-beta.10
+# EA-PDF browser viewer — beta 0.5.0-beta.11
 
-Current release: `0.5.0-beta.10` (EA-PDF `1.6.0-beta.11`).
+Current release: `0.5.0-beta.11` (EA-PDF `1.6.0-beta.12`).
 The local presentation redesign retains that version for review and is not published.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
@@ -43,17 +43,11 @@ files. The same TypeScript interface uses bundled PDF.js in both browsers.
 No Java, server, native host or network connection is needed at runtime.
 
 Folders now start expanded and can be collapsed with their chevrons. File groups
-show real counts; email sources and attachments start expanded, while other and
-technical files start collapsed. Empty files show a notice and a disabled download
-button. File actions have consistent labelled icons. Inspection problems use short warnings beside the affected content; detailed diagnostics are available in the browser debug console.
+show real counts; email sources, attachments, and technical/supporting files start expanded.
+Empty files have no View or Download controls. Isolated profiles show one source-omission notice above the attachment groups. File actions have consistent labelled icons. Inspection problems use short warnings beside the affected content; detailed diagnostics are available in the browser debug console.
 
 [Install the local beta and view attachments](docs/beta-release.md). Packages are
 in `releases/`; the [current checkpoint](docs/beta-release.md#verified-scope) records tests and limits.
-
-The earlier 0.3.2 update made zoom buttons move in 10% steps while preserving the horizontal viewing position. Scrolling an m/mi file now follows the current message in the left pane. Both browser interaction suites pass.
-
-The 0.4.0 beta adds metadata CSV export, folder-contained file scrolling, and
-expanded Document Information by default. See the beta guide for current checks.
 
 ## Use
 
@@ -70,6 +64,9 @@ expanded Document Information by default. See the beta guide for current checks.
 - The left panel lists documents, messages and collection folders. A PDF containing
   one email uses one subject row and shows all its embedded files. Folders start
   expanded; only folders with children have expand chevrons.
+- Filtering retains the result list when you select an email. Scrolling past its
+  end or beginning follows the filtered results and stops at the list boundaries.
+  Clear the filter to restore normal archive scrolling.
 - Select a message to see its uniquely owned body page and files. If no
   page mapping is known, the document remains visible with an explicit explanation.
 - Select a document name to see all its files, including files with unknown owners.
@@ -78,9 +75,9 @@ expanded Document Information by default. See the beta guide for current checks.
   PDF; the tree also provides document navigation.
 - **View** opens image or text attachments. Office files use normal browser download
   handling. Downloads save the exact stored bytes; files never open automatically.
-- Files appear in collapsible groups with real counts. Email sources and attachments
-  start expanded; other and technical files start collapsed. View and Download use
-  labelled icon buttons. Empty files show a warning and cannot be downloaded.
+- Files appear in collapsible groups with real counts. Email sources, attachments
+  and technical/supporting files start expanded. View and Download use
+  labelled icon buttons. Empty files have no View or Download controls; the source-omission notice appears only for isolated profiles.
 - The always-visible message filter shows matching subjects with sender and date.
   It does not change the PDF text search. The Messages and Files panes have hide/show
   controls. Wide windows retain 27% / 46% / 27% proportions; medium windows show one

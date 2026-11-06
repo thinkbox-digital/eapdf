@@ -12,6 +12,8 @@ export class ScrollingPages {
   private pdf:PDFDocumentProxy|undefined;
   private slots:PageSlot[]=[];
   private scale=1;
+  private firstPage=1;
+  private lastPage=0;
   private prefetch=true;
   private defaultWidth=1;
   private defaultHeight=1;
@@ -19,13 +21,13 @@ export class ScrollingPages {
   private top=document.createElement('div');
   private bottom=document.createElement('div');
   private offset(number:number):number {
-    let result=(number-1)*(this.defaultHeight+GAP);
-    for(const [page,size] of this.sizes)if(page<number)result+=size.height-this.defaultHeight;
+    let result=(number-this.firstPage)*(this.defaultHeight+GAP);
+    for(const [page,size] of this.sizes)if(page>=this.firstPage&&page<number)result+=size.height-this.defaultHeight;
     return result;
   }
   // Browsers cap element/scroll dimensions. Compress only the offscreen space;
   // mounted pages retain their normal dimensions and natural local scrolling.
-  private ratio():number {return Math.min(1,8_000_000/Math.max(1,this.offset((this.pdf?.numPages??0)+1)));}
+  private ratio():number {return Math.min(1,8_000_000/Math.max(1,this.offset(this.lastPage+1)));}
   private coordinates(position:number,inverse=false):number {
     const first=this.slots[0]?.number??1,last=this.slots.at(-1)?.number??0;
     const start=this.offset(first),end=this.offset(last+1),ratio=this.ratio(),physicalStart=start*ratio;
@@ -39,13 +41,13 @@ export class ScrollingPages {
     return end+(position-physicalStart-end+start)/ratio;
   }
   private spacers():void {
-    const first=this.slots[0]?.number??1,last=this.slots.at(-1)?.number??0,total=this.pdf?.numPages??0;
-    this.top.hidden=first===1;this.bottom.hidden=last===total;
+    const first=this.slots[0]?.number??1,last=this.slots.at(-1)?.number??0,total=this.lastPage;
+    this.top.hidden=first===this.firstPage;this.bottom.hidden=last===total;
     this.top.style.height=`${Math.max(0,this.offset(first)*this.ratio()-GAP)}px`;
     this.bottom.style.height=`${Math.max(0,(this.offset(total+1)-this.offset(last+1))*this.ratio()-GAP)}px`;
   }
   private mount(center:number):void {
-    const total=this.pdf?.numPages??0,first=Math.max(1,center-4),last=Math.min(total,center+4);
+    const total=this.lastPage,first=Math.max(this.firstPage,center-4),last=Math.min(total,center+4);
     if(this.slots[0]?.number===first&&this.slots.at(-1)?.number===last)return;
     const logical=this.coordinates(Math.max(0,this.viewport.scrollTop-30));
     const previous=new Map(this.slots.map(slot=>[slot.number,slot]));
@@ -97,7 +99,10 @@ export class ScrollingPages {
   highlight(query:string,match?:{page:number;index:number}):void {
     this.query=query;this.match=match;for(const slot of this.slots)if(slot.ready)slot.layer.highlight(query,match?.page===slot.number?match.index:undefined);
   }
-  async show(doc:Pick<BrowserDocument,'pdf'|'run'>,scale:number,page:number,query:string,prefetch=true):Promise<void>{
+  async show(doc:Pick<BrowserDocument,'pdf'|'run'>,scale:number,page:number,query:string,prefetch=true,range?:readonly number[]):Promise<void>{
+    const first=range?.[0]??1,last=range?.at(-1)??doc.pdf.numPages;
+    const rangeChanged=first!==this.firstPage||last!==this.lastPage;
+    page=Math.max(first,Math.min(last,page));
     this.prefetch=prefetch;
     const sameDocument=this.doc===doc&&this.pdf===doc.pdf;
     const zooming=sameDocument&&this.scale!==scale;
@@ -106,11 +111,11 @@ export class ScrollingPages {
     const center=zooming&&previous?Math.max(0,Math.min(1,(bounds.left+this.viewport.clientLeft+this.viewport.clientWidth/2-previous.left)/previous.width)):0.5;
     this.locked=true;let epoch=this.epoch;
     try{
-      if(this.doc!==doc||this.pdf!==doc.pdf||this.scale!==scale){
-        this.clear();this.locked=true;this.doc=doc;this.pdf=doc.pdf;this.scale=scale;
-        epoch=this.epoch;const first=await doc.run(doc.pdf.getPage(1));
+      if(this.doc!==doc||this.pdf!==doc.pdf||this.scale!==scale||rangeChanged){
+        this.clear();this.locked=true;this.doc=doc;this.pdf=doc.pdf;this.scale=scale;this.firstPage=first;this.lastPage=last;
+        epoch=this.epoch;const firstPdfPage=await doc.run(doc.pdf.getPage(first));
         if(epoch!==this.epoch)return;
-        const size=first.getViewport({scale});first.cleanup();
+        const size=firstPdfPage.getViewport({scale});firstPdfPage.cleanup();
         this.defaultWidth=size.width;this.defaultHeight=size.height;
         this.mount(page);this.surface.hidden=false;
       }
@@ -145,7 +150,7 @@ export class ScrollingPages {
       // Pages are vertically ordered. Locate the visible interval without forcing
       // layout reads for every page in a long archive on every scroll frame.
       const position=this.coordinates(Math.max(0,this.viewport.scrollTop-30));
-      let low=1,high=this.pdf!.numPages;
+      let low=this.firstPage,high=this.lastPage;
       while(low<high){const mid=(low+high)>>>1;const height=this.sizes.get(mid)?.height??this.defaultHeight;if(this.offset(mid)+height<=position)low=mid+1;else high=mid;}
       this.mount(low);
       for(const slot of this.slots){

@@ -102,7 +102,7 @@ loadingDialog.addEventListener('cancel',event=>{event.preventDefault();close();}
 function close():void {
   finishLoading();cancelExport?.();
   metadataEpoch++;metadataSession?.close();metadataSession=undefined;metadataIndex=undefined;clearTimeout(filterTimer);
-  filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;filter.value='';tree.hidden=false;
+  filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;filter.value='';filtered=undefined;tree.hidden=false;
   for(const list of virtualLists)list.close();virtualLists.clear();fileList?.close();fileList=undefined;
   cancelLinked();stopBrowseIndex();element('subject-index-progress').hidden=true;searchSession?.close();searchSession=undefined;exportSession?.close();exportSession=undefined;
   generation++;searchEpoch++;collectionResults=undefined;failedPages.clear();finder.clear();pages.clear();attachmentViewer.close();session?.close();session=undefined;current=undefined;
@@ -132,9 +132,10 @@ async function render(ticket:number,followMessage=true):Promise<void>{
   try{
     await session.ensure(doc);check(ticket);
     status.textContent=`Rendering page ${pageNumber}…`;
+    const range=filteredPages(doc);if(range)pageNumber=Math.max(range[0]!,Math.min(range.at(-1)!,pageNumber));
     const scale=await pageScale(doc,pageNumber);check(ticket);
     renderedViewportWidth=viewport.clientWidth;renderedViewportHeight=viewport.clientHeight;
-    empty.hidden=true;await pages.show(doc,scale,pageNumber,search.value);check(ticket);renderedZoom=scale/PDF_TO_CSS;
+    empty.hidden=true;await pages.show(doc,scale,pageNumber,search.value,true,filteredPages(doc));check(ticket);renderedZoom=scale/PDF_TO_CSS;
     empty.hidden=true;status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages}`;savedPages.set(doc,pageNumber);if(followMessage)syncMessageToPage();
   }catch(error){if(ticket===generation&&current===doc)failedPages.add(pageNumber);throw error;}
 }
@@ -274,6 +275,14 @@ async function openChild(parent:BrowserDocument,file:AssociatedFile,stream:Embed
 // An edge gesture changes files only inside the immediate containing folder.
 function scrollFile(direction:-1|1):boolean {
   const doc=current,parent=doc?.parent;
+  if(filtered&&filter.value.trim()){
+    if(busy||!doc)return false;
+    if(direction===1?viewport.scrollTop+viewport.clientHeight<viewport.scrollHeight-2:viewport.scrollTop>2)return false;
+    const next=filtered.index+direction;
+    if(filtered.index<0)return true;
+    if(next<0||next>=filtered.matches.length){status.textContent=direction===1?'End of filtered messages.':'Beginning of filtered messages.';return true;}
+    void operation(ticket=>openFiltered(next,ticket,direction));return true;
+  }
   if(busy||!doc||!parent||!doc.inspection.messages.length||doc.inspection.collection.value)return false;
   if(direction===1?viewport.scrollTop+viewport.clientHeight<viewport.scrollHeight-2:viewport.scrollTop>2)return false;
   const siblings=folderFiles(parent.inspection,doc.parentFileId??''),index=siblings.findIndex(f=>f.id===doc.parentFileId);
@@ -662,6 +671,28 @@ element('restart').addEventListener('click',()=>{
 const filter=element<HTMLInputElement>('message-filter');
 const filterResults=text('ul','');filterResults.id='filter-results';filterResults.hidden=true;tree.before(filterResults);
 let filterList:VirtualList<IndexedMessage>|undefined;
+let filtered:{root:BrowserDocument;matches:IndexedMessage[];index:number;doc?:BrowserDocument}|undefined;
+function filteredPages(doc:BrowserDocument):number[]|undefined {
+  if(!filtered||filtered.doc!==doc||!filter.value.trim())return;
+  const item=filtered.matches[filtered.index],message=doc.inspection.messages.find(m=>m.id===item?.messageId);
+  const mapped=message?messagePages(doc.inspection,message):[];
+  return mapped.length?mapped:undefined;
+}
+async function openFiltered(index:number,ticket:number,edge?:-1|1):Promise<void>{
+  const state=filtered,item=state?.matches[index];if(!state||!item)return;
+  let doc=state.root;
+  for(const step of item.path){const file=doc.inspection.files.find(f=>f.id===step.fileId),stream=file?.streams.find(s=>s.locator.path===step.streamPath);
+    if(!file||!stream)throw new Error('Email destination is no longer available.');
+    doc=await session!.child(doc,file,stream,false);check(ticket);
+  }
+  if(filtered!==state)return;
+  const message=doc.inspection.messages.find(m=>m.id===item.messageId);if(!message)throw new Error('Email metadata is no longer available.');
+  state.index=index;state.doc=doc;
+  await showDocument(doc,ticket,message);
+  if(edge===-1){const mapped=filteredPages(doc);pageNumber=mapped?.at(-1)??doc.pdf.numPages;await render(ticket,false);viewport.scrollTop=viewport.scrollHeight-viewport.clientHeight;}
+  for(const button of filterResults.querySelectorAll('button')){if(button.dataset.messageIndex===String(index))button.setAttribute('aria-current','true');else button.removeAttribute('aria-current');}
+  status.textContent+=` · Filtered email ${index+1} of ${state.matches.length}`;
+}
 let metadataSession:BrowserSession|undefined,metadataIndex:Promise<MessageIndex>|undefined,metadataEpoch=0,filterRevision=0;
 let filterTimer:ReturnType<typeof setTimeout>|undefined;
 async function filterMessages():Promise<void>{
@@ -683,22 +714,16 @@ async function filterMessages():Promise<void>{
   try{
     const result=await metadataIndex;checkIndex();if(revision!==filterRevision||query!==filter.value.trim().toLowerCase())return;
     const matches=result.messages.filter(m=>m.searchText.includes(query));
-    const messageCounts=new Map<string,number>();
-    for(const item of result.messages){const key=JSON.stringify(item.path);messageCounts.set(key,(messageCounts.get(key)??0)+1);}
+    filtered={root,matches,index:-1};
+    const matchIndices=new Map(matches.map((item,index)=>[item,index]));
     const create=(item:IndexedMessage)=>{const row=text('li',''),name=item.document.split(' / ').at(-1)!;
-      const choose=button(item.label,()=>void operation(async active=>{
-      let doc=root;
-      for(const step of item.path){const file=doc.inspection.files.find(f=>f.id===step.fileId),stream=file?.streams.find(s=>s.locator.path===step.streamPath);
-        if(!file||!stream)throw new Error('Email destination is no longer available.');await openChild(doc,file,stream,active);doc=current!;}
-      const message=doc.inspection.messages.find(m=>m.id===item.messageId);if(!message)throw new Error('Email metadata is no longer available.');
-      filter.value='';filterResults.hidden=true;tree.hidden=false;await showDocument(doc,active,message);
-    }));choose.title=name;choose.prepend(treeIcon('message'));messageLabel(choose,item.label,{From:item.sender??'',Sent:item.sent??''});row.append(choose);
+      const index=matchIndices.get(item)!,choose=button(item.label,()=>void operation(active=>openFiltered(index,active)));choose.dataset.messageIndex=String(index);if(filtered?.index===index)choose.setAttribute('aria-current','true');choose.title=name;choose.prepend(treeIcon('message'));messageLabel(choose,item.label,{From:item.sender??'',Sent:item.sent??''});row.append(choose);
       return row;};
     if(matches.length>256)filterList=new VirtualList(filterResults,tree.closest('aside')!,matches,create,60);else for(const item of matches)filterResults.append(create(item));
     element('filter-status').textContent=`${matches.length} matching emails. ${result.incomplete.length?'Search incomplete: '+result.incomplete.join(' '):'All reachable email metadata searched.'}`;
   }catch(error){if(ticket===generation&&epoch===metadataEpoch&&revision===filterRevision){metadataIndex=undefined;element('filter-status').textContent=`Email search could not finish: ${error instanceof Error?error.message:String(error)}`;}}
 }
-filter.addEventListener('input',()=>{filterRevision++;clearTimeout(filterTimer);if(!filter.value.trim()){filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;tree.hidden=false;element('filter-status').textContent='';return;}filterTimer=setTimeout(()=>void filterMessages(),200);});
+filter.addEventListener('input',()=>{filtered=undefined;if(current&&!busy)void operation(ticket=>render(ticket,false));filterRevision++;clearTimeout(filterTimer);if(!filter.value.trim()){filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;tree.hidden=false;element('filter-status').textContent='';return;}filterTimer=setTimeout(()=>void filterMessages(),200);});
 cancelLinked=setupLinkedOpening(openFile,message=>{status.textContent=message;});
 status.textContent='Open or drop a PDF to begin.';controls();
 

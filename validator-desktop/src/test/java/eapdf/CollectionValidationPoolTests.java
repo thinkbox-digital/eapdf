@@ -73,6 +73,31 @@ class CollectionValidationPoolTests {
         }
         for (long pid : pids) assertFalse(ProcessHandle.of(pid).map(ProcessHandle::isAlive).orElse(false));
     }
+    @Test void nativeStdoutLoggingCannotCorruptAcknowledgements() throws Exception {
+        Path scratch = Files.createTempDirectory("collection-protocol-test-");
+        Process process = null;
+        try {
+            Path report = scratch.resolve("report.json"), response = scratch.resolve("response.json"), log = scratch.resolve("worker.log");
+            process = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+                "-Xmx512m", "-Xlog:gc:stdout", "-Deapdf.validator.childWorker=true", "-cp", System.getProperty("java.class.path"),
+                CollectionValidationPool.class.getName(), Long.toString(ProcessHandle.current().pid()))
+                .redirectErrorStream(true).redirectOutput(log.toFile()).start();
+            JsonObject task = new JsonObject();
+            task.addProperty("id", "native-log-regression");
+            task.addProperty("input", collection("eml/eml_Agenda_and_timeline_slides_1s.pdf").toString());
+            task.addProperty("output", report.toString()); task.addProperty("response", response.toString());
+            task.addProperty("depth", 1); task.add("ancestors", new JsonArray());
+            try (var writer = process.outputWriter()) { writer.write(task.toString()); writer.newLine(); }
+            assertTrue(process.waitFor(60, TimeUnit.SECONDS)); assertEquals(0, process.exitValue());
+            assertTrue(Files.readString(log).contains("[gc]"), "Native JVM stdout logging must actually occur");
+            JsonObject ack = JsonParser.parseString(Files.readString(response)).getAsJsonObject();
+            assertEquals("native-log-regression", ack.get("id").getAsString());
+            assertTrue(ack.get("ok").getAsBoolean()); assertTrue(Files.size(report) > 0);
+        } finally {
+            if (process != null && process.isAlive()) { process.destroyForcibly(); process.waitFor(); }
+            ValidationRuntime.removeDirectory(scratch);
+        }
+    }
     @Test void crashedWorkerCannotProduceAPassingResult() throws Exception {
         Path input = collection("pst/pst_quality-attached-message_1c.pdf");
         try (var pool = new CollectionValidationPool()) {

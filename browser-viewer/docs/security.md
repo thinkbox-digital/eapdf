@@ -37,13 +37,13 @@ Continuous scrolling retains rendered pixels and text for at most five nearby
 pages, within a combined 32-million-pixel canvas budget; the remaining pages use
 lightweight placeholders. This is a canvas allocation limit, not a total-process
 memory guarantee.
-Root input is capped at 512 MiB before hashing. Decoded embedded streams are capped
+Root input is capped at 4 GiB before hashing. Decoded embedded streams are capped
 at 32 MiB each and 512 MiB of concurrent extraction reservations per browser session. Completed and failed reads release their reservations. Successful reads have
 a 32 MiB LRU cache; cached reads return copies and do not consume another decode
 reservation. The recovery-only Reopen PDF action explicitly closes all workers and resets
 limits; it also resets navigation to the root. Child count and nesting depth have no fixed cutoff. Repeated opens of the same
 child reuse it; ancestor cycles are rejected.
-Concurrent opens are capped at three. Metadata inspection retains a 16 MiB
+Concurrent opens are capped at three. Metadata inspection retains a 128 MiB
 per-stream byte ceiling. XML node, depth and record counts do not stop inspection. Unavailable metadata produces a concise warning and blocks CSV export; details are logged to the browser debug console.
 Collection CSV exports enumerate actual child messages, omitting parent index
 records; repeated identities in distinct children are retained. Ordinary PDF.js

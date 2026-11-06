@@ -3,12 +3,18 @@
 This file tracks human-readable release history for the repository.
 
 Current beta version:
-- `1.6.0-beta.11`
+- `1.6.0-beta.12`
 
 Notes:
 - Release tracking starts here.
 - This changelog is meant to track feature-level changes for users and operators.
 - It does not replace commit history.
+
+## 1.6.0-beta.12 - 2026-11-06
+
+- Keep filtered email results active and follow their order when scrolling in viewer 0.5.0-beta.11.
+- Prevent child-validator diagnostics from corrupting worker acknowledgements.
+- Refresh beta installation, navigation and known-limitations guidance.
 
 ## 1.6.0-beta.11 - 2026-11-06
 
