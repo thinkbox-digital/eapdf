@@ -7,7 +7,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <body>
 <section class="chapter" id="start">
 <h1>EA-PDF</h1>
-<p class="edition">User Manual · Creator and validators 1.6.0-beta.12 · 6 November 2026</p>
+<p class="edition">User Manual · Creator and validators 1.6.0-beta.13 · 6 November 2026</p>
 <p>EA-PDF converts email into PDF files for preservation and access. It supports saved EML and MSG messages, PST and MBOX mailboxes, and Gmail downloads.</p>
 <p>The creator produces readable email pages with structured metadata and retained source messages and attachments where the selected profile allows them. The validators check PDF/A and EA-PDF requirements. The viewer lets people browse messages, collections and embedded files.</p>
 <p>Created by <strong>Thinkbox.DIGITAL</strong>.</p>
@@ -48,7 +48,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <p>Open the project's <a href="https://github.com/thinkbox-digital/eapdf/releases">GitHub Releases page</a>. Choose the intended release, read its beta limitations and download these files:</p>
 <ul><li><strong>Creator GUI JAR:</strong> the filename ends in <code>-gui.jar</code>. This is the desktop converter.</li><li><strong>Standalone validator JAR:</strong> the filename begins <code>eapdf-validator</code>. It includes its checking engines.</li><li><strong>Creator CLI JAR:</strong> the creator JAR without <code>-gui</code>, if you want command-line conversion.</li><li><strong>Viewer ZIP:</strong> choose Chromium or Firefox. Installation is explained in chapter 7.</li></ul>
 <p>A JAR is a Java application file. Leave it as a JAR; do not unpack it. Extract viewer ZIPs into separate folders. Release files often contain a version number; the short JAR names in this guide stand for those downloaded filenames.</p>
-<p>Use creator and validator 1.6.0-beta.12 with viewer 0.5.0-beta.11 from the same release. Choose that named prerelease rather than relying on GitHub’s Latest badge.</p>
+<p>Use creator and validator 1.6.0-beta.13 with viewer 0.5.0-beta.12 from the same release. Choose that named prerelease rather than relying on GitHub’s Latest badge.</p>
 <p>Obtain the public <code>config</code> folder from the same source revision as the creator. It contains <code>eapdf_config.json</code>, which you can copy to a private working folder. Set the creator identity there and select that file with <code>EAPDF_CONFIG</code>, or use the desktop Creator identity button. The example Gmail credentials file is a template; supply your own authorized Desktop OAuth credentials. Do not reuse credentials accidentally included in an older configuration download.</p>
 <h2>Install and check Java</h2>
 <p>The desktop creator and Java validator need <strong>Java 21 or later</strong>. They do not need Python, Docker or a web server. Install a desktop Java runtime from a provider you trust. On Linux, a headless-only runtime cannot show application windows.</p>
@@ -266,7 +266,7 @@ java -jar "emailtopdfa-gui.jar"</pre>
 <section class="chapter" id="maintenance"><h1>11. Updates, source builds and further help</h1>
 <h2>Edition and verification notes</h2>
 <p>This manual was updated on 2 November 2026.</p>
-<p class="note"><strong>Edition and availability.</strong> This guide accompanies creator/validator 1.6.0-beta.12 and viewer 0.5.0-beta.11. Screenshots illustrate an earlier edition; current controls may differ. Read the release notes for the exact package you use. Store signing and approval are not claimed.</p>
+<p class="note"><strong>Edition and availability.</strong> This guide accompanies creator/validator 1.6.0-beta.13 and viewer 0.5.0-beta.12. Screenshots illustrate an earlier edition; current controls may differ. Read the release notes for the exact package you use. Store signing and approval are not claimed.</p>
 <p>The names, addresses, messages and attachments in the screenshots are fictional. The screenshots come from the actual applications on Linux; window borders and file pickers will look different on other systems. Linux and the listed browser versions are the tested environment.</p>
 <h2>Update carefully</h2>
 <p>Keep a copy of your configuration, originals and completed records. Read the new release notes, download the intended files, and test a small known email before a large job. Replacing a JAR does not update a conversion that is already running. Unpacked viewer installations need an explicit reload and a new viewer tab.</p>

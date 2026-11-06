@@ -424,6 +424,9 @@ public class EapdfGui {
     } else signingPassword = null;
     List<String> command = new ArrayList<>();
     command.add(javaExecutable());
+    // The GUI decodes the merged process log as UTF-8, including supervisor output.
+    command.add("-Dstdout.encoding=UTF-8");
+    command.add("-Dstderr.encoding=UTF-8");
     command.add("-cp");
     command.add(System.getProperty("java.class.path"));
     command.add(mainClass);

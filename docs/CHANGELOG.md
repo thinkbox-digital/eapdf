@@ -3,12 +3,17 @@
 This file tracks human-readable release history for the repository.
 
 Current beta version:
-- `1.6.0-beta.12`
+- `1.6.0-beta.13`
 
 Notes:
 - Release tracking starts here.
 - This changelog is meant to track feature-level changes for users and operators.
 - It does not replace commit history.
+
+## 1.6.0-beta.13 - 2026-11-06
+
+- Fix Windows creator progress-log encoding so punctuation and accented text display correctly.
+- Rebuild viewer 0.5.0-beta.12 alongside the creator and validator release.
 
 ## 1.6.0-beta.12 - 2026-11-06
 
