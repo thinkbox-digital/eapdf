@@ -3,12 +3,17 @@
 This file tracks human-readable release history for the repository.
 
 Current beta version:
-- `1.6.0-beta.16`
+- `1.6.0-beta.17`
 
 Notes:
 - Release tracking starts here.
 - This changelog is meant to track feature-level changes for users and operators.
 - It does not replace commit history.
+
+## 1.6.0-beta.17 - 2026-11-06
+
+- Keep the viewer search controls visible while results scroll independently.
+- Keep the search panel within the viewport at medium widths.
 
 ## 1.6.0-beta.16 - 2026-11-06
 

@@ -1,17 +1,17 @@
 # Downloads
 
-Download **EA-PDF 1.6.0-beta.16** and **viewer 0.5.0-beta.15** from the
-[current release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.16).
+Download **EA-PDF 1.6.0-beta.17** and **viewer 0.5.0-beta.16** from the
+[current release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.17).
 
 | File | Use it for |
 | --- | --- |
-| `emailtopdfa-1.6.0-beta.16-gui.jar` | Desktop email conversion |
-| `emailtopdfa-1.6.0-beta.16.jar` | Command-line conversion |
-| `eapdf-validator-1.6.0-beta.16.jar` | Standalone Java validation |
-| `configuration-1.6.0-beta.16.zip` | Public application configuration |
-| `eapdf-viewer-0.5.0-beta.15-chromium.zip` | Chromium viewer extension |
-| `eapdf-viewer-0.5.0-beta.15-firefox.zip` | Firefox viewer extension |
-| `ea-pdf-examples-1.6.0-beta.16.zip` | Example outputs and validation records |
+| `emailtopdfa-1.6.0-beta.17-gui.jar` | Desktop email conversion |
+| `emailtopdfa-1.6.0-beta.17.jar` | Command-line conversion |
+| `eapdf-validator-1.6.0-beta.17.jar` | Standalone Java validation |
+| `configuration-1.6.0-beta.17.zip` | Public application configuration |
+| `eapdf-viewer-0.5.0-beta.16-chromium.zip` | Chromium viewer extension |
+| `eapdf-viewer-0.5.0-beta.16-firefox.zip` | Firefox viewer extension |
+| `ea-pdf-examples-1.6.0-beta.17.zip` | Example outputs and validation records |
 | `EA-PDF_User_Manual.pdf` | Offline PDF/A user manual |
 | `SHA256SUMS.txt` | Checksums for verifying the downloaded files |
 
