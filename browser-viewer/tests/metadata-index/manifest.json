@@ -1,0 +1,10 @@
+{
+  "source": "in/enron-sample.mbox",
+  "sourceSha256": "370c41998013037bed444887b5cfe560ef74607db401f1ecbb80bf76df12251c",
+  "accessibility": true,
+  "premis": false,
+  "files": {
+    "mbox_sample_1c.pdf": "c0b9cb9edbe0e287e676fccefeefd93c965efadeba6e09bbda28259d145099a7",
+    "mbox_sample_1ci.pdf": "13d59d9badd9a352bef76d63afd7962c73d13e9e5887743d15e7fe013d71bf75"
+  }
+}

@@ -98,6 +98,34 @@ class FindingAidSpreadsheetTests {
     }
   }
 
+  @Test void zip64LocalAndCentralHeadersAgreeForCalc() throws Exception {
+    var row = new PdfMailWriter.FindingAidRow(1, "Inbox", "2026-11-07", "Sender",
+        "recipient@example.org", "Subject", "id", 1);
+    for (String profile : List.of("m", "mi", "c", "ci")) {
+      byte[] bytes = PdfFindingAidSupport.buildFindingAidSpreadsheetBytes(List.of(row), profile);
+      var names = new java.util.HashSet<String>();
+      try (var channel = new org.apache.commons.compress.utils.SeekableInMemoryByteChannel(bytes);
+           var zip = org.apache.commons.compress.archivers.zip.ZipFile.builder()
+               .setSeekableByteChannel(channel).get()) {
+        var entries = zip.getEntries();
+        while (entries.hasMoreElements()) {
+          var entry = entries.nextElement();
+          assertTrue(names.add(entry.getName()));
+          int offset = Math.toIntExact(entry.getLocalHeaderOffset());
+          int localVersion = (bytes[offset + 4] & 255) | ((bytes[offset + 5] & 255) << 8);
+          // POI's default custom ZIP writer emitted local version 45 with
+          // central version 20. Calc rejects that inconsistent ZIP64 package.
+          assertEquals(localVersion, entry.getVersionRequired(), entry.getName());
+          try (var data = zip.getInputStream(entry)) {
+            assertEquals(entry.getSize(), data.readAllBytes().length, entry.getName());
+          }
+        }
+      }
+      assertTrue(names.contains("[Content_Types].xml"));
+      assertTrue(names.contains("xl/worksheets/sheet1.xml"));
+    }
+  }
+
   private static String variedText(int length) {
     var random = new java.util.Random(42);
     StringBuilder text = new StringBuilder(length);

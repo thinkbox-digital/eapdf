@@ -192,3 +192,9 @@ Patch sources, immutable provenance, checksums and corresponding source JARs
 are supplied under `third_party/openhtmltopdf/` and `third_party/maven/`.
 The upstream LGPL-2.1-or-later license continues to apply. Rebuilding and
 resolution instructions are in `docs/RENDERER.md`.
+
+## Offline full-text indexing
+
+The Java creator uses the existing Apache PDFBox dependency for text extraction.
+It no longer packages the former Node.js/PDF.js indexing helper. PDF.js and its
+notices remain part of the separately distributed browser viewer.

@@ -39,7 +39,7 @@ def digest(path):
 
 
 def validator_jar():
-    return Path(os.environ.get("EAPDF_VALIDATOR_JAR", ROOT / "dist/eapdf-validator.jar")).resolve()
+    return Path(os.environ.get("EAPDF_VALIDATOR_JAR", ROOT / 'dist' / ('eapdf-validator-' + (ROOT / 'VERSION').read_text().strip() + '.jar'))).resolve()
 
 
 def parallel_settings():

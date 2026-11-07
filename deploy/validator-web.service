@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=www-data
 Group=www-data
-WorkingDirectory=/media/lepore/Work/thinkbox/convert
+WorkingDirectory=/opt/eapdf
 Environment=PORT=8876
 Environment=HOST=127.0.0.1
 Environment=VALIDATOR_MAX_CONTENT_LENGTH=67108864
@@ -15,8 +15,10 @@ Environment=VALIDATOR_AUTH_FILE=/etc/ea-pdf-validator/users.json
 Environment=VALIDATOR_ALLOWED_HOSTS=thinkbox.digital,www.thinkbox.digital
 Environment=VALIDATOR_TRUSTED_PROXIES=127.0.0.1/32
 Environment=VALIDATOR_RETENTION_SECONDS=86400
-Environment=PATH=/media/lepore/Work/thinkbox/convert/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
-ExecStart=/media/lepore/Work/thinkbox/convert/.venv/bin/gunicorn --workers 2 --threads 4 --timeout 660 --bind 127.0.0.1:8876 validator_web:app
+# Synchronous HTTP requests: leave 60 seconds for cleanup before proxy expiry.
+Environment=VALIDATOR_REQUEST_TIMEOUT=600
+Environment=PATH=/opt/eapdf/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+ExecStart=/opt/eapdf/.venv/bin/gunicorn --workers 2 --threads 4 --timeout 660 --bind 127.0.0.1:8876 validator_web:app
 Restart=always
 RestartSec=3
 NoNewPrivileges=true

@@ -1,3 +1,5 @@
+import {forgetFullTextIndex} from './fulltext-index.js';
+import {forgetEmbeddedIndex} from './embedded-index.js';
 import {indexMessages,type MessageIndex} from './message-index.js';
 import {fileLabel} from './navigation.js';
 import {SupplementLinks,contentKey} from './supplement-links.js';
@@ -46,7 +48,7 @@ export class BrowserSession {
   private closed=false;
   private clock=0;
   private check=()=>{if(this.closed)throw new Error('Document processing cancelled.');};
-  close():void {this.closed=true;for(const {worker} of this.exportWorkers.values())worker.close();this.exportWorkers.clear();for(const worker of this.associationWorkers)worker.close();this.associationWorkers.clear();for(const managed of this.pending)managed.close();for(const [doc,entry]of this.entries){entry.managed?.close();doc.payloads.clear();doc.active=false;}this.entries.clear();this.pending.clear();this.extracted.clear();this.cachedBytes=0;}
+  close():void {this.closed=true;for(const {worker} of this.exportWorkers.values())worker.close();this.exportWorkers.clear();for(const worker of this.associationWorkers)worker.close();this.associationWorkers.clear();for(const managed of this.pending)managed.close();for(const [doc,entry]of this.entries){entry.managed?.close();doc.payloads.clear();forgetEmbeddedIndex(doc);forgetFullTextIndex(doc);doc.fullTextIndex=undefined;doc.indexFileDigest=undefined;doc.embeddedIndex=undefined;doc.active=false;}this.entries.clear();this.pending.clear();this.extracted.clear();this.cachedBytes=0;}
   async open(blob:Blob,name:string,progress?:(fraction:number)=>void,parent:BrowserDocument|null=null,fileId?:string,streamPath?:string,preview?:(doc:Pick<BrowserDocument,'pdf'|'run'>)=>Promise<void>,stage?:(message:string)=>void):Promise<BrowserDocument>{
     this.check();
     if(blob.size>this.limits.maxFileBytes)throw new Error('PDF exceeds the configured input byte limit.');
@@ -94,6 +96,7 @@ export class BrowserSession {
     }catch(error){managed.close();this.pending.delete(managed);throw error;}
   }
   cachedMessageIndex(doc:BrowserDocument):MessageIndex|undefined{return this.entries.get(doc)?.messageIndex;}
+  rememberMessageIndex(doc:BrowserDocument,index:MessageIndex|undefined):void{const entry=this.entries.get(doc);if(entry)entry.messageIndex=index;}
   adoptAssociations(doc:BrowserDocument,source:BrowserSession,copy:BrowserDocument):void {
     this.check();source.check();
     if(doc.inspection.documentId!==copy.inspection.documentId)throw new Error('Association results belong to a different PDF.');
@@ -208,7 +211,7 @@ export class BrowserSession {
       };
       await Promise.all([inspect(),inspect()]);this.check();if(failure)throw failure;
       for(const file of targets){const owners=index.owners(key(file));if(owners)entry.supplementLinks.set(file.id,owners);}
-      if(cacheable&&indexed.size===children.length)entry.messageIndex={messages:children.flatMap(file=>indexed.get(file.id)!),incomplete:[]};
+      if(cacheable&&indexed.size===children.length)entry.messageIndex={messages:children.flatMap(file=>indexed.get(file.id)!),incomplete:[],notices:[],source:'scanned'};
     }catch(error){this.check();index.incomplete();entry.supplementLinks.clear();entry.supplementError=error instanceof Error?error.message:String(error);}
   }
   private applySupplementLinks(doc:BrowserDocument):void {
@@ -309,7 +312,7 @@ export class BrowserSession {
   async release(doc:BrowserDocument):Promise<void> {
     if(doc.children.size)throw new Error('Release child documents before their parent.');
     const entry=this.entries.get(doc);await entry?.managed?.close();
-    this.entries.delete(doc);doc.payloads.clear();doc.active=false;
+    this.entries.delete(doc);doc.payloads.clear();forgetEmbeddedIndex(doc);forgetFullTextIndex(doc);doc.fullTextIndex=undefined;doc.indexFileDigest=undefined;doc.embeddedIndex=undefined;doc.active=false;
     if(doc.parent)doc.parent.children.delete(doc.parentFileId+'|'+doc.parentStreamPath);
   }
   async child(parent:BrowserDocument,file:AssociatedFile,stream:EmbeddedStream,refreshParent=true):Promise<BrowserDocument>{

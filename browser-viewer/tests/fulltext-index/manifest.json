@@ -1,0 +1,13 @@
+{
+  "source": "in/enron-sample.mbox",
+  "sourceSha256": "370c41998013037bed444887b5cfe560ef74607db401f1ecbb80bf76df12251c",
+  "accessibility": true,
+  "premis": false,
+  "files": {
+    "mbox_sample_1m.pdf": "a83683d1aff2c7fa992a2da4c45a660b09f64e83c64dc1b527efc4a7dfc115bf",
+    "mbox_sample_1mi.pdf": "ca7d79080224611b440236414bba00ecde0c15118052ccb1dcae1f200b98fe4e",
+    "mbox_sample_1c.pdf": "3f66deb5a5104cd43fab5a20a9bc75663ca35b70ee1a955df1300545cc39e1db",
+    "mbox_sample_1ci.pdf": "861840b52444e4b41a72159f7e142c3d1d87017b3fe27b1e009de121abde4984"
+  },
+  "engine": "pdfbox-nfkd-space-fold-v2"
+}

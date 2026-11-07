@@ -274,3 +274,34 @@ test('metadata above 64 MiB uses its explicit allowance without raising ordinary
   assert.equal(new DecodeStream().maxBufferLength,64*1024*1024);
  }finally{DecodeStream.remainingBudget=saved;}
 });
+
+test('object-stream member readers remain independent across cleanup and refetch',async()=>{
+ const {XRef}=await load('src/core/xref.js'),{DecodeStream}=await load('src/core/decode_stream.js');
+ const budget=DecodeStream.remainingBudget,xref=new XRef(new Stream(new Uint8Array()),{evaluatorOptions:{}});
+ const first='(first) ',data=Buffer.from(`1 0 2 ${first.length} ${first}(second)`),header=data.indexOf(Buffer.from('(first)'));
+ let reads=0;const streams=[];
+ xref.fetch=()=>{reads++;const stream=new FlateStream(new Stream(deflateSync(data)));stream.dict=new Dict();stream.dict.set('First',header);stream.dict.set('N',2);streams.push(stream);return stream;};
+ try {
+  for(const index of [1,0,1,0])assert.equal(xref.fetchCompressed(Ref.get(index+1,0),{offset:3,gen:index}),index?'second':'first');
+  assert.equal(reads,1,'member readers must not share a cursor');
+  xref.clearObjectStreamCache();xref.clearObjectStreamCache();
+  assert.equal(DecodeStream.remainingBudget,budget,'cleanup must not refund twice');
+  assert.equal(xref.fetchCompressed(Ref.get(2,0),{offset:3,gen:1}),'second');assert.equal(reads,2);
+ }finally{xref.clearObjectStreamCache();DecodeStream.remainingBudget=budget;}
+});
+
+test('retained malformed stream readers survive cache cleanup with independent positions',async()=>{
+ const {XRef}=await load('src/core/xref.js'),{DecodeStream}=await load('src/core/decode_stream.js');
+ const budget=DecodeStream.remainingBudget,xref=new XRef(new Stream(new Uint8Array()),{evaluatorOptions:{}});
+ const data=Buffer.from('1 0 [<< /Length 3 >> stream\nabc\nendstream ]');
+ xref.fetch=()=>{const stream=new FlateStream(new Stream(deflateSync(data)));stream.dict=new Dict();stream.dict.set('First',4);stream.dict.set('N',1);return stream;};
+ try {
+  const a=xref.fetchCompressed(Ref.get(1,0),{offset:2,gen:0})[0];
+  const b=xref.fetchCompressed(Ref.get(1,0),{offset:2,gen:0})[0];
+  assert.equal(a.getByte(),97);assert.equal(b.getByte(),97);
+  const charged=DecodeStream.remainingBudget;
+  xref.clearObjectStreamCache();xref.clearObjectStreamCache();
+  assert.equal(DecodeStream.remainingBudget,charged,'escaped buffer must remain charged');
+  assert.equal(new TextDecoder().decode(a.getBytes()),'bc');assert.equal(new TextDecoder().decode(b.getBytes()),'bc');
+ }finally{xref.clearObjectStreamCache();DecodeStream.remainingBudget=budget;}
+});

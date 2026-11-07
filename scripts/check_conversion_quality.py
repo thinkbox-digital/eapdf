@@ -117,16 +117,16 @@ def main():
     args.output = args.output.resolve()
     # A fresh evidence directory prevents stale PDFs/reports from satisfying the gate.
     args.output.mkdir(parents=True, exist_ok=False)
-    results = {'status': 'RUNNING', 'scope': 'Pinned real EML, MSG, MBOX and small PST fidelity, visual checks and standalone Java validation', 'cases': []}
+    results = {'status': 'RUNNING', 'scope': 'Public small EML, MSG and MBOX fidelity, visual checks and standalone Java validation', 'cases': []}
     try:
-        corpus = json.loads((ROOT / 'tests/quality/corpus.json').read_text())
-        require(fitz.__version__ == corpus['renderer_version'], 'Wrong rasterizer version; install tests/quality/requirements.txt')
+        corpus = json.loads((ROOT / 'regression/quality/corpus.json').read_text())
+        require(fitz.__version__ == corpus['renderer_version'], 'Wrong rasterizer version; install regression/quality/requirements.txt')
         for case in corpus['cases']:
             original = check_original(case)
             name = Path(case['input']).stem
             destination = args.output / name
             destination.mkdir()
-            environment = dict(os.environ, EAPDF_CONFIG=str(ROOT / 'src/test/resources/eapdf/test-config.json'), EAPDF_WORKER_HEAP_BYTES=str(768 * 1024 * 1024))
+            environment = dict(os.environ, EAPDF_CONFIG=str(ROOT / 'regression/quality/config.json'), EAPDF_WORKER_HEAP_BYTES=str(768 * 1024 * 1024))
             command = ['java', '-Xmx768m', '-Duser.timezone=' + corpus['timezone'], '-jar', args.creator.resolve(), ROOT / case['input'], '--out', destination, '--jobs', '2']
             if case.get('archive_profile'):
                 command += ['--archive-profile', case['archive_profile']]
@@ -156,7 +156,7 @@ def main():
             require(checked['summary']['rulebook_sha256'] == digest((ROOT / 'validator_rule_text.json').read_bytes()), 'Validator used a stale rulebook')
             require(before == digest(pdf.read_bytes()), 'PDF changed during validation')
             require(original == (ROOT / case['input']).read_bytes(), 'Original changed during conversion')
-            compare_visual(pdf, ROOT / 'tests/quality/visual' / name, destination, case.get('visual_masks'))
+            compare_visual(pdf, ROOT / 'regression/quality/visual' / name, destination, case.get('visual_masks'))
             results['cases'].append({'input': case['input'], 'source_sha256': case['sha256'], 'pdf_sha256': before, 'pages': pages, 'message_count': len(quality_formats.messages(case)), 'known_limitations': case.get('known_limitations', []), 'source_representation': case.get('source_representation', 'Original source bytes embedded'), 'status': 'PASS', 'validation_report': str(report.relative_to(args.output)), 'rulebook_sha256': checked['summary']['rulebook_sha256']})
         require(results['cases'], 'No cases were checked')
         results['status'] = 'PASS'

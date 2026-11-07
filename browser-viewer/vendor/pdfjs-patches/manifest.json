@@ -16,20 +16,22 @@
   "localInputs": {
     "vendor/pdfjs-patches/0001-document-parts.patch": "b3d54b75e5f9dcbe6a25ee925904f7d7994307d409256b3f6cfdf173d6850fc6",
     "vendor/pdfjs-patches/build-task.mjs": "4aab30eba5ff01eaab59b3d31644e540fa5c6b7f3b3da7c25d0dcc329c735a28",
-    "vendor/pdfjs-patches/core.test.mjs": "3907e856c4f0774edb9978a12a695d9d344878188d502e60c6ecfa7cfff5c697",
+    "vendor/pdfjs-patches/core.test.mjs": "027d227f2dbd5c9e95612780c6773864ef4f34d918d3e943b9e05f5059b64592",
     "scripts/rebuild-pdfjs.mjs": "72295a38628fbb69560d0a8632d6b4d96e08d8f7acde586d88a326c973a45640",
     "vendor/pdfjs-patches/0002-document-assets.patch": "cd376f863c20e96684f557db40d19e9fd08b0dd1b067f4a11535c650ec2e69c1",
-    "vendor/pdfjs-patches/assets.test.mjs": "117d90461b982e2ff65ee89acf52040515a84b6d2ebf7f5ed3d0027c65677b75",
-    "vendor/pdfjs-patches/0003-large-archives.patch": "610144363542a8c75d68cd457efac86bf8a0cf3d28252f7cae6ae259e5bd260b"
+    "vendor/pdfjs-patches/assets.test.mjs": "f8f4c9ac68f7a650bba58e824c80c87237395eab0401daf15890fe597a79243c",
+    "vendor/pdfjs-patches/0003-large-archives.patch": "610144363542a8c75d68cd457efac86bf8a0cf3d28252f7cae6ae259e5bd260b",
+    "vendor/pdfjs-patches/0004-inspection-yield.patch": "b3e3ef5ebdfaec061b85a9179a78f2401b929485f9a282857257c0b2c2320658"
   },
   "outputs": {
     "vendor/pdfjs-patched/pdf.mjs": "b8cd5105b3bb5d2814e9e73cdc8863a4c33557102b1eb634e7a410c1a600b730",
-    "vendor/pdfjs-patched/pdf.worker.mjs": "11e9f489469327843fda2a54757a5492d9bdb479dd472ac34811480a5d8f1451"
+    "vendor/pdfjs-patched/pdf.worker.mjs": "f87ff3d01ee7abdd9210295108cf920327ae573f9dc32ea769b2f3cc643e7408"
   },
   "internalEventBuildDefine": "0a475cb6-573c-46ed-869d-fa7c5839d995",
   "patches": [
     "vendor/pdfjs-patches/0001-document-parts.patch",
     "vendor/pdfjs-patches/0002-document-assets.patch",
-    "vendor/pdfjs-patches/0003-large-archives.patch"
+    "vendor/pdfjs-patches/0003-large-archives.patch",
+    "vendor/pdfjs-patches/0004-inspection-yield.patch"
   ]
 }

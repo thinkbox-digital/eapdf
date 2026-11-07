@@ -311,6 +311,7 @@ class Common {
     OutputTransaction.write(destination, temporary -> {
       ProcessingLimits.checkCancelled();
       writer.write(temporary);
+      if (outermost) FullTextSearchIndex.add(temporary);
       boolean checked = EapdfConfig.get().validateOnCreation;
       if (checked) {
         if (outermost) ConversionProgress.stage("checking");

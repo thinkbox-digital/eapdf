@@ -7,7 +7,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <body>
 <section class="chapter" id="start">
 <h1>EA-PDF</h1>
-<p class="edition">User Manual · Creator and validators 1.6.0-beta.17 · 6 November 2026</p>
+<p class="edition">User Manual · Creator and validators 1.6.0-beta.18 · 7 November 2026</p>
 <p>EA-PDF converts email into PDF files for preservation and access. It supports saved EML and MSG messages, PST and MBOX mailboxes, and Gmail downloads.</p>
 <p>The creator produces readable email pages with structured metadata and retained source messages and attachments where the selected profile allows them. The validators check PDF/A and EA-PDF requirements. The viewer lets people browse messages, collections and embedded files.</p>
 <p>Created by <strong>Thinkbox.DIGITAL</strong>.</p>
@@ -48,7 +48,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <p>Open the project's <a href="https://github.com/thinkbox-digital/eapdf/releases">GitHub Releases page</a>. Choose the intended release, read its beta limitations and download these files:</p>
 <ul><li><strong>Creator GUI JAR:</strong> the filename ends in <code>-gui.jar</code>. This is the desktop converter.</li><li><strong>Standalone validator JAR:</strong> the filename begins <code>eapdf-validator</code>. It includes its checking engines.</li><li><strong>Creator CLI JAR:</strong> the creator JAR without <code>-gui</code>, if you want command-line conversion.</li><li><strong>Viewer ZIP:</strong> choose Chromium or Firefox. Installation is explained in chapter 7.</li></ul>
 <p>A JAR is a Java application file. Leave it as a JAR; do not unpack it. Extract viewer ZIPs into separate folders. Release files often contain a version number; the short JAR names in this guide stand for those downloaded filenames.</p>
-<p>Use creator and validator 1.6.0-beta.17 with viewer 0.5.0-beta.16 from the same release. Choose that named prerelease rather than relying on GitHub’s Latest badge.</p>
+<p>Use creator and validator 1.6.0-beta.18 with viewer 0.5.0-beta.17 from the same release. Choose that named prerelease rather than relying on GitHub’s Latest badge.</p>
 <p>Obtain the public <code>config</code> folder from the same source revision as the creator. It contains <code>eapdf_config.json</code>, which you can copy to a private working folder. Set the creator identity there and select that file with <code>EAPDF_CONFIG</code>, or use the desktop Creator identity button. The example Gmail credentials file is a template; supply your own authorized Desktop OAuth credentials. Do not reuse credentials accidentally included in an older configuration download.</p>
 <h2>Install and check Java</h2>
 <p>The desktop creator and Java validator need <strong>Java 21 or later</strong>. They do not need Python, Docker or a web server. Install a desktop Java runtime from a provider you trust. On Linux, a headless-only runtime cannot show application windows.</p>
@@ -76,7 +76,8 @@ java -jar "eapdf-validator.jar"</pre>
 <h2>Features and extra files</h2>
 <table><tr><th>Control</th><th>What it does</th></tr>
 <tr><td>Branding</td><td>Adds configured branding to generated material.</td></tr>
-<tr><td>Finding Aid</td><td>Adds an index to help navigate an archive or collection. Available spreadsheet settings are described below.</td></tr>
+<tr><td>Embed searchable index</td><td>Builds optional offline metadata and full-text indexes for supported archives. Uses built-in Java PDFBox extraction; no Node.js installation is needed.</td></tr>
+<tr><td>Finding Aid</td><td>Disabled by default. Adds an index to help navigate an archive or collection. Available spreadsheet settings are described below.</td></tr>
 <tr><td>PREMIS</td><td>Records preservation information. An XML sidecar may be written beside the PDF.</td></tr>
 <tr><td>Accessibility (partial)</td><td>Adds available semantic/accessibility structures. This is not proven PDF/UA conformance.</td></tr>
 <tr><td>Sign output</td><td>Requests a certificate-based signature. Configure the certificate first; see chapter 8.</td></tr>
@@ -196,7 +197,7 @@ python validate_eapdf.py "PDF output" --jobs 2 --json --no-html</pre>
 <pre>export EAPDF_CONFIG="/home/you/EA-PDF/my-config.json"
 java -jar "emailtopdfa-gui.jar"</pre>
 <p>In PowerShell, use <code>$env:EAPDF_CONFIG="C:\Users\You\EA-PDF\my-config.json"</code>. A setting remains active for programs launched from that shell. An explicitly selected missing configuration is an error.</p>
-<table><tr><th>Setting</th><th>Meaning</th></tr><tr><td>branding.enabled</td><td>Enable configured branding.</td></tr><tr><td>findingAid.pdfEnabled</td><td>Enable optional index pages and related finding-aid output.</td></tr><tr><td>findingAid.excelEnabled</td><td>Write a separate spreadsheet index; default false.</td></tr><tr><td>findingAid.embedExcel</td><td>Embed the spreadsheet for 1m/1mi; for 1c/1ci, request a separate spreadsheet sidecar.</td></tr><tr><td>findingAid.embedPdfInCollections</td><td>Despite its legacy name, request a separate finding-aid PDF beside a collection, not an embedded member.</td></tr><tr><td>premis.enabled</td><td>Enable preservation metadata and its sidecar.</td></tr><tr><td>accessibility</td><td>Language, reading direction, page labels and partial semantic tagging. Experimental unavailable options do not prove accessibility conformance.</td></tr></table>
+<table><tr><th>Setting</th><th>Meaning</th></tr><tr><td>branding.enabled</td><td>Enable configured branding.</td></tr><tr><td>findingAid.pdfEnabled</td><td>Enable optional index pages and related finding-aid output; default false.</td></tr><tr><td>findingAid.excelEnabled</td><td>Write a separate spreadsheet index; default false.</td></tr><tr><td>findingAid.embedExcel</td><td>Embed the spreadsheet for 1m/1mi; for 1c/1ci, request a separate spreadsheet sidecar.</td></tr><tr><td>findingAid.embedPdfInCollections</td><td>Despite its legacy name, request a separate finding-aid PDF beside a collection, not an embedded member.</td></tr><tr><td>searchIndex.enabled / searchIndex.fullTextEnabled</td><td>Enable embedded search indexes and full-text generation for supported archives; both default true. Unsupported or invalid indexes fall back to page scanning.</td></tr><tr><td>premis.enabled</td><td>Enable preservation metadata and its sidecar.</td></tr><tr><td>accessibility</td><td>Language, reading direction, page labels and partial semantic tagging. Experimental unavailable options do not prove accessibility conformance.</td></tr></table>
 <p>Keep defaults unless you need a specific change. Built-in fallback fonts cover additional scripts, but a font cannot supply glyphs it does not contain. Custom font and ICC color-profile paths are advanced options; use suitable licensed files and validate the result. Complete configuration details are in <code>config/README.md</code>.</p>
 <h2>Sign the outer PDF</h2>
 <p>A digital signature helps establish whether signed bytes changed. You need your own document-signing certificate and private key in a password-protected <strong>PKCS#12</strong> file, normally ending in <code>.p12</code> or <code>.pfx</code>.</p>
@@ -266,7 +267,7 @@ java -jar "emailtopdfa-gui.jar"</pre>
 <section class="chapter" id="maintenance"><h1>11. Updates, source builds and further help</h1>
 <h2>Edition and verification notes</h2>
 <p>This manual was updated on 2 November 2026.</p>
-<p class="note"><strong>Edition and availability.</strong> This guide accompanies creator/validator 1.6.0-beta.17 and viewer 0.5.0-beta.16. Screenshots illustrate an earlier edition; current controls may differ. Read the release notes for the exact package you use. Store signing and approval are not claimed.</p>
+<p class="note"><strong>Edition and availability.</strong> This guide accompanies creator/validator 1.6.0-beta.18 and viewer 0.5.0-beta.17. Screenshots illustrate an earlier edition; current controls may differ. Read the release notes for the exact package you use. Store signing and approval are not claimed.</p>
 <p>The names, addresses, messages and attachments in the screenshots are fictional. The screenshots come from the actual applications on Linux; window borders and file pickers will look different on other systems. Linux and the listed browser versions are the tested environment.</p>
 <h2>Update carefully</h2>
 <p>Keep a copy of your configuration, originals and completed records. Read the new release notes, download the intended files, and test a small known email before a large job. Replacing a JAR does not update a conversion that is already running. Unpacked viewer installations need an explicit reload and a new viewer tab.</p>

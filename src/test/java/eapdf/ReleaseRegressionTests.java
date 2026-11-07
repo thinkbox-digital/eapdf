@@ -22,6 +22,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ReleaseRegressionTests {
+  private boolean previousFindingAid;
+  @org.junit.jupiter.api.BeforeEach void enableFindingAidFixture() {
+    previousFindingAid = PdfMailWriter.CONFIG.findingAid.pdfEnabled;
+    PdfMailWriter.CONFIG.findingAid.pdfEnabled = true;
+  }
+  @org.junit.jupiter.api.AfterEach void restoreFindingAidDefault() {
+    PdfMailWriter.CONFIG.findingAid.pdfEnabled = previousFindingAid;
+  }
+
   @TempDir
   Path tempDir;
 

@@ -210,7 +210,7 @@ APP_VERSION = read_app_version()
 
 def resolve_generator_jar():
     candidates = [
-        ROOT / "dist" / "emailtopdfa.jar",
+        ROOT / "dist" / f"emailtopdfa-{APP_VERSION}.jar",
         ROOT / "target" / f"emailtopdfa-{APP_VERSION}.jar",
     ]
     available = [path for path in candidates if path.is_file()]

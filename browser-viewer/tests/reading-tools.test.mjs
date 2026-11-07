@@ -27,12 +27,13 @@ test('email ownership requires one complete syntactically valid source Message-I
   for(const s of ['Message-ID: <a@example.org>','Message-ID: <a@example.org>\nMessage-ID: <b@example.org>\n\n','Subject: x\n\nMessage-ID: <fake@example.org>','Message-ID: invalid\n\n'])assert.equal(sourceMessageId(bytes(s)),undefined);
 });
 test('collection search preserves member paths and reports unreadable children as incomplete',async()=>{
-  const doc=(name,text,collection)=>({name,pdf:{numPages:1,getPage:async()=>({getTextContent:async()=>({items:[{str:text}]}),cleanup(){}})},run:p=>p,inspection:{collection:collection?{state:'present',value:{}}:{state:'missing',value:null},coverage:{associatedFiles:'present'},files:[]}});
+  const doc=(name,text,collection)=>({name,pdf:{numPages:1,getPage:async()=>({getTextContent:async()=>({items:[{str:text}]}),cleanup(){}})},run:p=>p,inspection:{collection:collection?{state:'present',value:{entries:[{fileId:'a'},{fileId:'b'},{fileId:'missing'}]}}:{state:'missing',value:null},coverage:{associatedFiles:'present'},files:[]}});
   const root=doc('root','cover',true),child=doc('child','wanted email wanted',false);
   root.inspection.files=[{id:'a',filename:{value:'a.pdf'},unicodeFilename:{value:null},streams:[{mimeType:{value:'application/pdf'},locator:{path:'one'}}]},{id:'b',filename:{value:'b.pdf'},unicodeFilename:{value:null},streams:[{mimeType:{value:'application/pdf'},locator:{path:'two'}}]}];
-  const released=[];
-  const result=await searchCollection({release:async d=>{released.push(d);},child:async(_d,f,_s,refresh)=>{assert.equal(refresh,false);if(f.id==='b'){assert.deepEqual(released,[child]);throw new Error('broken child');}return child;}},root,'wanted',()=>{},()=>{});
-  assert.equal(result.matches.length,1);assert.equal(result.matches[0].count,2);assert.deepEqual(result.matches[0].path,[{fileId:'a',streamPath:'one'}]);assert.match(result.incomplete[0],/broken child/);
+  root.inspection.files.push({id:'unrelated',filename:{value:'attachment.pdf'},unicodeFilename:{value:null},streams:[{mimeType:{value:'application/pdf'},locator:{path:'attachment'}}]});
+  const released=[],opened=[];
+  const result=await searchCollection({release:async d=>{released.push(d);},child:async(_d,f,_s,refresh)=>{opened.push(f.id);assert.equal(refresh,false);assert.notEqual(f.id,'unrelated','non-member PDF must not be opened');if(f.id==='b'){assert.deepEqual(released,[child]);throw new Error('broken child');}return child;}},root,'wanted',()=>{},()=>{});
+  assert.equal(result.matches.length,1);assert.equal(result.matches[0].count,2);assert.deepEqual(result.matches[0].path,[{fileId:'a',streamPath:'one'}]);assert.ok(result.incomplete.some(x=>/broken child/.test(x)));assert.ok(result.incomplete.some(x=>/members are unavailable/.test(x)));assert.deepEqual(opened,['a','b']);
 });
 
 test('structure rendering accepts deep trees and rejects cycles or excessive text',()=>{
@@ -76,4 +77,24 @@ test('search does not charge released page text against later pages',async()=>{
   assert.deepEqual(await new DocumentSearch().find(doc,'wanted',1,1,()=>{}),{page:3,index:0,count:1});
   const result=await searchCollection({},doc,'wanted',()=>{},()=>{});
   assert.equal(result.matches.length,1);assert.equal(result.matches[0].page,3);assert.deepEqual(result.incomplete,[]);
+});
+
+for(const field of ['Cc','Bcc','Raw-Cc','Raw-Bcc'])test(`email filter includes addresses only in ${field}`,async()=>{
+  const {indexMessages}=await import('../dist/chromium/message-index.js');
+  const root={name:'mail.pdf',inspection:{collection:{state:'missing'},coverage:{metadata:'present'},diagnostics:[],messages:[{id:'m',metadataRecordId:'r'}]},details:new Map([['r',{Subject:'Test',[field]:'OnlyHere@example.org'}]])};
+  const result=await indexMessages({},root,()=>{},()=>{});
+  assert.equal(result.messages.length,1);assert.ok(result.messages[0].searchText.includes('onlyhere@example.org'));
+});
+
+test('PDF.js fragments preserve split words, real spaces and explicit EOL boundaries',async()=>{
+ const {pdfSearchText,normalizeSearchText}=await import('../dist/chromium/document-search.js');
+ assert.equal(pdfSearchText([{str:'con'},{str:''},{str:'tract'},{str:' '},{str:'terms',hasEOL:true},{str:'apply'}]),'contract terms\napply');
+ assert.deepEqual(textMatches(pdfSearchText([{str:'con'},{str:'tract'}]),'contract'),[{start:0,end:8}]);
+ assert.deepEqual(textMatches('con-\ntract','contract'),[{start:0,end:10}]);
+ assert.equal(normalizeSearchText('well-known'),'well-known');
+ assert.equal(textMatches('well-known','wellknown').length,0);
+ assert.deepEqual(textMatches('annual\nreport','annual report'),[{start:0,end:13}]);
+ assert.deepEqual(textMatches(pdfSearchText([{str:'Ca'},{str:'fe'},{str:'\u0301'}]),'Café'),[{start:0,end:5}]);
+ assert.deepEqual(textMatches('ofﬁce','office'),[{start:0,end:5}]);
+ assert.deepEqual(textMatches('co\u00adoperate','cooperate'),[{start:0,end:10}]);
 });

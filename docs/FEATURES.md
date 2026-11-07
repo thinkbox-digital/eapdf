@@ -3,13 +3,13 @@
 This file summarizes the current feature set of the project at a high level.
 
 Current tracked release:
-- `1.4.0`
+- `1.6.0-beta.18`
 
-Release 1.4.0 adds opt-in Gmail checkpoints, bounded processing, streaming PDF completion, multilingual font fallback, and semantic accessibility structures across all six profiles. Full PDF/UA conformance remains unverified.
+Features include opt-in Gmail checkpoints, bounded processing, streaming PDF completion, multilingual font fallback, and semantic accessibility structures across all six profiles. Full PDF/UA conformance remains unverified.
 
 See also:
-- [CHANGELOG.md](/media/lepore/Work/thinkbox/convert/docs/CHANGELOG.md)
-- [eapdf_decision_tree.pdf](/media/lepore/Work/thinkbox/convert/docs/eapdf_decision_tree.pdf)
+- [CHANGELOG.md](CHANGELOG.md)
+- [eapdf_decision_tree.pdf](eapdf_decision_tree.pdf)
 
 ## Input Types
 
@@ -93,11 +93,11 @@ Config-gated features include:
 
 - per-file logs in local per-file logs
 - optional debug output directories
-- validation HTML reports in [validation](/media/lepore/Work/thinkbox/convert/validation)
+- validation HTML reports saved locally in the configured report directory
 
 ## Examples
 
-- checked-in sample PDFs in [examples](/media/lepore/Work/thinkbox/convert/examples)
+- checked-in sample PDFs in [examples](../examples/)
 - includes the six core email profile samples
 
 ## Performance Features

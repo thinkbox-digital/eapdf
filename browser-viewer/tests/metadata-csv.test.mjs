@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import {csvCell,metadataCsv} from '../dist/chromium/metadata-csv.js';
 const doc=(name='mail.pdf')=>({name,details:new Map([['email',{From:'Alice <a@example.org>',To:'Bob <b@example.org>',Subject:'Hello, "Bob"\n안녕',Sent:'2026-10-29T12:00:00Z'}]]),inspection:{diagnostics:[],coverage:{metadata:'present',associatedFiles:'present'},metadataRecords:[],messages:[{id:'message',metadataRecordId:'email',internetMessageId:{value:'<id>'},mailGuid:{value:'uuid:1'}}],collection:{state:'missing',value:null},files:[]}});
 const run=(d,child=()=>{throw Error('unexpected child');},check=()=>{})=>metadataCsv(d,child,check,()=>{});
-test('CSV preserves quoted multiline Unicode fields and blank missing values',async()=>{
+test('CSV flattens line breaks while preserving quoted Unicode and blank values',async()=>{
  const result=await run(doc());assert.equal(result.rows,1);const text=await result.blob.text();assert.doesNotMatch(text,/Mail GUID|uuid:1/);
- assert.match(text,/"Hello, ""Bob""\n안녕"/);assert.match(text,/"Bob <b@example.org>","",""/);assert.match(text,/"2026-10-29T12:00:00Z"/);
+ assert.match(text,/"Hello, ""Bob"" 안녕"/);assert.match(text,/"Bob <b@example.org>","",""/);assert.match(text,/"2026-10-29T12:00:00Z"/);
  const bytes=new Uint8Array(await result.blob.arrayBuffer());assert.deepEqual([...bytes.slice(0,3)],[239,187,191]);
 });
 test('spreadsheet formula prefixes are neutralized, including whitespace',()=>{
- for(const value of ['=1+1','+cmd','-2','@SUM(1)','  =1','\t=1','\n=1'])assert.equal(csvCell(value),'"\''+value.replaceAll('\t',' ')+'"');
+ for(const value of ['=1+1','+cmd','-2','@SUM(1)','  =1','\t=1','\n=1'])assert.equal(csvCell(value),'"\''+value.replace(/[\t\n]/g,' ')+'"');
  assert.equal(csvCell('a,b'),'"a,b"');
 });
 test('long subjects are not truncated by CSV export',async()=>{
@@ -49,7 +49,7 @@ test('CSV preserves nested collection folder paths and multiple folder membershi
  const nested=collection('nested.pdf',[folder('r','Archive'),folder('leaf','2026','r')],[{fileId:'email',folderIds:present(['leaf'])}],[member('email')]);
  const result=await run(root,async(parent)=>parent===root?nested:doc('email.pdf'));
  assert.equal(result.rows,1);const csv=await result.blob.text();
- assert.match(csv,/"\/Mailbox\/Inbox\/Archive\/2026\n\/Mailbox\/Saved\/Archive\/2026"/);
+ assert.match(csv,/"\/Mailbox\/Inbox\/Archive\/2026; \/Mailbox\/Saved\/Archive\/2026"/);
  assert.match(csv,/root.pdf \/ nested.pdf \/ email.pdf/);
 });
 test('CSV rejects unresolved, cyclic and unknown folder membership instead of making up a root path',async()=>{
@@ -62,7 +62,7 @@ test('CSV includes declared attachment counts and names, preserves duplicate nam
  const d=doc();d.inspection.metadataRecords=[{id:'email',kind:'email',fields:{NumberAttachments:present('3')}},
  ...['a','b'].map(id=>({id,kind:'attachment',owners:present(['message']),fields:{Filename:present('report,"final".pdf')}}))];
  const csv=await (await run(d)).blob.text();
- assert.match(csv,/"3","report,""final"".pdf\nreport,""final"".pdf\n\(1 attachment name\(s\) not recorded\)"/);
+ assert.match(csv,/"3","report,""final"".pdf; report,""final"".pdf; \(1 attachment name\(s\) not recorded\)"/);
  assert.doesNotMatch(csv,/Mail GUID|uuid:1/);
  d.inspection.metadataRecords=[{id:'email',kind:'email',fields:{NumberAttachments:present('0')}}];
  assert.match(await (await run(d)).blob.text(),/,"0",""\r\n/);
@@ -115,4 +115,10 @@ test('CSV replaces embedded tabs in all exported fields without changing the sou
  for(const value of ['mail archive.pdf','Hello  world','Alice <a@example.org>','<id part>','file name.txt'])assert.ok(csv.includes(value));
  assert.equal(d.details.get('email').Subject,'Hello\t\tworld');
  assert.equal(csvCell('\t=1'),'"\' =1"');
+});
+test('every CSV record occupies one physical line even with international line separators',async()=>{
+ const d=doc(),original='a\r\nb\rc\nd\u0085e\u2028f\u2029g\vh\fi';d.details.get('email').Subject=original;
+ const value=await(await run(d)).blob.text();assert.equal(value.split('\r\n').length,3);
+ assert.match(value,/"a b c d e f g h i"/);assert.equal(d.details.get('email').Subject,original);
+ assert.doesNotMatch(value.replaceAll('\r\n',''),/[\r\n\u0085\u2028\u2029\v\f]/u);
 });

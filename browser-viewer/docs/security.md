@@ -22,6 +22,11 @@ metadata is inserted as text. XMP DTD/entity declarations are rejected before XM
 parsing. HTML/SVG/email attachments are displayed as inert source text, never
 iframes or HTML. Binary attachments are never executed or opened automatically.
 
+Embedded search indexes are untrusted XMP data. Bounded decoding, inventory and
+integrity checks precede use; selected full-text pages are confirmed with PDF.js.
+Invalid indexes fall back to ordinary traversal. Digests do not establish
+authenticity. See [index resource and trust limits](../../docs/EMBEDDED_SEARCH_INDEX.md#full-text-resource-limits).
+
 Every active PDF uses a dedicated terminable worker. At most three document
 workers remain active per session; an isolated search/export session can temporarily
 add up to three more. Within each session, older documents reopen from their parent when selected. Close/cancel rejects pending

@@ -22,10 +22,15 @@ class EapdfConfig {
   }
 
   static class FindingAidConfig {
-    boolean pdfEnabled = true;
+    boolean pdfEnabled = false;
     boolean excelEnabled = false;
     boolean embedExcel = true;
     boolean embedPdfInCollections = true;
+  }
+
+  static class SearchIndexConfig {
+    boolean enabled = true;
+    boolean fullTextEnabled = true;
   }
 
   static class PremisConfig {
@@ -60,6 +65,7 @@ class EapdfConfig {
   String creator = "";
   BrandingConfig branding = new BrandingConfig();
   FindingAidConfig findingAid = new FindingAidConfig();
+  SearchIndexConfig searchIndex = new SearchIndexConfig();
   PremisConfig premis = new PremisConfig();
   AccessibilityConfig accessibility = new AccessibilityConfig();
 
@@ -142,6 +148,7 @@ class EapdfConfig {
     if (cfg.signing == null) cfg.signing = new SigningConfig();
     if (cfg.branding == null) cfg.branding = new BrandingConfig();
     if (cfg.findingAid == null) cfg.findingAid = new FindingAidConfig();
+    if (cfg.searchIndex == null) cfg.searchIndex = new SearchIndexConfig();
     if (cfg.premis == null) cfg.premis = new PremisConfig();
     if (cfg.accessibility == null) cfg.accessibility = new AccessibilityConfig();
     if (cfg.accessibility.pageLabels == null) cfg.accessibility.pageLabels = new PageLabelsConfig();

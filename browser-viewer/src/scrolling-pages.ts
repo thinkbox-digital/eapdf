@@ -72,6 +72,11 @@ export class ScrollingPages {
     this.viewport.scrollTop=30+this.coordinates(logical,true);
   }
   private slot(number:number):PageSlot|undefined{return this.slots.find(slot=>slot.number===number);}
+  private updateHorizontalOverflow():void {
+    const style=getComputedStyle(this.viewport),available=this.viewport.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
+    const oversized=this.slots.some(slot=>slot.box.getBoundingClientRect().width>available+1);
+    this.viewport.style.overflowX=oversized?'auto':'hidden';
+  }
 
   private active=1;
   private epoch=0;
@@ -96,8 +101,8 @@ export class ScrollingPages {
     const canvas=document.createElement('canvas');canvas.id='canvas';canvas.hidden=true;
     this.surface.append(canvas);this.viewport.scrollTop=0;
   }
-  highlight(query:string,match?:{page:number;index:number}):void {
-    this.query=query;this.match=match;for(const slot of this.slots)if(slot.ready)slot.layer.highlight(query,match?.page===slot.number?match.index:undefined);
+  highlight(query:string,match?:{page:number;index:number}):number|undefined {
+    let activeCount:number|undefined;this.query=query;this.match=match;for(const slot of this.slots)if(slot.ready){const count=slot.layer.highlight(query,match?.page===slot.number?match.index:undefined);if(match?.page===slot.number)activeCount=count;}return activeCount;
   }
   async show(doc:Pick<BrowserDocument,'pdf'|'run'>,scale:number,page:number,query:string,prefetch=true,range?:readonly number[]):Promise<void>{
     const first=range?.[0]??1,last=range?.at(-1)??doc.pdf.numPages;
@@ -105,6 +110,7 @@ export class ScrollingPages {
     page=Math.max(first,Math.min(last,page));
     this.prefetch=prefetch;
     const sameDocument=this.doc===doc&&this.pdf===doc.pdf;
+    const selectedMatch=sameDocument&&this.query===query?this.match:undefined;
     const zooming=sameDocument&&this.scale!==scale;
     const previous=this.slot(this.active)?.box.getBoundingClientRect();
     const bounds=this.viewport.getBoundingClientRect();
@@ -122,7 +128,7 @@ export class ScrollingPages {
       this.query=query;this.mount(page);this.select(page);this.jump(page);
       epoch=this.epoch;await this.enqueue(epoch,true);
       if(epoch!==this.epoch)return;
-      this.jump(page);this.highlight(query);
+      this.jump(page);this.highlight(query,selectedMatch);
       if(!sameDocument)this.viewport.scrollLeft=0;
       if(zooming){
         const box=this.slot(page)?.box.getBoundingClientRect();
@@ -131,7 +137,7 @@ export class ScrollingPages {
           this.viewport.scrollLeft+=box.left+center*box.width-(viewport.left+this.viewport.clientLeft+this.viewport.clientWidth/2);
         }
       }
-    }finally{if(epoch===this.epoch){this.locked=false;this.schedule();}}
+    }finally{if(epoch===this.epoch){this.updateHorizontalOverflow();this.locked=false;this.schedule();}}
   }
   private select(number:number):void {
     const previous=this.slot(this.active);previous?.canvas.removeAttribute('id');previous?.text.removeAttribute('id');
@@ -227,7 +233,7 @@ export class ScrollingPages {
         if(epoch!==this.epoch)return;this.release(slot);this.onRenderState(slot.number,true);
         slot.box.querySelector('.page-placeholder')!.textContent=`Unable to display page ${slot.number}: ${error instanceof Error?error.message:String(error)}`;
         if(slot.number===this.active)throw error;
-      }finally{page?.cleanup();}
+      }finally{page?.cleanup();if(epoch===this.epoch)this.updateHorizontalOverflow();}
     }
     if(!focused&&epoch===this.epoch&&center!==this.active)this.schedule();
   }

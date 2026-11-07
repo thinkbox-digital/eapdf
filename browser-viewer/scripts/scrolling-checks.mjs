@@ -44,7 +44,7 @@ export async function checkScrolling(browser){
  // Real PST DParts independently inspected with pikepdf: first email 8–12,
  // second 13–14, final 150–151. Front matter has no email owner.
  for(const suffix of ['m','mi']){
-  await browser.open(resolve(suffix==='m'?'tests/attachments/source/pst_sample_1m.pdf':'../tests/quality/fixtures/pst_native_attachment_scope_legacy.pdf'));
+  await browser.open(resolve(suffix==='m'?'tests/attachments/source/pst_sample_1m.pdf':'tests/attachments/source/pst_sample_1mi_legacy.pdf'));
   await browser.evaluate(()=>{const z=document.querySelector('#zoom');z.value='1';z.dispatchEvent(new Event('change'));});await browser.ready();
   const ids=await browser.evaluate(()=>[...document.querySelectorAll('#tree [data-message-id]')].map(b=>b.dataset.messageId));
   const selected=()=>browser.evaluate(()=>document.querySelector('#tree [aria-current]')?.dataset.messageId??null);

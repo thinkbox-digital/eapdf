@@ -15,7 +15,7 @@ const field = (record: MetadataRecord, ...keys:string[]):TextObservation => {
   if(found.every(f=>f.state==='present'&&f.value===found[0]!.value))return found[0]!;
   return obs(null,{state:'ambiguous',raw:found.flatMap(f=>f.raw),candidates:found.flatMap(f=>f.value===null?[]:[f.value]),reason:'Identity aliases disagree.'});
 };
-export function interpret(input:InterpretationInput):{inspection:InspectionResult;details:Map<string,Record<string,string>>}{
+export function interpret(input:InterpretationInput):{inspection:InspectionResult;details:Map<string,Record<string,string>>;embeddedIndex?:string|null;fullTextIndex?:string|null;indexFileDigest?:string|null}{
   const {documentId,assets,limits}=input;
   const loc=(l:PartLocator):ObjectLocator=>({documentId,objectNumber:l.ref?.num??null,generation:l.ref?.gen??null,path:l.path});
   const id=(l:PartLocator)=>documentId+'#'+l.path;
@@ -182,5 +182,5 @@ export function interpret(input:InterpretationInput):{inspection:InspectionResul
     coverage:{metadata:xmp.state,documentParts:input.parts.status==='partial'?(input.parts.diagnostics.some(d=>d.code.includes('LIMIT'))?'unavailable':'invalid'):input.parts.status,
       associatedFiles:assets.diagnostics.some(d=>['OBJECT_LIMIT','FILE_LIMIT','OBJECT_UNAVAILABLE','FILE_UNAVAILABLE','NAME_TREE_UNAVAILABLE','NAME_TREE_CYCLE','INVALID_NAME_TREE','INVALID_AF_ARRAY','INVALID_FILESPEC'].includes(d.code))?'unavailable':'present',collection:assets.diagnostics.some(d=>d.code==='FOLDER_CYCLE')?'invalid':col.state,
       fullEmailHeaders:'not-evaluated',logicalStructure:'not-evaluated',sourceEmailParsing:'not-evaluated',contentStreamAssociations:'not-evaluated',conformance:'not-evaluated'}};
-  return {inspection,details:xmp.details};
+  return {inspection,details:xmp.details,embeddedIndex:xmp.embeddedIndex,fullTextIndex:xmp.fullTextIndex,indexFileDigest:xmp.indexFileDigest};
 }

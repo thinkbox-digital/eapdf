@@ -1,9 +1,10 @@
 # Security controls
 
-This is an **unreleased local checkpoint** covering the email creator, standalone
-Java validator, Python/web validator and browser viewer. Published beta.4 JARs and
-viewer beta.1 downloads have not been replaced. Candidate artifacts and detailed
-logs are retained in local records.
+Current source security baseline (reviewed November 7, 2026). Historical
+checkpoint results below are evidence for their recorded versions, not a claim
+that every acceptance check was rerun for the latest release. See the
+[browser security boundaries](../../browser-viewer/docs/security.md) for current
+viewer controls and [deployment configuration](../DEPLOY_WEB.md) for web limits.
 
 ## Changes
 
@@ -29,8 +30,8 @@ logs are retained in local records.
   proxy addresses may supply them. Direct non-loopback access requires HTTPS and
   authentication; default host names are loopback-only. The nginx/systemd setup
   remains a shared trusted-team service, without per-user job ownership.
-- Production browser sessions enforce input, aggregate decoded-byte, child-count,
-  nesting and concurrency bounds before work. Normal PDF.js rendering now shares
+- Production browser sessions enforce input, aggregate decoded-byte and concurrency bounds;
+  ancestor cycles are rejected before work. Normal PDF.js rendering now shares
   the allocation guard used for attachment extraction. Linked-file fetches count
   streamed bytes and have a deadline. No PDF scripting interpreter is shipped;
   CSP excludes remote scripts, JavaScript eval, objects and forms. Metadata is text;
@@ -45,13 +46,13 @@ logs are retained in local records.
 | Java/Python aggregate decoded streams | 512 MiB, counting repeat decodes/filter stages |
 | Java/Python embedded-file inspections | 2,048 |
 | Generalized stream filter chain | 8 filters |
-| XML | 64 levels; Python/browser also 100,000 nodes |
+| XML | Validators: 64 levels; Python also 100,000 nodes; browser has no fixed node/depth cutoff |
 | Validation work file / aggregate scratch | 64 MiB / 512 MiB, 10,000 files |
 | Python CLI worker | 512 MiB soft parser address limit, 4 GiB hard headroom for trusted Docker execs, 600 s; directory concurrency capped at 2 |
 | Java worker | Heap bounded by launcher `-Xmx` and available-memory budget; native address-space headroom of 4 GiB on Linux |
 | Java validation time | 600 s minimum, proportional to input bytes, maximum 24 h |
-| Browser root / embedded stream / session extracted bytes | 512 MiB / 32 MiB / 128 MiB |
-| Browser retained child PDFs / child depth / active or pending workers | 128 / 8 / 3 |
+| Browser root / embedded stream / session extracted bytes | 4 GiB / 32 MiB / 512 MiB concurrent reservations |
+| Browser retained child PDFs / child depth / active or pending workers | No fixed child-count/depth cutoff; 3 workers per session |
 | PDF.js ordinary decoded buffer / cumulative buffer growth per worker | 64 MiB / 256 MiB |
 | Browser image decode / PDF.js canvas bytes | 16 million pixels / 64 MiB |
 | Explicit linked PDF | 64 MiB streamed bytes, 30 s, no cookies or redirects |
@@ -63,7 +64,7 @@ Validator settings use `VALIDATOR_MAX_STREAM_BYTES`, `VALIDATOR_MAX_METADATA_BYT
 `VALIDATOR_JOB_TIMEOUT`. Java also accepts the corresponding JVM properties for
 stream/storage settings. Python CLI memory uses `VALIDATOR_JOB_MEMORY_MB`;
 `VALIDATOR_MAX_CONCURRENT_JOBS` caps directory workers. Existing CLI arguments are
-unchanged. Browser ceilings can only be lowered by application session options.
+unchanged. Browser input/decoding ceilings can only be lowered by application session options. The 4 GiB input ceiling is an acceptance ceiling, not a guarantee that a browser has enough memory to open that input.
 Raising limits changes resource exposure; it cannot recover missing source data.
 
 The Python bounded stream path supports unfiltered, Flate, ASCII85, ASCIIHex and
@@ -102,7 +103,7 @@ Build into separate `/tmp` directories, then run:
 python scripts/security_inventory.py \
   --creator-dependencies /tmp/creator-dependencies.txt \
   --validator-dependencies /tmp/validator-dependencies.txt \
-  --creator-jar /tmp/creator-build/emailtopdfa-1.6.0-beta.17.jar \
+  --creator-jar /tmp/creator-build/emailtopdfa-1.6.0-beta.18.jar \
   --validator-jar /tmp/validator-build/eapdf-validator.jar \
   --output docs/security/runtime-inventory
 ```

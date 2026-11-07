@@ -146,3 +146,14 @@ test('one-pass page map rejects a detached DPart page reference',async()=>{
  const f=fixture();f.catalog.getAllPageDicts=async()=>new Map([[0,[f.dict({Type:Name.get('Page')}),Ref.get(999,0)]]]);
  const result=await f.inspect();assert.equal(result.parts[0].pageRange.state,'invalid');assert.ok(result.diagnostics.some(d=>d.code==='INVALID_PAGE_RANGE'));
 });
+
+test('inspection yielding services tasks and completes concurrent calls',async()=>{
+ const {yieldInspection}=await upstream('src/core/inspection_yield.js');
+ let delivered=false;
+ const {port1,port2}=new MessageChannel();port1.onmessage=()=>{delivered=true;port1.close();port2.close();};port2.postMessage(null);
+ try {
+  for(let i=0;i<100&&!delivered;i++)await yieldInspection();
+  assert.equal(delivered,true,'inspection must yield to tasks, not only microtasks');
+  await Promise.all(Array.from({length:32},()=>yieldInspection()));
+ }finally{port1.close();port2.close();}
+});

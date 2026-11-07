@@ -1,0 +1,5 @@
+# Pinned rendering engine: baseline comparisons must use the reviewed rasterizer.
+PyMuPDF==1.25.5
+# Independent PDF object checks and deliberate-loss tests.
+pikepdf==10.17.0
+olefile==0.46

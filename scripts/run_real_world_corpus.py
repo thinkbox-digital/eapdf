@@ -224,8 +224,8 @@ def main():
         if not rows:
             parser.error('--only did not match any input')
     rows.sort(key=lambda row: (row['bytes'], row['input']))
-    creator = Path(os.environ.get('EAPDF_GENERATOR_CLASSPATH', ROOT/'dist/emailtopdfa.jar')).resolve()
-    validator = Path(os.environ.get('EAPDF_VALIDATOR_JAR', ROOT/'dist/eapdf-validator.jar')).resolve()
+    creator = Path(os.environ.get('EAPDF_GENERATOR_CLASSPATH', ROOT / 'dist' / ('emailtopdfa-' + (ROOT / 'VERSION').read_text().strip() + '.jar'))).resolve()
+    validator = Path(os.environ.get('EAPDF_VALIDATOR_JAR', ROOT / 'dist' / ('eapdf-validator-' + (ROOT / 'VERSION').read_text().strip() + '.jar'))).resolve()
     creator_sha, validator_sha = digest(creator), digest(validator)
     current = {row['input']: {'input': row, 'status': 'NOT_RUN', 'creator_sha256': creator_sha, 'validator_sha256': validator_sha} for row in inventory}
     for row in inventory:

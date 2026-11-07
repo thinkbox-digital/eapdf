@@ -99,7 +99,7 @@ final class PdfFindingAidSupport {
 
   static PdfMailWriter.FindingAidDocument buildCollectionFrontMatter(String profile,
                                                                    PdfMailWriter.CollectionRunSummary summary,
-                                                                   String fontPath) throws Exception {
+                                                                   String fontPath, boolean incomplete) throws Exception {
     PDDocument document = new PDDocument(org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache());
     try {
       PDPage page = new PDPage(new PDRectangle(PDRectangle.LETTER.getHeight(), PDRectangle.LETTER.getWidth()));
@@ -109,7 +109,9 @@ final class PdfFindingAidSupport {
         PdfMailWriter.drawText(content, font, 20f, 46.8f, 565f, "Email Collection");
         PdfMailWriter.drawText(content, font, 11f, 46.8f, 535f, "EA-PDF 1" + profile + " collection");
         PdfMailWriter.drawText(content, font, 11f, 46.8f, 515f, summary.countsText());
-        PdfMailWriter.drawText(content, font, 11f, 46.8f, 495f, "Open the contained email PDFs from the attachments panel.");
+        PdfMailWriter.drawText(content, font, 11f, 46.8f, 495f, "Open the contained email PDFs from the Messages pane.");
+        if (incomplete) PdfMailWriter.drawText(content, font, 11f, 46.8f, 475f,
+            "INCOMPLETE SOURCE — see conversion warnings in the contained email PDFs.");
       }
       ProcessingLimits.accountPages(document.getNumberOfPages());
       return new PdfMailWriter.FindingAidDocument(document, List.of(), null);
@@ -688,6 +690,10 @@ final class PdfFindingAidSupport {
   private static void writeFindingAidSpreadsheet(List<PdfMailWriter.FindingAidRow> rows, String profile, java.io.OutputStream out) throws Exception {
     try (var wb = new org.apache.poi.xssf.streaming.SXSSFWorkbook(128)) {
       wb.setCompressTempFiles(true);
+      // POI defaults to unconditional ZIP64 local headers, which Calc 24.2
+      // rejects even for small workbooks. Preserve large-entry support using
+      // the ZIP64 compatibility layout instead.
+      wb.setZip64Mode(org.apache.commons.compress.archivers.zip.Zip64Mode.AlwaysWithCompatibility);
       boolean includeFolderColumn = findingAidShowsFolderColumn(profile);
       Sheet sheet = wb.createSheet("Finding Aid");
       SpreadsheetTextWriter text = new SpreadsheetTextWriter(wb, SpreadsheetVersion.EXCEL2007.getMaxRows());

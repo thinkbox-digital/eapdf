@@ -1,0 +1,19 @@
+{
+  "creator": {
+    "eapdf.MsgAddressPreservationTests.suppliedOutlookMessageRetainsItsTransportRecipientOrder": "Requires a separately supplied Outlook fixture",
+    "eapdf.MsgSentDateTests.suppliedNativeSubmissionFractionSurvivesIntoXmpExactly": "Requires a separately supplied Outlook fixture",
+    "eapdf.MsgThreadPreservationTests.suppliedTransportFieldsKeepPriorityWhileMissingFieldsAreRecovered": "Requires a separately supplied Outlook fixture",
+    "eapdf.MsgThreadPreservationTests.suppliedOutlookReplyRetainsItsNativeThreadFields": "Requires a separately supplied Outlook fixture"
+  },
+  "validator": {
+    "eapdf.OutlookSourceTests.nativeCorePreservesTheStoredSubmissionInstantAndDoesNotClaimHeaders": "Requires a separately supplied Outlook fixture",
+    "eapdf.OutlookSourceTests.nestedMessagesHaveContentEvidenceAndCidIsNotAlwaysInline": "Requires a separately supplied Outlook fixture",
+    "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[1]": "Requires a separately supplied Outlook fixture",
+    "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[2]": "Requires a separately supplied Outlook fixture",
+    "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[3]": "Requires a separately supplied Outlook fixture",
+    "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[4]": "Requires a separately supplied Outlook fixture",
+    "eapdf.OutlookSourceTests.nativeCoreRejectsDefiniteContradictions(String, String, String)[5]": "Requires a separately supplied Outlook fixture",
+    "eapdf.OutlookSourceTests.unknownRecipientTypeAndDifferentRepresentedAuthorRemainUnknown": "Requires a separately supplied Outlook fixture",
+    "eapdf.ValidatorDesktopSmokeTests.windowValidatesARealFileAndStopsASecondRunWithoutLeavingWorkFiles": "Requires an interactive desktop; separate acceptance test"
+  }
+}

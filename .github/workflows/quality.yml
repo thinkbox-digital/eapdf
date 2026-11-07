@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
           java-version: '21'
@@ -26,11 +26,94 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.19.0'
       - run: npm run verify:pdfjs
         working-directory: browser-viewer
       - run: node --test tests/pdfjs-pin.test.mjs
         working-directory: browser-viewer
+  python-regressions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --require-hashes -r requirements-web.lock
+      - run: python -B -m unittest discover -s regression -v
+  viewer:
+    name: Viewer (${{ matrix.browser }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: browser-viewer/package-lock.json
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r browser-viewer/reference/requirements.txt
+      - run: npm ci
+        working-directory: browser-viewer
+      - run: npm run check
+        working-directory: browser-viewer
+      - name: Install Chromium dependencies
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright install-deps firefox
+          echo "CHROMIUM_PATH=$(node --input-type=module -e "import {chromium} from 'playwright'; console.log(chromium.executablePath())")" >> "$GITHUB_ENV"
+        working-directory: browser-viewer
+      - name: Complete Chromium suite and independent inspection oracle
+        if: matrix.browser == 'chromium'
+        run: npm test && npm run test:m1 && npm run test:archive-memory
+        working-directory: browser-viewer
+      - name: Install pinned Firefox and WebDriver
+        if: matrix.browser == 'firefox'
+        run: python browser-viewer/scripts/install-ci-firefox.py "$RUNNER_TEMP/firefox-tools"
+      - name: Firefox temporary installation and UI acceptance
+        if: matrix.browser == 'firefox'
+        env:
+          FIREFOX_PATH: ${{ runner.temp }}/firefox-tools/firefox/firefox
+          GECKODRIVER_PATH: ${{ runner.temp }}/firefox-tools/geckodriver
+          M5_UI: '1'
+        run: npm run build && npm run test:firefox
+        working-directory: browser-viewer
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: viewer-${{ matrix.browser }}-evidence
+          path: browser-viewer/test-results
+  conversion-acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r regression/quality/requirements.txt
+      - run: python -B -m unittest discover -s regression/quality -v
+      - run: mvn -B -DskipTests -Deapdf.build.directory=/tmp/eapdf-acceptance-creator package
+      - run: mvn -B -f validator-desktop/pom.xml -DskipTests -Deapdf.build.directory=/tmp/eapdf-acceptance-validator package
+      - name: Public source fidelity, visual and standalone Java validation gate
+        run: python scripts/check_conversion_quality.py --creator /tmp/eapdf-acceptance-creator/emailtopdfa-$(cat VERSION).jar --validator /tmp/eapdf-acceptance-validator/eapdf-validator-$(cat VERSION).jar --output "$RUNNER_TEMP/conversion-acceptance"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: conversion-acceptance-evidence
+          path: ${{ runner.temp }}/conversion-acceptance

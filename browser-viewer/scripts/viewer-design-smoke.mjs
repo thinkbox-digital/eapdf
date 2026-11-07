@@ -20,6 +20,19 @@ try{
  await page.locator('#open-search').click();await page.locator('#search-scope').selectOption('collection');await page.locator('#search').fill('email');await page.locator('#search-submit').click();await ready();
  assert.equal(await page.locator('#results-tab').getAttribute('aria-selected'),'true');assert.equal(await page.locator('#browse-panel').isVisible(),true);
  const groups=await page.locator('.result-heading').allTextContents();assert.ok(groups.length>1);assert.ok(groups.every(name=>!name.includes('pst_quality-attached-message_1c.pdf')));assert.ok(await page.locator('.match-excerpt mark').count()>0);
+ // Real search results must stay below the form inside a single panel column.
+ const searchGeometry=()=>page.evaluate(()=>{const box=id=>{const r=document.querySelector(id).getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,height:r.height};};return {panel:box('#search-panel'),form:box('#search-form'),results:box('#collection-results'),panelScroll:document.querySelector('#search-panel').scrollTop};});
+ for(const width of [1600,1100,390]){
+  await page.setViewportSize({width,height:1050});
+  const geometry=await searchGeometry();
+  assert.ok(geometry.results.left>=geometry.panel.left&&geometry.results.right<=geometry.panel.right,'results stay inside the panel');
+  assert.ok(geometry.results.top>=geometry.form.bottom&&geometry.results.height>0,'results stay below the stationary search form');
+  const before=geometry.form;await page.locator('#collection-results').evaluate(e=>{e.scrollTop=e.scrollHeight;});
+  assert.deepEqual((await searchGeometry()).form,before,'only results scroll');
+  assert.equal((await searchGeometry()).panelScroll,0);
+  await page.locator('#collection-results').evaluate(e=>{e.scrollTop=0;});
+ }
+ await page.setViewportSize({width:1600,height:1050});
  const count=await page.locator('.collection-hit').count();assert.ok(count>=groups.length);assert.equal(await page.locator('.result-heading .tree-icon').count(),groups.length);
  await page.locator('#find').click();await ready();assert.match(await page.locator('#search-status').innerText(),/^Match 2 of/);
  await page.locator('#search-submit').click();await ready();assert.match(await page.locator('#search-status').innerText(),/^Match 1 of/);
@@ -30,7 +43,7 @@ try{
  await page.locator('#message-filter').fill('Feature');await page.locator('#filter-results button').first().waitFor();
  const filtered=await page.locator('#filter-results').innerText();assert.ok(!filtered.includes('pst_quality-attached-message_1c.pdf'));assert.ok(!filtered.includes(' / '));
  assert.equal(await page.locator('#filter-results small').count(),0,'single-message files should not repeat the subject');
- const destination=await page.locator('#filter-results button .message-subject').first().innerText();await page.locator('#filter-results button').first().click();await ready();assert.equal(await page.locator('#tree [aria-current] .message-subject').last().innerText(),destination);
+ const destination=await page.locator('#filter-results button .message-subject').first().innerText();await page.locator('#filter-results button').first().click();await ready();assert.equal(await page.locator('#filter-results [aria-current] .message-subject').last().innerText(),destination);
  await page.locator('#open-search').click();
  await page.locator('.collection-hit').last().click();await ready();
  const categories=await page.locator('.file-category-heading>span:not(.badge)').allTextContents();assert.ok(categories.includes('Email sources'));assert.ok(categories.includes('Technical and supporting files'));
@@ -52,8 +65,8 @@ try{
   await page.locator('#'+show).click();assert.ok(await page.locator('#'+panel).isVisible());assert.equal(await page.evaluate(()=>document.activeElement.id),hide);
  }
  await mkdir('test-results',{recursive:true});await page.screenshot({path:'test-results/viewer-design-desktop.png',fullPage:true});
- await page.setViewportSize({width:900,height:950});const medium=await dimensions();assert.equal(medium.left,270);assert.equal(medium.right,0);assert.equal(medium.overflow,false);
- await page.setViewportSize({width:600,height:950});assert.equal((await dimensions()).overflow,false);await page.screenshot({path:'test-results/viewer-design-narrow.png',fullPage:true});
+ await page.setViewportSize({width:900,height:950});await page.waitForFunction(()=>document.querySelector('#workspace').dataset.layout==='medium');const medium=await dimensions();assert.equal(medium.left,270);assert.equal(medium.right,0);assert.equal(medium.overflow,false);
+ await page.setViewportSize({width:600,height:950});await page.waitForFunction(()=>document.querySelector('#workspace').dataset.layout==='compact');assert.equal((await dimensions()).overflow,false);await page.screenshot({path:'test-results/viewer-design-narrow.png',fullPage:true});
  await page.locator('#close').click();assert.equal(await page.locator('#results-tab').isDisabled(),true);assert.equal(await page.locator('#browse-tab').getAttribute('aria-selected'),'true');
  assert.deepEqual(errors,[]);const report={status:'PASS',desktop,medium,groups,matchingPages:count,checks:['equal 27% sidebars','filename-only search groups and metadata results','filter destinations preserved','distinct file-category headers','highlighted excerpts','search returns to first match','search popover keeps message filtering available','pane focus and restore controls','no horizontal overflow','closing resets results']};await writeFile('test-results/viewer-design.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
 }finally{await context.close();}

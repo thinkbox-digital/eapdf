@@ -10,8 +10,12 @@
   "branding": {
     "enabled": true
   },
+  "searchIndex": {
+    "enabled": true,
+    "fullTextEnabled": true
+  },
   "findingAid": {
-    "pdfEnabled": true,
+    "pdfEnabled": false,
     "excelEnabled": false,
     "embedExcel": true,
     "embedPdfInCollections": true

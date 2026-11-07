@@ -78,6 +78,9 @@ try {
   }
   await mkdir('test-results', { recursive: true });
   await open('tests/fixtures/ordinary.pdf');
+  // Opening now defaults to fit-width; make fixed-scale pixel assertions explicit.
+  await execute("const z=document.querySelector('#zoom'); z.value='1'; z.dispatchEvent(new Event('change'));");
+  await until(() => execute("return document.querySelector('#viewport').getAttribute('aria-busy') === 'false';"));
   // Real WebDriver key events must reach our picker. Cancel only the native
   // dialog's default action so the headless test does not need an OS file picker.
   await writeFile('test-results/firefox-ordinary.png', Buffer.from(await call('/screenshot', undefined, 'GET'), 'base64'));
@@ -89,6 +92,34 @@ try {
   assert.equal(await execute("return document.querySelector('#canvas').width;"), Math.ceil(320 * (96/72) * 1.5));
   await open(process.env.EAPDF_SAMPLE ?? '../examples/eml/eml_Agenda_and_timeline_slides_1s.pdf');
   await writeFile('test-results/firefox-eapdf.png', Buffer.from(await call('/screenshot', undefined, 'GET'), 'base64'));
+  await execute("return import('./browser-session.js').then(({BrowserSession})=>{const child=BrowserSession.prototype.child;window.indexChildOpens=0;BrowserSession.prototype.child=async function(...args){window.indexChildOpens++;return child.apply(this,args);};});");
+  for (const profile of ['1c','1ci']) {
+    await execute("document.querySelector('#close').click();window.indexChildOpens=0;");
+    await open(`tests/metadata-index/mbox_sample_${profile}.pdf`);
+    await until(() => execute("return document.querySelector('#subject-index-progress').dataset.complete==='true';"));
+    assert.equal(await execute('return window.indexChildOpens;'),0);
+    await execute("const f=document.querySelector('#message-filter');f.value='power';f.dispatchEvent(new Event('input'));");
+    await until(() => execute("return document.querySelector('#filter-results button') && document.querySelector('#filter-status').textContent.includes('1 matching emails');"));
+    assert.equal(await execute('return window.indexChildOpens;'),0);
+    await execute("document.querySelector('#filter-results button').click();");
+    await until(() => execute("return !document.querySelector('#back').disabled && document.querySelector('#viewport').getAttribute('aria-busy')==='false';"));
+    assert.match(await execute("return document.querySelector('#breadcrumbs').textContent;"),/Power VaR/);
+  }
+  await execute("document.querySelector('#close').click();");
+  await open(process.env.EAPDF_SAMPLE ?? '../examples/eml/eml_Agenda_and_timeline_slides_1s.pdf');
+  for(const profile of ['1mi','1ci']){
+    await execute("document.querySelector('#close').click();");
+    await open(`tests/fulltext-index/mbox_sample_${profile}.pdf`);
+    await execute("document.querySelector('#open-search').click();document.querySelector('#search-scope').value='collection';document.querySelector('#search').value='Power VaR';document.querySelector('#find').click();");
+    await until(()=>execute("return document.querySelector('#collection-search-summary').textContent.includes('Embedded PDFBox text index') && document.querySelector('#viewport').getAttribute('aria-busy')==='false';"));
+    assert.ok(await execute("return document.querySelectorAll('#text-layer .current-match').length>0;"),'Indexed first page highlights in Firefox');
+    await execute("document.querySelector('#collection-matches button[data-match-index=\"1\"]').click();");
+    await until(()=>execute("return document.querySelector('#viewport').getAttribute('aria-busy')==='false' && document.querySelector('#search-status').textContent.includes('Match 2 of 3') && document.querySelectorAll('#text-layer .current-match').length>0;"));
+    assert.ok(await execute("return document.querySelectorAll('#text-layer .current-match').length>0;"),'Indexed destination highlights in Firefox');
+  }
+  await execute("document.querySelector('#close').click();");
+  await open(process.env.EAPDF_SAMPLE ?? '../examples/eml/eml_Agenda_and_timeline_slides_1s.pdf');
+  await execute("document.querySelector('#search-scope').value='document';");
   let uiResults;
   if (process.env.M5_UI === '1') {
     const ready = () => until(() => execute("return document.querySelector('#viewport').getAttribute('aria-busy') === 'false';"));

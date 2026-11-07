@@ -439,6 +439,7 @@ final class PdfCollectionSupport {
     efs.setNames(nameMap);
     names.setEmbeddedFiles(efs);
     cat.setNames(names);
+    MetadataSearchIndex.embed(doc, members, childFiles, nameMap);
   }
 
   static void repairSavedTopLevelCollection(Path pdfPath, List<PdfMailWriter.CollectionFolder> folders, List<PdfMailWriter.CollectionMember> members, boolean debug) throws Exception {
@@ -479,8 +480,8 @@ final class PdfCollectionSupport {
       addCollectionDPartStructure(doc, records, collectionProfile);
       PdfMailWriter.drawPageContext(doc, fontPath);
       addCollectionLogicalStructure(doc);
-      embedCollectionFiles(doc, records, members, debug, false);
       PdfMailWriter.setPdfA3Metadata(doc, iccPath, records, collectionProfile);
+      embedCollectionFiles(doc, records, members, debug, false);
       addMessageCollectionDictionary(doc);
       Files.createDirectories(out.getParent() == null ? Paths.get(".") : out.getParent());
       SemanticStructure.balanceParentTree(doc);

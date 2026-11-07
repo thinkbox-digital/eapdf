@@ -119,8 +119,8 @@ def build(source,destination,bold_font):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--creator-jar',type=Path,default=ROOT/'dist/emailtopdfa.jar')
-    parser.add_argument('--validator-jar',type=Path,default=ROOT/'dist/eapdf-validator.jar')
+    parser.add_argument('--creator-jar',type=Path,default=ROOT / 'dist' / ('emailtopdfa-' + (ROOT / 'VERSION').read_text().strip() + '.jar'))
+    parser.add_argument('--validator-jar',type=Path,default=ROOT / 'dist' / ('eapdf-validator-' + (ROOT / 'VERSION').read_text().strip() + '.jar'))
     parser.add_argument('--bold-font',type=Path,default=Path('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'))
     parser.add_argument('--output',type=Path,default=MANUAL)
     args=parser.parse_args();args.output.parent.mkdir(parents=True,exist_ok=True)
@@ -131,7 +131,7 @@ def main():
         subprocess.run(['javac','-cp',classpath,'-d',str(work),str(helper)],check=True,cwd=ROOT)
         report=args.output.with_suffix('.pdfa-validation.json');icc=ROOT/'src/main/resources/assets/sRGB.icc'
         subprocess.run(['java','-Xmx512m','-cp',str(work)+os.pathsep+classpath,'eapdf.ManualPdf',str(intermediate),str(args.output.resolve()),str(icc),str(report.resolve())],check=True,cwd=ROOT)
-        receipt={'edition':'2026-11-02','pdf':args.output.name,'sha256':sha(args.output),'pdfa_validation':json.loads(report.read_text()),'sources':{str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else str(p):sha(p) for p in [*sources,icc,helper,Path(__file__).resolve()]},'runtime_jars':{p.name:sha(p) for p in [args.creator_jar,args.validator_jar]},'scope':'Ordinary PDF/A-2b user manual; no EA-PDF conformance asserted; screenshots use fictional mail.'}
+        receipt={'edition':'2026-11-07','pdf':args.output.name,'sha256':sha(args.output),'pdfa_validation':json.loads(report.read_text()),'sources':{str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else str(p):sha(p) for p in [*sources,icc,helper,Path(__file__).resolve()]},'runtime_jars':{p.name:sha(p) for p in [args.creator_jar,args.validator_jar]},'scope':'Ordinary PDF/A-2b user manual; no EA-PDF conformance asserted; screenshots use fictional mail.'}
         receipt_path=ROOT/'docs/manual/build-receipt.json' if args.output.resolve()==MANUAL.resolve() else args.output.with_suffix('.build-receipt.json')
         receipt_path.write_text(json.dumps(receipt,indent=2)+'\n')
         print(json.dumps({'pdf':str(args.output),'bytes':args.output.stat().st_size,'sha256':receipt['sha256'],'validation':receipt['pdfa_validation']['status']}))

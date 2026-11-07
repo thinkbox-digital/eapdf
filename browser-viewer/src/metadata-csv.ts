@@ -2,11 +2,11 @@ import type {BrowserDocument} from './browser-session.js';
 import type {AssociatedFile,EmbeddedStream,InspectionResult,MailMessage} from './domain/inspection.js';
 import {fileLabel} from './navigation.js';
 
-// Quote every field, preserve Unicode/newlines, and neutralize spreadsheet formulas.
+// Quote every field, flatten embedded line breaks, and neutralize spreadsheet formulas.
 // Normalize tabs to spaces for spreadsheet importers that also split on tabs.
 export function csvCell(value:string):string {
   if(/^[\s\uFEFF]*[=+@-]/u.test(value)||/^[\t\r\n]/.test(value))value="'"+value;
-  value=value.replaceAll('\t',' ');
+  value=value.replace(/\r\n|[\r\n\t\v\f\u0085\u2028\u2029]/gu,' ');
   return '"'+value.replaceAll('"','""')+'"';
 }
 // Folder names come from the collection tree, not from PDF filenames.
@@ -53,7 +53,7 @@ function attachmentIndex(inspection:InspectionResult):(message:MailMessage)=>[st
   const count=declared?.value===null||!declared?'':String(Number(declared.value));
   if(count!==''&&Number(count)<names.length)throw new Error('The attachment count conflicts with its name list; no CSV was downloaded.');
   if(count!==''&&Number(count)>names.length)names.push(`(${Number(count)-names.length} attachment name(s) not recorded)`);
-  return [count,names.join('\n')];
+  return [count,names.join('; ')];
   };
 }
 export async function metadataCsv(root:BrowserDocument,
@@ -78,7 +78,7 @@ export async function metadataCsv(root:BrowserDocument,
     // messages from their PDFs once, retaining repetitions in distinct children.
     for(const message of collection.value?[]:inspection.messages){
       const data=doc.details.get(message.metadataRecordId)??{};
-      const values=[path,folderPaths.map(p=>p?'/'+p:'/').join('\n'),...['From','To','Cc','Bcc'].map(k=>data['Raw-'+k]||data[k]||''),
+      const values=[path,folderPaths.map(p=>p?'/'+p:'/').join('; '),...['From','To','Cc','Bcc'].map(k=>data['Raw-'+k]||data[k]||''),
         data.Subject??'',data.Sent??'',message.internetMessageId.value??'',...attachments!(message)];
       const line=values.map(csvCell).join(',')+'\r\n';bytes+=encoder.encode(line).length;
       rows++;if(bytes>64*1024**2)throw new Error('Export exceeds the 64 MiB byte budget; no CSV was downloaded.');

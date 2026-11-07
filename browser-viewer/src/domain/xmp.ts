@@ -104,5 +104,10 @@ export function parseXmp(text: string | null, loc: ObjectLocator, parse: (source
     const hasIdentity=roots.some(d=>['Mail_GUID','Message-ID','messageid'].some(k=>children(d,NS.meta,k).length||d.hasAttributeNS(NS.meta,k)));
     if(['s','si'].includes(profile.value??'')&&hasIdentity)readRecord(roots,'document-email',0,'email');
   }
-  return {state,records,details,diagnostics,declaration};
+  const indexProperties=descriptions.filter(d=>(d.getAttributeNS(NS.rdf,'about')??'')==='')
+    .flatMap(d=>children(d,'https://thinkbox.digital/eapdf/search-index/','payload'));
+  const embeddedIndex=indexProperties.length===0?undefined:indexProperties.length===1&&!indexProperties[0]!.children.length
+    ?indexProperties[0]!.textContent??'':null;
+  const extension=(name:string)=>{const values=descriptions.filter(d=>(d.getAttributeNS(NS.rdf,'about')??'')==='').flatMap(d=>children(d,'https://thinkbox.digital/eapdf/search-index/',name));return values.length===0?undefined:values.length===1&&!values[0]!.children.length?values[0]!.textContent??'':null;};
+  return {state,records,details,diagnostics,declaration,embeddedIndex,fullTextIndex:extension('fulltext'),indexFileDigest:extension('fileDigest')};
 }

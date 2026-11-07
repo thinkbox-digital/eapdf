@@ -5,11 +5,13 @@ This app can run behind `thinkbox.digital` as a small Flask service proxied by n
 ## Install
 
 ```bash
-cd /path/to/eapdf
+cd /opt/eapdf
 python3 -m venv .venv
 . .venv/bin/activate
-pip install -r requirements-web.txt
+pip install --require-hashes -r requirements-web.lock
 ```
+
+`requirements-web.txt` records supported version ranges; `requirements-web.lock` pins the reviewed dependency closure and artifact hashes for deployment. Regenerate the lock in an isolated environment with `pip-compile --generate-hashes --output-file requirements-web.lock requirements-web.txt`, then rerun the public regressions before adopting updates.
 
 Generation also needs Java 21 and a current generator JAR built with `mvn package`. Validation needs Docker and the configured veraPDF image (default `ghcr.io/verapdf/cli:v1.31.18`). Pre-pull the image before starting the service. The service account needs read access to application files and write access to `.validator_web_tmp`, `.generator_web_tmp`, and `out`.
 
@@ -30,9 +32,9 @@ http://127.0.0.1:8876
 ## Production with gunicorn
 
 ```bash
-cd /path/to/eapdf
+cd /opt/eapdf
 . .venv/bin/activate
-gunicorn --workers 2 --threads 4 --timeout 660 --bind 127.0.0.1:8876 validator_web:app
+VALIDATOR_REQUEST_TIMEOUT=600 gunicorn --workers 2 --threads 4 --timeout 660 --bind 127.0.0.1:8876 validator_web:app
 ```
 
 ## systemd
@@ -64,7 +66,7 @@ sudo systemctl enable --now validator-web.service
 sudo systemctl enable --now validator-web-cleanup.timer
 ```
 
-The service explicitly uses this checkout's `.venv/bin/gunicorn`; adjust the absolute paths in both service files if deploying elsewhere. Configure the same retention environment in the application and cleanup services when changing the default. The hourly timer removes expired and abandoned job files even when nobody visits the application.
+The templates use `/opt/eapdf` and its `.venv`. Install the checkout there, or replace `/opt/eapdf` in both service files with the actual absolute installation directory before copying them. Ensure the service account can traverse that directory. Configure the same retention environment in the application and cleanup services when changing the default. The hourly timer removes expired and abandoned job files even when nobody visits the application.
 
 ## nginx
 
@@ -93,7 +95,7 @@ sudo systemctl reload nginx
 
 - Uploads default to 64 MiB per request (`VALIDATOR_MAX_CONTENT_LENGTH`), three validation files (`VALIDATOR_MAX_UPLOAD_FILES`), and 100 generation inputs (`GENERATOR_MAX_UPLOAD_FILES`). Keep nginx's body limit consistent with the application limit.
 - At most two requests execute jobs across all server workers (`VALIDATOR_MAX_CONCURRENT_JOBS`). Extra jobs receive HTTP 429, rather than forming an unlimited queue.
-- `VALIDATOR_REQUEST_TIMEOUT` sets the overall generation/validation request budget (600 seconds). Individual validation and generation subprocesses have defaults of 600 and 300 seconds (`VALIDATOR_JOB_TIMEOUT`, `GENERATOR_JOB_TIMEOUT`). Keep the Gunicorn and proxy timeouts above the request budget, with cleanup headroom.
+- `VALIDATOR_REQUEST_TIMEOUT` bounds synchronous generation/validation HTTP requests. The application default is 86,400 seconds; the supplied systemd deployment explicitly sets 600 seconds, below its 660-second Gunicorn and nginx timeouts. Direct Gunicorn launches should also set `VALIDATOR_REQUEST_TIMEOUT=600`. There is no asynchronous job queue. Subprocess defaults scale with input size: validation starts at 600 seconds, generation at 1,800 seconds, and both cap at 86,400 seconds. `VALIDATOR_JOB_TIMEOUT` and `GENERATOR_JOB_TIMEOUT` override these subprocess budgets; the remaining request budget always takes precedence. Change all three deployment timeouts together, leaving at least 60 seconds for cleanup. Gunicorn thread-worker liveness is not a replacement for the application deadline.
 - POSIX address-space limits default to 2048 MiB for validation and 8192 MiB for generation (`VALIDATOR_JOB_MEMORY_MB`, `GENERATOR_JOB_MEMORY_MB`). Generation uses a 512 MiB Java heap. Each captured stdout/stderr log is capped at 4 MiB. Expired jobs stop their local process groups and their own veraPDF containers, not other users' jobs.
 - Reports and downloads use unguessable capabilities stored atomically on disk, shared across workers and restarts. Links expire after 24 hours (`VALIDATOR_RETENTION_SECONDS`). Request-triggered cleanup and the hourly timer remove expired files, allowing the request budget plus one timer interval for abandoned-job cleanup. Reports can contain private email information; responses use `Cache-Control: no-store`.
 - Web generation writes into a separate `.web-jobs/<job-id>` directory under the selected the generated-document directory location. Cleanup never deletes ordinary local CLI archives. Uploaded inputs are deleted on completion, including failed partial saves. Child PDF temporary files remain inside the managed validation job, so abandoned workers do not leave permanent extracted emails.

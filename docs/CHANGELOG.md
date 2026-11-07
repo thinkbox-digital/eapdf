@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0-beta.18 — 2026-11-07
+
+- Embedded metadata and full-text search indexes for supported archives; conversion requires no Node.js runtime.
+- Improved search matching, highlighting, CSV exports, keyboard navigation and return-to-file navigation in viewer 0.5.0-beta.17.
+- Creator search-index control, finding aids disabled by default, and reduced MIME parsing allocations.
+- Expanded automated checks and stricter package integrity checks. Beta limitations remain documented.
+
+
 This file tracks human-readable release history for the repository.
 
 Current beta version:

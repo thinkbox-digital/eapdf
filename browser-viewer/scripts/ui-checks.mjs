@@ -65,7 +65,7 @@ export async function checkInterface(browser) {
         }
         const visibleFiles = await browser.evaluate(() => [...document.querySelectorAll('[data-file-id]')].map(b => b.dataset.fileId));
         if(record.messages.length===1){
-          assert.deepEqual([...new Set(visibleFiles)].sort(),record.files.filter(f=>f.streams.length).map(f=>f.id).sort(),'single-email row exposes all document files');
+          assert.deepEqual([...new Set(visibleFiles)].sort(),record.files.filter(f=>f.streams.some(s=>(s.decodedSize.value??s.declaredSize.value)!==0)).map(f=>f.id).sort(),'single-email row exposes download controls for nonempty document files');
           assert.equal(await browser.evaluate(()=>document.querySelector('[aria-current]')?.hasAttribute('data-document-id')),true,'single email and PDF share one selected row');
         }else assert.ok(visibleFiles.every(fileId => record.files.find(f => f.id === fileId)?.owners.value?.includes(message.id)));
         checks++;

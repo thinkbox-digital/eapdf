@@ -110,3 +110,66 @@ buffer allocation. Borrowed direct streams remain intact. This avoids cumulative
 attachment buffers exhausting the worker allowance and restarting whole-archive
 inventories. Focused tests cover repeated exact-byte reads, failure cleanup and
 retained direct streams; whole-archive verification remains separate.
+
+## Upstream compatibility audit (2026-11-07)
+
+Patch `0004-inspection-yield.patch` changes only cooperative scheduling in the
+DPart, associated-file and page-tree traversals. A shared MessageChannel helper
+replaces nested zero-delay timers at the existing traversal checkpoints. Each
+call closes both ports before resolving, including when several scans yield
+concurrently. This yields a task rather than a microtask and avoids timer
+clamping without changing PDF.js render-task cancellation or public APIs.
+
+This follows the scheduling rationale in upstream
+[PR 22161](https://github.com/mozilla/pdf.js/pull/22161). Rendering cancellation
+remains subject to PDF.js's existing zoom/rotation tradeoffs, described in
+[bug 1866296](https://bugzilla.mozilla.org/show_bug.cgi?id=1866296).
+
+The object-stream cache audit found no defect requiring a cache-policy change.
+Upstream [PR 11370](https://github.com/mozilla/pdf.js/pull/11370) warns against
+retaining large decoded streams and sharing mutable reader positions. Our
+structural cache retains decoded object-stream backing storage under its existing
+eviction thresholds; each member is parsed with a fresh substream reader.
+Ordinary stream objects are excluded from the parsed-object identity cache.
+Cleanup discards exclusively owned decoder buffers and refunds their allocation
+once. If malformed nested stream objects can retain slices, cleanup deliberately
+does not refund those bytes. That accounting is conservative and is not a measure
+of total JavaScript heap usage. Worker disposal remains the final release boundary.
+New source regressions cover out-of-order member reads, refetch after cleanup,
+idempotent cleanup, and independent malformed stream readers surviving cleanup.
+Existing tests cover cache eviction, live identity, failed extraction and limits.
+
+Our bundled PDF.js already includes upstream's on-demand attachment retrieval
+([PR 21351](https://github.com/mozilla/pdf.js/pull/21351)). The custom extraction
+API remains necessary for discovered associated-file identities, per-stream byte
+limits and exact bytes. Complete archive inspection is retained as an explicit
+application requirement; it is not added to upstream's ordinary attachment listing.
+The first-page preview and separately cancellable subject indexing remain intact.
+
+A browser-worker microbenchmark ran six alternating trials per implementation,
+with 200 yields and 512 small operations per checkpoint. Chromium 156 measured
+844.9–922.9 ms with timers (median 864.5), versus 8.0–11.0 ms with MessageChannel
+(median 8.5). Firefox 146.0.1 measured 811–827 ms (median 823), versus 6–13 ms
+(median 9). Periodic worker tasks ran in every trial. These figures isolate
+scheduling overhead; they are not archive-loading throughput measurements.
+
+Verification included 38 focused source tests, 133 selected upstream specs
+(0 failures; 1 expected Node OffscreenCanvas pending spec), and a second clean
+source rebuild producing byte-identical bundles. The independent pinned Python
+oracle passed all 15 tests. Firefox smoke covered standalone email and collection
+loading, background cancellation and close/reopen using served packaged assets;
+it did not test Firefox extension installation.
+
+The UI regression harness was also corrected to match the existing empty-file
+behavior: zero-byte files show their size without View/Download controls. The
+old expectation failed with the unchanged worker as well.
+
+
+The November 7 repository audit adds `npm run test:pdfjs-compat`: synthetic
+classic xrefs, compressed object/xref streams, incremental `/Prev` revisions,
+broken-startxref recovery and AES-256 encrypted compressed objects are opened
+with both the pinned upstream library and our patched bundles. Three rounds of
+out-of-order page rendering/text extraction and document cleanup must produce
+identical text, metadata and pixel hashes. All five cases pass in Chromium 156.
+This complements the source ownership/cursor tests; it is not the full upstream
+rendering corpus or an independent security review of patch 0003.

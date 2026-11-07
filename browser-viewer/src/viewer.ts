@@ -1,7 +1,9 @@
+import {resolveStep,invalidateFullTextIndex,fullTextPageOwners} from './fulltext-index.js';
+import {readEmbeddedIndex,metadataSearchText} from './embedded-index.js';
 import {saveBlob} from './downloads.js';
 import {indexMessages,type MessageIndex,type IndexedMessage} from './message-index.js';
-import {searchCollection} from './collection-search.js';
-import {DocumentSearch,textMatches} from './document-search.js';
+import {searchCollection,searchIndexedCollection} from './collection-search.js';
+import {DocumentSearch,textMatches,pdfSearchText} from './document-search.js';
 import {BrowserSession,type BrowserDocument} from './browser-session.js';
 import {AttachmentViewer} from './attachment-viewer.js';
 import {VirtualList} from './virtual-list.js';
@@ -101,7 +103,7 @@ element('loading-cancel').addEventListener('click',()=>close());
 loadingDialog.addEventListener('cancel',event=>{event.preventDefault();close();});
 function close():void {
   finishLoading();cancelExport?.();
-  metadataEpoch++;metadataSession?.close();metadataSession=undefined;metadataIndex=undefined;clearTimeout(filterTimer);
+  metadataEpoch++;forceMetadataScan=false;metadataSession?.close();metadataSession=undefined;metadataIndex=undefined;clearTimeout(filterTimer);
   filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;filter.value='';filtered=undefined;tree.hidden=false;
   for(const list of virtualLists)list.close();virtualLists.clear();fileList?.close();fileList=undefined;
   cancelLinked();stopBrowseIndex();element('subject-index-progress').hidden=true;searchSession?.close();searchSession=undefined;exportSession?.close();exportSession=undefined;
@@ -178,8 +180,10 @@ function showInformation(doc:BrowserDocument):void {
   const id=doc.inspection.identification,profile=element('declared-profile');
   profile.textContent=id.declaredProfile.value?`EA-PDF ${id.eapdfVersion.value??'?'}${id.declaredProfile.value}`:'No EA-PDF profile declared';profile.hidden=false;
   for(const diagnostic of doc.inspection.diagnostics)console.debug('[EA-PDF inspection]',doc.name,diagnostic);
-  breadcrumbs(doc);element('header-filename').textContent=doc.name;element('header-filename').title=doc.name;
-  let root=doc;while(root.parent)root=root.parent;element('message-count').textContent=String(browseMessageCounts.get(root)??root.inspection.messages.length);
+  breadcrumbs(doc);
+  let root=doc;while(root.parent)root=root.parent;
+  element('header-filename').textContent=root.name;element('header-filename').title=root.name;
+  element('message-count').textContent=String(browseMessageCounts.get(root)??root.inspection.messages.length);
 }
 function refreshInspection(doc:BrowserDocument):void {
   if(current!==doc)return;showInformation(doc);showFiles(doc,singleMessage(doc)?undefined:selectedMessage(doc));
@@ -245,12 +249,14 @@ function showFiles(doc:BrowserDocument,message?:MailMessage):void {
 function singleMessage(doc:BrowserDocument):MailMessage|undefined {
   return !doc.inspection.collection.value&&doc.inspection.messages.length===1?doc.inspection.messages[0]:undefined;
 }
-async function showDocument(doc:BrowserDocument,ticket:number,message?:MailMessage,node?:HTMLElement,edge?:-1|1):Promise<void>{
+async function showDocument(doc:BrowserDocument,ticket:number,message?:MailMessage,node?:HTMLElement,edge?:-1|1,fromTop=false):Promise<void>{
   message??=singleMessage(doc);
   await session!.ensure(doc);if(!doc.inspection.collection.value)await session!.associateFiles(doc);check(ticket);message=message?doc.inspection.messages.find(m=>m.id===message!.id):undefined;if(current!==doc)finder.clear();if(current)savedPages.set(current,pageNumber);current=doc;editingPage=false;savedMessages.set(doc,message?.id);
-  const destinations=message?messagePages(doc.inspection,message):[];pageNumber=edge===1?1:edge===-1?doc.pdf.numPages:destinations[0]??savedPages.get(doc)??1;
+  const destinations=message?messagePages(doc.inspection,message):[];pageNumber=fromTop||edge===1?1:edge===-1?doc.pdf.numPages:destinations[0]??savedPages.get(doc)??1;
   markSelection(node??nodes.get(doc)?.querySelector<HTMLButtonElement>(':scope > button')??undefined);showInformation(doc);showFiles(doc,singleMessage(doc)?undefined:message);searchStatus.textContent='';
+  if(fromTop)zoom.value='fit-width';
   await render(ticket,false);
+  if(fromTop){viewport.scrollTop=0;viewport.scrollLeft=0;}
   await showOutline(doc,ticket);
   if(edge===-1)viewport.scrollTop=viewport.scrollHeight-viewport.clientHeight;
   if(edge){nodes.get(doc)?.querySelector('button')?.scrollIntoView({block:'nearest'});status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages} · ${edge===1?'Next':'Previous'} file in this folder`;}
@@ -361,6 +367,7 @@ function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
       // Yield so the loaded document and enabled controls paint before indexing starts.
       await new Promise(resolve=>setTimeout(resolve,0));checkIndex();
       let indexed=main.cachedMessageIndex(doc);
+      if(!indexed){const fast=await readEmbeddedIndex(doc,checkIndex);if(fast.messages){indexed={messages:fast.messages,incomplete:[],source:'embedded'};main.rememberMessageIndex(doc,indexed);}}
       if(indexed)update(indexed.messages);
       else{
         const blob=await main.sourceBlob(doc);checkIndex();const copy=await isolated.open(blob,doc.name);checkIndex();
@@ -368,12 +375,12 @@ function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
           checkIndex();element('subject-index-status').textContent=`Reading subjects · ${count} emails. You can browse now.`;
         },update);
         checkIndex();element('subject-index-status').textContent=`Subjects read · ${indexed.messages.length} emails. Linking supporting files…`;
-        await isolated.associateFiles(copy);checkIndex();
+        if(indexed.source!=='embedded')await isolated.associateFiles(copy);checkIndex();
         main.adoptAssociations(doc,isolated,copy);if(current===doc)refreshInspection(doc);
       }
       checkIndex();browseCompleted.add(doc);browseMessageCounts.set(doc,indexed.messages.length);
       const collection=doc.inspection.collection.value;if(collection)for(const summary of nodes.get(doc)?.querySelectorAll<HTMLElement>('summary[data-folder-id]')??[]){const members=new Set<string>();for(const entry of collection.entries)for(let id of entry.folderIds.value??[]){const seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);if(id===summary.dataset.folderId)members.add(entry.fileId);id=collection.folders.find(f=>f.id===id)?.parentId??'';}}const count=indexed.messages.filter(m=>m.path[0]&&members.has(m.path[0].fileId)).length;const pill=text('span',String(count));pill.className='folder-count';summary.querySelector('.folder-count')?.remove();summary.append(pill);}
-      element('subject-index-status').textContent=indexed.incomplete.length?`Subjects partially indexed: ${indexed.incomplete.join(' ')}`:`Subjects ready · ${indexed.messages.length} emails.`;
+      element('subject-index-status').textContent=indexed.incomplete.length?`Subjects partially indexed: ${indexed.incomplete.join(' ')}`:`Subjects ready · ${indexed.messages.length} emails. ${(indexed.notices??[]).join(' ')}`;
       element('subject-index-cancel').hidden=true;element('subject-index-progress').dataset.complete=String(!indexed.incomplete.length);element('message-count').textContent=String(indexed.messages.length);return indexed;
     }finally{isolated.close();if(browseSession===isolated)browseSession=undefined;}
   })();
@@ -394,7 +401,7 @@ function messageLabel(node:HTMLButtonElement,label:string,details?:Record<string
 }
 function documentTree(doc:BrowserDocument):HTMLLIElement {
   const single=singleMessage(doc),label=single?(doc.details.get(single.metadataRecordId)?.Subject||doc.name):doc.name;
-  const row=text('li',''),open=button(label,()=>void operation(ticket=>showDocument(doc,ticket,single,open)));open.dataset.documentId=doc.inspection.documentId;open.title=doc.name;if(single)open.dataset.messageId=single.id;open.prepend(treeIcon(single?'message':'document'));messageLabel(open,label,single?doc.details.get(single.metadataRecordId):undefined);open.classList.add('root-document');row.append(open);nodes.set(doc,row);
+  const row=text('li',''),open=button(label,()=>void operation(ticket=>showDocument(doc,ticket,single,open,undefined,true)));open.dataset.documentId=doc.inspection.documentId;open.title=doc.name;if(single)open.dataset.messageId=single.id;open.prepend(treeIcon(single?'message':'document'));messageLabel(open,label,single?doc.details.get(single.metadataRecordId):undefined);open.classList.add('root-document');row.append(open);nodes.set(doc,row);
   const list=text('ul','');row.append(list);const collection=doc.inspection.collection.value;
   // Collection metadata describes the member emails, not body pages in the cover PDF.
   if(!collection&&!single){
@@ -570,25 +577,44 @@ async function showOutline(doc:BrowserDocument,ticket:number):Promise<void>{
 }
 async function showCollectionMatch(cached:CollectionResults,index:number,occurrence:number,ticket:number):Promise<void>{
   const match=cached.result.matches[index];if(!match)return;
+  const rejectIndex=():never=>{
+    invalidateFullTextIndex(cached.root);collectionResults=undefined;pages.highlight('');
+    setTimeout(()=>{if(ticket===generation&&search.value.trim()===cached.query.trim())void findInCollection(1,true);},0);
+    throw new Error('Indexed destination disagrees with the PDF. Restarting with PDF.js search.');
+  };
   let doc=cached.root;
-  for(const step of match.path){
+  for(let depth=0;depth<(match.indexed?.route.length??match.path.length);depth++){
+    const step=match.indexed?resolveStep(doc,match.indexed.route[depth]!):match.path[depth];
+    if(!step)return rejectIndex();
     const file=doc.inspection.files.find(f=>f.id===step.fileId),stream=file?.streams.find(s=>s.locator.path===step.streamPath);
-    if(!file||!stream)throw new Error('Search destination is no longer available.');
+    if(!file||!stream){if(match.indexed)rejectIndex();throw new Error('Search destination is no longer available.');}
     if(current?.parent===doc&&current.parentFileId===step.fileId&&current.parentStreamPath===step.streamPath)doc=current;
-    else{await openChild(doc,file,stream,ticket);doc=current!;}
+    else{try{await openChild(doc,file,stream,ticket);doc=current!;}catch(error){check(ticket);if(match.indexed)rejectIndex();throw error;}}
+  }
+  if(match.indexed){
+    if(match.page<1||match.page>doc.pdf.numPages)rejectIndex();
+    let verified=false;
+    try{
+      const page=await doc.run(doc.pdf.getPage(match.page));let value='';
+      try{const content=await doc.run(page.getTextContent());value=pdfSearchText(content.items);}finally{page.cleanup();}
+      check(ticket);const actual=textMatches(value,cached.query);
+      verified=actual.length>0&&actual.length===match.count&&(fullTextPageOwners(doc).get(match.page)??'')===match.indexed.guid;
+    }catch{check(ticket);}
+    if(!verified)rejectIndex();
   }
   if(current!==doc)await showDocument(doc,ticket);
   if(pageNumber!==match.page){pageNumber=match.page;await render(ticket,false);}
-  check(ticket);syncMessageToPage();pages.highlight(cached.query,{page:match.page,index:occurrence});
+  check(ticket);syncMessageToPage();const highlighted=pages.highlight(cached.query,{page:match.page,index:occurrence});
   cached.index=index;cached.occurrence=occurrence;
   const number=cached.result.matches.slice(0,index).reduce((n,m)=>n+m.count,0)+occurrence+1;
   searchStatus.textContent=`Match ${number} of ${cached.total} in collection${cached.result.incomplete.length?' (incomplete search)':''}.`;
+  if(match.indexed&&highlighted!==match.count){pages.highlight(cached.query);searchStatus.textContent+=' Matching page verified; precise occurrence highlighting is unavailable for this text layout.';}
   for(const node of element('collection-matches').querySelectorAll<HTMLButtonElement>('button[data-match-index]')){
     if(Number(node.dataset.matchIndex)===index)node.setAttribute('aria-current','true');else node.removeAttribute('aria-current');
   }
   const active=element('collection-matches').querySelector<HTMLElement>('button[aria-current]');
   if(active&&!element('collection-results').hidden){
-    const panel=element('search-panel'),bounds=panel.getBoundingClientRect(),box=active.getBoundingClientRect();
+    const panel=element('collection-results'),bounds=panel.getBoundingClientRect(),box=active.getBoundingClientRect();
     const top=bounds.top;
     if(box.top<top)panel.scrollTop-=Math.ceil(top-box.top);
     else if(box.bottom>bounds.bottom)panel.scrollTop+=Math.ceil(box.bottom-bounds.bottom);
@@ -614,12 +640,15 @@ async function findInCollection(direction:1|-1=1,first=false):Promise<void>{
     element('cancel-search').hidden=false;const list=element('collection-matches');list.replaceChildren();element<HTMLButtonElement>('results-tab').disabled=false;navigationTab('results');
     element('collection-search-summary').textContent='Searching collection…';
     try{
-      const blob=await main.sourceBlob(root);checkSearch();const copy=await isolated.open(blob,root.name);checkSearch();
-      const result=await searchCollection(isolated,copy,query,checkSearch,count=>{searchStatus.textContent=`Searching collection · ${count} pages…`;});checkSearch();
+      const fast=await searchIndexedCollection(main,root,query,checkSearch);let result=fast.result;
+      if(!result){const blob=await main.sourceBlob(root);checkSearch();const copy=await isolated.open(blob,root.name);checkSearch();
+        result=await searchCollection(isolated,copy,query,checkSearch,count=>{searchStatus.textContent=`Searching collection · ${count} pages…`;},true);
+        if(fast.diagnostic)result.notices=[fast.diagnostic];
+      }checkSearch();
       const saved:CollectionResults={root,query,result,index:-1,occurrence:0,total:result.matches.reduce((n,m)=>n+m.count,0)};collectionResults=saved;
       const groups=new Map<string,HTMLUListElement>();
       for(const [index,match] of result.matches.entries()){
-        const key=JSON.stringify(match.path);let group=groups.get(key);
+        const key=JSON.stringify(match.indexed?.route??match.path);let group=groups.get(key);
         if(!group){
           const row=text('li','');row.className='collection-result';
           // The stored path still identifies the destination; show only its file name.
@@ -640,7 +669,7 @@ async function findInCollection(direction:1|-1=1,first=false):Promise<void>{
         excerpt.append(document.createTextNode(match.excerpt.slice(offset)+'”'));
         choose.append(meta,excerpt);row.append(choose);group.append(row);
       }
-      element('collection-search-summary').textContent=`${result.matches.length} matching pages. ${result.incomplete.length?'Incomplete: '+result.incomplete.join(' '):'All reachable collection PDFs were searched.'}`;
+      element('collection-search-summary').textContent=`${result.matches.length} matching pages. ${result.incomplete.length?'Incomplete: '+result.incomplete.join(' '):(result.source==='indexed'?'Embedded PDFBox text index searched.':'All reachable collection PDFs were searched.') } ${(result.notices??[]).join(' ')}`;
       if(result.matches.length){const index=direction===1?0:result.matches.length-1;await showCollectionMatch(saved,index,direction===1?0:result.matches[index]!.count-1,ticket);}
       else searchStatus.textContent=result.incomplete.length?'No matches found in an incomplete collection search.':'No matching text in this collection.';
     }catch(error){if(epoch!==searchEpoch){searchStatus.textContent='Search cancelled.';element('collection-search-summary').textContent='Search cancelled; no complete result set was produced.';}else throw error;}
@@ -674,7 +703,7 @@ let filterList:VirtualList<IndexedMessage>|undefined;
 let filtered:{root:BrowserDocument;matches:IndexedMessage[];index:number;doc?:BrowserDocument}|undefined;
 function filteredPages(doc:BrowserDocument):number[]|undefined {
   if(!filtered||filtered.doc!==doc||!filter.value.trim())return;
-  const item=filtered.matches[filtered.index],message=doc.inspection.messages.find(m=>m.id===item?.messageId);
+  const item=filtered.matches[filtered.index],message=doc.inspection.messages.find(m=>item?.mailGuid?m.mailGuid.value===item.mailGuid:m.id===item?.messageId);
   const mapped=message?messagePages(doc.inspection,message):[];
   return mapped.length?mapped:undefined;
 }
@@ -686,13 +715,20 @@ async function openFiltered(index:number,ticket:number,edge?:-1|1):Promise<void>
     doc=await session!.child(doc,file,stream,false);check(ticket);
   }
   if(filtered!==state)return;
-  const message=doc.inspection.messages.find(m=>m.id===item.messageId);if(!message)throw new Error('Email metadata is no longer available.');
+  const candidates=doc.inspection.messages.filter(m=>item.mailGuid?m.mailGuid.value===item.mailGuid:m.id===item.messageId);
+  const message=candidates.length===1?candidates[0]:undefined;
+  if(item.mailGuid&&(!message||doc.inspection.messages.length!==1||metadataSearchText(doc.details.get(message.metadataRecordId)??{})!==item.searchText)){
+    forceMetadataScan=true;metadataIndex=undefined;session!.rememberMessageIndex(state.root,undefined);filtered=undefined;
+    await filterMessages();throw new Error('Embedded index disagrees with the selected email. Search was rebuilt from child PDFs.');
+  }
+  if(!message)throw new Error('Email metadata is no longer available.');
   state.index=index;state.doc=doc;
   await showDocument(doc,ticket,message);
   if(edge===-1){const mapped=filteredPages(doc);pageNumber=mapped?.at(-1)??doc.pdf.numPages;await render(ticket,false);viewport.scrollTop=viewport.scrollHeight-viewport.clientHeight;}
   for(const button of filterResults.querySelectorAll('button')){if(button.dataset.messageIndex===String(index))button.setAttribute('aria-current','true');else button.removeAttribute('aria-current');}
   status.textContent+=` · Filtered email ${index+1} of ${state.matches.length}`;
 }
+let forceMetadataScan=false;
 let metadataSession:BrowserSession|undefined,metadataIndex:Promise<MessageIndex>|undefined,metadataEpoch=0,filterRevision=0;
 let filterTimer:ReturnType<typeof setTimeout>|undefined;
 async function filterMessages():Promise<void>{
@@ -701,13 +737,13 @@ async function filterMessages():Promise<void>{
   if(!query||!current||!session)return;
   const ticket=generation,epoch=metadataEpoch,revision=filterRevision;let root=current;while(root.parent)root=root.parent;
   const checkIndex=()=>{check(ticket);if(epoch!==metadataEpoch)throw new Error('Email search cancelled.');};
-  const cachedIndex=session.cachedMessageIndex(root);
+  const cachedIndex=forceMetadataScan?undefined:session.cachedMessageIndex(root);
   if(!metadataIndex&&cachedIndex)metadataIndex=Promise.resolve(cachedIndex);
   if(!metadataIndex){
     const main=session,isolated=new BrowserSession({},{reuseWorker:true});metadataSession=isolated;
     metadataIndex=(async()=>{try{
       const blob=await main.sourceBlob(root);checkIndex();const copy=await isolated.open(blob,root.name);checkIndex();
-      return await indexMessages(isolated,copy,checkIndex,count=>{if(filter.value.trim())element('filter-status').textContent=`Reading email list · ${count} emails…`;});
+      return await indexMessages(isolated,copy,checkIndex,count=>{if(filter.value.trim())element('filter-status').textContent=`Reading email list · ${count} emails…`;},undefined,forceMetadataScan);
     }finally{isolated.close();if(metadataSession===isolated)metadataSession=undefined;}})();
   }
   element('filter-status').textContent='Finding emails…';
@@ -720,7 +756,7 @@ async function filterMessages():Promise<void>{
       const index=matchIndices.get(item)!,choose=button(item.label,()=>void operation(active=>openFiltered(index,active)));choose.dataset.messageIndex=String(index);if(filtered?.index===index)choose.setAttribute('aria-current','true');choose.title=name;choose.prepend(treeIcon('message'));messageLabel(choose,item.label,{From:item.sender??'',Sent:item.sent??''});row.append(choose);
       return row;};
     if(matches.length>256)filterList=new VirtualList(filterResults,tree.closest('aside')!,matches,create,60);else for(const item of matches)filterResults.append(create(item));
-    element('filter-status').textContent=`${matches.length} matching emails. ${result.incomplete.length?'Search incomplete: '+result.incomplete.join(' '):'All reachable email metadata searched.'}`;
+    element('filter-status').textContent=`${matches.length} matching emails. ${result.incomplete.length?'Search incomplete: '+result.incomplete.join(' '):'All reachable email metadata searched.'} ${(result.notices??[]).join(' ')}`;
   }catch(error){if(ticket===generation&&epoch===metadataEpoch&&revision===filterRevision){metadataIndex=undefined;element('filter-status').textContent=`Email search could not finish: ${error instanceof Error?error.message:String(error)}`;}}
 }
 filter.addEventListener('input',()=>{filtered=undefined;if(current&&!busy)void operation(ticket=>render(ticket,false));filterRevision++;clearTimeout(filterTimer);if(!filter.value.trim()){filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;tree.hidden=false;element('filter-status').textContent='';return;}filterTimer=setTimeout(()=>void filterMessages(),200);});
@@ -811,4 +847,20 @@ document.querySelector('.open-file')!.prepend(treeIcon('folder'));
 tree.addEventListener('keydown',event=>{const target=event.target;if(!(target instanceof HTMLElement))return;const visible=[...tree.querySelectorAll<HTMLElement>('button,summary')].filter(node=>node.getClientRects().length&&!node.closest('[hidden]')),index=visible.indexOf(target);if(index<0)return;let next:HTMLElement|undefined;
  if(event.key==='ArrowDown')next=visible[index+1];else if(event.key==='ArrowUp')next=visible[index-1];else if(event.key==='Home')next=visible[0];else if(event.key==='End')next=visible.at(-1);else if(event.key==='ArrowRight'&&target.tagName==='SUMMARY'){(target.parentElement as HTMLDetailsElement).open=true;event.preventDefault();}else if(event.key==='ArrowLeft'){const parent=target.closest('details');if(parent){parent.open=false;next=parent.querySelector('summary')!;}}
  if(next){event.preventDefault();next.focus();}
+});
+// Arrow keys move through pane controls; Enter/Space retain native activation.
+function visiblePaneControls(pane:HTMLElement):HTMLElement[]{return [...pane.querySelectorAll<HTMLElement>('button,summary,a[href]')].filter(node=>node.getClientRects().length&&!node.closest('[hidden],[inert]')&&!node.matches(':disabled'));}
+document.addEventListener('keydown',event=>{
+ if(event.defaultPrevented||event.altKey||event.ctrlKey||event.metaKey||!['ArrowUp','ArrowDown'].includes(event.key))return;
+ const target=event.target;if(!(target instanceof HTMLElement)||target.closest('input,textarea,select,[contenteditable=true]'))return;
+ const direction=event.key==='ArrowDown'?1:-1;
+ if(viewport.contains(target)){event.preventDefault();viewport.scrollBy({top:direction*60,behavior:'instant'});return;}
+ const pane=target.closest<HTMLElement>('#navigation-panel,#details-panel,.reader-pane,#search-panel');if(!pane)return;
+ const controls=visiblePaneControls(pane),index=controls.indexOf(target),next=controls[index<0?(direction===1?0:controls.length-1):index+direction];
+ if(next){event.preventDefault();next.focus();}
+});
+search.addEventListener('keydown',event=>{
+ if(event.altKey||event.ctrlKey||event.metaKey||!['ArrowUp','ArrowDown'].includes(event.key))return;
+ const list=element('collection-results').hidden?filterResults:element('collection-matches'),controls=visiblePaneControls(list);
+ const next=event.key==='ArrowDown'?controls[0]:controls.at(-1);if(next){event.preventDefault();next.focus();}
 });

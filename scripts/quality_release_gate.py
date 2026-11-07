@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -17,7 +18,7 @@ def sha(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 def check_skips(name, skipped):
-    allowed = json.loads((ROOT / 'tests/quality/allowed-skips.json').read_text())[name]
+    allowed = json.loads((ROOT / 'regression/quality/allowed-skips.json').read_text())[name]
     unexpected = set(skipped) - set(allowed)
     if unexpected:
         raise RuntimeError('Unexpected skipped tests: ' + ', '.join(sorted(unexpected)))
@@ -29,12 +30,12 @@ def main():
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
-    summary = {'status': 'RUNNING', 'scope': 'Linux Java builds, small real EML/MSG/MBOX/PST fidelity/visual acceptance, Java EA-PDF/veraPDF validation',
+    summary = {'status': 'RUNNING', 'scope': 'Linux Java builds, public small EML/MSG/MBOX fidelity/visual acceptance, Java EA-PDF/veraPDF validation',
                'excluded': ['RealWorldInputTests: optional local corpus includes large PST scans', 'GUI runtime tests', 'Cross-platform runtime certification'], 'steps': [], 'tests': {}, 'artifacts': {}}
-    def run(name, command):
+    def run(name, command, env=None):
         print(name, flush=True)
         with (output / (name + '.log')).open('w') as log:
-            result = subprocess.run([str(x) for x in command], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, timeout=1200)
+            result = subprocess.run([str(x) for x in command], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, timeout=1800, env=env)
         summary['steps'].append({'name': name, 'exit_code': result.returncode})
         if result.returncode:
             raise RuntimeError(f'{name} failed; see {output / (name + ".log")}')
@@ -62,7 +63,12 @@ def main():
                 if int(root.get('tests', 0)) < minimum or int(root.get('skipped', 0)):
                     raise RuntimeError('Required quality tests missing or skipped: ' + suite)
     try:
-        run('oracle-tests', [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_conversion_quality_gate.py'])
+        run('viewer-check', ['npm', '--prefix', 'browser-viewer', 'run', 'check'])
+        run('viewer-chromium', ['npm', '--prefix', 'browser-viewer', 'test'])
+        run('viewer-firefox', ['npm', '--prefix', 'browser-viewer', 'run', 'test:firefox'], dict(os.environ, M5_UI='1'))
+        run('viewer-archive-memory', ['npm', '--prefix', 'browser-viewer', 'run', 'test:archive-memory'])
+        run('python-regressions', [sys.executable, '-B', '-m', 'unittest', 'discover', '-s', 'regression', '-v'])
+        run('oracle-tests', [sys.executable, '-m', 'unittest', 'discover', '-s', 'regression/quality', '-p', 'test_gate.py'])
         with tempfile.TemporaryDirectory(prefix='eapdf-quality-gate-') as temporary:
             temporary = Path(temporary)
             version = ET.parse(ROOT / 'pom.xml').findtext('{http://maven.apache.org/POM/4.0.0}version')
@@ -76,7 +82,7 @@ def main():
                 reports(name, build)
                 rebuilt = temporary / (name + '-repeat')
                 run(name + '-repeat', ['mvn', '-B', '-f', pom, '-Deapdf.build.directory=' + str(rebuilt), '-DskipTests', 'package'])
-                names = [f'emailtopdfa-{version}.jar', f'emailtopdfa-{version}-gui.jar'] if name == 'creator' else ['eapdf-validator.jar']
+                names = [f'emailtopdfa-{version}.jar', f'emailtopdfa-{version}-gui.jar'] if name == 'creator' else [f'eapdf-validator-{version}.jar']
                 for filename in names:
                     digest = sha(build / filename)
                     if digest != sha(rebuilt / filename):

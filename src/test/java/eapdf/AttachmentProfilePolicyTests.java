@@ -327,9 +327,9 @@ class AttachmentProfilePolicyTests {
     String text = new org.apache.pdfbox.text.PDFTextStripper().getText(document);
     Assertions.assertFalse(text.contains("Attachment contents omitted"));
     Assertions.assertFalse(text.contains("These empty placeholders"));
-    Assertions.assertTrue(text.contains(isolated
-        ? "These placeholders identify attachments; their native bytes are not embedded separately."
-        : "Original email attachments are available from the file annotations below."));
+    Assertions.assertFalse(text.contains("Original email attachments are available from"));
+    if (isolated) Assertions.assertTrue(text.contains(
+        "These placeholders identify attachments; their native bytes are not embedded separately."));
     int references = 0;
     int noticeReferences = 0;
     for (var page : document.getPages()) {

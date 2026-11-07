@@ -13,8 +13,9 @@ Current contents include:
 
 `EAPDF_CONFIG` selects the JSON configuration file. An explicitly selected missing or unreadable file is an error; only an absent default configuration falls back to built-in settings. The supported `configVersion` is `1`; unsupported versions or invalid value types stop loading with an explanation. Unknown keys produce warnings that include the full setting name.
 
+- `searchIndex.enabled` defaults to `true` for embedded search indexes. `searchIndex.fullTextEnabled` independently controls full-text generation for `1m`, `1mi`, `1c`, and `1ci`; it uses built-in PDFBox extraction, with no Node.js requirement. Extraction failures or exceeded limits produce a warning and retain ordinary PDF.js searching. See [format, limits and fallback](../docs/EMBEDDED_SEARCH_INDEX.md).
 - `branding.enabled` controls branding, including collections.
-- `findingAid.pdfEnabled` controls the optional index and related embedded or sidecar spreadsheets. Collections still include required front matter when the index is disabled.
+- `findingAid.pdfEnabled` defaults to `false` and controls the optional finding-aid pages and related embedded or sidecar spreadsheets. Collections still include required front matter when the index is disabled.
 - `findingAid.excelEnabled` defaults to `false`, both in built-in settings and the checked-in configuration; `embedExcel` independently defaults to `true`.
 - For collection profiles `1c`/`1ci`, the existing `embedPdfInCollections` setting requests a separate `_finding_aid.pdf` sidecar. `embedExcel` or `excelEnabled` requests a separate `_index.xlsx` sidecar. These legacy setting names do not cause collection embedding: EA-PDF §7.6 prohibits ordinary finding-aid PDFs and spreadsheets as collection members. The finding-aid PDF has no embedded XLSX or synthetic email; its index pages also remain in the collection front matter. Disabling `pdfEnabled` disables optional finding aids and their sidecars.
 - For flat archives `1m`/`1mi`, `embedExcel` still embeds the XLSX in the archive and `excelEnabled` independently writes an external XLSX. Single-message source/native-attachment handling is unchanged.

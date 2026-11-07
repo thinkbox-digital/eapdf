@@ -8,16 +8,20 @@
 
 Convert email into EA-PDF files using Java, PDFBox, and XMP metadata.
 
-Current beta version: `1.6.0-beta.17`
+Current beta version: `1.6.0-beta.18`
 
 The separate [browser viewer beta](browser-viewer/docs/beta-release.md) opens local
 EA-PDF files and embedded PDFs recursively in Firefox and Chromium. It also
 shows metadata, image and text attachments, with normal downloads for Office files.
-Viewer version `0.5.0-beta.16` includes collection-wide email search, CSV finding
+Viewer version `0.5.0-beta.17` includes collection-wide email search, CSV finding
 aids with folder and attachment details, and paced file downloads. Installation and tested limits
 are documented in that guide.
 
-Latest release: [v1.6.0-beta.17](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.17). Java 21 or later is required.
+Latest release: [v1.6.0-beta.18](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.18). Java 21 or later is required.
+
+The current source tree adds optional [embedded metadata and full-text indexes](docs/EMBEDDED_SEARCH_INDEX.md).
+Full-text generation uses built-in PDFBox extraction and shared text normalization;
+no Node.js installation is required for conversion or viewing. Both remain offline-capable.
 
 For the current proof of concept, see [the short demo guide](docs/CREATOR_DEMO.md). Runnable creator and standalone-validator builds are available from the release linked above.
 
@@ -108,12 +112,12 @@ All six profiles currently use PDF 2.0 / PDF/A-4f output in this generator. Sele
 
 | Download | Purpose |
 | --- | --- |
-| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.17/emailtopdfa-1.6.0-beta.17-gui.jar) | Convert local email sources through the desktop app. |
-| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.17/emailtopdfa-1.6.0-beta.17.jar) | Run local email and Gmail workflows from the command line. |
-| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.17/eapdf-validator-1.6.0-beta.17.jar) | Validate a PDF using the bundled Java engines and current rules. |
-| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.17/eapdf-viewer-0.5.0-beta.16-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
-| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.17/eapdf-viewer-0.5.0-beta.16-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
-| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.17/ea-pdf-examples-1.6.0-beta.17.zip) | Refreshed input-named examples and PDF/A finding-aid sidecars, with source hashes and validation receipts. |
+| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.18/emailtopdfa-1.6.0-beta.18-gui.jar) | Convert local email sources through the desktop app. |
+| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.18/emailtopdfa-1.6.0-beta.18.jar) | Run local email and Gmail workflows from the command line. |
+| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.18/eapdf-validator-1.6.0-beta.18.jar) | Validate a PDF using the bundled Java engines and current rules. |
+| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.18/eapdf-viewer-0.5.0-beta.17-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
+| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.18/eapdf-viewer-0.5.0-beta.17-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
+| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.18/ea-pdf-examples-1.6.0-beta.18.zip) | Existing examples with their original edition dates, source hashes and validation receipts. |
 
 Each JAR includes its runtime libraries. The release also includes the updated specification-author review document, license notices and `SHA256SUMS.txt`. Run a desktop app with `java -jar downloaded-file.jar`.
 
@@ -138,36 +142,36 @@ mvn package
 
 Artifacts:
 
-- CLI fat jar: `target/emailtopdfa-1.6.0-beta.17.jar`
-- GUI fat jar: `target/emailtopdfa-1.6.0-beta.17-gui.jar`
+- CLI fat jar: `target/emailtopdfa-1.6.0-beta.18.jar`
+- GUI fat jar: `target/emailtopdfa-1.6.0-beta.18-gui.jar`
 
 The current creator build is also available in `dist/`:
 
 ```bash
-java -Xmx2g -jar dist/emailtopdfa.jar --jobs 2 --out out file.eml
-java -jar dist/emailtopdfa-gui.jar
+java -Xmx2g -jar dist/emailtopdfa-1.6.0-beta.18.jar --jobs 2 --out out file.eml
+java -jar dist/emailtopdfa-1.6.0-beta.18-gui.jar
 ```
 
-The web creator uses the newer of `dist/emailtopdfa.jar` and the current-version
+The web creator uses the newer of `dist/emailtopdfa-1.6.0-beta.18.jar` and the current-version
 CLI JAR in `target/`. Restart an already
 running web process to load a changed application or creator JAR selection.
 
 Convert a local email source:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.17.jar eapdf.EmailToPDFA --jobs 2 file.eml
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.18.jar eapdf.EmailToPDFA --jobs 2 file.eml
 ```
 
 Write output to a custom directory:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.17.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.18.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
 ```
 
 Generate an archive profile:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.17.jar eapdf.EmailToPDFA \
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.18.jar eapdf.EmailToPDFA \
   --jobs 2 --archive-profile m \
   --archive-output archive_1m.pdf \
   file.mbox
@@ -176,7 +180,7 @@ java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.17.jar eapdf.EmailToPDFA \
 Validate a PDF with the standalone Java engine:
 
 ```bash
-java -Xmx4g -cp dist/eapdf-validator.jar eapdf.JavaValidation archive_1m.pdf validation.json
+java -Xmx4g -cp dist/eapdf-validator-1.6.0-beta.18.jar eapdf.JavaValidation archive_1m.pdf validation.json
 ```
 
 The CLI example gives the JVM 4 GiB; choose a heap suited to the file and available
@@ -215,7 +219,7 @@ python validator_web.py
 Launch the desktop GUI:
 
 ```bash
-java -jar target/emailtopdfa-1.6.0-beta.17-gui.jar
+java -jar target/emailtopdfa-1.6.0-beta.18-gui.jar
 ```
 
 Tracked examples are grouped by source format under [`examples/`](examples/):
@@ -252,8 +256,8 @@ python3 -B scripts/regenerate_email_samples.py
 To use the local verified build and retain detailed validation reports:
 
 ```bash
-EAPDF_GENERATOR_CLASSPATH="$PWD/dist/emailtopdfa.jar" \
-EAPDF_VALIDATOR_JAR="$PWD/dist/eapdf-validator.jar" \
+EAPDF_GENERATOR_CLASSPATH="$PWD/dist/emailtopdfa-1.6.0-beta.18.jar" \
+EAPDF_VALIDATOR_JAR="$PWD/dist/eapdf-validator-1.6.0-beta.18.jar" \
 EAPDF_SAMPLE_REPORT_DIR="/tmp/eapdf-example-reports" \
 python3 -B scripts/regenerate_email_samples.py
 ```

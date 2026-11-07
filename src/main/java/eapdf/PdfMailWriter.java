@@ -1755,7 +1755,7 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
   boolean findingAidEnabled = CONFIG.findingAid.pdfEnabled;
   FindingAidDocument findingAid = findingAidEnabled
       ? PdfFindingAidSupport.buildFindingAidPdf(findingAidRows, collectionProfile, runSummary, fontPath, true, excelFilename, true)
-      : PdfFindingAidSupport.buildCollectionFrontMatter(collectionProfile, runSummary, fontPath);
+      : PdfFindingAidSupport.buildCollectionFrontMatter(collectionProfile, runSummary, fontPath, records.stream().anyMatch(record -> !record.sourceProblems.isEmpty()));
   try (PDDocument archive = findingAid.document) {
     archive.setVersion(2.0f);
     archive.getDocument().setVersion(2.0f);
@@ -1767,11 +1767,11 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
     PdfCollectionSupport.addTopLevelCollectionDictionary(archive, folders);
     addOutlines(archive, PdfCollectionSupport.buildCollectionFrontRecord(records, collectionProfile, members));
     PdfCollectionSupport.addCollectionDPartStructure(archive, records, collectionProfile);
+    setPdfA3Metadata(archive, iccPath, records, collectionProfile);
     PdfCollectionSupport.embedCollectionFiles(archive, records, members, debug, true);
     // Embedded streams now own their copied bytes. Release child working PDFs before saving the collection.
     memberStore.close();
     PdfCollectionSupport.addCollectionLogicalStructure(archive);
-    setPdfA3Metadata(archive, iccPath, records, collectionProfile);
     PdfCollectionSupport.addTopLevelCollectionDictionary(archive, folders);
     normalizePageContentStreams(archive);
     Files.createDirectories(out.getParent() == null ? Paths.get(".") : out.getParent());
@@ -3338,10 +3338,11 @@ static void addOmittedAttachmentAnnotations(PDDocument doc, EmailRecord record, 
           }
         }
         positionY -= 6f;
-        drawText(content, font, 9f, margin, positionY, record.embedSourceMessage
-            ? "Original email attachments are available from the file annotations below."
-            : "These placeholders identify attachments; their native bytes are not embedded separately.");
-        positionY -= 16f;
+        if (!record.embedSourceMessage) {
+          drawText(content, font, 9f, margin, positionY,
+              "These placeholders identify attachments; their native bytes are not embedded separately.");
+          positionY -= 16f;
+        }
         drawText(content, font, 9f, margin, positionY, record.embedSourceMessage
             ? "The original source email is also retained in the document attachments panel."
             : "This isolated PDF does not preserve the original attachment contents.");

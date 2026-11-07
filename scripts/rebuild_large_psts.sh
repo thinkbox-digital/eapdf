@@ -11,7 +11,10 @@ flock -n 9 || { echo 'The large PST run is already running.' >&2; exit 1; }
 for program in java python3 flock sha256sum; do
     command -v "$program" >/dev/null || { echo "Missing program: $program" >&2; exit 1; }
 done
-for jar in emailtopdfa.jar eapdf-validator.jar; do
+release_version=$(cat VERSION)
+creator_jar="emailtopdfa-${release_version}.jar"
+validator_jar="eapdf-validator-${release_version}.jar"
+for jar in "$creator_jar" "$validator_jar"; do
     [[ -r "dist/$jar" ]] || { echo "Missing build: dist/$jar" >&2; exit 1; }
 done
 inputs=()
@@ -24,12 +27,12 @@ done
 # Freeze the JARs for this run, even if the installed builds change meanwhile.
 work_dir=$(mktemp -d /tmp/eapdf-large-psts.XXXXXXXX)
 trap 'rm -rf -- "$work_dir"' EXIT
-cp -- dist/emailtopdfa.jar dist/eapdf-validator.jar "$work_dir/"
-export EAPDF_GENERATOR_CLASSPATH="$work_dir/emailtopdfa.jar"
-export EAPDF_VALIDATOR_JAR="$work_dir/eapdf-validator.jar"
+cp -- "dist/$creator_jar" "dist/$validator_jar" "$work_dir/"
+export EAPDF_GENERATOR_CLASSPATH="$work_dir/$creator_jar"
+export EAPDF_VALIDATOR_JAR="$work_dir/$validator_jar"
 export PYTHONDONTWRITEBYTECODE=1
 # Keep the exact build identities with the durable run evidence.
-sha256sum "$work_dir/emailtopdfa.jar" "$work_dir/eapdf-validator.jar" > "$run_dir/build-sha256.txt"
+sha256sum "$work_dir/$creator_jar" "$work_dir/$validator_jar" > "$run_dir/build-sha256.txt"
 printf 'Output: %s\nFour rendering jobs; one archive at a time; full Java validation.\n' "$run_dir"
 printf 'Progress files: %s/pst/*/conversion-*/progress.json\n' "$run_dir"
 printf 'Validation progress: %s/pst/*/validation-*/*.progress.json\n' "$run_dir"

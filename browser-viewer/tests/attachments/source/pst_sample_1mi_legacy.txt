@@ -1,0 +1,2 @@
+Legacy 1mi scrolling regression fixture, derived from the same public Enron messages as pst_sample_1m.pdf. Retains 151-page layout and historical missing attachment ownership; it is not a current conformance example. No original email/attachment payloads are embedded. Page text compared against the existing public 1m fixture; differences are profile, generator/date and source/attachment placeholder boilerplate.
+SHA-256: d0d3cab6a553faca434d7df428fc66e2dd32385f2b41972ebeab299fd2017739

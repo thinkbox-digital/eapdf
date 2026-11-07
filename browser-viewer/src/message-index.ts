@@ -1,22 +1,38 @@
+import {readEmbeddedIndex,metadataSearchText} from './embedded-index.js';
 import type {BrowserDocument,BrowserSession} from './browser-session.js';
 import {fileLabel} from './navigation.js';
 import type {SearchStep} from './collection-search.js';
-export type IndexedMessage={path:SearchStep[];messageId:string;label:string;document:string;searchText:string;sender?:string;sent?:string};
-export type MessageIndex={messages:IndexedMessage[];incomplete:string[]};
+export type IndexedMessage={path:SearchStep[];messageId:string;mailGuid?:string;label:string;document:string;searchText:string;sender?:string;sent?:string};
+export type MessageIndex={messages:IndexedMessage[];incomplete:string[];notices?:string[];source?:'embedded'|'scanned'|'mixed'};
 /** Retain only bounded display metadata; release the isolated PDF session after indexing. */
-export async function indexMessages(session:BrowserSession,root:BrowserDocument,check:()=>void,progress:(count:number)=>void,discovered?:(messages:readonly IndexedMessage[])=>void):Promise<MessageIndex>{
-  const messages:IndexedMessage[]=[],incomplete:string[]=[];let characters=0,stopped=false;
+export async function indexMessages(session:BrowserSession,root:BrowserDocument,check:()=>void,progress:(count:number)=>void,discovered?:(messages:readonly IndexedMessage[])=>void,forceScan=false):Promise<MessageIndex>{
+  const messages:IndexedMessage[]=[],incomplete:string[]=[],notices:string[]=[];let characters=0,stopped=false,embedded=false,scanned=false;
   const problem=(value:string)=>{incomplete.push(value);};
   async function visit(doc:BrowserDocument,path:SearchStep[],name:string):Promise<void>{
     check();if(stopped)return;
     const i=doc.inspection;
+    if(i.collection.value&&!forceScan){
+      const indexed=await readEmbeddedIndex(doc,check);check();
+      if(indexed.diagnostic)notices.push(indexed.diagnostic);
+      if(indexed.messages){
+        const batch:IndexedMessage[]=[];
+        for(const item of indexed.messages){
+          const value={...item,path:[...path,...item.path],document:name+item.document.slice(doc.name.length)};
+          characters+=value.label.length+value.document.length+value.searchText.length;
+          if(characters>8_000_000){problem('Email metadata search limit reached.');stopped=true;return;}
+          batch.push(value);
+        }
+        messages.push(...batch);embedded=true;discovered?.(batch);progress(messages.length);return;
+      }
+    }
+    scanned=true;
     if(!['present','missing'].includes(i.coverage.metadata)||i.diagnostics.some(d=>/^XMP_.*LIMIT$/.test(d.code)||['XMP_RECORD_STRUCTURE','XMP_DISPLAY_VALUE_UNAVAILABLE','XMP_DISPLAY_VALUE_AMBIGUOUS'].includes(d.code)))problem(`${name}: some email metadata could not be read.`);
     if(!['present','missing'].includes(i.collection.state)){problem(`${name}: collection structure could not be read.`);return;}
     if(!i.collection.value){
       const first=messages.length;
       for(const m of i.messages){
         check();const data=doc.details.get(m.metadataRecordId)??{};
-        const label=data.Subject||doc.name,searchText=['Subject','From','Raw-From','To','Raw-To','Sent'].map(k=>data[k]??'').join(' ').toLowerCase();
+        const label=data.Subject||doc.name,searchText=metadataSearchText(data);
         characters+=label.length+name.length+searchText.length;
         if(characters>8_000_000){problem('Email metadata search limit reached.');stopped=true;return;}
         messages.push({path,messageId:m.id,label,document:name,searchText,sender:data.From||data['Raw-From'],sent:data.Sent});
@@ -44,5 +60,5 @@ export async function indexMessages(session:BrowserSession,root:BrowserDocument,
     }
     progress(messages.length);
   }
-  await visit(root,[],root.name);check();return {messages,incomplete};
+  await visit(root,[],root.name);check();return {messages,incomplete,notices,source:embedded?(scanned?'mixed':'embedded'):'scanned'};
 }

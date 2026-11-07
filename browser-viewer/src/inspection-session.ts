@@ -5,6 +5,8 @@ import { md5, sha256 } from './domain/hashes.js';
 import type { ChildDocument, InspectionLimits, InspectionResult } from './domain/inspection.js';
 
 export type InspectedDocument = {
+  embeddedIndex?:string|null;
+  fullTextIndex?:string|null;indexFileDigest?:string|null;
   pdf:PDFDocumentProxy;inspection:InspectionResult;details:Map<string,Record<string,string>>;
   payloads:Map<string,Uint8Array>;children:Map<string,InspectedDocument>;
   run:<T>(operation:Promise<T>,milliseconds?:number)=>Promise<T>;

@@ -38828,6 +38828,22 @@ class ColorConverters {
 const DateFormats = ["m/d", "m/d/yy", "mm/dd/yy", "mm/yy", "d-mmm", "d-mmm-yy", "dd-mmm-yy", "yy-mm-dd", "mmm-yy", "mmmm-yy", "mmm d, yyyy", "mmmm d, yyyy", "m/d/yy h:MM tt", "m/d/yy HH:MM"];
 const TimeFormats = ["HH:MM", "h:MM tt", "HH:MM:ss", "h:MM:ss tt"];
 
+;// ./src/core/inspection_yield.js
+function yieldInspection() {
+  return new Promise(resolve => {
+    const {
+      port1,
+      port2
+    } = new MessageChannel();
+    port1.onmessage = () => {
+      port1.close();
+      port2.close();
+      resolve();
+    };
+    port2.postMessage(null);
+  });
+}
+
 ;// ./src/core/name_number_tree.js
 
 
@@ -39032,6 +39048,7 @@ class FileSpec {
 }
 
 ;// ./src/core/document_assets.js
+
 
 
 
@@ -39262,7 +39279,7 @@ class DocumentAssets {
     let totalMetadata = 0,
       visitsSinceYield = 0;
     while (pending.length) {
-      if (++visitsSinceYield % 512 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+      if (++visitsSinceYield % 512 === 0) await yieldInspection();
       const [raw, path, depth] = pending.pop(),
         loc = locator(raw, path);
       try {
@@ -39428,6 +39445,7 @@ class DocumentAssets {
 
 
 
+
 const LIMITS = Object.freeze({
   maxNodes: 16384,
   maxDepth: 32,
@@ -39579,7 +39597,7 @@ async function getDocumentParts(catalog, root, documentId) {
   }
   let workSinceYield = 0;
   async function walk(raw, parent, path, depth, expectedParent) {
-    if (++workSinceYield % 256 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+    if (++workSinceYield % 256 === 0) await yieldInspection();
     if (stopped) {
       return;
     }
@@ -41346,6 +41364,7 @@ class StructTreePage {
 
 
 
+
 const isRef = v => v instanceof Ref;
 const isValidExplicitDest = _isValidExplicitDest.bind(null, isRef, isName);
 function fetchDest(dest) {
@@ -42477,7 +42496,7 @@ class Catalog {
     }
     let workSinceYield = 0;
     while (queue.length > 0) {
-      if (++workSinceYield % 1024 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+      if (++workSinceYield % 1024 === 0) await yieldInspection();
       const queueItem = queue.at(-1);
       const {
         currentNode,

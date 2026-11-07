@@ -11,11 +11,11 @@ export async function checkAttachments(browser){
   const source=resolve(fixture.sourcePath);assert.equal(hash(await readFile(source)),fixture.sha256);await browser.open(source);
   for(const file of fixture.attachments){
    const parent=await parentState();
-   const cards=await browser.evaluate(()=>[...document.querySelectorAll('#files .file-card')].map(li=>{const save=li.querySelector('[data-file-id]');return {name:li.querySelector('strong').textContent,file:save?.dataset.fileId,stream:save?.dataset.stream,view:!!li.querySelector('[data-view-file-id]'),text:li.textContent};}));
+   const cards=await browser.evaluate(()=>[...document.querySelectorAll('#files .file-card')].map(li=>{const save=li.querySelector('[data-file-id]');return {name:li.querySelector('strong').textContent,file:save?.dataset.fileId??null,stream:save?.dataset.stream??null,view:!!li.querySelector('[data-view-file-id]'),text:li.textContent};}));
    const card=cards.find(c=>c.name===file.name);assert.ok(card,file.name);
    const selector=`[data-view-file-id=${JSON.stringify(card.file)}][data-view-stream=${JSON.stringify(card.stream)}]`;
    if(file.name==='empty.pdf'||file.name==='binary.exe'){
-    assert.equal(card.view,false);if(file.name==='empty.pdf')assert.match(card.text,/This file is empty/);else assert.doesNotMatch(card.text,/Download only/);
+    assert.equal(card.view,false);if(file.name==='empty.pdf'){assert.match(card.text,/0 B/);assert.equal(card.file,null,'empty files have no download action');}else assert.doesNotMatch(card.text,/Download only/);
    }else{
     assert.equal(card.view,true,file.name+' needs a viewing action');await browser.click(selector);await browser.ready();
     if(file.pages){
@@ -39,7 +39,7 @@ export async function checkAttachments(browser){
     }
    }
    assert.deepEqual(await parentState(),parent,'Parent document and page must be preserved');
-   if(file.name==='empty.pdf'){assert.equal(await browser.evaluate(()=>document.querySelector('[data-file-id][aria-disabled=true]')?.disabled),true);continue;}
+   if(file.name==='empty.pdf')continue;
    const downloaded=await browser.download(`[data-file-id=${JSON.stringify(card.file)}][data-stream=${JSON.stringify(card.stream)}]`);await browser.ready();assert.equal(hash(downloaded),file.sha256);
    results.push({sourcePath:fixture.sourcePath,name:file.name,status:'PASS',sha256:file.sha256});
   }

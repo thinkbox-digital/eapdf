@@ -1,0 +1,160 @@
+{
+  "schema_version": 2,
+  "scope": "Public small EML, MSG and MBOX fidelity and existing visual baselines",
+  "cases": [
+    {
+      "input": "in/sample.eml",
+      "sha256": "e0d8979fb882d5b65ef04b81b0f98b3e5e9e86cdc10034380d348a33b5ba995b",
+      "subject": "sample with attachment",
+      "from": [
+        "ries@amsterdamsoftware.com"
+      ],
+      "to": [
+        "ries@amsterdamsoftware.com"
+      ],
+      "sent": "2015-07-20T18:11:55+02:00",
+      "message_id": "<CALg5Jkqm42ktsSWWXgXpCyd-2EgWQXPbDQaJ8St4-VwoPoG78Q@mail.gmail.com>",
+      "body_phrases": [
+        "BODY TEXT",
+        "www.amsterdamsoftware.com"
+      ],
+      "attachments": [
+        {
+          "filename": "attachment.txt",
+          "sha256": "85a7a9ae649bc25c22c2f49607d6ddd5cce0a63879bffca3980d9ab8f479c3d0"
+        }
+      ]
+    },
+    {
+      "input": "in/EmailWith2Attachments.msg",
+      "format": "msg",
+      "sha256": "513a894a87de02ecbb312ada79ea19318378607bcb593ddb05ddecbade2d511f",
+      "messages": [
+        {
+          "subject": "E-mail with 2 attachments",
+          "message_id": "<AM7P189MB07920EE2DBDD12A2C694C81CBF430@AM7P189MB0792.EURP189.PROD.OUTLOOK.COM>",
+          "sent": "2019-12-02T08:44:20+00:00",
+          "from": [
+            "kees.van.spelde@achmea.nl"
+          ],
+          "to": [
+            "kees.van.spelde@achmea.nl"
+          ],
+          "cc": [],
+          "bcc": [],
+          "body_phrases": [
+            "Met vriendelijke groet,",
+            "Achmea | IT | DC Generiek | DCG Build Archiefdiensten",
+            "Security Co\u00f6rdinator OpenText",
+            "Spoorlaan 298 | 5017 JZ Tilburg"
+          ],
+          "attachments": [
+            {
+              "filename": "Installatie handleiding.docx",
+              "sha256": "11a4be418f65813f92a67c893984397f5c3debbfe5dca9f20816e434912e75fc"
+            },
+            {
+              "filename": "Installatiehandleiding S&I Agro.xlsx",
+              "sha256": "56c53320e5d41387b11ef47c2d80896f24506e2d8031c14617429b5a5cea7d48"
+            }
+          ]
+        }
+      ],
+      "provenance": "Direct OLE property streams and original transport headers, independently decoded using olefile 0.46."
+    },
+    {
+      "input": "in/enron-sample.mbox",
+      "format": "mbox",
+      "sha256": "370c41998013037bed444887b5cfe560ef74607db401f1ecbb80bf76df12251c",
+      "messages": [
+        {
+          "subject": "12/28 Power VaR",
+          "message_id": "<26521776.1075852054120.JavaMail.evans@thyme>",
+          "sent": "2000-12-29T03:49:00-08:00",
+          "from": [
+            "vladimir.gorny@enron.com"
+          ],
+          "to": [
+            "tim.belden@enron.com",
+            "kevin.presto@enron.com",
+            "john.lavorato@enron.com"
+          ],
+          "cc": [
+            "frank.hayden@enron.com",
+            "stacey.white@enron.com",
+            "lacrecia.davenport@enron.com",
+            "david.port@enron.com"
+          ],
+          "bcc": [
+            "frank.hayden@enron.com",
+            "stacey.white@enron.com",
+            "lacrecia.davenport@enron.com",
+            "david.port@enron.com"
+          ],
+          "body_phrases": [
+            "As of 12/28 Power VaR increased by $8.7 MM to $43.7 MM",
+            "Vlady."
+          ],
+          "attachments": [],
+          "folder": "enron-sample",
+          "plain_body_sha256": "097cb767480cd56031bfc0265338ed4ba7f2684e91716ab96815d8dedd5dee33"
+        },
+        {
+          "subject": "release to production of scheduling forward obs. report",
+          "message_id": "<29534117.1075852053898.JavaMail.evans@thyme>",
+          "sent": "2001-03-09T02:23:00-08:00",
+          "from": [
+            "valarie.sabo@enron.com"
+          ],
+          "to": [
+            "kroum.kroumov@enron.com"
+          ],
+          "cc": [
+            "diana.scholtes@enron.com",
+            "cara.semperger@enron.com",
+            "will.smith@enron.com",
+            "stacey.white@enron.com",
+            "tim.belden@enron.com",
+            "fran.chang@enron.com",
+            "samantha.law@enron.com",
+            "heather.dunton@enron.com",
+            "duong.luu@enron.com"
+          ],
+          "bcc": [
+            "diana.scholtes@enron.com",
+            "cara.semperger@enron.com",
+            "will.smith@enron.com",
+            "stacey.white@enron.com",
+            "tim.belden@enron.com",
+            "fran.chang@enron.com",
+            "samantha.law@enron.com",
+            "heather.dunton@enron.com",
+            "duong.luu@enron.com"
+          ],
+          "body_phrases": [
+            "I've tested the \"schedule\" version of forward obs.",
+            "Please release this to production"
+          ],
+          "attachments": [],
+          "folder": "enron-sample",
+          "plain_body_sha256": "4c3980339929e140b99a562bf4d087ac7e3ffc7829f5544e38a004dd69858af2"
+        }
+      ],
+      "archive_profile": "m",
+      "source_representation": "Per-message RFC822 derivatives; original MBOX container is not embedded",
+      "visual_masks": {
+        "1": [
+          [
+            46,
+            118,
+            230,
+            130
+          ]
+        ]
+      },
+      "provenance": "Python mailbox and email parsers; two messages cross-checked against in/enron.mbox."
+    }
+  ],
+  "renderer_version": "1.25.5",
+  "timezone": "America/New_York"
+}

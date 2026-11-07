@@ -66,7 +66,9 @@ class EmlReader {
   static EmailRecord readRfc822Bytes(byte[] raw, String sourcePath, String sourceFilename, String globalId, List<String> archiveEmails, boolean debug) throws Exception {
     ProcessingLimits.checkMessage(raw.length, sourcePath);
     Session s = mimeSession(raw);
-    try (InputStream in = new ByteArrayInputStream(raw)) {
+    // MIME slices borrow this immutable source buffer during synchronous extraction.
+    // No MimeMessage/Part escapes; returned payloads own byte arrays before staging.
+    try (InputStream in = new jakarta.mail.util.SharedByteArrayInputStream(raw)) {
       MimeMessage mm = new MimeMessage(s, in);
       checkMimeStructure(mm, 0, new long[]{0, 0});
       EmailRecord r = new EmailRecord();

@@ -1,0 +1,72 @@
+--- a/src/core/document_parts.js
++++ b/src/core/document_parts.js
+@@ -1,3 +1,4 @@
++import { yieldInspection } from "./inspection_yield.js";
+ /* Copyright 2026 Mozilla Foundation
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+@@ -179,7 +180,7 @@
+   }
+   let workSinceYield = 0;
+   async function walk(raw, parent, path, depth, expectedParent) {
+-    if (++workSinceYield % 256 === 0) await new Promise(resolve => setTimeout(resolve, 0));
++    if (++workSinceYield % 256 === 0) await yieldInspection();
+     if (stopped) {
+       return;
+     }
+--- a/src/core/document_assets.js
++++ b/src/core/document_assets.js
+@@ -1,3 +1,4 @@
++import { yieldInspection } from "./inspection_yield.js";
+ /* Copyright 2026 PDF.js contributors
+  * Licensed under the Apache License, Version 2.0.
+  * http://www.apache.org/licenses/LICENSE-2.0
+@@ -281,7 +282,7 @@
+     const identity = raw => raw instanceof Ref ? (raw.gen === 0 ? raw.num : raw.toString()) : raw;
+     let totalMetadata = 0, visitsSinceYield = 0;
+     while (pending.length) {
+-      if (++visitsSinceYield % 512 === 0) await new Promise(resolve => setTimeout(resolve, 0));
++      if (++visitsSinceYield % 512 === 0) await yieldInspection();
+       const [raw, path, depth] = pending.pop(),
+         loc = locator(raw, path);
+       try {
+--- a/src/core/catalog.js
++++ b/src/core/catalog.js
+@@ -1,3 +1,4 @@
++import { yieldInspection } from "./inspection_yield.js";
+ /* Copyright 2012 Mozilla Foundation
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+@@ -1516,7 +1517,7 @@
+ 
+     let workSinceYield = 0;
+     while (queue.length > 0) {
+-      if (++workSinceYield % 1024 === 0) await new Promise(resolve => setTimeout(resolve, 0));
++      if (++workSinceYield % 1024 === 0) await yieldInspection();
+       const queueItem = queue.at(-1);
+       const { currentNode, posInKids } = queueItem;
+ 
+--- /dev/null
++++ b/src/core/inspection_yield.js
+@@ -0,0 +1,21 @@
++/* Copyright 2026 Thinkbox Digital
++ * Licensed under the Apache License, Version 2.0.
++ */
++
++// Yield a task, not a microtask, so worker messages can run during inspection.
++// Unlike nested setTimeout(0), MessageChannel avoids the browser's timer clamp.
++// Each yield owns its ports; closing them before resolving leaves no idle port
++// keeping a document worker (or a source-test process) alive.
++function yieldInspection() {
++  return new Promise(resolve => {
++    const { port1, port2 } = new MessageChannel();
++    port1.onmessage = () => {
++      port1.close();
++      port2.close();
++      resolve();
++    };
++    port2.postMessage(null);
++  });
++}
++
++export { yieldInspection };

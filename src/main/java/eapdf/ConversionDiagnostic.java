@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 record ConversionDiagnostic(Code code, String source, String subject, String messageId,
                             String mailGuid, String details) {
   enum Code {
+    SEARCH_INDEX_UNAVAILABLE("The optional metadata index was not embedded.", "Metadata search remains available through child PDF inspection."),
     SOURCE_INCOMPLETE("Some source content could not be recovered.", "Keep the original and review the missing content before accepting the PDF."),
     TEXT_RECOVERED("Displayed text was recovered using a fallback; characters may differ.", "Compare the affected text with the original message."),
     DATE_PRECISION_REDUCED("The reconstructed date retains whole seconds; native fractional seconds are lost.", "Keep the original container if subsecond timing matters."),

@@ -105,6 +105,7 @@ public class EapdfGui {
     frame.add(buildLogPanel(), BorderLayout.CENTER);
 
     frame.setMinimumSize(new Dimension(1200, 955));
+    addMissingTooltips(frame.getContentPane(), "Conversion options");
     frame.pack();
     var screen = frame.getGraphicsConfiguration().getBounds();
     var screenInsets = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(frame.getGraphicsConfiguration());
@@ -123,7 +124,7 @@ public class EapdfGui {
 
     JLabel title = new JLabel("EA-PDF Desktop Converter");
     title.setFont(title.getFont().deriveFont(Font.BOLD, 24f));
-    JLabel subtitle = new JLabel("Turn email files and folders into searchable PDF archives.");
+    JLabel subtitle = new JLabel("Authentic email archives—with original content, structured metadata, and provenance preserved for the future.");
     subtitle.setFont(subtitle.getFont().deriveFont(14f));
 
     panel.add(title);
@@ -170,9 +171,11 @@ public class EapdfGui {
 
     JPanel controls = new JPanel(new BorderLayout(8, 0));
     JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+    stopButton.setToolTipText("Stop the active conversion; unfinished output is not published.");
     stopButton.setEnabled(false);
     stopButton.addActionListener(e -> stopActiveProcess());
     actions.add(stopButton);
+    openOutputButton.setToolTipText("Open the most recent conversion output directory.");
     openOutputButton.setEnabled(false);
     openOutputButton.addActionListener(e -> openOutputFolder());
     actions.add(openOutputButton);
@@ -216,6 +219,7 @@ public class EapdfGui {
     addRow(panel, gc, 3, "Features", buildRunConfigPanel(configControls));
 
     JButton runButton = new JButton("Convert Local Input");
+    runButton.setToolTipText("Convert the selected local email source using the profile and feature options above.");
     runButtons.add(runButton);
     profileBox.setSelectedIndex(0);
 
@@ -258,6 +262,7 @@ public class EapdfGui {
   }
 
   private JPanel buildProfilePicker(JComboBox<Choice> choices, boolean localInput) {
+    choices.setToolTipText("Choose single-message PDFs, a combined archive, or a collection. Isolated profiles omit original source assets.");
     JPanel picker = new JPanel(new BorderLayout(0, 4));
     JTextArea description = new JTextArea(3, 52);
     description.setName("profileDescription");
@@ -329,6 +334,7 @@ public class EapdfGui {
     addRow(panel, gc, 8, "Features", buildRunConfigPanel(configControls));
 
     JButton runButton = new JButton("Download + Convert Gmail");
+    runButton.setToolTipText("Download the selected Gmail messages and create EA-PDF output using these options.");
     runButtons.add(runButton);
     profileBox.setSelectedIndex(0);
 
@@ -371,6 +377,7 @@ public class EapdfGui {
     JLabel label = new JLabel("Signing certificate password:");
     label.setLabelFor(password);
     password.getAccessibleContext().setAccessibleName("Signing certificate password");
+    password.setToolTipText("Enter the password that unlocks your signing certificate; it is not saved in the configuration.");
     JPanel content = new JPanel(new BorderLayout(0, 8));
     content.add(label, BorderLayout.NORTH);
     content.add(password, BorderLayout.CENTER);
@@ -380,6 +387,7 @@ public class EapdfGui {
       }
     };
     var dialog = pane.createDialog(parent, title);
+    addMissingTooltips(dialog.getContentPane(), title);
     int titleWidth = password.getFontMetrics(password.getFont()).stringWidth(title);
     dialog.setMinimumSize(new Dimension(Math.max(440, titleWidth + 160), dialog.getHeight()));
     dialog.setLocationRelativeTo(parent);
@@ -614,8 +622,10 @@ public class EapdfGui {
     return panel;
   }
 
-  private RunConfigControls buildRunConfigControls() {
+  static RunConfigControls buildRunConfigControls() {
     EapdfConfig cfg = EapdfConfig.normalize(EapdfConfig.get());
+    JCheckBox searchIndex = new JCheckBox("Embed searchable index", cfg.searchIndex.enabled);
+    searchIndex.setToolTipText("Embed metadata and full-text search indexes for faster offline searches. Full-text generation uses built-in PDFBox extraction; unsupported outputs retain ordinary search.");
     JCheckBox branding = new JCheckBox("Branding", cfg.branding != null && cfg.branding.enabled);
     JCheckBox findingAid = new JCheckBox("Finding Aid", cfg.findingAid != null && cfg.findingAid.pdfEnabled);
     JCheckBox premis = new JCheckBox("PREMIS", cfg.premis != null && cfg.premis.enabled);
@@ -626,17 +636,19 @@ public class EapdfGui {
     premis.setToolTipText("Include or omit PREMIS preservation metadata sidecar output.");
     pdfUa.setToolTipText("Enable accessibility features. This does not establish PDF/UA conformance.");
 
-    return new RunConfigControls(branding, findingAid, premis, pdfUa, cfg.signing);
+    return new RunConfigControls(branding, findingAid, premis, pdfUa, searchIndex, cfg.signing);
   }
 
   private JPanel buildRunConfigPanel(RunConfigControls controls) {
     JButton creator = new JButton("Creator identity...");
+    creator.setToolTipText("Identify the person or organization responsible for creating the archive.");
     creator.addActionListener(event -> {
       String value = JOptionPane.showInputDialog(frame,
           "Person or organization responsible for creating these EA-PDF files:", EapdfConfig.get().creator);
       if (value != null) EapdfConfig.get().creator = value.strip();
     });
     JButton certificate = new JButton("Signing settings...");
+    certificate.setToolTipText("Choose a signing certificate and optional key alias and signature reason.");
     certificate.addActionListener(event -> {
       JTextField path = new JTextField(controls.signing.pkcs12Path, 36);
       JTextField alias = new JTextField(controls.signing.alias, 24);
@@ -656,15 +668,17 @@ public class EapdfGui {
         controls.signing.reason = reason.getText().trim();
       }
     });
-    return inlinePanel(controls.branding, controls.findingAid, controls.premis, controls.pdfUa,
+    return inlinePanel(controls.branding, controls.findingAid, controls.premis, controls.pdfUa, controls.searchIndex,
         controls.signOutput, certificate, creator);
   }
 
-  private Path writeGuiConfig(RunConfigOverrides overrides) throws Exception {
+  static Path writeGuiConfig(RunConfigOverrides overrides) throws Exception {
     Gson gson = new GsonBuilder().setPrettyPrinting().create();
     EapdfConfig cfg = gson.fromJson(gson.toJson(EapdfConfig.get()), EapdfConfig.class);
     cfg = EapdfConfig.normalize(cfg == null ? new EapdfConfig() : cfg);
     cfg.requireCreator();
+    cfg.searchIndex.enabled = overrides.searchIndexEnabled;
+    cfg.searchIndex.fullTextEnabled = overrides.searchIndexEnabled;
     cfg.branding.enabled = overrides.brandingEnabled;
     cfg.findingAid.pdfEnabled = overrides.findingAidEnabled;
     if (!overrides.findingAidEnabled) {
@@ -683,6 +697,7 @@ public class EapdfGui {
 
   private String describeConfigOverrides(RunConfigOverrides overrides) {
     return "branding=" + overrides.brandingEnabled
+        + ", searchIndex=" + overrides.searchIndexEnabled
         + ", findingAid=" + overrides.findingAidEnabled
         + ", premis=" + overrides.premisEnabled
         + ", pdfUa=" + overrides.pdfUaEnabled
@@ -692,6 +707,7 @@ public class EapdfGui {
   private void addPathRow(JPanel panel, GridBagConstraints gc, int row, String label, JTextField field,
                           java.awt.event.ActionListener browseAction) {
     JButton browse = new JButton("Browse...");
+    browse.setToolTipText("Choose " + label.toLowerCase(java.util.Locale.ROOT) + ".");
     browse.addActionListener(browseAction);
     JPanel pathPanel = new JPanel(new BorderLayout(8, 0));
     pathPanel.add(field, BorderLayout.CENTER);
@@ -722,6 +738,7 @@ public class EapdfGui {
   }
 
   private void addRow(JPanel panel, GridBagConstraints gc, int row, String label, Component component) {
+    addMissingTooltips(component, label);
     GridBagConstraints left = (GridBagConstraints) gc.clone();
     left.gridy = row;
     left.gridx = 0;
@@ -737,6 +754,17 @@ public class EapdfGui {
     right.fill = GridBagConstraints.HORIZONTAL;
     right.anchor = GridBagConstraints.NORTHWEST;
     panel.add(component, right);
+  }
+
+  static void addMissingTooltips(Component component, String context) {
+    if (component instanceof javax.swing.JComponent field && field.getToolTipText() == null) {
+      if (field instanceof javax.swing.AbstractButton button)
+        field.setToolTipText(button.getText() == null || button.getText().isBlank() ? context : button.getText());
+      else if (field instanceof javax.swing.text.JTextComponent || field instanceof JComboBox<?> || field instanceof JSpinner)
+        field.setToolTipText(context);
+    }
+    if (component instanceof java.awt.Container container)
+      for (Component child : container.getComponents()) addMissingTooltips(child, context);
   }
 
   private GridBagConstraints defaultConstraints() {
@@ -837,20 +865,22 @@ public class EapdfGui {
     }
   }
 
-  private static final class RunConfigControls {
+  static final class RunConfigControls {
     final JCheckBox branding;
     final JCheckBox findingAid;
     final JCheckBox premis;
     final JCheckBox pdfUa;
+    final JCheckBox searchIndex;
     final JCheckBox signOutput;
     final EapdfConfig.SigningConfig signing;
 
-    RunConfigControls(JCheckBox branding, JCheckBox findingAid, JCheckBox premis, JCheckBox pdfUa,
+    RunConfigControls(JCheckBox branding, JCheckBox findingAid, JCheckBox premis, JCheckBox pdfUa, JCheckBox searchIndex,
         EapdfConfig.SigningConfig defaults) {
       this.branding = branding;
       this.findingAid = findingAid;
       this.premis = premis;
       this.pdfUa = pdfUa;
+      this.searchIndex = searchIndex;
       this.signing = new Gson().fromJson(new Gson().toJson(defaults), EapdfConfig.SigningConfig.class);
       this.signOutput = new JCheckBox("Sign output", defaults.enabled);
       this.signOutput.setToolTipText("Sign each outer EA-PDF with your certificate. Embedded files stay unchanged.");
@@ -863,23 +893,25 @@ public class EapdfGui {
           branding.isSelected(),
           findingAid.isSelected(),
           premis.isSelected(),
-          pdfUa.isSelected(), copy);
+          pdfUa.isSelected(), searchIndex.isSelected(), copy);
     }
   }
 
-  private static final class RunConfigOverrides {
+  static final class RunConfigOverrides {
     final boolean brandingEnabled;
     final boolean findingAidEnabled;
     final boolean premisEnabled;
     final boolean pdfUaEnabled;
+    final boolean searchIndexEnabled;
     final EapdfConfig.SigningConfig signing;
 
-    RunConfigOverrides(boolean brandingEnabled, boolean findingAidEnabled, boolean premisEnabled, boolean pdfUaEnabled,
+    RunConfigOverrides(boolean brandingEnabled, boolean findingAidEnabled, boolean premisEnabled, boolean pdfUaEnabled, boolean searchIndexEnabled,
         EapdfConfig.SigningConfig signing) {
       this.brandingEnabled = brandingEnabled;
       this.findingAidEnabled = findingAidEnabled;
       this.premisEnabled = premisEnabled;
       this.pdfUaEnabled = pdfUaEnabled;
+      this.searchIndexEnabled = searchIndexEnabled;
       this.signing = signing;
     }
   }

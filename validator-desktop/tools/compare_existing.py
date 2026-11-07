@@ -97,7 +97,7 @@ def summarize(inputs, output, jar):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("/tmp/eapdf-validator-compare"))
-    parser.add_argument("--jar", type=Path, default=ROOT / "dist/eapdf-validator.jar")
+    parser.add_argument("--jar", type=Path, default=ROOT / 'dist' / ('eapdf-validator-' + (ROOT / 'VERSION').read_text().strip() + '.jar'))
     parser.add_argument("--jobs", type=int, default=2)
     parser.add_argument("--summarize-only", action="store_true")
     parser.add_argument("--python-only", action="store_true")

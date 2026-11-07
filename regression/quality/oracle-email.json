@@ -1,0 +1,25 @@
+{
+  "input": "in/test3.eml",
+  "sha256": "c7a80c16e7c327e8f27a436e358ef646c56b1b2e416095fc6ecadbb62347b7b6",
+  "subject": "Agenda and timeline slides",
+  "from": [
+    "gregory.lepore@nara.gov"
+  ],
+  "to": [
+    "oonjoku@us.ibm.com"
+  ],
+  "sent": "2010-09-30T13:24:56+00:00",
+  "message_id": "4CA45768.ARCH2D2.A2D2P1.100.1316735.1.8D7E.1",
+  "body_phrases": [
+    "Ogunna,",
+    "Attached is a basic agenda and timeline for my project, let me know if it looks OK to you.",
+    "National Archives at College Park",
+    "Tel. (301) 837-0758"
+  ],
+  "attachments": [
+    {
+      "filename": "Lean Six Sigma Kickoff Meeting.pptx",
+      "sha256": "1508fc3dd068c0e2574873f37a8857954e75cdb0745f88fb24359d2a7cf4c915"
+    }
+  ]
+}

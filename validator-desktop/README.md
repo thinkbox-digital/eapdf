@@ -50,7 +50,7 @@ From the repository root, using Java 21 and Maven:
 mvn -f validator-desktop/pom.xml verify
 ```
 
-On Linux, the JAR is written to `/tmp/eapdf-validator-build/eapdf-validator.jar`.
+On Linux, the JAR is written to `/tmp/eapdf-validator-build/eapdf-validator-1.6.0-beta.18.jar`.
 Override the build directory with `-Deapdf.build.directory=/tmp/your-build`.
 No build files are written to the creator's `target/` directory.
 `verify` checks the final shaded JAR's manifest, ZIP CRCs, bundled runtime classes,
@@ -61,16 +61,16 @@ To build, verify and atomically replace the distributable:
 
 ```sh
 python3 scripts/package_validator.py
-(cd dist && sha256sum -c eapdf-validator.jar.sha256)
+(cd dist && sha256sum -c eapdf-validator-1.6.0-beta.18.jar.sha256)
 ```
 
-Publish the executable `eapdf-validator.jar`, not the unshaded `original-` JAR.
+Publish the executable `eapdf-validator-1.6.0-beta.18.jar`, not the unshaded `original-` JAR.
 The packaging command verifies the build before replacing the distributable.
 
 ## Run
 
 ```sh
-java -jar /path/to/eapdf-validator.jar
+java -jar /path/to/eapdf-validator-1.6.0-beta.18.jar
 ```
 
 The JAR includes its runtime libraries, rules and specification references; only

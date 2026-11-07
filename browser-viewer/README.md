@@ -1,6 +1,6 @@
-# EA-PDF browser viewer — beta 0.5.0-beta.16
+# EA-PDF browser viewer — beta 0.5.0-beta.17
 
-Current release: `0.5.0-beta.16` (EA-PDF `1.6.0-beta.17`).
+Current release: `0.5.0-beta.17` (EA-PDF `1.6.0-beta.18`).
 The local presentation redesign retains that version for review and is not published.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
@@ -25,6 +25,8 @@ removed. Intrinsic PDF page orientation is respected. Search opens from the head
 or Ctrl/Cmd+F; Enter and Shift+Enter move between matches, and Escape closes the
 panel. The message tree supports native Tab/Enter disclosure controls and arrow-key
 movement. The viewer tagline is “Your email—complete, authentic, accessible, structured.”
+
+New creator collections can carry an optional [embedded metadata search index](../docs/EMBEDDED_SEARCH_INDEX.md). The viewer verifies it once and builds the message list without opening each child PDF; missing or invalid indexes retain the existing scan fallback. New `1m`, `1mi`, `1c`, and `1ci` archives can also carry a positional full-text index. It locates matching pages without opening every child; selection confirms and highlights the actual PDF.js text. Corrupt, stale, unsupported or oversized indexes fall back to ordinary search. See the same [index reference](../docs/EMBEDDED_SEARCH_INDEX.md#full-text-index-version-2) for exact phrase semantics, resource limits and the optional creator-side Node.js requirement.
 
 The persistent **Filter by subject, sender or date** field filters the message list
 using subject, sender, recipients and date across unopened

@@ -31,30 +31,31 @@ def replace_file(source, destination):
         Path(pending).unlink(missing_ok=True)
 
 def main():
+    ns = {'m': 'http://maven.apache.org/POM/4.0.0'}
+    version = ET.parse(ROOT/'validator-desktop/pom.xml').findtext('m:version', namespaces=ns)
+    filename = f'eapdf-validator-{version}.jar'
     with tempfile.TemporaryDirectory(prefix='eapdf-validator-package-', dir='/tmp') as scratch:
         scratch = Path(scratch)
         subprocess.run(['mvn', '-B', '-f', str(ROOT/'validator-desktop/pom.xml'),
                         '-Deapdf.build.directory=' + str(scratch/'build'), 'verify'], cwd=ROOT, check=True)
-        built = scratch/'build/eapdf-validator.jar'
+        built = scratch/'build'/filename
         with ZipFile(built) as jar:
             if jar.testzip() is not None:
                 raise RuntimeError('Validator ZIP CRC verification failed')
             manifest = jar.read('META-INF/MANIFEST.MF').decode('utf-8').replace('\r\n', '\n')
             if '\nMain-Class: eapdf.ValidatorGui\n' not in '\n' + manifest:
                 raise RuntimeError('Validator executable manifest is missing or incorrect')
-        destination = ROOT/'dist/eapdf-validator.jar'
+        destination = ROOT/'dist'/filename
         checksum = sha(built)
         replace_file(built, destination)
         if sha(destination) != checksum:
             raise RuntimeError('Published validator differs from the verified build')
         checksum_file = scratch/'checksum'
-        checksum_file.write_text(checksum + '  eapdf-validator.jar\n')
+        checksum_file.write_text(checksum + '  ' + filename + '\n')
         replace_file(checksum_file, destination.with_suffix('.jar.sha256'))
         paths = [ROOT/'validator-desktop/pom.xml', ROOT/'validator_rule_text.json',
                  ROOT/'config/verapdf/ISO-32005.xml', Path(__file__).resolve()]
         paths += sorted((ROOT/'validator-desktop/src/main').rglob('*'))
-        ns = {'m': 'http://maven.apache.org/POM/4.0.0'}
-        version = ET.parse(ROOT/'validator-desktop/pom.xml').findtext('m:version', namespaces=ns)
         data = {'date': datetime.now(timezone.utc).isoformat(), 'version': version,
                 'scope': 'Verified executable packaging; large-file acceptance is documented separately.',
                 'main_class': 'eapdf.ValidatorGui', 'java_release': 21,
