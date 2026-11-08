@@ -200,3 +200,13 @@ comparison and standalone PDF/A/EA-PDF validation are `NOT_RUN`. This option
 does not disable atomic publication, output hashing, cancellation or resource
 safeguards. It does not establish conformance. Future regeneration configs must
 also enable `accessibility.addPdfUaFeatures`, per the user's preference.
+
+
+## Creator GUI logs
+
+The GUI keeps a recent tail of up to 500,000 detail characters and 100,000 summary
+characters. Complete merged stdout/debug output is saved per conversion as UTF-8
+under `~/.eapdf/logs/`; the current path appears in the GUI and final summary.
+Display updates are batched without discarding the saved output. Existing logs
+are retained rather than automatically deleted. The display limits bound retained
+history, not the temporary allocation for an individual exceptionally long line.

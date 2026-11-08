@@ -25,12 +25,12 @@ Isolated profiles deliberately omit source assets; they do not anonymize the ema
 
 ## About this documentation
 
-Current versions are **EA-PDF 1.6.0-beta.18** and **viewer 0.5.0-beta.17**.
+Current versions are **EA-PDF 1.6.0-beta.19** and **viewer 0.5.0-beta.18**.
 Screenshots illustrate earlier editions; current controls may differ. This is
 beta demonstration software with documented limits; validation is not independent
 certification.
 
-[Download the PDF/A manual](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.18/EA-PDF_User_Manual.pdf)
+[Download the PDF/A manual](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.19/EA-PDF_User_Manual.pdf)
 for an offline copy. Advanced setup is in **Reference**. Source code,
 [issues](https://github.com/thinkbox-digital/eapdf/issues) and
 [releases](https://github.com/thinkbox-digital/eapdf/releases) remain on GitHub.

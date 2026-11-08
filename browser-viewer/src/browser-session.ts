@@ -1,3 +1,4 @@
+import {retainedSize} from './retained-size.js';
 import {forgetFullTextIndex} from './fulltext-index.js';
 import {forgetEmbeddedIndex} from './embedded-index.js';
 import {indexMessages,type MessageIndex} from './message-index.js';
@@ -18,7 +19,7 @@ export type BrowserDocument = InspectedDocument & {
   name:string; parent:BrowserDocument|null; parentFileId?:string; parentStreamPath?:string;
   ancestorIds:readonly string[]; active:boolean;
 };
-type Entry={messageIndex?:MessageIndex;needsRefresh?:boolean;restarting?:Promise<void>;managed?:ReturnType<typeof loadManagedPdf>;blob?:Blob;parts:DocumentPartsInspection;assets:DocumentAssets;facts:Map<string,StreamFacts>;header:string|null;size:number;lastUse:number;supplementLinks?:Map<string,readonly string[]>;supplementError?:string;supplementScan?:Promise<void>};
+type Entry={metadataBytes:number;messageIndex?:MessageIndex;needsRefresh?:boolean;restarting?:Promise<void>;managed?:ReturnType<typeof loadManagedPdf>;blob?:Blob;parts:DocumentPartsInspection;assets:DocumentAssets;facts:Map<string,StreamFacts>;header:string|null;size:number;lastUse:number;supplementLinks?:Map<string,readonly string[]>;supplementError?:string;supplementScan?:Promise<void>};
 export class BrowserSession {
   readonly limits:InspectionLimits;
   readonly extractionLimit:number;
@@ -29,7 +30,7 @@ export class BrowserSession {
   private readonly cacheLimit=32*1024**2;
   private readonly exportReads=new WeakMap<BrowserDocument,number>();
   private readonly exportWorkers=new Map<number,{worker:ReturnType<typeof createManagedWorker>;used:number}>();
-  constructor(overrides:Partial<InspectionLimits>={},private readonly options:{reuseWorker?:boolean}={}) {
+  constructor(overrides:Partial<InspectionLimits>={},private readonly options:{reuseWorker?:boolean;metadataCacheBytes?:number;onEvict?:(doc:BrowserDocument)=>void;keepDocuments?:()=>readonly BrowserDocument[]}={}) {
     const ceilings={...DEFAULT_LIMITS,maxObjects:1_000_000,maxParts:16384,maxFileBytes:4*1024**3,maxStreamBytes:32*1024**2,maxDecodedBytes:512*1024**2,maxMetadataBytes:128*1024**2,maxChildDepth:8,maxChildren:128};
     const limits={...ceilings};
     for(const key of Object.keys(overrides) as (keyof InspectionLimits)[]){
@@ -39,6 +40,7 @@ export class BrowserSession {
       if(!Number.isSafeInteger(value)||value<0||value>ceilings[key])throw new Error(`Invalid inspection limit: ${key}`);
       limits[key]=value;
     }
+    if(options.metadataCacheBytes!==undefined&&(!Number.isSafeInteger(options.metadataCacheBytes)||options.metadataCacheBytes<0||options.metadataCacheBytes>32*1024**2))throw new Error('Invalid metadata cache budget.');
     this.limits=limits;
     this.extractionLimit=this.limits.maxStreamBytes;
   }
@@ -88,15 +90,15 @@ export class BrowserSession {
       })(),inspectionTimeout);
       const header=/%PDF-(\d\.\d)/.exec(new TextDecoder('latin1').decode(await blob.slice(0,1024).arrayBuffer()))?.[1]??null;
       this.check();
-      const entry:Entry={managed,blob:parent?undefined:blob,parts,assets,facts:new Map(),header,size:blob.size,lastUse:++this.clock};
+      const entry:Entry={metadataBytes:0,managed,blob:parent?undefined:blob,parts,assets,facts:new Map(),header,size:blob.size,lastUse:++this.clock};
       stage?.("Reading email metadata…");
       const interpreted=interpret({documentId:id,byteLength:blob.size,headerVersion:header,pageCount:pdf.numPages,parts,assets,streams:entry.facts,limits:this.limits,parseXml:xml=>new DOMParser().parseFromString(xml,'application/xml')});
       const doc:BrowserDocument={pdf,...interpreted,payloads:new Map(),children:new Map(),run:managed.run,name,parent,parentFileId:fileId,parentStreamPath:streamPath,ancestorIds:ancestors,active:true};
-      this.entries.set(doc,entry);this.pending.delete(managed);this.trim(doc);return doc;
+      this.entries.set(doc,entry);this.accountMetadata(doc,entry);this.pending.delete(managed);this.trim(doc);return doc;
     }catch(error){managed.close();this.pending.delete(managed);throw error;}
   }
   cachedMessageIndex(doc:BrowserDocument):MessageIndex|undefined{return this.entries.get(doc)?.messageIndex;}
-  rememberMessageIndex(doc:BrowserDocument,index:MessageIndex|undefined):void{const entry=this.entries.get(doc);if(entry)entry.messageIndex=index;}
+  rememberMessageIndex(doc:BrowserDocument,index:MessageIndex|undefined):void{const entry=this.entries.get(doc);if(entry){entry.messageIndex=index;this.accountMetadata(doc,entry);}}
   adoptAssociations(doc:BrowserDocument,source:BrowserSession,copy:BrowserDocument):void {
     this.check();source.check();
     if(doc.inspection.documentId!==copy.inspection.documentId)throw new Error('Association results belong to a different PDF.');
@@ -222,9 +224,24 @@ export class BrowserSession {
     })};
     if(entry.supplementError&&!doc.inspection.diagnostics.some(d=>d.code==='SUPPLEMENT_ASSOCIATION_INCOMPLETE'))doc.inspection={...doc.inspection,diagnostics:[...doc.inspection.diagnostics,{code:'SUPPLEMENT_ASSOCIATION_INCOMPLETE',state:'unavailable',message:entry.supplementError,evidence:[]}]};
   }
+  private accountMetadata(doc:BrowserDocument,entry:Entry):void{
+    entry.metadataBytes=retainedSize([entry.parts,entry.assets,entry.facts,entry.messageIndex,entry.supplementLinks,doc.inspection,doc.details,doc.embeddedIndex,doc.fullTextIndex]);
+  }
   private trim(keep:BrowserDocument):void {
+    const protectedDocs=new Set<BrowserDocument>();
+    for(const start of [keep,...(this.options.keepDocuments?.()??[])]){let doc:BrowserDocument|null=start;while(doc){protectedDocs.add(doc);doc=doc.parent;}}
     const active=[...this.entries].filter(([doc])=>doc.active).sort((a,b)=>a[1].lastUse-b[1].lastUse);
-    while(active.length>3){const [doc,entry]=active.shift()!;if(doc===keep)continue;entry.managed?.close();entry.managed=undefined;doc.active=false;doc.payloads.clear();}
+    while(active.length>3){const [doc,entry]=active.shift()!;if(doc===keep)continue;entry.managed?.close();entry.managed=undefined;doc.active=false;doc.payloads.clear();if(doc.parent){forgetFullTextIndex(doc);forgetEmbeddedIndex(doc);}}
+    // Keep the current navigation chain, but bound older child inspections independently of worker count.
+    const inactive=[...this.entries].filter(([doc])=>doc.parent&&!doc.active&&!protectedDocs.has(doc)).sort((a,b)=>a[1].lastUse-b[1].lastUse);
+    let bytes=inactive.reduce((sum,[,entry])=>sum+entry.metadataBytes,0),count=inactive.length;
+    const budget=this.options.metadataCacheBytes??32*1024**2;
+    while(count>16||bytes>budget){
+      const index=inactive.findIndex(([doc])=>doc.children.size===0);if(index<0)break;
+      const [doc,entry]=inactive.splice(index,1)[0]!;bytes-=entry.metadataBytes;count--;
+      this.options.onEvict?.(doc);this.entries.delete(doc);doc.parent?.children.delete(doc.parentFileId+'|'+doc.parentStreamPath);
+      doc.payloads.clear();forgetFullTextIndex(doc);forgetEmbeddedIndex(doc);doc.fullTextIndex=undefined;doc.embeddedIndex=undefined;doc.indexFileDigest=undefined;
+    }
   }
   async sourceBlob(doc:BrowserDocument):Promise<Blob>{
     this.check();const entry=this.entries.get(doc);if(!entry)throw new Error('Document is no longer open.');
@@ -249,7 +266,7 @@ export class BrowserSession {
     const managed=loadManagedPdf(input);this.pending.add(managed);
     try{
       const pdf=await managed.run(managed.task.promise,60000),assets=await managed.run(pdf.getDocumentAssets({maxObjects:Math.max(1,this.limits.maxObjects),maxMetadataBytes:Math.max(1,this.limits.maxMetadataBytes)}),pdf.numPages>=10000?900000:60000);this.check();
-      entry.assets=assets;entry.managed=managed;entry.lastUse=++this.clock;doc.pdf=pdf;doc.run=managed.run;doc.active=true;this.trim(doc);
+      entry.assets=assets;entry.managed=managed;entry.lastUse=++this.clock;this.accountMetadata(doc,entry);doc.pdf=pdf;doc.run=managed.run;doc.active=true;this.trim(doc);
     }catch(error){managed.close();throw error;}finally{this.pending.delete(managed);}
   }
   async bytes(doc:BrowserDocument,file:AssociatedFile,stream:EmbeddedStream):Promise<Uint8Array>{
@@ -306,7 +323,7 @@ export class BrowserSession {
   private refresh(doc:BrowserDocument):void {
     const entry=this.entries.get(doc)!;
     const interpreted=interpret({documentId:doc.inspection.documentId,byteLength:entry.size,headerVersion:entry.header,pageCount:doc.pdf.numPages,parts:entry.parts,assets:entry.assets,streams:entry.facts,limits:this.limits,parseXml:xml=>new DOMParser().parseFromString(xml,'application/xml')});
-    doc.inspection=interpreted.inspection;doc.details=interpreted.details;this.applySupplementLinks(doc);entry.needsRefresh=false;
+    doc.inspection=interpreted.inspection;doc.details=interpreted.details;this.applySupplementLinks(doc);entry.needsRefresh=false;this.accountMetadata(doc,entry);
   }
   /** Release a completed export child without retaining its inspection. */
   async release(doc:BrowserDocument):Promise<void> {

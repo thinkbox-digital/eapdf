@@ -2,7 +2,8 @@ import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,readFile,writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 process.chdir(fileURLToPath(new URL('../',import.meta.url)));
 const extension=resolve('dist/chromium');
 const context=await chromium.launchPersistentContext('',{headless:true,viewport:{width:1600,height:1050},executablePath:process.env.CHROMIUM_PATH??'/snap/chromium/current/usr/lib/chromium-browser/chrome',args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`]});
@@ -49,7 +50,7 @@ try{
  const categories=await page.locator('.file-category-heading>span:not(.badge)').allTextContents();assert.ok(categories.includes('Email sources'));assert.ok(categories.includes('Technical and supporting files'));
  assert.equal(categories[0],'Email sources');assert.equal(await page.locator('.file-owner').count(),0);
  assert.equal(await page.locator('#document-info').count(),0);assert.match(await page.locator('#declared-profile').innerText(),/EA-PDF 1s/);
- const premis=page.locator('.file-card').filter({has:page.locator('.file-name',{hasText:/premis\.xml$/i})});assert.ok(await premis.count()>0);assert.equal(await premis.first().locator('xpath=../../..').locator('.file-category-heading>span:not(.badge)').innerText(),'Technical and supporting files');
+ const premis=page.locator('.file-card').filter({has:page.locator('.file-name',{hasText:/premis\.xml$/i})});assert.equal(await premis.count(),0,'current examples disable optional PREMIS');
  assert.ok(await page.locator('.file-category details>ul .file-card').count()>0);
  assert.equal(await page.locator('.app-header #breadcrumbs').count(),0);
  assert.equal(await page.locator('.reader-pane #breadcrumbs').count(),1);
@@ -68,5 +69,11 @@ try{
  await page.setViewportSize({width:900,height:950});await page.waitForFunction(()=>document.querySelector('#workspace').dataset.layout==='medium');const medium=await dimensions();assert.equal(medium.left,270);assert.equal(medium.right,0);assert.equal(medium.overflow,false);
  await page.setViewportSize({width:600,height:950});await page.waitForFunction(()=>document.querySelector('#workspace').dataset.layout==='compact');assert.equal((await dimensions()).overflow,false);await page.screenshot({path:'test-results/viewer-design-narrow.png',fullPage:true});
  await page.locator('#close').click();assert.equal(await page.locator('#results-tab').isDisabled(),true);assert.equal(await page.locator('#browse-tab').getAttribute('aria-selected'),'true');
- assert.deepEqual(errors,[]);const report={status:'PASS',desktop,medium,groups,matchingPages:count,checks:['equal 27% sidebars','filename-only search groups and metadata results','filter destinations preserved','distinct file-category headers','highlighted excerpts','search returns to first match','search popover keeps message filtering available','pane focus and restore controls','no horizontal overflow','closing resets results']};await writeFile('test-results/viewer-design.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
+ // Keep optional PREMIS grouping coverage independent of current conversion defaults.
+ const legacy=JSON.parse(await readFile('tests/attachments/premis-legacy.json','utf8'));
+ assert.equal(createHash('sha256').update(await readFile(legacy.sourcePath)).digest('hex'),legacy.sha256);
+ await page.locator('#file').setInputFiles(resolve(legacy.sourcePath));await ready();
+ assert.ok(await premis.count()>0);assert.equal(await premis.first().locator('xpath=../../..').locator('.file-category-heading>span:not(.badge)').innerText(),'Technical and supporting files');
+ await page.locator('#close').click();
+ assert.deepEqual(errors,[]);const report={status:'PASS',desktop,medium,groups,matchingPages:count,checks:['equal 27% sidebars','filename-only search groups and metadata results','filter destinations preserved','distinct file-category headers','highlighted excerpts','search returns to first match','search popover keeps message filtering available','pane focus and restore controls','no horizontal overflow','closing resets results','optional PREMIS remains grouped in legacy files']};await writeFile('test-results/viewer-design.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
 }finally{await context.close();}

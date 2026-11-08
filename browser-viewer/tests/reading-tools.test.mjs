@@ -98,3 +98,40 @@ test('PDF.js fragments preserve split words, real spaces and explicit EOL bounda
  assert.deepEqual(textMatches('ofﬁce','office'),[{start:0,end:5}]);
  assert.deepEqual(textMatches('co\u00adoperate','cooperate'),[{start:0,end:10}]);
 });
+test('resetting search position preserves extracted text until document cleanup',async()=>{
+ let reads=0;const doc={pdf:{numPages:1,getPage:async()=>({getTextContent:async()=>{reads++;return {items:[{str:'alpha beta alpha'}]};},cleanup(){}})},run:p=>p};
+ const search=new DocumentSearch();assert.equal((await search.find(doc,'alpha',1,1,()=>{})).index,0);
+ search.resetCursor();assert.equal((await search.find(doc,'beta',1,1,()=>{})).count,1);
+ search.resetCursor();assert.equal((await search.find(doc,'alpha',1,1,()=>{})).index,0);assert.equal(reads,1);
+ search.clear();await search.find(doc,'alpha',1,1,()=>{});assert.equal(reads,2);
+});
+
+
+test('separate backward text runs cannot manufacture words, and offsets include their boundary',async()=>{
+ const {pdfSearchText}=await import('../dist/chromium/document-search.js');
+ const item=(str,x,width,extra={})=>({str,dir:'ltr',transform:[11,0,0,11,x,577.2],width,...extra});
+ const pieces=[item('Belmonte',343.94,52.92),{type:'beginMarkedContent'},item('',0,0),item('mailto:person@example.org',145.46,185.21),item('',0,0,{hasEOL:true}),item('email',40,30)];
+ const text=pdfSearchText(pieces);
+ assert.equal(text,'Belmonte mailto:person@example.org\nemail');
+ assert.deepEqual(textMatches(text,'email'),[{start:35,end:40}]);
+ assert.deepEqual(textMatches(text,'Belmonte mailto'),[{start:0,end:15}]);
+ assert.equal(pdfSearchText([item('Belmonte ',343.94,52.92),item('mailto:',145.46,40)]),'Belmonte mailto:');
+ assert.equal(pdfSearchText([item('Belmonte',343.94,52.92),item(' mailto:',145.46,40)]),'Belmonte mailto:');
+ assert.equal(pdfSearchText([item('Belmonte',343.94,52.92,{hasEOL:true}),item('mailto:',145.46,40)]),'Belmonte\nmailto:');
+});
+
+test('spatial boundary preserves contiguous words, overlaps, marks and unsupported writing directions',async()=>{
+ const {pdfSearchText}=await import('../dist/chromium/document-search.js');
+ const item=(str,x,width,extra={})=>({str,dir:'ltr',transform:[12,0,0,12,x,100],width,...extra});
+ assert.equal(pdfSearchText([item('con',40,18),item('tract',58,30)]),'contract');
+ assert.equal(pdfSearchText([item('con',40,18),item('tract',57,30)]),'contract');
+ assert.equal(pdfSearchText([item('Cafe',40,24),item('\u0301',55,2)]),'Café');
+ assert.equal(pdfSearchText([item('e',40,6),item('\u0301',20,2)]),'é','combining marks never acquire a separator');
+ assert.equal(pdfSearchText([item('of',40,12),item('ﬁce',52,18)]),'ofﬁce');
+ assert.equal(pdfSearchText([item('a',40,6),item('b',33,6)]),'ab','small kerning/rounding differences remain joined');
+ for(const dir of ['rtl','ttb'])assert.equal(pdfSearchText([item('a',60,6,{dir}),item('b',40,6,{dir})]),'ab');
+ assert.equal(pdfSearchText([item('a',60,6,{transform:[0,12,-12,0,60,100]}),item('b',40,6,{transform:[0,12,-12,0,40,100]})]),'ab');
+ assert.equal(pdfSearchText([item('a',60,6),item('b',40,0)]),'ab');
+ assert.equal(pdfSearchText([item('a',60,6),item('b',40,6,{transform:[12,0,0,12,NaN,100]})]),'ab');
+ assert.equal(pdfSearchText([{str:'con'},{str:'tract'}]),'contract','text-only callers retain PDF.js fragment semantics');
+});

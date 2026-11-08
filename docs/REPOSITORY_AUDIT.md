@@ -1,10 +1,58 @@
 # November 7, 2026 repository audit follow-up
 
 The supplied audit reviewed public commit `8f0b079`. Remediation below describes
-source changes prepared for beta.18. Verification below describes local runs;
+source changes prepared for beta.18 and extended for beta.19. Verification below describes local runs;
 remote workflow status is reported by GitHub Actions.
 The previously completed search-pane, Calc XLSX and PDF.js scheduling fixes are
 preserved.
+
+## Beta.19 release verification
+
+Creator and validator `1.6.0-beta.19` and viewer `0.5.0-beta.18` include the
+follow-up fixes below. The beta.18 work was local; beta.17 was the preceding
+published GitHub release.
+
+Fresh release builds passed 445 creator tests (four documented skips), 264
+validator tests (nine documented skips), and both executable-validator-JAR
+checks. The skips match the maintained allowlist. Independent clean rebuilds
+produced identical bytes for the creator, GUI and validator JARs. All four signed
+index profiles passed standalone Java EA-PDF and veraPDF validation.
+
+The 18 public Python regressions, eight deliberate-loss oracle tests and three
+independent EML/MSG/MBOX conversion cases passed. These conversion cases compare
+source and attachment preservation, rendered output and standalone Java/veraPDF
+results. The PDF/A-2b manual and strict documentation build also passed.
+All Chromium suite stages passed, including 131 unit tests and 36 unsigned plus
+36 signed indexed/scanned comparisons. Firefox fresh temporary installation, UI
+and signed-index checks passed. The inspection contract/reference checks and
+44 MB repeated-open/search/extraction probe also passed. Rebuilt browser packages
+are byte-identical. Tests that specifically exercise scanning now explicitly
+select that path; a small frozen public fixture retains optional PREMIS coverage
+while refreshed examples omit PREMIS. GitHub Actions remains the authority for
+remote workflow status.
+
+The public bundle contains 26 freshly generated PDFs: all 24 primary examples
+pass EA-PDF and PDF/A validation across the six profiles; the missing-date
+negative example retains its expected `MESSAGE_SENT_XMP` failure; the 1,433-message
+Enron archive is explicitly `INCOMPLETE` because bundled veraPDF encounters the
+same runtime exception recorded in beta.18. It is not a conformance-passing
+fixture. The [example inventory](../examples/README.md) and manifests record these
+distinctions, source hashes and output hashes. Accessibility and supported search
+indexes are enabled; optional finding aids and PREMIS are disabled. The 44
+superseded optional sidecars were removed after verifying their recorded hashes.
+
+Fresh conversions of the 69.09 MB May PST and 130.80 MB April PST produced indexed
+`1ci` files of 84.39 MB and 91.84 MB. Both roots and all 3,704 embedded message PDFs
+passed standalone Java EA-PDF, veraPDF and selected ISO checks. Original PST
+hashes are unchanged; existing header-conflict and date-precision diagnostics
+remain explicit. Conversion took 249.2/260.0 seconds and validation 283.0/265.2
+seconds during concurrent release work. Sampled conversion peak process-tree
+PSS was 742/833 MiB; validation was 1,793/1,801 MiB. These are fresh-conversion
+measurements, not controlled speedup comparisons. Isolated profiles intentionally
+omit original email bytes and use attachment placeholders; comparison with
+normalized reader records does not establish independent PST completeness.
+
+## Original audit findings
 
 | Finding | Disposition |
 | --- | --- |
@@ -38,3 +86,304 @@ tests pass locally. Workflow execution and required-check settings on GitHub are
 not established by these local results. Native MSG evidence limits, inaccessible
 or over-budget archives, actual accessibility and cross-platform acceptance
 remain documented limitations; they must not be relabeled as complete coverage.
+
+
+## Follow-up creator and viewer improvements — November 7
+
+Implemented the subsequent code-review improvements, excluding the proposed
+manual “Verify using PDF.js” action. File-backed MSG parsing remains deferred.
+
+- MIME scopes, body selection, attachment discovery and debug traversal now use
+  iterative walks. A 3,000-level, 203,933-byte MIME fixture that raised
+  `StackOverflowError` now parses under a 256 MiB heap and 1 MiB stack. Decoded-byte
+  accounting accompanies extraction; ignored and nested parts remain checked,
+  avoiding a redundant decoding pass without caching all decoded payloads.
+- Index serialization hashes a bounded disk spool and streams into gzip. The
+  version-3 payload and signature-compatible binding remain unchanged.
+- Creator GUI logs keep bounded recent display text while preserving complete
+  UTF-8 run logs; display updates are batched. See [operations](CONVERSION_OPERATIONS.md#creator-gui-logs).
+- Messages-filter edits preserve scroll unless they change the displayed page
+  range. Large collection-result lists are virtualized with keyboard navigation,
+  matching-page highlighting, and precomputed cumulative counts. Search-form
+  submissions reset the cursor without discarding the bounded page-text cache.
+- Inactive child metadata is evicted by count/estimated memory, restoring lazy
+  navigation when reopened. Current/root navigation state remains available.
+  [Resource policy](../browser-viewer/docs/security.md) documents the exemptions.
+- CI now generates signed fixtures, independently validates all four profiles,
+  and supplies those same PDFs to Chromium and Firefox acceptance. Unsigned and
+  signed reports are retained separately. Remote Actions execution is not claimed.
+
+### Measured isolated workloads
+
+| Workload | Before | After |
+| --- | ---: | ---: |
+| Agenda/PPTX EML: median time for 100 parses | 531.75 ms | 486.71 ms |
+| Same MIME workload: main-thread allocated bytes | 116,265,928 | 105,394,536 |
+| 1,000 distinct messages: median index serialization/gzip time | 197.728 ms | 152.230 ms |
+| Same serialization stage: main-thread allocated bytes | 63,395,456 | 18,869,688 |
+| 50,000-line GUI display model: median processing time | 4,231.416 ms | 1,019.572 ms |
+| GUI retained detail characters | 5,950,000 | 500,000 |
+| GUI append/scroll updates | 50,000 | 391 |
+| 1,000 matching pages: mounted result rows | 1,000 | 48 |
+| Result presentation, including the first match | 210.3 ms | 81.6 ms |
+| Six refined queries: page-text extractions | 6 | 1 |
+| Retained children after 64 visits | 64 | 18 |
+| Serialized retained metadata in that probe | 2,041,761 characters | 863,163 characters |
+
+MIME and index figures use warm-up followed by three measured trials; GUI timings
+use three fresh JVMs. MIME source/body/metadata/attachment fingerprints agree for
+all 31 real EML inputs. The index benchmark uses 1,000 distinct real messages;
+compressed bytes remain exactly identical (754,713 bytes). Heap-pool peaks and
+allocation counters are not equivalent to whole-process peak memory. The GUI
+model is headless and excludes disk I/O and visible desktop interaction.
+
+Viewer presentation/retention figures are single shared-host trials. Synthetic
+pages isolate DOM scaling; cache/retention probes use unchanged real PDF content
+under multiple logical references. Six-query latency was 16.9 → 19.0 ms and
+64-child traversal was 11.19 → 16.39 s in those trials: these establish reduced
+work/retention, not a reliable speed gain for those paths. Retained children plateau
+at 16/18/18 for visits 16/32/64; root and active documents are excluded from the
+inactive budget. Serialized metadata size is not browser heap or RSS.
+
+### Verification and reproducibility
+
+The integrated creator package passed 442 tests (four skipped), and all 122 viewer
+unit tests passed. Complete Chromium acceptance, Firefox UI acceptance, both
+signed-index paths, the independent inspection oracle, and the 44 MB constrained
+archive test passed. The independent real EML/MSG/MBOX conversion gate retained
+its source/attachment and visual expectations and passed Java/veraPDF checks.
+All four signed-index profiles pass, as do new 100- and 1,000-distinct-message
+collections, with zero failures (nine warnings per diverse collection).
+
+Reusable probes are `scripts/benchmarks/MimeReaderBenchmark.java`,
+`scripts/benchmarks/CreatorMemoryBenchmark.java`,
+`browser-viewer/scripts/viewer-improvements-smoke.mjs`,
+`scripts/benchmark_diverse_index.py`, and
+`browser-viewer/scripts/diverse-index-benchmark.mjs`. Java probes document their
+invocation in their source. The viewer probe supports `EAPDF_VIEWER_BASELINE`
+pointing to an earlier Chromium package directory. Use explicit temporary output
+destinations for private corpora. No commits, pushes or releases were performed.
+
+
+### Diverse corpus and complete-conversion measurements
+
+The new benchmark uses the first 100 and 1,000 distinct records from the existing
+Enron mailbox, without changing the original. The 1,000-message collection has
+1,271 pages, 1,254 unique normalized page texts and 15,806 terms. Indexed and
+PDF.js-scanned results agree exactly on per-page destinations and counts for the
+recorded common, rare and phrase queries. Indexed queries opened zero children;
+scanned queries opened all 1,000. The selected phrase (`email collection`) is a
+cover-page phrase; these three queries supplement, not replace, the 36-query
+four-profile regression.
+
+On the updated 1,000-message file, opening took 1.361 s and index loading 2.398 s.
+The common query took 0.687 s indexed versus 45.667 s scanned; rare and phrase
+queries took 0.086/0.453 s indexed versus 61.914/99.539 s scanned. These were
+instrumented runs concurrent with other acceptance checks, so the scan spread
+is not an estimate of query complexity or a before/after speedup. All paths return
+complete result sets; time to first result equals complete query time here.
+Sampled peak browser PSS was 620,539 KiB, versus 607,940 KiB in the earlier run;
+there is no established total-browser-memory reduction from this benchmark.
+
+Two later alternating baseline/updated conversion pairs ran sequentially with no
+other task workloads. Complete 1,000-message conversion times were 49.574/53.867 s
+before and 52.379/52.932 s after (medians 51.721 → 52.656 s). This establishes no
+whole-conversion speedup. GNU time maximum RSS ranged from 1,761,996–1,803,524 KiB
+before and 1,758,968–2,110,264 KiB after; no whole-process peak-memory improvement
+is claimed. GNU time's maximum is not an aggregate concurrent-worker memory
+measurement. PDFs remained approximately 41.19 MB; small byte-size differences
+include ordinary generated identifiers/metadata and are not a compression gain.
+
+The earlier concurrent conversion timings (45.737 → 70.689 s for 1,000 messages)
+are retained as raw evidence, not used to infer a regression or improvement.
+The isolated allocation and UI-retention results above are the demonstrated
+benefits. Multi-GiB and broad cross-platform capacity remain unverified.
+
+
+A second viewer pair ran sequentially after the other task workloads completed.
+Result presentation was 195.8 → 49.2 ms with the same 1,000 → 48 mounted rows.
+Six-query median time was 13.7 → 10.4 ms, and 64-child traversal was
+10.353 → 10.826 s. This reinforces the presentation improvement and retained-work
+reductions, but does not establish a broad browsing speedup. Both the earlier
+shared-load observations and this sequential pair are retained; no slower result
+was discarded.
+
+
+### Larger PST acceptance tests
+
+Two real public PST inputs above the previous 60 MB cutoff were converted with
+creator/validator 1.6.0-beta.18 and tested in Chromium with viewer 0.5.0-beta.17.
+Both use indexed 1ci, accessibility enabled, PREMIS disabled and no finding aid.
+Original source hashes remained unchanged; message counts match prior inventories.
+
+| Input | Source size | Messages | PDF size | Conversion | Recursive Java validation |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| May 2003 public PST | 69.09 MB | 1,795 | 84.40 MB | 131.94 s | PASS, 318.82 s |
+| April 2003 public PST | 130.80 MB | 1,909 | 91.85 MB | 182.33 s | PASS, 308.75 s |
+
+All 3,704 embedded messages completed validation. Both collection roots and their
+children pass EA-PDF and veraPDF PDF/A-4f checks with zero failures. Each root
+report retains nine warnings concerning provenance evidence and recommended
+metadata, tagging, structure and asset policies; child reports retain applicable
+recommendations. Creator diagnostics include Message-ID/header conflicts, reduced
+date precision and invalid date strings retained as raw metadata. Creator
+preservation comparisons pass against normalized reader records, which do not
+independently prove PST parser completeness. Isolated 1ci intentionally omits
+original email bytes and uses attachment placeholders.
+
+Conversion used a 3 GiB parent heap, two jobs and 1 GiB worker heaps. Validation
+used a 2 GiB parent, four child processes and a 256 MiB work-file allowance;
+child heaps were 512 MiB for May and 384 MiB for April. GNU time's maximum
+individual-process RSS was 810.68/713.83 MiB during May/April conversion, not an
+aggregate concurrent-worker measurement. April's sampled process-tree peaks
+were 789.57 MiB RSS / 746.21 MiB PSS for conversion and 1,950.23 MiB RSS /
+1,813.23 MiB PSS for validation. May's initial descendant sampler missed worker
+processes; no aggregate conversion peak is claimed for that run.
+
+Metadata indexes cover all 1,795/1,909 messages. Full-text indexes cover
+2,878/3,268 pages and occupy 2.53/2.92 MB compressed, respectively. These are
+payload sizes, not measured PDF overhead against equivalent unindexed output.
+
+| Chromium measurement | May | April |
+| --- | ---: | ---: |
+| Root opening | 3.732 s | 2.33 s |
+| Metadata index load | 0.161 s | 0.110 s |
+| Full-text index load | 6.897 s | 5.11 s |
+| First rare-term indexed query | 0.190 s | 0.189 s |
+| First phrase indexed query | 0.240 s | 0.208 s |
+| Combined three-query PDF.js scan | 232.727 s | 92.79 s |
+| Child PDFs opened by indexed queries / full scan | 0 / 1,795 | 0 / 1,909 |
+| Sampled peak browser PSS | 831 MiB | 803 MiB |
+
+The independent scan extracts every page once and answers all three queries in
+that pass. Its timing is for the combined workload, not three independent scans.
+These are instrumented single trials on a shared host; May overlapped validator
+load, while April ran later. They establish current behavior, not a before/after
+speedup or a comparison between the two inputs.
+
+May's rare query `abandoned` (two occurrences on two pages) and phrase
+`economic damages` (29 occurrences on 11 pages) agree exactly on document route,
+page, message identity and occurrence count. Its common query `email` exceeded
+the existing two-second indexed-query budget twice during concurrent validation.
+A later actual UI run stayed indexed, but reported 4,144 occurrences versus
+4,145 from PDF.js across the same 2,053 matching pages. That query does not pass
+search parity; the differing page was not retained by the initial comparison
+harness. No claim of universal PDFBox/PDF.js equivalence is made.
+
+April's `email` (4,476 occurrences / 2,215 pages), `aback` (two / one) and
+`petersburg times` (27 / 19) all agree exactly with PDF.js. First/repeated common
+queries took 1.762/1.776 s, rare queries 0.189/0.192 s and phrases 0.208/0.222 s.
+Both independent scans completed without missing children. Actual UI selection
+verified first/last highlights and destinations; root navigation returned to page
+one at Fit Width with the original filename. Common-query lists mounted 48 rows
+initially and 29 at the final window. Session entries and pending work were empty
+after disposal; browser main heaps after explicit test GC were about 5 MiB.
+
+A broad May query entered the actual PDF.js fallback. Cancellation completed in
+76 ms, explicitly reported that no complete result set was produced, and cleared
+the isolated scan session. Full fallback completion within the default 120-second
+budget was not measured.
+
+This run covers two unsigned 1ci files on Linux/Chromium. Other profiles,
+Firefox, signed large files and multi-GiB capacity were not retested here.
+Generated documents, source hashes, configurations, logs and detailed reports
+were retained locally. No production code, version or release was changed.
+
+
+### Search correctness and query performance follow-up
+
+The larger-PST discrepancy was localized to deferred link text painted out of
+reading order. Joining `Belmonte` directly to a separately positioned `mailto:`
+run manufactured an `email` occurrence in the PDF.js scan. A complete scan after
+fixing that boundary found a second phantom, `White` + `mailto:`, present in both
+old PDFBox and PDF.js text. Thus the original May figures (4,144 indexed / 4,145
+scanned) included one/two false occurrences respectively; the corrected count is
+4,143 across the same 2,053 pages. This was not a lost email or missing PDF page.
+
+Viewer search and streamed text-layer highlights now share a conservative
+separator for disjoint backward horizontal LTR runs. Contiguous words, overlaps,
+marks, RTL/rotated text and existing EOL handling retain their behavior. PDFBox
+index extraction applies the boundary through its public text-position callback,
+preserving emitted Unicode and normal word/line separators. Ambiguous position
+mapping fails optional index creation with an explicit diagnostic. No PDF.js
+patch, visible page, original asset or CLI behavior changes.
+
+The corrected extraction uses engine `pdfbox-nfkd-space-fold-v3` within the
+unchanged version-3 wire schema. Earlier engines fall back to PDF.js scanning;
+regeneration supplies a current index. A retained real engine-v2 fixture tests
+that compatibility path. [Index architecture and limits](EMBEDDED_SEARCH_INDEX.md#search-semantics)
+describe the narrow rule and remaining extraction differences.
+
+Indexed queries previously normalized canonical page text again and allocated
+original-offset match arrays. They now count literal non-overlapping matches
+directly in strings already validated during index parsing. Precise PDF.js glyph
+offsets are still established on selection. No cache or increased resource
+limit was added. The fallback's existing 120-second budget now also applies
+before opening members/streams, including malformed and zero-page children.
+
+#### Controlled query-stage measurements
+
+Three alternating baseline/updated Chromium trials used identical real embedded
+index payloads, with no competing task workloads. The root inventory was
+reconstructed from verified index rows to isolate querying; PDF opening, index
+loading and rendering are excluded. These medians measure the query optimization
+independently of the subsequent extraction-engine change.
+
+| Query | May before → after | April before → after |
+| --- | ---: | ---: |
+| Common `email` | 1,597.1 → 214.4 ms | 1,773.0 → 252.3 ms |
+| Broad `e` | 2 s timeout → 288.3 ms | 2 s timeout → 311.9 ms |
+| Rare term (`abandoned` / `aback`) | 176.6 → 168.4 ms | 185.3 → 190.6 ms |
+| Phrase (`economic damages` / `petersburg times`) | 231.7 → 168.1 ms | 211.7 → 189.6 ms |
+
+The broad baseline timed out in all six trials. Every successful before/after
+query retained its complete destination/page/count/message-identity fingerprint.
+An independent legacy canonical-text matcher also verified broad-query results
+(282,908 May / 332,715 April occurrences). This establishes substantial common-
+and broad-query improvement, not an improvement for every query; the rare April
+query was slightly slower. The two-second query deadline remains unchanged.
+
+
+#### Integrated current-engine verification
+
+Current-engine May indexed/scanned results agree at 4,143 occurrences over 2,053
+pages; April agrees at 4,476 over 2,215 pages. Repeated common queries took
+215–221 ms and 260–277 ms respectively, opening zero children. May's complete
+current-viewer fallback scan took 81.37 s; April's took 92.85 s. Both completed
+all children/pages within the unchanged 120-second budget. May's scan was reused
+after verifying identical child routes/checksums/sizes/page counts, root page
+text and the exact text-assembly module; its earlier incomplete parity result
+was retained separately. April's new scan also checked rare/phrase counts from
+the same extracted text. No broader extraction-equivalence claim is made.
+
+Both affected May pages stay indexed when selected and display exactly two and
+three real highlights. First/last-result navigation, 48/29 mounted rows, root
+page-one Fit Width and disposal passed. Query time excludes PDF opening and
+initial index loading. The final May memory sample excludes a new full scan, so
+it is not evidence of reduced scan memory.
+
+Verification completed: full creator package (445 tests, four skips), 131 viewer
+unit tests, TypeScript/inspection contract, 36 unsigned and 36 signed Chromium
+indexed/scanned comparisons, current/legacy engine behavior, and unsigned/signed
+Firefox acceptance. The real PDF text-layer regression forces one-item stream
+chunks and checks split words, EOL/hyphenation, backward runs and exact highlight
+offsets. Focused tests retain Unicode, marks, overlaps, RTL/rotation, cancellation
+and malformed/empty-child deadline coverage. Strict documentation build and
+optimized-Python package integrity checks passed.
+
+The four unsigned and four signed current-engine profile fixtures pass standalone
+Java EA-PDF and veraPDF checks with zero failures (nine/ten root warnings
+respectively). Refreshed large PDFs add only 2,263 / 2,399 bytes. All non-root-XMP
+decoded streams, page content/geometry and remaining root XMP were verified
+unchanged, including embedded children and original assets. Original test PDFs
+remain unchanged. Versioned creator/GUI JARs and both local viewer packages were
+refreshed without a version bump or publication.
+
+
+Both refreshed large roots and all 3,704 children subsequently completed
+standalone Java EA-PDF and veraPDF validation: zero failures and nine root
+warnings each, in 379.25 / 374.33 seconds. These were index-only refreshes of
+copies, not new source conversions. Original PST and prior PDF hashes remained
+unchanged. Task-owned temporary builds and validation scratch were removed.
+The general PDFBox/PDF.js reading-order caveat remains; the measured fixes do not
+establish equivalence for arbitrary PDFs or all multilingual layouts.

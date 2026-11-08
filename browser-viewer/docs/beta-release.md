@@ -1,16 +1,16 @@
-# Viewer 0.5.0-beta.17 — GitHub prerelease (2026-11-07)
+# Viewer 0.5.0-beta.18 — GitHub prerelease (2026-11-07)
 
-Packages accompany EA-PDF 1.6.0-beta.18. This beta adds embedded archive search,
-corrects text-fragment matching and highlights, improves CSV export and keyboard
-navigation, and returns filename selections to the first page at Fit Width.
+Packages accompany EA-PDF 1.6.0-beta.19. This beta corrects false matches across
+separate text runs, speeds up collection searches, supports indexes in signed
+archives and bounds retained search results and child metadata.
 
 ## Install or update
 
 Download the packages from the
-[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.18):
+[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.19):
 
-- `eapdf-viewer-0.5.0-beta.17-chromium.zip`
-- `eapdf-viewer-0.5.0-beta.17-firefox.zip`
+- `eapdf-viewer-0.5.0-beta.18-chromium.zip`
+- `eapdf-viewer-0.5.0-beta.18-firefox.zip`
 
 Extract the appropriate ZIP into a new directory. Chromium: open
 `chrome://extensions`, enable Developer mode, choose **Load unpacked**, then select
@@ -21,13 +21,13 @@ closes. No Java, Python, Node or server is needed to use either extension.
 
 Remove or disable the older installation. Reloading an old extracted directory
 does not download an update. Close old viewer tabs and open a new one. The footer
-shows `0.5.0-beta.17`; the browser's extension manager shows `0.5.0.17`.
+shows `0.5.0-beta.18`; the browser's extension manager shows `0.5.0.18`.
 For workspace builds, reload `browser-viewer/dist/chromium/` or reinstall
 `browser-viewer/dist/firefox/manifest.json`.
 
 ## Example emails
 
-Download [the example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.18/ea-pdf-examples-1.6.0-beta.18.zip),
+Download [the example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.19/ea-pdf-examples-1.6.0-beta.19.zip),
 or see the [example inventory](../../examples/README.md).
 
 ## Use and limitations
@@ -42,8 +42,12 @@ The viewer displays the declared EA-PDF profile; it does not validate conformanc
 Use the standalone validator and read its [coverage and limitations](../../docs/VALIDATOR_COVERAGE.md).
 An INCOMPLETE result means required evidence or an assessment is unavailable,
 not a pass. Missing original dates and unsupported or ambiguous native MSG source
-comparisons can remain unresolved. Large-archive loading, performance and known
-validation problems remain deferred; this beta does not claim they are fixed.
+comparisons can remain unresolved. Large-archive capacity and source-validation limits remain documented; the
+verified larger-file tests do not establish unrestricted capacity.
+
+Full-text indexes created with older extraction engines fall back to PDF.js
+scanning. Regenerate an archive with the current creator for the corrected fast
+index; existing PDFs remain viewable.
 
 Current processing limits are in the [README](../README.md#limits) and
 [security boundaries](security.md). A file below a size ceiling is not guaranteed
@@ -51,10 +55,18 @@ to load successfully. See [compatibility](compatibility.md) for platform coverag
 
 ## Verified scope
 
-Local beta.18 checks passed: 118 unit tests, all standard Chromium test commands,
-fresh Firefox installation/UI checks, inspection-oracle tests and the bounded
-44 MB archive probe. One keyboard test expectation was updated from two to three
-phrase matches after correcting whitespace normalization; it then passed.
+Local release checks passed: 131 viewer unit tests and all Chromium integration
+stages, Firefox UI acceptance with a fresh temporary installation, and 72
+unsigned/signed Chromium indexed/scanned comparisons with highlighting. The
+independent inspection oracle and the 44 MB repeated-open/search/extraction
+probe also passed. Both viewer packages reproduce byte for byte after a clean
+rebuild.
+
+Regenerated examples now contain indexes and omit optional PREMIS. Scan-specific
+tests explicitly exercise fallback, while a frozen public legacy fixture retains
+PREMIS grouping coverage. Navigation checks use the refreshed PDF page counts. Association and search-result
+navigation checks also passed against the regenerated 1,433-message Enron archive;
+its separate validation limitation remains documented in the example inventory.
 
 Release checks and remaining limitations are recorded in the
 [embedded-index design](../../docs/EMBEDDED_SEARCH_INDEX.md) and
@@ -79,8 +91,8 @@ PDF.js pin checks. Firefox runs `M5_UI=1 npm run test:firefox` after a build and
 performs a fresh temporary add-on installation. It does not establish signed
 installation, store approval or cross-platform compatibility. `npm test` includes
 the upstream/patched PDF.js differential checks; `npm run test:archive-memory`
-adds the public 44 MB repeated-open/search/extraction probe. These requirements
-do not retroactively change the beta.17 verification record above.
+adds the public 44 MB repeated-open/search/extraction probe. These requirements apply to the current release; historical verification
+records remain in the repository audit.
 
 `package:beta` rejects version/hash mismatches and unexpected files even under
 optimized Python, then verifies the ZIP entries against the validated bytes.

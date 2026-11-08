@@ -457,10 +457,19 @@ public class EapdfGui {
     command.add(mainClass);
     command.addAll(args);
 
-    appendLog("");
-    appendLog("== " + label + " ==");
-    appendLog("$ " + shellCommand(command));
-    appendLog("GUI feature overrides: " + describeConfigOverrides(configOverrides));
+    final Path runLog;
+    try {
+      Path logs=Paths.get(System.getProperty("user.home"),".eapdf","logs");Files.createDirectories(logs);
+      runLog=Files.createTempFile(logs,"conversion-",".log");
+    } catch(Exception error) {
+      if(signingPassword!=null)java.util.Arrays.fill(signingPassword,'\0');
+      try{Files.deleteIfExists(tempConfigPath);}catch(Exception ignored){}
+      showError("Could not create the conversion log: "+error.getMessage());return;
+    }
+    List<String> logHeader=List.of("", "== "+label+" ==", "$ "+shellCommand(command),
+        "GUI feature overrides: "+describeConfigOverrides(configOverrides),"Full conversion log: "+runLog);
+    logArea.setToolTipText("Recent output only. Complete conversion log: "+runLog);
+    appendLogLines(logHeader);
     lastOutputDirectory = null;
     stopRequested = false;
     lastRunError = null;
@@ -470,7 +479,7 @@ public class EapdfGui {
     messageTabs.setSelectedIndex(0);
     setRunning(true, "Running " + label + "...");
 
-    SwingWorker<Integer, String> worker = new SwingWorker<>() {
+    SwingWorker<Integer, Void> worker = new SwingWorker<>() {
       @Override
       protected Integer doInBackground() throws Exception {
         ProcessBuilder builder = new ProcessBuilder(command);
@@ -488,12 +497,12 @@ public class EapdfGui {
         activeProcess = process;
         if (stopRequested) ConversionSupervisor.requestStop(process);
         try (BufferedReader reader = new BufferedReader(
-            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-          String line;
-          while ((line = reader.readLine()) != null) {
-            publish(line);
-          }
-        } catch (java.io.IOException error) {
+            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+             var saved=Files.newBufferedWriter(runLog,StandardCharsets.UTF_8)) {
+          for(String line:logHeader){saved.write(line);saved.newLine();}
+          GuiLog.copy(reader,saved,lines->SwingUtilities.invokeAndWait(()->appendLogLines(lines)));
+          int exitCode=process.waitFor();saved.write("Exit code: "+exitCode);saved.newLine();return exitCode;
+        } catch (Exception error) {
           if (!stopRequested) {
             ConversionSupervisor.requestStop(process);
             throw error;
@@ -503,15 +512,11 @@ public class EapdfGui {
       }
 
       @Override
-      protected void process(List<String> chunks) {
-        for (String line : chunks) appendLog(line);
-      }
-
-      @Override
       protected void done() {
         try {
           int exitCode = get();
           appendLog("Exit code: " + exitCode);
+          appendSummary("Full conversion log: "+runLog);
           boolean stopped = stopRequested && exitCode != 0;
           if (exitCode == 0 && Files.isDirectory(outputDirectory)) {
             lastOutputDirectory = outputDirectory;
@@ -529,6 +534,7 @@ public class EapdfGui {
           }
         } catch (Exception ex) {
           appendLog("Error: " + ex.getMessage());
+          appendSummary("Full conversion log: "+runLog);
           setRunning(false, stopRequested ? "Stopped" : "Failed");
           appendSummary(stopRequested ? "Stopped." : "The conversion did not finish. See Details for the error.");
           if (!stopRequested) showError(Objects.toString(ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage(), "Conversion failed."));
@@ -581,26 +587,26 @@ public class EapdfGui {
     }
   }
 
-  private void appendLog(String line) {
-    if (line.contains("INCOMPLETE SOURCE:")) incompleteSource = true;
-    logArea.append(line + System.lineSeparator());
-    logArea.setCaretPosition(logArea.getDocument().getLength());
-    if (line.startsWith("[progress] ") && running && !stopRequested) {
-      statusLabel.setText(line.substring("[progress] ".length()));
+  private void appendLog(String line) {appendLogLines(List.of(line));}
+
+  private void appendLogLines(List<String> lines) {
+    var detail=new StringBuilder();var summary=new StringBuilder();
+    for(String line:lines){
+      GuiLog.tail(detail,line+System.lineSeparator(),GuiLog.DISPLAY_CHARACTERS);
+      if (line.contains("INCOMPLETE SOURCE:")) incompleteSource = true;
+      if (line.startsWith("[progress] ") && running && !stopRequested)
+        statusLabel.setText(line.substring("[progress] ".length()));
+      String error = conversionError(line),message=null;
+      if (line.startsWith("wrote: ") || line.startsWith("wrote archive: ") || line.startsWith("wrote pdf: ")) {
+        try {message="Converted: " + Paths.get(line.substring(line.indexOf(':') + 1).trim()).getFileName();}
+        catch (java.nio.file.InvalidPathException ex) {message=line;}
+      } else if (error != null && (!line.startsWith("Caused by: ") || lastRunError == null)) {
+        lastRunError = error;if (!stopRequested) message="Error: " + lastRunError;
+      } else if (line.startsWith("warning: ")) message=line;
+      if(message!=null)GuiLog.tail(summary,message+System.lineSeparator(),GuiLog.SUMMARY_CHARACTERS);
     }
-    String error = conversionError(line);
-    if (line.startsWith("wrote: ") || line.startsWith("wrote archive: ") || line.startsWith("wrote pdf: ")) {
-      try {
-        appendSummary("Converted: " + Paths.get(line.substring(line.indexOf(':') + 1).trim()).getFileName());
-      } catch (java.nio.file.InvalidPathException ex) {
-        appendSummary(line);
-      }
-    } else if (error != null && (!line.startsWith("Caused by: ") || lastRunError == null)) {
-      lastRunError = error;
-      if (!stopRequested) appendSummary("Error: " + lastRunError);
-    } else if (line.startsWith("warning: ")) {
-      appendSummary(line);
-    }
+    GuiLog.append(logArea,detail.toString(),GuiLog.DISPLAY_CHARACTERS);
+    if(!summary.isEmpty())GuiLog.append(summaryArea,summary.toString(),GuiLog.SUMMARY_CHARACTERS);
   }
 
   static String conversionError(String line) {
@@ -612,8 +618,7 @@ public class EapdfGui {
   }
 
   private void appendSummary(String line) {
-    summaryArea.append(line + System.lineSeparator());
-    summaryArea.setCaretPosition(summaryArea.getDocument().getLength());
+    GuiLog.append(summaryArea,line+System.lineSeparator(),GuiLog.SUMMARY_CHARACTERS);
   }
 
   private JPanel inlinePanel(Component... components) {

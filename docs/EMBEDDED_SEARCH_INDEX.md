@@ -162,8 +162,8 @@ Example, from the repository root (use a fresh temporary directory):
 ```sh
 TASK_DIR=$(mktemp -d /tmp/eapdf-index-benchmark-XXXXXX)
 mvn -Deapdf.build.directory="$TASK_DIR/creator" package
-javac -cp "$TASK_DIR/creator/emailtopdfa-1.6.0-beta.18.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/MetadataIndexBenchmark.java
-EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-1.6.0-beta.18.jar" eapdf.MetadataIndexBenchmark in/sample.eml "$TASK_DIR/fixtures" 100 1000 10000
+javac -cp "$TASK_DIR/creator/emailtopdfa-1.6.0-beta.19.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/MetadataIndexBenchmark.java
+EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-1.6.0-beta.19.jar" eapdf.MetadataIndexBenchmark in/sample.eml "$TASK_DIR/fixtures" 100 1000 10000
 # Run in a temporary viewer working copy with dependencies installed and bundles built:
 EAPDF_INDEX_BENCHMARK="$TASK_DIR/fixtures" npm run benchmark:metadata-index
 ```
@@ -262,7 +262,12 @@ are supported; standalone `1s`/`1si` keep ordinary PDF.js search.
 
 Full-text generation uses PDFBox in the Java process; Node.js is not required.
 The creator extracts each rendered page with PDFTextStripper in content-stream
-order, normalizes the result, and builds the existing positional index. It reuses
+order, preserves PDFTextStripper's emitted text and inserts a separator only at
+proven disjoint backward horizontal LTR run boundaries, then normalizes the
+result and builds the existing positional index. The viewer applies the same
+narrow boundary rule described below. If an affected PDFBox word cannot be
+safely aligned with its character positions, index creation reports
+`SEARCH_INDEX_UNAVAILABLE` and retains ordinary PDF.js search. It reuses
 loaded documents and spools text rows to disk. No JavaScript runtime or helper is
 packaged in the creator. The viewer continues using PDF.js for rendering.
 
@@ -276,8 +281,7 @@ that limitation and verifies selected matches with PDF.js before highlighting.
 defaults to `true` and can independently disable full text. Extraction failure, ambiguity or resource limits
 emit `SEARCH_INDEX_UNAVAILABLE` and publish the valid PDF without full text.
 Cancellation still aborts conversion. The staged original is replaced only
-after the complete replacement index and binding succeed. Signed outputs omit
-full text with a diagnostic because signing would change the byte binding.
+after the complete replacement index and binding succeed. Signed outputs retain full text using the signature-compatible binding described below.
 Existing metadata indexing is unaffected. There are no new CLI arguments.
 
 ### Search semantics
@@ -294,17 +298,31 @@ multiple words form a phrase, not Boolean AND. Quotes are literal characters.
 As with other substring searches, `cafe` can match the prefix of decomposed
 `café`; accents are not explicitly removed.
 
-The viewer concatenates PDF.js `str` fragments without invented spaces and
-adds LF only for `hasEOL`, following pinned PDFFindController extraction. The
-text layer records these same EOL flags while streaming; search and highlights
-therefore share offsets even when words cross font runs. Empty items add no
-space. This is not a wholesale copy of upstream normalization: punctuation and
-CJK newline handling retain this application's documented rules.
+The viewer concatenates contiguous PDF.js `str` fragments and adds LF for
+`hasEOL`, following pinned PDFFindController extraction. One narrow spatial
+boundary prevents false words when a deferred text run jumps backward on the
+same baseline: a horizontal LTR run entirely left of the preceding run, with a
+gap exceeding one tenth of the larger font size, gets a separating space.
+For example, a separate `mailto:` link must not join a preceding surname ending
+in `e` to manufacture an `email` match. Actual whitespace, contiguous/overlapping
+fragments, combining marks, RTL, vertical and rotated runs retain their existing
+boundaries; text is never reordered. This supplements PDF.js string assembly
+without modifying PDF.js or the creator's index format.
+
+The text layer records the same separators and EOL flags while streaming,
+including across chunk boundaries, so searching and highlighting share offsets
+even when words cross font runs. Empty items add no space. This is not a wholesale
+copy of upstream normalization: punctuation and CJK newline handling retain this
+application's documented rules.
 
 The viewer maps normalized match endpoints back to original UTF-16 text-layer
 positions, including expanded ligatures and collapsed whitespace. Index version
-3 / engine `pdfbox-nfkd-space-fold-v2` identifies these semantics. Version-2 indexes and the previous `pdfbox-nfkd-space-fold-v1` engine
-safely fall back to scanning with the new normalization. Unicode-table
+3 / engine `pdfbox-nfkd-space-fold-v3` identifies the corrected extraction
+boundaries. The wire schema and scalar normalization are unchanged. Earlier
+`pdfbox-nfkd-space-fold-v1`/`v2` engines and version-2 indexes safely fall back to
+PDF.js scanning: their embedded text can contain false words across separately
+positioned runs. Existing PDFs still open; regeneration with the current creator
+provides the new fast index. Unicode-table
 differences between Java and JavaScript can also cause safe index rejection.
 Coverage means all PDFBox-extracted pages, not guaranteed equality with PDF.js.
 
@@ -319,7 +337,7 @@ extension, not an EA-PDF 1.0 requirement.
 The first line has these fields:
 
 ```json
-{"format":"eapdf-search-index","version":3,"profile":"1ci","engine":"pdfbox-nfkd-space-fold-v2","complete":true,"documents":3,"pages":3,"texts":3,"terms":120,"postings":200,"sha256":"payload SHA-256"}
+{"format":"eapdf-search-index","version":3,"profile":"1ci","engine":"pdfbox-nfkd-space-fold-v3","complete":true,"documents":3,"pages":3,"texts":3,"terms":120,"postings":200,"sha256":"payload SHA-256"}
 ```
 
 Counts above are illustrative. SHA-256 covers all subsequent bytes, including
@@ -355,21 +373,52 @@ were chosen over a custom binary codec for inspectability and no new codec
 dependency. Binary compression has not been benchmarked; no superiority claim
 is made. Text is deduplicated, and document paths/metadata are not repeated in
 postings. Construction spools text rows to disk, retaining hashes, compact
-page/document rows and bounded primitive postings. Final serialization has
-bounded byte-array copies. Identical extraction produces deterministic payloads
+page/document rows and bounded primitive postings. Final serialization writes a
+bounded body spool while hashing, then streams the header and body through gzip.
+Posting deltas are written directly without a full posting-array copy. Only the
+bounded compressed payload/base64 XMP remains materialized; the uncompressed
+index is not reconstructed in multiple heap buffers. Spools are removed on
+success, cancellation and failure. Identical extraction produces deterministic payloads
 and gzip; ordinary PDF timestamps and child byte identities retain their
 existing behavior.
 
 ### Integrity, navigation and fallback
 
-`eapdfindex:fileDigest` contains SHA-256 of the **entire final PDF**, computed
-with that unique 64-character field replaced by 64 ASCII zeros. The creator
-patches only this fixed-width slot after saving; offsets and lengths do not
-change. The viewer locates the unique unfiltered marker and verifies this digest
-once before using the index. This catches modifications to page streams, child
-bytes, metadata and appended incremental updates without parsing every child.
-It still reads/hashes the root file's bytes, so initial loading is not constant
-with archive size. Ambiguous markers fail closed.
+`eapdfindex:fileDigest` contains SHA-256 of the final PDF with that unique
+64-character field replaced by 64 ASCII zeros. For unsigned PDFs it covers every
+byte. New indexes also include `eapdfindex:signatureContents`, initially
+`00000000000000000000:00000000000000000000`. This optional binding extension
+leaves the version-3 search payload and its normalization unchanged.
+
+For creator-signed output, that property holds two zero-padded, 20-digit decimal
+byte offsets separated by a colon: the start (inclusive) and end (exclusive) of
+the signature's hex `/Contents`, including its `<` and `>` delimiters. Only this
+range is omitted from the file hash. The descriptor, signature `/ByteRange`,
+all page streams, embedded files, index payload, metadata, and final incremental
+revision remain covered. The reserved range is limited to 1 MiB and must be a
+hex string after the binding fields. Duplicate markers, malformed offsets,
+overlap, out-of-file ranges, and non-hex contents fail closed.
+
+The creator first verifies the unsigned index binding, refusing to reseal stale
+content. PDFBox late external signing then writes the final revision with empty
+signature space. The creator fills the range descriptor, reseals the fixed-width
+index digest over the signature byte ranges, computes CMS over those same ranges
+(including the completed index digest), and fills the reserved signature space.
+No PDF offsets or stream lengths change. Signature verification still runs before
+atomic publication. Signing failure leaves an existing destination untouched.
+
+The viewer verifies the binding once before using the index. Appended revisions,
+including another signature, conservatively cause ordinary-search fallback.
+Existing unsigned indexes without the new property remain supported. Older
+viewers safely reject the signed binding and fall back. Previously indexed files
+without a reserved descriptor are not upgraded during signing and likewise fall
+back. Arbitrary third-party signing workflows are not supported by this binding.
+
+This check is **not signature verification**: changed CMS bytes can still pass the
+index fingerprint because they do not change searchable content. Cryptographic
+signature validity, certificate trust, revocation and timestamps require separate
+verification. Initial binding verification still reads the file; it does not open
+every embedded child or make initial loading constant with archive size.
 
 The payload digest detects corruption, and the file digest binds the complete
 payload to the saved file. Neither proves authenticity: a malicious editor can
@@ -390,6 +439,37 @@ precise occurrence highlights shows the verified page with a diagnostic.
 Viewport refits preserve the selected occurrence. Closing/replacing/releasing
 a document clears the cache; cancellation checks bound decoding and queries.
 There is one cached index per live document, with existing session eviction.
+
+Signed-output regression verification (November 7, 2026): all four supported
+profiles passed standalone Java EA-PDF and veraPDF PDF/A-4f validation, with zero
+failures and ten reported warnings each. Poppler `pdfsig` independently reported
+valid signatures covering each complete file; test certificate issuers were
+unknown, as expected. Java tests compare rendered text and embedded bytes before
+and after signing, verify the masked digest and CMS, and reject resealing stale
+indexes without replacing the original file. Existing RSA and EC signing tests
+also pass.
+
+Chromium compared 36 signed indexed/scanned queries across all four profiles,
+with zero child opens for indexed queries, verified navigation/highlights, and
+ordinary-search fallback after actual incremental metadata revisions. The same
+36-query unsigned regression passed. Firefox verified signed `1mi` and `1ci`
+search/navigation/highlighting. The signature checkpoint creator package suite ran 433 tests (four
+skipped); all 120 viewer unit tests passed. No signed large-archive performance
+benchmark or third-party signing compatibility claim is made.
+
+To regenerate temporary test-only signed fixtures and exercise browser acceptance:
+
+```sh
+mvn -Deapdf.build.directory=/tmp/eapdf-signing-build -Dtest=PdfSigningTests \
+  -Deapdf.signedIndexFixtures=/tmp/eapdf-signed-fixtures test
+cd browser-viewer
+npm run build
+EAPDF_SIGNED_INDEX_FIXTURES=/tmp/eapdf-signed-fixtures npm run test:fulltext-index
+EAPDF_SIGNED_INDEX_FIXTURES=/tmp/eapdf-signed-fixtures npm run test:firefox
+```
+
+The browser commands require the usual development browsers/drivers. Generated
+certificates are for tests only; no private keys are exported with these fixtures.
 
 ### Full-text resource limits
 
@@ -421,6 +501,16 @@ memory; the 512 MiB input ceiling and explicit omission policy apply even though
 the viewer accepts larger PDFs. Full-text indexes on larger files require a
 future range-backed extraction design. Searches exceeding the query budget use
 legacy scanning, which may itself explicitly report incomplete coverage.
+Its 120-second deadline is checked before opening collection members and streams
+as well as before page reads, including when children are unreadable or empty.
+
+Indexed queries count non-overlapping literal matches directly in page strings
+already verified as canonical during index parsing. They do not normalize those
+strings again or allocate original-glyph offset arrays; PDF.js establishes glyph
+offsets when a result is selected. The two-second budget, match/result limits,
+cancellation checks and index lifetime remain unchanged; no additional query
+cache is retained. [Measured large-PST follow-up](REPOSITORY_AUDIT.md#search-correctness-and-query-performance-follow-up)
+records the observed improvements and remaining scope limits.
 
 ### Full-text verification and benchmarks
 
@@ -449,8 +539,8 @@ by `browser-viewer/scripts/fulltext-index-benchmark.mjs`. First generate the
 Phase 1 paired real-source scaling fixtures using the instructions above. Then:
 
 ```sh
-javac -cp "$TASK_DIR/creator/emailtopdfa-1.6.0-beta.18.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/FullTextIndexBenchmark.java
-EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-1.6.0-beta.18.jar" eapdf.FullTextIndexBenchmark "$TASK_DIR/fixtures" "$TASK_DIR/fulltext"
+javac -cp "$TASK_DIR/creator/emailtopdfa-1.6.0-beta.19.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/FullTextIndexBenchmark.java
+EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-1.6.0-beta.19.jar" eapdf.FullTextIndexBenchmark "$TASK_DIR/fixtures" "$TASK_DIR/fulltext"
 # From a built temporary viewer working copy, run each kind: common, rare, phrase.
 EAPDF_FULLTEXT_BENCHMARK="$TASK_DIR/fulltext" EAPDF_QUERY_KIND=common npm run benchmark:fulltext-index
 ```
@@ -559,7 +649,7 @@ TypeScript/inspection-contract and documentation checks passed. Validation is
 automated evidence for the tested files, not independent EA-PDF certification.
 
 Historical version-2 acceptance boundaries (Node is no longer required):
-signed outputs and files over the creator's 512 MiB indexing ceiling omit it;
+files over the creator's 512 MiB indexing ceiling omit it;
 diverse 10,000-message corpora, multi-GiB generation, full recursive 10,000-message
 validation, creator peak RSS, older browsers and signed/store-installed Firefox
 were not established. Nested routes and duplicate names are covered by decoder
@@ -574,3 +664,26 @@ handle query selection, verified navigation and highlights. Tests and both
 benchmark harnesses are named above. Node remains a viewer development/build tool,
 not a Java conversion or end-user dependency. No PDF.js patch, source asset,
 CLI argument, release version or validation rule was changed by Phase 2.
+
+
+### Follow-up performance checks
+
+The November 7 follow-up streams index serialization without changing version 3
+or its normalization/binding semantics. An isolated 1,000-real-message benchmark
+produced identical gzip bytes before and after (754,713 bytes). Over three measured
+rounds after warm-up, median serialization/gzip time was 197.728 → 152.230 ms,
+and current-thread allocation was 63,395,456 → 18,869,688 bytes. These figures
+measure that stage, not complete conversion or process peak memory.
+
+The reproducible harness is `scripts/benchmarks/CreatorMemoryBenchmark.java`
+(instructions in its JavaDoc). `scripts/benchmark_diverse_index.py` builds 100/
+1,000-message subsets from an explicit existing mailbox, preserves its original,
+and records source/output hashes, elapsed conversion time and resource statistics.
+`browser-viewer/scripts/diverse-index-benchmark.mjs` compares indexed and scanned
+common/rare/phrase results on an explicit PDF, including exact per-page destinations
+and counts, child opens, opening/loading times and sampled browser PSS. Reports
+must use explicit temporary destinations; no private corpus is bundled.
+
+Signed browser acceptance now runs in CI using fixtures produced by the Java
+signing tests and checked by `scripts/check_signed_index.py`. Both browser jobs
+consume the same fixture artifact, preserving separate signed/unsigned reports.

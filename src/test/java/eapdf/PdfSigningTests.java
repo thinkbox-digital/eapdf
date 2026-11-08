@@ -70,6 +70,70 @@ class PdfSigningTests {
     }
   }
 
+  @Test void indexedArchivesRemainBoundAndSignedAcrossAllFourProfiles() throws Exception {
+    Identity identity=identity("RSA",Instant.now().plusSeconds(86400),KeyUsage.digitalSignature);
+    var signer=PdfSigning.load(store(identity,"index.p12",false),PASSWORD);
+    var config=EapdfConfig.get();boolean enabled=config.searchIndex.enabled,full=config.searchIndex.fullTextEnabled,signing=config.signing.enabled;
+    try {
+      config.searchIndex.enabled=true;config.searchIndex.fullTextEnabled=true;config.signing.enabled=true;
+      for(String profile:List.of("1m","1mi","1c","1ci")){
+        Path source=Path.of("browser-viewer/tests/fulltext-index/mbox_sample_"+profile+".pdf");
+        Path indexed=directory.resolve("indexed-"+profile+".pdf"),signed=directory.resolve("signed-"+profile+".pdf");
+        try(var pdf=Loader.loadPDF(source.toFile())){
+          var metadata=pdf.getDocumentCatalog().getMetadata();
+          String xmp=new String(metadata.toByteArray(),java.nio.charset.StandardCharsets.UTF_8);
+          // Retain Phase 1 metadata indexing so child opening occurs on result selection.
+          for(String field:List.of("fulltext","fileDigest","signatureContents"))
+            xmp=xmp.replaceAll("<eapdfindex:"+field+">.*?</eapdfindex:"+field+">","");
+          metadata.importXMPMetadata(xmp.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+          PdfFontMetadata.save(pdf,indexed.toFile());
+        }
+        FullTextSearchIndex.add(indexed);
+        String before;
+        try(var pdf=Loader.loadPDF(indexed.toFile())){
+          before=new String(pdf.getDocumentCatalog().getMetadata().toByteArray(),java.nio.charset.StandardCharsets.UTF_8);
+          assertTrue(before.contains("<eapdfindex:fulltext>"));
+          assertTrue(before.contains(FullTextSearchIndex.EMPTY_SIGNATURE_RANGE));
+        }
+        FullTextSearchIndex.verifyUnsignedBinding(indexed);
+        signer.sign(indexed,signed);PdfSigning.verify(signed,identity.certificate());
+        Files.writeString(indexed,"\n% changed after indexing\n",StandardOpenOption.APPEND);
+        byte[] stale=Files.readAllBytes(indexed);
+        assertThrows(IOException.class,()->signer.signInPlace(indexed));
+        assertArrayEquals(stale,Files.readAllBytes(indexed));
+        long[] range;
+        try(var original=Loader.loadPDF(source.toFile());var pdf=Loader.loadPDF(signed.toFile())){
+          assertEquals(new PDFTextStripper().getText(original),new PDFTextStripper().getText(pdf));
+          var a=original.getDocumentCatalog().getNames().getEmbeddedFiles().getNames();
+          var b=pdf.getDocumentCatalog().getNames().getEmbeddedFiles().getNames();
+          assertEquals(a.keySet(),b.keySet());
+          for(String name:a.keySet())assertArrayEquals(a.get(name).getEmbeddedFile().toByteArray(),b.get(name).getEmbeddedFile().toByteArray());
+          int[] r=pdf.getSignatureDictionaries().get(0).getByteRange();range=new long[]{r[0],r[1],r[2],r[3]};
+          String after=new String(pdf.getDocumentCatalog().getMetadata().toByteArray(),java.nio.charset.StandardCharsets.UTF_8);
+          assertEquals(before.replaceAll("<eapdfindex:fileDigest>.*?</eapdfindex:fileDigest>","").replaceAll("<eapdfindex:signatureContents>.*?</eapdfindex:signatureContents>",""),
+              after.replaceAll("<eapdfindex:fileDigest>.*?</eapdfindex:fileDigest>","").replaceAll("<eapdfindex:signatureContents>.*?</eapdfindex:signatureContents>",""));
+        }
+        byte[] bytes=Files.readAllBytes(signed);int slot=(int)FullTextSearchIndex.findMarker(signed,FullTextSearchIndex.MARKER);
+        String actual=new String(bytes,slot,64,java.nio.charset.StandardCharsets.US_ASCII);
+        Arrays.fill(bytes,slot,slot+64,(byte)'0');var hash=MessageDigest.getInstance("SHA-256");
+        hash.update(bytes,0,(int)range[1]);hash.update(bytes,(int)range[2],(int)range[3]);
+        assertEquals(actual,HexFormat.of().formatHex(hash.digest()));
+        assertThrows(IOException.class,()->FullTextSearchIndex.sealForSigning(signed,range));
+        String fixtures=System.getProperty("eapdf.signedIndexFixtures");
+        if(fixtures!=null){Path destination=Path.of(fixtures);Files.createDirectories(destination);Files.copy(signed,destination.resolve("mbox_sample_"+profile+".pdf"),StandardCopyOption.REPLACE_EXISTING);}
+        Path revised=directory.resolve("revised-"+profile+".pdf");
+        try(var pdf=Loader.loadPDF(signed.toFile());var output=Files.newOutputStream(revised)){
+          pdf.getDocumentInformation().setSubject("Subsequent metadata revision");
+          pdf.getDocumentInformation().getCOSObject().setNeedToBeUpdated(true);
+          pdf.saveIncremental(output);
+        }
+        assertTrue(Files.size(revised)>Files.size(signed));
+        assertThrows(GeneralSecurityException.class,()->PdfSigning.verify(revised,identity.certificate()));
+        if(fixtures!=null){Path destination=Path.of(fixtures,"revisions");Files.createDirectories(destination);Files.copy(revised,destination.resolve("mbox_sample_"+profile+".pdf"),StandardCopyOption.REPLACE_EXISTING);}
+      }
+    } finally {config.searchIndex.enabled=enabled;config.searchIndex.fullTextEnabled=full;config.signing.enabled=signing;}
+  }
+
   @Test void signatureRangesHandleOffsetsBeyondTwoGiBWithoutBufferingTheFile() throws Exception {
     Path sparse = directory.resolve("large-range.bin");
     long offset = (1L << 31) + 100;

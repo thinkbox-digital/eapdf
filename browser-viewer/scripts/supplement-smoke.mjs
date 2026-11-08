@@ -37,7 +37,7 @@ try{
     const scannedChildren=children,cached=session.cachedMessageIndex(doc);let cacheMatches;
     if(mode==='success'){
       const {indexMessages}=await import('./message-index.js'),reference=new BrowserSession({},{reuseWorker:true});
-      try{const root=await reference.open(input,input.name);const expected=await indexMessages(reference,root,()=>{},()=>{});cacheMatches=JSON.stringify(cached)===JSON.stringify(expected);}
+      try{const root=await reference.open(input,input.name);const expected=await indexMessages(reference,root,()=>{},()=>{},undefined,true);cacheMatches=JSON.stringify(cached)===JSON.stringify(expected);}
       finally{reference.close();}
     }
     results.push({mode,error,children:scannedChildren,cached:!!cached,cacheMatches,count:supplements.length,linked:supplements.filter(f=>f.owners.value?.length===1).length,diagnostics:doc.inspection.diagnostics.map(d=>d.code)});

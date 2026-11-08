@@ -13,7 +13,7 @@ function fixture(texts=['Contract contract contracts.\n東京 café ﬁancée İ
  for(const [id,text] of texts.entries())for(const token of text.toLowerCase().matchAll(/[^ ]+/g)){const list=terms.get(token[0])??[];list.push(id,token.index);terms.set(token[0],list);}
  let postings=0;
  for(const [term,positions] of [...terms].sort(([a],[b])=>a<b?-1:1)){const delta=[];let id=0,position=0;for(let n=0;n<positions.length;n+=2){delta.push(positions[n]-id,positions[n+1]-(positions[n]===id?position:0));id=positions[n];position=positions[n+1];postings++;}rows.push(['W',[term,delta]]);}
- const header={format:'eapdf-search-index',version:3,profile:'1mi',engine:'pdfbox-nfkd-space-fold-v2',complete:true,documents:1,pages:texts.length,texts:texts.length,terms:terms.size,postings};
+ const header={format:'eapdf-search-index',version:3,profile:'1mi',engine:'pdfbox-nfkd-space-fold-v3',complete:true,documents:1,pages:texts.length,texts:texts.length,terms:terms.size,postings};
  const encode=(edit={})=>{const body=rows.map(r=>JSON.stringify(r)+'\n').join('');return new TextEncoder().encode(JSON.stringify({...header,sha256:createHash('sha256').update(body).digest('hex'),...edit})+'\n'+body);};return {root,rows,header,encode};
 }
 test('substring, phrases, case, whitespace, Unicode and repeated matches equal legacy semantics',async()=>{
@@ -22,6 +22,25 @@ test('substring, phrases, case, whitespace, Unicode and repeated matches equal l
   const result=await queryFullTextIndex(index,f.root,query,()=>{}),expected=index.texts.flatMap((text,n)=>{const matches=textMatches(text,query);return matches.length?[{page:n+1,count:matches.length}]:[];});
   assert.deepEqual(result.map(({page,count})=>({page,count})),expected,query);
  }
+});
+test('canonical query counting preserves overlaps, folded text, Unicode and result verification hashes',async()=>{
+ const f=fixture(['aaaaa aaaa Con-\ntract literal-hyphen Café ﬁ ﬃ Straße İΣς 😀😀 𐐀','Cafe\u0301 é\nsecond page','']),index=await parseFullTextIndex(f.encode(),f.root,()=>{});
+ for(const query of ['', ' ', 'aa','aaa','contract','con-\ntract','literal-hyphen','literal hyphen','fi','f','cafe','é','\u0301','i\u0307','σ','😀','😀😀','𐐀','straße','STRASSE']){
+  const expected=index.texts.flatMap((text,n)=>{const matches=textMatches(text,query);return matches.length?[{page:n+1,count:matches.length,excerpt:text.slice(Math.max(0,matches[0].start-60),matches[0].end+120),hash:createHash('sha256').update(text).digest('hex')}]:[];});
+  const result=await queryFullTextIndex(index,f.root,query,()=>{});
+  assert.deepEqual(result.map(m=>({page:m.page,count:m.count,excerpt:m.excerpt,hash:m.indexed.textHash})),expected,query);
+  assert.deepEqual(await queryFullTextIndex(index,f.root,query,()=>{}),result,'repeated query: '+query);
+ }
+});
+test('indexed queries yield for cancellation and retain the execution deadline',async()=>{
+ const f=fixture(['email '.repeat(20000)]),index=await parseFullTextIndex(f.encode(),f.root,()=>{});
+ let cancelled=false;const timer=setTimeout(()=>{cancelled=true;},0);
+ try{await assert.rejects(queryFullTextIndex(index,f.root,'email',()=>{if(cancelled)throw Error('cancelled');}),/cancelled/);}finally{clearTimeout(timer);}
+ const original=Object.getOwnPropertyDescriptor(globalThis,'performance');let time=0;
+ try{
+  Object.defineProperty(globalThis,'performance',{configurable:true,value:{now:()=>time+=1001}});
+  await assert.rejects(queryFullTextIndex(index,f.root,'email',()=>{}),/indexed query time limit/);
+ }finally{Object.defineProperty(globalThis,'performance',original);}
 });
 for(const [name,edit] of [
  ['unsupported version',f=>f.header.version=99],['unsupported engine',f=>f.header.engine='other'],['incomplete coverage',f=>f.header.complete=false],['wrong profile',f=>f.header.profile='1c'],
@@ -72,3 +91,33 @@ test('normalization maps highlights to original glyphs and whitespace',()=>{
  assert.deepEqual(textMatches('Café','Café'),[{start:0,end:4}]);
  assert.equal(textMatches('Café','cafe').length,1); // substring ends before the retained accent
 });
+
+function signedBinding(){
+ const marker='<eapdfindex:fileDigest>',descriptor='<eapdfindex:signatureContents>';
+ const zero='0'.repeat(64),empty='0'.repeat(20)+':'+'0'.repeat(20);
+ let prefix=marker+zero+'</eapdfindex:fileDigest>'+descriptor+empty+'</eapdfindex:signatureContents> /Contents ';
+ const contents='<'+ 'ab'.repeat(100)+'>',end=prefix.length+contents.length;
+ prefix=prefix.replace(empty,String(prefix.length).padStart(20,'0')+':'+String(end).padStart(20,'0'));
+ const suffix=' /ByteRange [0 '+prefix.length+' '+end+' 4] EOF';
+ const digest=createHash('sha256').update(prefix+suffix).digest('hex');
+ return {prefix:prefix.replace(zero,digest),contents,suffix,digest,descriptor};
+}
+test('signature binding excludes only CMS bytes and covers all other changes',async()=>{
+ const f=signedBinding(),blob=()=>new Blob([f.prefix,f.contents,f.suffix]);
+ await verifyFileBinding(blob(),f.digest,()=>{});
+ f.contents=f.contents.replaceAll('ab','cd');await verifyFileBinding(blob(),f.digest,()=>{}); // Not signature authentication.
+ await assert.rejects(verifyFileBinding(new Blob([blob(),'appended revision']),f.digest,()=>{}),/changed/);
+ await assert.rejects(verifyFileBinding(new Blob([f.prefix,f.contents,f.suffix.replace('EOF','EOf')]),f.digest,()=>{}),/changed/);
+ await assert.rejects(verifyFileBinding(new Blob([f.prefix,f.contents.replace('cd','zz'),f.suffix]),f.digest,()=>{}),/Contents/);
+ await assert.rejects(verifyFileBinding(new Blob([blob(),f.descriptor]),f.digest,()=>{}),/ambiguous/);
+ for(const range of ['9'.repeat(20)+':'+'9'.repeat(20),'0'.repeat(20)+':'+'0'.repeat(19)+'1','x'.repeat(41)]){
+  const prefix=f.prefix.replace(/\d{20}:\d{20}/,range);
+  await assert.rejects(verifyFileBinding(new Blob([prefix,f.contents,f.suffix]),f.digest,()=>{}),/signature/);
+ }
+});
+test('unsigned signature-capable bindings retain whole-file verification',async()=>{
+ const raw='<eapdfindex:fileDigest>'+'0'.repeat(64)+'</eapdfindex:fileDigest><eapdfindex:signatureContents>'+'0'.repeat(20)+':'+'0'.repeat(20)+'</eapdfindex:signatureContents>';
+ const digest=createHash('sha256').update(raw).digest('hex');await verifyFileBinding(new Blob([raw.replace('0'.repeat(64),digest)]),digest,()=>{});
+});
+
+test('pre-boundary PDFBox indexes fall back instead of trusting cross-run phantom matches',async()=>{const f=fixture();await assert.rejects(parseFullTextIndex(f.encode({engine:'pdfbox-nfkd-space-fold-v2'}),f.root,()=>{}),/unsupported full-text format\/engine/);});

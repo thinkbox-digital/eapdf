@@ -1,0 +1,11 @@
+{
+  "purpose": "Preserve optional PREMIS viewer grouping coverage while current example conversions disable PREMIS.",
+  "source": "examples/pst/pst_quality-attached-message_1c.pdf",
+  "commit": "fa610bc3cf85b45d3587b8f8e86d6766f97310b0",
+  "sourceSha256": "df672a582a546d0ee0c18ac59d7ff754e707bc82a2105b91c2b0f882b020ffad",
+  "childName": "Feature Generators_000006_1s.pdf",
+  "sourcePath": "tests/attachments/source/pst_premis_legacy.pdf",
+  "sha256": "9e8efdb67eab626131edea73a0f2d5042654b10f5b204c93a8afa8ed5beec66f",
+  "bytes": 42549,
+  "extraction": "Exact embedded PDF bytes; no PDF rewrite or source changes."
+}

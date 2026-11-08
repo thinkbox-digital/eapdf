@@ -48,5 +48,5 @@ Rules:
 - Whenever the user requests a new version or a version bump, also bump the browser viewer version and rebuild both viewer packages.
 - Representative bulk samples must be balanced by output count: retain only a handful of standalone 1s/1si PDFs per input type, group EML/MSG sources into 1m/1mi archives, and use predominantly 1c/1ci/1m/1mi for PSTs. Preserve every source in the grouped/archive coverage.
 
-- When the user asks for possible new features, include the parked signature-compatible embedded full-text index from docs/DEVELOPMENT_STATUS.md. Do not implement it without a new request.
+- Signature-compatible embedded full-text indexing was authorized on 2026-11-07; see docs/EMBEDDED_SEARCH_INDEX.md for its supported signing workflow and limits.
 - Produce distributable JARs only with the project version in their filenames; do not create unversioned creator, GUI, or validator JAR aliases.

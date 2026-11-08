@@ -62,6 +62,12 @@ A failure leaves an existing destination unchanged. The standalone Java validato
 still provides the full PDF/A and EA-PDF conformance checks; these checks do not
 establish certificate trust or signature validity.
 
+New signed `1m`, `1mi`, `1c` and `1ci` outputs can retain the optional full-text
+search index. The index fingerprint is finalized before signing and excludes only
+the reserved signature contents. Later content changes or appended revisions make
+the viewer fall back to ordinary search. This fingerprint does not verify the
+signer or certificate; see [search-index binding and compatibility](EMBEDDED_SEARCH_INDEX.md#integrity-navigation-and-fallback).
+
 ## Current limits
 
 This is an integrity signature. It does not check issuer trust or revocation,

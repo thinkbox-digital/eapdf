@@ -7,9 +7,14 @@ export type CollectionMatch={path:SearchStep[];document:string;page:number;count
 export async function searchCollection(session:BrowserSession,root:BrowserDocument,query:string,check:()=>void,progress:(pages:number)=>void,forceScan=false,maximumMilliseconds=120000):Promise<CollectionSearchResult>{
   const fast=forceScan?{}:await searchIndexedCollection(session,root,query,check);if(fast.result)return fast.result;
   const matches:CollectionMatch[]=[],incomplete:string[]=[];let pages=0,retainedCharacters=0;let stopped=false;const deadline=performance.now()+Math.min(1800000,Math.max(1,maximumMilliseconds));
+  const withinBudget=():boolean=>{
+    check();if(stopped)return false;
+    if(performance.now()>deadline){stopped=true;incomplete.push('Search time budget reached.');return false;}
+    return true;
+  };
   async function visit(doc:BrowserDocument,path:SearchStep[],name:string):Promise<void>{
     for(let page=1;page<=doc.pdf.numPages;page++){
-      check();if(performance.now()>deadline){stopped=true;incomplete.push('Search time budget reached.');return;}
+      if(!withinBudget())return;
       const p=await doc.run(doc.pdf.getPage(page));
       try{const content=await doc.run(p.getTextContent());check();const value=pdfSearchText(content.items);pages++;progress(pages);
         const occurrences=textMatches(value,query),match=occurrences[0];if(match){
@@ -27,9 +32,10 @@ export async function searchCollection(session:BrowserSession,root:BrowserDocume
     if([...members].some(id=>!available.has(id)))incomplete.push(`${name}: some collection members are unavailable.`);
     for(const file of doc.inspection.files){
       if(!members.has(file.id))continue;
+      if(!withinBudget())return;
       if(!file.streams.length&&/\.pdf$/i.test(fileLabel(file)))incomplete.push(`${fileLabel(file)}: embedded PDF is missing.`);
       for(const stream of file.streams){
-      check();if(stopped)return;if(!/^application\/pdf(?:;|$)/i.test(stream.mimeType.value??'')&&!/\.pdf$/i.test(fileLabel(file)))continue;
+      if(!withinBudget())return;if(!/^application\/pdf(?:;|$)/i.test(stream.mimeType.value??'')&&!/\.pdf$/i.test(fileLabel(file)))continue;
       try{const child=await session.child(doc,file,stream,false);
         try{check();await visit(child,[...path,{fileId:file.id,streamPath:stream.locator.path}],name+' / '+fileLabel(file));}
         finally{await session.release(child);}}

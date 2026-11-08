@@ -1,3 +1,4 @@
+import {checkTextFragments} from './text-fragment-checks.mjs';
 import {checkReadingTools} from './reading-checks.mjs';
 // Development-only WebDriver harness. No driver/server is included in the extension.
 import { spawn,execFileSync } from 'node:child_process';
@@ -69,6 +70,7 @@ try {
   await call('/moz/context', { context: 'content' });
   await call('/url', { url: `moz-extension://${uuid}/viewer.html` });
   await until(() => execute("return document.querySelector('#file') && !document.querySelector('#file').disabled;"));
+  await checkTextFragments(fn => execute('return (' + fn.toString() + ')();'));
   const file = await call('/element', { using: 'css selector', value: '#file' });
   const id = file['element-6066-11e4-a52e-4f735466cecf'];
   async function open(path, requireMarks = true) {
@@ -109,7 +111,7 @@ try {
   await open(process.env.EAPDF_SAMPLE ?? '../examples/eml/eml_Agenda_and_timeline_slides_1s.pdf');
   for(const profile of ['1mi','1ci']){
     await execute("document.querySelector('#close').click();");
-    await open(`tests/fulltext-index/mbox_sample_${profile}.pdf`);
+    await open(resolve(process.env.EAPDF_SIGNED_INDEX_FIXTURES??'tests/fulltext-index',`mbox_sample_${profile}.pdf`));
     await execute("document.querySelector('#open-search').click();document.querySelector('#search-scope').value='collection';document.querySelector('#search').value='Power VaR';document.querySelector('#find').click();");
     await until(()=>execute("return document.querySelector('#collection-search-summary').textContent.includes('Embedded PDFBox text index') && document.querySelector('#viewport').getAttribute('aria-busy')==='false';"));
     assert.ok(await execute("return document.querySelectorAll('#text-layer .current-match').length>0;"),'Indexed first page highlights in Firefox');
@@ -171,9 +173,9 @@ try {
   assert.deepEqual(await execute("return performance.getEntriesByType('resource').map(r=>r.name).filter(n=>/^https?:/.test(n));"), []);
   const report = { status: 'PASS', browser: result.capabilities.browserVersion,
     driver: result.capabilities['moz:geckodriverVersion'],
-    checks: ['MV3 temporary add-on installation', 'ordinary PDF pixels and next-page navigation', '150% zoom', 'EA-PDF sample pixels', 'Firefox offline; no HTTP(S) page resources'],
+    checks: ['PDF.js fragment boundaries and highlight offsets across stream chunks', 'MV3 temporary add-on installation', 'ordinary PDF pixels and next-page navigation', '150% zoom', 'EA-PDF sample pixels', 'Firefox offline; no HTTP(S) page resources'],
     limits: 'Temporary installation only; no signing, store review, or older-version compatibility claim.' };
-  await writeFile('test-results/firefox-smoke.json', JSON.stringify(report, null, 2) + '\n');
+  await writeFile(process.env.EAPDF_SIGNED_INDEX_FIXTURES?'test-results/firefox-smoke-signed.json':'test-results/firefox-smoke.json', JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify(report, null, 2));
 } finally {
   try { if (session) await request(`/session/${session}`, undefined, 'DELETE'); }

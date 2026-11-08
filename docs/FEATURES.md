@@ -3,7 +3,7 @@
 This file summarizes the current feature set of the project at a high level.
 
 Current tracked release:
-- `1.6.0-beta.18`
+- `1.6.0-beta.19`
 
 Features include opt-in Gmail checkpoints, bounded processing, streaming PDF completion, multilingual font fallback, and semantic accessibility structures across all six profiles. Full PDF/UA conformance remains unverified.
 

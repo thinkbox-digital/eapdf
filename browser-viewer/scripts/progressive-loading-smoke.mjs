@@ -11,7 +11,8 @@ try{
  await page.goto(`chrome-extension://${new URL(worker.url()).host}/viewer.html`);
  await page.evaluate(async()=>{
   const {BrowserSession}=await import('./browser-session.js');const child=BrowserSession.prototype.child,close=BrowserSession.prototype.close,open=BrowserSession.prototype.open;
-  BrowserSession.prototype.open=async function(...args){const doc=await open.apply(this,args);if(!this.options.reuseWorker)window.mainDocument=doc;return doc;};
+  // Exercise legacy background scanning even when the regenerated fixture has an embedded metadata index.
+  BrowserSession.prototype.open=async function(...args){const doc=await open.apply(this,args);doc.embeddedIndex=undefined;if(!this.options.reuseWorker)window.mainDocument=doc;return doc;};
   window.holdIndex=true;window.indexChildren=0;window.indexClosed=0;
   BrowserSession.prototype.child=async function(...args){if(this.options.reuseWorker&&++window.indexChildren===2&&window.holdIndex)await new Promise(resolve=>{window.releaseIndex=resolve;});return child.apply(this,args);};
   BrowserSession.prototype.close=function(){if(this.options.reuseWorker)window.indexClosed++;return close.apply(this);};

@@ -9,7 +9,7 @@ const context=await chromium.launchPersistentContext('',{headless:true,executabl
 try{
  const worker=context.serviceWorkers()[0]??await context.waitForEvent('serviceworker'),page=await context.newPage();await context.setOffline(true);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`chrome-extension://${new URL(worker.url()).host}/viewer.html`);
- await page.evaluate(async()=>{const {BrowserSession}=await import('./browser-session.js');const open=BrowserSession.prototype.open;window.collectionScans=0;window.scanDelay=0;BrowserSession.prototype.open=async function(...args){if(this.options.reuseWorker&&!args[3]&&!document.querySelector('#cancel-search').hidden){window.collectionScans++;if(window.scanDelay)await new Promise(resolve=>setTimeout(resolve,window.scanDelay));}const doc=await open.apply(this,args);if(!this.options.reuseWorker)window.mainDocument=doc;return doc;};});
+ await page.evaluate(async()=>{const {BrowserSession}=await import('./browser-session.js');const open=BrowserSession.prototype.open;window.collectionScans=0;window.scanDelay=0;window.forceCollectionScan=true;BrowserSession.prototype.open=async function(...args){if(this.options.reuseWorker&&!args[3]&&!document.querySelector('#cancel-search').hidden){window.collectionScans++;if(window.scanDelay)await new Promise(resolve=>setTimeout(resolve,window.scanDelay));}const doc=await open.apply(this,args);if(window.forceCollectionScan)doc.fullTextIndex=undefined;if(!this.options.reuseWorker)window.mainDocument=doc;return doc;};});
  const ready=()=>page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false',null,{timeout:180000});
  const fixture=resolve('../examples/pst/pst_quality-attached-message_1c.pdf');
  const load=async()=>{await page.locator('#file').setInputFiles(fixture);await ready();};
@@ -35,7 +35,9 @@ try{
  };
  await page.locator('#search').fill('');await checkCleared();await page.locator('#search').fill('subject');await click('#search-submit');assert.equal(await scans(),6,'clearing invalidates completed results');
  await page.locator('#search').press('Escape');assert.equal(await page.locator('#search-panel').isVisible(),false);await page.locator('#open-search').click();await page.locator('#search').fill('');await checkCleared();
+ // The first fixture deliberately exercises scan caching/cancellation, even when regenerated with an index.
  // Real multi-message archive: search must update ownership while Browse is hidden.
+ await page.evaluate(()=>{window.forceCollectionScan=false;});
  await page.locator('#file').setInputFiles(resolve('../examples/mbox/mbox_enron_1m.pdf'));await ready();
  await page.locator('#open-search').click();await page.locator('#search-scope').selectOption('collection');await page.locator('#search').fill('sabo');await click('#search-submit');
  const checkFiles=async()=>{

@@ -2,7 +2,7 @@ import {resolveStep,invalidateFullTextIndex,fullTextPageOwners} from './fulltext
 import {readEmbeddedIndex,metadataSearchText} from './embedded-index.js';
 import {saveBlob} from './downloads.js';
 import {indexMessages,type MessageIndex,type IndexedMessage} from './message-index.js';
-import {searchCollection,searchIndexedCollection} from './collection-search.js';
+import {searchCollection,searchIndexedCollection,type CollectionMatch} from './collection-search.js';
 import {DocumentSearch,textMatches,pdfSearchText} from './document-search.js';
 import {BrowserSession,type BrowserDocument} from './browser-session.js';
 import {AttachmentViewer} from './attachment-viewer.js';
@@ -49,8 +49,9 @@ const browseCompleted=new WeakSet<BrowserDocument>();
 const browseMessageCounts=new WeakMap<BrowserDocument,number>();
 const browseDisplay=new WeakMap<BrowserDocument,Map<string,Record<string,string>>>();
 const browseSubjects=new WeakMap<BrowserDocument,Map<string,string>>();
-type CollectionResults={root:BrowserDocument;query:string;result:Awaited<ReturnType<typeof searchCollection>>;index:number;occurrence:number;total:number};
+type CollectionResults={root:BrowserDocument;query:string;result:Awaited<ReturnType<typeof searchCollection>>;index:number;occurrence:number;total:number;offsets:Float64Array};
 let collectionResults:CollectionResults|undefined;
+let collectionList:VirtualList<CollectionMatch>|undefined;
 let session:BrowserSession|undefined,current:BrowserDocument|undefined,busy=false,generation=0,pageNumber=1,editingPage=false,renderedZoom=1;
 let renderedViewportWidth=0,renderedViewportHeight=0;
 const nodes=new Map<BrowserDocument,HTMLLIElement>(),savedMessages=new Map<BrowserDocument,string|undefined>(),savedPages=new Map<BrowserDocument,number>();
@@ -59,6 +60,8 @@ const pdfKey=(file:AssociatedFile,stream:EmbeddedStream)=>JSON.stringify([file.i
 const lazyPdfs=new WeakMap<BrowserDocument,Map<string,{list:VirtualList<PdfLink>;index:number}>>();
 const lazyMessages=new WeakMap<BrowserDocument,{list:VirtualList<MailMessage>;indices:Map<string,number>}>();
 const virtualLists=new Set<{close:()=>void}>();
+const documentLists=new WeakMap<BrowserDocument,Set<{close:()=>void}>>();
+function rememberList(doc:BrowserDocument,list:{close:()=>void}):void{virtualLists.add(list);let owned=documentLists.get(doc);if(!owned){owned=new Set();documentLists.set(doc,owned);}owned.add(list);}
 let fileList:VirtualList<AssociatedFile>|undefined;
 const pageOwners=new WeakMap<BrowserDocument,Map<number,MailMessage|null>>();
 // PDF points use 72 units/inch; browser CSS uses 96.
@@ -109,7 +112,7 @@ function close():void {
   cancelLinked();stopBrowseIndex();element('subject-index-progress').hidden=true;searchSession?.close();searchSession=undefined;exportSession?.close();exportSession=undefined;
   generation++;searchEpoch++;collectionResults=undefined;failedPages.clear();finder.clear();pages.clear();attachmentViewer.close();session?.close();session=undefined;current=undefined;
   nodes.clear();savedPages.clear();savedMessages.clear();busy=false;pageNumber=1;editingPage=false;
-  element('restart').hidden=true;empty.hidden=false;element('collection-results').hidden=true;element('collection-matches').replaceChildren();element('outline').replaceChildren();element('outline-panel').hidden=true;
+  element('restart').hidden=true;empty.hidden=false;element('collection-results').hidden=true;collectionList?.close();collectionList=undefined;element('collection-matches').replaceChildren();element('outline').replaceChildren();element('outline-panel').hidden=true;
   for(const panel of [tree,files,element('breadcrumbs')])panel.replaceChildren();
   element('declared-profile').textContent='';element('declared-profile').hidden=true;
   element('header-filename').textContent='';element('header-filename').title='';element('message-count').textContent='0';element('selection-details').replaceChildren();element('files-title').textContent='Files in this PDF';closeSearch(false);
@@ -399,6 +402,19 @@ function messageLabel(node:HTMLButtonElement,label:string,details?:Record<string
   if(secondary){const meta=text('span',''),sender=text('span',details?.From||details?.['Raw-From']||''),date=text('span',details?.Sent?.match(/^\d{4}-\d{2}-\d{2}/)?.[0]||details?.Sent||'');meta.className='message-meta';meta.title=secondary;sender.className='message-sender';date.className='message-date';meta.append(sender);if(date.textContent)meta.append(text('span','·'),date);content.append(meta);}
   for(const child of [...node.childNodes])if(child.nodeType===Node.TEXT_NODE)child.remove();node.append(content);
 }
+function pdfTreeRow(doc:BrowserDocument,{file,stream}:PdfLink):HTMLLIElement{
+    for(const [child,existing] of nodes)if(child.parent===doc&&child.parentFileId===file.id&&child.parentStreamPath===stream.locator.path)return existing;
+    const subject=browseSubjects.get(doc)?.get(pdfKey(file,stream));
+    const item=text('li',''),openFile=button(subject||fileLabel(file),()=>void operation(ticket=>openChild(doc,file,stream,ticket)));
+    openFile.disabled=busy;openFile.dataset.embeddedFileId=file.id;openFile.dataset.embeddedStream=stream.locator.path;openFile.title=fileLabel(file);openFile.prepend(treeIcon(subject?'message':'document'));messageLabel(openFile,subject||fileLabel(file),browseDisplay.get(doc)?.get(pdfKey(file,stream)));item.append(openFile);return item;
+}
+function evictDocument(doc:BrowserDocument):void{
+  const row=nodes.get(doc);nodes.delete(doc);savedMessages.delete(doc);savedPages.delete(doc);
+  for(const list of documentLists.get(doc)??[]){list.close();virtualLists.delete(list);}documentLists.delete(doc);
+  lazyPdfs.delete(doc);lazyMessages.delete(doc);pageOwners.delete(doc);browseCompleted.delete(doc);browseMessageCounts.delete(doc);browseSubjects.delete(doc);browseDisplay.delete(doc);
+  const parent=doc.parent,file=parent?.inspection.files.find(f=>f.id===doc.parentFileId),stream=file?.streams.find(s=>s.locator.path===doc.parentStreamPath);
+  if(parent&&file&&stream){const replacement=pdfTreeRow(parent,{file,stream}),lazy=lazyPdfs.get(parent)?.get(pdfKey(file,stream));if(lazy)lazy.list.invalidateRow(lazy.index,replacement);else row?.replaceWith(replacement);}else row?.remove();
+}
 function documentTree(doc:BrowserDocument):HTMLLIElement {
   const single=singleMessage(doc),label=single?(doc.details.get(single.metadataRecordId)?.Subject||doc.name):doc.name;
   const row=text('li',''),open=button(label,()=>void operation(ticket=>showDocument(doc,ticket,single,open,undefined,true)));open.dataset.documentId=doc.inspection.documentId;open.title=doc.name;if(single)open.dataset.messageId=single.id;open.prepend(treeIcon(single?'message':'document'));messageLabel(open,label,single?doc.details.get(single.metadataRecordId):undefined);open.classList.add('root-document');row.append(open);nodes.set(doc,row);
@@ -411,7 +427,7 @@ function documentTree(doc:BrowserDocument):HTMLLIElement {
     };
     if(doc.inspection.messages.length>256){
       const virtual=new VirtualList(list,tree.closest('aside')!,doc.inspection.messages,makeMessage,40);
-      lazyMessages.set(doc,{list:virtual,indices:new Map(doc.inspection.messages.map((m,i)=>[m.id,i]))});virtualLists.add(virtual);
+      lazyMessages.set(doc,{list:virtual,indices:new Map(doc.inspection.messages.map((m,i)=>[m.id,i]))});rememberList(doc,virtual);
     }else doc.inspection.messages.forEach((message,index)=>list.append(makeMessage(message,index)));
   }
 
@@ -439,17 +455,12 @@ function documentTree(doc:BrowserDocument):HTMLLIElement {
     const group=groups.get(target)??[];group.push({file,stream});groups.set(target,group);
   }
   const positions=new Map<string,{list:VirtualList<PdfLink>;index:number}>();lazyPdfs.set(doc,positions);
-  const makePdf=({file,stream}:PdfLink)=>{
-    for(const [child,existing] of nodes)if(child.parent===doc&&child.parentFileId===file.id&&child.parentStreamPath===stream.locator.path)return existing;
-    const subject=browseSubjects.get(doc)?.get(pdfKey(file,stream));
-    const item=text('li',''),openFile=button(subject||fileLabel(file),()=>void operation(ticket=>openChild(doc,file,stream,ticket)));
-    openFile.disabled=busy;openFile.dataset.embeddedFileId=file.id;openFile.dataset.embeddedStream=stream.locator.path;openFile.title=fileLabel(file);openFile.prepend(treeIcon(subject?'message':'document'));messageLabel(openFile,subject||fileLabel(file),browseDisplay.get(doc)?.get(pdfKey(file,stream)));item.append(openFile);return item;
-  };
+  const makePdf=(item:PdfLink)=>pdfTreeRow(doc,item);
   for(const [target,items] of groups){
     if(items.length>256){
       let memberList=target;
       if(target.children.length){const item=text('li',''),nested=text('ul','');item.append(nested);target.append(item);memberList=nested;}
-      const virtual=new VirtualList(memberList,tree.closest('aside')!,items,makePdf,40);virtualLists.add(virtual);
+      const virtual=new VirtualList(memberList,tree.closest('aside')!,items,makePdf,40);rememberList(doc,virtual);
       items.forEach((item,index)=>positions.set(pdfKey(item.file,item.stream),{list:virtual,index}));
     }else for(const item of items)target.append(makePdf(item));
   }
@@ -461,7 +472,7 @@ function documentTree(doc:BrowserDocument):HTMLLIElement {
   return row;
 }
 async function openFile(file:Blob,name:string):Promise<void>{
-  if(busy)return;close();zoom.value='fit-width';element('linked-file').hidden=true;session=new BrowserSession();const active=session;
+  if(busy)return;close();zoom.value='fit-width';element('linked-file').hidden=true;session=new BrowserSession({},{onEvict:evictDocument,keepDocuments:()=>current?[current]:[]});const active=session;
   await operation(async ticket=>{
     status.textContent=`Opening ${name}…`;
     tree.hidden=true;
@@ -551,7 +562,7 @@ for(const [id,step]of [['zoom-out',-1],['zoom-in',1]] as const)element(id).addEv
 }));
 function clearSearch():void {
   searchEpoch++;searchSession?.close();collectionResults=undefined;finder.clear();pages.highlight('');
-  element('collection-matches').replaceChildren();element('collection-search-summary').textContent='';searchStatus.textContent='';
+  collectionList?.close();collectionList=undefined;element('collection-matches').replaceChildren();element('collection-search-summary').textContent='';searchStatus.textContent='';
   element<HTMLButtonElement>('results-tab').disabled=true;navigationTab('browse');
 }
 search.addEventListener('input',()=>{if(!search.value.trim())clearSearch();});
@@ -606,7 +617,8 @@ async function showCollectionMatch(cached:CollectionResults,index:number,occurre
   if(pageNumber!==match.page){pageNumber=match.page;await render(ticket,false);}
   check(ticket);syncMessageToPage();const highlighted=pages.highlight(cached.query,{page:match.page,index:occurrence});
   cached.index=index;cached.occurrence=occurrence;
-  const number=cached.result.matches.slice(0,index).reduce((n,m)=>n+m.count,0)+occurrence+1;
+  const number=cached.offsets[index]!+occurrence+1;
+  collectionList?.rowAt(index);
   searchStatus.textContent=`Match ${number} of ${cached.total} in collection${cached.result.incomplete.length?' (incomplete search)':''}.`;
   if(match.indexed&&highlighted!==match.count){pages.highlight(cached.query);searchStatus.textContent+=' Matching page verified; precise occurrence highlighting is unavailable for this text layout.';}
   for(const node of element('collection-matches').querySelectorAll<HTMLButtonElement>('button[data-match-index]')){
@@ -637,7 +649,7 @@ async function findInCollection(direction:1|-1=1,first=false):Promise<void>{
     collectionResults=undefined;
     const epoch=++searchEpoch;const checkSearch=()=>{check(ticket);if(epoch!==searchEpoch)throw new Error('Search cancelled.');};
     const main=session!,isolated=new BrowserSession({},{reuseWorker:true});searchSession=isolated;
-    element('cancel-search').hidden=false;const list=element('collection-matches');list.replaceChildren();element<HTMLButtonElement>('results-tab').disabled=false;navigationTab('results');
+    element('cancel-search').hidden=false;const list=element('collection-matches');collectionList?.close();collectionList=undefined;list.replaceChildren();element<HTMLButtonElement>('results-tab').disabled=false;navigationTab('results');
     element('collection-search-summary').textContent='Searching collection…';
     try{
       const fast=await searchIndexedCollection(main,root,query,checkSearch);let result=fast.result;
@@ -645,21 +657,24 @@ async function findInCollection(direction:1|-1=1,first=false):Promise<void>{
         result=await searchCollection(isolated,copy,query,checkSearch,count=>{searchStatus.textContent=`Searching collection · ${count} pages…`;},true);
         if(fast.diagnostic)result.notices=[fast.diagnostic];
       }checkSearch();
-      const saved:CollectionResults={root,query,result,index:-1,occurrence:0,total:result.matches.reduce((n,m)=>n+m.count,0)};collectionResults=saved;
-      const groups=new Map<string,HTMLUListElement>();
-      for(const [index,match] of result.matches.entries()){
-        const key=JSON.stringify(match.indexed?.route??match.path);let group=groups.get(key);
+      const offsets=new Float64Array(result.matches.length+1);for(let i=0;i<result.matches.length;i++)offsets[i+1]=offsets[i]!+result.matches[i]!.count;
+      const saved:CollectionResults={root,query,result,index:-1,occurrence:0,total:offsets[result.matches.length]!,offsets};collectionResults=saved;
+      const groups=new Map<string,HTMLUListElement>(),virtual=result.matches.length>256;
+      const create=(match:CollectionMatch,index:number)=>{
+        const key=JSON.stringify(match.indexed?.route??match.path);let group=virtual?undefined:groups.get(key);
+        const container=text('li','');
         if(!group){
-          const row=text('li','');row.className='collection-result';
-          // The stored path still identifies the destination; show only its file name.
+          container.className='collection-result';
           const name=match.path.length?match.document.split(' / ').at(-1)!:'Collection overview';
           const heading=text('h3','');heading.className='result-heading';heading.title=name;heading.append(treeIcon('document'),text('span',name));
-          group=text('ul','');group.className='result-pages';row.append(heading,group);list.append(row);groups.set(key,group);
+          group=text('ul','');group.className='result-pages';container.append(heading,group);
+          if(!virtual){list.append(container);groups.set(key,group);}
         }
         const row=text('li',''),choose=button('',()=>void operation(async active=>{
           if(collectionResults!==saved)return;search.value=saved.query;element<HTMLSelectElement>('search-scope').value='collection';
           await showCollectionMatch(saved,index,0,active);
         }));choose.className='collection-hit';choose.dataset.matchIndex=String(index);
+        if(saved.index===index)choose.setAttribute('aria-current','true');
         const meta=text('span','');meta.className='match-meta';const selected=text('span','✓ Viewing');selected.className='match-selected';
         meta.append(text('span',`Page ${match.page} · ${match.count} ${match.count===1?'match':'matches'}`),selected);
         const excerpt=text('span','');excerpt.className='match-excerpt';let offset=0;excerpt.append(document.createTextNode('“'));
@@ -667,8 +682,10 @@ async function findInCollection(direction:1|-1=1,first=false):Promise<void>{
           excerpt.append(document.createTextNode(match.excerpt.slice(offset,found.start)),text('mark',match.excerpt.slice(found.start,found.end)));offset=found.end;
         }
         excerpt.append(document.createTextNode(match.excerpt.slice(offset)+'”'));
-        choose.append(meta,excerpt);row.append(choose);group.append(row);
-      }
+        choose.append(meta,excerpt);row.append(choose);group.append(row);return container;
+      };
+      if(virtual)collectionList=new VirtualList(list,element('collection-results'),result.matches,create,150);
+      else result.matches.forEach(create);
       element('collection-search-summary').textContent=`${result.matches.length} matching pages. ${result.incomplete.length?'Incomplete: '+result.incomplete.join(' '):(result.source==='indexed'?'Embedded PDFBox text index searched.':'All reachable collection PDFs were searched.') } ${(result.notices??[]).join(' ')}`;
       if(result.matches.length){const index=direction===1?0:result.matches.length-1;await showCollectionMatch(saved,index,direction===1?0:result.matches[index]!.count-1,ticket);}
       else searchStatus.textContent=result.incomplete.length?'No matches found in an incomplete collection search.':'No matching text in this collection.';
@@ -688,7 +705,7 @@ async function findMatch(direction:1|-1):Promise<void>{
     finally{element('cancel-search').hidden=true;}
   });
 }
-element('search-form').addEventListener('submit',event=>{event.preventDefault();finder.clear();void (element<HTMLSelectElement>('search-scope').value==='collection'?findInCollection(1,true):findMatch(1));});
+element('search-form').addEventListener('submit',event=>{event.preventDefault();finder.resetCursor();void (element<HTMLSelectElement>('search-scope').value==='collection'?findInCollection(1,true):findMatch(1));});
 element('find').addEventListener('click',()=>void (element<HTMLSelectElement>('search-scope').value==='collection'?findInCollection():findMatch(1)));
 element('find-previous').addEventListener('click',()=>void (element<HTMLSelectElement>('search-scope').value==='collection'?findInCollection(-1):findMatch(-1)));
 element('cancel-search').addEventListener('click',()=>{searchEpoch++;searchSession?.close();searchStatus.textContent='Cancelling search…';});
@@ -759,7 +776,7 @@ async function filterMessages():Promise<void>{
     element('filter-status').textContent=`${matches.length} matching emails. ${result.incomplete.length?'Search incomplete: '+result.incomplete.join(' '):'All reachable email metadata searched.'} ${(result.notices??[]).join(' ')}`;
   }catch(error){if(ticket===generation&&epoch===metadataEpoch&&revision===filterRevision){metadataIndex=undefined;element('filter-status').textContent=`Email search could not finish: ${error instanceof Error?error.message:String(error)}`;}}
 }
-filter.addEventListener('input',()=>{filtered=undefined;if(current&&!busy)void operation(ticket=>render(ticket,false));filterRevision++;clearTimeout(filterTimer);if(!filter.value.trim()){filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;tree.hidden=false;element('filter-status').textContent='';return;}filterTimer=setTimeout(()=>void filterMessages(),200);});
+filter.addEventListener('input',()=>{const restricted=current&&filteredPages(current);filtered=undefined;if(restricted&&!busy)void operation(ticket=>render(ticket,false));filterRevision++;clearTimeout(filterTimer);if(!filter.value.trim()){filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;tree.hidden=false;element('filter-status').textContent='';return;}filterTimer=setTimeout(()=>void filterMessages(),200);});
 cancelLinked=setupLinkedOpening(openFile,message=>{status.textContent=message;});
 status.textContent='Open or drop a PDF to begin.';controls();
 
@@ -856,6 +873,10 @@ document.addEventListener('keydown',event=>{
  const direction=event.key==='ArrowDown'?1:-1;
  if(viewport.contains(target)){event.preventDefault();viewport.scrollBy({top:direction*60,behavior:'instant'});return;}
  const pane=target.closest<HTMLElement>('#navigation-panel,#details-panel,.reader-pane,#search-panel');if(!pane)return;
+ if(collectionList&&target.matches('#collection-matches button[data-match-index]')){
+  const index=Number(target.dataset.matchIndex)+direction;
+  if(collectionResults&&index>=0&&index<collectionResults.result.matches.length){event.preventDefault();collectionList.rowAt(index)?.querySelector<HTMLButtonElement>('button[data-match-index]')?.focus();}return;
+ }
  const controls=visiblePaneControls(pane),index=controls.indexOf(target),next=controls[index<0?(direction===1?0:controls.length-1):index+direction];
  if(next){event.preventDefault();next.focus();}
 });

@@ -29,7 +29,14 @@ authenticity. See [index resource and trust limits](../../docs/EMBEDDED_SEARCH_I
 
 Every active PDF uses a dedicated terminable worker. At most three document
 workers remain active per session; an isolated search/export session can temporarily
-add up to three more. Within each session, older documents reopen from their parent when selected. Close/cancel rejects pending
+add up to three more. Inactive child inspections additionally use a 32 MiB
+conservative retained-metadata estimate and a maximum of 16 inactive children.
+The root, active documents and current ancestor chain are excluded from this
+inactive budget. Eviction removes UI references and restores lazy navigation;
+older children are reconstructed from their parent when selected. This is a
+retention policy, not a limit on collection membership or traversal. Parsed root
+indexes survive worker-only eviction; closing the session releases them.
+Within each session, older documents reopen from their parent when selected. Close/cancel rejects pending
 work immediately and releases the session; timeouts retain their own explanation.
 Opening checks cancellation again after the asynchronous input hash, before
 starting a worker. The initial file picker stays disabled until its handler is
@@ -83,7 +90,12 @@ silence failures. `npm audit` reported zero advisories on 2026-10-31; this is a
 point-in-time registry result, not a permanent guarantee.
 
 Collection search uses an isolated session with a 120-second deadline and a
-10-million-character budget for retained results. Released page text does not
+10-million-character budget for retained results. The deadline is checked before
+opening each collection member/stream and before page reads, so unreadable and
+zero-page children cannot bypass the traversal budget. More than 256 matching pages
+use a virtualized list, preserving the complete logical result set while mounting
+only nearby rows. Document search retains its existing four-million-character
+page-text cache across query submissions; changing documents or closing clears it. Released page text does not
 consume a cumulative allowance; page and match counts have no fixed cutoff. Its results identify incomplete
 coverage; they never imply that unreadable children were searched. Legacy header-only
 source association requires a unique exact Message-ID, complete bounded headers,

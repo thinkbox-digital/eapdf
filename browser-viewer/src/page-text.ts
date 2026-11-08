@@ -1,19 +1,25 @@
 import {boundedStructureTree} from './structure-tree.js';
-import {textMatches,pdfSearchText} from './document-search.js';
+import {textMatches,pdfTextSeparator,type PdfTextFragment} from './document-search.js';
 import type {PDFPageProxy,TextLayer} from 'pdfjs-dist';
 import {pdfjs} from './pdfjs-adapter.js';
 export class PageText {
-  private eols:boolean[]=[];
+  private eols:boolean[]=[];private gaps:string[]=[];
   private layer:TextLayer|undefined;
   private structure:HTMLElement|undefined;
   constructor(private readonly container:HTMLElement){}
-  clear():void {this.eols=[];delete this.container.dataset.structure;this.structure?.remove();this.structure=undefined;this.layer?.cancel();this.layer=undefined;this.container.replaceChildren();}
+  clear():void {this.eols=[];this.gaps=[];delete this.container.dataset.structure;this.structure?.remove();this.structure=undefined;this.layer?.cancel();this.layer=undefined;this.container.replaceChildren();}
   async render(page:PDFPageProxy,scale:number):Promise<void>{
     this.clear();const viewport=page.getViewport({scale});
     this.container.style.setProperty('--total-scale-factor',String(scale*page.userUnit));
-    const eols:boolean[]=[];this.eols=eols;
+    const eols:boolean[]=[],gaps:string[]=[];this.eols=eols;this.gaps=gaps;let previous:PdfTextFragment|undefined;
     const source=page.streamTextContent({includeMarkedContent:true}).pipeThrough(new TransformStream({
-      transform(chunk,controller){for(const item of chunk.items)if('str'in item)eols.push(item.hasEOL);controller.enqueue(chunk);},
+      transform(chunk,controller){
+        for(const item of chunk.items)if('str'in item){
+          gaps.push(pdfTextSeparator(previous,item));eols.push(item.hasEOL);
+          if(item.hasEOL)previous=undefined;else if(item.str)previous=item;
+        }
+        controller.enqueue(chunk);
+      },
     }));
     const layer=new pdfjs.TextLayer({textContentSource:source,container:this.container,viewport});
     this.layer=layer;await layer.render();
@@ -38,9 +44,10 @@ export class PageText {
     // Use the same fragment/EOL boundaries as getTextContent search; offsets stay
     // in the original strings used by each PDF.js text div.
     const values=layer.textContentItemsStr,divs=layer.textDivs;
-    const matches=textMatches(pdfSearchText(values.map((str,i)=>({str,hasEOL:this.eols[i]}))),query);let start=0;
+    const text=values.map((str,i)=>(this.gaps[i]??'')+str+(this.eols[i]?'\n':'')).join('');
+    const matches=textMatches(text,query);let start=0;
     values.forEach((value,index)=>{
-      const div=divs[index],end=start+value.length;
+      start+=(this.gaps[index]??'').length;const div=divs[index],end=start+value.length;
       if(!div){start=end+(this.eols[index]?1:0);return;}
       const parts=matches.filter(m=>m.start<end&&m.end>start);
       if(!parts.length){div.textContent=value;start=end+(this.eols[index]?1:0);return;}

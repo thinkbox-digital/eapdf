@@ -4,7 +4,7 @@ import {decodeEmbeddedGzip} from './embedded-index.js';
 import {sha256Blob} from './blob-hash.js';
 import {sha256} from './domain/hashes.js';
 import {fileLabel} from './navigation.js';
-import {textMatches,normalizeSearchText} from './document-search.js';
+import {normalizeSearchText} from './document-search.js';
 export const FULLTEXT_LIMITS={compressed:16*1024**2,decoded:128*1024**2,documents:100000,pages:200000,terms:250000,postings:5000000,characters:32000000,row:16*1024**2,retained:256*1024**2};
 type IndexedDoc={route:string[][];md5:string;size:number;pages:number};
 type IndexedPage={doc:number;page:number;text:number;guid:string};
@@ -17,16 +17,29 @@ function requireValue(value:unknown,message:string):asserts value{if(!value)thro
 const integer=(value:unknown,max:number)=>Number.isSafeInteger(value)&&Number(value)>=0&&Number(value)<=max;
 export async function verifyFileBinding(blob:Blob,digest:string,check:()=>void):Promise<void>{
  requireValue(/^[a-f0-9]{64}$/.test(digest),'missing file binding');
- const marker='<eapdfindex:fileDigest>';let tail='',found=-1;
+ const markers=['<eapdfindex:fileDigest>','<eapdfindex:signatureContents>'],found=[-1,-1];let tail='';
  for(let start=0;start<blob.size;start+=1024*1024){
   check();const chunk=new TextDecoder('latin1').decode(await blob.slice(start,start+1024*1024).arrayBuffer()),text=tail+chunk;
-  for(let from=0;;){const at=text.indexOf(marker,from);if(at<0)break;const position=start-tail.length+at+marker.length;
-   if(position!==found){requireValue(found<0,'ambiguous file binding');found=position;}from=at+marker.length;
-  }tail=text.slice(-(marker.length-1));
+  for(const [i,marker] of markers.entries())for(let from=0;;){const at=text.indexOf(marker,from);if(at<0)break;const position=start-tail.length+at+marker.length;
+   if(position!==found[i]){requireValue(found[i]===-1,'ambiguous file binding');found[i]=position;}from=at+marker.length;
+  }tail=text.slice(-(Math.max(...markers.map(m=>m.length))-1));
  }
- requireValue(found>=0,'file binding not stored unfiltered');
- requireValue(await blob.slice(found,found+64).text()===digest,'file binding differs from XMP');
- const masked=new Blob([blob.slice(0,found),'0'.repeat(64),blob.slice(found+64)]);
+ const slot=found[0]!,descriptor=found[1]!;
+ requireValue(slot>=0,'file binding not stored unfiltered');
+ requireValue(await blob.slice(slot,slot+64).text()===digest,'file binding differs from XMP');
+ let gapStart=blob.size,gapEnd=blob.size;
+ if(descriptor>=0){
+  const value=await blob.slice(descriptor,descriptor+41).text();
+  requireValue(/^\d{20}:\d{20}$/.test(value),'invalid signature binding');
+  const [start,end]=value.split(':').map(Number) as [number,number];
+  if(start!==0||end!==0){
+   requireValue(Number.isSafeInteger(start)&&Number.isSafeInteger(end)&&start>=Math.max(slot+64,descriptor+41)&&end>start+2&&end<=blob.size&&end-start<=1024*1024,'invalid signature range');
+   const contents=await blob.slice(start,end).text();check();
+   requireValue(/^<[0-9a-fA-F]+>$/.test(contents)&&(end-start)%2===0,'invalid signature Contents');
+   gapStart=start;gapEnd=end;
+  }
+ }
+ const masked=new Blob([blob.slice(0,slot),'0'.repeat(64),blob.slice(slot+64,gapStart),blob.slice(gapEnd)]);
  requireValue(await sha256Blob(masked,check)===digest,'PDF changed after index generation');
 }
 export async function readFullTextIndex(session:BrowserSession,doc:BrowserDocument,check:()=>void):Promise<ReadResult>{
@@ -45,7 +58,7 @@ export async function parseFullTextIndex(bytes:Uint8Array,root:BrowserDocument,c
  const first=bytes.indexOf(10),decoder=new TextDecoder('utf-8',{fatal:true});
  requireValue(bytes.length<=FULLTEXT_LIMITS.decoded&&first>0&&first<=1024&&bytes.at(-1)===10,'index framing/size');
  const header=JSON.parse(decoder.decode(bytes.subarray(0,first)));
- requireValue(header.format==='eapdf-search-index'&&header.version===3&&header.engine==='pdfbox-nfkd-space-fold-v2','unsupported full-text format/engine');
+ requireValue(header.format==='eapdf-search-index'&&header.version===3&&header.engine==='pdfbox-nfkd-space-fold-v3','unsupported full-text format/engine');
  requireValue(header.complete===true,'incomplete indexed coverage');
  requireValue(header.profile==='1'+root.inspection.identification.declaredProfile.value&&['1m','1mi','1c','1ci'].includes(header.profile),'profile mismatch');
  for(const key of ['documents','pages','terms','postings'] as const)requireValue(integer(header[key],FULLTEXT_LIMITS[key]),key+' limit');
@@ -122,8 +135,18 @@ export async function queryFullTextIndex(index:FullTextIndex,root:BrowserDocumen
   if(!term.includes(first))continue;
   for(let n=0;n<positions.length;n+=2){if(visitedPostings++%32768===0){check();requireValue(performance.now()<deadline,'indexed query time limit');await new Promise(r=>setTimeout(r,0));}candidates.add(positions[n]!);}
  }
- const hits=new Map<number,{count:number;excerpt:string;hash:string}>();
- for(const id of candidates){check();requireValue(performance.now()<deadline,'indexed query time limit');const text=index.texts[id]!,matches=textMatches(text,query,1000001);requireValue(matches.length<=1000000,'match count limit');if(matches.length){const at=matches[0]!;hits.set(id,{count:matches.length,excerpt:text.slice(Math.max(0,at.start-60),at.end+120),hash:await sha256(new TextEncoder().encode(text))});}}
+ const hits=new Map<number,{count:number;excerpt:string;hash:string}>(),encoder=new TextEncoder();
+ for(const id of candidates){
+  check();requireValue(performance.now()<deadline,'indexed query time limit');const text=index.texts[id]!,at=text.indexOf(needle);if(at<0)continue;
+  // Parsing already verifies canonical text. Its offsets need no normalization or
+  // glyph remapping here; PDF.js establishes original glyph offsets on selection.
+  let count=1;
+  for(let from=at+needle.length;;){const next=text.indexOf(needle,from);if(next<0)break;
+   requireValue(++count<=1000000,'match count limit');from=next+needle.length;
+   if(count%4096===0){check();requireValue(performance.now()<deadline,'indexed query time limit');}
+  }
+  hits.set(id,{count,excerpt:text.slice(Math.max(0,at-60),at+needle.length+120),hash:await sha256(encoder.encode(text))});
+ }
  const matches:CollectionMatch[]=[];let retained=0;const direct=collectionSteps(root);
  for(const [ordinal,page] of index.pages.entries()){if(ordinal%1000===0){check();requireValue(performance.now()<deadline,'indexed query time limit');await new Promise(r=>setTimeout(r,0));}const hit=hits.get(page.text);if(!hit)continue;const doc=index.documents[page.doc]!,route=doc.route;
   const target=route.length?direct.get(JSON.stringify(route[0])):undefined;const path=target?[target.step]:[];

@@ -1,9 +1,27 @@
 import type {PDFDocumentProxy} from 'pdfjs-dist';
 import type {BrowserDocument} from './browser-session.js';
 export type TextMatch={start:number;end:number};
-// Match the pinned PDFFindController: actual spaces belong to str, not item boundaries.
-export function pdfSearchText(items:readonly ({str:string;hasEOL?:boolean}|object)[]):string{
-  let text='';for(const item of items)if('str'in item&&typeof item.str==='string')text+=item.str+('hasEOL'in item&&item.hasEOL?'\n':'');return text;
+export type PdfTextFragment={str:string;hasEOL?:boolean;dir?:string;transform?:readonly number[];width?:number};
+// Deferred link text can jump back to a separate run on the same baseline. Do
+// not turn the preceding word plus that link into a new word. Contiguous and
+// overlapping fragments, marks, RTL and rotated text keep PDF.js's boundaries.
+export function pdfTextSeparator(previous:PdfTextFragment|undefined,item:PdfTextFragment):string{
+  if(!previous?.str||!item.str||previous.hasEOL||/\s$/u.test(previous.str)||/^[\s\p{M}]/u.test(item.str))return '';
+  if((previous.dir??'ltr')!=='ltr'||(item.dir??'ltr')!=='ltr')return '';
+  const a=previous.transform,b=item.transform,w=item.width,previousWidth=previous.width;
+  if(!a||!b||a.length!==6||b.length!==6||!a.every(Number.isFinite)||!b.every(Number.isFinite)||!Number.isFinite(w)||w! <= 0||!Number.isFinite(previousWidth)||previousWidth! <= 0)return '';
+  if(a[0]! <= 0||b[0]! <= 0||a[1]!==0||a[2]!==0||b[1]!==0||b[2]!==0)return '';
+  const tolerance=Math.max(Math.abs(a[0]!),Math.abs(a[3]!),Math.abs(b[0]!),Math.abs(b[3]!))*0.1;
+  return Math.abs(a[5]!-b[5]!)<=tolerance&&b[4]!+w!<a[4]!-tolerance?' ':'';
+}
+// Match PDFFindController's string/EOL assembly, with the narrow spatial boundary above.
+export function pdfSearchText(items:readonly (PdfTextFragment|object)[]):string{
+  let text='',previous:PdfTextFragment|undefined;
+  for(const value of items)if('str'in value&&typeof value.str==='string'){
+    const item=value as PdfTextFragment;text+=pdfTextSeparator(previous,item)+item.str+(item.hasEOL?'\n':'');
+    if(item.hasEOL)previous=undefined;else if(item.str)previous=item;
+  }
+  return text;
 }
 // Keep this scalar normalization identical to FullTextSearchIndex.normalize.
 const spaces=/[\u0009-\u000d\u0020\u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/;
@@ -43,6 +61,7 @@ export function textMatches(text:string,query:string,maximum=Infinity):TextMatch
 export class DocumentSearch {
   private cache=new Map<string,string>();private characters=0;private pdf:PDFDocumentProxy|undefined;
   private cursor:{query:string;page:number;index:number}|undefined;
+  resetCursor():void{this.cursor=undefined;}
   clear():void{this.cache.clear();this.characters=0;this.pdf=undefined;this.cursor=undefined;}
   async find(doc:BrowserDocument,query:string,page:number,direction:1|-1,check:()=>void):Promise<{page:number;index:number;count:number}|{incomplete:boolean}>{
     if(this.pdf!==doc.pdf){this.clear();this.pdf=doc.pdf;}

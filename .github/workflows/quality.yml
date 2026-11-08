@@ -20,8 +20,15 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - run: mvn -B -Deapdf.build.directory=/tmp/eapdf-creator-build verify
+      - run: mvn -B -Deapdf.build.directory=/tmp/eapdf-creator-build -Deapdf.signedIndexFixtures=/tmp/eapdf-signed-index-fixtures verify
       - run: mvn -B -f validator-desktop/pom.xml -Deapdf.build.directory=/tmp/eapdf-validator-build verify
+      - name: Validate signed indexed archives
+        run: python3 scripts/check_signed_index.py --fixtures /tmp/eapdf-signed-index-fixtures --validator /tmp/eapdf-validator-build/eapdf-validator-$(cat VERSION).jar
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: signed-index-fixtures
+          path: /tmp/eapdf-signed-index-fixtures
+          if-no-files-found: error
   pdfjs-pin:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -45,6 +52,7 @@ jobs:
       - run: python -m pip install --require-hashes -r requirements-web.lock
       - run: python -B -m unittest discover -s regression -v
   viewer:
+    needs: java-builds
     name: Viewer (${{ matrix.browser }})
     runs-on: ubuntu-24.04
     timeout-minutes: 35
@@ -73,9 +81,19 @@ jobs:
           npx playwright install-deps firefox
           echo "CHROMIUM_PATH=$(node --input-type=module -e "import {chromium} from 'playwright'; console.log(chromium.executablePath())")" >> "$GITHUB_ENV"
         working-directory: browser-viewer
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: signed-index-fixtures
+          path: ${{ runner.temp }}/signed-index-fixtures
       - name: Complete Chromium suite and independent inspection oracle
         if: matrix.browser == 'chromium'
         run: npm test && npm run test:m1 && npm run test:archive-memory
+        working-directory: browser-viewer
+      - name: Signed Chromium search and incremental-update fallback
+        if: matrix.browser == 'chromium'
+        env:
+          EAPDF_SIGNED_INDEX_FIXTURES: ${{ runner.temp }}/signed-index-fixtures
+        run: npm run test:fulltext-index
         working-directory: browser-viewer
       - name: Install pinned Firefox and WebDriver
         if: matrix.browser == 'firefox'
@@ -87,6 +105,14 @@ jobs:
           GECKODRIVER_PATH: ${{ runner.temp }}/firefox-tools/geckodriver
           M5_UI: '1'
         run: npm run build && npm run test:firefox
+        working-directory: browser-viewer
+      - name: Signed Firefox search and highlighting
+        if: matrix.browser == 'firefox'
+        env:
+          FIREFOX_PATH: ${{ runner.temp }}/firefox-tools/firefox/firefox
+          GECKODRIVER_PATH: ${{ runner.temp }}/firefox-tools/geckodriver
+          EAPDF_SIGNED_INDEX_FIXTURES: ${{ runner.temp }}/signed-index-fixtures
+        run: npm run test:firefox
         working-directory: browser-viewer
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()

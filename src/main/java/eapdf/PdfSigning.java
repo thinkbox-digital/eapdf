@@ -119,10 +119,14 @@ final class PdfSigning {
     checkCertificate();
     if (input.toAbsolutePath().normalize().equals(output.toAbsolutePath().normalize()))
       throw new IOException("Signing input and output must be different files.");
+    long[] signingRange;boolean bindIndex;
     try (PDDocument document = IndexedPdfLoader.load(input, IOUtils.createTempFileOnlyStreamCache());
          SignatureOptions options = new SignatureOptions()) {
       if (document.isEncrypted() || !document.getSignatureDictionaries().isEmpty())
         throw new IOException("Expected an unsigned, unencrypted creator output.");
+      var metadata=document.getDocumentCatalog().getMetadata();
+      bindIndex=metadata!=null&&new String(metadata.toByteArray(),java.nio.charset.StandardCharsets.UTF_8).contains(FullTextSearchIndex.SIGNATURE_MARKER);
+      if(bindIndex)FullTextSearchIndex.verifyUnsignedBinding(input);
       PDSignature signature = new PDSignature();
       signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
       signature.setSubFilter(PDSignature.SUBFILTER_ETSI_CADES_DETACHED);
@@ -137,8 +141,22 @@ final class PdfSigning {
       for (var field : document.getSignatureFields()) field.setAlternateFieldName("Document signature");
       try (OutputStream out = Files.newOutputStream(output)) {
         ExternalSigningSupport external = document.saveIncrementalForExternalSigning(out);
-        try (InputStream content = external.getContent()) { external.setSignature(cms(content)); }
+        // PDFBox late external signing: finish the placeholder PDF before calculating CMS.
+        // The index fingerprint must be sealed over this final revision before it is signed.
+        external.setSignature(new byte[0]);
+        var bytes=signature.getCOSObject().getCOSArray(org.apache.pdfbox.cos.COSName.BYTERANGE);
+        signingRange=new long[4];
+        for(int i=0;i<4;i++)signingRange[i]=((org.apache.pdfbox.cos.COSInteger)bytes.getObject(i)).longValue();
       }
+    }
+    if(bindIndex)FullTextSearchIndex.sealForSigning(output,signingRange);
+    byte[] signature;
+    try(var content=new ByteRanges(output,signingRange)){signature=cms(content);}
+    if(signature.length>(signingRange[2]-signingRange[1]-2)/2)
+      throw new IOException("Signature exceeds reserved Contents space");
+    try(var file=new RandomAccessFile(output.toFile(),"rw")){
+      file.seek(signingRange[1]+1);
+      file.write(HexFormat.of().withUpperCase().formatHex(signature).getBytes(java.nio.charset.StandardCharsets.US_ASCII));
     }
   }
 

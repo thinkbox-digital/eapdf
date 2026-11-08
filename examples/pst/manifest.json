@@ -1,11 +1,11 @@
 {
   "input_type": "pst",
-  "creator_version": "1.6.0-beta.7",
+  "creator_version": "1.6.0-beta.19",
   "filename_policy": "Lower-case input type, input filename stem, _archive for multiple inputs, and EA-PDF profile. Single-message mailbox examples contain one extracted child.",
-  "creator_sha256": "338c12beb94bad6aeac0c3ea5484c431cb0495f2b5891380a182ec9fcba05881",
-  "validator_sha256": "7568fcbca3e407a434fea068de5dca6039972803ee9a59b15cadc39d23b191da",
+  "creator_sha256": "551326c2de07588d390bd4d15f8f6d0f938c0655c2d01eacb9f5cf14046ac68e",
+  "validator_sha256": "259e445062a92edccf6a4ab2e787af0b1f7a379238fce370e899ebcc0e42f5a7",
   "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
-  "configuration_sha256": "f788d4ed48d03604527755f450b5adbfe86d5a232635ac102af860eb6880d887",
+  "configuration_sha256": "42914a99a1a7997c2f7e80ef282197321db24c138b4b2cd5db3fcffa8c9df6a0",
   "sources": {
     "in/quality-attached-message.pst": "f2a6b1d2cad00f574e3d1c1211c4b1c854d6526caea77213adc3da92b7813ae3"
   },
@@ -21,7 +21,7 @@
     {
       "profile": "1s",
       "file": "pst_quality-attached-message_1s.pdf",
-      "sha256": "be18d4266cd39d98966c5601b34299c12465da9e37dc6efbe9a4f182409504ed",
+      "sha256": "507046ca84a8784a250d79a60e7f62adca212d81515b3014ab8c1a99c7ca9274",
       "pages": 2,
       "inputs": [
         "in/quality-attached-message.pst"
@@ -29,17 +29,17 @@
       "extracted_from": {
         "collection": "pst_quality-attached-message_1c.pdf",
         "member": "<1>FW_ First email_000001_1s.pdf",
-        "member_sha256": "be18d4266cd39d98966c5601b34299c12465da9e37dc6efbe9a4f182409504ed"
+        "member_sha256": "507046ca84a8784a250d79a60e7f62adca212d81515b3014ab8c1a99c7ca9274"
       },
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 5.21
+      "validation_seconds": 3.683
     },
     {
       "profile": "1si",
       "file": "pst_quality-attached-message_1si.pdf",
-      "sha256": "e08f0865403ca14b8e4bc093a0422defd363d3862c49cffbbe162dd4dc5160bf",
+      "sha256": "9e6b74dc04fc1419c9391d0ae257c2ddf243a9f2e00262e6b2ed1a31ecf13d18",
       "pages": 2,
       "inputs": [
         "in/quality-attached-message.pst"
@@ -47,18 +47,18 @@
       "extracted_from": {
         "collection": "pst_quality-attached-message_1ci.pdf",
         "member": "<1>FW_ First email_000001_1si.pdf",
-        "member_sha256": "e08f0865403ca14b8e4bc093a0422defd363d3862c49cffbbe162dd4dc5160bf"
+        "member_sha256": "9e6b74dc04fc1419c9391d0ae257c2ddf243a9f2e00262e6b2ed1a31ecf13d18"
       },
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 4.848
+      "validation_seconds": 3.282
     },
     {
       "profile": "1m",
       "file": "pst_quality-attached-message_1m.pdf",
-      "sha256": "61ab45c460b56d297c5e2186af040126d9cbc6f02455a5c6c6fcd9f74ed40eb2",
-      "pages": 13,
+      "sha256": "76856fc8d1e4dbfafaac1aeff59f6dc63c05dd9905de97b4089547a21b8bfff5",
+      "pages": 12,
       "inputs": [
         "in/quality-attached-message.pst"
       ],
@@ -66,13 +66,13 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 7.837
+      "validation_seconds": 4.786
     },
     {
       "profile": "1mi",
       "file": "pst_quality-attached-message_1mi.pdf",
-      "sha256": "21d277e4a3293a72952156d0513cd8d9ae1e411068a84e2969b701da83417df9",
-      "pages": 13,
+      "sha256": "7baface4e47be413d90a983088876d22d8e9123eb46e01ae6207acd25509ff4c",
+      "pages": 12,
       "inputs": [
         "in/quality-attached-message.pst"
       ],
@@ -80,12 +80,12 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 8.153
+      "validation_seconds": 3.879
     },
     {
       "profile": "1c",
       "file": "pst_quality-attached-message_1c.pdf",
-      "sha256": "df672a582a546d0ee0c18ac59d7ff754e707bc82a2105b91c2b0f882b020ffad",
+      "sha256": "03f47439d6208b66a992417674a68f70bfd941039f6209259f1397ed1e9fa3c9",
       "pages": 1,
       "inputs": [
         "in/quality-attached-message.pst"
@@ -94,12 +94,12 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 11.305
+      "validation_seconds": 8.723
     },
     {
       "profile": "1ci",
       "file": "pst_quality-attached-message_1ci.pdf",
-      "sha256": "18be985f75c47bb9bfad9d2aaed1442bd42ecfa9d3c6615615634c4de620e678",
+      "sha256": "edd02c17597bc411e42e3d69f39e659879241c3a3ba03d8157e68bc81c65a76a",
       "pages": 1,
       "inputs": [
         "in/quality-attached-message.pst"
@@ -108,55 +108,8 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 9.766
+      "validation_seconds": 9.031
     }
   ],
-  "sidecars": [
-    {
-      "file": "pst_quality-attached-message_1m_premis.xml",
-      "sha256": "26ead9daef5d302e49aa17b99c9d69f9ebf7c2f482272110b65baf03739e753f"
-    },
-    {
-      "file": "pst_quality-attached-message_1m_index.xlsx",
-      "sha256": "4d562dcd412ed0b2b5c0ffc733a013fe27b73b96aa741524eeb299906d6cc7bf",
-      "xlsx_package": "PASS"
-    },
-    {
-      "file": "pst_quality-attached-message_1mi_premis.xml",
-      "sha256": "236199560810c6bbf49fe7f1be145fe2e8a3f52993694d9d3773a4d3a4c32c34"
-    },
-    {
-      "file": "pst_quality-attached-message_1mi_index.xlsx",
-      "sha256": "1689067f356f3a716c7e4ef141c20974621811be4908349661cbe0b48bd7a963",
-      "xlsx_package": "PASS"
-    },
-    {
-      "file": "pst_quality-attached-message_1c_premis.xml",
-      "sha256": "e3717e7493a8a57664688be6fbce05ce49ba6aa8877a57171da8392ce337ccc5"
-    },
-    {
-      "file": "pst_quality-attached-message_1c_index.xlsx",
-      "sha256": "93d542a98918141cb05bdc766e11e320b15cbadd456d4914a4d2cfc06897f651",
-      "xlsx_package": "PASS"
-    },
-    {
-      "file": "pst_quality-attached-message_1c_finding_aid.pdf",
-      "sha256": "851008ace936a74cad075a35d3149ca3bd826e4dea28896528f06ac44a5a2fd5",
-      "pdfa": "PASS"
-    },
-    {
-      "file": "pst_quality-attached-message_1ci_premis.xml",
-      "sha256": "910309f0f22a15461978e888f1edcf877d89fc8b295615ba18891af597440cb7"
-    },
-    {
-      "file": "pst_quality-attached-message_1ci_index.xlsx",
-      "sha256": "b4074e1478fef938b00bfe40313b041c158f24d2baa62caf99591b416f913732",
-      "xlsx_package": "PASS"
-    },
-    {
-      "file": "pst_quality-attached-message_1ci_finding_aid.pdf",
-      "sha256": "4cbe2ab3b8dbd906ae9fa8e5602bc3cd3d8edb8e5a61b2d61be56618a67255d8",
-      "pdfa": "PASS"
-    }
-  ]
+  "sidecars": []
 }

@@ -1,6 +1,15 @@
 # Changelog
 
-## 1.6.0-beta.18 — 2026-11-07
+## 1.6.0-beta.19 — 2026-11-07
+
+- Correct false search matches across separately positioned PDF text and accelerate common archive searches.
+- Preserve embedded full-text indexes when signing; older extraction engines fall back to scanned search.
+- Bound viewer results, retained metadata and creator GUI logs; reduce MIME and index-generation allocations.
+- Regenerate representative archives and release examples with current search indexes.
+
+## 1.6.0-beta.18 — 2026-11-07 (local, unpublished)
+
+Included in the published beta.19 release.
 
 - Embedded metadata and full-text search indexes for supported archives; conversion requires no Node.js runtime.
 - Improved search matching, highlighting, CSV exports, keyboard navigation and return-to-file navigation in viewer 0.5.0-beta.17.
@@ -11,7 +20,7 @@
 This file tracks human-readable release history for the repository.
 
 Current beta version:
-- `1.6.0-beta.17`
+- `1.6.0-beta.19`
 
 Notes:
 - Release tracking starts here.

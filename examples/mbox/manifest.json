@@ -1,13 +1,14 @@
 {
   "input_type": "mbox",
-  "creator_version": "1.6.0-beta.7",
+  "creator_version": "1.6.0-beta.19",
   "filename_policy": "Lower-case input type, input filename stem, _archive for multiple inputs, and EA-PDF profile. Single-message mailbox examples contain one extracted child.",
-  "creator_sha256": "338c12beb94bad6aeac0c3ea5484c431cb0495f2b5891380a182ec9fcba05881",
-  "validator_sha256": "7568fcbca3e407a434fea068de5dca6039972803ee9a59b15cadc39d23b191da",
+  "creator_sha256": "551326c2de07588d390bd4d15f8f6d0f938c0655c2d01eacb9f5cf14046ac68e",
+  "validator_sha256": "259e445062a92edccf6a4ab2e787af0b1f7a379238fce370e899ebcc0e42f5a7",
   "rulebook_sha256": "5753d02350f1ff8262090c272bde6e760dfed20c5a5c97031871f8cbeebb1d21",
-  "configuration_sha256": "f788d4ed48d03604527755f450b5adbfe86d5a232635ac102af860eb6880d887",
+  "configuration_sha256": "42914a99a1a7997c2f7e80ef282197321db24c138b4b2cd5db3fcffa8c9df6a0",
   "sources": {
-    "in/enron-sample.mbox": "370c41998013037bed444887b5cfe560ef74607db401f1ecbb80bf76df12251c"
+    "in/enron-sample.mbox": "370c41998013037bed444887b5cfe560ef74607db401f1ecbb80bf76df12251c",
+    "in/enron.mbox": "ac91b223f9eaeb57f7498bc08b8eb190ef4624b7c88bb5534e3fd4934ac2dfd4"
   },
   "single_message_policy": "First matching message child, sorted by collection name, copied unchanged from the corresponding collection.",
   "archive_policy": "Every message in all listed inputs.",
@@ -21,7 +22,7 @@
     {
       "profile": "1s",
       "file": "mbox_enron-sample_1s.pdf",
-      "sha256": "d54d88dadf63b4d655701c7b090e2cb43f73a9c27ccdacdb883dc1cc717fd01e",
+      "sha256": "5f971d6a7f863da192094dc55d51694375898f540ac8062d0b74d483d83573c1",
       "pages": 1,
       "inputs": [
         "in/enron-sample.mbox"
@@ -29,17 +30,17 @@
       "extracted_from": {
         "collection": "mbox_enron-sample_1c.pdf",
         "member": "<1>12_28 Power VaR_000002_1s.pdf",
-        "member_sha256": "d54d88dadf63b4d655701c7b090e2cb43f73a9c27ccdacdb883dc1cc717fd01e"
+        "member_sha256": "5f971d6a7f863da192094dc55d51694375898f540ac8062d0b74d483d83573c1"
       },
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 4.923
+      "validation_seconds": 5.095
     },
     {
       "profile": "1si",
       "file": "mbox_enron-sample_1si.pdf",
-      "sha256": "4e4125e3a7f6076dd0c92c783096993266ee93c28d787d50710e3f257c30d37e",
+      "sha256": "9423fd924a0291ef4e4e5f22a3fb3eb53dd74b859f44149e04cd34da100c35d4",
       "pages": 1,
       "inputs": [
         "in/enron-sample.mbox"
@@ -47,18 +48,18 @@
       "extracted_from": {
         "collection": "mbox_enron-sample_1ci.pdf",
         "member": "<1>12_28 Power VaR_000002_1si.pdf",
-        "member_sha256": "4e4125e3a7f6076dd0c92c783096993266ee93c28d787d50710e3f257c30d37e"
+        "member_sha256": "9423fd924a0291ef4e4e5f22a3fb3eb53dd74b859f44149e04cd34da100c35d4"
       },
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 6.028
+      "validation_seconds": 7.813
     },
     {
       "profile": "1m",
       "file": "mbox_enron-sample_1m.pdf",
-      "sha256": "2733f0a73258bc0e4fdc635bf341d21b9e639cfe1665eb6dda8fa7b33a9ad77d",
-      "pages": 3,
+      "sha256": "accd5a9edfc16f6289eb22e74aa9f7527425166974f7b4fa8f39feca63ff1264",
+      "pages": 2,
       "inputs": [
         "in/enron-sample.mbox"
       ],
@@ -66,13 +67,13 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 4.71
+      "validation_seconds": 9.111
     },
     {
       "profile": "1mi",
       "file": "mbox_enron-sample_1mi.pdf",
-      "sha256": "1a3ae19f06f46797298d80c15612d46e492b105d13a0ae2ea523bbcfabd5a3f3",
-      "pages": 3,
+      "sha256": "7fc4a535b18f110dc206e60269809fe69caa026fce624d41cb1c2547eadbb901",
+      "pages": 2,
       "inputs": [
         "in/enron-sample.mbox"
       ],
@@ -80,12 +81,12 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 4.966
+      "validation_seconds": 8.314
     },
     {
       "profile": "1c",
       "file": "mbox_enron-sample_1c.pdf",
-      "sha256": "7a2c5f5cc41dd3d193b2628cec26085337c6c34b656e8aa5c08951568a1bc764",
+      "sha256": "9b8cc281530d74ed9226b0d01af19c48c5f44f4d9b75ab3ba8573fd0fecf9a13",
       "pages": 1,
       "inputs": [
         "in/enron-sample.mbox"
@@ -94,12 +95,12 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 6.95
+      "validation_seconds": 13.535
     },
     {
       "profile": "1ci",
       "file": "mbox_enron-sample_1ci.pdf",
-      "sha256": "92f1f1a9c8bd7291f75ce1f96bf8e8cb1ea47f767357983051abcb777ccad530",
+      "sha256": "fb94ae68347d0d3ced70d7c07e0ecce4696b48d622aa072d7cb8c4fae039d71d",
       "pages": 1,
       "inputs": [
         "in/enron-sample.mbox"
@@ -108,55 +109,32 @@
       "pdfa": "PASS",
       "eapdf": "PASS",
       "selected_iso_structure": "PASS",
-      "validation_seconds": 6.558
+      "validation_seconds": 10.604
     }
   ],
-  "sidecars": [
+  "sidecars": [],
+  "additional_samples": [
     {
-      "file": "mbox_enron-sample_1m_premis.xml",
-      "sha256": "28bc30cb863e50f5399b32a022e2fda0ee849997e786234072184201d997fadc"
-    },
-    {
-      "file": "mbox_enron-sample_1m_index.xlsx",
-      "sha256": "4b78e40a13962e04374b4756f8f2a2a098b4c9e65ed41b165dd21d44d1a35405",
-      "xlsx_package": "PASS"
-    },
-    {
-      "file": "mbox_enron-sample_1mi_premis.xml",
-      "sha256": "b173440a5674ca7f2fa45f5703d9122c7b1262df090b4da7be764a3c4294f646"
-    },
-    {
-      "file": "mbox_enron-sample_1mi_index.xlsx",
-      "sha256": "d25d7d1c6d772d8352d4e2d4d084e104fba4e0bcbcd33ef50f4a0f94bebfaf9f",
-      "xlsx_package": "PASS"
-    },
-    {
-      "file": "mbox_enron-sample_1c_premis.xml",
-      "sha256": "6ef99b21f162053e8bab8f3b4563d6ca7791fcd2cd302b54676671cc8c02b457"
-    },
-    {
-      "file": "mbox_enron-sample_1c_index.xlsx",
-      "sha256": "d708a61fc3dbcf394459065f50a623af0c1de7d7e842eb157ba2ebc48cf3303b",
-      "xlsx_package": "PASS"
-    },
-    {
-      "file": "mbox_enron-sample_1c_finding_aid.pdf",
-      "sha256": "87720ac75560587c85808f00ca51bd0062af9f79c56d984f13d994d190197d1e",
-      "pdfa": "PASS"
-    },
-    {
-      "file": "mbox_enron-sample_1ci_premis.xml",
-      "sha256": "b89fa22d4791900d04cfe96e14e2d0fefd4bf6f9cc5cddd92a501849c2cbd7c0"
-    },
-    {
-      "file": "mbox_enron-sample_1ci_index.xlsx",
-      "sha256": "41095363e9bf017a2f9df095f37ececa36bc5d560ff3f5810bec4aa5066d0ccd",
-      "xlsx_package": "PASS"
-    },
-    {
-      "file": "mbox_enron-sample_1ci_finding_aid.pdf",
-      "sha256": "50cf52d2c45f0c258e9a15f21fe18981c4fb71601ef6d93d510b6b83c10a95f3",
-      "pdfa": "PASS"
+      "profile": "1m",
+      "file": "mbox_enron_1m.pdf",
+      "sha256": "f309c1fe86eded8344aa8515dbec8dd93e92aefd2cf7314b61084de4c7de6994",
+      "pages": 1839,
+      "messages": 1433,
+      "inputs": [
+        "in/enron.mbox"
+      ],
+      "pdfa": "ERROR",
+      "eapdf": "INCOMPLETE",
+      "selected_iso_structure": "N/A",
+      "validation_seconds": 74.976,
+      "configuration_sha256": "e4d540ebe203941c49ce4e2a6ae36421ec24bd90b6219c1761d3cbbe980561b2",
+      "creator_identity": "EmailToPDFA 1.6.0-beta.19",
+      "parallelism": {
+        "creator_jobs": 2,
+        "creator_heap_mb": 2048
+      },
+      "validation_note": "PDF/A checks could not finish: org.verapdf.core.ValidationException: Caught unexpected runtime exception during validation",
+      "known_limitation": "The same bundled-veraPDF runtime exception occurred for this source/profile in beta.18; PDF/A and dependent ISO assessment are unavailable, so this example is not a conformance-passing fixture."
     }
   ]
 }
