@@ -29,7 +29,12 @@ and signed-index checks passed. The inspection contract/reference checks and
 are byte-identical. Tests that specifically exercise scanning now explicitly
 select that path; a small frozen public fixture retains optional PREMIS coverage
 while refreshed examples omit PREMIS. GitHub Actions remains the authority for
-remote workflow status.
+remote workflow status. GitHub's creator run skips 45 additional optional
+real-input checks because the private local corpus is not distributed; the local
+run above exercised those available inputs. The refreshed indexed example also
+required the RSA/EC signing regression to exclude only the two intentionally
+resealed XMP binding fields from byte equality, while separately verifying their
+bindings and retaining page, attachment, other-metadata and CMS checks.
 
 The public bundle contains 26 freshly generated PDFs: all 24 primary examples
 pass EA-PDF and PDF/A validation across the six profiles; the missing-date
@@ -51,6 +56,18 @@ PSS was 742/833 MiB; validation was 1,793/1,801 MiB. These are fresh-conversion
 measurements, not controlled speedup comparisons. Isolated profiles intentionally
 omit original email bytes and use attachment placeholders; comparison with
 normalized reader records does not establish independent PST completeness.
+
+The balanced local regeneration covered all 79 inputs below 60 MB and produced
+90 PDFs: 20 of each archive profile and five of each standalone profile. All
+creator/preservation receipts passed, all 80 archive indexes are complete, and
+all 88 original input hashes are unchanged; nine larger PSTs were excluded from
+this set. Standalone validation returned 74 PASS, 10 INCOMPLETE and six FAIL.
+Six incomplete assessments reproduce existing veraPDF runtime errors; four new
+grouped EML/MSG archives expose duplicate-source or native-MSG association
+limits. The six failures reproduce missing-date errors in the Drafts/msg MBOX
+inputs. All 82 directly comparable outputs retain their previous statuses and
+failure codes; eight grouped archives are newly exercised coverage. No validator
+checks were weakened and these exceptions are not represented as passes.
 
 ## Original audit findings
 

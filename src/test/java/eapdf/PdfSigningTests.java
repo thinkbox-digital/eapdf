@@ -46,18 +46,53 @@ class PdfSigningTests {
     return config;
   }
 
+  /** Mask only the two fixed-width index binding values, preserving every other XMP byte. */
+  static byte[] metadataWithoutBindingValues(byte[] metadata) {
+    var charset = java.nio.charset.StandardCharsets.ISO_8859_1;
+    String text = new String(metadata, charset);
+    for (var field : List.of(Map.entry("fileDigest", "[0-9a-f]{64}"),
+        Map.entry("signatureContents", "[0-9]{20}:[0-9]{20}"))) {
+      var matcher = java.util.regex.Pattern.compile("<eapdfindex:" + field.getKey() + ">(" + field.getValue()
+          + ")</eapdfindex:" + field.getKey() + ">").matcher(text);
+      assertTrue(matcher.find(), "Missing or malformed index binding: " + field.getKey());
+      int start = matcher.start(1), end = matcher.end(1);
+      assertFalse(matcher.find(), "Duplicate index binding: " + field.getKey());
+      text = text.substring(0, start) + "0".repeat(end - start) + text.substring(end);
+    }
+    return text.getBytes(charset);
+  }
+
+  static void assertSignedIndexBinding(Path signed, long[] range) throws Exception {
+    byte[] bytes = Files.readAllBytes(signed);
+    int slot = Math.toIntExact(FullTextSearchIndex.findMarker(signed, FullTextSearchIndex.MARKER));
+    int descriptor = Math.toIntExact(FullTextSearchIndex.findMarker(signed, FullTextSearchIndex.SIGNATURE_MARKER));
+    assertTrue(slot >= 0 && descriptor >= 0);
+    var ascii = java.nio.charset.StandardCharsets.US_ASCII;
+    assertEquals(String.format(Locale.ROOT, "%020d:%020d", range[1], range[2]),
+        new String(bytes, descriptor, FullTextSearchIndex.EMPTY_SIGNATURE_RANGE.length(), ascii));
+    String actual = new String(bytes, slot, 64, ascii);
+    Arrays.fill(bytes, slot, slot + 64, (byte) '0');
+    var hash = MessageDigest.getInstance("SHA-256");
+    hash.update(bytes, 0, Math.toIntExact(range[1]));
+    hash.update(bytes, Math.toIntExact(range[2]), Math.toIntExact(range[3]));
+    assertEquals(actual, HexFormat.of().formatHex(hash.digest()));
+  }
+
   @Test void rsaAndEcSignRealPdfWithoutChangingPagesMetadataOrAttachments() throws Exception {
     for (String algorithm : List.of("RSA", "EC")) {
       Identity identity = identity(algorithm, Instant.now().plusSeconds(86400), KeyUsage.digitalSignature);
       var config = store(identity, algorithm + ".p12", false);
       Path input = Path.of("examples/eml/eml_Agenda_and_timeline_slides_archive_1c.pdf");
+      FullTextSearchIndex.verifyUnsignedBinding(input);
       Path signed = directory.resolve(algorithm + ".pdf"); Files.copy(input, signed);
       var signer = PdfSigning.load(config, PASSWORD);
       signer.signInPlace(signed); PdfSigning.verify(signed, identity.certificate());
       try (var before = Loader.loadPDF(input.toFile()); var after = Loader.loadPDF(signed.toFile())) {
         assertEquals(before.getNumberOfPages(), after.getNumberOfPages());
         assertEquals(new PDFTextStripper().getText(before), new PDFTextStripper().getText(after));
-        assertArrayEquals(before.getDocumentCatalog().getMetadata().toByteArray(), after.getDocumentCatalog().getMetadata().toByteArray());
+        assertArrayEquals(metadataWithoutBindingValues(before.getDocumentCatalog().getMetadata().toByteArray()),
+            metadataWithoutBindingValues(after.getDocumentCatalog().getMetadata().toByteArray()));
+        assertSignedIndexBinding(signed, Arrays.stream(after.getSignatureDictionaries().get(0).getByteRange()).asLongStream().toArray());
         var a = before.getDocumentCatalog().getNames().getEmbeddedFiles().getNames();
         var b = after.getDocumentCatalog().getNames().getEmbeddedFiles().getNames();
         assertEquals(a.keySet(), b.keySet());
@@ -110,14 +145,10 @@ class PdfSigningTests {
           for(String name:a.keySet())assertArrayEquals(a.get(name).getEmbeddedFile().toByteArray(),b.get(name).getEmbeddedFile().toByteArray());
           int[] r=pdf.getSignatureDictionaries().get(0).getByteRange();range=new long[]{r[0],r[1],r[2],r[3]};
           String after=new String(pdf.getDocumentCatalog().getMetadata().toByteArray(),java.nio.charset.StandardCharsets.UTF_8);
-          assertEquals(before.replaceAll("<eapdfindex:fileDigest>.*?</eapdfindex:fileDigest>","").replaceAll("<eapdfindex:signatureContents>.*?</eapdfindex:signatureContents>",""),
-              after.replaceAll("<eapdfindex:fileDigest>.*?</eapdfindex:fileDigest>","").replaceAll("<eapdfindex:signatureContents>.*?</eapdfindex:signatureContents>",""));
+          assertArrayEquals(metadataWithoutBindingValues(before.getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+              metadataWithoutBindingValues(after.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
         }
-        byte[] bytes=Files.readAllBytes(signed);int slot=(int)FullTextSearchIndex.findMarker(signed,FullTextSearchIndex.MARKER);
-        String actual=new String(bytes,slot,64,java.nio.charset.StandardCharsets.US_ASCII);
-        Arrays.fill(bytes,slot,slot+64,(byte)'0');var hash=MessageDigest.getInstance("SHA-256");
-        hash.update(bytes,0,(int)range[1]);hash.update(bytes,(int)range[2],(int)range[3]);
-        assertEquals(actual,HexFormat.of().formatHex(hash.digest()));
+        assertSignedIndexBinding(signed, range);
         assertThrows(IOException.class,()->FullTextSearchIndex.sealForSigning(signed,range));
         String fixtures=System.getProperty("eapdf.signedIndexFixtures");
         if(fixtures!=null){Path destination=Path.of(fixtures);Files.createDirectories(destination);Files.copy(signed,destination.resolve("mbox_sample_"+profile+".pdf"),StandardCopyOption.REPLACE_EXISTING);}
