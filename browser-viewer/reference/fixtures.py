@@ -42,20 +42,14 @@ def cases():
         's-duplicate-files': ['AMBIGUOUS_FILE_BINDING'], 's-bad-checksum': ['CHECKSUM_MISMATCH'],
         's-malformed-xmp': ['METADATA_UNREADABLE'], 's-dpart-cycle': ['DPART_TRAVERSAL_STOPPED'],
         's-invalid-page-ref': ['INVALID_PAGE_RANGE'],
+        'existing-uri-checksum': ['XMP_VALUE_NOT_TEXT'],
     }
-    for name, (profile, mutation) in sorted(CONTROLS.items()):
+    for name, (profile, mutation) in sorted(CONTROLS.items(), key=lambda item: (item[0].startswith('existing-'), item[0])):
         rows.append(dict(id=name, sourcePath=f'browser-viewer/tests/inspection/controls/{name}.pdf',
             category='synthetic-structural-control', intendedProfile=profile,
             provenance=f'Original Apache-2.0 control from reference/make_controls.py; mutation={mutation}. Not a conforming EA-PDF or validation oracle.',
-            requiredFacts={}, requiredDiagnostics=expected_codes.get(name, [])))
-    for name, path, code in [
-        ('existing-reversed-order', 'validator-dpart-object-ranges/multi-reversed.pdf', None),
-        ('existing-uri-checksum', 'validator-xmp-records/attachment-uri-checksum.pdf', 'XMP_VALUE_NOT_TEXT'),
-    ]:
-        rows.append(dict(id=name, sourcePath='tests/fixtures/eapdf/' + path, category='repository-negative', intendedProfile=None,
-                         provenance='Existing intentionally malformed regression PDF; compare the neighboring expectations.json for its original purpose, not as an extraction verdict.',
-                         requiredFacts=dict(bodyRanges=[[4, 4], [3, 3], [1, 2]]) if code is None else {},
-                         requiredDiagnostics=[code] if code else []))
+            requiredFacts=dict(bodyRanges=[[4, 4], [3, 3], [1, 2]]) if name == 'existing-reversed-order' else {},
+            requiredDiagnostics=expected_codes.get(name, [])))
     rows.append(dict(id='ordinary', sourcePath='browser-viewer/tests/fixtures/ordinary.pdf', category='ordinary-control', intendedProfile=None,
                      provenance='M0 original Apache-2.0 ordinary PDF; it must not acquire an EA-PDF declaration.',
                      requiredFacts=dict(pages=2, messages=0, files=0, sourceAssetRecords=0, annotationFiles=0, bodyRanges=[], childProfiles=[]), requiredDiagnostics=[]))
@@ -90,12 +84,10 @@ def generate():
     validator = Draft202012Validator(schema)
     Draft202012Validator.check_schema(schema)
     inputs = ['docs/reference/EA-PDF-v1.pdf', 'validate_eapdf.py', 'browser-viewer/tests/inspection/source-examples/eml/manifest.json',
-              'docs/improvement/specification-audit/specification-reexamination-2026-10-27.txt',
-              'tests/fixtures/eapdf/validator-dpart-object-ranges/expectations.json',
-              'tests/fixtures/eapdf/validator-xmp-records/expectations.json']
+              'browser-viewer/docs/inspection-schema.md', 'browser-viewer/reference/test_inspection.py']
     manifest = dict(schemaVersion=1, scope='M1 extraction expectations, not conformance judgments',
         reference=dict(engine='qpdf via pikepdf; independent of PDF.js and validator verdicts',
-            python=sys.version.split()[0], pikepdf=importlib.metadata.version('pikepdf'),
+            python='.'.join(map(str, sys.version_info[:2])), pikepdf=importlib.metadata.version('pikepdf'),
             jsonschema=importlib.metadata.version('jsonschema'), qpdf=pikepdf.__libqpdf_version__,
             dependencies={line.split('==')[0]: importlib.metadata.version(line.split('==')[0])
                 for line in (VIEWER/'reference/requirements.txt').read_text().splitlines() if '==' in line and not line.startswith('#')},

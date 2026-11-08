@@ -15,7 +15,7 @@ from inspect_pdf import RDF, META, IDENT, PDFA
 
 def make(profile='s', mutation=None):
     pdf = pikepdf.Pdf.new()
-    n = 2 if profile in ['m', 'mi'] else 1
+    n = 5 if mutation == 'reversed-body-order' else 2 if profile in ['m', 'mi'] else 1
     pages = [pdf.add_blank_page(page_size=(200, 200)).obj for _ in range(n)]
     rootpart = pdf.make_indirect(pikepdf.Dictionary(Type=pikepdf.Name.DPartRoot))
     top = pdf.make_indirect(pikepdf.Dictionary(Type=pikepdf.Name.DPart, Parent=rootpart))
@@ -53,7 +53,8 @@ def make(profile='s', mutation=None):
             folders.Child = child
             child.Next = child
     else:
-        for i, page in enumerate(pages):
+        message_pages = [pages[1], pages[3], pages[4]] if mutation == 'reversed-body-order' else pages
+        for i, page in enumerate(message_pages):
             guid = 'same-guid' if mutation == 'duplicate-guid' else f'guid-{i}'
             values = {'Mail_GUID': guid, 'messageid': f'<message-{i}@example.invalid>'}
             if mutation == 'missing-guid':
@@ -67,6 +68,8 @@ def make(profile='s', mutation=None):
             part = pdf.make_indirect(pikepdf.Dictionary(Type=pikepdf.Name.DPart, Parent=top, DPM=dpm))
             leaf = pdf.make_indirect(pikepdf.Dictionary(Type=pikepdf.Name.DPart, Parent=part, Start=page,
                 DPM=pikepdf.Dictionary(Mail_ContentSetType=pikepdf.Name.BodyRendering, Mail_Subtype=pikepdf.Name('/text/plain; charset=UTF-8'), Mail_Desc='Synthetic body')))
+            if mutation == 'reversed-body-order' and i == 0:
+                leaf.End = pages[2]
             if mutation == 'reversed-range' and i == 0:
                 leaf.Start, leaf.End = pages[1], pages[0]
             if mutation == 'invalid-page-ref':
@@ -74,6 +77,8 @@ def make(profile='s', mutation=None):
             part.DParts = pikepdf.Array([pikepdf.Array([leaf])])
             members.append(part)
             page.DPart = leaf
+    if mutation == 'reversed-body-order':
+        members.reverse()
     top.DParts = pikepdf.Array([pikepdf.Array(members)])
     if mutation == 'dpart-cycle':
         top.DParts.append(top)
@@ -109,7 +114,11 @@ def make(profile='s', mutation=None):
                   'Mail_GUID': 'same-guid' if mutation == 'duplicate-guid' else 'guid-0'}
         if af:
             values = {'Filename': 'fixture.txt', 'SizeInBytes': len(payload), 'ContentType': 'text/plain', 'Checksum': values['CheckSum']}
-        record('assets' if af else 'attachments', values)
+        attachment = record('assets' if af else 'attachments', values)
+        if mutation == 'uri-checksum':
+            checksum = attachment.find(f'{{{META}}}CheckSum')
+            checksum.text = None
+            checksum.set(f'{{{RDF}}}resource', 'urn:checksum:synthetic')
         if mutation == 'duplicate-files':
             add_file('alias.txt', payload)
         if mutation == 'missing-stream':
@@ -145,6 +154,8 @@ CONTROLS = {
     's-two-streams': ('s', 'two-streams'), 's-bad-checksum': ('s', 'bad-checksum'),
     's-missing-stream': ('s', 'missing-stream'), 's-malformed-xmp': ('s', 'malformed-xmp'),
     's-dpart-cycle': ('s', 'dpart-cycle'), 's-invalid-page-ref': ('s', 'invalid-page-ref'),
+    'existing-reversed-order': ('m', 'reversed-body-order'),
+    'existing-uri-checksum': ('s', 'uri-checksum'),
 }
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)

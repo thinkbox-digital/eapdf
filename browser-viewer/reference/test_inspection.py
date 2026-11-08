@@ -216,7 +216,8 @@ class InspectionTests(unittest.TestCase):
     def test_invalid_pdf_types_do_not_become_present_values(self):
         with pikepdf.open(io.BytesIO(make('s'))) as pdf:
             pdf.Root.Version = pikepdf.String('2.0')  # A name is required.
-            pdf.pages[0].obj.Annots[0].FS.EF.F = pikepdf.String('not a stream')
+            attachment = next(a for a in pdf.pages[0].obj.Annots if a.get('/Subtype') == pikepdf.Name.FileAttachment)
+            attachment.FS.EF.F = pikepdf.String('not a stream')
             output = io.BytesIO()
             pdf.save(output, fix_metadata_version=False)
         doc = Inspector(output.getvalue()).inspect()
@@ -242,6 +243,15 @@ class InspectionTests(unittest.TestCase):
             self.assertEqual(self.results[key]['identification']['declaredProfile']['state'], state)
         self.assertEqual(self.results['s-malformed-xmp']['coverage']['metadata'], 'invalid')
         self.assertEqual(self.results['s-uri-guid']['messages'][0]['mailGuid']['state'], 'invalid')
+        uri_case = self.results['existing-uri-checksum']
+        attachment = next(r for r in uri_case['metadataRecords'] if r['kind'] == 'attachment')
+        self.assertEqual(attachment['fields']['CheckSum']['state'], 'invalid')
+        with pikepdf.open(ROOT/self.cases['existing-uri-checksum']['sourcePath']) as pdf:
+            xml = ET.fromstring(pdf.Root.Metadata.read_bytes())
+            checksum = xml.find(f'.//{{{META}}}attachments/{{{RDF}}}Bag/{{{RDF}}}li/{{{META}}}CheckSum')
+            self.assertIsNotNone(checksum)
+            self.assertIsNone(checksum.text)
+            self.assertEqual(checksum.get(f'{{{RDF}}}resource'), 'urn:checksum:synthetic')
         # Unknown conflicting values must remain representable as candidates.
         doc = Inspector(make('future-profile', 'conflicting-profile')).inspect()
         self.validator.validate(doc)

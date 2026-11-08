@@ -385,7 +385,7 @@ class Inspector:
                     unicodeFilename=self.field(spec.get('/UF'), self.fieldloc(loc, 'UF')),
                     afRelationship=self.field(spec.get('/AFRelationship'), self.fieldloc(loc, 'AFRelationship'), 'name'),
                     origins=[], embedding=('missing' if ef is None else 'present'
-                        if isinstance(ef, pikepdf.Dictionary) and streams and all(isinstance(s, pikepdf.Stream) for s in ef.values()) else 'invalid'),
+                        if isinstance(ef, pikepdf.Dictionary) and streams and all(isinstance(s, pikepdf.Stream) for _, s in ef.items()) else 'invalid'),
                     streams=list(streams.values()), roles=observation(state='unavailable'),
                     owners=observation(state='unavailable', reason='No proven email ownership.'), metadataRecordIds=[])
             origin = dict(kind=kind, locator=owner, pageIndex=page, nameTreeKey=self.field(key, owner) if key is not None else observation())
@@ -678,7 +678,7 @@ def read_embedded_bytes(path, request):
         if streamloc['path'] != f'object:{expected[0]}:{expected[1]}':
             raise ValueError('Stream locator path and object identity disagree')
         ef = spec.get('/EF') if isinstance(spec, pikepdf.Dictionary) else None
-        candidates = [s for s in ef.values() if isinstance(s, pikepdf.Stream) and s.objgen == expected] if isinstance(ef, pikepdf.Dictionary) else []
+        candidates = [s for _, s in ef.items() if isinstance(s, pikepdf.Stream) and s.objgen == expected] if isinstance(ef, pikepdf.Dictionary) else []
         if not candidates:
             raise ValueError('Stream is not an EF target of the requested file specification')
         payload = candidates[0].read_bytes()
