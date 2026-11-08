@@ -14,7 +14,7 @@ class ArchiveFooterResourceTests {
   @TempDir Path directory;
 
   @Test
-  void archiveHasOneCompactBannerOnFirstPage() throws Exception {
+  void archiveHasNoBrandingAndPreservesEmailContent() throws Exception {
     byte[] shortRaw = WideEmailTableTests.message("600", 1);
     byte[] longRaw = WideEmailTableTests.message("900", 45);
     var shortMail = EmlReader.readRfc822Bytes(shortRaw, "short.eml", "short.eml", "", List.of(), false);
@@ -27,13 +27,13 @@ class ArchiveFooterResourceTests {
       var stripper = new PDFTextStripper();
       String text = stripper.getText(document);
       String label = "Email converted by ThinkBox";
-      assertEquals(1, text.split(label, -1).length - 1);
+      assertEquals(0, text.split(label, -1).length - 1);
       stripper.setEndPage(1);
-      assertTrue(stripper.getText(document).contains(label));
+      assertFalse(stripper.getText(document).contains(label));
       for (var page : document.getPages()) {
         for (var name : page.getResources().getXObjectNames()) {
           assertFalse(page.getResources().getXObject(name) instanceof PDImageXObject,
-              "Text-only email and compact branding must not embed raster artwork");
+              "Text-only email must not embed raster artwork");
         }
       }
       assertTrue(text.contains("R45C6"));

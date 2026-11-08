@@ -14,8 +14,10 @@ class CreatorIdentityTests {
         assertTrue(xml.contains("<xmp:CreatorTool>" + Common.xml(Common.productLabel()) + "</xmp:CreatorTool>"));
       }
       PdfMailWriter.CONFIG.creator = " ";
-      assertThrows(IllegalArgumentException.class, () -> PdfMailWriter.buildXmpMetadata(record, "s"));
-      assertThrows(IllegalArgumentException.class, () -> new EapdfConfig().requireCreator());
+      assertTrue(PdfMailWriter.buildXmpMetadata(record, "s").contains("<rdf:li>Thinkbox.DIGITAL</rdf:li>"));
+      assertEquals("Thinkbox.DIGITAL", new EapdfConfig().requireCreator());
+      PdfMailWriter.CONFIG.creator = null;
+      assertEquals("Thinkbox.DIGITAL", PdfMailWriter.CONFIG.requireCreator());
     } finally { PdfMailWriter.CONFIG.creator = previous; }
   }
 }

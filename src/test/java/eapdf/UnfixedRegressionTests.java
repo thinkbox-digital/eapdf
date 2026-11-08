@@ -159,10 +159,8 @@ class UnfixedRegressionTests {
   }
 
   @Test
-  void stagedArchivesAndCollectionsPreserveMessagesAndChildPremis() throws Exception {
-    boolean previousPremis = PdfMailWriter.CONFIG.premis.enabled;
+  void stagedArchivesAndCollectionsPreserveMessages() throws Exception {
     try (PayloadStore store = new PayloadStore()) {
-      PdfMailWriter.CONFIG.premis.enabled = true;
       EmailRecord first = EmlReader.readRfc822Bytes("Date: Fri, 16 Oct 2026 12:00:00 +0000\r\nSubject: First\r\n\r\nFirst body".getBytes(StandardCharsets.UTF_8), "first.eml", "first.eml", "", List.of(), false);
       EmailRecord second = EmlReader.readRfc822Bytes("Date: Fri, 16 Oct 2026 12:00:00 +0000\r\nSubject: Second\r\n\r\nSecond body".getBytes(StandardCharsets.UTF_8), "second.eml", "second.eml", "", List.of(), false);
       store.stage(first);
@@ -174,9 +172,6 @@ class UnfixedRegressionTests {
         try (PDDocument document = Loader.loadPDF(output.toFile())) {
           Assertions.assertTrue(TestSupport.metadataXml(document).contains("<pdfmailid:conformance>" + profile + "</pdfmailid:conformance>"));
           if (profile.startsWith("c")) {
-            String sidecar = Files.readString(PdfFindingAidSupport.premisSidecarPath(output));
-            Assertions.assertEquals(3, sidecar.split("<premis:event>", -1).length - 1);
-            Assertions.assertTrue(sidecar.contains("event:conversion:child:"));
             int children = 0;
             for (var file : AttachmentProfilePolicyTests.files(document).values()) {
               if (!"Contained EA-PDF message".equals(file.getCOSObject().getString(org.apache.pdfbox.cos.COSName.DESC))) continue;
@@ -194,8 +189,6 @@ class UnfixedRegressionTests {
           }
         }
       }
-    } finally {
-      PdfMailWriter.CONFIG.premis.enabled = previousPremis;
     }
   }
 

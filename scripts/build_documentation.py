@@ -56,11 +56,18 @@ def rewrite_links(text, source, destination):
 def check_release_versions():
     current = (ROOT / 'VERSION').read_text().strip()
     viewer = json.loads((ROOT / 'browser-viewer/package.json').read_text())['version']
-    for path in ('docs/manual/user-manual.html', 'docs/site/index.md', 'docs/site/downloads.md', *SOURCES):
+    release_pages = ('docs/manual/user-manual.html', 'docs/site/index.md', 'docs/site/downloads.md')
+    # A local viewer-only beta can precede publication. Keep released download
+    # references tied to the immutable release notes, not nonexistent assets.
+    release_notes = ROOT / 'docs/releases' / (current + '.md')
+    published = re.search(r'viewer \*\*(0\.\d+\.\d+-beta\.\d+)\*\*', release_notes.read_text()) if release_notes.exists() else None
+    for path in (*release_pages, *SOURCES):
         text = (ROOT / path).read_text()
         for version in re.findall(r'\b[01]\.\d+\.\d+-beta\.\d+\b', text):
-            expected = viewer if version.startswith('0.') else current
-            if version != expected:
+            expected = {viewer} if version.startswith('0.') else {current}
+            if version.startswith('0.') and path in release_pages and published:
+                expected.add(published.group(1))
+            if version not in expected:
                 raise ValueError(f'{path}: stale version {version}; expected {expected}')
 
 

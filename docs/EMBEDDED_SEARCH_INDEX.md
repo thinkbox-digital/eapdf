@@ -2,8 +2,7 @@
 
 The Java creator adds an optional metadata search index to new `1c` and `1ci`
 collections. The offline browser viewer uses it to populate the existing message
-list without opening the individual message PDFs. Version 1 remains the metadata
-format. The separate version 3 full-text property, described below, extends the
+list without opening the individual message PDFs. Version 2 is the compact metadata format; the viewer also accepts version 1. The separate version 3 full-text property, described below, extends the
 same XMP/decode infrastructure for `1m`, `1mi`, `1c` and `1ci`.
 
 ## Embedding and conformance
@@ -27,7 +26,18 @@ and `1ci` conversions passes, including recursive children, document parts and
 attachments. This is evidence for these generated files, not a blanket claim
 about arbitrary PDFs or PDF/UA conformance.
 
-## Wire schema
+## Wire schema (version 2)
+
+New indexes use the same gzip/UTF-8/JSON envelope and integrity digest described below,
+with `version: 2`. Each row has four values: `[Mail_GUID, sorted child name-tree keys,
+declared child MD5, declared child byte length]`. Subject, sender, recipients and
+date are read directly from authoritative catalog XMP. Folder membership comes
+from the checked collection keys. Omitting duplicate headers and folder strings
+lets substantially more messages fit the unchanged 8 MiB decoded payload budget.
+The GUI’s **Embed searchable index** checkbox enables this filtering index and the
+separate full-text index. Their byte limits and failure diagnostics are independent.
+
+### Legacy version 1 (still readable)
 
 Decompressed bytes are strict UTF-8, newline-delimited JSON, with a final LF.
 The first line is an object:
@@ -76,7 +86,7 @@ uses EmailRecords, folder aliases and already-established embedded-stream
 checksums. It does not reopen children to construct the index. Generation occurs
 inside the existing staged creation/publication transaction.
 
-Version 1 covers collections with single-message `1s`/`1si` children. Unsupported
+Versions 1 and 2 cover collections with single-message `1s`/`1si` children. Unsupported
 multi-message/nested child shapes, ambiguous identities and resource limits omit
 the index with `SEARCH_INDEX_UNAVAILABLE`, leaving legacy search available.
 Cancellation still stops conversion. Other index-generation exceptions produce
@@ -84,8 +94,9 @@ that explicit diagnostic and continue without the index; fatal VM errors are not
 swallowed. The payload is prepared before replacing catalog metadata.
 
 For metadata indexing, `1s`, `1si`, `1m` and `1mi` retain their existing behavior. Flat archives already
-expose their message metadata in one document, so an additional index offers less
-benefit and is outside this phase. The viewer can use an indexed child collection
+expose their message metadata in one document. The viewer now builds and caches
+filtering keys directly from that loaded metadata, without reopening the PDF on
+the first filter. The viewer can use an indexed child collection
 inside an older nested collection, opening only the outer path to reach it.
 Empty-index decoding is supported; existing creator restrictions on empty
 conversions are unchanged.
@@ -99,9 +110,8 @@ logic. Subject, sender, all recipients and date use the same searchable values a
 legacy indexing. Folder presentation and normal result navigation are retained.
 
 Before accepting an index the viewer checks its version/profile, gzip/UTF-8/JSON,
-digest, row count and uniqueness, complete root message inventory, every raw
-metadata field against authoritative catalog XMP, all collection keys and folder
-paths, and declared child checksums/sizes. Every PDF member must be covered.
+digest, row count and uniqueness, complete root message inventory, authoritative catalog XMP identities, all collection keys and folder membership,
+legacy version-1 duplicate metadata fields and paths, and declared child checksums/sizes. Every PDF member must be covered.
 Result selection opens the bound child and verifies its single message GUID and
 searchable values before displaying it. A disagreement rebuilds the metadata
 list by scanning children; it does not navigate to a guessed message.
@@ -122,7 +132,7 @@ children and defeat this optimization. Digital-signature trust is separate.
 
 ## Resource limits
 
-| Limit | Version 1 |
+| Limit | Current reader / version 2 writer |
 | --- | --- |
 | Gzip bytes | 4 MiB |
 | Decompressed bytes | 8 MiB |
@@ -131,7 +141,7 @@ children and defeat this optimization. Digital-signature trust is separate.
 | Messages | 100,000, subject to the byte limits |
 | Name-tree aliases per child | 256 |
 | Folder depth / path | 256 / 16,384 characters |
-| Retained searchable strings | 8,000,000 JavaScript UTF-16 code units |
+| Retained searchable strings | 32,000,000 JavaScript UTF-16 code units for embedded metadata |
 
 Decompression is read incrementally and stopped at the decoded limit; parsing is
 row-by-row with cancellation/yield checkpoints. Bounded byte/string copies still
@@ -162,8 +172,8 @@ Example, from the repository root (use a fresh temporary directory):
 ```sh
 TASK_DIR=$(mktemp -d /tmp/eapdf-index-benchmark-XXXXXX)
 mvn -Deapdf.build.directory="$TASK_DIR/creator" package
-javac -cp "$TASK_DIR/creator/emailtopdfa-1.6.0-beta.19.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/MetadataIndexBenchmark.java
-EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-1.6.0-beta.19.jar" eapdf.MetadataIndexBenchmark in/sample.eml "$TASK_DIR/fixtures" 100 1000 10000
+javac -cp "$TASK_DIR/creator/emailtopdfa-1.6.0-beta.20.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/MetadataIndexBenchmark.java
+EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-1.6.0-beta.20.jar" eapdf.MetadataIndexBenchmark in/sample.eml "$TASK_DIR/fixtures" 100 1000 10000
 # Run in a temporary viewer working copy with dependencies installed and bundles built:
 EAPDF_INDEX_BENCHMARK="$TASK_DIR/fixtures" npm run benchmark:metadata-index
 ```
@@ -329,7 +339,7 @@ Coverage means all PDFBox-extracted pages, not guaranteed equality with PDF.js.
 ### Full-text wire schema
 
 The private XMP property `eapdfindex:fulltext` holds base64(gzip(UTF-8 NDJSON)).
-It coexists with the unchanged version 1 `payload`; it creates no FileSpec,
+It coexists with the version 1 or compact version 2 `payload`; it creates no FileSpec,
 collection member, attachment or DPart. Catalog XMP is unfiltered to support the
 fixed-width file binding below. The URI identifies an implementation-specific
 extension, not an EA-PDF 1.0 requirement.
@@ -539,8 +549,8 @@ by `browser-viewer/scripts/fulltext-index-benchmark.mjs`. First generate the
 Phase 1 paired real-source scaling fixtures using the instructions above. Then:
 
 ```sh
-javac -cp "$TASK_DIR/creator/emailtopdfa-1.6.0-beta.19.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/FullTextIndexBenchmark.java
-EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-1.6.0-beta.19.jar" eapdf.FullTextIndexBenchmark "$TASK_DIR/fixtures" "$TASK_DIR/fulltext"
+javac -cp "$TASK_DIR/creator/emailtopdfa-1.6.0-beta.20.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/FullTextIndexBenchmark.java
+EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-1.6.0-beta.20.jar" eapdf.FullTextIndexBenchmark "$TASK_DIR/fixtures" "$TASK_DIR/fulltext"
 # From a built temporary viewer working copy, run each kind: common, rare, phrase.
 EAPDF_FULLTEXT_BENCHMARK="$TASK_DIR/fulltext" EAPDF_QUERY_KIND=common npm run benchmark:fulltext-index
 ```

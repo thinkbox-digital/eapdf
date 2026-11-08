@@ -30,12 +30,15 @@ export async function checkAttachments(browser){
      await browser.evaluate(()=>{const z=document.querySelector('#zoom');z.value='1';z.dispatchEvent(new Event('change'));});await browser.ready();
     }else if(file.name==='broken.pdf')assert.match(await browser.evaluate(()=>document.querySelector('#status').textContent),/Unable to display PDF/);
     else{
+     assert.equal(await browser.evaluate(()=>document.querySelector('#attachment-close').closest('.attachment-heading')!==null),true,'Close is in the preview title bar');
+     assert.match(await browser.evaluate(()=>document.querySelector('#attachment-close').textContent),/Close/);
      const view=await preview();assert.equal(view.active,false);assert.equal(view.markup,0);
      if(file.width){assert.equal(view.visible,true,view.status);assert.equal(view.width,file.width);assert.equal(view.height,file.height);assert.ok(view.pixel.every((n,i)=>Math.abs(n-file.pixel[i])<=3),file.name+' pixels');}
      else if(file.name==='huge.png')assert.match(view.status,/pixel.*limit/);
      else if(file.name==='large.txt'){assert.match(view.status,/first 2 MiB/);assert.equal(view.text.length,2*1024*1024);}
      else{assert.ok(view.text.length>0);assert.match(view.status,/plain text/);}
      assert.equal(hash(await browser.download('#attachment-download')),file.sha256);await browser.click('#attachment-close');
+     assert.equal(await browser.evaluate(()=>document.activeElement?.hasAttribute('data-view-file-id')),true,'closing returns focus to the View control');
     }
    }
    assert.deepEqual(await parentState(),parent,'Parent document and page must be preserved');

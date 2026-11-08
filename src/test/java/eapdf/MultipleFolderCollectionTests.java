@@ -53,9 +53,7 @@ class MultipleFolderCollectionTests {
 
   @Test
   void overlappingFoldersShareOneChildPerEmailForRetainedAndIsolatedCollections() throws Exception {
-    boolean previous = PdfMailWriter.CONFIG.premis.enabled;
-    try {
-      PdfMailWriter.CONFIG.premis.enabled = true;
+    {
       for (String profile : List.of("c", "ci")) {
         var records = records();
         Path output = directory.resolve("folders_1" + profile + ".pdf");
@@ -80,13 +78,9 @@ class MultipleFolderCollectionTests {
         }
         var factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
-        var premis = factory.newDocumentBuilder().parse(Files.newInputStream(PdfFindingAidSupport.premisSidecarPath(output)));
-        var objects = premis.getElementsByTagNameNS("http://www.loc.gov/premis/v3", "objectIdentifierValue");
-        int children = 0;
-        for (int index = 0; index < objects.getLength(); index++) if (objects.item(index).getTextContent().startsWith("object:child:")) children++;
-        assertEquals(3, children);
+
       }
-    } finally { PdfMailWriter.CONFIG.premis.enabled = previous; }
+    }
   }
 
   @Test

@@ -1,33 +1,30 @@
-# Viewer 0.5.0-beta.18 — GitHub prerelease (2026-11-07)
+# Viewer 0.5.0-beta.20 — beta release (2026-11-08)
 
-Packages accompany EA-PDF 1.6.0-beta.19. This beta corrects false matches across
-separate text runs, speeds up collection searches, supports indexes in signed
-archives and bounds retained search results and child metadata.
+Packages accompany EA-PDF 1.6.0-beta.20. This beta fixes Messages-pane arrow
+navigation and stale filtering status, adds compact filtering indexes, and moves
+large metadata parsing off the UI thread. CSV export remains available.
 
 ## Install or update
 
 Download the packages from the
-[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.19):
+[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.20):
 
-- `eapdf-viewer-0.5.0-beta.18-chromium.zip`
-- `eapdf-viewer-0.5.0-beta.18-firefox.zip`
+- `eapdf-viewer-0.5.0-beta.20-chromium.zip`
+- `eapdf-viewer-0.5.0-beta.20-firefox.zip`
 
-Extract the appropriate ZIP into a new directory. Chromium: open
-`chrome://extensions`, enable Developer mode, choose **Load unpacked**, then select
-that directory. Firefox: open `about:debugging#/runtime/this-firefox`, choose
-**Load Temporary Add-on**, then select the extracted `manifest.json`.
-The packages are unsigned. Firefox's temporary installation ends when the browser
-closes. No Java, Python, Node or server is needed to use either extension.
+Extract the new ZIP. Chromium: open `chrome://extensions`, enable Developer mode
+and load the extracted directory with **Load unpacked**. Firefox: open
+`about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select
+its `manifest.json`. Packages are unsigned; Firefox installation ends on exit.
 
-Remove or disable the older installation. Reloading an old extracted directory
-does not download an update. Close old viewer tabs and open a new one. The footer
-shows `0.5.0-beta.18`; the browser's extension manager shows `0.5.0.18`.
-For workspace builds, reload `browser-viewer/dist/chromium/` or reinstall
-`browser-viewer/dist/firefox/manifest.json`.
+Remove or disable the older installation, and close old viewer tabs. The footer
+must show `0.5.0-beta.20`; the extension manager shows `0.5.0.20`. Reloading an older
+extracted directory does not update it. Workspace builds use
+`browser-viewer/dist/chromium/` or `browser-viewer/dist/firefox/manifest.json`.
 
 ## Example emails
 
-Download [the example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.19/ea-pdf-examples-1.6.0-beta.19.zip),
+Download [the example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.20/ea-pdf-examples-1.6.0-beta.20.zip),
 or see the [example inventory](../../examples/README.md).
 
 ## Use and limitations

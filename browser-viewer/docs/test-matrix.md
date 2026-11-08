@@ -1,14 +1,13 @@
-# M1 fixtures and evidence
+# Inspection fixtures and viewer regression tests
 
 [manifest.json](../tests/inspection/manifest.json) pins all 27 input and expected
 JSON hashes, engine versions, extractor/generator/contract hashes, source evidence,
-hand-reviewed facts, required relationships and diagnostic codes. Existing PDFs
-are referenced relative to the repository root, never copied or regenerated.
+hand-reviewed facts, required relationships and diagnostic codes. Frozen PDFs are referenced relative to the repository root; routine tests do not regenerate them.
 These are inspection expectations, not replacement validator outcomes.
 
 ## Six real repository examples
 
-All paths below start `examples/eml/eml_sample_` and end `.pdf`. Each has a full
+The frozen inspection inputs live under `browser-viewer/tests/inspection/source-examples/`; consult the manifest for exact paths and hashes. These are historical inspection fixtures, separate from the regenerated public examples. Each has a full
 expected record in `tests/inspection/expected/example-<suffix>.json`.
 
 | Suffix/profile | Pages | Messages in catalog XMP | Physical file specs | Source-asset records | Body page ranges (zero-based, inclusive) | Child profiles |
@@ -20,8 +19,7 @@ expected record in `tests/inspection/expected/example-<suffix>.json`.
 | 1c / c | 1 | 2 | 4 | 2 | none in outer PDF | s, s |
 | 1ci / ci | 1 | 2 | 2 | 0 | none in outer PDF | si, si |
 
-These samples declare EA-PDF version 1/revision 2024. Their source manifest is
-`examples/eml/manifest.json`. Independent direct XMP/object/byte checks establish
+These samples declare EA-PDF version 1/revision 2024. Their provenance is recorded in the inspection manifest. Independent direct XMP/object/byte checks establish
 the table, rather than accepting the source manifest's validation status. For
 example, the s sample's attachment is 49,338 decoded bytes and its EML source is
 69,830 bytes. The corresponding si attachment is an actual zero-byte stream.
@@ -58,14 +56,12 @@ controls are not conforming EA-PDF/PDF/A examples**.
 
 ## Interpretation sources
 
-Source hashes make these references traceable even in this pre-existing dirty
-checkout. Repository HEAD at the start of M1 was
+Source hashes preserve the original M1 provenance. Repository HEAD at the start of M1 was
 `b73d3fd5144f5e1a3e204342551fc1f63dcbdc88`.
 
 ## Checking and refreshing
 
-Use the development environment in the README. `npm run test:m1` runs two Node
-contract tests and 15 Python tests. Checks include all frozen JSON/schema records,
+Use the development environment in the README. `npm run test:m1` runs the Node contract and Python oracle suites. Checks include all frozen JSON/schema records,
 all six hand-reviewed profiles, direct page-object and decoded-byte comparison,
 raw XMP identities and DPM ancestor ownership, empty/missing streams, unknown and
 ambiguous declarations, case-sensitive identities, cycle/limit outcomes, extraction
@@ -87,7 +83,7 @@ To deliberately change the contract or fixtures:
 4. Run `npm run check`, `npm run test:m1`, `npm run fixtures:check` and the existing
    `npm test` rendering gate. Remove temporary control copies after review.
 
-Python 3.12.3, pikepdf 10.2.0 (qpdf 12.4.2), jsonschema 4.24.0 and their tested
+Python 3.12.3, pikepdf 10.2.0 (qpdf 12.2.0), jsonschema 4.24.0 and their tested
 dependency versions are recorded/pinned. Version drift deliberately requires a
 review; platform-specific qpdf error wording may require a reviewed expectation
 update. pikepdf (MPL-2.0) and jsonschema (MIT) are development dependencies only.
@@ -100,4 +96,21 @@ copied; expected JSON contains selected identity and asset metadata, so treat it
 as extracted repository data rather than anonymized content. Full header/body,
 logical-structure, source-email and content-stream AF inspection remain outside
 this oracle's declared projection. Future PDF.js output still needs comparison
-against these expectations; M2 implementation has not begun.
+against these expectations using the current inspection-contract and browser tests.
+
+
+## Current runtime and review regressions
+
+The oracle dependency pins above describe its frozen development environment, not
+web production dependencies. The web lock now pins pypdf 7.0.0; use
+`requirements-web.lock` for installation. Viewer tool versions are defined in
+`package.json` (Node 24.19.0, npm 11.17.0, PDF.js 6.5.438).
+
+Run `npm run check`, `npm run build`, `node --test tests/*.test.mjs`,
+`npm run test:viewer-improvements`, and `npm run test:pdfjs-compat` from
+`browser-viewer/`. The improvements test selects a filtered email, searches for
+unique text on another page, and checks the displayed page and highlight.
+`npm run build:pdfjs` tests the maintained upstream XRef regression during the
+hash-verified source rebuild. At repository root, run
+`python3 -B -m unittest regression.test_worker regression.test_web` for the
+real-JVM aggregate scratch-budget and cleanup regression.

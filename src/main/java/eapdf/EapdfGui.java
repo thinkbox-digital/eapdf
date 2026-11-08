@@ -630,18 +630,12 @@ public class EapdfGui {
   static RunConfigControls buildRunConfigControls() {
     EapdfConfig cfg = EapdfConfig.normalize(EapdfConfig.get());
     JCheckBox searchIndex = new JCheckBox("Embed searchable index", cfg.searchIndex.enabled);
-    searchIndex.setToolTipText("Embed metadata and full-text search indexes for faster offline searches. Full-text generation uses built-in PDFBox extraction; unsupported outputs retain ordinary search.");
-    JCheckBox branding = new JCheckBox("Branding", cfg.branding != null && cfg.branding.enabled);
-    JCheckBox findingAid = new JCheckBox("Finding Aid", cfg.findingAid != null && cfg.findingAid.pdfEnabled);
-    JCheckBox premis = new JCheckBox("PREMIS", cfg.premis != null && cfg.premis.enabled);
-    JCheckBox pdfUa = new JCheckBox("Accessibility", cfg.accessibility != null && cfg.accessibility.addPdfUaFeatures);
+    searchIndex.setToolTipText("Embed a compact message-filter index and a separate full-text index for faster offline filtering and searches. Full-text generation uses built-in PDFBox extraction; unsupported outputs retain ordinary search.");
+    JCheckBox pdfUa = new JCheckBox("Accessibility (PDF/UA)", cfg.accessibility != null && cfg.accessibility.addPdfUaFeatures);
 
-    branding.setToolTipText("Show or suppress the ThinkBox footer branding in generated PDFs.");
-    findingAid.setToolTipText("Include or omit generated finding-aid front matter and related spreadsheet output.");
-    premis.setToolTipText("Include or omit PREMIS preservation metadata sidecar output.");
     pdfUa.setToolTipText("Enable accessibility features. This does not establish PDF/UA conformance.");
 
-    return new RunConfigControls(branding, findingAid, premis, pdfUa, searchIndex, cfg.signing);
+    return new RunConfigControls(pdfUa, searchIndex, cfg.signing);
   }
 
   private JPanel buildRunConfigPanel(RunConfigControls controls) {
@@ -673,7 +667,7 @@ public class EapdfGui {
         controls.signing.reason = reason.getText().trim();
       }
     });
-    return inlinePanel(controls.branding, controls.findingAid, controls.premis, controls.pdfUa, controls.searchIndex,
+    return inlinePanel(controls.pdfUa, controls.searchIndex,
         controls.signOutput, certificate, creator);
   }
 
@@ -684,14 +678,6 @@ public class EapdfGui {
     cfg.requireCreator();
     cfg.searchIndex.enabled = overrides.searchIndexEnabled;
     cfg.searchIndex.fullTextEnabled = overrides.searchIndexEnabled;
-    cfg.branding.enabled = overrides.brandingEnabled;
-    cfg.findingAid.pdfEnabled = overrides.findingAidEnabled;
-    if (!overrides.findingAidEnabled) {
-      cfg.findingAid.excelEnabled = false;
-      cfg.findingAid.embedExcel = false;
-      cfg.findingAid.embedPdfInCollections = false;
-    }
-    cfg.premis.enabled = overrides.premisEnabled;
     cfg.accessibility.addPdfUaFeatures = overrides.pdfUaEnabled;
     cfg.signing = overrides.signing;
     Path tempConfig = Files.createTempFile("eapdf-gui-config-", ".json");
@@ -701,10 +687,7 @@ public class EapdfGui {
   }
 
   private String describeConfigOverrides(RunConfigOverrides overrides) {
-    return "branding=" + overrides.brandingEnabled
-        + ", searchIndex=" + overrides.searchIndexEnabled
-        + ", findingAid=" + overrides.findingAidEnabled
-        + ", premis=" + overrides.premisEnabled
+    return "searchIndex=" + overrides.searchIndexEnabled
         + ", pdfUa=" + overrides.pdfUaEnabled
         + ", signing=" + overrides.signing.enabled;
   }
@@ -871,19 +854,12 @@ public class EapdfGui {
   }
 
   static final class RunConfigControls {
-    final JCheckBox branding;
-    final JCheckBox findingAid;
-    final JCheckBox premis;
     final JCheckBox pdfUa;
     final JCheckBox searchIndex;
     final JCheckBox signOutput;
     final EapdfConfig.SigningConfig signing;
 
-    RunConfigControls(JCheckBox branding, JCheckBox findingAid, JCheckBox premis, JCheckBox pdfUa, JCheckBox searchIndex,
-        EapdfConfig.SigningConfig defaults) {
-      this.branding = branding;
-      this.findingAid = findingAid;
-      this.premis = premis;
+    RunConfigControls(JCheckBox pdfUa, JCheckBox searchIndex, EapdfConfig.SigningConfig defaults) {
       this.pdfUa = pdfUa;
       this.searchIndex = searchIndex;
       this.signing = new Gson().fromJson(new Gson().toJson(defaults), EapdfConfig.SigningConfig.class);
@@ -895,26 +871,17 @@ public class EapdfGui {
       EapdfConfig.SigningConfig copy = new Gson().fromJson(new Gson().toJson(signing), EapdfConfig.SigningConfig.class);
       copy.enabled = signOutput.isSelected();
       return new RunConfigOverrides(
-          branding.isSelected(),
-          findingAid.isSelected(),
-          premis.isSelected(),
           pdfUa.isSelected(), searchIndex.isSelected(), copy);
     }
   }
 
   static final class RunConfigOverrides {
-    final boolean brandingEnabled;
-    final boolean findingAidEnabled;
-    final boolean premisEnabled;
     final boolean pdfUaEnabled;
     final boolean searchIndexEnabled;
     final EapdfConfig.SigningConfig signing;
 
-    RunConfigOverrides(boolean brandingEnabled, boolean findingAidEnabled, boolean premisEnabled, boolean pdfUaEnabled, boolean searchIndexEnabled,
+    RunConfigOverrides(boolean pdfUaEnabled, boolean searchIndexEnabled,
         EapdfConfig.SigningConfig signing) {
-      this.brandingEnabled = brandingEnabled;
-      this.findingAidEnabled = findingAidEnabled;
-      this.premisEnabled = premisEnabled;
       this.pdfUaEnabled = pdfUaEnabled;
       this.searchIndexEnabled = searchIndexEnabled;
       this.signing = signing;

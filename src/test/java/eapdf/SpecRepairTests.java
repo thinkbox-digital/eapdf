@@ -88,13 +88,7 @@ class SpecRepairTests {
     }
   }
 
-  @Test void premisUsesVersionThreeStructuresAndDoesNotClaimValidationSuccess() throws Exception {
-    String xml = new String(PremisBuilder.buildSingle(temporary.resolve("single.pdf"), record("text/plain", "Body"), "s"), StandardCharsets.UTF_8);
-    Assertions.assertFalse(xml.contains("objectCategory"));
-    Assertions.assertTrue(xml.contains("eventDetailInformation"));
-    Assertions.assertFalse(xml.contains("eventOutcome>success"));
-    Assertions.assertTrue(xml.contains("does not attest final publication"));
-  }
+
 
   @Test void collectionGateRejectsInvalidFilesFoldersCollisionsAndEditableCustomFields() throws Exception {
     EmailRecord record = record("text/plain", "Body");
@@ -142,9 +136,6 @@ class SpecRepairTests {
         Assertions.assertTrue(metadata.contains("preprocessing:"));
         Assertions.assertTrue(metadata.contains("not embedded"));
       }
-      String premis = new String(PremisBuilder.buildSingle(temporary.resolve("single.pdf"), record, "s"), StandardCharsets.UTF_8);
-      Assertions.assertTrue(premis.contains("preprocessing:"));
-      Assertions.assertTrue(premis.contains(record.mailGuid));
     }
   }
 
@@ -166,9 +157,9 @@ class SpecRepairTests {
   @Test void auxiliaryCollectionFilenamesAreSanitizedAndRemainUniquelyLinked() throws Exception {
     try (var document = Loader.loadPDF(create(record("text/plain", "Body")))) {
       PdfCollectionSupport.addMessageCollectionDictionary(document);
-      var first = PdfFindingAidSupport.embedStandaloneCatalogBytes(document, "colon:aid.xml", new byte[]{1},
+      var first = PdfAttachmentSupport.embedStandaloneCatalogBytes(document, "colon:aid.xml", new byte[]{1},
           "Auxiliary", "application/xml", "Data", false);
-      var second = PdfFindingAidSupport.embedStandaloneCatalogBytes(document, "COLON_AID.XML", new byte[]{2},
+      var second = PdfAttachmentSupport.embedStandaloneCatalogBytes(document, "COLON_AID.XML", new byte[]{2},
           "Auxiliary", "application/xml", "Data", false);
       Assertions.assertEquals("colon_aid.xml", first.getFileUnicode());
       Assertions.assertEquals("COLON_AID_2.XML", second.getFileUnicode());
@@ -178,10 +169,7 @@ class SpecRepairTests {
     }
   }
 
-  @Test void builtInAndCheckedInFindingAidSidecarDefaultsAgree() {
-    Assertions.assertFalse(new EapdfConfig().findingAid.excelEnabled);
-    Assertions.assertEquals(EapdfConfig.load(Path.of("config/eapdf_config.json")).findingAid.excelEnabled,
-        new EapdfConfig().findingAid.excelEnabled);
+  @Test void collectionLabelsRemainSafe() {
     Assertions.assertFalse(Common.safeCollectionLabel("x".repeat(119) + ".extra", "Messages").endsWith("."));
     Assertions.assertFalse(Common.safeCollectionLabel("bad\0folder", "Messages").contains("\0"));
   }
@@ -198,31 +186,5 @@ class SpecRepairTests {
     }
   }
 
-  @Test void collectionPremisPlacesAllObjectsAndEventsBeforeAgents() throws Exception {
-    EmailRecord record = record("text/plain", "Body");
-    var members = new java.util.ArrayList<PdfMailWriter.CollectionMember>();
-    for (int index = 1; index <= 2; index++) {
-      String filename = "child" + index + ".pdf";
-      var member = new PdfMailWriter.CollectionMember("Messages", "Message", "s", List.of(record), index, index, filename, new byte[0], 0, record.date);
-      member.premisBytes = PremisBuilder.buildSingle(temporary.resolve(filename), record, "s");
-      members.add(member);
-    }
-    byte[] bytes = PremisBuilder.buildCollection(temporary.resolve("collection.pdf"), List.of(record), "c", members);
-    var factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
-    factory.setNamespaceAware(true);
-    var document = factory.newDocumentBuilder().parse(new java.io.ByteArrayInputStream(bytes));
-    int previous = 0;
-    int eventCount = 0;
-    for (var child = document.getDocumentElement().getFirstChild(); child != null; child = child.getNextSibling()) {
-      if (!(child instanceof org.w3c.dom.Element element)) continue;
-      int rank = List.of("object", "event", "agent", "rights").indexOf(element.getLocalName());
-      Assertions.assertTrue(rank >= previous, "PREMIS root element is out of schema order: " + element.getLocalName());
-      previous = rank;
-      if (rank == 1) eventCount++;
-    }
-    Assertions.assertEquals(3, eventCount);
-    String xml = new String(bytes, StandardCharsets.UTF_8);
-    Assertions.assertTrue(xml.contains("object:child:1:child1.pdf"));
-    Assertions.assertTrue(xml.contains("object:child:2:child2.pdf"));
-  }
+
 }

@@ -14,6 +14,22 @@ try{
  await page.locator('#viewport').evaluate(e=>e.scrollTop=180);await page.locator('#message-filter').fill('Power');
  await page.waitForFunction(()=>document.querySelector('#filter-status').textContent.includes('matching emails'));await ready();
  const filterScroll=await page.locator('#viewport').evaluate(e=>e.scrollTop);if(!baseline)assert.equal(filterScroll,180);
+ // A whole-document result must escape an email's restricted page range.
+ await page.locator('#filter-results button').first().click();await ready();
+ const target=await page.evaluate(async()=>{
+  const doc=window.mainDoc,number=doc.pdf.numPages,p=await doc.pdf.getPage(number);
+  const content=await p.getTextContent();let earlier='';for(let n=1;n<number;n++)earlier+=(await (await doc.pdf.getPage(n)).getTextContent()).items.map(x=>x.str??'').join(' ');
+  return {number,query:content.items.map(x=>x.str??'').find(x=>x.trim().length>8&&!earlier.includes(x.trim()))?.trim()};
+ });
+ assert.ok(target.query,'fixture must have unique text on the last page');
+ await page.locator('#open-search').click();await page.locator('#search-scope').selectOption('document');
+ await page.locator('#search').fill(target.query);await page.locator('#search-submit').click();await ready();
+ await page.waitForFunction(()=>document.querySelector('#search-status').textContent.startsWith('Match '));
+ assert.equal(await page.locator('#message-filter').inputValue(),'');
+ const reported=Number((await page.locator('#search-status').innerText()).match(/on page (\d+)/)[1]);
+ assert.equal(reported,target.number);
+ assert.match(await page.locator('#status').innerText(),new RegExp(`Page ${reported} of`));
+ assert.ok(await page.locator('#text-layer .current-match').count()>0);
  const searches=await page.evaluate(async()=>{
   const {DocumentSearch}=await import('./document-search.js'),doc=window.mainDoc,search=new DocumentSearch(),getPage=doc.pdf.getPage.bind(doc.pdf),wrapped=new WeakSet();let reads=0;
   doc.pdf.getPage=async number=>{const p=await getPage(number);if(!wrapped.has(p)){wrapped.add(p);const original=p.getTextContent.bind(p);p.getTextContent=(...args)=>{reads++;return original(...args);};}return p;};
@@ -81,7 +97,7 @@ try{
  await page.locator('#find-previous').click();await ready();assert.match(await page.locator('#search-status').innerText(),new RegExp(`Match ${count} of ${count}`));
  assert.equal(await page.locator('#collection-matches [aria-current]').count(),1);assert.ok(await page.locator('#text-layer .current-match').count()>0);
  if(!baseline){
-  await page.locator('#collection-matches [aria-current]').focus();for(let n=0;n<80;n++)await page.keyboard.press('ArrowUp');assert.equal(await page.evaluate(()=>document.activeElement.dataset.matchIndex),String(count-81));
+  await page.locator('#collection-matches [aria-current]').focus();for(let n=0;n<80;n++){await page.keyboard.press('ArrowUp');await ready();}assert.equal(await page.evaluate(()=>document.activeElement.dataset.matchIndex),String(count-81));
  }
  await page.locator('#close').click();assert.equal(await page.locator('.collection-hit').count(),0);
  const report={status:'PASS',mode:baseline?'before':'after',filterScroll,searches,children,results,scope:'Three repeated-search trials; one result-presentation/retention trial. Synthetic repeated pages isolate DOM scaling; real PDF text/attachments used for cache and retention.'};

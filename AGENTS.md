@@ -50,3 +50,8 @@ Rules:
 
 - Signature-compatible embedded full-text indexing was authorized on 2026-11-07; see docs/EMBEDDED_SEARCH_INDEX.md for its supported signing workflow and limits.
 - Produce distributable JARs only with the project version in their filenames; do not create unversioned creator, GUI, or validator JAR aliases.
+
+- When summarizing fixes, classify the work as Bug fix, Code improvement, New code, Speed improvement, Memory improvement, or another clear top-level category. Distinguish measured improvements from expected ones.
+
+- Keep only the latest versioned creator, GUI, and validator JARs in `dist/`; remove superseded JARs and their checksum files after verifying replacements.
+- Keep the viewer’s independent CSV metadata export; removing creator finding-aid generation does not remove CSV export.

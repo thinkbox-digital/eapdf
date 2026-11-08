@@ -35,7 +35,7 @@ test('multiple folder memberships remain one message and are all checked',async(
  rows[0][11]=['Inbox'];pack();await assert.rejects(decodeIndex(doc,()=>{}),/folder membership/);
 });
 for(const [name,edit,pattern] of [
- ['unsupported version',f=>f.pack({version:2}),/version/],
+ ['unsupported version',f=>f.pack({version:99}),/version/],
  ['wrong profile',f=>f.pack({profile:'1c'}),/profile/],
  ['digest mismatch',f=>f.pack({sha256:'0'.repeat(64)}),/integrity/],
  ['missing row',f=>f.pack({},[f.rows[0]]),/incomplete/],
@@ -64,7 +64,7 @@ test('legacy and corrupt indexes fall back with identical metadata and paths',as
  const legacy=await indexMessages(session,doc,()=>{},()=>{},undefined,true);
  const projection=result=>result.messages.map(({messageId,mailGuid,...rest})=>rest);
  assert.deepEqual(projection(fast),projection(legacy));assert.equal(opened,2);assert.equal(released,2);
- pack({version:2});const fallback=await indexMessages(session,doc,()=>{},()=>{});assert.deepEqual(projection(fallback),projection(legacy));assert.equal(fallback.incomplete.length,0);assert.match(fallback.notices[0],/version/);
+ pack({version:99});const fallback=await indexMessages(session,doc,()=>{},()=>{});assert.deepEqual(projection(fallback),projection(legacy));assert.equal(fallback.incomplete.length,0);assert.match(fallback.notices[0],/version/);
 });
 test('nested collections can use a child index without opening its message PDFs',async()=>{
  const {doc:child}=fixture();const root={name:'outer.pdf',inspection:{coverage:{metadata:'present',associatedFiles:'present'},diagnostics:[],collection:observed({entries:[{fileId:'nested'}]}),files:[{id:'nested',filename:observed('nested.pdf'),unicodeFilename:observed(null),streams:[{mimeType:observed('application/pdf'),locator:{path:'nested-stream'}}]}]}};
@@ -82,4 +82,13 @@ test('cancellation during decompression releases the reader and permits retry',a
  const {doc}=fixture();let checks=0;
  await assert.rejects(readEmbeddedIndex(doc,()=>{if(++checks>=5)throw Error('cancelled during decode');}),/cancelled/);
  assert.equal((await readEmbeddedIndex(doc,()=>{})).messages.length,2);
+});
+
+test('compact v2 filtering matches v1 without duplicating catalog headers',async()=>{
+ const f=fixture(500),expected=await decodeIndex(f.doc,()=>{});
+ const compact=f.rows.map(r=>[r[0],r[8],r[9],r[10]]);
+ assert.ok(JSON.stringify(compact).length<JSON.stringify(f.rows).length/2);
+ f.pack({version:2},compact);assert.deepEqual(await decodeIndex(f.doc,()=>{}),expected);
+ compact[0][2]='b'.repeat(32);f.pack({version:2},compact);
+ await assert.rejects(decodeIndex(f.doc,()=>{}),/checksum/);
 });

@@ -59604,14 +59604,17 @@ class XRef {
     const streamState = this.streamState;
     stream.pos = streamState.streamPos;
     const [typeFieldWidth, offsetFieldWidth, generationFieldWidth] = streamState.byteWidths;
+    if (![typeFieldWidth, offsetFieldWidth, generationFieldWidth].every(width => Number.isInteger(width) && width >= 0)) {
+      throw new FormatError(`Invalid XRef entry fields length: ${streamState.byteWidths}`);
+    }
+    if (typeFieldWidth + offsetFieldWidth + generationFieldWidth === 0) {
+      return;
+    }
     const entryRanges = streamState.entryRanges;
     while (entryRanges.length > 0) {
       const [first, n] = entryRanges;
       if (!Number.isInteger(first) || !Number.isInteger(n)) {
         throw new FormatError(`Invalid XRef range fields: ${first}, ${n}`);
-      }
-      if (![typeFieldWidth, offsetFieldWidth, generationFieldWidth].every(width => Number.isInteger(width) && width >= 0) || typeFieldWidth + offsetFieldWidth + generationFieldWidth === 0) {
-        throw new FormatError(`Invalid XRef entry fields length: ${first}, ${n}`);
       }
       for (let i = streamState.entryNum; i < n; ++i) {
         streamState.entryNum = i;

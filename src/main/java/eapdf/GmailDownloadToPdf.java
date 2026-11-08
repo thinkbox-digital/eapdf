@@ -115,7 +115,6 @@ public class GmailDownloadToPdf {
           Path pdfPath = Paths.get(outPdfDir).resolve(stem + ".pdf");
           PdfMailWriter.writeEaPdfA3(pdfPath, r, fontPath, iccPath, debug, Paths.get(debugDir), seq);
           List<Path> completedOutputs = new ArrayList<>(List.of(pdfPath));
-          if (PdfMailWriter.CONFIG.premis.enabled) completedOutputs.add(PdfFindingAidSupport.premisSidecarPath(pdfPath));
           resume.rememberCompleted(meta.getId(), completedOutputs);
           System.out.println("wrote pdf: " + pdfPath);
           Common.inputState(sourcePath, "completed");

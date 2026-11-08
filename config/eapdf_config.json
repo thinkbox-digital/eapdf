@@ -1,27 +1,15 @@
 {
   "configVersion": 1,
-  "creator": "",
+  "creator": "Thinkbox.DIGITAL",
   "signing": {
     "enabled": false,
     "pkcs12Path": "",
     "alias": "",
     "reason": ""
   },
-  "branding": {
-    "enabled": true
-  },
   "searchIndex": {
     "enabled": true,
     "fullTextEnabled": true
-  },
-  "findingAid": {
-    "pdfEnabled": false,
-    "excelEnabled": false,
-    "embedExcel": true,
-    "embedPdfInCollections": true
-  },
-  "premis": {
-    "enabled": false
   },
   "accessibility": {
     "addPdfUaFeatures": true,
@@ -35,8 +23,6 @@
       "frontMatterPrefix": "Index-"
     },
     "experimental": {
-      "artifactGeneratedBranding": false,
-      "semanticFindingAidTags": false,
       "altTextGeneratedImages": false
     }
   }

@@ -41,3 +41,7 @@ not a claim of store approval or completion of the M6 release review.
 The unmodified upstream web/pdf_viewer.mjs component bundle (Apache-2.0) is
 included for StructTreeLayerBuilder only. Its source is in the same pinned
 PDF.js upstream revision; the PDF scripting interpreter is excluded.
+
+## XML interpretation worker
+
+@xmldom/xmldom 0.9.12 (MIT) is bundled for background XML interpretation. Its license is shipped as xmldom-LICENSE. esbuild 0.28.2 (MIT) is a build-only dependency.

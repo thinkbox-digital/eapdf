@@ -247,39 +247,7 @@ class AttachmentProfilePolicyTests {
     }
   }
 
-  @Test
-  void isolatedOutputsEmbedOnlyFindingAidsAndKeepPremisAsASidecar() throws Exception {
-    boolean previousPremis = PdfMailWriter.CONFIG.premis.enabled;
-    boolean previousPdf = PdfMailWriter.CONFIG.findingAid.pdfEnabled;
-    boolean previousExcel = PdfMailWriter.CONFIG.findingAid.embedExcel;
-    try {
-      PdfMailWriter.CONFIG.premis.enabled = true;
-      PdfMailWriter.CONFIG.findingAid.pdfEnabled = true;
-      PdfMailWriter.CONFIG.findingAid.embedExcel = true;
-      Path singleOutput = tempDir.resolve("isolated_single.pdf");
-      EmailRecord single = record("Isolated single");
-      single.embedSourceMessage = false;
-      PdfMailWriter.writeEaPdfA3(singleOutput, single, TestSupport.fontPath(), TestSupport.iccPath(), false, tempDir, 1);
-      try (PDDocument document = Loader.loadPDF(singleOutput.toFile())) {
-        Assertions.assertTrue(files(document).isEmpty());
-        Assertions.assertFalse(document.getDocumentCatalog().getCOSObject().containsKey(COSName.getPDFName("AF")));
-      }
-      Assertions.assertTrue(java.nio.file.Files.exists(singleOutput.resolveSibling(PdfFindingAidSupport.premisFilename(singleOutput))));
-      Path archiveOutput = tempDir.resolve("isolated_archive.pdf");
-      PdfMailWriter.writeEaPdfArchive(archiveOutput, List.of(record("First"), record("Second")), TestSupport.fontPath(), TestSupport.iccPath(), false, tempDir, "mi");
-      try (PDDocument document = Loader.loadPDF(archiveOutput.toFile())) {
-        Assertions.assertEquals(1, files(document).size());
-        PDComplexFileSpecification file = files(document).values().iterator().next();
-        Assertions.assertEquals("Finding aid spreadsheet index", file.getCOSObject().getString(COSName.DESC));
-        Assertions.assertEquals(1, document.getDocumentCatalog().getCOSObject().getCOSArray(COSName.getPDFName("AF")).size());
-      }
-      Assertions.assertTrue(java.nio.file.Files.exists(archiveOutput.resolveSibling(PdfFindingAidSupport.premisFilename(archiveOutput))));
-    } finally {
-      PdfMailWriter.CONFIG.premis.enabled = previousPremis;
-      PdfMailWriter.CONFIG.findingAid.pdfEnabled = previousPdf;
-      PdfMailWriter.CONFIG.findingAid.embedExcel = previousExcel;
-    }
-  }
+
 
   @Test
   void nonIsolatedPolicyAlsoAppliesToOriginalEmlSourcesWithoutChangingTheirBytes() throws Exception {

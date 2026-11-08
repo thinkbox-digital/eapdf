@@ -21,7 +21,7 @@ try{
     // This small fixture has direct matches; hide those to exercise the same
     // fallback used by the real transport-header/export-ID mismatch collection.
     const forceFallback=()=>{doc.inspection={...doc.inspection,files:doc.inspection.files.map(f=>f.afRelationship.value==='Supplement'?{...f,owners:{...f.owners,value:null,state:'unavailable'}}:f)};};
-    const refresh=session.refresh.bind(session);session.refresh=d=>{refresh(d);if(!session.entries.get(d).supplementLinks)forceFallback();};forceFallback();
+    const refresh=session.refresh.bind(session);session.refresh=async d=>{await refresh(d);if(!session.entries.get(d).supplementLinks)forceFallback();};forceFallback();
     proto=Object.getPrototypeOf(doc.pdf);original=proto.getDocumentAssets;let children=0;
     proto.getDocumentAssets=function(...args){if(this!==doc.pdf){children++;if(mode==='failure')return Promise.reject(new Error('Injected child read failure'));if(mode==='cancel'){session.close();return Promise.reject(new Error('Injected cancellation'));}}return original.apply(this,args);};
     let error;try{await session.associateFiles(doc);}catch(e){error=String(e);}

@@ -4,18 +4,20 @@ import java.nio.file.*;
 import javax.swing.*;
 import org.junit.jupiter.api.Test;
 class GuiSearchOptionsTests {
- @Test void findingAidIsOffByDefault(){assertFalse(new EapdfConfig().findingAid.pdfEnabled);}
+
  @Test void searchableIndexCheckboxControlsBothIndexesInChildConfiguration()throws Exception{
   var config=EapdfConfig.get();String creator=config.creator;
   try{
    config.creator="GUI regression";
    var controls=EapdfGui.buildRunConfigControls();assertEquals("Embed searchable index",controls.searchIndex.getText());
+   assertEquals("Accessibility (PDF/UA)",controls.pdfUa.getText());
    for(boolean enabled:new boolean[]{false,true}){
-    controls.searchIndex.setSelected(enabled);controls.findingAid.setSelected(false);
+    controls.searchIndex.setSelected(enabled);
     Path path=EapdfGui.writeGuiConfig(controls.snapshot());
     try{var child=new com.google.gson.Gson().fromJson(Files.readString(path),EapdfConfig.class);
+     assertFalse(Files.readString(path).contains("\"branding\""));assertFalse(Files.readString(path).contains("\"findingAid\""));assertFalse(Files.readString(path).contains("\"premis\""));
      assertEquals(enabled,child.searchIndex.enabled);assertEquals(enabled,child.searchIndex.fullTextEnabled);
-     assertFalse(child.findingAid.pdfEnabled);assertFalse(child.findingAid.excelEnabled);assertFalse(child.findingAid.embedPdfInCollections);
+
     }finally{Files.delete(path);}
    }
   }finally{config.creator=creator;}

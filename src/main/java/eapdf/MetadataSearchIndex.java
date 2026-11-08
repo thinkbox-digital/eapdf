@@ -74,13 +74,9 @@ final class MetadataSearchIndex {
       var row = new LimitedBytes(MAX_ROW_BYTES);
       try (var json = new JsonWriter(new OutputStreamWriter(row, StandardCharsets.UTF_8))) {
         json.beginArray();
-        for (String value : List.of(Common.nz(record.mailGuid), Common.nz(record.messageId), Common.nz(record.subject),
-            Common.nz(record.rawFrom), Common.nz(record.rawTo), Common.nz(record.rawCc), Common.nz(record.rawBcc), Common.nz(record.sentXmp)))
-          json.value(Common.stripInvalidXml(value).replace("\r\n", "\n").replace("\r", "\n"));
+        json.value(record.mailGuid); // Display/search fields remain authoritative in catalog XMP.
         json.beginArray();for (String key : keys.get(spec)) json.value(key);json.endArray();
         json.value(HexFormat.of().formatHex(checksum.getBytes()));json.value(ef.getSize());
-        json.beginArray();for (String path : paths) json.value(path);json.endArray();
-        json.value(1); // Single-message child body always starts on its first page.
         json.endArray();
       }
       row.writeTo(payload);payload.write('\n');
@@ -90,7 +86,7 @@ final class MetadataSearchIndex {
     try { hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(payload.toByteArray())); }
     catch (java.security.NoSuchAlgorithmException impossible) { throw new AssertionError(impossible); }
     var output = new LimitedBytes(MAX_BYTES);
-    String header = "{\"format\":\"eapdf-metadata-index\",\"version\":1,\"profile\":\"" + profile
+    String header = "{\"format\":\"eapdf-metadata-index\",\"version\":2,\"profile\":\"" + profile
         + "\",\"messages\":" + ordered.size() + ",\"sha256\":\"" + hash + "\"}\n";
     output.write(header.getBytes(StandardCharsets.UTF_8));payload.writeTo(output);return output.toByteArray();
   }

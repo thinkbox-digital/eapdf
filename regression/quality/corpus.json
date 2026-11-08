@@ -142,16 +142,6 @@
       ],
       "archive_profile": "m",
       "source_representation": "Per-message RFC822 derivatives; original MBOX container is not embedded",
-      "visual_masks": {
-        "1": [
-          [
-            46,
-            118,
-            230,
-            130
-          ]
-        ]
-      },
       "provenance": "Python mailbox and email parsers; two messages cross-checked against in/enron.mbox."
     }
   ],

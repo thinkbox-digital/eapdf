@@ -91,10 +91,17 @@ function controls():void {
   viewport.setAttribute('aria-busy',String(busy));
 }
 function check(ticket:number):void {if(ticket!==generation)throw new Error('Cancelled.');}
+let keyboardSelection: (()=>HTMLElement|null|undefined)|undefined;
 async function operation(action:(ticket:number)=>Promise<void>):Promise<void>{
-  if(busy)return;const ticket=generation;busy=true;controls();
+  if(busy)return;const ticket=generation;
+  // Disabling a clicked tree button blurs it. Embedded PDFs also replace the row.
+  // Restore the selected row after rendering so the next arrow key reaches Messages.
+  const focused=document.activeElement;
+  if(!keyboardSelection&&focused instanceof HTMLElement&&tree.contains(focused))
+    keyboardSelection=()=>tree.querySelector<HTMLElement>('button[aria-current]')??(focused.isConnected?focused:undefined);
+  busy=true;controls();
   try{await action(ticket);}catch(error){if(ticket===generation){element('restart').hidden=!current;status.textContent=`Unable to display PDF: ${error instanceof Error?error.message:String(error)}`;}}
-  finally{if(ticket===generation){busy=false;controls();}}
+  finally{if(ticket===generation){busy=false;controls();const focus=keyboardSelection;keyboardSelection=undefined;focus?.()?.focus({preventScroll:true});}}
 }
 const loadingDialog=element<HTMLDialogElement>('loading-dialog');
 let loadingTimer:ReturnType<typeof setTimeout>|undefined;
@@ -107,7 +114,7 @@ loadingDialog.addEventListener('cancel',event=>{event.preventDefault();close();}
 function close():void {
   finishLoading();cancelExport?.();
   metadataEpoch++;forceMetadataScan=false;metadataSession?.close();metadataSession=undefined;metadataIndex=undefined;clearTimeout(filterTimer);
-  filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;filter.value='';filtered=undefined;tree.hidden=false;
+  filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;filter.value='';filtered=undefined;tree.hidden=false;element('filter-status').textContent='';keyboardSelection=undefined;
   for(const list of virtualLists)list.close();virtualLists.clear();fileList?.close();fileList=undefined;
   cancelLinked();stopBrowseIndex();element('subject-index-progress').hidden=true;searchSession?.close();searchSession=undefined;exportSession?.close();exportSession=undefined;
   generation++;searchEpoch++;collectionResults=undefined;failedPages.clear();finder.clear();pages.clear();attachmentViewer.close();session?.close();session=undefined;current=undefined;
@@ -229,7 +236,7 @@ function showFiles(doc:BrowserDocument,message?:MailMessage):void {
       else if(canView(file,stream)){
         const view=button(isPdf(file,stream)?'Open PDF':'View',()=>void operation(async ticket=>{
           if(isPdf(file,stream)){await openChild(doc,file,stream,ticket);return;}
-          status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);refreshInspection(doc);await attachmentViewer.open(data,fileLabel(file),stream.mimeType.value??'');check(ticket);status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages}`;
+          status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);refreshInspection(doc);await attachmentViewer.open(data,fileLabel(file),stream.mimeType.value??'',()=>{[...files.querySelectorAll<HTMLButtonElement>('button[data-view-file-id]')].find(b=>b.dataset.viewFileId===file.id&&b.dataset.viewStream===stream.locator.path)?.focus({preventScroll:true});});check(ticket);status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages}`;
         }));view.className='view-action';view.replaceChildren(treeIcon('view'));view.classList.add('icon-button');view.setAttribute('aria-label',`View ${fileLabel(file)}`);view.title=`${isPdf(file,stream)?'Open':'View'} ${fileLabel(file)}`;view.dataset.viewFileId=file.id;view.dataset.viewStream=stream.locator.path;actions.prepend(view);
       }
     }
@@ -351,15 +358,16 @@ function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
   const counts=new Map<string,number>();const display=new Map<string,Record<string,string>>();browseDisplay.set(doc,display);
   const checkIndex=()=>{check(ticket);if(epoch!==browseEpoch)throw new Error('Subject indexing cancelled.');};
   const update=(messages:readonly IndexedMessage[])=>{
-    checkIndex();
+    checkIndex();const changed=new Set<string>();
     for(const message of messages){
       if(message.path.length!==1)continue;
-      const step=message.path[0]!,key=JSON.stringify([step.fileId,step.streamPath]),count=(counts.get(key)??0)+1;counts.set(key,count);
+      const step=message.path[0]!,key=JSON.stringify([step.fileId,step.streamPath]),count=(counts.get(key)??0)+1;counts.set(key,count);changed.add(key);
       if(count===1){subjects.set(key,message.label);display.set(key,{From:message.sender??'',Sent:message.sent??''});}else{subjects.delete(key);display.delete(key);}
     }
     // Update mounted rows in place, preserving focus, expansion and scroll position.
     for(const node of nodes.get(doc)?.querySelectorAll<HTMLButtonElement>('[data-embedded-file-id]')??[]){
-      const label=subjects.get(JSON.stringify([node.dataset.embeddedFileId,node.dataset.embeddedStream]));
+      const key=JSON.stringify([node.dataset.embeddedFileId,node.dataset.embeddedStream]);if(!changed.has(key))continue;
+      const label=subjects.get(key);
       node.querySelector('.message-text')?.remove();messageLabel(node,label||node.title,display.get(JSON.stringify([node.dataset.embeddedFileId,node.dataset.embeddedStream])));if(label){node.querySelector('.tree-icon')?.replaceWith(treeIcon('message'));}
     }
   };
@@ -379,7 +387,7 @@ function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
         },update);
         checkIndex();element('subject-index-status').textContent=`Subjects read · ${indexed.messages.length} emails. Linking supporting files…`;
         if(indexed.source!=='embedded')await isolated.associateFiles(copy);checkIndex();
-        main.adoptAssociations(doc,isolated,copy);if(current===doc)refreshInspection(doc);
+        await main.adoptAssociations(doc,isolated,copy);if(current===doc)refreshInspection(doc);
       }
       checkIndex();browseCompleted.add(doc);browseMessageCounts.set(doc,indexed.messages.length);
       const collection=doc.inspection.collection.value;if(collection)for(const summary of nodes.get(doc)?.querySelectorAll<HTMLElement>('summary[data-folder-id]')??[]){const members=new Set<string>();for(const entry of collection.entries)for(let id of entry.folderIds.value??[]){const seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);if(id===summary.dataset.folderId)members.add(entry.fileId);id=collection.folders.find(f=>f.id===id)?.parentId??'';}}const count=indexed.messages.filter(m=>m.path[0]&&members.has(m.path[0].fileId)).length;const pill=text('span',String(count));pill.className='folder-count';summary.querySelector('.folder-count')?.remove();summary.append(pill);}
@@ -613,8 +621,9 @@ async function showCollectionMatch(cached:CollectionResults,index:number,occurre
     }catch{check(ticket);}
     if(!verified)rejectIndex();
   }
+  const wasFiltered=!!filteredPages(doc);clearMessageFilterForSearch();
   if(current!==doc)await showDocument(doc,ticket);
-  if(pageNumber!==match.page){pageNumber=match.page;await render(ticket,false);}
+  if(wasFiltered||pageNumber!==match.page){pageNumber=match.page;await render(ticket,false);}
   check(ticket);syncMessageToPage();const highlighted=pages.highlight(cached.query,{page:match.page,index:occurrence});
   cached.index=index;cached.occurrence=occurrence;
   const number=cached.offsets[index]!+occurrence+1;
@@ -699,7 +708,7 @@ async function findMatch(direction:1|-1):Promise<void>{
     const epoch=++searchEpoch;const checkSearch=()=>{check(ticket);if(epoch!==searchEpoch)throw new Error('Search cancelled.');};
     element('cancel-search').hidden=false;searchStatus.textContent='Searching this PDF…';
     try{await session!.ensure(doc);const result=await finder.find(doc,query,pageNumber,direction,checkSearch);checkSearch();
-      if('page'in result){pageNumber=result.page;await render(ticket);checkSearch();pages.highlight(query,result);searchStatus.textContent=`Match ${result.index+1} of ${result.count} on page ${result.page}`;}
+      if('page'in result){clearMessageFilterForSearch();pageNumber=result.page;await render(ticket);checkSearch();pages.highlight(query,result);searchStatus.textContent=`Match ${result.index+1} of ${result.count} on page ${result.page}`;}
       else searchStatus.textContent=result.incomplete?'Search limit reached; results are incomplete.':'No matching text in this document.';
     }catch(error){if(epoch!==searchEpoch){searchStatus.textContent='Search cancelled.';return;}throw error;}
     finally{element('cancel-search').hidden=true;}
@@ -756,6 +765,9 @@ async function filterMessages():Promise<void>{
   const checkIndex=()=>{check(ticket);if(epoch!==metadataEpoch)throw new Error('Email search cancelled.');};
   const cachedIndex=forceMetadataScan?undefined:session.cachedMessageIndex(root);
   if(!metadataIndex&&cachedIndex)metadataIndex=Promise.resolve(cachedIndex);
+  if(!metadataIndex&&!root.inspection.collection.value){
+    metadataIndex=indexMessages(session,root,checkIndex,()=>{}).then(result=>{checkIndex();session!.rememberMessageIndex(root,result);return result;});
+  }
   if(!metadataIndex){
     const main=session,isolated=new BrowserSession({},{reuseWorker:true});metadataSession=isolated;
     metadataIndex=(async()=>{try{
@@ -775,6 +787,13 @@ async function filterMessages():Promise<void>{
     if(matches.length>256)filterList=new VirtualList(filterResults,tree.closest('aside')!,matches,create,60);else for(const item of matches)filterResults.append(create(item));
     element('filter-status').textContent=`${matches.length} matching emails. ${result.incomplete.length?'Search incomplete: '+result.incomplete.join(' '):'All reachable email metadata searched.'} ${(result.notices??[]).join(' ')}`;
   }catch(error){if(ticket===generation&&epoch===metadataEpoch&&revision===filterRevision){metadataIndex=undefined;element('filter-status').textContent=`Email search could not finish: ${error instanceof Error?error.message:String(error)}`;}}
+}
+function clearMessageFilterForSearch():void {
+  if(!filter.value && !filtered)return;
+  filter.value='';filtered=undefined;filterRevision++;clearTimeout(filterTimer);
+  filterList?.close();filterList=undefined;filterResults.replaceChildren();
+  filterResults.hidden=true;tree.hidden=false;
+  element('filter-status').textContent='Email filter cleared to show whole-document search results.';
 }
 filter.addEventListener('input',()=>{const restricted=current&&filteredPages(current);filtered=undefined;if(restricted&&!busy)void operation(ticket=>render(ticket,false));filterRevision++;clearTimeout(filterTimer);if(!filter.value.trim()){filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;tree.hidden=false;element('filter-status').textContent='';return;}filterTimer=setTimeout(()=>void filterMessages(),200);});
 cancelLinked=setupLinkedOpening(openFile,message=>{status.textContent=message;});
@@ -856,13 +875,38 @@ element('search-scope').addEventListener('change',()=>{const collection=element<
 function openSearch(focus=true):void {element('search-panel').hidden=false;element('open-search').setAttribute('aria-expanded','true');if(focus)search.focus();}
 function closeSearch(focus=true):void {element('search-panel').hidden=true;element('open-search').setAttribute('aria-expanded','false');if(focus)element('open-search').focus();}
 element('open-search').addEventListener('click',()=>openSearch());element('close-search').addEventListener('click',()=>closeSearch());
-window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='f'&&!document.querySelector('dialog[open]')){event.preventDefault();openSearch();}else if(event.key==='Escape'&&!element('search-panel').hidden){event.preventDefault();closeSearch();}},{capture:true});
+window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='f'&&!document.querySelector('dialog[open]')){event.preventDefault();openSearch();}else if(event.key==='Escape'&&!element('search-panel').hidden&&!document.querySelector('dialog[open]')){event.preventDefault();closeSearch();}},{capture:true});
 for(const [id,kind]of [['close','close'],['close-search','close'],['previous','left'],['next','right'],['find-previous','left'],['find','right'],['toggle-navigation','left'],['toggle-details','right'],['back','up'],['zoom-out','minus'],['zoom-in','plus']] as const){const control=element(id);if(!control.hasAttribute('aria-label'))control.setAttribute('aria-label',control.textContent!.trim());if(!control.title)control.title=control.getAttribute('aria-label')!;control.replaceChildren(treeIcon(kind));control.classList.add('icon-button');}
 for(const [id,kind]of [['open-search','search'],['export-csv','download']] as const)element(id).prepend(treeIcon(kind));
 document.querySelector('.open-file')!.prepend(treeIcon('folder'));
-// Native buttons/disclosures retain their semantics; arrows supplement Tab navigation.
-tree.addEventListener('keydown',event=>{const target=event.target;if(!(target instanceof HTMLElement))return;const visible=[...tree.querySelectorAll<HTMLElement>('button,summary')].filter(node=>node.getClientRects().length&&!node.closest('[hidden]')),index=visible.indexOf(target);if(index<0)return;let next:HTMLElement|undefined;
- if(event.key==='ArrowDown')next=visible[index+1];else if(event.key==='ArrowUp')next=visible[index-1];else if(event.key==='Home')next=visible[0];else if(event.key==='End')next=visible.at(-1);else if(event.key==='ArrowRight'&&target.tagName==='SUMMARY'){(target.parentElement as HTMLDetailsElement).open=true;event.preventDefault();}else if(event.key==='ArrowLeft'){const parent=target.closest('details');if(parent){parent.open=false;next=parent.querySelector('summary')!;}}
+// Up/Down select and open messages, including rows beyond the mounted window.
+function activateMessage(next:HTMLElement|undefined):void {
+  if(!next||busy)return;
+  const selector=next.matches('.collection-hit')?`#collection-matches button[data-match-index="${next.dataset.matchIndex}"]`:next.closest('#filter-results')?`#filter-results button[data-message-index="${next.dataset.messageIndex}"]`:'#tree button[aria-current]';
+  keyboardSelection=()=>document.querySelector<HTMLElement>(selector);
+  next.focus();next.click();
+}
+function adjacentMessage(target:HTMLElement,direction:number):HTMLElement|undefined {
+  for(const [doc,row] of nodes){
+    const messageIndex=target.dataset.messageId?lazyMessages.get(doc)?.indices.get(target.dataset.messageId):undefined;
+    const messages=lazyMessages.get(doc);
+    if(messages&&messageIndex!==undefined&&messageIndex+direction>=0&&messageIndex+direction<doc.inspection.messages.length)
+      return messages.list.rowAt(messageIndex+direction)?.querySelector<HTMLButtonElement>('button')??undefined;
+    const owner=target.dataset.embeddedFileId?doc:row.querySelector(':scope > button')===target?doc.parent:undefined;
+    const fileId=target.dataset.embeddedFileId??doc.parentFileId,stream=target.dataset.embeddedStream??doc.parentStreamPath;
+    const lazy=owner&&fileId&&stream?lazyPdfs.get(owner)?.get(JSON.stringify([fileId,stream])):undefined;
+    if(lazy){const next=lazy.list.rowAt(lazy.index+direction)?.querySelector<HTMLButtonElement>('button');if(next)return next;}
+  }
+  const rows=visiblePaneControls(tree).filter(n=>n.matches('button[data-message-id],button[data-embedded-file-id]'));
+  const index=rows.indexOf(target);return rows[index<0?(direction===1?0:rows.length-1):index+direction];
+}
+tree.addEventListener('keydown',event=>{
+ const target=event.target;if(!(target instanceof HTMLElement)||event.altKey||event.ctrlKey||event.metaKey)return;
+ if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();if(!busy)activateMessage(adjacentMessage(target,event.key==='ArrowDown'?1:-1));return;}
+ const visible=visiblePaneControls(tree);let next:HTMLElement|undefined;
+ if(event.key==='Home')next=visible[0];else if(event.key==='End')next=visible.at(-1);
+ else if(event.key==='ArrowRight'&&target.tagName==='SUMMARY'){(target.parentElement as HTMLDetailsElement).open=true;event.preventDefault();}
+ else if(event.key==='ArrowLeft'){const parent=target.closest('details');if(parent){parent.open=false;next=parent.querySelector('summary')!;}}
  if(next){event.preventDefault();next.focus();}
 });
 // Arrow keys move through pane controls; Enter/Space retain native activation.
@@ -875,13 +919,19 @@ document.addEventListener('keydown',event=>{
  const pane=target.closest<HTMLElement>('#navigation-panel,#details-panel,.reader-pane,#search-panel');if(!pane)return;
  if(collectionList&&target.matches('#collection-matches button[data-match-index]')){
   const index=Number(target.dataset.matchIndex)+direction;
-  if(collectionResults&&index>=0&&index<collectionResults.result.matches.length){event.preventDefault();collectionList.rowAt(index)?.querySelector<HTMLButtonElement>('button[data-match-index]')?.focus();}return;
+  if(collectionResults&&index>=0&&index<collectionResults.result.matches.length){event.preventDefault();activateMessage(collectionList.rowAt(index)?.querySelector<HTMLButtonElement>('button[data-match-index]')??undefined);}return;
  }
+ if(filterList&&target.matches('#filter-results button[data-message-index]')){event.preventDefault();activateMessage(filterList.rowAt(Number(target.dataset.messageIndex)+direction)?.querySelector<HTMLButtonElement>('button')??undefined);return;}
+ if(target.closest('#filter-results,#collection-matches')){event.preventDefault();const list=target.closest<HTMLElement>('#filter-results,#collection-matches')!,rows=visiblePaneControls(list),index=rows.indexOf(target);activateMessage(rows[index+direction]);return;}
+ if(target===element('navigation-panel')||target===tree){event.preventDefault();activateMessage(adjacentMessage(tree.querySelector<HTMLElement>('button[aria-current]')??target,direction));return;}
  const controls=visiblePaneControls(pane),index=controls.indexOf(target),next=controls[index<0?(direction===1?0:controls.length-1):index+direction];
  if(next){event.preventDefault();next.focus();}
 });
 search.addEventListener('keydown',event=>{
  if(event.altKey||event.ctrlKey||event.metaKey||!['ArrowUp','ArrowDown'].includes(event.key))return;
  const list=element('collection-results').hidden?filterResults:element('collection-matches'),controls=visiblePaneControls(list);
- const next=event.key==='ArrowDown'?controls[0]:controls.at(-1);if(next){event.preventDefault();next.focus();}
+ const next=event.key==='ArrowDown'?controls[0]:controls.at(-1);if(next){event.preventDefault();activateMessage(next);}
 });
+
+element('navigation-panel').tabIndex=0;
+element('navigation-panel').addEventListener('pointerdown',event=>{if(event.target instanceof Element&&!event.target.closest('button,input,summary,a,select'))element('navigation-panel').focus({preventScroll:true});});

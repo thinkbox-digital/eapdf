@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.0-beta.20 — 2026-11-08
+
+- Creator/validator 1.6.0-beta.20; viewer 0.5.0-beta.20.
+- Fix Messages-pane focus and arrows, filtered search navigation and stale filtering status.
+- Add a standard attachment-preview title bar with a visible Close button and reliable Escape handling.
+- Add compact filtering indexes and large-metadata worker interpretation; preserve CSV export.
+- Remove creator Branding, Finding Aid and PREMIS; default identity to Thinkbox.DIGITAL.
+- Add bounded parallel regeneration and update pypdf/security safeguards.
+
+## Viewer 0.5.0-beta.19 — 2026-11-08 (local, unpublished)
+
+- Restore Messages-pane focus after clicking an email, so Up/Down opens adjacent messages.
+- Include compact filtering indexes, large-metadata responsiveness and stale-filter reset fixes.
+- Preserve CSV export. Creator/validator remains 1.6.0-beta.19.
+
 ## 1.6.0-beta.19 — 2026-11-07
 
 - Correct false search matches across separately positioned PDF text and accelerate common archive searches.
@@ -20,7 +35,7 @@ Included in the published beta.19 release.
 This file tracks human-readable release history for the repository.
 
 Current beta version:
-- `1.6.0-beta.19`
+- `1.6.0-beta.20`
 
 Notes:
 - Release tracking starts here.

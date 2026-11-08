@@ -36,7 +36,7 @@ class MetadataSearchIndexTests {
         assertEquals("1"+profile,header.get("profile").getAsString());assertEquals(1,header.get("messages").getAsInt());
         assertEquals(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Arrays.copyOfRange(bytes,boundary+1,bytes.length))),header.get("sha256").getAsString());
         var row=JsonParser.parseString(new String(bytes,boundary+1,bytes.length-boundary-1,StandardCharsets.UTF_8)).getAsJsonArray();
-        assertEquals(record.mailGuid,row.get(0).getAsString());assertEquals(2,row.get(8).getAsJsonArray().size());assertEquals(2,row.get(11).getAsJsonArray().size());
+        assertEquals(record.mailGuid,row.get(0).getAsString());assertEquals(2,row.get(1).getAsJsonArray().size());assertEquals(4,row.size());
         assertTrue(TestSupport.embeddedFileNames(doc).stream().noneMatch(n->n.contains("metadata-index")));
         var files=AttachmentProfilePolicyTests.files(doc);var unique=Collections.newSetFromMap(new IdentityHashMap<COSDictionary,Boolean>());
         int children=0;
@@ -66,13 +66,15 @@ class MetadataSearchIndexTests {
   @Test void encodingIsDeterministicAndPreservesUnicodeAndAllRecipients() throws Exception {
     try(var f=fixture()){
       assertArrayEquals(f.encode(),f.encode());String value=new String(f.encode(),StandardCharsets.UTF_8);
-      assertTrue(value.contains("日本語"));assertTrue(value.contains("bcc@example.org"));
+      assertTrue(value.contains("stable-guid"));assertFalse(value.contains("日本語"));assertFalse(value.contains("bcc@example.org"));
+      assertTrue(value.contains("\"version\":2"));
     }
   }
   @Test void missingIdentityAndOversizedRowsAreRejectedBeforeEmbedding() throws Exception {
     try(var f=fixture()){
       f.record.mailGuid="";assertThrows(IOException.class,f::encode);f.record.mailGuid="stable";
-      f.record.subject="x".repeat(MetadataSearchIndex.MAX_ROW_BYTES);assertThrows(IllegalArgumentException.class,f::encode);
+      f.record.subject="x".repeat(MetadataSearchIndex.MAX_ROW_BYTES);assertTrue(f.encode().length<1024,"metadata must not be duplicated in the compact index");
+      f.record.mailGuid="x".repeat(MetadataSearchIndex.MAX_ROW_BYTES);assertThrows(IllegalArgumentException.class,f::encode);
       MetadataSearchIndex.embed(f.doc,f.members,f.files,f.names);
       assertNull(f.doc.getDocumentCatalog().getMetadata(),"failed index must not create partial XMP");
     }

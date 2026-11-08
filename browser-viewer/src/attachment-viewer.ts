@@ -68,6 +68,7 @@ export class AttachmentViewer {
   private image:ImageBitmap|undefined;
   private bytes:Uint8Array|undefined;
   private name='';
+  private restoreFocus:(()=>void)|undefined;
   private page=1;
   private generation=0;
   private busy=false;
@@ -78,14 +79,16 @@ export class AttachmentViewer {
     this.canvas.id='attachment-canvas';this.content.id='attachment-text';
     this.previous.textContent='Previous';this.previous.id='attachment-previous';
     this.next.textContent='Next';this.next.id='attachment-next';
-    this.done.textContent='Back to email';this.done.id='attachment-close';
+    this.done.id='attachment-close';this.done.type='button';this.done.setAttribute('aria-label','Close attachment preview');this.done.title='Close attachment preview (Esc)';
+    const cross=document.createElement('span');cross.textContent='×';cross.setAttribute('aria-hidden','true');this.done.append(cross,document.createTextNode('Close'));
+    const heading=document.createElement('header');heading.className='attachment-heading';heading.append(this.title,this.done);
     this.save.textContent='Download original';this.save.id='attachment-download';
     this.zoom.id='attachment-zoom';this.zoom.setAttribute('aria-label','Attachment zoom');
     for(const scale of [0.5,0.75,1,1.25,1.5,2]) {const option=document.createElement('option');option.value=String(scale);option.textContent=`${scale*100}%`;this.zoom.append(option);}
     const toolbar=document.createElement('div');toolbar.className='attachment-controls';
-    toolbar.append(this.previous,this.next,this.zoom,this.save,this.done);
+    toolbar.append(this.previous,this.next,this.zoom,this.save);
     const viewport=document.createElement('div');viewport.className='attachment-content';viewport.append(this.canvas,this.content);
-    this.dialog.append(this.title,toolbar,this.status,viewport);document.body.append(this.dialog);
+    this.dialog.append(heading,toolbar,this.status,viewport);document.body.append(this.dialog);
     this.done.addEventListener('click',()=>this.close());
     this.dialog.addEventListener('cancel',event=>{event.preventDefault();this.close();});
     this.previous.addEventListener('click',()=>{if(!this.busy){this.page--;void this.render();}});
@@ -100,7 +103,7 @@ export class AttachmentViewer {
       finally{if(epoch===this.generation)this.save.disabled=false;}
     });
   }
-  close():void { this.release(); if(this.dialog.open)this.dialog.close(); }
+  close():void { const restore=this.restoreFocus;this.restoreFocus=undefined;this.release();if(this.dialog.open)this.dialog.close();restore?.(); }
   private release():void {
     this.generation++;this.rendering?.cancel();this.rendering=undefined;
     this.managed?.close();this.managed=undefined;this.pdf=undefined;
@@ -114,9 +117,10 @@ export class AttachmentViewer {
     this.zoom.disabled=this.busy||(!this.pdf&&!this.image);
     this.dialog.setAttribute('aria-busy',String(this.busy));
   }
-  async open(bytes:Uint8Array,name:string,mime:string):Promise<void> {
+  async open(bytes:Uint8Array,name:string,mime:string,restoreFocus?:()=>void):Promise<void> {
     this.release();const ticket=this.generation;
-    this.bytes=bytes;this.name=name;this.page=1;this.zoom.value='1';this.title.textContent=name;
+    const previous=document.activeElement;this.restoreFocus=restoreFocus??(()=>{if(previous instanceof HTMLElement&&previous.isConnected)previous.focus({preventScroll:true});});
+    this.bytes=bytes;this.name=name;this.page=1;this.zoom.value='1';this.title.textContent=name;this.title.title=name;
     this.canvas.hidden=this.content.hidden=true;this.status.textContent='Opening attachment…';this.busy=true;this.controls();
     if(!this.dialog.open)this.dialog.showModal();
     this.done.focus();

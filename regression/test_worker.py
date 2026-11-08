@@ -50,6 +50,25 @@ class WorkerBoundaryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'aggregate scratch/report'):
                 web.bounded_subprocess([sys.executable, '-c', 'from pathlib import Path;import sys;(Path(sys.argv[1])/"file").write_bytes(b"x"*256)', directory], 10, work_roots=(directory,))
 
+    def test_conversion_java_scratch_is_monitored_and_cleaned(self):
+        import shutil
+        import subprocess
+        if not shutil.which('java') or not shutil.which('javac'):
+            self.skipTest('Java toolchain unavailable')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'ScratchProbe.java'
+            source.write_text('public class ScratchProbe { public static void main(String[] args) throws Exception { java.nio.file.Path p = java.nio.file.Path.of(System.getProperty("java.io.tmpdir")); java.nio.file.Files.write(p.resolve("one"), new byte[80]); java.nio.file.Files.write(p.resolve("two"), new byte[80]); } }')
+            subprocess.run(['javac', str(source)], check=True, capture_output=True)
+            outside = root / 'outside'
+            outside.mkdir()
+            logs = root / 'logs'
+            with patch.object(web, 'MAX_JOB_WORK_BYTES', 128):
+                with self.assertRaisesRegex(ValueError, 'aggregate scratch/report'):
+                    web.run_command(['java', '-Djava.io.tmpdir=' + str(outside), '-cp', str(root), 'ScratchProbe', '--out', str(logs), str(root)])
+            self.assertEqual([], list(outside.iterdir()))
+            self.assertEqual([], list(logs.glob('.worker-scratch-*')))
+
 
 class MetadataBoundaryTests(unittest.TestCase):
     def test_dtd_entities_are_rejected_in_utf8_and_utf16(self):

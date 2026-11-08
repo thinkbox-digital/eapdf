@@ -169,38 +169,7 @@ class RemainingPreservationTests {
     Assertions.assertThrows(Common.UserFacingException.class, () -> GmailDownloadToPdf.resolveLabelIds("Projects", Map.of("Label_1", "Projects", "Label_2", "Projects")));
   }
 
-  @Test
-  void premisObjectsAndEventLinksUseDistinctInternalEmailIdentities() throws Exception {
-    EmailRecord first = AttachmentProfilePolicyTests.record("Duplicate");
-    EmailRecord second = AttachmentProfilePolicyTests.record("Duplicate");
-    first.messageId = second.messageId = "<duplicate@example.org>";
-    for (EmailRecord record : List.of(first, second)) {
-      AssociatedFile source = new AssociatedFile();
-      source.filename = "same.eml";
-      source.mime = "message/rfc822";
-      source.afRelationship = "Source";
-      source.bytes = Common.synthesizeEml(record);
-      record.associatedFiles.add(source);
-    }
-    String xml = new String(PremisBuilder.buildAggregate(tempDir.resolve("archive.pdf"), List.of(first, second), "1m"), StandardCharsets.UTF_8);
-    var factory = DocumentBuilderFactory.newInstance();
-    factory.setNamespaceAware(true);
-    var document = factory.newDocumentBuilder().parse(new java.io.ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
-    var identifiers = document.getElementsByTagNameNS("http://www.loc.gov/premis/v3", "objectIdentifierValue");
-    Set<String> unique = new HashSet<>();
-    int originalIds = 0;
-    for (int index = 0; index < identifiers.getLength(); index++) {
-      String value = identifiers.item(index).getTextContent();
-      if (value.equals("<duplicate@example.org>")) originalIds++;
-      else Assertions.assertTrue(unique.add(value));
-    }
-    Assertions.assertEquals(2, originalIds);
-    Assertions.assertTrue(unique.contains("record:" + first.mailGuid));
-    Assertions.assertTrue(unique.contains("record:" + second.mailGuid));
-    Assertions.assertEquals(2, unique.stream().filter(value -> value.startsWith("embedded:")).count());
-    var links = document.getElementsByTagNameNS("http://www.loc.gov/premis/v3", "linkingObjectIdentifierValue");
-    for (int index = 0; index < links.getLength(); index++) Assertions.assertTrue(unique.contains(links.item(index).getTextContent()));
-  }
+
 
   @Test
   void encryptedBodyShowsAnExplicitNoticeAndPreservesOriginalSource() throws Exception {

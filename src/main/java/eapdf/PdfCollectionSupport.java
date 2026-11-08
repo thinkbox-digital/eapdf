@@ -48,55 +48,7 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPa
 final class PdfCollectionSupport {
   private PdfCollectionSupport() {}
 
-  static String buildFolderCollectionRenderHtml(List<PdfMailWriter.CollectionMember> members, String collectionProfile,
-                                                PdfMailWriter.CollectionRunSummary runSummary,
-                                                List<PdfMailWriter.FindingAidRow> findingAidRows) {
-    StringBuilder s = new StringBuilder();
-    s.append("<!DOCTYPE html><html><head><meta charset=\"utf-8\"/>");
-    s.append("<style>");
-    s.append("@page { size: letter; margin: 0.65in; }");
-    s.append("html, body, body * { font-family: ArchiveFont !important; }");
-    s.append("body { font-size: 11pt; color: #222; line-height: 1.35; }");
-    s.append("h1 { font-size: 20pt; margin: 0 0 8px; }");
-    s.append("p { margin: 0 0 10px; }");
-    s.append(".lede { color: #5f5544; margin-bottom: 16px; }");
-    s.append(".member-list { margin-top: 14px; }");
-    s.append(".member { border: 1px solid #d7c7ae; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; background: #fcfaf6; }");
-    s.append(".member-name { font-weight: bold; font-size: 12pt; color: #1f3f5b; }");
-    s.append(".member-meta { color: #675b4f; font-size: 10pt; margin-top: 3px; }");
-    s.append(".member-file { color: #3e4f63; font-family: monospace; font-size: 10pt; margin-top: 4px; }");
-    s.append(".member-count { margin-top: 2px; }");
-    s.append(".message-delimiter { margin-top: 24px; page-break-inside: avoid; width: 100%; }");
-    s.append(".message-delimiter-label { font-size: 8.5pt; color: #7f7462; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }");
-    s.append(".branding-box { border: 1px solid #cdbd9f; overflow: hidden; position: relative; width: 100%; box-sizing: border-box; }");
-    s.append(".branding-image { display: block; width: 100%; height: auto; }");
-    s.append(".branding-overlay { position: absolute; left: 24px; top: 14px; max-width: 72%; }");
-    s.append(".branding-overlay-inner { background: #ffffff; border: 1px solid #cdbd9f; padding: 7px 10px; }");
-    s.append(".branding-title { font-size: 10pt; font-weight: bold; color: #1f3f5b; }");
-    s.append(".branding-subtitle { font-size: 8.5pt; color: #5f5544; margin-top: 2px; }");
-    s.append("</style></head><body>");
-    s.append("<h1>Email Archive</h1>");
-    s.append("<p class=\"lede\">EA-PDF 1").append(Common.escapeHtml(collectionProfile)).append(" container. Embedded child EA-PDF files are grouped by top-level folder.</p>");
-    if (runSummary != null) {
-      s.append("<p><strong>Harvested email(s):</strong> ").append(Common.escapeHtml(runSummary.harvestedEmails)).append("</p>");
-      s.append("<p><strong>Run stats:</strong> ").append(runSummary.countsText()).append("</p>");
-      s.append("<p><strong>Generated:</strong> ").append(Common.escapeHtml(runSummary.generatedAt)).append("</p>");
-    }
-    s.append("<div class=\"member-list\">");
-    for (PdfMailWriter.CollectionMember member : members) {
-      s.append("<div class=\"member\">");
-      s.append("<div class=\"member-name\">").append(Common.escapeHtml(member.groupName)).append("</div>");
-      s.append("<div class=\"member-meta\">Child profile: EA-PDF 1").append(Common.escapeHtml(member.childProfile))
-          .append(" &bull; Messages: ").append(member.records.size()).append("</div>");
-      s.append("<div class=\"member-file\">Embedded file: ").append(Common.escapeHtml(member.filename)).append("</div>");
-      s.append("</div>");
-    }
-    s.append("</div>");
-    s.append("<p>Folders are sorted alphabetically. Each collection folder contains embedded child EA-PDF message files in chronological order.</p>");
-    PdfFindingAidSupport.appendFindingAidTable(s, findingAidRows, true);
-    s.append("</body></html>");
-    return Common.stripInvalidXml(s.toString());
-  }
+
 
   static String buildMessageCollectionRenderHtml(List<PdfMailWriter.CollectionMember> members, String collectionProfile, String folderName) {
     StringBuilder s = new StringBuilder();
@@ -113,12 +65,6 @@ final class PdfCollectionSupport {
     s.append(".member-name { font-weight: bold; font-size: 12pt; color: #1f3f5b; }");
     s.append(".member-meta { color: #675b4f; font-size: 10pt; margin-top: 3px; }");
     s.append(".member-file { color: #3e4f63; font-family: monospace; font-size: 10pt; margin-top: 4px; }");
-    s.append(".branding-box { border: 1px solid #cdbd9f; overflow: hidden; position: relative; width: 100%; box-sizing: border-box; }");
-    s.append(".branding-image { display: block; width: 100%; height: auto; }");
-    s.append(".branding-overlay { position: absolute; left: 24px; top: 14px; max-width: 72%; }");
-    s.append(".branding-overlay-inner { background: #ffffff; border: 1px solid #cdbd9f; padding: 7px 10px; }");
-    s.append(".branding-title { font-size: 10pt; font-weight: bold; color: #1f3f5b; }");
-    s.append(".branding-subtitle { font-size: 8.5pt; color: #5f5544; margin-top: 2px; }");
     s.append("</style></head><body>");
     s.append("<h1>").append(Common.escapeHtml(folderName)).append("</h1>");
     s.append("<p class=\"lede\">EA-PDF 1").append(Common.escapeHtml(collectionProfile)).append(" folder collection. Embedded child EA-PDF files are listed in chronological order.</p>");
@@ -271,7 +217,6 @@ final class PdfCollectionSupport {
         debug, debugDir.resolve("collection_child_" + index), 1, childProfile, childPath);
     var member = new PdfMailWriter.CollectionMember(folder.name, subject, childProfile, List.of(record),
         folder.id, order, filename, built.pdfBytes, Math.max(record.attachmentCount, 0), Common.nz(record.date));
-    member.premisBytes = built.premisBytes;
     member.pdfPath = childPath;
     member.storedPdfSize = childPath == null ? built.pdfBytes.length : Math.toIntExact(Files.size(childPath));
     member.stage(memberStore);
@@ -287,7 +232,6 @@ final class PdfCollectionSupport {
           member.pdfBytes, member.attachmentCount, member.sentDisplay);
       alias.pdfPath = member.pdfPath;
       alias.storedPdfSize = member.storedPdfSize;
-      alias.premisBytes = member.premisBytes;
       member = alias;
     }
     pending.folder().totalSizeBytes += member.pdfSize();
@@ -471,7 +415,6 @@ final class PdfCollectionSupport {
     try (PDDocument doc = Loader.loadPDF(rendered)) {
       doc.setVersion(2.0f);
       doc.getDocument().setVersion(2.0f);
-      if (PdfMailWriter.CONFIG.branding.enabled) PdfMailWriter.drawBrandingBanner(doc, fontPath, "1" + collectionProfile);
       PdfMailWriter.clearImageInterpolation(doc);
       PdfMailWriter.setDocumentInfo(doc, records.get(0));
       PdfMailWriter.configureArchiveCatalog(doc, collectionProfile);
@@ -507,7 +450,6 @@ final class PdfCollectionSupport {
         int attachmentCount = Math.max(record.attachmentCount, 0);
         String latestSent = Common.nz(record.date);
         members.add(new PdfMailWriter.CollectionMember(folderName, subject, childProfile, List.of(record), 0, index, filename, pdfBytes, attachmentCount, latestSent));
-        members.get(members.size() - 1).premisBytes = built.premisBytes;
       }
     } else {
       ExecutorService pool = Common.newWorkers(parallelism);
@@ -527,7 +469,6 @@ final class PdfCollectionSupport {
             int attachmentCount = Math.max(record.attachmentCount, 0);
             String latestSent = Common.nz(record.date);
             PdfMailWriter.CollectionMember member = new PdfMailWriter.CollectionMember(folderName, subject, childProfile, List.of(record), 0, index, filename, pdfBytes, attachmentCount, latestSent);
-            member.premisBytes = built.premisBytes;
             return member;
           }));
         }

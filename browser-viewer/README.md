@@ -1,18 +1,21 @@
-# EA-PDF browser viewer — beta 0.5.0-beta.18
+# EA-PDF browser viewer — beta 0.5.0-beta.20
 
-Current release: `0.5.0-beta.18` (EA-PDF `1.6.0-beta.19`).
-The local presentation redesign retains that version for review and is not published.
+Current beta: `0.5.0-beta.20`, with creator/validator `1.6.0-beta.20`.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
 6.5.438 and retains the existing Chromium/Firefox architecture.
 
 Read emails, browse collection folders, search text, zoom or fit pages, and
-view/download embedded files. The file panel identifies the containing PDF and
+view/download embedded files. Image and text previews have a fixed title bar with
+a labeled **× Close** button at the top right; Escape also closes the preview
+and returns focus to its View control. The file panel identifies the containing PDF and
 links owning emails automatically. New creator output records explicit file
 ownership; older files can use bounded header matching. Insufficient evidence
 is a document error, not a guessed association.
 
-**Export finding aid (CSV)** includes PDF paths, collection folder paths, sender,
+CSV export reads email metadata directly and does not require an embedded finding aid.
+
+**Export CSV** includes PDF paths, collection folder paths, sender,
 recipients, subject, date, Message-ID, attachment counts and attachment names.
 Multiple folder memberships and nested collections are preserved. Mail GUID is
 not exported. Missing counts are blank; recorded zero counts remain zero. Names

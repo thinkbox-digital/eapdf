@@ -18,6 +18,7 @@ export function loadPdf(data: Uint8Array) {
     iccUrl: asset("iccs"),
     useSystemFonts: false,
     enableXfa: false,
+    // PDF.js 6 guard: reassess before 7 (upstream PR 22471); canvas area is not a decode-memory cap.
     maxImageSize: 16_000_000,
     canvasMaxAreaInBytes: 64 * 1024 * 1024,
   });

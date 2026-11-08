@@ -26,11 +26,12 @@ try{
           // archive after all 1,433 reads is the regression under investigation.
           doc.inspection={...doc.inspection,files:doc.inspection.files.filter(f=>['Source','Supplement'].includes(f.afRelationship.value??'')).slice(0,4).map(f=>({...f,owners:{...f.owners,value:null,state:'unavailable'}}))};
           let reads=0,parses=0;
-          const parse=DOMParser.prototype.parseFromString;
-          DOMParser.prototype.parseFromString=function(...args){parses++;return parse.apply(this,args);};
+          // Count full interpretations whether parsing occurs on the UI thread or in a worker.
+          const interpret=session.interpretAsync.bind(session);
+          session.interpretAsync=async(...args)=>{parses++;return interpret(...args);};
           const read=session.readBytes.bind(session);
           session.readBytes=async(...args)=>{reads++;if(fail&&reads===1)throw new Error('Injected extraction failure');if(eager)args[3]=true;return read(...args);};
-          try{await session.associateFiles(doc);}finally{DOMParser.prototype.parseFromString=parse;}
+          await session.associateFiles(doc);
           variants.push({reads,parses,inspection:doc.inspection,details:[...doc.details]});
         }finally{session.close();}
       }
@@ -44,6 +45,6 @@ try{
     assert.deepEqual(batched.details,eager.details,'identical metadata details');
     assert.ok(batched.parses<eager.parses,'batch avoids repeated XML parsing');
     if(fail)assert.ok(batched.inspection.files.some(f=>f.streams.some(s=>s.sha256.state==='unavailable')),'failed extraction remains unavailable');
-    console.log(`PASS: ${fail?'failed extraction':'successful extraction'}; ${batched.reads} reads, XML parses ${eager.parses} -> ${batched.parses}; identical inspection and details.`);
+    console.log(`PASS: ${fail?'failed extraction':'successful extraction'}; ${batched.reads} reads, XML interpretations ${eager.parses} -> ${batched.parses}; identical inspection and details.`);
   }
 }finally{await context.close();}

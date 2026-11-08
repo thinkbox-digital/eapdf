@@ -13,14 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class CollectionPortfolioTests {
-  private boolean previousFindingAid;
-  @org.junit.jupiter.api.BeforeEach void enableFindingAidFixture() {
-    previousFindingAid = PdfMailWriter.CONFIG.findingAid.pdfEnabled;
-    PdfMailWriter.CONFIG.findingAid.pdfEnabled = true;
-  }
-  @org.junit.jupiter.api.AfterEach void restoreFindingAidDefault() {
-    PdfMailWriter.CONFIG.findingAid.pdfEnabled = previousFindingAid;
-  }
+
+
+
 
 
   @TempDir
@@ -79,8 +74,8 @@ class CollectionPortfolioTests {
       Assertions.assertFalse(embeddedNames.contains("Finding_Aid.pdf"));
       Assertions.assertFalse(embeddedNames.stream().anyMatch(name -> name.endsWith("_index.xlsx")));
       Assertions.assertFalse(embeddedNames.contains("test_1c_finding_aid.pdf"));
-      Assertions.assertTrue(Files.exists(tempDir.resolve("test_1c_finding_aid.pdf")));
-      Assertions.assertTrue(Files.exists(tempDir.resolve("test_1c_index.xlsx")));
+      Assertions.assertFalse(Files.exists(tempDir.resolve("test_1c_finding_aid.pdf")));
+      Assertions.assertFalse(Files.exists(tempDir.resolve("test_1c_index.xlsx")));
       Assertions.assertEquals(3, embeddedNames.stream().filter(name -> name.startsWith("<")).count());
       Assertions.assertEquals(3, AttachmentProfilePolicyTests.files(doc).values().stream()
           .filter(file -> "Source".equals(file.getCOSObject().getNameAsString(COSName.getPDFName("AFRelationship")))).count());

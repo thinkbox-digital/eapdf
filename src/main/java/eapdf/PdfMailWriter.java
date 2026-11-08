@@ -237,11 +237,9 @@ static class RenderedMessagePart {
 
 static class SingleMessageBuildResult {
   final byte[] pdfBytes;
-  final byte[] premisBytes;
 
-  SingleMessageBuildResult(byte[] pdfBytes, byte[] premisBytes) {
+  SingleMessageBuildResult(byte[] pdfBytes) {
     this.pdfBytes = pdfBytes;
-    this.premisBytes = premisBytes;
   }
 }
 
@@ -296,7 +294,6 @@ static class CollectionMember {
   Path pdfPath;
   int storedPdfSize;
   final int attachmentCount;
-  byte[] premisBytes;
   final String sentDisplay;
 
   CollectionMember(String groupName, String subject, String childProfile, List<EmailRecord> records, int folderId, int orderIndex, String filename, byte[] pdfBytes,
@@ -385,53 +382,11 @@ static class CollectionRunSummary {
   }
 }
 
-static class FindingAidRow {
-  final int ordinal;
-  final String folder;
-  final String sent;
-  final String from;
-  final String to;
-  final String subject;
-  final String messageId;
-  final int attachmentCount;
 
-  FindingAidRow(int ordinal, String folder, String sent, String from, String to, String subject, String messageId, int attachmentCount) {
-    this.ordinal = ordinal;
-    this.folder = folder;
-    this.sent = sent;
-    this.from = from;
-    this.to = to;
-    this.subject = subject;
-    this.messageId = messageId;
-    this.attachmentCount = attachmentCount;
-  }
-}
 
-static class FindingAidPlacement {
-  final int rowOrdinal;
-  final int pageNumber;
-  final PDRectangle numberRect;
-  final PDRectangle subjectRect;
 
-  FindingAidPlacement(int rowOrdinal, int pageNumber, PDRectangle numberRect, PDRectangle subjectRect) {
-    this.rowOrdinal = rowOrdinal;
-    this.pageNumber = pageNumber;
-    this.numberRect = numberRect;
-    this.subjectRect = subjectRect;
-  }
-}
 
-static class FindingAidDocument {
-  final PDDocument document;
-  final List<FindingAidPlacement> placements;
-  final PDRectangle excelLinkRect;
 
-  FindingAidDocument(PDDocument document, List<FindingAidPlacement> placements, PDRectangle excelLinkRect) {
-    this.document = document;
-    this.placements = placements;
-    this.excelLinkRect = excelLinkRect;
-  }
-}
 
 static boolean includeAssociatedFile(EmailRecord record, AssociatedFile file) {
   return file.embedInPdf && record.embedSourceMessage && ("Source".equals(Common.nz(file.afRelationship))
@@ -1380,7 +1335,6 @@ static void writeEaPdfA3(Path out, EmailRecord r, String fontPath, String iccPat
   ConversionProgress.stage("rendering");
   SingleMessageBuildResult built = buildSingleMessagePdf(out, r, fontPath, iccPath, debug, debugDir, idx, null, out, true);
   ConversionProgress.completed();
-  if (built.premisBytes != null) PdfFindingAidSupport.writePremisSidecar(out, built.premisBytes);
   Common.recordWarnings(r);
 
   if (debug) Common.dbg(r, "wrote pdf=" + out);
@@ -1426,9 +1380,6 @@ private static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, E
 
     byte[] rendered = renderHtmlPdf(html, assetDir.toUri().toString(), fontPath, r, debug);
     if (debug) Common.dbg(r, "rendered pdf bytes=" + rendered.length);
-    byte[] premisBytes = CONFIG.premis.enabled
-        ? PremisBuilder.buildSingle(logicalOut, r, "1" + chooseEaPdfConformance(r, profileOverride))
-        : null;
 
     PDDocument doc = Loader.loadPDF(new org.apache.pdfbox.io.RandomAccessReadBuffer(rendered), org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache());
     try {
@@ -1436,7 +1387,6 @@ private static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, E
       doc.getDocument().setVersion(2.0f);
       drawInlineImageFallback(doc, r, debug);
       addOmittedAttachmentAnnotations(doc, r, fontPath);
-      if (CONFIG.branding.enabled) drawBrandingBanner(doc, fontPath, "1" + chooseEaPdfConformance(r, profileOverride));
       clearImageInterpolation(doc);
       drawPageContext(doc, fontPath);
       setDocumentInfo(doc, r);
@@ -1444,12 +1394,9 @@ private static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, E
       applyPageLabels(doc, 0, true);
       addOutlines(doc, r);
       addDPartStructure(doc, r);
-      if (premisBytes != null && r.embedSourceMessage) {
-        PdfFindingAidSupport.embedStandaloneCatalogBytes(doc, PdfFindingAidSupport.premisFilename(logicalOut), premisBytes,
-            "PREMIS preservation metadata", "application/xml", "Data", false);
-      }
+
       Map<String, PDComplexFileSpecification> embeddedFiles = embedAssociatedFiles(doc, r, debug);
-      PdfFindingAidSupport.rewriteAttachmentLaunchLinks(doc, embeddedFiles);
+      PdfAttachmentSupport.rewriteAttachmentLaunchLinks(doc, embeddedFiles);
       addLogicalStructure(doc, r);
       setPdfA3Metadata(doc, iccPath, r, profileOverride);
       normalizePageContentStreams(doc);
@@ -1457,7 +1404,7 @@ private static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, E
       if (destination != null) {
         if (outermost) Common.writeOuterPdfAtomically(destination, temporary -> PdfFontMetadata.save(doc, temporary.toFile()), expected);
         else Common.writePdfAtomically(destination, temporary -> PdfFontMetadata.save(doc, temporary.toFile()), expected);
-        return new SingleMessageBuildResult(null, premisBytes);
+        return new SingleMessageBuildResult(null);
       }
       ByteArrayOutputStream finalized = new ByteArrayOutputStream();
       PdfFontMetadata.save(doc, finalized);
@@ -1468,7 +1415,7 @@ private static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, E
           PdfCreationValidator.validate(serialized, expected);
         }
       }
-      return new SingleMessageBuildResult(bytes, premisBytes);
+      return new SingleMessageBuildResult(bytes);
     } finally {
       try { doc.close(); } catch (Exception ignored) {}
     }
@@ -1598,52 +1545,20 @@ static void writeEaPdfArchive(Path out, List<EmailRecord> records, String fontPa
   // Return from the writer with all PDF graphs out of scope before the saved
   // archive is reopened for the unchanged creation/preservation checks.
   ConversionProgress.stage("preparing_archive");
-  ArchiveBuildResult[] result = new ArchiveBuildResult[1];
-  Common.writeOuterPdfAtomically(out, temporary -> result[0] = saveArchiveDocument(
+  Common.writeOuterPdfAtomically(out, temporary -> saveArchiveDocument(
       temporary, out, records, fontPath, iccPath, debug, debugDir, archiveProfile), expected);
-  ArchiveBuildResult sidecars = result[0];
-  if (sidecars.premisBytes() != null) PdfFindingAidSupport.writePremisSidecar(out, sidecars.premisBytes());
-  if (sidecars.findingAidEnabled() && CONFIG.findingAid.excelEnabled)
-    PdfFindingAidSupport.writeFindingAidSpreadsheet(out, sidecars.findingAidRows(), archiveProfile);
   for (EmailRecord record : records) Common.recordWarnings(record);
   }
 }
 
-private record ArchiveBuildResult(byte[] premisBytes, List<FindingAidRow> findingAidRows, boolean findingAidEnabled) {}
 
-private static ArchiveBuildResult saveArchiveDocument(Path temporary, Path out, List<EmailRecord> records,
+private static void saveArchiveDocument(Path temporary, Path out, List<EmailRecord> records,
     String fontPath, String iccPath, boolean debug, Path debugDir, String archiveProfile) throws Exception {
   List<MessageSegment> segments = new ArrayList<>();
-  PDDocument findingAidDoc = null;
-  FindingAidDocument findingAid = null;
-  List<FolderSection> sections = PdfCollectionSupport.buildFolderSections(records);
-  CollectionRunSummary runSummary = buildCollectionRunSummary(records, sections);
-  boolean findingAidEnabled = CONFIG.findingAid != null && CONFIG.findingAid.pdfEnabled;
-  List<FindingAidRow> findingAidRows = findingAidEnabled ? PdfFindingAidSupport.buildFindingAidRows(records) : Collections.emptyList();
-  String excelFilename = out.getFileName().toString().replaceFirst("(?i)\\.pdf$", "") + "_index.xlsx";
-  byte[] premisBytes = CONFIG.premis.enabled
-      ? PremisBuilder.buildAggregate(out, records, "1" + archiveProfile)
-      : null;
-  ByteArrayOutputStream findingAidBytes = null;
-  if (findingAidEnabled) {
-    findingAid = PdfFindingAidSupport.buildFindingAidPdf(findingAidRows, archiveProfile, runSummary, fontPath, false, excelFilename);
-    findingAidBytes = new ByteArrayOutputStream();
-    PdfFontMetadata.save(findingAid.document, findingAidBytes);
-  }
   try (PDDocument archive = new PDDocument(CompactStreamCache::new)) {
     try {
       archive.setVersion(2.0f);
       archive.getDocument().setVersion(2.0f);
-      int pageCursor = 1;
-      int findingAidPages = 0;
-      if (findingAidEnabled && findingAidBytes != null) {
-        findingAidDoc = Loader.loadPDF(findingAidBytes.toByteArray());
-        for (PDPage page : findingAidDoc.getPages()) {
-          archive.importPage(page);
-          pageCursor++;
-        }
-        findingAidPages = pageCursor - 1;
-      }
       ArchiveResourcePool resources = new ArchiveResourcePool();
       forEachArchiveMessagePart(records, fontPath, debug, debugDir, archiveProfile, rendered -> {
         try (PDDocument part = Loader.loadPDF(rendered.pdfBytes)) {
@@ -1654,30 +1569,23 @@ private static ArchiveBuildResult saveArchiveDocument(Path temporary, Path out, 
         }
       });
       ConversionProgress.stage("assembling");
-      if (CONFIG.branding.enabled) drawBrandingBanner(archive, fontPath, "1" + archiveProfile);
       setDocumentInfo(archive, records.get(0));
       configureArchiveCatalog(archive, archiveProfile);
-      applyPageLabels(archive, findingAidPages, false);
+      applyPageLabels(archive, 0, false);
       ConversionProgress.begin("bookmarks", segments.size(), "emails");
-      addArchiveOutlines(archive, segments, findingAidPages);
+      addArchiveOutlines(archive, segments, 0);
       ConversionProgress.begin("document_parts", segments.size(), "emails");
-      addArchiveDPartStructure(archive, segments, findingAidPages);
-      if (premisBytes != null && !archiveProfile.endsWith("i")) {
-        PdfFindingAidSupport.embedStandaloneCatalogBytes(archive, PdfFindingAidSupport.premisFilename(out), premisBytes,
-            "PREMIS preservation metadata", "application/xml", "Data", false);
-      }
+      addArchiveDPartStructure(archive, segments, 0);
+
       ConversionProgress.stage("embedding");
       EmbeddedFileBindings embeddedFiles = embedAssociatedFiles(archive, records, debug);
-      PdfFindingAidSupport.rewriteAttachmentLaunchLinks(archive, embeddedFiles.filesByToken);
-      PDComplexFileSpecification excelFile = findingAidEnabled && CONFIG.findingAid.embedExcel
-          ? PdfFindingAidSupport.embedSpreadsheetFile(archive, out, findingAidRows, archiveProfile, true)
-          : null;
+      PdfAttachmentSupport.rewriteAttachmentLaunchLinks(archive, embeddedFiles.filesByToken);
       ConversionProgress.begin("page_information", archive.getNumberOfPages() < 2 || !CONFIG.accessibility.pageLabels.enabled ? 0 : archive.getNumberOfPages(), "pages");
       drawPageContext(archive, fontPath);
       ConversionProgress.begin("tagging", segments.size(), "emails");
-      addArchiveLogicalStructure(archive, segments, findingAidPages);
+      addArchiveLogicalStructure(archive, segments, 0);
       ConversionProgress.stage("metadata");
-      setPdfA3Metadata(archive, iccPath, records, archiveProfile, findingAidPages > 0);
+      setPdfA3Metadata(archive, iccPath, records, archiveProfile);
       ConversionProgress.begin("page_streams", archive.getNumberOfPages(), "pages");
       normalizePageContentStreams(archive);
       Files.createDirectories(out.getParent() == null ? Paths.get(".") : out.getParent());
@@ -1689,17 +1597,7 @@ private static ArchiveBuildResult saveArchiveDocument(Path temporary, Path out, 
     } finally {
       PdfDocumentParts.releaseAllocator(archive);
     }
-  } finally {
-    if (findingAidDoc != null) {
-      PdfDocumentParts.releaseAllocator(findingAidDoc);
-      try { findingAidDoc.close(); } catch (Exception closeErr) {}
-    }
-    if (findingAid != null) {
-      PdfDocumentParts.releaseAllocator(findingAid.document);
-      try { findingAid.document.close(); } catch (Exception closeErr) {}
-    }
   }
-  return new ArchiveBuildResult(premisBytes, findingAidRows, findingAidEnabled);
 }
 
 static int appendClonedPages(PDDocument target, PDDocument source) throws Exception {
@@ -1746,20 +1644,10 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
   List<CollectionMember> members = PdfCollectionSupport.buildFolderCollectionMembers(sections, folders, fontPath, iccPath, debug, debugDir, collectionProfile, memberStore);
   ConversionProgress.stage("assembling");
   if (members.isEmpty()) throw new IllegalArgumentException("collection requires at least one embedded EA-PDF member");
-  List<FindingAidRow> findingAidRows = PdfFindingAidSupport.buildFindingAidRowsFromMembers(members);
-  byte[] premisBytes = CONFIG.premis.enabled
-      ? PremisBuilder.buildCollection(out, records, "1" + collectionProfile, members)
-      : null;
-
-  String excelFilename = out.getFileName().toString().replaceFirst("(?i)\\.pdf$", "") + "_index.xlsx";
-  boolean findingAidEnabled = CONFIG.findingAid.pdfEnabled;
-  FindingAidDocument findingAid = findingAidEnabled
-      ? PdfFindingAidSupport.buildFindingAidPdf(findingAidRows, collectionProfile, runSummary, fontPath, true, excelFilename, true)
-      : PdfFindingAidSupport.buildCollectionFrontMatter(collectionProfile, runSummary, fontPath, records.stream().anyMatch(record -> !record.sourceProblems.isEmpty()));
-  try (PDDocument archive = findingAid.document) {
+  try (PDDocument archive = PdfAttachmentSupport.buildCollectionFrontMatter(collectionProfile, runSummary,
+      fontPath, records.stream().anyMatch(record -> !record.sourceProblems.isEmpty()))) {
     archive.setVersion(2.0f);
     archive.getDocument().setVersion(2.0f);
-    if (CONFIG.branding.enabled) drawBrandingBanner(archive, fontPath, "1" + collectionProfile);
     clearImageInterpolation(archive);
     setDocumentInfo(archive, records.get(0));
     configureArchiveCatalog(archive, collectionProfile);
@@ -1785,18 +1673,6 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
       PdfCollectionSupport.repairSavedTopLevelCollection(temporary, folders, members, debug, expected);
     }, expected);
   }
-  if (findingAidEnabled) {
-    if (CONFIG.findingAid.embedPdfInCollections) {
-      byte[] findingAidBytes = PdfFindingAidSupport.buildFindingAidSidecar(out, findingAidRows, collectionProfile, runSummary, fontPath, iccPath);
-      OutputTransaction.write(out.resolveSibling(PdfFindingAidSupport.findingAidPdfFilename(out)),
-          temporary -> Files.write(temporary, findingAidBytes));
-    }
-    PdfFindingAidSupport.writeFindingAidSpreadsheet(out, findingAidRows, collectionProfile);
-  }
-  if (premisBytes != null) PdfFindingAidSupport.writePremisSidecar(out, premisBytes);
-  if (premisBytes != null) {
-    Common.warn(records.get(0), "Collection PREMIS and requested finding-aid PDF/XLSX files are published as sidecars (section 7.6).");
-  }
   for (EmailRecord record : records) Common.recordWarnings(record);
   }
 }
@@ -1806,7 +1682,7 @@ static String ROOT_URI() {
 }
 
 static void configureLinkAnnotation(PDAnnotationLink annotation, PDRectangle rect) {
-  PdfFindingAidSupport.configureLinkAnnotation(annotation, rect);
+  PdfAttachmentSupport.configureLinkAnnotation(annotation, rect);
 }
 
 static PDType0Font loadUiFont(PDDocument doc, String fontPath) throws Exception {
@@ -1889,30 +1765,7 @@ static void endArtifact(PDPageContentStream cs) throws IOException {
   cs.endMarkedContent();
 }
 
-// Draw once after document assembly, inside the existing first-page top margin.
-// Text and vector artwork keep branding compact without embedding a raster image.
-static void drawBrandingBanner(PDDocument doc, String fontPath, String eaPdfProfile) throws Exception {
-  if (doc == null || doc.getNumberOfPages() == 0) return;
-  PDPage page = doc.getPage(0);
-  PDRectangle box = page.getCropBox();
-  PDType0Font font = loadUiFont(doc, fontPath);
-  float margin = 46.8f;
-  float x = box.getLowerLeftX() + margin;
-  float y = box.getUpperRightY() - 32f;
-  float width = box.getWidth() - 2f * margin;
-  String label = "Email converted by ThinkBox | " + Common.productLabel()
-      + "; EA-PDF 1.0 " + eaPdfProfile;
-  float size = Math.min(8f, 8f * (width - 16f) / Math.max(1f, textWidth(font, 8f, label)));
-  try (PDPageContentStream cs = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
-    beginArtifact(cs);
-    cs.setNonStrokingColor(new java.awt.Color(239, 243, 247));
-    cs.addRect(x, y, width, 18f);
-    cs.fill();
-    cs.setNonStrokingColor(new java.awt.Color(31, 63, 91));
-    FontSupport.draw(cs, font, size, x + (width - textWidth(font, size, label)) / 2f, y + 5f, label);
-    endArtifact(cs);
-  }
-}
+
 
 static boolean documentHasImageXObjects(PDDocument doc) {
   for (PDPage page : doc.getPages()) {
@@ -1921,9 +1774,7 @@ static boolean documentHasImageXObjects(PDDocument doc) {
   return false;
 }
 
-static String buildFolderCollectionRenderHtml(List<CollectionMember> members, String collectionProfile, CollectionRunSummary runSummary, List<FindingAidRow> findingAidRows) {
-  return PdfCollectionSupport.buildFolderCollectionRenderHtml(members, collectionProfile, runSummary, findingAidRows);
-}
+
 
 static String buildMessageCollectionRenderHtml(List<CollectionMember> members, String collectionProfile, String folderName) {
   return PdfCollectionSupport.buildMessageCollectionRenderHtml(members, collectionProfile, folderName);
@@ -2193,13 +2044,11 @@ static void setPdfA3Metadata(PDDocument doc, String iccPath, EmailRecord r, Stri
   }
 }
 
-static void setPdfA3Metadata(PDDocument doc, String iccPath, List<EmailRecord> records, String archiveProfile) throws Exception {
-  setPdfA3Metadata(doc, iccPath, records, archiveProfile, false);
-}
 
-static void setPdfA3Metadata(PDDocument doc, String iccPath, List<EmailRecord> records, String archiveProfile, boolean includeFindingAidIdentity) throws Exception {
+
+static void setPdfA3Metadata(PDDocument doc, String iccPath, List<EmailRecord> records, String archiveProfile) throws Exception {
   PDDocumentCatalog cat = doc.getDocumentCatalog();
-  String xmp = buildXmpMetadata(records, archiveProfile, includeFindingAidIdentity);
+  String xmp = buildXmpMetadata(records, archiveProfile);
   setCompressedMetadata(doc, xmp);
 
   try (InputStream icc = Files.newInputStream(Paths.get(iccPath))) {
@@ -2330,11 +2179,9 @@ static String buildXmpMetadata(EmailRecord r, String profileOverride) throws Exc
   return x.toString();
 }
 
-static String buildXmpMetadata(List<EmailRecord> records, String archiveProfile) throws Exception {
-  return buildXmpMetadata(records, archiveProfile, false);
-}
 
-static String buildXmpMetadata(List<EmailRecord> records, String archiveProfile, boolean includeFindingAidIdentity) throws Exception {
+
+static String buildXmpMetadata(List<EmailRecord> records, String archiveProfile) throws Exception {
   for (EmailRecord r : records) {
     Common.finalizeRecordMetadata(r);
     Common.requireCreationDate(r);
@@ -2606,18 +2453,18 @@ private static void addMessageSectionOutlines(java.util.function.IntFunction<PDP
   message.openNode();
 }
 
-static void addArchiveOutlines(PDDocument doc, List<MessageSegment> segments, int findingAidPages) {
+static void addArchiveOutlines(PDDocument doc, List<MessageSegment> segments, int frontMatterPages) {
   if (doc.getNumberOfPages() == 0 || segments.isEmpty()) return;
   List<PDPage> pages = new ArrayList<>(doc.getNumberOfPages());
   for (PDPage page : doc.getPages()) pages.add(page);
   PDDocumentCatalog cat = doc.getDocumentCatalog();
   PDDocumentOutline outline = new PDDocumentOutline();
   cat.setDocumentOutline(outline);
-  if (findingAidPages > 0) {
-    PDOutlineItem findingAid = new PDOutlineItem();
-    findingAid.setTitle("Finding Aid");
-    setOutlineDestination(findingAid, pages.get(0));
-    outline.addLast(findingAid);
+  if (frontMatterPages > 0) {
+    PDOutlineItem frontMatter = new PDOutlineItem();
+    frontMatter.setTitle("Archive front matter");
+    setOutlineDestination(frontMatter, pages.get(0));
+    outline.addLast(frontMatter);
   }
   for (MessageSegment segment : segments) {
     PDOutlineItem item = new PDOutlineItem();
@@ -2675,10 +2522,10 @@ static void addDPartStructure(PDDocument doc, EmailRecord r) throws Exception {
   new PdfDocumentParts(doc).addMessage(r, 0, doc.getNumberOfPages() - 1);
 }
 
-static void addArchiveDPartStructure(PDDocument doc, List<MessageSegment> segments, int findingAidPages) throws Exception {
+static void addArchiveDPartStructure(PDDocument doc, List<MessageSegment> segments, int frontMatterPages) throws Exception {
   if (doc.getNumberOfPages() == 0 || segments.isEmpty()) return;
   PdfDocumentParts parts = new PdfDocumentParts(doc);
-  if (findingAidPages > 0) parts.addFrontMatter(0, findingAidPages - 1, "Archive finding aid");
+  if (frontMatterPages > 0) parts.addFrontMatter(0, frontMatterPages - 1, "Archive front matter");
   for (MessageSegment segment : segments) {
     parts.addMessage(segment.record, segment.startPage - 1, segment.endPage - 1);
     ConversionProgress.advance("document_parts");
@@ -2982,7 +2829,7 @@ static void addLogicalStructure(PDDocument doc, EmailRecord r) throws IOExceptio
   cat.getCOSObject().setItem(COSName.STRUCT_TREE_ROOT, PdfDocumentParts.indirect(doc, tree));
 }
 
-static void addArchiveLogicalStructure(PDDocument doc, List<MessageSegment> segments, int findingAidPages) throws IOException {
+static void addArchiveLogicalStructure(PDDocument doc, List<MessageSegment> segments, int frontMatterPages) throws IOException {
   if (doc.getNumberOfPages() == 0 || segments.isEmpty()) return;
   // Page order is final here. Share one index across every message and content
   // set, instead of rescanning the page tree for each structure association.
@@ -2998,10 +2845,10 @@ static void addArchiveLogicalStructure(PDDocument doc, List<MessageSegment> segm
   tree.setItem(COSName.ROLE_MAP, roles);
   COSDictionary root = structElem("Document", tree, pageAt.apply(0));
   COSArray children = new COSArray();
-  if (findingAidPages > 0) {
+  if (frontMatterPages > 0) {
     COSDictionary front = structElem("Mail_ContentSet", root, pageAt.apply(0));
     addStringUserProperty(front, "Mail_ContentSetType", "FrontMatter");
-    SemanticStructure.attach(doc, tree, front, null, 0, findingAidPages - 1, pageAt);
+    SemanticStructure.attach(doc, tree, front, null, 0, frontMatterPages - 1, pageAt);
     children.add(PdfDocumentParts.indirect(doc, front));
   }
   for (MessageSegment segment : segments) {
@@ -3581,7 +3428,7 @@ static Map<String, PageLinkTarget> addFolderIndexPages(PDDocument doc, PDType0Fo
       float pageWidth = page.getMediaBox().getWidth();
       float pageHeight = page.getMediaBox().getHeight();
       float margin = 46f;
-      float top = pageHeight - margin - (CONFIG.branding.enabled && doc.getNumberOfPages() == 1 ? 14f : 0f);
+      float top = pageHeight - margin;
       float rowHeight = 18f;
       float y = top;
 
@@ -3640,7 +3487,7 @@ static Map<EmailRecord, PageLinkTarget> addFolderSummaryPages(PDDocument doc, PD
       float pageWidth = page.getMediaBox().getWidth();
       float pageHeight = page.getMediaBox().getHeight();
       float margin = 36f;
-      float top = pageHeight - margin - (CONFIG.branding.enabled && doc.getNumberOfPages() == 1 ? 14f : 0f);
+      float top = pageHeight - margin;
       float rowHeight = 24f;
       float y = top;
 

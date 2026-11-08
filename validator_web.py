@@ -1198,6 +1198,7 @@ def run_command(cmd, cwd=None):
         if logs is not None and Path(cmd[0]).name.lower() in ("java", "java.exe"):
             logs.mkdir(parents=True, exist_ok=True)
             scratch = Path(tempfile.mkdtemp(prefix=".worker-scratch-", dir=logs.resolve()))
+            executed = [arg for arg in executed if not arg.startswith("-Djava.io.tmpdir=")]
             executed.insert(1, "-Djava.io.tmpdir=" + str(scratch))
         code, stdout, stderr = bounded_subprocess(
             [sys.executable, "-c", worker, str(memory + 4096), *executed], timeout, cwd, env=environment, logs=logs)
@@ -1393,7 +1394,7 @@ def handle_local_generation():
             with target.open("xb") as destination:
                 upload.save(destination)
 
-        cmd = ["java", "-XX:ActiveProcessorCount=4", "-Djava.io.tmpdir=" + str(stage_dir),
+        cmd = ["java", "-XX:ActiveProcessorCount=4",
                "-jar", str(JAR_PATH), "--jobs", "4", "--out", str(output_dir)]
         archive_output_path = str((output_dir / archive_output_name).resolve()) if archive_output_name else None
         if archive_output_path and not Path(archive_output_path).is_relative_to(output_root):

@@ -46,12 +46,12 @@ Set `EAPDF_GMAIL_RESUME_DIR` to a private directory before running the same Gmai
 
 ```bash
 export EAPDF_GMAIL_RESUME_DIR="$HOME/.local/share/emailtopdfa/gmail-resume"
-java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf --folder INBOX --out-pdf /tmp/eapdf-gmail
+java -cp dist/emailtopdfa-1.6.0-beta.20.jar eapdf.GmailDownloadToPdf --folder INBOX --out-pdf /tmp/eapdf-gmail
 ```
 
 The existing credential discovery and OAuth settings still apply. `-Deapdf.gmailResumeDir=/private/path` is the equivalent JVM setting.
 
-The first attempt freezes the selected Gmail message IDs and their order. Completed ordinary PDFs are skipped only when their bytes and enabled PREMIS sidecars still match the checkpoint. Missing or changed outputs are recreated from staged source emails. Archive jobs reassemble the selected messages from staged downloads; they do not need to download those messages again. Transient downloads receive at most three application-level attempts. Export settings, the authenticated account, output location, and release version distinguish checkpoints, and a file lock prevents two processes from updating the same export together.
+The first attempt freezes the selected Gmail message IDs and their order. Completed ordinary PDFs are skipped only when their bytes still match the checkpoint. Missing or changed outputs are recreated from staged source emails. Archive jobs reassemble the selected messages from staged downloads; they do not need to download those messages again. Transient downloads receive at most three application-level attempts. Export settings, the authenticated account, output location, and release version distinguish checkpoints, and a file lock prevents two processes from updating the same export together.
 
 The printed resume directory contains original private email bytes, labels, output paths, and checksums. It is retained until explicitly deleted, including after success. POSIX directories use mode `0700` and files use `0600`. Delete that export's printed directory to discard its snapshot and begin a new selection that includes newer matching messages. Unsetting the variable disables future persistent staging but does not delete earlier checkpoints. With no resume directory configured, staging remains temporary and is removed on exit.
 
@@ -146,7 +146,7 @@ Relevant code:
 ### One PDF Per Message
 
 ```bash
-java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-1.6.0-beta.20.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --out-pdf out
 ```
@@ -154,7 +154,7 @@ java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
 ### Archive Output (`1m`, `1mi`, `1c`, `1ci`)
 
 ```bash
-java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-1.6.0-beta.20.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --archive-profile m \
   --archive-output /tmp/eapdf-gmail-inbox_1m.pdf
@@ -163,7 +163,7 @@ java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
 ### Use An Explicit Credentials File
 
 ```bash
-java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-1.6.0-beta.20.jar eapdf.GmailDownloadToPdf \
   --credentials config/credentials.json \
   --folder ALL_MAIL
 ```
@@ -171,7 +171,7 @@ java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
 ### Use A Custom Token Directory
 
 ```bash
-java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-1.6.0-beta.20.jar eapdf.GmailDownloadToPdf \
   --credentials config/credentials.json \
   --token-dir .gmail_token_store_local \
   --folder ALL_MAIL
@@ -180,7 +180,7 @@ java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
 ### Only Unread Messages
 
 ```bash
-java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-1.6.0-beta.20.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --unread-only
 ```
@@ -188,7 +188,7 @@ java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
 ### Limit The Number Of Downloaded Messages
 
 ```bash
-java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-1.6.0-beta.20.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --limit 100
 ```
@@ -266,7 +266,7 @@ Default:
 Use a fresh token directory:
 
 ```bash
-java -cp dist/emailtopdfa-1.6.0-beta.19.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-1.6.0-beta.20.jar eapdf.GmailDownloadToPdf \
   --credentials config/credentials.json \
   --token-dir .gmail_token_store_test \
   --folder INBOX

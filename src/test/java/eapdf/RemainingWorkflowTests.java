@@ -97,33 +97,26 @@ class RemainingWorkflowTests {
   void configurationRejectsUnsupportedVersionsAndWrongTypesAndWarnsForUnknownKeys() throws Exception {
     Path config = tempDir.resolve("config.json");
     for (String json : List.of("[]", "{\"configVersion\":2}", "{\"configVersion\":1.5}",
-        "{\"branding\":{\"enabled\":\"false\"}}", "{\"findingAid\":true}")) {
+        "{\"searchIndex\":{\"enabled\":\"false\"}}", "{\"searchIndex\":true}")) {
       Files.writeString(config, json);
       Assertions.assertThrows(RuntimeException.class, () -> EapdfConfig.load(config));
     }
-    Files.writeString(config, "{\"configVersion\":1,\"findingAid\":{\"pdfEnabled\":false,\"typo\":true},\"accessibility\":{\"experimental\":{\"altTextGeneratedImages\":true}}}");
+    Files.writeString(config, "{\"configVersion\":1,\"searchIndex\":{\"enabled\":false,\"typo\":true},\"accessibility\":{\"experimental\":{\"altTextGeneratedImages\":true}}}");
     ByteArrayOutputStream warnings = new ByteArrayOutputStream();
     PrintStream previous = System.err;
     try {
       System.setErr(new PrintStream(warnings, true, StandardCharsets.UTF_8));
-      Assertions.assertFalse(EapdfConfig.load(config).findingAid.pdfEnabled);
+      Assertions.assertFalse(EapdfConfig.load(config).searchIndex.enabled);
     } finally {
       System.setErr(previous);
     }
-    Assertions.assertTrue(warnings.toString(StandardCharsets.UTF_8).contains("findingAid.typo"));
+    Assertions.assertTrue(warnings.toString(StandardCharsets.UTF_8).contains("searchIndex.typo"));
     Assertions.assertTrue(warnings.toString(StandardCharsets.UTF_8).contains("unavailable"));
   }
 
   @Test
   void disabledCollectionFindingAidAndBrandingLeaveRequiredFrontMatterOnly() throws Exception {
-    EapdfConfig config = PdfMailWriter.CONFIG;
-    boolean pdfEnabled = config.findingAid.pdfEnabled;
-    boolean brandingEnabled = config.branding.enabled;
-    boolean excelEnabled = config.findingAid.excelEnabled;
-    try {
-      config.findingAid.pdfEnabled = false;
-      config.branding.enabled = false;
-      config.findingAid.excelEnabled = true;
+    {
       for (String profile : List.of("c", "ci")) {
         Path output = tempDir.resolve("minimal_1" + profile + ".pdf");
         EmailRecord record = AttachmentProfilePolicyTests.record("Optional features off");
@@ -143,12 +136,8 @@ class RemainingWorkflowTests {
             }
           }
         }
-        Assertions.assertFalse(Files.exists(PdfFindingAidSupport.findingAidSpreadsheetPath(output)));
+        Assertions.assertFalse(Files.exists(output.resolveSibling(output.getFileName().toString().replace(".pdf", "_index.xlsx"))));
       }
-    } finally {
-      config.findingAid.pdfEnabled = pdfEnabled;
-      config.branding.enabled = brandingEnabled;
-      config.findingAid.excelEnabled = excelEnabled;
     }
   }
 

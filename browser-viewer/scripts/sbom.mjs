@@ -6,6 +6,7 @@ export async function makeSbom(root) {
  const pkg=JSON.parse(await read('package.json'));
  const pin=JSON.parse(await read('vendor/pdfjs-patches/manifest.json'));
  const materials=[
+  ['@xmldom/xmldom',pkg.dependencies['@xmldom/xmldom'],'MIT','xmldom-LICENSE'],
   ['PDF.js',pin.version,'Apache-2.0','vendor/pdfjs/LICENSE'],
   ['Adobe character maps','bundled-'+pin.version,'BSD-style','vendor/pdfjs/cmaps/LICENSE'],
   ['Foxit PDFium standard fonts','bundled-'+pin.version,'BSD-3-Clause','vendor/pdfjs/standard_fonts/LICENSE_FOXIT'],

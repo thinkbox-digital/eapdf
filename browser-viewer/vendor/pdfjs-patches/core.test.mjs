@@ -157,3 +157,13 @@ test('inspection yielding services tasks and completes concurrent calls',async()
   await Promise.all(Array.from({length:32},()=>yieldInspection()));
  }finally{port1.close();port2.close();}
 });
+
+// Upstream PR 22465 regression: retain /Prev without reconstruction.
+test('zero-width xref stream preserves prior revision entries', async () => {
+  const {XRef}=await upstream('src/core/xref.js');
+  const {StringStream}=await upstream('src/core/stream.js');
+  const previous='xref\n0 2\n0000000000 65535 f \n0000000123 00000 n \ntrailer\n<</Size 2>>\n';
+  const stream=new StringStream(previous+'3 0 obj\n<</Type/XRef/W[0 0 0]/Size 10000000/Prev 0/Length 0>>\nstream\nendstream\nendobj\n');
+  const xref=new XRef(stream,{});xref.setStartXRef(previous.length);xref.readXRef();
+  assert.equal(xref.getEntry(1).offset,123);assert.equal(xref.countUpdatesAfter(0),2);
+});

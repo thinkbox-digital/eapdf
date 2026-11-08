@@ -17,25 +17,16 @@ class EapdfConfig {
     String reason = "";
   }
 
-  static class BrandingConfig {
-    boolean enabled = true;
-  }
 
-  static class FindingAidConfig {
-    boolean pdfEnabled = false;
-    boolean excelEnabled = false;
-    boolean embedExcel = true;
-    boolean embedPdfInCollections = true;
-  }
+
+
 
   static class SearchIndexConfig {
     boolean enabled = true;
     boolean fullTextEnabled = true;
   }
 
-  static class PremisConfig {
-    boolean enabled = false;
-  }
+
 
   static class AccessibilityConfig {
     boolean addPdfUaFeatures = false;
@@ -54,24 +45,20 @@ class EapdfConfig {
   }
 
   static class ExperimentalConfig {
-    boolean artifactGeneratedBranding = false;
-    boolean semanticFindingAidTags = false;
     boolean altTextGeneratedImages = false;
   }
 
   SigningConfig signing = new SigningConfig();
   int configVersion = 1;
   boolean validateOnCreation = true;
-  String creator = "";
-  BrandingConfig branding = new BrandingConfig();
-  FindingAidConfig findingAid = new FindingAidConfig();
+  static final String DEFAULT_CREATOR = "Thinkbox.DIGITAL";
+  String creator = DEFAULT_CREATOR;
   SearchIndexConfig searchIndex = new SearchIndexConfig();
-  PremisConfig premis = new PremisConfig();
   AccessibilityConfig accessibility = new AccessibilityConfig();
 
   String requireCreator() {
     if (creator == null || creator.isBlank()) {
-      throw new IllegalArgumentException("Set creator in the configuration to the person or organization responsible for creating the EA-PDF.");
+      return DEFAULT_CREATOR;
     }
     if (!Common.stripInvalidXml(creator).equals(creator)) {
       throw new IllegalArgumentException("The creator name contains characters that cannot be preserved in XMP.");
@@ -107,9 +94,7 @@ class EapdfConfig {
       validateKeys(json.getAsJsonObject(), EapdfConfig.class, "");
       EapdfConfig loaded = normalize(new Gson().fromJson(json, EapdfConfig.class));
       if (loaded.configVersion != 1) throw new IllegalArgumentException("unsupported configVersion: " + loaded.configVersion + " (expected 1)");
-      if (loaded.accessibility.experimental.artifactGeneratedBranding
-          || loaded.accessibility.experimental.semanticFindingAidTags
-          || loaded.accessibility.experimental.altTextGeneratedImages) {
+      if (loaded.accessibility.experimental.altTextGeneratedImages) {
         System.err.println("warning: accessibility.experimental settings are unavailable and do not change the output");
       }
       return loaded;
@@ -146,10 +131,7 @@ class EapdfConfig {
 
   static EapdfConfig normalize(EapdfConfig cfg) {
     if (cfg.signing == null) cfg.signing = new SigningConfig();
-    if (cfg.branding == null) cfg.branding = new BrandingConfig();
-    if (cfg.findingAid == null) cfg.findingAid = new FindingAidConfig();
     if (cfg.searchIndex == null) cfg.searchIndex = new SearchIndexConfig();
-    if (cfg.premis == null) cfg.premis = new PremisConfig();
     if (cfg.accessibility == null) cfg.accessibility = new AccessibilityConfig();
     if (cfg.accessibility.pageLabels == null) cfg.accessibility.pageLabels = new PageLabelsConfig();
     if (cfg.accessibility.experimental == null) cfg.accessibility.experimental = new ExperimentalConfig();

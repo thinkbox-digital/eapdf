@@ -9,7 +9,7 @@ import {sourceMessageId} from './source-email.js';
 import {loadManagedPdf,createManagedWorker} from './pdfjs-adapter.js';
 import {sha256Blob} from './blob-hash.js';
 import {md5Responsive,sha256} from './domain/hashes.js';
-import {DEFAULT_LIMITS,interpret,type StreamFacts} from './domain/interpret.js';
+import {DEFAULT_LIMITS,interpret,type InterpretationInput,type StreamFacts} from './domain/interpret.js';
 import type {InspectedDocument} from './inspection-session.js';
 import type {AssociatedFile,EmbeddedStream,InspectionLimits} from './domain/inspection.js';
 import type {DocumentAssets} from './pdfjs-assets.js';
@@ -47,10 +47,34 @@ export class BrowserSession {
   private readonly entries=new Map<BrowserDocument,Entry>();
   private readonly pending=new Set<ReturnType<typeof loadManagedPdf>>();
   private readonly associationWorkers=new Set<ReturnType<typeof createManagedWorker>>();
+  private readonly interpretationCancels=new Set<()=>void>();
+  private async interpretAsync(input:InterpretationInput):Promise<ReturnType<typeof interpret>>{
+    this.check();
+    if(input.assets.metadata.reduce((n,m)=>n+(m.text?.length??0),0)<1024*1024)return interpret(input);
+    const {parseXml:_,...data}=input;
+    const worker=new Worker(new URL('./interpret-worker.js',import.meta.url),{type:'module'});
+    return await new Promise((resolve,reject)=>{
+      const finish=()=>{clearTimeout(timer);worker.terminate();this.interpretationCancels.delete(cancel);};
+      const cancel=()=>{finish();reject(new Error('Document processing cancelled.'));};
+      const timer=setTimeout(()=>{finish();reject(new Error('Email metadata interpretation timed out.'));},120000);
+      this.interpretationCancels.add(cancel);
+      let partial:ReturnType<typeof interpret>;
+      worker.onmessage=event=>{
+        const data=event.data;
+        if(data.error){finish();reject(new Error(data.error));return;}
+        if(data.start)partial=data.start;
+        else if(data.key)(partial.inspection[data.key as 'messages'] as unknown as unknown[]).push(...data.values);
+        else if(data.details)for(const [key,value] of data.details)partial.details.set(key,value);
+        else if(data.done){finish();try{this.check();resolve(partial);}catch(error){reject(error);}}
+      };
+      worker.onerror=event=>{finish();reject(new Error(event.message||'Email metadata worker failed.'));};
+      try{worker.postMessage({input:data,chunked:true});}catch(error){finish();reject(error);}
+    });
+  }
   private closed=false;
   private clock=0;
   private check=()=>{if(this.closed)throw new Error('Document processing cancelled.');};
-  close():void {this.closed=true;for(const {worker} of this.exportWorkers.values())worker.close();this.exportWorkers.clear();for(const worker of this.associationWorkers)worker.close();this.associationWorkers.clear();for(const managed of this.pending)managed.close();for(const [doc,entry]of this.entries){entry.managed?.close();doc.payloads.clear();forgetEmbeddedIndex(doc);forgetFullTextIndex(doc);doc.fullTextIndex=undefined;doc.indexFileDigest=undefined;doc.embeddedIndex=undefined;doc.active=false;}this.entries.clear();this.pending.clear();this.extracted.clear();this.cachedBytes=0;}
+  close():void {this.closed=true;for(const cancel of this.interpretationCancels)cancel();for(const {worker} of this.exportWorkers.values())worker.close();this.exportWorkers.clear();for(const worker of this.associationWorkers)worker.close();this.associationWorkers.clear();for(const managed of this.pending)managed.close();for(const [doc,entry]of this.entries){entry.managed?.close();doc.payloads.clear();forgetEmbeddedIndex(doc);forgetFullTextIndex(doc);doc.fullTextIndex=undefined;doc.indexFileDigest=undefined;doc.embeddedIndex=undefined;doc.active=false;}this.entries.clear();this.pending.clear();this.extracted.clear();this.cachedBytes=0;}
   async open(blob:Blob,name:string,progress?:(fraction:number)=>void,parent:BrowserDocument|null=null,fileId?:string,streamPath?:string,preview?:(doc:Pick<BrowserDocument,'pdf'|'run'>)=>Promise<void>,stage?:(message:string)=>void):Promise<BrowserDocument>{
     this.check();
     if(blob.size>this.limits.maxFileBytes)throw new Error('PDF exceeds the configured input byte limit.');
@@ -92,14 +116,14 @@ export class BrowserSession {
       this.check();
       const entry:Entry={metadataBytes:0,managed,blob:parent?undefined:blob,parts,assets,facts:new Map(),header,size:blob.size,lastUse:++this.clock};
       stage?.("Reading email metadata…");
-      const interpreted=interpret({documentId:id,byteLength:blob.size,headerVersion:header,pageCount:pdf.numPages,parts,assets,streams:entry.facts,limits:this.limits,parseXml:xml=>new DOMParser().parseFromString(xml,'application/xml')});
+      const interpreted=await this.interpretAsync({documentId:id,byteLength:blob.size,headerVersion:header,pageCount:pdf.numPages,parts,assets,streams:entry.facts,limits:this.limits,parseXml:xml=>new DOMParser().parseFromString(xml,'application/xml')});
       const doc:BrowserDocument={pdf,...interpreted,payloads:new Map(),children:new Map(),run:managed.run,name,parent,parentFileId:fileId,parentStreamPath:streamPath,ancestorIds:ancestors,active:true};
       this.entries.set(doc,entry);this.accountMetadata(doc,entry);this.pending.delete(managed);this.trim(doc);return doc;
     }catch(error){managed.close();this.pending.delete(managed);throw error;}
   }
   cachedMessageIndex(doc:BrowserDocument):MessageIndex|undefined{return this.entries.get(doc)?.messageIndex;}
   rememberMessageIndex(doc:BrowserDocument,index:MessageIndex|undefined):void{const entry=this.entries.get(doc);if(entry){entry.messageIndex=index;this.accountMetadata(doc,entry);}}
-  adoptAssociations(doc:BrowserDocument,source:BrowserSession,copy:BrowserDocument):void {
+  async adoptAssociations(doc:BrowserDocument,source:BrowserSession,copy:BrowserDocument):Promise<void> {
     this.check();source.check();
     if(doc.inspection.documentId!==copy.inspection.documentId)throw new Error('Association results belong to a different PDF.');
     const target=this.entries.get(doc),entry=source.entries.get(copy);
@@ -108,7 +132,7 @@ export class BrowserSession {
     target.supplementLinks=entry.supplementLinks;target.supplementError=entry.supplementError;
     target.messageIndex=entry.messageIndex??target.messageIndex;
     target.supplementScan=Promise.resolve();
-    this.refresh(doc);this.applySupplementLinks(doc);
+    await this.refresh(doc);this.applySupplementLinks(doc);
   }
 
   async associateFiles(doc:BrowserDocument):Promise<void>{
@@ -125,7 +149,7 @@ export class BrowserSession {
       }
     }
     // Reinterpret once after collecting facts, not once per embedded email.
-    if(changed||this.entries.get(doc)?.needsRefresh)this.refresh(doc);
+    if(changed||this.entries.get(doc)?.needsRefresh)await this.refresh(doc);
     const entry=this.entries.get(doc)!;
     if(doc.inspection.collection.value&&doc.inspection.files.some(f=>f.afRelationship.value==='Supplement'&&!f.owners.value)){
       entry.supplementScan??=this.associateSupplements(doc);
@@ -174,7 +198,7 @@ export class BrowserSession {
               try{
                 const pdf=await managed.run(managed.task.promise,60000);
                 const [assets,parts]=await managed.run(Promise.all([pdf.getDocumentAssets({maxObjects:Math.max(1,this.limits.maxObjects),maxMetadataBytes:Math.max(1,this.limits.maxMetadataBytes)}),pdf.getDocumentParts()]),60000);this.check();
-                const interpreted=interpret({documentId:childId,byteLength,headerVersion:null,pageCount:pdf.numPages,assets,parts,streams:new Map(),limits:this.limits,parseXml:xml=>new DOMParser().parseFromString(xml,'application/xml')});
+                const interpreted=await this.interpretAsync({documentId:childId,byteLength,headerVersion:null,pageCount:pdf.numPages,assets,parts,streams:new Map(),limits:this.limits,parseXml:xml=>new DOMParser().parseFromString(xml,'application/xml')});
                 const child=interpreted.inspection;
                 if(child.coverage.associatedFiles!=='present'||child.coverage.metadata!=='present'||parts.status==='partial')throw new Error('Child inspection is incomplete.');
                 if(child.identification.declaredProfile.value!=='s'||child.messages.length!==1)throw new Error('Child is not an unambiguous single-email PDF.');
@@ -288,7 +312,7 @@ export class BrowserSession {
     await this.ensure(doc);const entry=this.entries.get(doc)!;this.check();
     const key=doc.inspection.documentId+'|'+stream.locator.path;
     const cached=this.extracted.get(key);
-    if(cached){this.extracted.delete(key);this.extracted.set(key,cached);if(refresh&&entry.needsRefresh)this.refresh(doc);return cached.slice();}
+    if(cached){this.extracted.delete(key);this.extracted.set(key,cached);if(refresh&&entry.needsRefresh)await this.refresh(doc);return cached.slice();}
     const allowance=Math.min(this.extractionLimit,this.limits.maxDecodedBytes-this.decoded);
     if(allowance<=0)throw new Error('Concurrent decoded-byte budget is occupied or too small.');
     // Reserve before awaiting, so concurrent reads cannot oversubscribe the budget.
@@ -316,13 +340,13 @@ export class BrowserSession {
     }
     entry.facts.set(stream.locator.path,{state:'present',size:data.length,md5:await md5Responsive(data,this.check),sha256:await sha256(data),sourceMessageId:['Source','Supplement'].includes(file.afRelationship.value??'')?sourceMessageId(data,file.afRelationship.value==='Supplement'):undefined});
     entry.needsRefresh=true;
-    if(refresh)this.refresh(doc);
+    if(refresh)await this.refresh(doc);
     return data;
     }finally{this.decoded-=allowance;}
   }
-  private refresh(doc:BrowserDocument):void {
+  private async refresh(doc:BrowserDocument):Promise<void> {
     const entry=this.entries.get(doc)!;
-    const interpreted=interpret({documentId:doc.inspection.documentId,byteLength:entry.size,headerVersion:entry.header,pageCount:doc.pdf.numPages,parts:entry.parts,assets:entry.assets,streams:entry.facts,limits:this.limits,parseXml:xml=>new DOMParser().parseFromString(xml,'application/xml')});
+    const interpreted=await this.interpretAsync({documentId:doc.inspection.documentId,byteLength:entry.size,headerVersion:entry.header,pageCount:doc.pdf.numPages,parts:entry.parts,assets:entry.assets,streams:entry.facts,limits:this.limits,parseXml:xml=>new DOMParser().parseFromString(xml,'application/xml')});
     doc.inspection=interpreted.inspection;doc.details=interpreted.details;this.applySupplementLinks(doc);entry.needsRefresh=false;this.accountMetadata(doc,entry);
   }
   /** Release a completed export child without retaining its inspection. */

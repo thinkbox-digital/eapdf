@@ -31,6 +31,7 @@ try {
   execFileSync(process.execPath, ['scripts/licenses.mjs'], { stdio: 'inherit' });
   const patch = await verifyPatchedPdfjs();
   execFileSync(process.execPath, ['node_modules/typescript/bin/tsc', '--outDir', temporary], { stdio: 'inherit' });
+  execFileSync('node_modules/.bin/esbuild',['src/interpret-worker.ts','--bundle','--format=esm','--platform=browser','--outfile='+join(temporary,'interpret-worker.js')],{stdio:'inherit'});
   await rm('dist', { recursive: true, force: true });
   for (const browser of ['chromium', 'firefox']) {
     const directory = join('dist', browser);
@@ -53,6 +54,7 @@ try {
     // PDF scripting is never enabled; do not ship its unused JavaScript interpreter.
     for (const name of ['quickjs-eval.js', 'quickjs-eval.wasm', 'LICENSE_QUICKJS', 'LICENSE_PDFJS_QUICKJS'])
       await rm(join(directory,'vendor/pdfjs/wasm',name),{force:true});
+    await cp('node_modules/@xmldom/xmldom/LICENSE',join(directory,'xmldom-LICENSE'));
     await cp('LICENSE', join(directory, 'LICENSE'));
     await cp('THIRD_PARTY_NOTICES.md', join(directory, 'THIRD_PARTY_NOTICES.md'));
     await cp('vendor/sources', join(directory, 'license-sources'), { recursive: true });

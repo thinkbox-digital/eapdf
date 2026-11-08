@@ -16,14 +16,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class AdditionalSpecRuleTests {
-  private boolean previousFindingAid;
-  @org.junit.jupiter.api.BeforeEach void enableFindingAidFixture() {
-    previousFindingAid = PdfMailWriter.CONFIG.findingAid.pdfEnabled;
-    PdfMailWriter.CONFIG.findingAid.pdfEnabled = true;
-  }
-  @org.junit.jupiter.api.AfterEach void restoreFindingAidDefault() {
-    PdfMailWriter.CONFIG.findingAid.pdfEnabled = previousFindingAid;
-  }
+
+
+
 
   @TempDir Path directory;
 
@@ -131,70 +126,24 @@ class AdditionalSpecRuleTests {
     Assertions.assertThrows(Common.UserFacingException.class, () -> PdfMailWriter.pdfEmbeddedFiles(record));
   }
 
-  @Test void collectionExcelSettingWritesSidecarWithOtherEmbeddingFlagsDisabled() throws Exception {
-    var config = PdfMailWriter.CONFIG.findingAid;
-    boolean pdf = config.pdfEnabled, excel = config.excelEnabled, embed = config.embedExcel, embeddedPdf = config.embedPdfInCollections;
-    boolean premis = PdfMailWriter.CONFIG.premis.enabled;
-    try {
-      config.pdfEnabled = true;
-      config.excelEnabled = true;
-      config.embedExcel = false;
-      config.embedPdfInCollections = false;
-      PdfMailWriter.CONFIG.premis.enabled = false;
-      for (String profile : List.of("c", "ci")) {
-        Path folder = directory.resolve(profile);
-        Path output = folder.resolve("collection.pdf");
-        PdfMailWriter.writeEaPdfCollection(output, List.of(record()), TestSupport.fontPath(), TestSupport.iccPath(), false, directory, profile);
-        Path spreadsheet = folder.resolve("collection_index.xlsx");
-        try (var paths = Files.list(folder)) {
-          Assertions.assertEquals(java.util.Set.of(output, spreadsheet), paths.filter(Files::isRegularFile).collect(java.util.stream.Collectors.toSet()));
-        }
-        try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook(Files.newInputStream(spreadsheet))) {
-          Assertions.assertEquals(1, workbook.getSheetAt(0).getLastRowNum());
-        }
-        try (PDDocument document = Loader.loadPDF(output.toFile())) {
-          Assertions.assertFalse(AttachmentProfilePolicyTests.files(document).keySet().stream()
-              .anyMatch(name -> name.endsWith("_finding_aid.pdf") || name.endsWith(".xlsx")));
-          PdfCreationValidator.validate(document);
-        }
-      }
-    } finally {
-      config.pdfEnabled = pdf;
-      config.excelEnabled = excel;
-      config.embedExcel = embed;
-      config.embedPdfInCollections = embeddedPdf;
-      PdfMailWriter.CONFIG.premis.enabled = premis;
-    }
-  }
+
 
   @Test void collectionAuxiliariesAreSidecarsAndCreationGateRejectsUnrelatedFiles() throws Exception {
-    boolean premis = PdfMailWriter.CONFIG.premis.enabled;
-    try {
-      PdfMailWriter.CONFIG.premis.enabled = true;
+    {
       for (String profile : List.of("c", "ci")) {
         Path output = directory.resolve("collection_" + profile + ".pdf");
         PdfMailWriter.writeEaPdfCollection(output, List.of(record()), TestSupport.fontPath(), TestSupport.iccPath(), false, directory, profile);
-        Assertions.assertTrue(Files.exists(output.resolveSibling("collection_" + profile + "_premis.xml")));
-        try (PDDocument finding = Loader.loadPDF(output.resolveSibling("collection_" + profile + "_finding_aid.pdf").toFile())) {
-          Assertions.assertTrue(AttachmentProfilePolicyTests.files(finding).isEmpty());
-          Assertions.assertFalse(TestSupport.metadataXml(finding).contains("pdfmailid:conformance"));
-          Assertions.assertTrue(new org.apache.pdfbox.text.PDFTextStripper().getText(finding).contains("Finding Aid"));
-        }
-        try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook(
-            Files.newInputStream(output.resolveSibling("collection_" + profile + "_index.xlsx")))) {
-          Assertions.assertEquals(1, workbook.getSheetAt(0).getLastRowNum());
-        }
         try (PDDocument document = Loader.loadPDF(output.toFile())) {
           for (var file : AttachmentProfilePolicyTests.files(document).values()) {
             Assertions.assertTrue("Source".equals(file.getCOSObject().getNameAsString(COSName.getPDFName("AFRelationship")))
                 || file.getFileUnicode().endsWith("_1s.pdf") || file.getFileUnicode().endsWith("_1si.pdf"));
           }
           PdfCreationValidator.validate(document);
-          PdfFindingAidSupport.embedStandaloneCatalogBytes(document, "misc.xml", "<misc/>".getBytes(StandardCharsets.UTF_8),
+          PdfAttachmentSupport.embedStandaloneCatalogBytes(document, "misc.xml", "<misc/>".getBytes(StandardCharsets.UTF_8),
               "Not an email or source", "application/xml", "Data", false);
           Assertions.assertThrows(java.io.IOException.class, () -> PdfCreationValidator.validate(document));
         }
       }
-    } finally { PdfMailWriter.CONFIG.premis.enabled = premis; }
+    }
   }
 }

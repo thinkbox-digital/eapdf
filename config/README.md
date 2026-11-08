@@ -14,15 +14,8 @@ Current contents include:
 `EAPDF_CONFIG` selects the JSON configuration file. An explicitly selected missing or unreadable file is an error; only an absent default configuration falls back to built-in settings. The supported `configVersion` is `1`; unsupported versions or invalid value types stop loading with an explanation. Unknown keys produce warnings that include the full setting name.
 
 - `searchIndex.enabled` defaults to `true` for embedded search indexes. `searchIndex.fullTextEnabled` independently controls full-text generation for `1m`, `1mi`, `1c`, and `1ci`; it uses built-in PDFBox extraction, with no Node.js requirement. Extraction failures or exceeded limits produce a warning and retain ordinary PDF.js searching. See [format, limits and fallback](../docs/EMBEDDED_SEARCH_INDEX.md).
-- `branding.enabled` controls branding, including collections.
-- `findingAid.pdfEnabled` defaults to `false` and controls the optional finding-aid pages and related embedded or sidecar spreadsheets. Collections still include required front matter when the index is disabled.
-- `findingAid.excelEnabled` defaults to `false`, both in built-in settings and the checked-in configuration; `embedExcel` independently defaults to `true`.
-- For collection profiles `1c`/`1ci`, the existing `embedPdfInCollections` setting requests a separate `_finding_aid.pdf` sidecar. `embedExcel` or `excelEnabled` requests a separate `_index.xlsx` sidecar. These legacy setting names do not cause collection embedding: EA-PDF §7.6 prohibits ordinary finding-aid PDFs and spreadsheets as collection members. The finding-aid PDF has no embedded XLSX or synthetic email; its index pages also remain in the collection front matter. Disabling `pdfEnabled` disables optional finding aids and their sidecars.
-- For flat archives `1m`/`1mi`, `embedExcel` still embeds the XLSX in the archive and `excelEnabled` independently writes an external XLSX. Single-message source/native-attachment handling is unchanged.
-- `premis.enabled` controls PREMIS metadata and its sidecar. There is no `premis.writeSidecar` setting.
-- Collection PREMIS is sidecar-only at the container level; non-isolated email children may retain their own embedded PREMIS.
 - `accessibility.addPdfUaFeatures` enables semantic headings, paragraphs, tables, image descriptions, and annotation associations in message PDFs and collection/archival front matter. It remains partial accessibility support, not proven PDF/UA conformance.
-- The three `accessibility.experimental` settings are unavailable. Setting them to `true` produces a warning; they do not change output.
+- The remaining `accessibility.experimental` setting are unavailable. Setting them to `true` produces a warning; they do not change output.
 
 ## Processing And Fonts
 
@@ -68,13 +61,10 @@ For configuration, supported keys and limitations, see
 
 ## Responsible creator
 
-Set the top-level `creator` string to the person, organization or service
-responsible for creating the EA-PDF resource, for example
-`"creator": "Example Archives"`. The GUI's **Creator identity...** button sets
-this value for its conversion session. Save it in the configuration for future
-sessions. Conversion requires a nonblank value; no identity is inferred from
-the software name, email sender or operating-system account.
+The creator defaults to `Thinkbox.DIGITAL`, including when older configuration files leave it blank. No command-line value is required. Override the top-level `creator` string or use the GUI’s **Creator identity...** button when a different responsible entity is needed.
 
 The value becomes the first `dc:creator` item. `xmp:CreatorTool` and
 `pdf:Producer` continue to identify software. Validation checks the required
 metadata structure separately from provenance-backed attribution.
+
+Branding, finding-aid generation and PREMIS output have been removed. Old configuration keys for these features are ignored with an unknown-setting warning. Collections retain their required cover page. The GUI checkbox is **Accessibility (PDF/UA)**.

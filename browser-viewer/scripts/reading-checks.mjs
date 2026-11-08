@@ -32,8 +32,23 @@ export async function checkReadingTools(browser){
  await browser.open(resolve('../examples/pst/pst_quality-attached-message_1m.pdf'));
  assert.equal(await browser.evaluate(()=>document.querySelector('#files').textContent.includes('Find email sources')),false);
  const first=await browser.evaluate(()=>document.querySelector('[data-message-id]').dataset.messageId);await browser.click(`[data-message-id=${JSON.stringify(first)}]`);await browser.ready();
+ assert.equal(await browser.evaluate(()=>document.activeElement===document.querySelector('#tree button[aria-current]')),true,'mouse-opened message retains focus');
+ await browser.evaluate(()=>document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true})));await browser.ready();
+ assert.notEqual(await browser.evaluate(()=>document.querySelector('#tree button[aria-current]').dataset.messageId),first);
+ await browser.evaluate(()=>document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true})));await browser.ready();
+ assert.equal(await browser.evaluate(()=>document.querySelector('#tree button[aria-current]').dataset.messageId),first);
+ checks.push('mouse-opened flat message retains focus for Up/Down activation');
  assert.ok(await browser.evaluate(()=>[...document.querySelectorAll('#files button')].some(b=>/^Download .*\.eml$/i.test(b.getAttribute('aria-label')??''))));assert.equal(await browser.evaluate(()=>!!document.querySelector('#message-details')),false);checks.push('automatic source association without duplicate email details pane');
  assert.equal(await browser.evaluate(()=>document.querySelector('#text-layer').dataset.structure==='unavailable'),false);checks.push('upstream structure layer loads without errors');
  assert.equal(await browser.evaluate(()=>document.querySelector('#restart').hidden),true);checks.push('recovery control hidden during normal reading');
+ await browser.open(resolve('tests/metadata-index/mbox_sample_1ci.pdf'));
+ await browser.click('#tree button[data-embedded-file-id]');await browser.ready();
+ const childId=await browser.evaluate(()=>document.querySelector('#tree button[aria-current]').dataset.documentId);
+ assert.equal(await browser.evaluate(()=>document.activeElement===document.querySelector('#tree button[aria-current]')),true,'replacement child row receives focus');
+ await browser.evaluate(()=>document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true})));await browser.ready();
+ assert.notEqual(await browser.evaluate(()=>document.querySelector('#tree button[aria-current]').dataset.documentId),childId);
+ await browser.evaluate(()=>document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true})));await browser.ready();
+ assert.equal(await browser.evaluate(()=>document.querySelector('#tree button[aria-current]').dataset.documentId),childId);
+ checks.push('mouse-opened collection row retains focus and opens next/previous message');
  return {status:'PASS',checks};
 }

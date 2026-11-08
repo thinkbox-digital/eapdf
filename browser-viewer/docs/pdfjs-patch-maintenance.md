@@ -173,3 +173,20 @@ out-of-order page rendering/text extraction and document cleanup must produce
 identical text, metadata and pixel hashes. All five cases pass in Chromium 156.
 This complements the source ownership/cursor tests; it is not the full upstream
 rendering corpus or an independent security review of patch 0003.
+
+
+## November 8 review
+
+Patch 0005 backports [upstream PR 22465](https://github.com/mozilla/pdf.js/pull/22465)
+(source revision 37af0b407fe4246a142f1bff9232fa1e3fc18e50): a zero-width XRef stream
+must retain its previous revision without file reconstruction. The upstream
+StringStream fixture is included in core.test.mjs, checking the old object offset
+and both revisions. Invalid widths still fail and zero-width ranges do no work.
+
+[PR 22471](https://github.com/mozilla/pdf.js/pull/22471) proposes removing
+maxImageSize for PDF.js 7. Retain the 16-million-pixel guard on our pinned 6.x
+runtime. The 64 MiB canvas area setting is a resizing policy, not an equivalent
+image decode-memory cap. Before upgrading to 7, remove the unsupported option
+and measure large-image decoding, worker cancellation and rendered output under
+bounded workloads; do not silently treat the canvas setting as its replacement.
+No 7.x upgrade is included here.

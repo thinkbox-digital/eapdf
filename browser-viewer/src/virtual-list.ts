@@ -38,7 +38,7 @@ export class VirtualList<T> {
     this.top.style.height=`${this.offset(first)}px`;this.bottom.style.height=`${this.offset(this.values.length)-this.offset(last)}px`;
     if(anchor&&before!==undefined)this.panel.scrollTop+=anchor.getBoundingClientRect().top-before;
   }
-  rowAt(index:number):HTMLElement|undefined{this.mount(index);return this.rows.get(index);}
+  rowAt(index:number):HTMLElement|undefined{if(index<0||index>=this.values.length)return;this.mount(index);return this.rows.get(index);}
   invalidateRow(index:number,row:HTMLElement):void{const previous=this.rows.get(index);if(previous){previous.replaceWith(row);this.rows.set(index,row);}}
   replaceRow(index:number,row:HTMLElement):void{
     this.mount(index);const previous=this.rows.get(index);previous?.replaceWith(row);this.rows.set(index,row);

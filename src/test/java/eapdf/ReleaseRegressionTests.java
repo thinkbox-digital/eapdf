@@ -22,14 +22,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ReleaseRegressionTests {
-  private boolean previousFindingAid;
-  @org.junit.jupiter.api.BeforeEach void enableFindingAidFixture() {
-    previousFindingAid = PdfMailWriter.CONFIG.findingAid.pdfEnabled;
-    PdfMailWriter.CONFIG.findingAid.pdfEnabled = true;
-  }
-  @org.junit.jupiter.api.AfterEach void restoreFindingAidDefault() {
-    PdfMailWriter.CONFIG.findingAid.pdfEnabled = previousFindingAid;
-  }
+
+
+
 
   @TempDir
   Path tempDir;
@@ -246,9 +241,11 @@ class ReleaseRegressionTests {
           Assertions.assertEquals("http://iso.org/pdf2/ssn", namespace.getString(COSName.getPDFName("NS")));
           var outline = document.getDocumentCatalog().getDocumentOutline().getFirstChild();
           Assertions.assertTrue(outline.getAction().getCOSObject().containsKey(COSName.getPDFName("SD")));
+          if (!profile.startsWith("c")) {
           Assertions.assertTrue(roles.contains("Table"), profile + roles);
           Assertions.assertTrue(roles.contains("TH"), profile + roles);
           Assertions.assertTrue(roles.contains("TD"), profile + roles);
+          }
           Assertions.assertTrue(roles.contains("H1"), profile + roles);
           for (PDPage page : document.getPages()) {
             Assertions.assertTrue(page.getCOSObject().containsKey(COSName.getPDFName("StructParents")));

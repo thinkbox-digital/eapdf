@@ -3,7 +3,7 @@ import type {IndexedMessage} from './message-index.js';
 import {fileLabel} from './navigation.js';
 import {sha256} from './domain/hashes.js';
 
-export const INDEX_LIMITS=Object.freeze({compressed:4*1024*1024,decoded:8*1024*1024,messages:100_000,row:128*1024,characters:8_000_000});
+export const INDEX_LIMITS=Object.freeze({compressed:4*1024*1024,decoded:8*1024*1024,messages:100_000,row:128*1024,characters:32_000_000});
 export const SEARCH_FIELDS=['Subject','From','Raw-From','To','Raw-To','Cc','Raw-Cc','Bcc','Raw-Bcc','Sent'] as const;
 export const metadataSearchText=(data:Record<string,string>)=>SEARCH_FIELDS.map(k=>data[k]??'').join(' ').toLowerCase();
 export type EmbeddedIndexResult={messages?:IndexedMessage[];diagnostic?:string};
@@ -23,7 +23,7 @@ export async function decodeIndex(doc:BrowserDocument,check:()=>void):Promise<In
   const bytes=await decodeEmbeddedGzip(doc.embeddedIndex,INDEX_LIMITS,check);
   const boundary=bytes.indexOf(10);requireIndex(boundary>0&&boundary<=1024,'invalid header');
   const utf8=new TextDecoder('utf-8',{fatal:true}),header=JSON.parse(utf8.decode(bytes.subarray(0,boundary)));
-  requireIndex(header?.format==='eapdf-metadata-index'&&header.version===1,'unsupported format/version');
+  requireIndex(header?.format==='eapdf-metadata-index'&&[1,2].includes(header.version),'unsupported format/version');
   requireIndex(header.profile==='1'+doc.inspection.identification.declaredProfile.value&&['1c','1ci'].includes(header.profile),'profile mismatch');
   requireIndex(Number.isInteger(header.messages)&&header.messages>=0&&header.messages<=INDEX_LIMITS.messages,'message count limit');
   requireIndex(typeof header.sha256==='string'&&/^[a-f0-9]{64}$/.test(header.sha256),'invalid integrity digest');
@@ -54,20 +54,21 @@ export async function decodeIndex(doc:BrowserDocument,check:()=>void):Promise<In
     if(count%250===0){check();await new Promise(resolve=>setTimeout(resolve,0));check();}
     const end=bytes.indexOf(10,start);requireIndex(end>=start&&end-start<=INDEX_LIMITS.row,'row size limit');
     const row=JSON.parse(utf8.decode(bytes.subarray(start,end)));start=end+1;count++;
-    requireIndex(count<=header.messages&&Array.isArray(row)&&row.length===13,'invalid row/count');
-    requireIndex(row.slice(0,8).every(v=>typeof v==='string'),'invalid metadata');
-    const [guid,mid,subject,from,to,cc,bcc,sent,keys,md5,size,paths,page]=row;
+    requireIndex(count<=header.messages&&Array.isArray(row)&&row.length===(header.version===1?13:4),'invalid row/count');
+    const legacy=header.version===1;
+    requireIndex((legacy?row.slice(0,8):row.slice(0,1)).every(v=>typeof v==='string'),'invalid metadata');
+    const [guid,mid,subject,from,to,cc,bcc,sent,keys,md5,size,paths,page]=legacy?row:[row[0],null,null,null,null,null,null,null,row[1],row[2],row[3],null,1];
     requireIndex(!seenGuids.has(guid)&&authoritative.has(guid),'duplicate or unknown message identity');seenGuids.add(guid);
     requireIndex(Array.isArray(keys)&&keys.length>0&&keys.length<=256&&keys.every(k=>typeof k==='string'),'invalid child keys');
     const fileId=byKey.get(keys[0]!),file=fileId&&files.get(fileId);requireIndex(fileId&&file&&!rows.has(file.id),'missing or ambiguous child');
     requireIndex(same(keys,sorted(keysByFile.get(file.id)??[]))&&keys.every(k=>byKey.get(k)===file.id),'collection membership mismatch');
-    requireIndex(same(paths,sorted(pathsByFile.get(file.id)??[])),'folder membership mismatch');
+    requireIndex(!legacy||same(paths,sorted(pathsByFile.get(file.id)??[])),'folder membership mismatch');
     requireIndex(file.streams.length===1&&file.streams[0]!.mimeType.value==='application/pdf','child is not one PDF stream');
     const stream=file.streams[0]!;
     requireIndex(typeof md5==='string'&&/^[a-f0-9]{32}$/.test(md5)&&stream.declaredMd5.value===md5&&Number.isSafeInteger(size)&&size>0&&stream.declaredSize.value===size,'child identity/checksum mismatch');
     requireIndex(page===1,'unsupported page destination');
     const message=authoritative.get(guid)!,data=doc.details.get(message.metadataRecordId)??{};
-    requireIndex(same([mid,subject,from,to,cc,bcc,sent],[message.internetMessageId.value??'',...['Subject','Raw-From','Raw-To','Raw-Cc','Raw-Bcc','Sent'].map(k=>data[k]??'')]),'metadata differs from catalog XMP');
+    requireIndex(!legacy||same([mid,subject,from,to,cc,bcc,sent],[message.internetMessageId.value??'',...['Subject','Raw-From','Raw-To','Raw-Cc','Raw-Bcc','Sent'].map(k=>data[k]??'')]),'metadata differs from catalog XMP');
     const label=data.Subject||fileLabel(file),document=doc.name+' / '+fileLabel(file),searchText=metadataSearchText(data);
     characters+=label.length+document.length+searchText.length;requireIndex(characters<=INDEX_LIMITS.characters,'retained metadata limit');
     rows.set(file.id,{path:[{fileId:file.id,streamPath:stream.locator.path}],messageId:guid,mailGuid:guid,label,document,searchText,sender:data.From||data['Raw-From'],sent:data.Sent});

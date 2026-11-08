@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Installed launcher; the maintained worker lives with the project.
+project=/media/lepore/Work/thinkbox/eapdf
+if (($# == 0)); then
+  printf '%s\n' 'Usage: eapdf-regenerate sample|everything [options]' \
+    'Both modes CLEAR the project out/ directory when run.' \
+    'sample: two small inputs per type; everything: every supported input, all applicable profiles.' \
+    'Completed PDFs appear immediately after each creator job; validation results follow.' \
+    'Uses concurrent Java processes, limited automatically by available CPU and memory.' \
+    'Example: eapdf-regenerate everything --workers 4 --jobs 2' \
+    'Default creator: Thinkbox.DIGITAL (no creator argument required).' \
+    'Preview: eapdf-regenerate everything --dry-run' \
+    'Help: eapdf-regenerate --help'
+  exit 0
+fi
+exec python3 -B "$project/scripts/regenerate_out.py" "$@"

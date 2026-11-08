@@ -8,16 +8,16 @@
 
 Convert email into EA-PDF files using Java, PDFBox, and XMP metadata.
 
-Current beta version: `1.6.0-beta.19`
+Current beta version: `1.6.0-beta.20`
 
 The separate [browser viewer beta](browser-viewer/docs/beta-release.md) opens local
 EA-PDF files and embedded PDFs recursively in Firefox and Chromium. It also
 shows metadata, image and text attachments, with normal downloads for Office files.
-Viewer version `0.5.0-beta.18` includes collection-wide email search, CSV finding
+Viewer version `0.5.0-beta.20` includes collection-wide email search, CSV finding
 aids with folder and attachment details, and paced file downloads. Installation and tested limits
 are documented in that guide.
 
-Latest release: [v1.6.0-beta.19](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.19). Java 21 or later is required.
+Latest release: [v1.6.0-beta.20](https://github.com/thinkbox-digital/eapdf/releases/tag/v1.6.0-beta.20). Java 21 or later is required.
 
 The current source tree adds optional [embedded metadata and full-text indexes](docs/EMBEDDED_SEARCH_INDEX.md).
 Full-text generation uses built-in PDFBox extraction and shared text normalization;
@@ -32,6 +32,39 @@ See [validation coverage and limitations](docs/VALIDATOR_COVERAGE.md).
 
 This codebase was produced with Codex/ChatGPT assistance and is not designed for production use without additional engineering, review, and hardening.
 
+## Regenerating local outputs
+
+The installed `eapdf-regenerate` launcher prints basic instructions without arguments:
+
+```bash
+eapdf-regenerate sample
+eapdf-regenerate everything
+eapdf-regenerate everything --dry-run
+eapdf-regenerate everything --workers 4 --jobs 2
+```
+
+Running either generation mode clears this checkout’s `out/` directory. `--dry-run`
+only prints the plan. The default creator is `Thinkbox.DIGITAL`; no creator argument
+is needed. Concurrent Java processes are bounded automatically by available CPU
+and memory, with two creator threads per process by default. `sample` selects the
+two smallest sources of each type. `everything` covers every supported source in
+all applicable profiles: EML/MSG are also grouped into archives; PST/MBOX each use
+all six profiles. A one-message source cannot produce 1m/1mi and is reported as
+not applicable. Full mode can produce many standalone PDFs from large mailboxes.
+
+Each creator job publishes its completed PDFs immediately and prints their paths,
+before validation starts. Validation results follow separately; a single archive
+PDF must finish converting before it can appear. Other jobs continue concurrently.
+
+Final PDFs go directly into `out/eml/`, `out/msg/`, `out/mbox/`, and `out/pst/`.
+Each run snapshots its versioned creator and validator JARs so later upgrades
+do not interrupt it. Source hashes, logs, progress and standalone Java validation reports go into the
+run’s evidence directory under `output/`. Each process has isolated temporary
+staging. Accessibility and both indexes are enabled; signing is disabled. Original
+inputs are preserved. Failed or incomplete conversions are reported with a nonzero
+exit status. Existing conversions using `out/` must finish before regeneration.
+The maintained sources are `scripts/eapdf-regenerate` and `scripts/regenerate_out.py`.
+
 ## What This Project Does
 
 This repository generates EA-PDF outputs from:
@@ -45,8 +78,6 @@ The generator also includes:
 
 - PDF/A validation workflow
 - EA-PDF-specific validation
-- optional finding aids for archive/container outputs
-- optional PREMIS metadata
 - optional PDF/UA-style catalog features
 - per-file generation logs
 
@@ -62,10 +93,10 @@ The profile names describe **how emails are packaged**, separately from PDF/A co
 | --- | --- | --- | --- |
 | **`1s` — Single** ([sample](examples/eml/eml_Agenda_and_timeline_slides_1s.pdf)) | Preserve an individual message as a separately usable PDF. | One message's headers/body, potentially spanning several pages, plus attachment notices. | Source email asset embedded; original native attachment bytes retained as file-attachment annotations. |
 | **`1si` — Single, isolated** ([sample](examples/eml/eml_Agenda_and_timeline_slides_1si.pdf)) | Read or distribute an individual message without bundling its source email or original native attachments. | One message's rendered headers/body and explicit notices for omitted attachment payloads. | Original source email omitted; native attachment markers contain zero bytes. |
-| **`1m` — Multiple** ([sample](examples/pst/pst_quality-attached-message_1m.pdf)) | Read, search or print two or more messages as one continuous document while retaining their source assets. | All message pages in one PDF, with navigation/bookmarks and an optional finding aid. There is no collection folder tree to browse. | Source email assets embedded; original native attachments retained with their owning messages. |
+| **`1m` — Multiple** ([sample](examples/pst/pst_quality-attached-message_1m.pdf)) | Read, search or print two or more messages as one continuous document while retaining their source assets. | All message pages in one PDF, with navigation/bookmarks. There is no collection folder tree to browse. | Source email assets embedded; original native attachments retained with their owning messages. |
 | **`1mi` — Multiple, isolated** ([sample](examples/pst/pst_quality-attached-message_1mi.pdf)) | Read or distribute two or more messages as one continuous document without source emails or original native attachments. | The same flat reading layout as `1m`, with notices for omitted attachment payloads. | Original source emails omitted; native attachment markers contain zero bytes. |
 | **`1c` — Collection** ([sample](examples/eml/eml_Agenda_and_timeline_slides_archive_1c.pdf)) | Keep messages separately openable inside one archive, organized into collection folder/label groups. | The outer PDF shows collection context/index pages. Open the embedded message EA-PDFs to read the emails; this generator creates `1s` message children. | Message source assets and native attachments retained in the children; source email assets are also listed in the outer collection. |
-| **`1ci` — Collection, isolated** ([sample](examples/eml/eml_Agenda_and_timeline_slides_archive_1ci.pdf)) | Distribute a grouped collection of separately openable message copies without their original sources or native attachment payloads. | The outer PDF shows context/index pages; original message children use `1si` and must be opened separately. | Original email sources and original native attachment bytes omitted. Optional finding-aid PDFs and XLSX indexes are separate sidecars. |
+| **`1ci` — Collection, isolated** ([sample](examples/eml/eml_Agenda_and_timeline_slides_archive_1ci.pdf)) | Distribute a grouped collection of separately openable message copies without their original sources or native attachment payloads. | The outer PDF shows context/index pages; original message children use `1si` and must be opened separately. | Original email sources and original native attachment bytes omitted. |
 
 ### Choosing and opening a profile
 
@@ -100,9 +131,9 @@ For `1m`/`1mi`, an enabled PDF index appears before the message pages and `embed
 
 Oversized spreadsheet fields are preserved in numbered chunks on `Continuation` sheets. The main index links to the first chunk; each chunk identifies the email, field and part number. No text is truncated.
 
-For `1c`/`1ci`, the index remains front matter. Requested `_finding_aid.pdf` and `_index.xlsx` files are written **beside the collection as sidecars**. Neither is embedded in the collection, and the finding-aid PDF contains no embedded XLSX or synthetic EML. EA-PDF §7.6 permits only other EA-PDF files and original raw email assets as collection members. This collection restriction does not prohibit XLSX embedding in `1m`/`1mi`.
+Branding, finding-aid generation and PREMIS output have been removed from the creator GUI and command line. Collections retain their required cover page.
 
-See [configuration](config/README.md) for the settings. Container PREMIS also remains a sidecar. Finding-aid PDF sidecars are ordinary PDF/A index documents, not EA-PDF email messages.
+See [configuration](config/README.md) for the supported settings.
 
 The EA-PDF standard allows collections to contain other EA-PDF profiles, including mixed and nested collections; the `1s`/`1si` original-message children above describe this generator's current behavior. Profile definitions are in §3.2 of the [EA-PDF 1.0 specification](docs/reference/EA-PDF-v1.pdf).
 
@@ -112,12 +143,12 @@ All six profiles currently use PDF 2.0 / PDF/A-4f output in this generator. Sele
 
 | Download | Purpose |
 | --- | --- |
-| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.19/emailtopdfa-1.6.0-beta.19-gui.jar) | Convert local email sources through the desktop app. |
-| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.19/emailtopdfa-1.6.0-beta.19.jar) | Run local email and Gmail workflows from the command line. |
-| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.19/eapdf-validator-1.6.0-beta.19.jar) | Validate a PDF using the bundled Java engines and current rules. |
-| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.19/eapdf-viewer-0.5.0-beta.18-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
-| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.19/eapdf-viewer-0.5.0-beta.18-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
-| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.19/ea-pdf-examples-1.6.0-beta.19.zip) | Regenerated examples with source hashes and recorded validation results. |
+| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.20/emailtopdfa-1.6.0-beta.20-gui.jar) | Convert local email sources through the desktop app. |
+| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.20/emailtopdfa-1.6.0-beta.20.jar) | Run local email and Gmail workflows from the command line. |
+| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.20/eapdf-validator-1.6.0-beta.20.jar) | Validate a PDF using the bundled Java engines and current rules. |
+| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.20/eapdf-viewer-0.5.0-beta.20-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
+| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.20/eapdf-viewer-0.5.0-beta.20-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
+| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v1.6.0-beta.20/ea-pdf-examples-1.6.0-beta.20.zip) | Regenerated examples with source hashes and recorded validation results. |
 
 Each JAR includes its runtime libraries. The release also includes the updated specification-author review document, license notices and `SHA256SUMS.txt`. Run a desktop app with `java -jar downloaded-file.jar`.
 
@@ -132,7 +163,7 @@ bundles, and verify them against the exact applications being released.
 
 ## Quick Start
 
-Set `"creator": "Your organization or name"` in `config/eapdf_config.json` before converting. This identifies the entity responsible for the EA-PDF, separately from the software. The GUI also provides **Creator identity...** for the current session.
+The creator defaults to `Thinkbox.DIGITAL` in code and configuration. Override `creator` in `config/eapdf_config.json` when needed. This identifies the entity responsible for the EA-PDF, separately from the software. The GUI also provides **Creator identity...** for the current session.
 
 Build:
 
@@ -142,36 +173,36 @@ mvn package
 
 Artifacts:
 
-- CLI fat jar: `target/emailtopdfa-1.6.0-beta.19.jar`
-- GUI fat jar: `target/emailtopdfa-1.6.0-beta.19-gui.jar`
+- CLI fat jar: `target/emailtopdfa-1.6.0-beta.20.jar`
+- GUI fat jar: `target/emailtopdfa-1.6.0-beta.20-gui.jar`
 
 The current creator build is also available in `dist/`:
 
 ```bash
-java -Xmx2g -jar dist/emailtopdfa-1.6.0-beta.19.jar --jobs 2 --out out file.eml
-java -jar dist/emailtopdfa-1.6.0-beta.19-gui.jar
+java -Xmx2g -jar dist/emailtopdfa-1.6.0-beta.20.jar --jobs 2 --out out file.eml
+java -jar dist/emailtopdfa-1.6.0-beta.20-gui.jar
 ```
 
-The web creator uses the newer of `dist/emailtopdfa-1.6.0-beta.19.jar` and the current-version
+The web creator uses the newer of `dist/emailtopdfa-1.6.0-beta.20.jar` and the current-version
 CLI JAR in `target/`. Restart an already
 running web process to load a changed application or creator JAR selection.
 
 Convert a local email source:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.19.jar eapdf.EmailToPDFA --jobs 2 file.eml
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.20.jar eapdf.EmailToPDFA --jobs 2 file.eml
 ```
 
 Write output to a custom directory:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.19.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.20.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
 ```
 
 Generate an archive profile:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.19.jar eapdf.EmailToPDFA \
+java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.20.jar eapdf.EmailToPDFA \
   --jobs 2 --archive-profile m \
   --archive-output archive_1m.pdf \
   file.mbox
@@ -180,7 +211,7 @@ java -Xmx2g -cp target/emailtopdfa-1.6.0-beta.19.jar eapdf.EmailToPDFA \
 Validate a PDF with the standalone Java engine:
 
 ```bash
-java -Xmx4g -cp dist/eapdf-validator-1.6.0-beta.19.jar eapdf.JavaValidation archive_1m.pdf validation.json
+java -Xmx4g -cp dist/eapdf-validator-1.6.0-beta.20.jar eapdf.JavaValidation archive_1m.pdf validation.json
 ```
 
 The CLI example gives the JVM 4 GiB; choose a heap suited to the file and available
@@ -219,7 +250,7 @@ python validator_web.py
 Launch the desktop GUI:
 
 ```bash
-java -jar target/emailtopdfa-1.6.0-beta.19-gui.jar
+java -jar target/emailtopdfa-1.6.0-beta.20-gui.jar
 ```
 
 Tracked examples are grouped by source format under [`examples/`](examples/):
@@ -236,7 +267,7 @@ and a `manifest.json` with source paths, hashes and validation results.
 Output filenames identify the input type, source and profile, for example
 `eml_Agenda_and_timeline_slides_1s.pdf`. Multiple-input samples add `_archive`.
 The 24 primary examples were regenerated and validated on 2026-11-07 using
-`1.6.0-beta.19`, with Accessibility enabled, embedded search indexes enabled for
+`1.6.0-beta.20`, with Accessibility enabled, embedded search indexes enabled for
 supported profiles, and optional PREMIS and finding aids disabled. Gmail is an
 account download workflow, not a separate accepted local file type.
 
@@ -259,8 +290,8 @@ python3 -B scripts/regenerate_email_samples.py
 To use the local verified build and retain detailed validation reports:
 
 ```bash
-EAPDF_GENERATOR_CLASSPATH="$PWD/dist/emailtopdfa-1.6.0-beta.19.jar" \
-EAPDF_VALIDATOR_JAR="$PWD/dist/eapdf-validator-1.6.0-beta.19.jar" \
+EAPDF_GENERATOR_CLASSPATH="$PWD/dist/emailtopdfa-1.6.0-beta.20.jar" \
+EAPDF_VALIDATOR_JAR="$PWD/dist/eapdf-validator-1.6.0-beta.20.jar" \
 EAPDF_SAMPLE_REPORT_DIR="/tmp/eapdf-example-reports" \
 python3 -B scripts/regenerate_email_samples.py
 ```
@@ -268,8 +299,7 @@ python3 -B scripts/regenerate_email_samples.py
 The standalone Java validator bundles the PDF/A and selected ISO engines; Docker
 is not needed for this workflow. Its bundled rule JSON must match the current
 rulebook. The script validates all 24 EA-PDF candidates and their collection
-children before replacing any saved example. If finding-aid PDFs are explicitly
-enabled, it also requires their PDF/A checks to pass. It rejects incorrect profiles,
+children before replacing any saved example. It rejects incorrect profiles,
 mandatory failures, incomplete required comparisons, and missing or failed PDF/A
 or selected ISO checks. The per-folder manifests record the actual results.
 
@@ -347,10 +377,7 @@ Project configuration lives in [`config/eapdf_config.json`](config/eapdf_config.
 
 Current config-controlled feature areas include:
 
-- branding/footer behavior
-- finding aid / Excel embedding behavior
 - PDF/UA-style catalog features
-- PREMIS embedding and sidecar output
 - optional [outer-file digital signatures](docs/DIGITAL_SIGNATURES.md)
 
 Supporting configuration files live under [`config/`](config/).
@@ -437,7 +464,7 @@ PyPI links provide upstream release and license metadata.
 | Flask — validator web application | `>=3.1.3,<4` | [3.1.3](https://pypi.org/project/Flask/3.1.3/) | BSD-3-Clause |
 | Gunicorn — production web server | `>=26.2.0,<27` | [26.2.0](https://pypi.org/project/gunicorn/26.2.0/) | MIT |
 | pikepdf — PDF validation / sample processing | `>=10.17.0,<11` | [10.17.0](https://pypi.org/project/pikepdf/10.17.0/) | MPL-2.0 |
-| pypdf — PDF inspection | `>=6.21.0,<7` | [6.21.0](https://pypi.org/project/pypdf/6.21.0/) | BSD-3-Clause |
+| pypdf — PDF inspection | `>=7.0.0,<8` | [7.0.0](https://pypi.org/project/pypdf/7.0.0/) | BSD-3-Clause |
 | ReportLab — documentation PDF generation | `>=5.0.1,<6` | [5.0.1](https://pypi.org/project/reportlab/5.0.1/) | BSD-3-Clause |
 | Werkzeug — directly imported web helpers | `>=3.1.9,<4` | [3.1.9](https://pypi.org/project/Werkzeug/3.1.9/) | BSD-3-Clause |
 
