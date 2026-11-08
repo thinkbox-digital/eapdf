@@ -15,7 +15,7 @@ execFileSync('python3',['-c',`import pikepdf,sys
 with pikepdf.open(sys.argv[1]) as p:
  for o in p.objects:
   if isinstance(o,pikepdf.Dictionary) and o.get('/Type')==pikepdf.Name('/Filespec') and str(o.get('/F','')).endswith('.pptx'):
-   for s in o['/EF'].values():
+   for _, s in o['/EF'].items():
     s.write(b'');s['/Params']['/Size']=0
  p.save(sys.argv[2])`,source,single]);
 const shapes=[['single',single,1],['mbox',resolve('../examples/mbox/mbox_enron-sample_1m.pdf'),2],['pst',resolve('../examples/pst/pst_quality-attached-message_1c.pdf'),7]];
