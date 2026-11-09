@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.0-beta.1 — 2026-11-09
+
+- **Bug fixes:** Correct nested MSG comparisons, unavailable metadata outcomes, validation warning handling and file-drop capture.
+- **UI improvements:** Add PDF Portfolio layouts and resizing; link confirmed message filenames while keeping embedded source/attachment filenames plain.
+- **Code improvements:** Scale resource allowances with memory/disk, preserve completed validation outcomes, prioritize bounded EML/MSG archive groups and report rejected/incomplete jobs explicitly.
+- **Test coverage:** Replace two missing Outlook-source dependencies with reproducible synthetic regressions. Viewer bumped to 1.0.0-beta.1; creator and validator to 2.0.0-beta.1.
+
+
 ## 1.6.0-beta.20 — 2026-11-08
 
 - Creator/validator 1.6.0-beta.20; viewer 0.5.0-beta.20.
@@ -26,7 +34,7 @@
 
 Included in the published beta.19 release.
 
-- Embedded metadata and full-text search indexes for supported archives; conversion requires no Node.js runtime.
+- Embedded metadata and full-text search indexes for supported archives using built-in Java text extraction.
 - Improved search matching, highlighting, CSV exports, keyboard navigation and return-to-file navigation in viewer 0.5.0-beta.17.
 - Creator search-index control, finding aids disabled by default, and reduced MIME parsing allocations.
 - Expanded automated checks and stricter package integrity checks. Beta limitations remain documented.

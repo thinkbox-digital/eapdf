@@ -23,8 +23,9 @@ final class BoundedPdfStreams {
         String value = System.getProperty(name, System.getenv(name));
         return value == null || value.isBlank() ? fallback : Math.max(1, Long.parseLong(value));
     }
-    static long streamLimit() { return setting("VALIDATOR_MAX_STREAM_BYTES", 64L * 1024 * 1024); }
-    static long metadataLimit() { return setting("VALIDATOR_MAX_METADATA_BYTES", 16L * 1024 * 1024); }
+    static long streamLimit() { return setting("VALIDATOR_MAX_STREAM_BYTES", ValidationRuntime.workFileLimit()); }
+    static long memoryStreamLimit() { return Math.min(streamLimit(), Math.min(Integer.MAX_VALUE - 8L, Math.max(1, Runtime.getRuntime().maxMemory() / 4))); }
+    static long metadataLimit() { return setting("VALIDATOR_MAX_METADATA_BYTES", Math.min(Integer.MAX_VALUE - 8L, Math.max(1, Runtime.getRuntime().maxMemory() / 16))); }
     private static final class Budget {
         long bytes, files;
         String limited;
@@ -59,9 +60,10 @@ final class BoundedPdfStreams {
         for (int i = 0; i < filters.size(); i++) {
             COSBase item = parameters instanceof COSArray a && i < a.size() ? a.getObject(i) : parameters;
             if (item instanceof COSDictionary d) {
+                long rowLimit = Math.min(maximum, memoryStreamLimit());
                 long columns = d.getLong(COSName.COLUMNS, 1), colors = d.getLong(COSName.COLORS, 1), bits = d.getLong(COSName.BITS_PER_COMPONENT, 8);
                 if (columns < 1 || colors < 1 || bits < 1 || bits > 16 || colors > 32
-                    || columns > Math.min(maximum, 16L * 1024 * 1024) / colors / bits * 8)
+                    || columns > rowLimit / colors / bits * 8)
                     throw new Limit("PDF predictor row exceeds the decoding limit");
             }
         }

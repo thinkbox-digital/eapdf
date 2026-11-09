@@ -784,6 +784,12 @@ static String buildRenderHtml(EmailRecord r, boolean debug, Path assetDir, Strin
   s.append(".pagebreak { page-break-before: always; }");
   s.append(emailStyles);
   s.append("</style></head><body>");
+  if (!Common.nz(EapdfConfig.get().validationWarning).isBlank()) {
+    System.err.println("warning: VALIDATION WARNING BANNER: " + EapdfConfig.get().validationWarning);
+    s.append("<div style='border:2px solid #8b6500;background:#fff5ce;padding:10px;margin-bottom:12px;color:#473500'>")
+        .append("<p><strong>WARNING — Validation requires review</strong></p><p>")
+        .append(Common.escapeHtml(EapdfConfig.get().validationWarning)).append("</p></div>");
+  }
   if (!r.sourceProblems.isEmpty()) {
     s.append("<div style='border:2px solid #8b3500;padding:10px;margin-bottom:12px;color:#582400'>")
         .append("<p><strong>INCOMPLETE SOURCE — conversion warnings</strong></p><ul>");

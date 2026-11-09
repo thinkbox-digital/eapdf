@@ -20,7 +20,7 @@ export async function checkScrolling(browser){
  // Use page-number entry to jump once, then real DOM scrolling in both directions.
  const source=resolve('tests/attachments/source/pst_first_message_legacy.pdf'),before=hash(await readFile(source));
  await browser.open(source);
- // Pixel-size checks explicitly select 100%; opening now defaults to Fit width.
+ // Pixel-size checks explicitly select 100%; opening now defaults to Fit Page.
  await browser.evaluate(()=>{const z=document.querySelector('#zoom');z.value='1';z.dispatchEvent(new Event('change'));});await browser.ready();assert.equal((await state()).total,'of 5');assert.equal((await state()).width,816);
  for(let number=2;number<=5;number++){
   // Transfer the next index from the current page rather than evaluating generated code.

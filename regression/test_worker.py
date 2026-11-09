@@ -86,6 +86,39 @@ class MetadataBoundaryTests(unittest.TestCase):
         self.assertTrue(any(item['code']=='VALIDATION_INCOMPLETE' for item in report.items))
         self.assertFalse(any(item['level']=='FAIL' for item in report.items))
 
+class AdaptiveResourceTests(unittest.TestCase):
+    def test_unavailable_storage_and_invalid_resource_settings_report_incomplete(self):
+        with patch('validation_worker.disk_allowances', side_effect=OSError('No space available')):
+            result=run_cli(Path('unused.py'), [])
+            self.assertEqual(2,result[0]);self.assertEqual(b'',result[1]);self.assertIn('No space available',result[3])
+        with patch.dict(os.environ, {'VALIDATOR_JOB_MEMORY_MB':'invalid'}):
+            result=run_cli(Path('unused.py'), [])
+            self.assertEqual(2,result[0]);self.assertIn('ValueError',result[3])
+
+    def test_disk_budgets_share_available_space_and_preserve_overrides(self):
+        from validation_worker import disk_allowances
+        from types import SimpleNamespace
+        with patch.dict(os.environ, {}, clear=True), patch('validation_worker.shutil.disk_usage', return_value=SimpleNamespace(free=80*1024**3)):
+            self.assertEqual((5*1024**3, 10*1024**3), disk_allowances(Path('.'), 4))
+            with patch.dict(os.environ, {'VALIDATOR_MAX_WORK_FILE_BYTES':'1024','VALIDATOR_MAX_SCRATCH_BYTES':'2048'}):
+                self.assertEqual((1024,2048), disk_allowances(Path('.'), 4))
+
+    def test_decoder_defaults_follow_job_memory_without_lifetime_count_ceiling(self):
+        import pdf_stream_limits as limits
+        with patch.dict(os.environ, {'VALIDATOR_JOB_MEMORY_MB':'1024'}, clear=True):
+            self.assertEqual(256*1024**2, limits.setting('VALIDATOR_MAX_STREAM_BYTES', 1))
+            self.assertEqual(64*1024**2, limits.setting('VALIDATOR_MAX_METADATA_BYTES', 1))
+            budget=limits.Budget()
+            budget.charge(64*1024**3) # Completed decodes do not retain these bytes.
+            token=limits.CURRENT.set(budget)
+            try:
+                for _ in range(2050): limits.count_file()
+            finally: limits.CURRENT.reset(token)
+            with patch.dict(os.environ, {'VALIDATOR_MAX_DECODED_BYTES':'12'}):
+                budget=limits.Budget();budget.charge(8)
+                with self.assertRaises(limits.DecodeLimitError): budget.charge(8)
+
+
 class ValidatorPipelineTests(unittest.TestCase):
     def test_empty_page_completes_without_engine_exception(self):
         import pikepdf

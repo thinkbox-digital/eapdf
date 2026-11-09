@@ -12,7 +12,8 @@ python -B -m unittest discover -s regression -v
 ```
 
 Coverage includes authentication, host/proxy boundaries, worker timeout/crash
-cleanup, scratch budgets, admission/deadline enforcement, XML limits and invalid
+cleanup, adaptive memory/disk budgets, explicit resource overrides, warning retries,
+stale-result rejection, admission/deadline enforcement, XML limits and invalid
 or empty-page PDFs. This is an initial public subset, not comprehensive parity
 with every local Python test.
 

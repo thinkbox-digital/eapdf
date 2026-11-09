@@ -30,7 +30,7 @@ review described in `docs/THIRD_PARTY_LICENSES.md`.
 From the project folder:
 
 ```bash
-java -jar dist/emailtopdfa-1.6.0-beta.20-gui.jar
+java -jar dist/emailtopdfa-2.0.0-beta.1-gui.jar
 ```
 
 1. Open **Local Email**.
@@ -130,8 +130,8 @@ Legacy email background, text and existing link colors are retained, including w
 ## Use the command line
 
 ```bash
-java -jar dist/emailtopdfa-1.6.0-beta.20.jar --out /tmp/eapdf-demo-single "in/Agenda and timeline slides.eml"
-java -jar dist/emailtopdfa-1.6.0-beta.20.jar --out /tmp/eapdf-demo --archive-profile c "in/enron-sample.mbox"
+java -jar dist/emailtopdfa-2.0.0-beta.1.jar --out /tmp/eapdf-demo-single "in/Agenda and timeline slides.eml"
+java -jar dist/emailtopdfa-2.0.0-beta.1.jar --out /tmp/eapdf-demo --archive-profile c "in/enron-sample.mbox"
 ```
 
 CLI arguments are unchanged.

@@ -126,12 +126,14 @@ class MsgAddressPreservationTests {
   }
 
   @Test
-  void suppliedOutlookMessageRetainsItsTransportRecipientOrder() throws Exception {
-    Path source = Path.of("in/2019.10.10a additional comments and questions for DEP.msg");
-    org.junit.jupiter.api.Assumptions.assumeTrue(Files.isRegularFile(source), "Optional source fixture absent: " + source);
+  void syntheticOutlookMessageRetainsItsTransportRecipientOrder() throws Exception {
+    Path source = Path.of("src/test/resources/eapdf/outlook-regression/transport-recipient-order.msg");
     EmailRecord record = MsgReader.readMsg(source.toString(), "", List.of(), false);
-    Assertions.assertEquals(List.of("Jay.L.Clement@usace.army.mil", "Jami.MacNeil@maine.gov"),
+    Assertions.assertEquals(List.of("first@example.org", "second@example.org"),
         record.toAgents.stream().map(agent -> agent.email).toList());
+    Assertions.assertEquals(List.of("Native first", "Native second"),
+        record.toAgents.stream().map(agent -> agent.name).toList());
+    Assertions.assertEquals("Header first <first@example.org>, Header second <second@example.org>", record.rawTo);
     Assertions.assertArrayEquals(Files.readAllBytes(source), record.sourceBytes);
   }
 

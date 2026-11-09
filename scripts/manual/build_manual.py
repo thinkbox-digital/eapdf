@@ -78,7 +78,7 @@ def build(source,destination,bold_font):
     def decorate(canvas,document):
         canvas.saveState();canvas.setStrokeColor(colors.HexColor('#d2dce4'));canvas.line(left,35,width-left,35)
         canvas.setFont('ManualSans',8);canvas.setFillColor(colors.HexColor('#435867'))
-        canvas.drawString(left,23,'EA-PDF User Manual | 2 November 2026')
+        canvas.drawString(left,23,'EA-PDF User Manual | 9 November 2026')
         canvas.drawRightString(width-left,23,str(document.page));canvas.restoreState()
     doc.addPageTemplates(PageTemplate(id='manual',frames=[Frame(left,49,usable,height-97,leftPadding=0,rightPadding=0,topPadding=0,bottomPadding=0)],onPage=decorate))
     root=ET.parse(source).getroot();story=[];figures=[]
@@ -131,7 +131,7 @@ def main():
         subprocess.run(['javac','-cp',classpath,'-d',str(work),str(helper)],check=True,cwd=ROOT)
         report=args.output.with_suffix('.pdfa-validation.json');icc=ROOT/'src/main/resources/assets/sRGB.icc'
         subprocess.run(['java','-Xmx512m','-cp',str(work)+os.pathsep+classpath,'eapdf.ManualPdf',str(intermediate),str(args.output.resolve()),str(icc),str(report.resolve())],check=True,cwd=ROOT)
-        receipt={'edition':'2026-11-08','pdf':args.output.name,'sha256':sha(args.output),'pdfa_validation':json.loads(report.read_text()),'sources':{str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else str(p):sha(p) for p in [*sources,icc,helper,Path(__file__).resolve()]},'runtime_jars':{p.name:sha(p) for p in [args.creator_jar,args.validator_jar]},'scope':'Ordinary PDF/A-2b user manual; no EA-PDF conformance asserted; screenshots use fictional mail.'}
+        receipt={'edition':'2026-11-09','pdf':args.output.name,'sha256':sha(args.output),'pdfa_validation':json.loads(report.read_text()),'sources':{str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else str(p):sha(p) for p in [*sources,icc,helper,Path(__file__).resolve()]},'runtime_jars':{p.name:sha(p) for p in [args.creator_jar,args.validator_jar]},'scope':'Ordinary PDF/A-2b user manual; no EA-PDF conformance asserted; screenshots use fictional mail.'}
         receipt_path=ROOT/'docs/manual/build-receipt.json' if args.output.resolve()==MANUAL.resolve() else args.output.with_suffix('.build-receipt.json')
         receipt_path.write_text(json.dumps(receipt,indent=2)+'\n')
         print(json.dumps({'pdf':str(args.output),'bytes':args.output.stat().st_size,'sha256':receipt['sha256'],'validation':receipt['pdfa_validation']['status']}))

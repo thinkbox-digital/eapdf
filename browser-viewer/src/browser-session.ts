@@ -1,3 +1,4 @@
+import type {PortfolioData} from './portfolio.js';
 import {retainedSize} from './retained-size.js';
 import {forgetFullTextIndex} from './fulltext-index.js';
 import {forgetEmbeddedIndex} from './embedded-index.js';
@@ -16,7 +17,7 @@ import type {DocumentAssets} from './pdfjs-assets.js';
 import type {DocumentPartsInspection} from './pdfjs-document-parts.js';
 
 export type BrowserDocument = InspectedDocument & {
-  name:string; parent:BrowserDocument|null; parentFileId?:string; parentStreamPath?:string;
+  portfolio?:PortfolioData; name:string; parent:BrowserDocument|null; parentFileId?:string; parentStreamPath?:string;
   ancestorIds:readonly string[]; active:boolean;
 };
 type Entry={metadataBytes:number;messageIndex?:MessageIndex;needsRefresh?:boolean;restarting?:Promise<void>;managed?:ReturnType<typeof loadManagedPdf>;blob?:Blob;parts:DocumentPartsInspection;assets:DocumentAssets;facts:Map<string,StreamFacts>;header:string|null;size:number;lastUse:number;supplementLinks?:Map<string,readonly string[]>;supplementError?:string;supplementScan?:Promise<void>};
@@ -120,6 +121,11 @@ export class BrowserSession {
       const doc:BrowserDocument={pdf,...interpreted,payloads:new Map(),children:new Map(),run:managed.run,name,parent,parentFileId:fileId,parentStreamPath:streamPath,ancestorIds:ancestors,active:true};
       this.entries.set(doc,entry);this.accountMetadata(doc,entry);this.pending.delete(managed);this.trim(doc);return doc;
     }catch(error){managed.close();this.pending.delete(managed);throw error;}
+  }
+  async portfolio(doc:BrowserDocument):Promise<PortfolioData>{
+    this.check();await this.ensure(doc);this.check();
+    if(!doc.portfolio){const result=await doc.run(doc.pdf.getDocumentAssets({presentationOnly:true}));this.check();doc.portfolio=result.presentation;const entry=this.entries.get(doc);if(entry)this.accountMetadata(doc,entry);}
+    return doc.portfolio;
   }
   cachedMessageIndex(doc:BrowserDocument):MessageIndex|undefined{return this.entries.get(doc)?.messageIndex;}
   rememberMessageIndex(doc:BrowserDocument,index:MessageIndex|undefined):void{const entry=this.entries.get(doc);if(entry){entry.messageIndex=index;this.accountMetadata(doc,entry);}}
@@ -249,7 +255,7 @@ export class BrowserSession {
     if(entry.supplementError&&!doc.inspection.diagnostics.some(d=>d.code==='SUPPLEMENT_ASSOCIATION_INCOMPLETE'))doc.inspection={...doc.inspection,diagnostics:[...doc.inspection.diagnostics,{code:'SUPPLEMENT_ASSOCIATION_INCOMPLETE',state:'unavailable',message:entry.supplementError,evidence:[]}]};
   }
   private accountMetadata(doc:BrowserDocument,entry:Entry):void{
-    entry.metadataBytes=retainedSize([entry.parts,entry.assets,entry.facts,entry.messageIndex,entry.supplementLinks,doc.inspection,doc.details,doc.embeddedIndex,doc.fullTextIndex]);
+    entry.metadataBytes=retainedSize([entry.parts,entry.assets,entry.facts,entry.messageIndex,entry.supplementLinks,doc.portfolio,doc.inspection,doc.details,doc.embeddedIndex,doc.fullTextIndex]);
   }
   private trim(keep:BrowserDocument):void {
     const protectedDocs=new Set<BrowserDocument>();

@@ -1,3 +1,7 @@
+import {treeIcon} from './viewer-icons.js';
+import {detectDocument,PortfolioModel,type PortfolioRow} from './portfolio.js';
+import {resolveEmbeddedLink,type EmbeddedAction} from './embedded-navigation.js';
+import {PortfolioView} from './portfolio-view.js';
 import {resolveStep,invalidateFullTextIndex,fullTextPageOwners} from './fulltext-index.js';
 import {readEmbeddedIndex,metadataSearchText} from './embedded-index.js';
 import {saveBlob} from './downloads.js';
@@ -16,24 +20,21 @@ import {setupLinkedOpening} from './linked-opening.js';
 function element<T extends HTMLElement>(id:string):T {const node=document.getElementById(id);if(!node)throw new Error('Missing element: '+id);return node as T;}
 function text<K extends keyof HTMLElementTagNameMap>(tag:K,value:string){const node=document.createElement(tag);node.textContent=value;return node;}
 function button(label:string,action:()=>void){const node=text('button',label);node.type='button';node.addEventListener('click',action);return node;}
-function treeIcon(kind:'folder'|'message'|'document'|'attachment'|'code'|'view'|'download'|'search'|'close'|'left'|'right'|'up'|'minus'|'plus'|'warning'):SVGSVGElement {
-  const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
-  icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('aria-hidden','true');icon.setAttribute('focusable','false');icon.classList.add('tree-icon');
-  const paths=kind==='search'?['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14','m15 15 6 6']:kind==='close'?['m6 6 12 12M18 6 6 18']:kind==='left'?['m15 5-7 7 7 7']:kind==='right'?['m9 5 7 7-7 7']:kind==='up'?['m5 12 7-7 7 7M12 5v15']:kind==='minus'?['M5 12h14']:kind==='plus'?['M5 12h14M12 5v14']:kind==='warning'?['m12 3 10 18H2Z','M12 9v5M12 17v1']:kind==='attachment'?['M8 13l7-7a3 3 0 0 1 4 4L9 20a5 5 0 0 1-7-7L12 3','M5 15l9-9']:kind==='code'?['m8 6-6 6 6 6M16 6l6 6-6 6M14 3l-4 18']:kind==='view'?['M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z','M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0']:kind==='download'?['M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5']:kind==='folder'?['M3 7V5h6l2 2h10v13H3Z','M3 10h18l-3 10H3Z']:kind==='message'?['M3 5h18v14H3Z','m3 6 9 7 9-7']:['M5 3h9l5 5v13H5Z','M14 3v6h5M8 13h8M8 17h8'];
-  paths.forEach((d,index)=>{const path=document.createElementNS(icon.namespaceURI,'path');path.setAttribute('d',d);if(kind==='folder')path.setAttribute('class',index?'folder-open':'folder-closed');icon.append(path);});
-  return icon;
-}
+
 const fileInput=element<HTMLInputElement>('file'),pageInput=element<HTMLInputElement>('page'),zoom=element<HTMLSelectElement>('zoom');
 const status=element('status'),tree=element('tree'),files=element('files');
 const surface=element('page-surface'),viewport=element('viewport'),empty=element('empty-state');
 const search=element<HTMLInputElement>('search'),searchStatus=element('search-status');
 const attachmentViewer=new AttachmentViewer();
+let portfolioView:PortfolioView|undefined,portfolioDocument:BrowserDocument|undefined;
+const portfolioModels=new WeakMap<BrowserDocument,PortfolioModel>();
+let portfolioReturn:{doc:BrowserDocument;page:number;message?:string}|undefined;
 const failedPages=new Set<number>();
 const pages=new ScrollingPages(viewport,surface,number=>{
   pageNumber=number;syncMessageToPage();if(current){savedPages.set(current,number);status.textContent=`${current.name} · Page ${number} of ${current.pdf.numPages}`;}controls();
 },message=>{status.textContent=`Unable to display PDF: ${message}`;},(number,failed)=>{
   if(failed)failedPages.add(number);else failedPages.delete(number);controls();
-});
+},action=>{if(current){const source=current;void operation(ticket=>followEmbeddedLink(source,action,ticket));}});
 let cancelLinked=()=>{};
 const finder=new DocumentSearch();let searchEpoch=0;
 const selectedMessage=(doc:BrowserDocument)=>doc.inspection.messages.find(m=>m.id===savedMessages.get(doc));
@@ -71,6 +72,8 @@ const canView=(file:AssociatedFile,stream:EmbeddedStream)=>isPdf(file,stream)||/
 function sizeLabel(size:number|null):string {if(size===null)return 'Size not recorded';if(size<1024)return `${size} B`;if(size<1024**2)return `${(size/1024).toFixed(1)} KiB`;return `${(size/1024**2).toFixed(1)} MiB`;}
 function controls():void {
   fileInput.disabled=busy;const available=!!current;
+  portfolioView?.setBusy(busy);
+  element<HTMLButtonElement>('portfolio-toggle').disabled=element<HTMLButtonElement>('portfolio-show').disabled=busy;
   element<HTMLSelectElement>('search-scope').disabled=busy||!available;
   pageInput.disabled=zoom.disabled=search.disabled=element<HTMLButtonElement>('find').disabled=busy||!available;
   element<HTMLButtonElement>('previous').disabled=busy||!available||pageNumber<=1;
@@ -92,6 +95,7 @@ function controls():void {
 }
 function check(ticket:number):void {if(ticket!==generation)throw new Error('Cancelled.');}
 let keyboardSelection: (()=>HTMLElement|null|undefined)|undefined;
+let pendingOpen:{file:Blob;name:string}|undefined;
 async function operation(action:(ticket:number)=>Promise<void>):Promise<void>{
   if(busy)return;const ticket=generation;
   // Disabling a clicked tree button blurs it. Embedded PDFs also replace the row.
@@ -99,9 +103,10 @@ async function operation(action:(ticket:number)=>Promise<void>):Promise<void>{
   const focused=document.activeElement;
   if(!keyboardSelection&&focused instanceof HTMLElement&&tree.contains(focused))
     keyboardSelection=()=>tree.querySelector<HTMLElement>('button[aria-current]')??(focused.isConnected?focused:undefined);
+  if(!keyboardSelection&&focused instanceof HTMLElement&&focused.matches('#portfolio-panel [data-portfolio-row]'))keyboardSelection=()=>element('portfolio-panel').querySelector<HTMLElement>('button[aria-current]');
   busy=true;controls();
   try{await action(ticket);}catch(error){if(ticket===generation){element('restart').hidden=!current;status.textContent=`Unable to display PDF: ${error instanceof Error?error.message:String(error)}`;}}
-  finally{if(ticket===generation){busy=false;controls();const focus=keyboardSelection;keyboardSelection=undefined;focus?.()?.focus({preventScroll:true});}}
+  finally{if(ticket===generation){busy=false;controls();const focus=keyboardSelection;keyboardSelection=undefined;focus?.()?.focus({preventScroll:true});if(pendingOpen)queueMicrotask(()=>{if(!busy&&pendingOpen){const next=pendingOpen;pendingOpen=undefined;void openFile(next.file,next.name);}});}}
 }
 const loadingDialog=element<HTMLDialogElement>('loading-dialog');
 let loadingTimer:ReturnType<typeof setTimeout>|undefined;
@@ -112,7 +117,10 @@ function finishLoading():void {
 element('loading-cancel').addEventListener('click',()=>close());
 loadingDialog.addEventListener('cancel',event=>{event.preventDefault();close();});
 function close():void {
+  pendingOpen=undefined;
   finishLoading();cancelExport?.();
+  portfolioView?.close();portfolioView=undefined;portfolioDocument=undefined;portfolioReturn=undefined;
+  element('portfolio-toggle').hidden=element('portfolio-show').hidden=true;delete document.body.dataset.documentKind;
   metadataEpoch++;forceMetadataScan=false;metadataSession?.close();metadataSession=undefined;metadataIndex=undefined;clearTimeout(filterTimer);
   filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;filter.value='';filtered=undefined;tree.hidden=false;element('filter-status').textContent='';keyboardSelection=undefined;
   for(const list of virtualLists)list.close();virtualLists.clear();fileList?.close();fileList=undefined;
@@ -123,7 +131,7 @@ function close():void {
   for(const panel of [tree,files,element('breadcrumbs')])panel.replaceChildren();
   element('declared-profile').textContent='';element('declared-profile').hidden=true;
   element('header-filename').textContent='';element('header-filename').title='';element('message-count').textContent='0';element('selection-details').replaceChildren();element('files-title').textContent='Files in this PDF';closeSearch(false);
-  element('file-count').textContent='0';search.value='';searchStatus.textContent='';
+  element('file-count').textContent='0';search.value='';searchStatus.textContent='';element('document-notice').hidden=true;element('navigation-title').textContent='Messages';element('export-csv').hidden=false;
   element<HTMLButtonElement>('results-tab').disabled=true;navigationTab('browse');
   status.textContent='Closed. Open or drop a PDF to begin.';controls();
 }
@@ -184,7 +192,11 @@ function syncMessageToPage():void {
 function breadcrumbs(doc:BrowserDocument):void {
   const bar=element('breadcrumbs');bar.replaceChildren();const path:BrowserDocument[]=[];
   for(let d:BrowserDocument|null=doc;d;d=d.parent)path.unshift(d);
-  path.forEach((d,i)=>{if(i)bar.append(text('span','›'));const b=button(d.name,()=>void operation(ticket=>showDocument(d,ticket)));b.title=d.name;bar.append(b);});
+  path.forEach((d,i)=>{
+    if(d.parent&&d.parentFileId)for(const folder of portfolioModels.get(d.parent)?.folderPath(d.parentFileId)??[]){
+      bar.append(text('span','›'));const segment=text('span',folder);segment.className='breadcrumb-folder';bar.append(segment);
+    }
+    if(i)bar.append(text('span','›'));const b=button(d.name,()=>void operation(async ticket=>{await showDocument(d,ticket);if(portfolioView)portfolioReturn=undefined;if(portfolioView&&d.inspection.collection.state==='present'&&d!==portfolioDocument)await activatePortfolio(d,ticket);}));b.title=d.name;bar.append(b);});
 }
 function showInformation(doc:BrowserDocument):void {
   const id=doc.inspection.identification,profile=element('declared-profile');
@@ -192,6 +204,15 @@ function showInformation(doc:BrowserDocument):void {
   for(const diagnostic of doc.inspection.diagnostics)console.debug('[EA-PDF inspection]',doc.name,diagnostic);
   breadcrumbs(doc);
   let root=doc;while(root.parent)root=root.parent;
+  const rootDetection=detectDocument(root.inspection),detection=rootDetection.kind==='eapdf'||portfolioView?rootDetection:detectDocument(doc.inspection);document.body.dataset.documentKind=detection.kind;
+  element('navigation-title').textContent=detection.kind==='eapdf'?'Messages':'Contents';
+  element('navigation-panel').setAttribute('aria-label',detection.kind==='eapdf'?'Messages and collections':'Document contents');
+  element('export-csv').hidden=detection.kind!=='eapdf';
+  element('portfolio-toggle').hidden=!rootDetection.collection&&!detection.collection;
+  element('portfolio-toggle').textContent=portfolioView?(detectDocument((portfolioReturn?.doc??doc).inspection).kind==='eapdf'?'Email view':'PDF view'):'Portfolio view';
+  element('portfolio-show').hidden=!portfolioView?.hidden;
+  element('document-notice').textContent=detection.notice;element('document-notice').hidden=!detection.notice;
+  if(detection.kind!=='eapdf')profile.textContent=detection.kind==='portfolio'?'PDF Portfolio':'PDF';
   element('header-filename').textContent=root.name;element('header-filename').title=root.name;
   element('message-count').textContent=String(browseMessageCounts.get(root)??root.inspection.messages.length);
 }
@@ -220,20 +241,52 @@ function showFiles(doc:BrowserDocument,message?:MailMessage):void {
   if(message&&doc.inspection.diagnostics.some(d=>d.code==='FILE_EMAIL_ASSOCIATION_MISSING')){const note=text('p','Some files could not be linked to an email.');note.className='file-note';files.append(note);}
   if(!selected.length){if(doc.inspection.coverage.associatedFiles==='present'){const note=text('p',message&&doc.inspection.files.length?'No files are associated with this email in the PDF.':'No embedded files in this selection.');note.className='muted';files.append(note);}}
   const list=text('ul','');files.append(list);
+  const fileById=new Map(doc.inspection.files.map(file=>[file.id,file]));
   const createFile=(file:AssociatedFile)=>{
-    const row=text('li','');row.className='file-card';const label=text('strong',fileLabel(file));label.className='file-name';label.title=fileLabel(file);const icon=treeIcon(/\.eml$/i.test(fileLabel(file))?'message':/\.(xml|json|html?)$/i.test(fileLabel(file))?'code':file.afRelationship.value!=='Supplement'&&file.afRelationship.value!=='Source'&&file.owners.value?.length?'attachment':'document');icon.classList.add('file-icon');const heading=text('div','');heading.className='file-heading';heading.append(label);row.append(icon,heading);
+    const row=text('li','');row.className='file-card';row.dataset.associatedFileId=file.id;const label=text('strong',fileLabel(file));label.className='file-name';label.title=fileLabel(file);const icon=treeIcon(/\.eml$/i.test(fileLabel(file))?'message':/\.(xml|json|html?)$/i.test(fileLabel(file))?'code':file.afRelationship.value!=='Supplement'&&file.afRelationship.value!=='Source'&&file.owners.value?.length?'attachment':'document');icon.classList.add('file-icon');const heading=text('div','');heading.className='file-heading';heading.append(label);row.append(icon,heading);
     const category=fileCategory(file);
+    const filenameStream=file.streams.length===1&&isPdf(file,file.streams[0]!)
+      &&browseSubjects.get(doc)?.has(pdfKey(file,file.streams[0]!))
+      &&(file.streams[0]!.decodedSize.value??file.streams[0]!.declaredSize.value)!==0?file.streams[0]:undefined;
+    if(filenameStream){
+      const open=button(fileLabel(file),()=>void operation(async ticket=>{await openChild(doc,file,filenameStream,ticket);}));
+      open.className='file-name file-name-link';open.title=`Open ${fileLabel(file)}`;
+      open.setAttribute('aria-label',`Open ${fileLabel(file)}`);open.dataset.openFileId=file.id;
+      label.replaceWith(open);
+    }
     if(selected.length>256){const role=text('p',category);role.className='file-role';row.append(role);}
-    const owner=doc.inspection.messages.find(m=>file.owners.value?.includes(m.id));
-    const description=(owner?doc.details.get(owner.metadataRecordId)?.Subject:undefined);
-    if(description&&description!==fileLabel(file)){const detail=text('p',description);detail.className='file-description';detail.title=description;row.append(detail);}
+    const owners=doc.inspection.messages.filter(m=>file.owners.value?.includes(m.id));
+    if(category==='Email attachments'&&owners.length){
+      const links=text('div','');links.className='file-message-links';row.append(links);
+      for(const owner of owners){
+        const subject=doc.details.get(owner.metadataRecordId)?.Subject;
+        const sourceNames=(owner.sourceAssetIds.value??[]).map(id=>fileById.get(id)).filter((source):source is AssociatedFile=>!!source).map(fileLabel);
+        const filename=[...new Set(sourceNames)].join(' · ')||doc.name;
+        const item=text('div','');item.className='file-message-owner';
+        if(subject){const description=text('span',subject);description.className='file-message-subject';description.title=subject;item.append(description);}
+        const jump=button(filename,()=>void operation(async ticket=>{
+          const target=doc.inspection.messages.find(m=>m.id===owner.id);
+          if(!target||!messagePages(doc.inspection,target).length)throw new Error('The PDF does not provide an unambiguous page for this message.');
+          clearMessageFilterForSearch('Email filter cleared to show the attachment’s message.');
+          await showDocument(doc,ticket,target);syncMessageToPage();viewport.focus({preventScroll:true});
+        }));
+        jump.className='file-message-link';jump.dataset.ownerMessageId=owner.id;
+        jump.setAttribute('aria-label',`Go to message: ${subject??'Email'} (${filename})`);
+        const available=messagePages(doc.inspection,owner).length>0;
+        jump.dataset.unavailable=String(!available);jump.title=available?`Go to message: ${filename}`:'Message page mapping is unavailable';
+        item.append(jump);links.append(item);
+      }
+    }else{
+      const description=owners[0]?doc.details.get(owners[0].metadataRecordId)?.Subject:undefined;
+      if(description&&description!==fileLabel(file)){const detail=text('p',description);detail.className='file-description';detail.title=description;row.append(detail);}
+    }
     for(const stream of file.streams){
       const size=stream.decodedSize.value??stream.declaredSize.value;
       const facts=text('span',sizeLabel(size)+(file.streams.length>1?' · '+stream.efKeys.join('/'):'') );facts.className='file-size';heading.append(facts);
       const actions=text('div','');actions.className='file-actions';if(file.streams.length>1){row.classList.add('multiple-streams');actions.setAttribute('role','group');actions.setAttribute('aria-label',stream.efKeys.join('/'));const streamLabel=text('span',stream.efKeys.join('/'));streamLabel.className='stream-label';actions.append(streamLabel);}row.append(actions);
       const save=button(file.afRelationship.value==='Source'&&/\.eml$/i.test(fileLabel(file))?'Download email (.eml)':'Download',()=>void operation(async ticket=>{status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);await saveBlob(new Blob([new Uint8Array(data)],{type:'application/octet-stream'}),fileLabel(file),()=>check(ticket));check(ticket);refreshInspection(doc);status.textContent=`Download requested: ${fileLabel(file)} (${sizeLabel(data.length)}).${doc.inspection.diagnostics.some(d=>d.code==='CHECKSUM_MISMATCH')?' Warning: recorded checksum mismatch.':''}`;}));save.replaceChildren(treeIcon('download'));save.classList.add('icon-button');save.setAttribute('aria-label',`Download ${fileLabel(file)}`);save.title=`Download ${fileLabel(file)}`;save.dataset.fileId=file.id;save.dataset.stream=stream.locator.path;actions.append(save);
       if(size===0){actions.remove();}
-      else if(canView(file,stream)){
+      else if(canView(file,stream)&&stream!==filenameStream){
         const view=button(isPdf(file,stream)?'Open PDF':'View',()=>void operation(async ticket=>{
           if(isPdf(file,stream)){await openChild(doc,file,stream,ticket);return;}
           status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);refreshInspection(doc);await attachmentViewer.open(data,fileLabel(file),stream.mimeType.value??'',()=>{[...files.querySelectorAll<HTMLButtonElement>('button[data-view-file-id]')].find(b=>b.dataset.viewFileId===file.id&&b.dataset.viewStream===stream.locator.path)?.focus({preventScroll:true});});check(ticket);status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages}`;
@@ -261,10 +314,14 @@ function singleMessage(doc:BrowserDocument):MailMessage|undefined {
 }
 async function showDocument(doc:BrowserDocument,ticket:number,message?:MailMessage,node?:HTMLElement,edge?:-1|1,fromTop=false):Promise<void>{
   message??=singleMessage(doc);
+  if(doc.parent?.inspection.collection.state==='present'&&!portfolioModels.has(doc.parent)){
+    const data=await session!.portfolio(doc.parent);check(ticket);portfolioModels.set(doc.parent,new PortfolioModel(data,doc.parent.inspection));
+  }
   await session!.ensure(doc);if(!doc.inspection.collection.value)await session!.associateFiles(doc);check(ticket);message=message?doc.inspection.messages.find(m=>m.id===message!.id):undefined;if(current!==doc)finder.clear();if(current)savedPages.set(current,pageNumber);current=doc;editingPage=false;savedMessages.set(doc,message?.id);
   const destinations=message?messagePages(doc.inspection,message):[];pageNumber=fromTop||edge===1?1:edge===-1?doc.pdf.numPages:destinations[0]??savedPages.get(doc)??1;
   markSelection(node??nodes.get(doc)?.querySelector<HTMLButtonElement>(':scope > button')??undefined);showInformation(doc);showFiles(doc,singleMessage(doc)?undefined:message);searchStatus.textContent='';
-  if(fromTop)zoom.value='fit-width';
+  portfolioView?.syncDocument(doc.parent===portfolioDocument?doc.parentFileId:undefined);
+  if(fromTop)zoom.value='fit-page';
   await render(ticket,false);
   if(fromTop){viewport.scrollTop=0;viewport.scrollLeft=0;}
   await showOutline(doc,ticket);
@@ -286,7 +343,8 @@ async function openChild(parent:BrowserDocument,file:AssociatedFile,stream:Embed
   }
   const single=!child.inspection.collection.value&&child.inspection.messages.length===1?child.inspection.messages[0]:undefined;
   await showDocument(child,ticket,single,row.querySelector('button')??undefined,edge);
-  prepareBrowseSubjects(child,ticket);
+  if(portfolioView&&detectDocument(child.inspection).kind==='portfolio')await activatePortfolio(child,ticket,true);
+  else if(!portfolioView)prepareBrowseSubjects(child,ticket);
 }
 // An edge gesture changes files only inside the immediate containing folder.
 function scrollFile(direction:-1|1):boolean {
@@ -352,7 +410,7 @@ function stopBrowseIndex():void {
 }
 element('subject-index-cancel').addEventListener('click',stopBrowseIndex);
 function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
-  if(!doc.inspection.collection.value||browseCompleted.has(doc)||browseSession)return;
+  if(detectDocument(doc.inspection).kind!=='eapdf'||!doc.inspection.collection.value||browseCompleted.has(doc)||browseSession)return;
   const main=session!,epoch=++browseEpoch,isolated=new BrowserSession({},{reuseWorker:true});browseSession=isolated;
   const subjects=browseSubjects.get(doc)??new Map<string,string>();browseSubjects.set(doc,subjects);
   const counts=new Map<string,number>();const display=new Map<string,Record<string,string>>();browseDisplay.set(doc,display);
@@ -390,6 +448,7 @@ function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
         await main.adoptAssociations(doc,isolated,copy);if(current===doc)refreshInspection(doc);
       }
       checkIndex();browseCompleted.add(doc);browseMessageCounts.set(doc,indexed.messages.length);
+      if(current===doc)showFiles(doc,singleMessage(doc)?undefined:selectedMessage(doc));
       const collection=doc.inspection.collection.value;if(collection)for(const summary of nodes.get(doc)?.querySelectorAll<HTMLElement>('summary[data-folder-id]')??[]){const members=new Set<string>();for(const entry of collection.entries)for(let id of entry.folderIds.value??[]){const seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);if(id===summary.dataset.folderId)members.add(entry.fileId);id=collection.folders.find(f=>f.id===id)?.parentId??'';}}const count=indexed.messages.filter(m=>m.path[0]&&members.has(m.path[0].fileId)).length;const pill=text('span',String(count));pill.className='folder-count';summary.querySelector('.folder-count')?.remove();summary.append(pill);}
       element('subject-index-status').textContent=indexed.incomplete.length?`Subjects partially indexed: ${indexed.incomplete.join(' ')}`:`Subjects ready · ${indexed.messages.length} emails. ${(indexed.notices??[]).join(' ')}`;
       element('subject-index-cancel').hidden=true;element('subject-index-progress').dataset.complete=String(!indexed.incomplete.length);element('message-count').textContent=String(indexed.messages.length);return indexed;
@@ -480,7 +539,9 @@ function documentTree(doc:BrowserDocument):HTMLLIElement {
   return row;
 }
 async function openFile(file:Blob,name:string):Promise<void>{
-  if(busy)return;close();zoom.value='fit-width';element('linked-file').hidden=true;session=new BrowserSession({},{onEvict:evictDocument,keepDocuments:()=>current?[current]:[]});const active=session;
+  // A file picker may finish while a layout/zoom render is in flight. Keep the
+  // latest explicit selection and open it when that operation releases the UI.
+  if(busy){pendingOpen={file,name};return;}close();zoom.value='fit-page';element('linked-file').hidden=true;session=new BrowserSession({},{onEvict:evictDocument,keepDocuments:()=>current?[current]:[]});const active=session;
   await operation(async ticket=>{
     status.textContent=`Opening ${name}…`;
     tree.hidden=true;
@@ -491,7 +552,8 @@ async function openFile(file:Blob,name:string):Promise<void>{
     try {
     const doc=await active.open(file,name,fraction=>{if(ticket===generation)status.textContent=`Inspecting ${name} · ${Math.round(fraction*100)}%`;},null,undefined,undefined,async preview=>{check(ticket);empty.hidden=true;await pages.show(preview,await pageScale(preview,1),1,'',false);check(ticket);status.textContent='First page ready. Email and file inspection continues…';},message=>{check(ticket);status.textContent=message;element('loading-message').textContent=message;});check(ticket);
     tree.append(documentTree(doc));await showDocument(doc,ticket);
-    if(ticket===generation){finishLoading();prepareBrowseSubjects(doc,ticket);}
+    if(detectDocument(doc.inspection).kind==='portfolio')await activatePortfolio(doc,ticket,true);
+    if(ticket===generation){finishLoading();if(!portfolioView)prepareBrowseSubjects(doc,ticket);}
     } catch(error) {
       if(ticket===generation){
         clearTimeout(loadingTimer);loadingTimer=undefined;
@@ -504,10 +566,51 @@ async function openFile(file:Blob,name:string):Promise<void>{
     }
   });
 }
+async function openPortfolioRow(row:PortfolioRow,ticket:number,reveal=true):Promise<void>{
+  const parent=portfolioDocument,file=row.file;if(!parent||!file)throw new Error('This collection member is unavailable.');
+  const stream=file.streams.find(s=>s.efKeys.includes('/UF'))??file.streams[0];if(!stream)throw new Error('This file has no readable embedded content.');
+  portfolioView?.show(row,reveal&&isPdf(file,stream));
+  if(isPdf(file,stream)){await openChild(parent,file,stream,ticket);if(reveal)portfolioReturn=undefined;return;}
+  const data=await session!.bytes(parent,file,stream);check(ticket);
+  await attachmentViewer.open(data,row.name,stream.mimeType.value??'',()=>element('portfolio-panel').querySelector<HTMLButtonElement>('button[aria-current]')?.focus({preventScroll:true}));check(ticket);
+  status.textContent=`Viewing ${row.name}`;
+}
+async function activatePortfolio(doc:BrowserDocument,ticket:number,initial=false):Promise<void>{
+  const data=await session!.portfolio(doc);check(ticket);
+  stopBrowseIndex();portfolioView?.close();portfolioDocument=doc;
+  const model=new PortfolioModel(data,doc.inspection);portfolioModels.set(doc,model);
+  portfolioView=new PortfolioView(element('portfolio-panel'),model,{
+    open:row=>void operation(active=>openPortfolioRow(row,active)),
+    cover:()=>void operation(async active=>{portfolioView?.revealPreview();await showDocument(doc,active);portfolioReturn=undefined;}),
+    thumbnail:async row=>{if(row.directory){await session!.ensure(doc);const result=await doc.run(doc.pdf.getDocumentAssets({folderThumbnail:row.directory.path}));check(ticket);return result.thumbnail;}const file=row.file,stream=file?.streams[0];if(!file||!stream)throw new Error('No preview available.');const bytes=await session!.bytes(doc,file,stream);check(ticket);return bytes;},
+    download:row=>void operation(async active=>{const file=row.file,stream=file?.streams.find(s=>s.efKeys.includes('/UF'))??file?.streams[0];if(!file||!stream)throw new Error('This collection member is unavailable.');const bytes=await session!.bytes(doc,file,stream);check(active);await saveBlob(new Blob([new Uint8Array(bytes)],{type:'application/octet-stream'}),row.name,()=>check(active));check(active);}),
+    parent:doc.parent?()=>void operation(async active=>{await showDocument(doc.parent!,active);portfolioReturn=undefined;await activatePortfolio(doc.parent!,active);}):undefined,
+  });
+  portfolioView.syncDocument(current?.parent===doc?current.parentFileId:undefined);
+  showInformation(current??doc);
+  await showOutline(current??doc,ticket);
+  if(initial){const target=model.initial();if(target==='empty'){pages.clear();surface.hidden=true;empty.hidden=true;status.textContent='The portfolio has no files to preview.';}else if(target!=='container')await openPortfolioRow(target,ticket,false);}
+}
+element('portfolio-show').addEventListener('click',()=>portfolioView?.reveal());
+element('portfolio-toggle').addEventListener('click',()=>void operation(async ticket=>{
+  if(!current)return;
+  if(portfolioView){const saved=portfolioReturn,doc=saved?.doc??current;portfolioView.close();portfolioView=undefined;portfolioDocument=undefined;portfolioReturn=undefined;await showDocument(doc,ticket,doc.inspection.messages.find(m=>m.id===saved?.message));if(saved){pageNumber=saved.page;await render(ticket,false);}showInformation(doc);prepareBrowseSubjects(doc,ticket);}
+  else{portfolioReturn={doc:current,page:pageNumber,message:savedMessages.get(current)};let doc=current;while(doc.parent&&!doc.inspection.collection.value)doc=doc.parent;if(!doc.inspection.collection.value){while(doc.parent)doc=doc.parent;}await activatePortfolio(doc,ticket);}
+}));
 fileInput.addEventListener('change',()=>{const file=fileInput.files?.[0];fileInput.value='';if(file)void openFile(file,file.name);});
-window.addEventListener('dragover',event=>{if(event.dataTransfer?.types.includes('Files')){event.preventDefault();viewport.classList.add('drop-target');}});
-window.addEventListener('dragleave',event=>{if(!event.relatedTarget)viewport.classList.remove('drop-target');});
-window.addEventListener('drop',event=>{event.preventDefault();viewport.classList.remove('drop-target');const file=event.dataTransfer?.files[0];if(file)void openFile(file,file.name);});
+// Capture file drags before controls in the navigation pane handle them or the
+// browser performs its default file navigation. Every viewer pane is a drop target.
+for(const type of ['dragenter','dragover'] as const)window.addEventListener(type,event=>{
+  const transfer=event.dataTransfer;
+  if(transfer&&(Array.from(transfer.types).includes('Files')||Array.from(transfer.items).some(item=>item.kind==='file'))){
+    event.preventDefault();event.stopPropagation();transfer.dropEffect='copy';document.body.classList.add('drop-target');
+  }
+},{capture:true});
+const clearDropTarget=()=>document.body.classList.remove('drop-target');
+window.addEventListener('dragleave',event=>{if(!event.relatedTarget)clearDropTarget();},{capture:true});
+window.addEventListener('dragend',clearDropTarget,{capture:true});
+window.addEventListener('blur',clearDropTarget);
+window.addEventListener('drop',event=>{event.preventDefault();event.stopPropagation();clearDropTarget();const file=event.dataTransfer?.files[0];if(file)void openFile(file,file.name);},{capture:true});
 element('export-csv').addEventListener('click',()=>void operation(async ticket=>{
   const doc=current,active=session;if(!doc||!active)return;
   const isolated=new BrowserSession({},{reuseWorker:true});exportSession=isolated;
@@ -541,7 +644,7 @@ element('export-csv').addEventListener('click',()=>void operation(async ticket=>
   }
 }));
 element('close').addEventListener('click',close);window.addEventListener('pagehide',close);
-element('back').addEventListener('click',()=>{if(current?.parent){const parent=current.parent;void operation(ticket=>showDocument(parent,ticket,parent.inspection.messages.find(m=>m.id===savedMessages.get(parent))));}});
+element('back').addEventListener('click',()=>{if(current?.parent){const parent=current.parent;void operation(async ticket=>{await showDocument(parent,ticket,parent.inspection.messages.find(m=>m.id===savedMessages.get(parent)));if(portfolioView)portfolioReturn=undefined;if(portfolioView&&parent.inspection.collection.state==='present'&&parent!==portfolioDocument)await activatePortfolio(parent,ticket);});}});
 element('previous').addEventListener('click',()=>void operation(async ticket=>{pageNumber=Math.max(1,pageNumber-1);await render(ticket);}));
 element('next').addEventListener('click',()=>void operation(async ticket=>{pageNumber=Math.min(current?.pdf.numPages??1,pageNumber+1);await render(ticket);}));
 function jumpToEnteredPage():void {
@@ -575,15 +678,29 @@ function clearSearch():void {
 }
 search.addEventListener('input',()=>{if(!search.value.trim())clearSearch();});
 search.addEventListener('keydown',event=>{if(event.key==='Escape'){if(!event.defaultPrevented){event.preventDefault();closeSearch();}}else if(event.key==='Enter'){event.preventDefault();void (element<HTMLSelectElement>('search-scope').value==='collection'?findInCollection(event.shiftKey?-1:1):findMatch(event.shiftKey?-1:1));}});
+async function followEmbeddedLink(source:BrowserDocument,action:EmbeddedAction,ticket:number):Promise<void>{
+  const target=await resolveEmbeddedLink(session!,source,action,()=>check(ticket));check(ticket);
+  portfolioReturn=undefined;
+  clearMessageFilterForSearch();
+  const path:BrowserDocument[]=[];for(let d:BrowserDocument|null=target.doc;d;d=d.parent)path.unshift(d);
+  for(const doc of path)if(!nodes.has(doc)){const row=documentTree(doc);const parent=doc.parent&&nodes.get(doc.parent);(parent?.querySelector(':scope > ul')??tree).append(row);}
+  if(portfolioView){let container:BrowserDocument|null=target.doc.inspection.collection.state==='present'?target.doc:target.doc.parent;while(container&&container.inspection.collection.state!=='present')container=container.parent;
+    if(container&&container!==portfolioDocument)await activatePortfolio(container,ticket);
+    const row=portfolioView?.model.rows.find(r=>r.file?.id===target.doc.parentFileId);if(row)portfolioView?.show(row);portfolioView?.revealPreview();
+  }
+  await showDocument(target.doc,ticket);pageNumber=target.page;await render(ticket,false);
+}
 async function showOutline(doc:BrowserDocument,ticket:number):Promise<void>{
-  const panel=element('outline-panel'),list=element('outline');list.replaceChildren();panel.hidden=true;
+  const panel=element(portfolioView?'portfolio-outline-panel':'outline-panel'),list=element(portfolioView?'portfolio-outline':'outline');list.replaceChildren();panel.hidden=true;
   try{const entries=await doc.run(doc.pdf.getOutline());check(ticket);if(current!==doc||!entries)return;let count=0;
     const pending=entries.slice().reverse().map(item=>({item,parent:list})),seen=new Set<typeof entries[number]>();
     while(pending.length){
       const {item,parent}=pending.pop()!;
       if(seen.has(item))throw new Error('Cyclic bookmark tree.');seen.add(item);
       const row=text('li','');
-      if(item.dest)row.append(button(item.title,()=>void operation(async active=>{
+      const embedded=(item as typeof item & {embeddedAction?:EmbeddedAction}).embeddedAction;
+      if(embedded)row.append(button(item.title,()=>void operation(active=>followEmbeddedLink(doc,embedded,active))));
+      else if(item.dest)row.append(button(item.title,()=>void operation(async active=>{
         const dest=typeof item.dest==='string'?await doc.run(doc.pdf.getDestination(item.dest)):item.dest;check(active);if(!dest)throw new Error('Bookmark destination is unavailable.');
         const ref=dest[0];const index=typeof ref==='number'?ref:await doc.run(doc.pdf.getPageIndex(ref));check(active);if(index<0||index>=doc.pdf.numPages)throw new Error('Bookmark page is outside this PDF.');pageNumber=index+1;await render(active);
       })));else row.append(text('span',item.title+' (no internal page destination)'));
@@ -788,12 +905,12 @@ async function filterMessages():Promise<void>{
     element('filter-status').textContent=`${matches.length} matching emails. ${result.incomplete.length?'Search incomplete: '+result.incomplete.join(' '):'All reachable email metadata searched.'} ${(result.notices??[]).join(' ')}`;
   }catch(error){if(ticket===generation&&epoch===metadataEpoch&&revision===filterRevision){metadataIndex=undefined;element('filter-status').textContent=`Email search could not finish: ${error instanceof Error?error.message:String(error)}`;}}
 }
-function clearMessageFilterForSearch():void {
+function clearMessageFilterForSearch(reason='Email filter cleared to show whole-document search results.'):void {
   if(!filter.value && !filtered)return;
   filter.value='';filtered=undefined;filterRevision++;clearTimeout(filterTimer);
   filterList?.close();filterList=undefined;filterResults.replaceChildren();
   filterResults.hidden=true;tree.hidden=false;
-  element('filter-status').textContent='Email filter cleared to show whole-document search results.';
+  element('filter-status').textContent=reason;
 }
 filter.addEventListener('input',()=>{const restricted=current&&filteredPages(current);filtered=undefined;if(restricted&&!busy)void operation(ticket=>render(ticket,false));filterRevision++;clearTimeout(filterTimer);if(!filter.value.trim()){filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;tree.hidden=false;element('filter-status').textContent='';return;}filterTimer=setTimeout(()=>void filterMessages(),200);});
 cancelLinked=setupLinkedOpening(openFile,message=>{status.textContent=message;});

@@ -27,6 +27,25 @@ class MetadataLimitTests {
             .anyMatch(v->"EAPDF_XMP_UNCHECKED".equals(v.get("code").getAsString()) && "FAIL".equals(v.get("level").getAsString())));
         assertArrayEquals(before, Files.readAllBytes(original));
     }
+    @Test void unreadableXmpDoesNotInventIdentityOrDeclarationMismatches() throws Exception {
+        String old = System.getProperty("VALIDATOR_MAX_METADATA_BYTES");
+        try {
+            System.setProperty("VALIDATOR_MAX_METADATA_BYTES", "1");
+            var result = JavaValidation.validate(Path.of("../examples/pst/pst_quality-attached-message_1m.pdf"));
+            var dependent = java.util.Set.of("DPM_MAIL_GUID_MATCH", "DPM_MAIL_MESSAGEID_MATCH", "LOGICAL_TS32005_DECLARATION");
+            assertFalse(result.getAsJsonArray("items").asList().stream().map(v -> v.getAsJsonObject())
+                .anyMatch(v -> "FAIL".equals(v.get("level").getAsString()) && dependent.contains(v.get("code").getAsString())));
+            assertTrue(result.getAsJsonArray("items").asList().stream().map(v -> v.getAsJsonObject())
+                .anyMatch(v -> "VALIDATION_INCOMPLETE".equals(v.get("code").getAsString())));
+        } finally {
+            if (old == null) System.clearProperty("VALIDATOR_MAX_METADATA_BYTES");
+            else System.setProperty("VALIDATOR_MAX_METADATA_BYTES", old);
+        }
+    }
+    @Test void upstreamFailureReportsItsUnderlyingCause() {
+        var failure = new RuntimeException("upstream", new java.io.IOException("File too large"));
+        assertTrue(JavaValidation.failureReason(failure).contains("File too large"));
+    }
     @Test void monitoringToleratesConcurrentCreationAndRemoval() throws Exception {
         var finished = new java.util.concurrent.atomic.AtomicBoolean();
         var writer = new Thread(() -> {

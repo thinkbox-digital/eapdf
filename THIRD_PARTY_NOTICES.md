@@ -196,5 +196,4 @@ resolution instructions are in `docs/RENDERER.md`.
 ## Offline full-text indexing
 
 The Java creator uses the existing Apache PDFBox dependency for text extraction.
-It no longer packages the former Node.js/PDF.js indexing helper. PDF.js and its
-notices remain part of the separately distributed browser viewer.
+PDF.js and its notices remain part of the separately distributed browser viewer.

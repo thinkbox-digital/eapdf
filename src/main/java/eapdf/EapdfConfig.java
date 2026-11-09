@@ -51,6 +51,7 @@ class EapdfConfig {
   SigningConfig signing = new SigningConfig();
   int configVersion = 1;
   boolean validateOnCreation = true;
+  String validationWarning = "";
   static final String DEFAULT_CREATOR = "Thinkbox.DIGITAL";
   String creator = DEFAULT_CREATOR;
   SearchIndexConfig searchIndex = new SearchIndexConfig();

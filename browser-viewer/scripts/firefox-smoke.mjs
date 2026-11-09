@@ -1,3 +1,7 @@
+import {checkPortfolioPresentation} from './portfolio-presentation-checks.mjs';
+import {checkAdditionalPortfolios} from './portfolio-additional-checks.mjs';
+import {checkPortfolioNavigation} from './portfolio-navigation-checks.mjs';
+import {checkPortfolio} from './portfolio-checks.mjs';
 import {checkTextFragments} from './text-fragment-checks.mjs';
 import {checkReadingTools} from './reading-checks.mjs';
 // Development-only WebDriver harness. No driver/server is included in the extension.
@@ -80,7 +84,7 @@ try {
   }
   await mkdir('test-results', { recursive: true });
   await open('tests/fixtures/ordinary.pdf');
-  // Opening now defaults to fit-width; make fixed-scale pixel assertions explicit.
+  // Opening now defaults to Fit Page; make fixed-scale pixel assertions explicit.
   await execute("const z=document.querySelector('#zoom'); z.value='1'; z.dispatchEvent(new Event('change'));");
   await until(() => execute("return document.querySelector('#viewport').getAttribute('aria-busy') === 'false';"));
   // Real WebDriver key events must reach our picker. Cancel only the native
@@ -130,8 +134,12 @@ try {
       await call(`/element/${found['element-6066-11e4-a52e-4f735466cecf']}/click`, {});
     };
     const adapter = {
-      evaluate: fn => execute('return (' + fn.toString() + ')();'), ready, click,
+      evaluate: (fn,arg) => execute('return (' + fn.toString() + ')(' + JSON.stringify(arg??null) + ');'), ready, click,
       open: path => open(path, false), // Structural negative fixtures intentionally have blank pages.
+      drag: async(selector,dx,dy)=>{
+        const point=await execute('const r=document.querySelector('+JSON.stringify(selector)+').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};');
+        await call('/actions',{actions:[{type:'pointer',id:'portfolio-mouse',parameters:{pointerType:'mouse'},actions:[{type:'pointerMove',duration:0,origin:'viewport',x:point.x,y:point.y},{type:'pointerDown',button:0},{type:'pointerMove',duration:250,origin:'viewport',x:point.x+dx,y:point.y+dy},{type:'pointerUp',button:0}]}]});
+      },
       download: async selector => {
         for (const file of await readdir(downloadDir)) await rm(join(downloadDir, file));
         await click(selector);
@@ -143,6 +151,12 @@ try {
         return readFile(join(downloadDir, files[0]));
       },
     };
+    const presentation=await checkPortfolioPresentation(adapter);await writeFile('test-results/portfolio-presentation-firefox.json',JSON.stringify(presentation,null,2)+'\n');
+    const portfolioLinks=await checkPortfolioNavigation(adapter);
+    await writeFile('test-results/portfolio-navigation-firefox.json',JSON.stringify({status:'PASS',checks:portfolioLinks},null,2)+'\n');
+    const additional=await checkAdditionalPortfolios(adapter);await writeFile('test-results/portfolio-additional-firefox.json',JSON.stringify(additional,null,2)+'\n');
+    const portfolios=await checkPortfolio(adapter);
+    await writeFile('test-results/portfolio-firefox.json',JSON.stringify({status:'PASS',checks:portfolios},null,2)+'\n');
     uiResults = process.env.READING_ONLY ? [] : await checkInterface(adapter);
     const reading=await checkReadingTools(adapter);
     const encryptedDirectory=await mkdtemp(join(tmpdir(),'eapdf-firefox-password-'));

@@ -1,6 +1,6 @@
-# EA-PDF browser viewer — beta 0.5.0-beta.20
+# EA-PDF browser viewer — beta 1.0.0-beta.1
 
-Current beta: `0.5.0-beta.20`, with creator/validator `1.6.0-beta.20`.
+Current beta: `1.0.0-beta.1`, with creator/validator `2.0.0-beta.1`.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
 6.5.438 and retains the existing Chromium/Firefox architecture.
@@ -29,7 +29,7 @@ or Ctrl/Cmd+F; Enter and Shift+Enter move between matches, and Escape closes the
 panel. The message tree supports native Tab/Enter disclosure controls and arrow-key
 movement. The viewer tagline is “Your email—complete, authentic, accessible, structured.”
 
-New creator collections can carry an optional [embedded metadata search index](../docs/EMBEDDED_SEARCH_INDEX.md). The viewer verifies it once and builds the message list without opening each child PDF; missing or invalid indexes retain the existing scan fallback. New `1m`, `1mi`, `1c`, and `1ci` archives can also carry a positional full-text index. It locates matching pages without opening every child; selection confirms and highlights the actual PDF.js text. Corrupt, stale, unsupported or oversized indexes fall back to ordinary search. See the same [index reference](../docs/EMBEDDED_SEARCH_INDEX.md#full-text-index-version-2) for exact phrase semantics, resource limits and the optional creator-side Node.js requirement.
+New creator collections can carry an optional [embedded metadata search index](../docs/EMBEDDED_SEARCH_INDEX.md). The viewer verifies it once and builds the message list without opening each child PDF; missing or invalid indexes retain the existing scan fallback. New `1m`, `1mi`, `1c`, and `1ci` archives can also carry a positional full-text index. It locates matching pages without opening every child; selection confirms and highlights the actual PDF.js text. Corrupt, stale, unsupported or oversized indexes fall back to ordinary search. See the same [index reference](../docs/EMBEDDED_SEARCH_INDEX.md#full-text-index-version-2) for exact phrase semantics, resource limits and built-in creator text extraction.
 
 The persistent **Filter by subject, sender or date** field filters the message list
 using subject, sender, recipients and date across unopened
@@ -49,14 +49,14 @@ No Java, server, native host or network connection is needed at runtime.
 
 Folders now start expanded and can be collapsed with their chevrons. File groups
 show real counts; email sources, attachments, other files, and technical/supporting files start expanded.
-Empty files have no View or Download controls. Isolated profiles show one source-omission notice above the attachment groups. File actions have consistent labelled icons. Inspection problems use short warnings beside the affected content; detailed diagnostics are available in the browser debug console.
+Email attachments show the owning subject and clickable source filenames. A filename opens the mapped message and clears a conflicting email filter. Source-omitted profiles show the containing PDF filename; links with no unambiguous page mapping are disabled. Empty files have no View or Download controls. Isolated profiles show one source-omission notice above the attachment groups. File actions have consistent labelled icons. Inspection problems use short warnings beside the affected content; detailed diagnostics are available in the browser debug console.
 
 [Install the local beta and view attachments](docs/beta-release.md). Packages are
 in `releases/`; the [current checkpoint](docs/beta-release.md#verified-scope) records tests and limits.
 
 ## Use
 
-- Open or drop a PDF, or use the Open PDF control while the viewer has focus.
+- Open or drop a PDF anywhere inside the viewer, including the left Messages/Portfolio pane, or use the Open PDF control. Drops on the browser tab strip or address bar are handled by the browser.
 - Scroll continuously between pages; **Page x of x** follows the visible page.
   Page arrows and page-number entry remain available.
 - In **c/ci collections**, scroll past the beginning or end of a message PDF to
@@ -87,7 +87,7 @@ in `releases/`; the [current checkpoint](docs/beta-release.md#verified-scope) re
   It does not change the PDF text search. The Messages and Files panes have hide/show
   controls. Wide windows retain 27% / 46% / 27% proportions; medium windows show one
   270-pixel sidebar; compact windows use full-width panes over the reader.
-- PDFs open at **Fit width** and refit when the window or panes change. Manual zoom
+- PDFs and Portfolio members initially open at **Fit page** and refit when the window or panes change. Manual zoom
   remains fixed when resizing. Rendered PDF content is unchanged.
 - **Search** in the header, or Ctrl/Cmd+F, opens a search panel. Choose **This PDF**
   or **All files**. Enter moves to the next match; Shift+Enter moves to the previous
@@ -107,6 +107,87 @@ in `releases/`; the [current checkpoint](docs/beta-release.md#verified-scope) re
 - **Close / cancel** stops processing and releases the document workers and data.
 - Right-click a web PDF link and choose **Open in EA-PDF viewer**, then explicitly
   open the linked file in the new tab. Site access may require browser approval.
+
+## Portfolio viewing (local development)
+
+On opening, document identification selects the interface. A recognized EA-PDF
+version/profile keeps the existing email interface, including Messages, filtering,
+indexed search and CSV export. Otherwise a valid catalog Collection dictionary
+selects Portfolio view; ordinary PDFs retain document viewing. Identification is
+not a conformance verdict. Unsupported/incomplete EA-PDF declarations are reported.
+
+**Portfolio view** is also available explicitly for EA-PDF collections. Switching
+back restores the selected document, email and page unless another member was explicitly
+opened; then it keeps that newly selected member. A Portfolio lists only members
+of its EmbeddedFiles name tree, including non-PDF files; other associated attachments
+remain accessible through PDF view. It supports folders, Details/Tiles layouts,
+custom schema columns and CI values, typed/multiple-field sorting, metadata filtering,
+opening/previewing and downloading members. Collection-subitem prefixes display but
+do not participate in sorting. Column visibility can be changed without modifying
+the PDF. Initial file, hidden view and split direction are read from the collection;
+vertical sidebars default to about 425 pixels, with user-resized width saved locally.
+Changing the layout keeps navigation in the left sidebar, including Details and
+Filmstrip, and retains the chosen sidebar width. Filmstrip shows compact thumbnail/name
+rows. Preview and details (Linear) places one selected-file metadata panel and a compact
+file list beside the large reader preview. Metadata follows file selection, keyboard
+navigation and document links; showing the cover clears the member details. Freeform
+places clickable thumbnails at randomized, non-overlapping positions. Positions remain
+stable during selection and adapt to pane resizing; keyboard/source order is unchanged.
+Details initially shows
+only Name and Size, with optional columns under **View options → Details columns**.
+Long filenames stay on one line, preserving the ending; hover or focus reveals the full
+name. **Selected file details** below the list starts open and can be collapsed. It shows all available metadata.
+Hidden fields remain searchable. Sizes use B/KiB/MiB/GiB; dates use YYYY-MM-DD, with
+exact byte counts and full timestamps available in tooltips and selected-file details.
+Sorting uses original values. Optional wide tables scroll horizontally. Drag the divider
+between Portfolio and the document to resize the panes, or focus it and use arrow
+keys (Shift for larger steps; Home/End for the limits). Horizontal initial splits
+can also be resized. The divider is hidden in the single-pane narrow-window layout.
+PDF 2.0 named navigator preferences select Details, Tiles, Hidden, Tree, Filmstrip,
+Linear or Freeform presentations; unknown names fall back to a recognized preference
+or Details. Layouts use viewer code, never embedded executable content. The Portfolio uses the
+email reader's folder/document icons, eye/download actions and selected-row styling.
+Folder breadcrumbs, Back/Forward/Up and Previous/Next file controls support navigation;
+Up/Down opens the next row, Home/End goes to the first/last row, and Left/Right collapses
+or expands a folder in Tree view. **View options** contains column controls.
+PDF bookmarks and the document path remain available when browsing nested collections.
+On narrow windows the Portfolio pane fills the workspace; opening a PDF switches to
+the reader, and **Show portfolio** restores the chosen layout.
+
+Thumbnails are lazy, with one rendering worker and at most 64 cached images. Automatic
+thumbnails are limited to supported PDF/image members with a recorded size at most
+4 MiB; other files retain type icons and can still be opened or downloaded under the
+normal extraction limits. Stored folder thumbnails use PDF.js image decoding on demand,
+with a total image/mask budget of 1,048,576 pixels, at most four image streams and a
+4 MiB encoded-stream limit per image. Missing, unsupported or oversized previews retain
+their type icon. The metadata pass does not decode embedded payloads.
+Its bounds are 200,000 traversal/value operations, 8 Mi characters and 256 schema/CI
+fields, with explicit partial-listing notices. Displayed metadata cells show at most
+1,024 characters; filtering uses at most 65,536 characters per item. Lists mount 100
+rows at a time. Files and source hashes are not changed.
+
+Embedded Go-To links and bookmarks resolve named destinations and explicit page
+numbers through parent/child chains, including nested Portfolios. Child targets use
+exact name-tree byte keys or attachment annotations identified by page/index or name.
+Target chains are capped at 32 steps; cycles, missing/ambiguous targets and non-PDF
+content fail with a message. Encrypted members use the existing password dialog and
+support retry/cancellation. Cross-file links open in the current reader; an external
+root file specification requires opening that PDF separately. Destination page selection
+is supported; target zoom/coordinate settings are not applied.
+
+This is collection viewing, not a claim of complete ISO 32000 conformance. Editing
+collection fields/folders and executing custom/legacy navigator programs are not implemented.
+Named navigators use native viewer layouts, with responsive adaptations for narrow screens.
+Unsupported native file formats remain downloadable. Existing PDF reading and resource
+limits continue to apply.
+
+`npm run test:portfolio` covers classification, all six EA-PDF profiles, membership,
+sorting, initial targets, layouts, keyboard/folder navigation, encrypted members, inter-file
+links, stored thumbnails, a 1,200-member listing and view switching. Private real samples under
+`in/portfolio` are checked when available and explicitly skipped otherwise. Additional
+samples are discovered automatically and compared with an independent read-only inventory,
+including exact native downloads and mixed EA-PDF profile navigation. Firefox's
+full UI acceptance also exercises Portfolio viewing.
 
 ## Build
 

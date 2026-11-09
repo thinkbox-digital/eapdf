@@ -89,7 +89,8 @@ export class ScrollingPages {
   private pending:{epoch:number;promise:Promise<void>}|undefined;
   constructor(private viewport:HTMLElement,private surface:HTMLElement,
     private onPage:(page:number)=>void,private onError:(message:string)=>void,
-    private onRenderState:(page:number,failed:boolean)=>void=()=>{}){
+    private onRenderState:(page:number,failed:boolean)=>void=()=>{},
+    private onEmbeddedLink?:(action:import('./embedded-navigation.js').EmbeddedAction)=>void){
     viewport.addEventListener('scroll',()=>this.schedule(),{passive:true});
     new ResizeObserver(()=>this.schedule()).observe(viewport);
   }
@@ -218,11 +219,12 @@ export class ScrollingPages {
         try{
           const annotations=await doc.run(page.getAnnotations({intent:'display'}));if(epoch!==this.epoch)return;
           for(const annotation of annotations.slice(0,500)){
-            if(annotation.subtype!=='Link'||!annotation.dest||!Array.isArray(annotation.rect)||annotation.rect.length!==4||!annotation.rect.every(Number.isFinite))continue;
+            if(annotation.subtype!=='Link'||(!annotation.dest&&!annotation.embeddedAction)||!Array.isArray(annotation.rect)||annotation.rect.length!==4||!annotation.rect.every(Number.isFinite))continue;
             const rect=[...view.convertToViewportPoint(annotation.rect[0],annotation.rect[1]),...view.convertToViewportPoint(annotation.rect[2],annotation.rect[3])],left=Math.max(0,Math.min(rect[0]!,rect[2]!)),top=Math.max(0,Math.min(rect[1]!,rect[3]!)),right=Math.min(view.width,Math.max(rect[0]!,rect[2]!)),bottom=Math.min(view.height,Math.max(rect[1]!,rect[3]!));
             if(right<=left||bottom<=top)continue;
             const link=document.createElement('a');link.href='#';link.setAttribute('aria-label','Go to linked page in this PDF');link.title='Go to linked page';Object.assign(link.style,{left:`${left}px`,top:`${top}px`,width:`${right-left}px`,height:`${bottom-top}px`});
-            link.addEventListener('click',event=>{event.preventDefault();void (async()=>{
+            if(annotation.embeddedAction){link.setAttribute('aria-label','Open linked embedded PDF');link.title='Open linked embedded PDF';}
+            link.addEventListener('click',event=>{event.preventDefault();if(epoch!==this.epoch)return;if(annotation.embeddedAction){this.onEmbeddedLink?.(annotation.embeddedAction);return;}void (async()=>{
               try{const dest=typeof annotation.dest==='string'?await doc.run(doc.pdf.getDestination(annotation.dest)):annotation.dest;if(epoch!==this.epoch||!dest)return;const index=typeof dest[0]==='number'?dest[0]:await doc.run(doc.pdf.getPageIndex(dest[0]));if(epoch!==this.epoch)return;if(!Number.isInteger(index)||index<0||index>=doc.pdf.numPages)throw new Error('Link destination is outside this PDF.');await this.show(doc,this.scale,index+1,this.query);this.onPage(index+1);}
               catch(error){if(epoch===this.epoch)this.onError(error instanceof Error?error.message:String(error));}
             })();});slot.links.append(link);

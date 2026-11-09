@@ -31,7 +31,7 @@ class PstJobBudgetTests {
    for(long heap:new long[]{4L*1024*1024*1024,512L*1024*1024}) {
     System.setProperty("eapdf.workerHeapBytes",Long.toString(heap));
     var budget=PstJobBudget.forInput("eapdf.EmailToPDFA",new String[]{source.toString()},temp);
-    long expected=Math.min(ConversionMemory.workerHeap(heap)/8,size/2+32L*1024*1024);
+    long expected=ConversionMemory.workerHeap(heap)/8;
     assertEquals(expected,budget.setting("eapdf.maxMetadataBytes","EAPDF_MAX_METADATA_BYTES",0));
     System.setProperty("eapdf.maxMetadataBytes","123456");
     assertEquals(123456,budget.setting("eapdf.maxMetadataBytes","EAPDF_MAX_METADATA_BYTES",0));
@@ -42,7 +42,20 @@ class PstJobBudgetTests {
    if(oldMetadata==null)System.clearProperty("eapdf.maxMetadataBytes");else System.setProperty("eapdf.maxMetadataBytes",oldMetadata);
   }
  }
- @Test void smallLocalInputAndLimitedGmailUseConservativeHeapWithoutChangingExplicitOverrides() throws Exception {
+ @Test void nativeAddressAllowanceIncludesMappedScratchAndPreservesExplicitOverride() throws Exception {
+  String old=System.getProperty("eapdf.workerAddressBytes");
+  try {
+   System.clearProperty("eapdf.workerAddressBytes");
+   Path source=Files.writeString(temp.resolve("mapped.eml"),"Subject: mapped\n\nbody");
+   var budget=PstJobBudget.forInput("eapdf.EmailToPDFA",new String[]{source.toString()},temp);
+   long heap=512L*1024*1024;budget.useWorkerHeap(heap);
+   assertEquals(heap+4L*1024*1024*1024+budget.setting("eapdf.maxTempBytes","EAPDF_MAX_TEMP_BYTES",0),
+       budget.setting("eapdf.workerAddressBytes","EAPDF_WORKER_ADDRESS_BYTES",0));
+   System.setProperty("eapdf.workerAddressBytes","5368709120");
+   assertEquals(5368709120L,budget.setting("eapdf.workerAddressBytes","EAPDF_WORKER_ADDRESS_BYTES",0));
+  } finally { if(old==null)System.clearProperty("eapdf.workerAddressBytes");else System.setProperty("eapdf.workerAddressBytes",old); }
+ }
+ @Test void smallLocalInputAndLimitedGmailUseAvailableHeapWithoutChangingExplicitOverrides() throws Exception {
   String previous=System.getProperty("eapdf.workerHeapBytes");
   Path source=Files.writeString(temp.resolve("mail.eml"),"Subject: budget test\n\nbody");
   try {
@@ -51,7 +64,7 @@ class PstJobBudgetTests {
     String[] args=entry.endsWith("EmailToPDFA")?new String[]{source.toString()}:new String[]{"--limit","200"};
     var budget=PstJobBudget.forInput(entry,args,temp);
     long heap=budget.setting("eapdf.workerHeapBytes","EAPDF_WORKER_HEAP_BYTES",0);
-    assertTrue(heap>0&&heap<=2L*1024*1024*1024);
+    assertTrue(heap>0);
     System.setProperty("eapdf.workerHeapBytes","3221225472");
     assertEquals(3221225472L,PstJobBudget.forInput(entry,args,temp).setting("eapdf.workerHeapBytes","EAPDF_WORKER_HEAP_BYTES",0));
     System.clearProperty("eapdf.workerHeapBytes");

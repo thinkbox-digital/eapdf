@@ -146,3 +146,147 @@ input::placeholder{color:#566273;opacity:1}#tree summary::before,.file-category 
 .file-card .empty-file-notice{color:#5c3d00;background:#fff4d6}
 
 #files .multiple-streams .file-actions{grid-column:1 / -1;grid-row:auto;flex-direction:row;align-items:center;flex-wrap:wrap}.stream-label{font-size:12px;color:#566273}
+
+/* Portfolio presentation is isolated from the existing EA-PDF workspace. */
+#portfolio-panel{min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;background:var(--portfolio-background,#f8fafc);border-right:1px solid var(--line)}
+.portfolio-heading,.portfolio-tools,.portfolio-path{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}.portfolio-heading h2{font-size:16px;margin:0;flex:1}.portfolio-tools input[type=search]{flex:1;min-width:140px;width:100%}.portfolio-columns{position:relative}.portfolio-columns[open]{background:white;padding:8px}.portfolio-columns label{display:block;padding:4px}.portfolio-path{font-size:12px}.portfolio-summary,.portfolio-notice{margin:8px 14px;font-size:12px}.portfolio-notice{color:#804000}.portfolio-scroll{flex:1;min-height:0;overflow:auto;padding:12px}.portfolio-items table{border-collapse:collapse;min-width:100%;background:white}.portfolio-items td,.portfolio-items th{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;max-width:400px;overflow-wrap:anywhere}.portfolio-items th{position:sticky;top:0;background:#eef2f7;z-index:1}.portfolio-items th button{background:none;border:0}.portfolio-items tr.selected{background:#edf3ff}.portfolio-file{text-align:left;overflow-wrap:anywhere;max-width:100%;background:transparent;border-color:transparent;color:var(--accent)}.portfolio-file[aria-current]{background:#e4edff;border-color:#a2b9e4}.portfolio-items:not([data-layout=D]):not([data-layout=Tree]){display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.portfolio-card{padding:12px;background:var(--portfolio-card,white);border:1px solid var(--portfolio-border,#d8e1ec);border-radius:6px;min-width:0}.portfolio-card dl{font-size:12px;margin-top:8px}.portfolio-card dd{font-size:12px;overflow-wrap:anywhere}.portfolio-file-type{font-size:14px;font-weight:650;padding:12px 0;color:#536980}.portfolio-items[data-layout=Tree] .portfolio-card{margin-bottom:6px}.portfolio-items[data-layout=Tree] .portfolio-file-type{display:none}.portfolio-items[data-layout=Tree] dl{display:none}.portfolio-items[data-layout=FilmStrip]{display:flex!important;flex-wrap:nowrap;overflow:auto}.portfolio-items[data-layout=FilmStrip] .portfolio-card{min-width:190px;width:190px;flex:none}.portfolio-items[data-layout=FreeForm] .portfolio-card:nth-child(3n+1){transform:rotate(-1deg)}
+body[data-portfolio] #workspace{grid-template-columns:minmax(0,var(--portfolio-size,40%)) minmax(0,1fr)}body[data-portfolio] #navigation-panel,body[data-portfolio] #details-panel,body[data-portfolio] .reader-heading{display:none!important}body[data-portfolio] #workspace>.reader-pane{min-height:0;min-width:0}body[data-portfolio][data-portfolio-split=H] #workspace{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,var(--portfolio-size,40%)) minmax(0,1fr)}body[data-portfolio=H] #workspace{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}body[data-portfolio]:not([data-portfolio=H])[data-portfolio-split=N] #workspace{grid-template-columns:minmax(0,1fr)}body[data-portfolio]:not([data-portfolio=H])[data-portfolio-split=N] .reader-pane{display:none}
+@media(max-width:750px){body[data-portfolio] #workspace{display:flex;flex-direction:column}body[data-portfolio] #portfolio-panel{height:45vh;min-height:230px;flex:none}body[data-portfolio] .reader-pane{min-height:60vh}}
+
+body[data-document-kind=pdf] .message-filter,body[data-document-kind=portfolio] .message-filter,body[data-document-kind=pdf] #filter-status,body[data-document-kind=portfolio] #filter-status{display:none}#document-notice{margin:0;padding:8px 14px;background:#fff5db;font-size:12px}
+
+.portfolio-file-type img{width:auto;max-width:160px;height:110px;object-fit:contain;display:block;margin:auto;box-shadow:0 1px 4px #0002}.portfolio-items[data-layout=Linear]{grid-template-columns:minmax(0,1fr)!important}.portfolio-items[data-layout=FreeForm] .portfolio-card:nth-child(3n+2){margin-top:18px;transform:rotate(1deg)}
+
+#portfolio-panel{color:var(--portfolio-primary,var(--text))}.portfolio-card .portfolio-file{color:var(--portfolio-primary,var(--accent))}.portfolio-card dl,.portfolio-file-type{color:var(--portfolio-secondary,#536980)}.portfolio-tools input[type=range]{width:100px;vertical-align:middle}.portfolio-items[data-layout=Tree] .stored-thumbnail{display:block;float:left;margin-right:12px}.portfolio-items[data-layout=Tree] .stored-thumbnail img{height:48px}
+
+/* Match Portfolio controls to the email reader's navigation and file actions. */
+.portfolio-heading.panel-heading{margin:0;background:#fff}.portfolio-heading h2{display:flex;align-items:center;gap:8px;font-size:14px}.portfolio-heading .badge{margin-left:4px}.portfolio-navigation{display:flex;align-items:center;gap:4px;padding:4px 10px;border-bottom:1px solid var(--line);background:#fff}.portfolio-command{display:inline-flex;align-items:center;gap:7px;min-height:40px}.portfolio-navigation [data-file-step="-1"]{margin-left:auto}.portfolio-tools{background:#fff;gap:8px}.portfolio-filter{position:relative;flex:1 0 100%;margin:0}.portfolio-filter>.tree-icon{position:absolute;left:10px;top:12px;color:var(--muted)}.portfolio-filter input[type=search]{padding-left:36px;min-height:42px;background:#f7f9fc}.portfolio-options{font-size:12px}.portfolio-options>summary{cursor:pointer;padding:8px}.portfolio-options[open]{flex:1 0 100%}.portfolio-options>label{display:flex;align-items:center;gap:8px;padding:8px}.portfolio-options .portfolio-columns{padding:8px}.portfolio-path{padding:3px 8px;gap:2px;background:#fcfdff}.portfolio-breadcrumbs{display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;flex:1}.portfolio-breadcrumbs button{border:0;background:transparent;padding:5px;overflow-wrap:anywhere;text-align:left}.portfolio-breadcrumbs [aria-current]{font-weight:650}.portfolio-file{display:flex;align-items:flex-start;gap:7px;width:100%;min-height:40px;padding:8px;line-height:1.4;font-weight:650;color:var(--portfolio-primary,#1d2733)}.portfolio-file>.tree-icon{margin-top:2px;color:var(--portfolio-secondary,#566273)}.portfolio-file[aria-current=true]{background:#e3ecf8;border:1px solid #c5d6ee;box-shadow:inset 4px 0 #1f4e8c;color:#1d2733}.portfolio-file[aria-expanded=true]>.portfolio-disclosure{transform:rotate(90deg)}.portfolio-file>.portfolio-disclosure{width:12px;flex-basis:12px}.portfolio-card.selected{border-color:#c5d6ee;box-shadow:inset 4px 0 #1f4e8c}.portfolio-row-actions{white-space:nowrap}.portfolio-row-actions .icon-button,.portfolio-card-actions .icon-button{width:40px;min-width:40px;height:40px;padding:10px}.portfolio-card-actions{display:flex;justify-content:flex-end;gap:2px}.portfolio-file-type{display:flex;align-items:center;justify-content:center;gap:8px;min-height:64px}.portfolio-file-type>.tree-icon{width:32px;height:32px;flex-basis:32px;stroke-width:1.5}.portfolio-items[data-layout=Tree] .portfolio-card{display:flex;align-items:center;gap:4px;padding:2px;border:0;background:transparent;margin-bottom:2px}.portfolio-items[data-layout=Tree] .portfolio-card-actions{margin-left:auto}.portfolio-items[data-layout=Tree] .portfolio-file{flex:1}.portfolio-summary{color:var(--muted)}
+
+.portfolio-heading>.portfolio-navigation{border:0;background:transparent;padding:0;flex-wrap:wrap}.portfolio-filter{display:block;width:100%}.portfolio-filter input{display:block;width:100%;margin:0}.portfolio-heading{flex-shrink:0}.portfolio-tools,.portfolio-path,.portfolio-summary,.portfolio-notice{flex-shrink:0}
+
+#portfolio-outline-panel{padding:8px 14px;max-height:30vh;overflow:auto;flex-shrink:0;border-bottom:1px solid var(--line);font-size:12px}#portfolio-outline-panel summary{cursor:pointer}#portfolio-outline{list-style:none;padding-left:8px}#portfolio-outline button{border:0;background:transparent;text-align:left;color:var(--accent);min-height:36px}body[data-document-kind=pdf] #outline-panel:not([hidden]){display:block!important}body[data-portfolio] #breadcrumbs{display:flex}
+@media(max-width:750px){body[data-portfolio] #workspace{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,55%) minmax(0,1fr)}body[data-portfolio] #portfolio-panel{height:auto;min-height:0}body[data-portfolio] .reader-pane{min-height:0}body[data-portfolio=H] #workspace,body[data-portfolio][data-portfolio-split=N] #workspace{grid-template-rows:minmax(0,1fr)}.portfolio-heading h2{flex-wrap:nowrap;font-size:14px}.portfolio-heading .portfolio-command{font-size:0;width:40px;padding:10px;gap:0}.portfolio-heading{padding:4px 10px}.portfolio-heading>.portfolio-navigation{gap:0}.portfolio-path{flex-wrap:nowrap}.portfolio-breadcrumbs{font-size:11px}}
+
+@media(max-width:750px){body[data-portfolio]:not([data-portfolio=H]) #workspace{grid-template-rows:minmax(0,1fr)}body[data-portfolio]:not([data-portfolio=H]) #workspace>.reader-pane{display:none}body[data-portfolio=H] #workspace>.reader-pane{display:flex}}
+body[data-portfolio-split=V] .portfolio-items[data-layout=FilmStrip]{flex-direction:column}body[data-portfolio-split=V] .portfolio-items[data-layout=FilmStrip] .portfolio-card{width:100%;min-width:0}
+
+/* Compact presentations: a visual strip versus a preview with readable metadata. */
+.portfolio-items[data-layout=FilmStrip] .portfolio-card {
+  display:grid;grid-template-columns:76px minmax(0,1fr) auto;align-items:center;gap:6px;
+  padding:6px;min-width:260px;width:260px;min-height:78px;
+}
+body[data-portfolio-split=V] .portfolio-items[data-layout=FilmStrip] .portfolio-card{width:100%;min-width:0}
+.portfolio-items[data-layout=FilmStrip] .portfolio-file-type{padding:0;min-height:64px;flex-direction:column;font-size:11px;gap:2px}
+.portfolio-items[data-layout=FilmStrip] .portfolio-file-type img{max-width:76px;height:64px;box-shadow:none}
+.portfolio-items[data-layout=FilmStrip] .portfolio-file{padding:4px;min-height:32px;font-size:13px}
+.portfolio-items[data-layout=FilmStrip] .portfolio-card-actions{flex-direction:row}
+.portfolio-items[data-layout=FilmStrip] .portfolio-card-actions .icon-button{width:32px;min-width:32px;height:32px;min-height:32px;padding:7px}
+.portfolio-items[data-layout=Linear] .portfolio-card {
+  display:grid;grid-template-columns:112px minmax(0,1fr) auto;
+  grid-template-areas:"preview name actions" "preview metadata metadata";
+  align-items:start;gap:4px 8px;padding:8px;
+}
+.portfolio-items[data-layout=Linear] .portfolio-file-type{grid-area:preview;padding:4px 0;min-height:80px;flex-direction:column;gap:4px}
+.portfolio-items[data-layout=Linear] .portfolio-file-type img{max-width:112px;height:80px;box-shadow:none}
+.portfolio-items[data-layout=Linear] .portfolio-file{grid-area:name;padding:4px;min-height:32px;font-size:13px}
+.portfolio-items[data-layout=Linear] .portfolio-card-actions{grid-area:actions}
+.portfolio-items[data-layout=Linear] .portfolio-card-actions .icon-button{width:32px;min-width:32px;height:32px;min-height:32px;padding:7px}
+.portfolio-items[data-layout=Linear] .portfolio-card dl{grid-area:metadata;display:grid;grid-template-columns:fit-content(110px) minmax(0,1fr);gap:3px 8px;margin:0;padding:0 4px}
+.portfolio-items[data-layout=Linear] .portfolio-card dt,.portfolio-items[data-layout=Linear] .portfolio-card dd{margin:0;font-size:12px;line-height:1.35;text-transform:none;letter-spacing:normal}
+
+/* Preserve legible columns; the surrounding pane supplies horizontal scrolling. */
+.portfolio-items[data-layout=D] table{width:max-content;min-width:100%;table-layout:auto}
+.portfolio-items[data-layout=D] th,.portfolio-items[data-layout=D] th button{white-space:nowrap;overflow-wrap:normal;word-break:normal}
+.portfolio-items[data-layout=D] td{min-width:120px;max-width:280px;width:200px;overflow-wrap:break-word;vertical-align:top;padding:6px 8px}
+.portfolio-items[data-layout=D] td[data-field-type=F]{min-width:200px;width:240px}
+.portfolio-items[data-layout=D] td[data-field-type=F] .portfolio-file{max-width:280px}
+.portfolio-items[data-layout=D] td[data-field-type=Size],.portfolio-items[data-layout=D] td[data-field-type=CompressedSize],.portfolio-items[data-layout=D] td[data-field-type=N],.portfolio-items[data-layout=D] td[data-field-type=D],.portfolio-items[data-layout=D] td[data-field-type=ModDate],.portfolio-items[data-layout=D] td[data-field-type=CreationDate]{white-space:nowrap;min-width:80px;width:auto}
+.portfolio-items[data-layout=D] td.portfolio-row-actions{min-width:88px;width:88px}
+
+#portfolio-splitter{position:relative;background:#e8edf3;touch-action:none;z-index:4;cursor:col-resize}
+#portfolio-splitter::after{content:"";position:absolute;inset:0 3px;background:#aebdce}
+#portfolio-splitter:hover,#portfolio-splitter:focus-visible{background:#c5d6ee;outline:2px solid #285dd7;outline-offset:-2px}
+body[data-portfolio-split=H] #portfolio-splitter{cursor:row-resize}
+body[data-portfolio-split=H] #portfolio-splitter::after{inset:3px 0}
+body[data-portfolio-resizing],body[data-portfolio-resizing] *{user-select:none!important}
+body[data-portfolio-resizing=V],body[data-portfolio-resizing=V] *{cursor:col-resize!important}
+body[data-portfolio-resizing=H],body[data-portfolio-resizing=H] *{cursor:row-resize!important}
+@media(min-width:751px){
+  body[data-portfolio][data-portfolio-split=V] #workspace{grid-template-columns:minmax(0,calc(var(--portfolio-size,35%) - 4px)) 8px minmax(0,1fr)}
+  body[data-portfolio][data-portfolio-split=H] #workspace{grid-template-rows:minmax(0,calc(var(--portfolio-size,55%) - 4px)) 8px minmax(0,1fr)}
+}
+@media(max-width:750px){#portfolio-splitter{display:none}.portfolio-items[data-layout=Linear] .portfolio-card{grid-template-columns:76px minmax(0,1fr) auto}.portfolio-items[data-layout=Linear] .portfolio-file-type img{max-width:76px;height:64px}.portfolio-items[data-layout=Linear] .portfolio-card dl{grid-column:1/-1}}
+
+#portfolio-splitter::before{content:"";position:absolute;left:2px;top:calc(50% - 16px);width:4px;height:32px;border-left:1px solid #536980;border-right:1px solid #536980;z-index:1}body[data-portfolio-split=H] #portfolio-splitter::before{left:calc(50% - 16px);top:2px;width:32px;height:4px;border:0;border-top:1px solid #536980;border-bottom:1px solid #536980}
+
+/* Compact metadata values and vertical file actions. */
+.portfolio-items[data-layout=D] td.portfolio-row-actions{min-width:44px;width:44px;padding:3px 4px}
+.portfolio-action-stack,.portfolio-card-actions{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.portfolio-action-stack .icon-button,.portfolio-card-actions .icon-button{width:28px;min-width:28px;height:28px;min-height:28px;padding:5px}
+.portfolio-items[data-layout=FilmStrip] .portfolio-card-actions{flex-direction:column}
+.portfolio-items[data-layout=Linear] .portfolio-card{grid-template-areas:"preview name actions" "preview metadata actions"}
+.portfolio-items[data-layout=D] td[data-field-type=ModDate],.portfolio-items[data-layout=D] td[data-field-type=CreationDate],.portfolio-items[data-layout=D] td[data-field-type=D]{min-width:96px}
+.portfolio-items[data-layout=D] td[data-field-type=Size],.portfolio-items[data-layout=D] td[data-field-type=CompressedSize]{min-width:76px}
+
+/* PDF outline items retain document order and hierarchy, without button boxes. */
+#outline-panel{padding:4px 8px;font-size:13px}
+#outline-panel>summary,#portfolio-outline-panel>summary{padding:5px 0;font-size:13px}
+#outline,#portfolio-outline{margin:4px 0;padding:0;list-style:none}
+#outline ul,#portfolio-outline ul{list-style:none;margin:0 0 0 10px;padding:0 0 0 8px;border-left:1px solid var(--line)}
+#outline li,#portfolio-outline li{margin:0;padding:0;min-width:0}
+#outline button,#portfolio-outline button{display:block;width:100%;min-height:26px;margin:0;padding:3px 6px;border:0;border-radius:3px;background:transparent;box-shadow:none;text-align:left;font-size:13px;font-weight:400;line-height:20px;white-space:normal;overflow-wrap:break-word;color:#24354a}
+#outline button:hover:not(:disabled),#portfolio-outline button:hover:not(:disabled){background:#e3ecf8}
+#outline button:focus-visible,#portfolio-outline button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+#outline li>span,#portfolio-outline li>span{display:block;padding:3px 6px;font-size:13px;line-height:20px;color:var(--muted)}
+
+/* Narrow Details list; optional columns can still scroll horizontally. */
+.portfolio-items[data-layout=D] table.compact-details{table-layout:fixed;width:100%;min-width:0}
+.portfolio-items[data-layout=D] col[data-field-type=Size]{width:90px}
+.portfolio-items[data-layout=D] col.portfolio-actions-column{width:40px}
+.portfolio-items[data-layout=D] td{padding:3px 6px;vertical-align:middle}
+.portfolio-items[data-layout=D] td[data-field-type=F]{min-width:0;width:auto}
+.portfolio-items[data-layout=D] td[data-field-type=F] .portfolio-file{max-width:none;min-height:32px;padding:4px;align-items:center;position:relative;white-space:nowrap;overflow-wrap:normal}
+.portfolio-name{display:flex;min-width:0;flex:1;white-space:nowrap}
+.portfolio-name-start{min-width:0;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+.portfolio-name-end{flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.portfolio-items[data-layout=D] .portfolio-file:is(:hover,:focus)::after{content:attr(data-full-name);position:absolute;top:100%;left:0;z-index:5;max-width:calc(100vw - 60px);width:max-content;white-space:normal;overflow-wrap:anywhere;padding:5px 8px;border:1px solid #8793a3;border-radius:4px;background:#fff;color:#1d2733;box-shadow:0 2px 5px #0002;font-size:13px;font-weight:400;pointer-events:none}
+.portfolio-items[data-layout=D] td.portfolio-row-actions{min-width:0;width:auto;padding:2px 4px}
+.portfolio-items[data-layout=D] .portfolio-action-stack{gap:0}
+.portfolio-items[data-layout=D] .portfolio-action-stack .icon-button{height:24px;min-height:24px;width:28px;min-width:28px;padding:3px 5px}
+.portfolio-selection{margin-top:10px;border-top:1px solid var(--line);padding:8px 4px;font-size:13px}
+.portfolio-selection>summary{cursor:pointer;overflow-wrap:anywhere;padding:4px 0;font-weight:600}
+.portfolio-selection dl{margin:8px 0;display:grid;grid-template-columns:minmax(65px,auto) minmax(0,1fr);gap:6px 12px}
+.portfolio-selection dt{font-weight:600;overflow-wrap:anywhere}
+.portfolio-selection dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* Linear uses the reader for the large preview and one selected-file metadata panel. */
+.portfolio-items[data-layout=Linear]{display:block!important}
+body[data-portfolio=Linear] .portfolio-selection{margin:0 0 12px;padding-top:0;border-top:0;border-bottom:1px solid var(--line)}
+.portfolio-list-heading{margin:8px 4px;font-size:13px}
+.portfolio-linear-row{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--line);padding:2px 0}
+.portfolio-linear-row .portfolio-file{flex:1;min-width:0;font-size:13px;padding:5px}
+.portfolio-linear-row .portfolio-action-stack{flex-shrink:0}
+/* Freeform thumbnails use randomized positions, with readable upright labels. */
+.portfolio-items[data-layout=FreeForm]{display:block!important}
+.portfolio-scatter{position:relative;width:100%;min-height:0}
+.portfolio-items[data-layout=FreeForm] .portfolio-card:nth-child(n){position:absolute;height:200px;min-width:0;margin:0;padding:6px;transform:none;display:grid;grid-template-columns:minmax(0,1fr) 28px;grid-template-rows:112px minmax(0,1fr);gap:4px;box-sizing:border-box}
+.portfolio-thumbnail-button{grid-column:1/-1;display:block;width:100%;min-width:0;height:112px;margin:0;padding:0;background:transparent;border:0}
+.portfolio-thumbnail-button .portfolio-file-type{padding:0;height:110px;min-height:0}
+.portfolio-thumbnail-button .portfolio-file-type img{max-width:100%;height:110px;object-fit:contain}
+.portfolio-items[data-layout=FreeForm] .portfolio-file{font-size:12px;padding:3px;min-height:0;align-self:start;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;overflow-wrap:anywhere}
+.portfolio-items[data-layout=FreeForm] .portfolio-file>.tree-icon{display:none}
+.portfolio-items[data-layout=FreeForm] .portfolio-card-actions{align-self:start}
+.portfolio-thumbnail-button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+body[data-portfolio=FreeForm] .portfolio-scroll{scrollbar-gutter:stable}
+
+#files .file-message-links{grid-column:1;grid-row:2;min-width:0;font-size:13px}
+.file-message-owner+.file-message-owner{margin-top:8px}
+.file-message-subject{display:block;overflow-wrap:anywhere}
+#files .file-message-link{display:block;min-height:44px;margin:2px 0 0;padding:2px 0;border:0;border-radius:2px;background:transparent;color:var(--accent);font-size:13px;font-weight:400;text-align:left;text-decoration:underline;white-space:normal;overflow-wrap:anywhere}
+#files .file-message-link:disabled{color:var(--muted);text-decoration:none}
+#files .file-message-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+#files .file-name-link{min-height:44px;padding:2px 0;border:0;border-radius:2px;background:transparent;color:var(--accent);text-align:left;text-decoration:underline;white-space:normal;overflow-wrap:anywhere}
+#files .file-name-link:disabled{color:var(--muted);text-decoration:none}
+#files .file-name-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}

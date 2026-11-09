@@ -172,7 +172,8 @@ final class LogicalStructureChecks {
       return;
     }
     boolean declared = validDeclaration();
-    report.check("LOGICAL_TS32005_DECLARATION", declared, "PDF 2.0 logical structure requires the ISO 32005 declaration.", null);
+    if (xml == null) report.unavailable("LOGICAL_TS32005_DECLARATION", "Document XMP could not be read, so its ISO 32005 declaration cannot be checked.");
+    else report.check("LOGICAL_TS32005_DECLARATION", declared, "PDF 2.0 logical structure requires the ISO 32005 declaration.", null);
     if (!"PASS".equals(JavaValidation.text(report.pdfa, "status"))) {
       report.na("ISO32005_UPSTREAM", "The ISO pass awaits a successful PDF/A run.", null);
       return;

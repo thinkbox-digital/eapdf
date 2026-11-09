@@ -305,3 +305,44 @@ test('retained malformed stream readers survive cache cleanup with independent p
   assert.equal(new TextDecoder().decode(a.getBytes()),'bc');assert.equal(new TextDecoder().decode(b.getBytes()),'bc');
  }finally{xref.clearObjectStreamCache();DecodeStream.remainingBudget=budget;}
 });
+
+test('optional portfolio presentation reads typed fields, CI, exact initial key and metadata without decoding payloads',async()=>{
+ const f=fixture();f.stream.getBytes=()=>{throw new Error('metadata must not decode payloads');};
+ f.spec.set('CI',f.dict({Topic:f.dict({D:'Planning',P:'Re: '})}));
+ const schema=f.dict({Type:Name.get('CollectionSchema'),Topic:f.dict({N:'Topic',Subtype:Name.get('S'),O:2,V:false})});
+ f.root.set('Collection',f.dict({D:'member',View:Name.get('T'),Schema:schema,Sort:f.dict({S:[Name.get('Topic'),Name.get('F')],A:false})}));
+ f.root.set('Names',f.dict({EmbeddedFiles:f.dict({Names:['member',Ref.get(3,1)]})}));
+ const p=(await f.reader.inspect({presentationOnly:true})).presentation;
+ assert.equal(p.initialHex,'6d656d626572');assert.equal(p.view,'T');assert.equal(p.ascendingAll,false);
+ assert.deepEqual(p.fields,[{key:'Topic',label:'Topic',subtype:'S',order:2,visible:false}]);
+ assert.equal(p.entries.length,1);assert.deepEqual(p.entries[0].values,[['Topic','Planning','Re: ']]);assert.equal(p.entries[0].filePath,'object:3:1');assert.deepEqual(p.notices,[]);
+});
+test('portfolio metadata cycles terminate with explicit notices and preserve empty initial string',async()=>{
+ const f=fixture(),folder=f.dict({ID:0,Name:'Root'});folder.set('Next',folder);const tree=f.dict({});tree.set('Kids',[tree]);
+ f.root.set('Collection',f.dict({D:'',Folders:folder}));f.root.set('Names',f.dict({EmbeddedFiles:tree}));
+ const p=(await f.reader.inspect({presentationOnly:true})).presentation;
+ assert.equal(p.initialHex,'');assert.equal(p.folders.length,1);assert.equal(p.notices.length,2);
+});
+test('ordinary asset inspection retains its API shape without Portfolio presentation',async()=>{
+ const f=fixture();f.root.set('Collection',f.dict({Schema:f.dict({Topic:f.dict({N:'Topic'})})}));
+ const normal=await f.reader.inspect();assert.equal('presentation' in normal,false);assert.deepEqual(normal.collection.schemaKeys,['Topic']);
+});
+
+test('embedded actions preserve nested byte keys, annotation targets and named destinations; reject cycles and external roots',async()=>{
+ const {embeddedAction}=await load('src/core/collection_navigation.js');const f=fixture();
+ const action=f.dict({D:Name.get('Chapter 1'),T:f.dict({R:Name.get('P'),T:f.dict({R:Name.get('C'),N:'\xfe\xff\x00A',T:f.dict({R:Name.get('C'),P:'page-name',A:'annotation-name'})})})});
+ assert.deepEqual(embeddedAction(action),{steps:[{relationship:'P'},{relationship:'C',nameHex:'feff0041'},{relationship:'C',page:'page-name',annotation:'annotation-name'}],destination:'Chapter 1',error:null});
+ action.set('D',[2,Name.get('Fit')]);assert.deepEqual(embeddedAction(action).destination,[2,{name:'Fit'}]);
+ const target=action.get('T');target.set('T',target);assert.match(embeddedAction(action).error,/cyclic/);
+ action.set('F','elsewhere.pdf');assert.match(embeddedAction(action).error,/external PDF/);
+});
+test('stored folder thumbnails decode lazily as bounded RGBA and reject oversized images',async()=>{
+ const {folderThumbnail}=await load('src/core/collection_navigation.js');const f=fixture();f.reader.catalog.xref.fetchIfRef=value=>value instanceof Ref?f.map.get(value):value;
+ const image=new Stream(new Uint8Array([255,0,0,0,255,0]));image.dict=f.dict({Type:Name.get('XObject'),Subtype:Name.get('Image'),Width:2,Height:1,BitsPerComponent:8,ColorSpace:Name.get('DeviceRGB'),Length:6});
+ const folder=f.dict({ID:0,Name:'Root',Thumb:image});f.root.set('Collection',f.dict({Folders:folder}));
+ assert.equal((await f.reader.inspect({presentationOnly:true})).presentation.folders[0].thumbnail,true);
+ const data=(await f.reader.inspect({folderThumbnail:'catalog/Collection/Folders'})).thumbnail;
+ assert.equal(data.width,2);assert.deepEqual([...data.data],[255,0,0,255,0,255,0,255]);
+ await assert.rejects(()=>f.reader.inspect({folderThumbnail:'object:999:0'}),/not discovered/);
+ image.dict.set('Width',100000);await assert.rejects(()=>folderThumbnail(image,f.reader.catalog.xref),/budget/);
+});

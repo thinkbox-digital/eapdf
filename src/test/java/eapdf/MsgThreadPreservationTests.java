@@ -8,16 +8,11 @@ import org.simplejavamail.outlookmessageparser.OutlookMessageParser;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MsgThreadPreservationTests {
-  static final Path SOURCE = Path.of("in/2019.10.08 DEP response.msg");
-  static final String PARENT = "<CAO928xwjCa3X=zFA9kKYLwwqeVHVtEjnZo-N+SNLyV1SQYfFRA@mail.gmail.com>";
-
-  @org.junit.jupiter.api.BeforeEach
-  void requireSource() {
-    org.junit.jupiter.api.Assumptions.assumeTrue(Files.isRegularFile(SOURCE), "Optional source fixture absent: " + SOURCE);
-  }
+  static final Path SOURCE = Path.of("src/test/resources/eapdf/outlook-regression/native-reply.msg");
+  static final String PARENT = "<parent@example.org>";
 
   @Test
-  void suppliedOutlookReplyRetainsItsNativeThreadFields() throws Exception {
+  void syntheticOutlookReplyRetainsItsNativeThreadFields() throws Exception {
     EmailRecord record = MsgReader.readMsg(SOURCE.toString(), "", List.of(), false);
     assertEquals(List.of(PARENT), record.inReplyTo);
     assertEquals(List.of(PARENT), record.references);

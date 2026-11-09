@@ -16,6 +16,7 @@ final class DocumentPartChecks {
   private final JavaValidation.Report report;
   private final List<Element> emails;
   private final String profile;
+  private final boolean readableXmp;
   private final Map<COSDictionary, Integer> pages;
   private final Set<Integer> outlines;
   private final Map<String, Set<String>> xmpIdentities;
@@ -28,9 +29,9 @@ final class DocumentPartChecks {
   private boolean metadataLimited;
 
   DocumentPartChecks(PDDocument document, JavaValidation.Report report, List<Element> emails, String profile,
-                     Map<COSDictionary, Integer> pages, Set<Integer> outlines, Map<String, Set<String>> xmpIdentities) {
+                     Map<COSDictionary, Integer> pages, Set<Integer> outlines, Map<String, Set<String>> xmpIdentities, boolean readableXmp) {
     this.document = document; this.report = report; this.emails = emails; this.profile = profile; this.pages = pages; this.outlines = outlines;
-    this.xmpIdentities = xmpIdentities;
+    this.xmpIdentities = xmpIdentities; this.readableXmp = readableXmp;
   }
 
   void run() throws IOException {
@@ -173,7 +174,8 @@ final class DocumentPartChecks {
       boolean present = value instanceof COSString && text != null && !text.isEmpty();
       if ("Mail_GUID".equals(field) && hasIdentity && kids != null)
         report.check("DPM_MAIL_GUID_PRESENT", present, "An email intermediate node requires a nonempty text Mail_GUID.", null);
-      if (present || !"Mail_GUID".equals(field) || kids == null)
+      if (!readableXmp) report.unavailable(code, "Document XMP could not be read, so its DPM identity comparison is unavailable.");
+      else if (present || !"Mail_GUID".equals(field) || kids == null)
         report.check(code, identity != null && !identity.isEmpty() && xmpIdentities.getOrDefault(xmpField, Set.of()).contains(identity),
             "DPM email identity must match its document XMP value.", Map.of("field", field, "value", observed(value)));
     }

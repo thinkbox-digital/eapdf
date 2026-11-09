@@ -16,12 +16,12 @@ final class ProcessingLimits {
   }
 
   static long messageBytes() {
-    return Math.min(setting("eapdf.maxMessageBytes", "EAPDF_MAX_MESSAGE_BYTES", 64L * 1024 * 1024),
+    return Math.min(setting("eapdf.maxMessageBytes", "EAPDF_MAX_MESSAGE_BYTES", Math.max(1024, Runtime.getRuntime().maxMemory() / 16)),
         Math.max(1024, Runtime.getRuntime().maxMemory() / 16));
   }
 
   static long metadataBytes() {
-    return Math.min(setting("eapdf.maxMetadataBytes", "EAPDF_MAX_METADATA_BYTES", 32L * 1024 * 1024),
+    return Math.min(setting("eapdf.maxMetadataBytes", "EAPDF_MAX_METADATA_BYTES", Math.max(1024, Runtime.getRuntime().maxMemory() / 8)),
         Math.max(1024, Runtime.getRuntime().maxMemory() / 8));
   }
 
@@ -41,7 +41,7 @@ final class ProcessingLimits {
 
   static void checkImage(int width, int height) {
     checkCancelled();
-    long limit = Math.min(setting("eapdf.maxImagePixels", "EAPDF_MAX_IMAGE_PIXELS", 16000000),
+    long limit = Math.min(setting("eapdf.maxImagePixels", "EAPDF_MAX_IMAGE_PIXELS", Math.max(1024, Runtime.getRuntime().maxMemory() / 32)),
         Math.max(1024, Runtime.getRuntime().maxMemory() / 32));
     if (width <= 0 || height <= 0 || (long) width * height > limit) {
       throw Common.fail("Image dimensions exceed the processing limit of " + limit + " pixels: " + width + "x" + height);
@@ -54,7 +54,7 @@ final class ProcessingLimits {
 
   static void checkOutput(long size) {
     checkCancelled();
-    long limit = setting("eapdf.maxOutputBytes", "EAPDF_MAX_OUTPUT_BYTES", 1024L * 1024 * 1024);
+    long limit = setting("eapdf.maxOutputBytes", "EAPDF_MAX_OUTPUT_BYTES", Long.MAX_VALUE);
     if (size > limit) throw Common.fail("Conversion exceeds the output limit of " + limit + " bytes");
   }
 
@@ -63,7 +63,7 @@ final class ProcessingLimits {
   }
 
   static void checkFont(java.nio.file.Path path) throws IOException {
-    long limit = setting("eapdf.maxFontBytes", "EAPDF_MAX_FONT_BYTES", 16L * 1024 * 1024);
+    long limit = setting("eapdf.maxFontBytes", "EAPDF_MAX_FONT_BYTES", Math.max(1024, Runtime.getRuntime().maxMemory() / 32));
     if (java.nio.file.Files.size(path) > limit) throw Common.fail("Font exceeds the processing limit of " + limit + " bytes: " + path);
   }
 
@@ -87,7 +87,7 @@ final class ProcessingLimits {
   }
 
   static long bodyCharacters() {
-    return Math.min(setting("eapdf.maxBodyChars", "EAPDF_MAX_BODY_CHARS", 2L * 1024 * 1024),
+    return Math.min(setting("eapdf.maxBodyChars", "EAPDF_MAX_BODY_CHARS", Math.max(1024, Runtime.getRuntime().maxMemory() / 64)),
         Math.max(1024, Runtime.getRuntime().maxMemory() / 64));
   }
 

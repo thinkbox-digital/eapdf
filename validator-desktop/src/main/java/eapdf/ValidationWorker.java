@@ -45,7 +45,7 @@ final class ValidationWorker {
             if (reason == null && ValidationRuntime.scratchExceeded(directory, report))
                 reason = "Validation exceeded its scratch/report budget.";
             if (reason != null || (code != 0 && code != 2)) {
-                try (var session = new ValidationSession(input, report)) {
+                try (var session = new ValidationSession(input, report, true)) {
                     session.failed(reason == null ? "Validation worker stopped before completion (exit " + code + ")." : reason);
                 }
                 return 2;

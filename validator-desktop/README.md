@@ -35,7 +35,7 @@ check still runs. Worker errors remain incomplete findings, never successful che
 
 Workers recycle after 128 child PDFs to release accumulated parser/JIT state.
 Each defaults to one quarter of the coordinator heap, bounded between 128 MiB
-and 1 GiB (four workers therefore use up to 4 GiB of Java heap in addition to
+and the current available-memory share (four workers use their own heaps in addition to
 the coordinator). `VALIDATOR_CHILD_HEAP_MIB` overrides the per-worker allowance.
 `VALIDATOR_CHILD_PROCESSES=1` selects the serial path for comparisons; the normal
 value is `4`. These are environment variables or Java system properties, not
@@ -50,7 +50,7 @@ From the repository root, using Java 21 and Maven:
 mvn -f validator-desktop/pom.xml verify
 ```
 
-On Linux, the JAR is written to `/tmp/eapdf-validator-build/eapdf-validator-1.6.0-beta.20.jar`.
+On Linux, the JAR is written to `/tmp/eapdf-validator-build/eapdf-validator-2.0.0-beta.1.jar`.
 Override the build directory with `-Deapdf.build.directory=/tmp/your-build`.
 No build files are written to the creator's `target/` directory.
 `verify` checks the final shaded JAR's manifest, ZIP CRCs, bundled runtime classes,
@@ -61,16 +61,16 @@ To build, verify and atomically replace the distributable:
 
 ```sh
 python3 scripts/package_validator.py
-(cd dist && sha256sum -c eapdf-validator-1.6.0-beta.20.jar.sha256)
+(cd dist && sha256sum -c eapdf-validator-2.0.0-beta.1.jar.sha256)
 ```
 
-Publish the executable `eapdf-validator-1.6.0-beta.20.jar`, not the unshaded `original-` JAR.
+Publish the executable `eapdf-validator-2.0.0-beta.1.jar`, not the unshaded `original-` JAR.
 The packaging command verifies the build before replacing the distributable.
 
 ## Run
 
 ```sh
-java -jar /path/to/eapdf-validator-1.6.0-beta.20.jar
+java -jar /path/to/eapdf-validator-2.0.0-beta.1.jar
 ```
 
 The JAR includes its runtime libraries, rules and specification references; only
@@ -96,10 +96,22 @@ ungrouped JSON report. **Stop** cancels a run.
 
 The input PDF is read only. A separate Java worker lets Stop end checking without
 closing the window. Private scratch prefers disk storage when the system temp
-folder uses RAM. Collection children are checked recursively with default limits
-of depth 8, 250,000 children and 64 GiB of decoded child bytes. The existing
-`VALIDATOR_CHILD_MAX_DEPTH`, `VALIDATOR_CHILD_MAX_COUNT` and
-`VALIDATOR_CHILD_MAX_BYTES` settings override those defaults.
+folder uses RAM. Collection children are checked recursively with cycle detection and byte accounting;
+fixed child-count, depth and lifetime decoded-byte cutoffs do not terminate checks.
+
+On Linux, workers use the inherited hard open-file allowance. An explicit
+`VALIDATOR_MAX_OPEN_FILES` can lower it. Work files/reports default to one eighth
+of free working-disk space and aggregate scratch to one quarter. The controller
+passes the same allowances to its worker and collection children.
+`VALIDATOR_MAX_WORK_FILE_BYTES` and `VALIDATOR_MAX_SCRATCH_BYTES` override these
+shares. Regeneration divides its disk allowance among concurrent jobs instead.
+The Linux virtual-address allowance includes admitted disk mappings in addition
+to the heap and native headroom; mapped file size is not resident RAM usage.
+Disk-streamed attachment decoding follows the work-file allowance. Paths that
+require an attachment byte array retain a heap-based allowance (one quarter);
+XMP defaults to one sixteenth of the heap, subject to Java array capacity.
+Explicit stream settings remain available. Exhausted budgets produce incomplete checks, not invented
+conformance failures. Real missing source information can still produce failures.
 
 The desktop worker uses two thirds of currently available memory, respecting container
 limits. CLI users can set the JVM heap with `-Xmx`; large-file checks may need more

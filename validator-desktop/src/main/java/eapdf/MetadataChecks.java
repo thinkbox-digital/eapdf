@@ -30,11 +30,11 @@ final class MetadataChecks {
   private final List<EaPdfChecks.Embedded> files;
   private final List<COSDictionary> sourceSpecs;
   private final Set<COSDictionary> sourceSpecSet = identitySet();
+  private final Set<COSDictionary> unreadableSources = identitySet();
   private final List<Element> emails;
   private final List<Element> assets;
   private final List<Element> attachments;
   private final String profile;
-  private long inspectedMimeBytes;
   private final Map<String, List<String>> bodyTypes = new java.util.HashMap<>();
   private final Map<Element, NativeAttachment> originalAttachmentBindings = new java.util.IdentityHashMap<>();
   private final Map<Element, Source> sourceBindings = new java.util.IdentityHashMap<>();
@@ -389,10 +389,33 @@ final class MetadataChecks {
     Source source = sourceBindings.get(owner);
     if (source == null || file == null) return List.of();
     try {
-      return originalAttachments(source).stream().filter(attachment -> file.size() == attachment.size()
-          && file.md5().equalsIgnoreCase(attachment.md5()))
-          .map(NativeAttachment::contentType).distinct().limit(2).toList();
+      return matchedOriginalMediaTypes(file, originalAttachments(source));
     } catch (Exception unavailable) { return List.of(); }
+  }
+
+  private static List<String> matchedOriginalMediaTypes(EaPdfChecks.Embedded file, List<NativeAttachment> originals) {
+    var types = new java.util.LinkedHashSet<String>();
+    Map<String, String> nested = Map.of();
+    boolean inspectedNested = false;
+    for (NativeAttachment original : originals) {
+      boolean matches;
+      if (original.nestedContent().isEmpty()) {
+        matches = file.size() == original.size() && file.md5().equalsIgnoreCase(original.md5());
+      } else {
+        // An attached Outlook message is a structured storage, not a standalone
+        // byte stream. Use the same complete property/stream comparison as the
+        // native-preservation check; filenames alone never establish identity.
+        if (!inspectedNested) {
+          inspectedNested = true;
+          try { nested = OutlookSource.standaloneContent(file.bytes()); }
+          catch (Exception unavailable) { nested = Map.of(); }
+        }
+        matches = original.nestedContent().equals(nested);
+      }
+      if (matches) types.add(original.contentType());
+      if (types.size() > 1) break; // Conflicting declarations remain unavailable.
+    }
+    return List.copyOf(types);
   }
 
   void renderedCounts(ContentOwnership.Result content) {
@@ -510,15 +533,22 @@ final class MetadataChecks {
     }
     for (EaPdfChecks.Embedded file : files) {
       if (!sourceSpecSet.contains(file.spec()) || !parsedSpecs.add(file.spec())) continue;
-      boolean outlookFile = "application/vnd.ms-outlook".equalsIgnoreCase(file.mediaType()) || file.name().toLowerCase(Locale.ROOT).endsWith(".msg");
-      OutlookSource.Evidence outlook = outlookFile ? OutlookSource.inspect(file.bytes()) : null;
-      OutlookSource.Core nativeCore = outlookFile && outlook == null ? OutlookSource.nativeCore(file.bytes()) : null;
-      if (outlookFile && outlook == null && nativeCore == null) continue;
-      if (!outlookFile && !Set.of("message/rfc822", "message/global").contains(file.mediaType().toLowerCase(Locale.ROOT)) && !file.name().toLowerCase(Locale.ROOT).endsWith(".eml")) continue;
-      try (var input = store != null && !outlookFile ? store.open(file)
-          : new ByteArrayInputStream(nativeCore != null ? new byte[0] : outlook == null ? file.bytes() : outlook.headers())) {
-        MimeMessage message = new MimeMessage(Session.getInstance(new Properties()), input);
-        sources.add(new Source(file, message, outlook, nativeCore));
+      try {
+        boolean outlookFile = "application/vnd.ms-outlook".equalsIgnoreCase(file.mediaType()) || file.name().toLowerCase(Locale.ROOT).endsWith(".msg");
+        byte[] outlookBytes = outlookFile ? file.bytes() : null;
+        OutlookSource.Evidence outlook = outlookFile ? OutlookSource.inspect(outlookBytes) : null;
+        OutlookSource.Core nativeCore = outlookFile && outlook == null ? OutlookSource.nativeCore(outlookBytes) : null;
+        if (outlookFile && outlook == null && nativeCore == null) continue;
+        if (!outlookFile && !Set.of("message/rfc822", "message/global").contains(file.mediaType().toLowerCase(Locale.ROOT)) && !file.name().toLowerCase(Locale.ROOT).endsWith(".eml")) continue;
+        try (var input = store != null && !outlookFile ? store.open(file)
+            : new ByteArrayInputStream(nativeCore != null ? new byte[0] : outlook == null ? file.bytes() : outlook.headers())) {
+          MimeMessage message = new MimeMessage(Session.getInstance(new Properties()), input);
+          sources.add(new Source(file, message, outlook, nativeCore));
+        }
+      } catch (java.io.IOException | java.io.UncheckedIOException | jakarta.mail.MessagingException error) {
+        if (Thread.currentThread().isInterrupted()) throw error;
+        unreadableSources.add(file.spec());
+        report.unavailable("MESSAGE_SOURCE_COVERAGE", "Original email could not be inspected: " + file.name() + ": " + JavaValidation.failureReason(error));
       }
     }
     inspectableSourceCount = sources.size();
@@ -1117,7 +1147,7 @@ final class MetadataChecks {
   private NativeSource nativeSource() {
     if (!Set.of("s", "si").contains(profile) || emails.size() != 1 || sourceSpecs.size() != 1) return null;
     EaPdfChecks.Embedded original = files.stream().filter(file -> file.spec() == sourceSpecs.getFirst()).findFirst().orElse(null);
-    if (original == null || !("application/vnd.ms-outlook".equalsIgnoreCase(original.mediaType()) || original.name().toLowerCase(Locale.ROOT).endsWith(".msg"))) return null;
+    if (original == null || unreadableSources.contains(original.spec()) || !("application/vnd.ms-outlook".equalsIgnoreCase(original.mediaType()) || original.name().toLowerCase(Locale.ROOT).endsWith(".msg"))) return null;
     var nativeCore = OutlookSource.nativeCore(original.bytes());
     return nativeCore == null ? null : new NativeSource(original, nativeCore);
   }
@@ -1441,8 +1471,8 @@ final class MetadataChecks {
            var input = encodedMessage && encoding != null ? MimeUtility.decode(raw, encoding) : raw) {
         byte[] buffer = new byte[128 * 1024]; int count;
         while ((count = input.read(buffer)) != -1) {
-          size += count; inspectedMimeBytes += count;
-          if (inspectedMimeBytes > 64L * 1024 * 1024 * 1024) throw new java.io.IOException("Original MIME payload inventory exceeds its byte limit");
+          if (Thread.currentThread().isInterrupted()) throw new java.io.InterruptedIOException("Original MIME inspection cancelled");
+          size = Math.addExact(size, count);
           digest.update(buffer, 0, count);
         }
       }

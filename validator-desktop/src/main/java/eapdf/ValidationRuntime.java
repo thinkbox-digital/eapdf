@@ -11,22 +11,71 @@ final class ValidationRuntime {
         String value = System.getProperty(name, System.getenv(name));
         return value == null || value.isBlank() ? fallback : Math.max(1, Long.parseLong(value));
     }
+    // veraPDF can retain a scratch stream per decoded PDF stream. A small
+    // fixed descriptor cap rejects otherwise valid multi-page mail archives.
+    static long openFileLimit() {
+        long inherited = ManagementFactory.getOperatingSystemMXBean() instanceof com.sun.management.UnixOperatingSystemMXBean os
+            ? os.getMaxFileDescriptorCount() : 16384;
+        long requested = setting("VALIDATOR_MAX_OPEN_FILES", Long.MAX_VALUE);
+        try {
+            for (String line : Files.readAllLines(Path.of("/proc/self/limits"))) if (line.startsWith("Max open files")) {
+                String[] columns = line.substring("Max open files".length()).strip().split("\\s+");
+                if (columns.length > 1 && !columns[1].equals("unlimited")) requested = Math.min(requested, Long.parseLong(columns[1]));
+                break;
+            }
+        } catch (IOException | NumberFormatException ignored) { }
+        return requested == Long.MAX_VALUE ? inherited : requested;
+    }
+    private static final class DiskBudget {
+        static final long FILE = availableDiskShare();
+    }
+    private static long availableDiskShare() {
+        try {
+            Path root = Path.of(System.getProperty("java.io.tmpdir"));
+            String type = Files.getFileStore(root).type().toLowerCase(java.util.Locale.ROOT);
+            if (type.equals("tmpfs") || type.equals("ramfs")) {
+                Path project = Path.of(System.getProperty("user.dir"));
+                String projectType = Files.getFileStore(project).type().toLowerCase(java.util.Locale.ROOT);
+                if (!projectType.equals("tmpfs") && !projectType.equals("ramfs")) root = project;
+            }
+            // Reserve room for other work and simultaneous validation jobs.
+            return Math.max(1, Files.getFileStore(root).getUsableSpace() / 8);
+        } catch (IOException error) { throw new IllegalStateException("Cannot determine available validation storage", error); }
+    }
+    static long workFileLimit() {
+        return setting("VALIDATOR_MAX_WORK_FILE_BYTES", DiskBudget.FILE);
+    }
+    static long scratchLimit() {
+        return setting("VALIDATOR_MAX_SCRATCH_BYTES", DiskBudget.FILE * 2);
+    }
+    static long addressLimit(long heapMiB) {
+        // RLIMIT_AS counts mapped files even when their pages are not resident.
+        // Leave address space for all admitted scratch as well as heap/native work.
+        return Math.addExact(Math.multiplyExact(heapMiB + 4096, 1024L * 1024), scratchLimit());
+    }
     static java.util.List<String> boundedCommand(java.util.List<String> command, long heapMiB) throws IOException {
         if (!System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("linux")) return command;
         Path limiter = Path.of("/usr/bin/prlimit");
         if (!Files.isExecutable(limiter)) throw new IOException("Linux validation requires /usr/bin/prlimit (util-linux)");
         var bounded = new java.util.ArrayList<String>();
-        bounded.add(limiter.toString()); bounded.add("--as=" + Math.multiplyExact(heapMiB + 4096, 1024L * 1024));
-        bounded.add("--fsize=" + setting("VALIDATOR_MAX_WORK_FILE_BYTES", 64L * 1024 * 1024));
-        bounded.add("--nofile=256"); bounded.add("--core=0"); bounded.addAll(command); return bounded;
+        bounded.add(limiter.toString()); bounded.add("--as=" + addressLimit(heapMiB));
+        bounded.add("--fsize=" + workFileLimit());
+        bounded.add("--nofile=" + openFileLimit()); bounded.add("--core=0");
+        bounded.add(command.getFirst());
+        if (Path.of(command.getFirst()).getFileName().toString().equals("java")) {
+            // Freeze the controller's disk share for the worker and its children.
+            bounded.add("-DVALIDATOR_MAX_WORK_FILE_BYTES=" + workFileLimit());
+            bounded.add("-DVALIDATOR_MAX_SCRATCH_BYTES=" + scratchLimit());
+        }
+        bounded.addAll(command.subList(1, command.size())); return bounded;
     }
     static boolean scratchExceeded(Path directory, Path report) throws IOException {
-        long maximum = setting("VALIDATOR_MAX_SCRATCH_BYTES", 512L * 1024 * 1024);
-        long[] totals = {0, 0};
+        long maximum = scratchLimit();
+        long[] totals = {0};
         boolean[] exceeded = {false};
         Files.walkFileTree(directory, new SimpleFileVisitor<>() {
             @Override public FileVisitResult visitFile(Path path, java.nio.file.attribute.BasicFileAttributes attributes) {
-                if (attributes.isRegularFile() && (++totals[1] > 10000 || attributes.size() > maximum - totals[0])) {
+                if (attributes.isRegularFile() && (attributes.size() > maximum - totals[0])) {
                     exceeded[0] = true; return FileVisitResult.TERMINATE;
                 }
                 if (attributes.isRegularFile()) totals[0] += attributes.size();
@@ -42,7 +91,7 @@ final class ValidationRuntime {
             }
         });
         if (exceeded[0]) return true;
-        try { return Files.isRegularFile(report) && Files.size(report) > setting("VALIDATOR_MAX_WORK_FILE_BYTES", 64L * 1024 * 1024); }
+        try { return Files.isRegularFile(report) && Files.size(report) > workFileLimit(); }
         catch (NoSuchFileException ignored) { return false; }
     }
     static long workerHeapMiB() {

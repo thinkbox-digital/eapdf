@@ -75,6 +75,8 @@ final class EaPdfChecks {
 
     byte[] bytes() {
       if (payload != null) return payload;
+      if (size > BoundedPdfStreams.memoryStreamLimit()) throw new java.io.UncheckedIOException(
+          new BoundedPdfStreams.Limit("Attachment exceeds the available allowance for in-memory inspection"));
       try (var input = open()) { return input.readAllBytes(); }
       catch (IOException error) { throw new java.io.UncheckedIOException(error); }
     }
@@ -839,7 +841,7 @@ final class EaPdfChecks {
       }
       identities.put(key, values);
     }
-    new DocumentPartChecks(document, report, emails, profile, pageNumbers, outlinePages, identities).run();
+    new DocumentPartChecks(document, report, emails, profile, pageNumbers, outlinePages, identities, xml != null).run();
     if (container() && !report.seen.contains("DPM_FRONTMATTER_REQUIRED_CONTAINER"))
       report.check("DPM_FRONTMATTER_REQUIRED_CONTAINER", false, "A collection requires a declared FrontMatter content set.", null);
   }

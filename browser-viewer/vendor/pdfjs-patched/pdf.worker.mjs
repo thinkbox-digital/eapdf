@@ -38828,6 +38828,90 @@ class ColorConverters {
 const DateFormats = ["m/d", "m/d/yy", "mm/dd/yy", "mm/yy", "d-mmm", "d-mmm-yy", "dd-mmm-yy", "yy-mm-dd", "mmm-yy", "mmmm-yy", "mmm d, yyyy", "mmmm d, yyyy", "m/d/yy h:MM tt", "m/d/yy HH:MM"];
 const TimeFormats = ["HH:MM", "h:MM tt", "HH:MM:ss", "h:MM:ss tt"];
 
+;// ./src/core/collection_navigation.js
+
+
+
+
+
+
+
+function embeddedAction(action) {
+  const result = {
+    steps: [],
+    destination: null,
+    error: null
+  };
+  try {
+    if (action.has("F")) throw new Error("This link requires an external PDF. Open that file separately.");
+    let dest = action.get("D");
+    if (dest instanceof Name) dest = dest.name;
+    if (typeof dest === "string" && dest.length <= 65536) result.destination = stringToPDFString(dest, true);else if (Array.isArray(dest) && dest.length >= 2 && dest.length <= 6 && Number.isInteger(dest[0]) && dest[0] >= 0 && dest[1] instanceof Name && dest.slice(2).every(v => v === null || typeof v === "number" && Number.isFinite(v))) result.destination = [dest[0], {
+      name: dest[1].name
+    }, ...dest.slice(2)];else throw new Error("Embedded link destination is invalid.");
+    let target = action.get("T");
+    const seen = new Set();
+    do {
+      if (!(target instanceof Dict)) throw new Error("Embedded link target is invalid.");
+      if (seen.has(target) || seen.size >= 32) throw new Error("Embedded link target is cyclic or too deep.");
+      seen.add(target);
+      const r = target.get("R");
+      if (!(r instanceof Name) || !["C", "P"].includes(r.name)) throw new Error("Embedded link relationship is invalid.");
+      const step = {
+        relationship: r.name
+      };
+      if (r.name === "C") {
+        const name = target.get("N");
+        if (typeof name === "string" && name.length <= 65536) step.nameHex = Array.from(name, c => c.charCodeAt(0).toString(16).padStart(2, "0")).join("");else {
+          const page = target.get("P"),
+            annotation = target.get("A");
+          const valid = v => Number.isInteger(v) && v >= 0 || typeof v === "string" && v.length <= 65536;
+          if (!valid(page) || !valid(annotation)) throw new Error("Embedded attachment target is invalid.");
+          step.page = typeof page === "string" ? stringToPDFString(page, true) : page;
+          step.annotation = typeof annotation === "string" ? stringToPDFString(annotation, true) : annotation;
+        }
+      }
+      result.steps.push(step);
+      target = target.get("T");
+    } while (target !== undefined);
+  } catch (error) {
+    if (error instanceof MissingDataException) throw error;
+    result.error = String(error.message || error);
+  }
+  return result;
+}
+async function folderThumbnail(image, xref) {
+  if (!(image instanceof BaseStream)) throw new Error("Folder thumbnail is unavailable.");
+  const pending = [image],
+    seen = new Set();
+  let pixels = 0;
+  while (pending.length) {
+    const stream = pending.pop();
+    if (seen.has(stream) || seen.size >= 4) throw new Error("Invalid thumbnail mask hierarchy.");
+    seen.add(stream);
+    const d = stream.dict,
+      w = d.get("Width", "W"),
+      h = d.get("Height", "H"),
+      length = d.get("Length");
+    if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1 || w > 2048 || h > 2048 || (pixels += w * h) > 1048576 || !Number.isInteger(length) || length < 0 || length > 4194304) throw new Error("Folder thumbnail exceeds the preview budget.");
+    for (const key of ["SMask", "Mask"]) {
+      const mask = d.get(key);
+      if (mask instanceof BaseStream) pending.push(mask);
+    }
+  }
+  const decoded = await PDFImage.buildImage({
+    xref,
+    res: Dict.empty,
+    image,
+    pdfFunctionFactory: new PDFFunctionFactory({
+      xref
+    }),
+    globalColorSpaceCache: new GlobalColorSpaceCache(),
+    localColorSpaceCache: new LocalColorSpaceCache()
+  });
+  if (decoded.width * decoded.height > 1048576) throw new Error("Folder thumbnail exceeds the preview budget.");
+  return decoded.createImageData(true, false);
+}
 ;// ./src/core/inspection_yield.js
 function yieldInspection() {
   return new Promise(resolve => {
@@ -39047,7 +39131,236 @@ class FileSpec {
   }
 }
 
+;// ./src/core/collection_presentation.js
+
+
+
+async function collectionPresentation(root, xref, thumbnails = null) {
+  const result = {
+    initial: null,
+    initialHex: null,
+    view: "D",
+    layouts: [],
+    fields: [],
+    sort: [],
+    ascending: [],
+    folders: [],
+    entries: [],
+    split: null,
+    colors: [],
+    notices: []
+  };
+  let steps = 0,
+    characters = 0;
+  const fetch = raw => raw instanceof Ref ? xref.fetch(raw) : raw;
+  const path = (raw, fallback) => raw instanceof Ref ? `object:${raw.num}:${raw.gen}` : fallback;
+  const check = () => {
+    if (++steps > 200000 || characters > 8 * 1024 * 1024) throw new Error("Portfolio metadata limit reached; listing is incomplete.");
+  };
+  const value = raw => {
+    check();
+    const v = fetch(raw);
+    if (typeof v === "string") {
+      characters += v.length;
+      if (v.length > 65536) throw new Error("Portfolio field exceeds text limit.");
+      return stringToPDFString(v, true);
+    }
+    if (v instanceof Name) {
+      characters += v.name.length;
+      if (v.name.length > 65536) throw new Error("Portfolio name exceeds text limit.");
+      return v.name;
+    }
+    if (typeof v === "boolean" || typeof v === "number" && Number.isFinite(v)) return v;
+    return null;
+  };
+  const hex = s => typeof s === "string" ? Array.from(s, c => c.charCodeAt(0).toString(16).padStart(2, "0")).join("") : null;
+  const get = (d, k) => d instanceof Dict ? value(d.getRaw(k)) : null;
+  const list = raw => {
+    const v = fetch(raw);
+    return (Array.isArray(v) ? v.slice(0, 256) : [v]).map(value);
+  };
+  const keys = dict => {
+    const result = [];
+    for (const key of dict.getKeys()) {
+      check();
+      characters += key.length;
+      if (key.length > 65536) throw new Error("Portfolio key exceeds text limit.");
+      if (result.length === 256) {
+        notice(new Error("Portfolio has more than 256 metadata fields; extra fields are omitted."));
+        break;
+      }
+      result.push(key);
+    }
+    return result;
+  };
+  const item = spec => {
+    const ci = spec.get("CI"),
+      values = [];
+    if (ci instanceof Dict) for (const key of keys(ci)) {
+      if (key === "Type") continue;
+      const raw = ci.get(key);
+      values.push([key, raw instanceof Dict ? get(raw, "D") : value(raw), raw instanceof Dict ? get(raw, "P") : null]);
+    }
+    return values;
+  };
+  const notice = error => {
+    if (error instanceof MissingDataException) throw error;
+    const text = String(error.message || error);
+    if (!result.notices.includes(text)) result.notices.push(text);
+  };
+  try {
+    const col = root.get("Collection");
+    if (!(col instanceof Dict)) throw new Error("Collection dictionary is unavailable.");
+    const initial = col.get("D");
+    if (typeof initial === "string") {
+      result.initial = value(initial);
+      result.initialHex = hex(initial);
+    }
+    result.view = get(col, "View") || "D";
+    const navigator = col.get("Navigator");
+    if (navigator instanceof Dict) result.layouts = list(navigator.getRaw("Layout"));
+    const schema = col.get("Schema");
+    if (schema instanceof Dict) for (const key of keys(schema)) {
+      if (key === "Type") continue;
+      const f = schema.get(key);
+      if (!(f instanceof Dict)) {
+        notice(new Error("Invalid collection field: " + key));
+        continue;
+      }
+      result.fields.push({
+        key,
+        label: get(f, "N"),
+        subtype: get(f, "Subtype"),
+        order: get(f, "O"),
+        visible: get(f, "V") !== false
+      });
+    }
+    const sort = col.get("Sort");
+    if (sort instanceof Dict) {
+      result.sort = list(sort.getRaw("S"));
+      result.ascending = list(sort.getRaw("A"));
+      if (typeof sort.get("A") === "boolean") result.ascendingAll = sort.get("A");
+    }
+    const split = col.get("Split");
+    if (split instanceof Dict) result.split = {
+      direction: get(split, "Direction"),
+      position: get(split, "Position")
+    };
+    const colors = col.get("Colors");
+    if (colors instanceof Dict) for (const key of ["Background", "CardBackground", "CardBorder", "PrimaryText", "SecondaryText"]) result.colors.push([key, list(colors.getRaw(key))]);
+    const seenFolders = new Set(),
+      pending = [{
+        raw: col.getRaw("Folders"),
+        parent: null,
+        fallback: "catalog/Collection/Folders"
+      }];
+    while (pending.length) {
+      check();
+      if (steps % 256 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+      const node = pending.pop();
+      if (!node.raw) continue;
+      const folder = fetch(node.raw),
+        id = path(node.raw, node.fallback);
+      if (!(folder instanceof Dict)) {
+        notice(new Error("Invalid portfolio folder."));
+        continue;
+      }
+      if (seenFolders.has(folder)) {
+        notice(new Error("Cyclic or shared portfolio folder."));
+        continue;
+      }
+      seenFolders.add(folder);
+      const declaredParent = folder.getRaw("Parent");
+      if (node.parent && path(declaredParent, "") !== node.parent) notice(new Error("Folder parent reference disagrees with its hierarchy."));
+      const thumb = folder.get("Thumb");
+      if (thumb) thumbnails?.set(id, thumb);
+      result.folders.push({
+        thumbnail: !!thumb,
+        path: id,
+        parent: node.parent,
+        number: get(folder, "ID"),
+        name: get(folder, "Name"),
+        description: get(folder, "Desc"),
+        created: get(folder, "CreationDate"),
+        modified: get(folder, "ModDate"),
+        values: item(folder)
+      });
+      pending.push({
+        raw: folder.getRaw("Next"),
+        parent: node.parent,
+        fallback: id + "/Next"
+      }, {
+        raw: folder.getRaw("Child"),
+        parent: id,
+        fallback: id + "/Child"
+      });
+    }
+    const names = root.get("Names"),
+      seenNames = new Set(),
+      queue = [names instanceof Dict ? names.getRaw("EmbeddedFiles") : null];
+    while (queue.length) {
+      check();
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const node = fetch(queue.pop());
+      if (!node) continue;
+      if (!(node instanceof Dict)) {
+        notice(new Error("Invalid EmbeddedFiles name tree."));
+        continue;
+      }
+      if (seenNames.has(node)) {
+        notice(new Error("Cyclic or shared EmbeddedFiles name tree."));
+        continue;
+      }
+      seenNames.add(node);
+      const pairs = node.get("Names"),
+        kids = node.get("Kids");
+      if (Array.isArray(kids)) {
+        if (kids.length > 200000) throw new Error("Portfolio name-tree limit reached.");
+        for (let k = kids.length - 1; k >= 0; k--) queue.push(kids[k]);
+      }
+      if (!Array.isArray(pairs)) continue;
+      for (let i = 0; i + 1 < pairs.length; i += 2) {
+        check();
+        if (i % 256 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+        try {
+          const spec = fetch(pairs[i + 1]);
+          if (!(spec instanceof Dict) || typeof pairs[i] !== "string") {
+            notice(new Error("Invalid collection member."));
+            continue;
+          }
+          const ef = spec.get("EF");
+          let stream;
+          if (ef instanceof Dict) stream = ef.get("UF") || ef.get("F") || ef.get(ef.getKeys().next().value);
+          const params = stream?.dict?.get("Params");
+          result.entries.push({
+            key: value(pairs[i]),
+            keyHex: hex(pairs[i]),
+            filePath: path(pairs[i + 1], ""),
+            name: get(spec, "UF") || get(spec, "F"),
+            description: get(spec, "Desc"),
+            created: get(params, "CreationDate"),
+            modified: get(params, "ModDate"),
+            size: get(params, "Size"),
+            compressedSize: get(stream?.dict, "Length"),
+            values: item(spec)
+          });
+        } catch (error) {
+          notice(error);
+        }
+      }
+    }
+  } catch (error) {
+    notice(error);
+  }
+  return {
+    files: [],
+    diagnostics: [],
+    presentation: result
+  };
+}
 ;// ./src/core/document_assets.js
+
+
 
 
 
@@ -39151,6 +39464,22 @@ class DocumentAssets {
     this.registered = new Map();
   }
   async inspect(options = {}) {
+    if (options.presentationOnly === true) {
+      this.collectionThumbnails = new Map();
+      return collectionPresentation(this.root, this.catalog.xref, this.collectionThumbnails);
+    }
+    if (typeof options.folderThumbnail === "string") {
+      if (!this.collectionThumbnails) {
+        this.collectionThumbnails = new Map();
+        await collectionPresentation(this.root, this.catalog.xref, this.collectionThumbnails);
+      }
+      const thumbnail = this.collectionThumbnails.get(options.folderThumbnail);
+      if (!thumbnail) throw new Error("Folder thumbnail was not discovered.");
+      return {
+        files: [],
+        thumbnail: await folderThumbnail(thumbnail, this.catalog.xref)
+      };
+    }
     const limits = {};
     for (const [key, ceiling] of Object.entries(CEILINGS)) {
       const value = options[key] ?? ceiling;
@@ -41365,6 +41694,7 @@ class StructTreePage {
 
 
 
+
 const isRef = v => v instanceof Ref;
 const isValidExplicitDest = _isValidExplicitDest.bind(null, isRef, isName);
 function fetchDest(dest) {
@@ -41416,6 +41746,31 @@ class Catalog {
     return this.#catDict.clone();
   }
   async getDocumentAssets(options) {
+    if (options?.embeddedTarget) {
+      const {
+        page,
+        annotation
+      } = options.embeddedTarget;
+      if (!Number.isInteger(page) || page < 0 || page >= this.numPages || !(Number.isInteger(annotation) && annotation >= 0 || typeof annotation === "string")) throw new Error("Invalid embedded annotation target.");
+      const [pageDict, pageRef] = await this.getPageDict(page);
+      const annots = pageDict.get("Annots");
+      if (!Array.isArray(annots) || annots.length > 16384) throw new Error("Attachment annotation is unavailable.");
+      const matches = [];
+      for (let i = 0; i < annots.length; i++) {
+        if (typeof annotation === "number" && i !== annotation) continue;
+        const raw = annots[i],
+          item = this.xref.fetchIfRef(raw);
+        if (!(item instanceof Dict) || !isName(item.get("Subtype"), "FileAttachment")) continue;
+        const nm = item.get("NM");
+        if (typeof annotation === "string" && (typeof nm !== "string" || stringToPDFString(nm, true) !== annotation)) continue;
+        matches.push(raw instanceof Ref ? `object:${raw.num}:${raw.gen}` : `object:${pageRef.num}:${pageRef.gen}/Annots[${i}]`);
+      }
+      if (matches.length !== 1) throw new Error("Attachment annotation is missing or ambiguous.");
+      return {
+        files: [],
+        target: matches[0]
+      };
+    }
     this._documentAssets ??= new DocumentAssets(this, this.#catDict);
     const result = await this._documentAssets.inspect(options);
     let pageIndices;
@@ -41659,6 +42014,7 @@ class Catalog {
       const outlineItem = {
         action: data.action,
         attachmentId: data.attachmentId,
+        embeddedAction: data.embeddedAction,
         attachment: data.attachment,
         dest: data.dest,
         url: data.url,
@@ -42837,6 +43193,7 @@ class Catalog {
           }
           break;
         case "GoToE":
+          resultObj.embeddedAction = embeddedAction(action);
           const target = action.get("T");
           let id = null;
           if (target instanceof Dict) {

@@ -60,12 +60,12 @@ def check_release_versions():
     # A local viewer-only beta can precede publication. Keep released download
     # references tied to the immutable release notes, not nonexistent assets.
     release_notes = ROOT / 'docs/releases' / (current + '.md')
-    published = re.search(r'viewer \*\*(0\.\d+\.\d+-beta\.\d+)\*\*', release_notes.read_text()) if release_notes.exists() else None
+    published = re.search(r'viewer \*\*(\d+\.\d+\.\d+-beta\.\d+)\*\*', release_notes.read_text()) if release_notes.exists() else None
     for path in (*release_pages, *SOURCES):
         text = (ROOT / path).read_text()
-        for version in re.findall(r'\b[01]\.\d+\.\d+-beta\.\d+\b', text):
-            expected = {viewer} if version.startswith('0.') else {current}
-            if version.startswith('0.') and path in release_pages and published:
+        for version in re.findall(r'\b\d+\.\d+\.\d+-beta\.\d+\b', text):
+            expected = {current, viewer}
+            if path in release_pages and published:
                 expected.add(published.group(1))
             if version not in expected:
                 raise ValueError(f'{path}: stale version {version}; expected {expected}')

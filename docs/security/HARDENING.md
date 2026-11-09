@@ -41,15 +41,17 @@ viewer controls and [deployment configuration](../DEPLOY_WEB.md) for web limits.
 
 | Path | Default |
 | --- | --- |
-| Java/Python decoded non-image stream | 64 MiB |
-| Java/Python metadata stream | 16 MiB |
-| Java/Python aggregate decoded streams | 512 MiB, counting repeat decodes/filter stages |
-| Java/Python embedded-file inspections | 2,048 |
-| Generalized stream filter chain | 8 filters |
-| XML | Validators: 64 levels; Python also 100,000 nodes; browser has no fixed node/depth cutoff |
-| Validation work file / aggregate scratch | 64 MiB / 512 MiB, 10,000 files |
-| Python CLI worker | 512 MiB soft parser address limit, 4 GiB hard headroom for trusted Docker execs, 600 s; directory concurrency capped at 2 |
-| Java worker | Heap bounded by launcher `-Xmx` and available-memory budget; native address-space headroom of 4 GiB on Linux |
+| Java disk-streamed non-image payload | Work-file allowance derived from available disk |
+| Java in-memory payload / Python decoded stream | One quarter of worker heap / Python job allowance; Java array capacity also applies |
+| Java/Python metadata stream | One sixteenth of worker heap / Python job allowance |
+| Completed decodes / embedded-file count | No default lifetime byte/count cutoff; active memory and disk budgets remain enforced |
+| Python optional lifetime quotas | Explicit `VALIDATOR_MAX_DECODED_BYTES` / `VALIDATOR_MAX_EMBEDDED_FILES` only |
+| Python generalized stream filter chain | 8 filters |
+| XML | Python: 64 levels / 100,000 nodes; Java and browser have no fixed node/depth cutoff |
+| Validation worker open files | OS hard allowance; explicit `VALIDATOR_MAX_OPEN_FILES` remains effective |
+| Java validation work file / aggregate scratch | One eighth / one quarter of free working-disk space; explicit overrides supported |
+| Python CLI worker | Half available host/container memory; scratch uses half free project-disk space, with half that share per work file; 600 s; explicit overrides supported |
+| Java worker | Heap bounded by launcher `-Xmx` and available-memory budget; Linux virtual-address allowance includes heap, 4 GiB native headroom and admitted scratch mappings |
 | Java validation time | 600 s minimum, proportional to input bytes, maximum 24 h |
 | Browser root / embedded stream / session extracted bytes | 4 GiB / 32 MiB / 512 MiB concurrent reservations |
 | Browser retained child PDFs / child depth / active or pending workers | No fixed child-count/depth cutoff; 3 workers per session |
@@ -59,13 +61,17 @@ viewer controls and [deployment configuration](../DEPLOY_WEB.md) for web limits.
 | Web upload request | At most 64 MiB by default, also bounded by available disk |
 
 Validator settings use `VALIDATOR_MAX_STREAM_BYTES`, `VALIDATOR_MAX_METADATA_BYTES`,
-`VALIDATOR_MAX_DECODED_BYTES`, `VALIDATOR_MAX_EMBEDDED_FILES`,
-`VALIDATOR_MAX_WORK_FILE_BYTES`, `VALIDATOR_MAX_SCRATCH_BYTES` and
+`VALIDATOR_MAX_WORK_FILE_BYTES`, `VALIDATOR_MAX_SCRATCH_BYTES`,
+`VALIDATOR_MAX_OPEN_FILES` and
 `VALIDATOR_JOB_TIMEOUT`. Java also accepts the corresponding JVM properties for
-stream/storage settings. Python CLI memory uses `VALIDATOR_JOB_MEMORY_MB`;
+stream/storage settings. Python additionally supports explicit lifetime quotas
+`VALIDATOR_MAX_DECODED_BYTES` and `VALIDATOR_MAX_EMBEDDED_FILES`. Python CLI memory uses `VALIDATOR_JOB_MEMORY_MB`;
 `VALIDATOR_MAX_CONCURRENT_JOBS` caps directory workers. Existing CLI arguments are
 unchanged. Browser input/decoding ceilings can only be lowered by application session options. The 4 GiB input ceiling is an acceptance ceiling, not a guarantee that a browser has enough memory to open that input.
-Raising limits changes resource exposure; it cannot recover missing source data.
+Python web and regeneration disk budgets divide half available disk among concurrent jobs.
+Headroom shares are admission budgets, not reservations or promises that another process
+will leave those resources free. Exhaustion remains an explicit incomplete outcome.
+Raising limits cannot recover missing source data.
 
 The Python bounded stream path supports unfiltered, Flate, ASCII85, ASCIIHex and
 RunLength streams and combinations. LZW, predictor transforms and image codecs
@@ -103,8 +109,8 @@ Build into separate `/tmp` directories, then run:
 python scripts/security_inventory.py \
   --creator-dependencies /tmp/creator-dependencies.txt \
   --validator-dependencies /tmp/validator-dependencies.txt \
-  --creator-jar /tmp/creator-build/emailtopdfa-1.6.0-beta.20.jar \
-  --validator-jar /tmp/validator-build/eapdf-validator-1.6.0-beta.20.jar \
+  --creator-jar /tmp/creator-build/emailtopdfa-2.0.0-beta.1.jar \
+  --validator-jar /tmp/validator-build/eapdf-validator-2.0.0-beta.1.jar \
   --output docs/security/runtime-inventory
 ```
 

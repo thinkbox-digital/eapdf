@@ -190,3 +190,34 @@ image decode-memory cap. Before upgrading to 7, remove the unsupported option
 and measure large-image decoding, worker cancellation and rendered output under
 bounded workloads; do not silently treat the canvas setting as its replacement.
 No 7.x upgrade is included here.
+
+## Optional collection presentation metadata
+
+Patch `0006-collection-presentation.patch` adds an opt-in
+`getDocumentAssets({presentationOnly:true})` metadata pass. It returns collection
+schema/CI fields, exact byte-string initial/name-tree keys, folders, sorting and
+layout preferences. It does not replace or change the default inspection result,
+register new attachment extraction locators, decode payloads or execute navigator
+content. BrowserSession requests it only for Portfolio presentation. Existing
+EA-PDF interpretation and frozen inspection contracts remain unchanged. The reader
+bounds work and text, yields during traversal and reports malformed/partial results.
+Source regressions cover typed metadata, cycles, empty initial keys and the unchanged
+default API shape.
+
+
+## Embedded navigation and stored folder thumbnails
+
+Patch `0007-collection-navigation.patch` serializes a bounded `embeddedAction` on
+GoToE link annotations and outline items. It preserves name-tree byte keys, parent/child
+steps, annotation page/index/name targets and destination names or page arrays. It does
+not fetch external root files or execute actions; the browser session resolves the path
+under its existing extraction and worker budgets. Cyclic/deep paths and unavailable
+references are reported. Missing range data propagates for PDF.js to retry.
+
+Two opt-in `getDocumentAssets` requests support this presentation layer:
+`embeddedTarget: {page, annotation}` resolves one FileAttachment annotation to its
+inspection locator; `folderThumbnail: path` decodes only a previously discovered
+folder thumbnail. Neither changes the default inspection schema. Thumbnail dimensions,
+mask depth and encoded sizes are checked before decoding; the existing worker allocation
+and time bounds remain active. Source tests cover exact nested target serialization,
+cycles, external-root rejection, lazy RGBA decoding, unknown locators and pixel limits.

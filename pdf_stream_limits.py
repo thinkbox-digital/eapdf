@@ -8,6 +8,7 @@ from contextvars import ContextVar
 from functools import wraps
 import os
 import zlib
+from validation_worker import memory_allowance_bytes
 
 
 class DecodeLimitError(ValueError):
@@ -19,6 +20,8 @@ class DecodeLimitError(ValueError):
 
 
 def setting(name, fallback):
+    if name in ("VALIDATOR_MAX_STREAM_BYTES", "VALIDATOR_MAX_METADATA_BYTES"):
+        fallback = max(1, memory_allowance_bytes() // (16 if name.endswith("METADATA_BYTES") else 4))
     return max(1, int(os.environ.get(name, fallback)))
 
 
@@ -27,11 +30,13 @@ CURRENT = ContextVar("pdf_decoding_budget", default=None)
 
 class Budget:
     def __init__(self):
-        self.remaining = setting("VALIDATOR_MAX_DECODED_BYTES", 512 * 1024**2)
+        self.remaining = setting("VALIDATOR_MAX_DECODED_BYTES", 1) if os.environ.get("VALIDATOR_MAX_DECODED_BYTES") else None
         self.files = 0
         self.limited = None
 
     def charge(self, size):
+        if self.remaining is None:
+            return
         if size > self.remaining:
             raise DecodeLimitError("Aggregate decoded-stream byte limit reached")
         self.remaining -= size
@@ -59,7 +64,7 @@ def count_file():
     budget = CURRENT.get()
     if budget is not None:
         budget.files += 1
-        if budget.files > setting("VALIDATOR_MAX_EMBEDDED_FILES", 2048):
+        if os.environ.get("VALIDATOR_MAX_EMBEDDED_FILES") and budget.files > setting("VALIDATOR_MAX_EMBEDDED_FILES", 1):
             raise DecodeLimitError("Embedded-file count limit reached")
 
 

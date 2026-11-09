@@ -68,7 +68,7 @@ final class JavaValidatorEngine implements ValidatorGui.Engine {
       }
       if (!diagnosticText.isBlank()) System.err.println(diagnosticText);
       if (!Files.isRegularFile(output) || timedOut || overBudget || run.stopped.get()) {
-        try (var session = new ValidationSession(input, output)) {
+        try (var session = new ValidationSession(input, output, true)) {
           session.failed(run.stopped.get() ? "Validation was stopped before the worker could write its report."
               : overBudget ? "Validation exceeded its scratch/report budget." : timedOut ? "Validation exceeded its time limit." : "Validation worker ended before it could write its report. " + diagnosticText);
         }

@@ -14,9 +14,12 @@ try{
  await page.locator('#file').setInputFiles(resolve('../examples/pst/pst_quality-attached-message_1m.pdf'));
  const fitted=()=>page.waitForFunction(()=>{
   const v=document.querySelector('#viewport'),c=document.querySelector('#canvas'),s=getComputedStyle(v);
-  return v.getAttribute('aria-busy')==='false'&&c&&!c.hidden&&Math.abs(c.getBoundingClientRect().width-(v.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight)-2))<3;
+  if(v.getAttribute('aria-busy')!=='false'||!c||c.hidden)return false;
+  const r=c.getBoundingClientRect(),w=v.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight)-2,h=v.clientHeight-parseFloat(s.paddingTop)-parseFloat(s.paddingBottom)-2;
+  return document.querySelector('#zoom').value==='fit-page'?r.width<=w+3&&r.height<=h+3&&(Math.abs(r.width-w)<3||Math.abs(r.height-h)<3):Math.abs(r.width-w)<3;
  },null,{timeout:60000});
- await fitted();assert.equal(await page.locator('#zoom').inputValue(),'fit-width');
+ await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');assert.equal(await page.locator('#zoom').inputValue(),'fit-page');
+ assert.ok(await page.locator('#canvas').evaluate(c=>{const v=document.querySelector('#viewport');return c.getBoundingClientRect().height<=v.clientHeight&&c.getBoundingClientRect().width<=v.clientWidth;}),'Fit Page fits both dimensions');
  const fittedWidth=await page.locator('#canvas').evaluate(e=>e.getBoundingClientRect().width);
  await page.locator('#zoom-in').click();await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
  assert.ok((await page.locator('#canvas').evaluate(e=>e.getBoundingClientRect().width))>fittedWidth,'plus must enlarge the fitted page');

@@ -62,9 +62,8 @@ class MsgSentDateTests {
   }
 
   @Test
-  void suppliedNativeSubmissionFractionSurvivesIntoXmpExactly() throws Exception {
-    Path source = Path.of("in/2019.10.08 DEP response.msg");
-    org.junit.jupiter.api.Assumptions.assumeTrue(Files.isRegularFile(source), "Optional source fixture absent: " + source);
+  void syntheticNativeSubmissionFractionSurvivesIntoXmpExactly() throws Exception {
+    Path source = Path.of("src/test/resources/eapdf/outlook-regression/native-reply.msg");
     EmailRecord record = MsgReader.readMsg(source.toString(), "", List.of(), false);
     assertEquals(Instant.parse("2019-10-08T14:07:48.3287079Z"), java.time.OffsetDateTime.parse(record.sentXmp).toInstant());
     var output = PdfMailWriter.buildSingleMessagePdf(directory.resolve("native-fraction.pdf"), record,

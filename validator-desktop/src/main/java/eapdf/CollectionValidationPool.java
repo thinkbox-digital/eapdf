@@ -82,11 +82,12 @@ final class CollectionValidationPool implements AutoCloseable {
             stop();
             if (scratch != null) ValidationRuntime.removeDirectory(scratch);
             scratch = Files.createTempDirectory(directory, "worker-" + number + "-");
-            long defaultHeap = Math.max(128, Math.min(1024, Runtime.getRuntime().maxMemory() / (4 * 1024 * 1024)));
+            long defaultHeap = Math.max(128, Math.min(Runtime.getRuntime().maxMemory() / (4 * 1024 * 1024),
+                ValidationRuntime.workerHeapMiB() / (2 * WORKERS)));
             long heap = ValidationRuntime.setting("VALIDATOR_CHILD_HEAP_MIB", defaultHeap);
             var command = new ArrayList<String>();
             if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("linux")) {
-                command.addAll(List.of("/usr/bin/prlimit", "--as=" + Math.multiplyExact(heap + 4096, 1024L * 1024), "--core=0"));
+                command.addAll(List.of("/usr/bin/prlimit", "--as=" + ValidationRuntime.addressLimit(heap), "--nofile=" + ValidationRuntime.openFileLimit(), "--fsize=" + ValidationRuntime.workFileLimit(), "--core=0"));
             }
             command.addAll(List.of(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
                 "-Xmx" + heap + "m", "-XX:ActiveProcessorCount=1", "-XX:MaxDirectMemorySize=128m",

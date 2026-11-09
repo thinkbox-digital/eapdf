@@ -12,10 +12,28 @@ import jakarta.mail.Session;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeUtility;
 import org.junit.jupiter.api.Test;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SourceFidelityTests {
+  @Test void oneUnreadableOriginalDoesNotStopLaterSourceInspection() throws Exception {
+    String previous = System.getProperty("VALIDATOR_MAX_STREAM_BYTES");
+    try (var stream = new org.apache.pdfbox.cos.COSStream(); var report = new JavaValidation.Report("mixed sources")) {
+      System.setProperty("VALIDATOR_MAX_STREAM_BYTES", "4");
+      var badSpec = new COSDictionary(); var goodSpec = new COSDictionary();
+      var bad = new EaPdfChecks.Embedded("", badSpec, stream, null, "large.msg", "application/vnd.ms-outlook", "", "Source", 8);
+      byte[] wire = "From: a@example.org\r\nSubject: Later message\r\n\r\nBody".getBytes(StandardCharsets.US_ASCII);
+      var good = new EaPdfChecks.Embedded("", goodSpec, stream, wire, "later.eml", "message/rfc822", "", "Source");
+      var checks = new MetadataChecks(report, List.of(bad, good), List.of(badSpec, goodSpec), List.of(), List.of(), List.of(), "m");
+      assertDoesNotThrow(checks::emails);
+      assertTrue(checks.hasInspectableSources());
+      assertTrue(report.items.asList().stream().map(value -> value.getAsJsonObject()).anyMatch(value ->
+          "VALIDATION_INCOMPLETE".equals(value.get("code").getAsString()) && value.get("message").getAsString().contains("large.msg")));
+    } finally {
+      if (previous == null) System.clearProperty("VALIDATOR_MAX_STREAM_BYTES"); else System.setProperty("VALIDATOR_MAX_STREAM_BYTES", previous);
+    }
+  }
   @Test void utf7SourceHeadersDecodeWithoutTreatingPlusAsSpace() {
     assertEquals("Café + résumé", SourceHeaders.decoded("=?UTF-7?Q?Caf+AOk_+-_r+AOk-sum+AOk-?="));
     assertThrows(IllegalArgumentException.class, () -> SourceHeaders.decoded("=?UTF-7?Q?+A-?="));

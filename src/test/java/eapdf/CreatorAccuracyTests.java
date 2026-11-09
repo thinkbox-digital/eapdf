@@ -277,6 +277,39 @@ class CreatorAccuracyTests {
   }
 
   @Test
+  void validationWarningIsVisibleAndDistinctFromMissingSourceData() throws Exception {
+    String previous = EapdfConfig.get().validationWarning;
+    try {
+      EapdfConfig.get().validationWarning = "Validation could not be completed. Review <initial> and final reports.";
+      EmailRecord record = parse("Fri, 16 Oct 2026 12:00:00 +0000", "text/plain", "Original body", "warning.eml");
+      try (PDDocument document = Loader.loadPDF(create(record, "s"))) {
+        String text = new PDFTextStripper().getText(document);
+        Assertions.assertTrue(text.contains("WARNING — Validation requires review"));
+        Assertions.assertTrue(text.contains("Review <initial> and final reports."));
+        Assertions.assertTrue(text.contains("Original body"));
+        Assertions.assertFalse(text.contains("INCOMPLETE SOURCE"));
+        Assertions.assertFalse(TestSupport.metadataXml(document).contains("<conversion:status>INCOMPLETE</conversion:status>"));
+      }
+      Assertions.assertTrue(record.sourceProblems.isEmpty());
+    } finally { EapdfConfig.get().validationWarning = previous; }
+  }
+
+  @Test
+  void collectionValidationWarningDoesNotMislabelFailedChecksAsUnfinished() throws Exception {
+    String previous = EapdfConfig.get().validationWarning;
+    try {
+      EapdfConfig.get().validationWarning = "One or more validation checks failed.";
+      var summary = new PdfMailWriter.CollectionRunSummary("1", "", 1, 1);
+      try (var document = PdfAttachmentSupport.buildCollectionFrontMatter("c", summary, TestSupport.fontPath(), false)) {
+        String text = new PDFTextStripper().getText(document);
+        Assertions.assertTrue(text.contains("WARNING — Validation requires review"));
+        Assertions.assertTrue(text.contains("Conformance was not established"));
+        Assertions.assertFalse(text.contains("could not be completed"));
+      }
+    } finally { EapdfConfig.get().validationWarning = previous; }
+  }
+
+  @Test
   void missingSourceDateProducesMarkedOutputWithoutInventingADate() throws Exception {
     for (String profile : List.of("s", "si")) {
       EmailRecord record = parse("", "text/plain", "Original body", "missing.eml");

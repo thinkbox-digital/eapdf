@@ -1,3 +1,148 @@
+## 2026-11-09 — Adaptive resources and truthful validation outcomes (local)
+
+## 2026-11-09 — Major beta release verification
+
+Creator/validator 2.0.0-beta.1 and browser viewer 1.0.0-beta.1.
+
+**Bug fixes:** Nested MSG media matching uses complete stored-property evidence; unavailable XMP/source evidence remains incomplete. Regeneration preserves failed/unfinished validation outcomes and adds visible review warnings. Viewer file drops reach all panes; only confirmed message destinations receive filename links. Embedded source EML/MSG and ordinary attachments keep plain filenames. Portfolio document breadcrumbs include the member's recorded folder hierarchy, including nested folders; ambiguous membership does not invent a path.
+
+**Code improvements:** Resource allowances follow heap and available disk while explicit operator limits remain effective. Regeneration retains whole-source PST/MBOX archives and bounded random EML/MSG groups, and schedules grouped archives before lengthy mailbox jobs. Missing optional Outlook inputs no longer suppress the replaced property-level regressions. Documentation version checks support independent major versions.
+
+**Verified locally:** Creator Maven verify: 437 tests passed, zero skipped. Validator: 280 tests, 279 passed and one opt-in native GUI test skipped; both executable packaging checks passed. All 40 public Python regressions and all 15 independent inspection-oracle tests passed using the pinned oracle environment. The manual passed PDF/A-2b validation and all 25 generated website pages passed local-link checks. Real EML, MSG and MBOX source-fidelity, visual and standalone Java validation checks passed. All four signed-index profiles passed. All 143 viewer unit tests pass. Chromium acceptance completed across the full suite and focused reruns; the initial zero-byte action assertion was corrected and the new message links now meet the existing 44-pixel target requirement. A transient Portfolio folder-history assertion passed in an instrumented isolated probe and the complete rerun. Chromium and Firefox acceptance include the reported CheatSheetCollection folder breadcrumb and preserve the real Portfolio source hashes. The bounded 213-member archive-memory check passes; its measurements exclude worker/native memory and do not establish multi-GiB capacity.
+
+The example ZIP retains the existing 26 PDFs and their beta.19 provenance: 24 PASS, one documented INCOMPLETE and one expected FAIL. No new bulk-conversion completion or speed/peak-memory improvement is claimed. The user's active regeneration retains immutable beta.20 runtime snapshots and its original job queue.
+
+
+**Bug fixes:** Nested MSG media comparisons now use the complete stored property/stream evidence when Outlook supplies no standalone attachment size or checksum. Ambiguous or changed contents remain unverified. If document XMP cannot be read, dependent DPM identity and ISO declaration checks report unavailable evidence instead of inventing mismatches. Upstream exceptions retain their cause chain, and supervisor failure reports preserve completed PDF/A/ISO outcomes.
+
+**Code improvement:** Creator message, body, metadata, image and font allowances follow the selected heap. All supervised conversions receive disk-sized scratch/output budgets; regeneration divides its allowance among concurrent jobs. Validator in-memory payload/XMP allowances follow worker memory; streamed attachments, reports and scratch follow available disk rather than fixed MiB/GiB ceilings. One unreadable original now records an incomplete finding while later sources continue to be inspected. Linux descriptor defaults follow the OS hard allowance. Virtual-address budgets include admitted mapped scratch in addition to heap/native headroom: disk-backed storage must not fail merely because its mappings exceed a fixed native margin. Explicit operator limits, bounded workers, deadlines and real resource exhaustion remain effective.
+
+**Bug fix / UI improvement:** Regeneration adds a visible “WARNING — Validation requires review” banner after failed or unfinished validation, preserves initial evidence and rechecks the replacement once. Message banners distinguish failed checks from unfinished checks; collection covers state that initial conformance was not established. Source-data warnings remain separate. A crashed recheck cannot reuse an earlier report. Warning-generation failure preserves the prior PDF and is reported explicitly.
+
+**Memory improvement:** Regeneration reads the small Java summary sidecar instead of loading the complete report into memory. The earlier PST report was 579 MiB. No speed or peak-memory benchmark improvement is claimed.
+
+**Verification:** Creator tests: 437 total, 433 passed, four missing-fixture skips. Validator tests including executable packaging and an explicitly enabled native GUI smoke check: 281 total, 273 passed, eight missing-fixture skips. The GUI check verifies real validation, cancellation and cleanup. All 39 public Python regeneration/worker/web tests and 16 additional Python worker/decoder tests pass. Sparse-file regression maps 6 GiB with a 128 MiB heap; a 20 MiB payload streams with a 64 MiB heap without exceeding the byte-array allowance. Explicit smaller work/scratch limits and unsafe predictor-row guards still reject oversized allocations.
+
+Both real nested-MSG examples now pass PDF/A and EA-PDF checks after regeneration. Blammo remains INCOMPLETE because its original encoding evidence is unavailable; Drafts retains its missing-Date FAIL. Both have visible review banners, and original sources/preserved source streams remain unchanged. The unchanged Enron 1ci collection passes PDF/A and EA-PDF with all 1,433 children checked. The large June 1999 PST converts successfully on disk; its 33,356,444-byte XMP now reads beyond the former limit. Its supervised PDF/A pass completes 66,272,629 checks and its selected ISO 32005 pass completes successfully. Full EA-PDF revalidation finished in 2,179.7 seconds with 3,276,475 passed findings and zero failed findings. Its overall result remains INCOMPLETE because the creator recorded missing source information and some source associations, recipient/body comparisons and message counts cannot be independently established. All validation stages finished and the 886,989,708-byte report was saved; no resource cutoff occurred. Source and PDF hashes remain unchanged, and the private scratch directory was removed. This long-running check used its immutable resource-fix snapshot; subsequent source-isolation changes were covered by the final unit and small real-file checks.
+
+The remaining skipped tests require three absent optional Outlook source files. They are not counted as passed. Corrupt or missing source information cannot be repaired by increasing resources; rejected/incomplete work must remain explicit. These changes do not promise successful conversion or conformance for every conceivable future input.
+
+Latest versioned creator, GUI and validator JARs/checksums are installed locally at 1.6.0-beta.20. Existing jobs retain their immutable snapshots. Web services require restart to load Python changes. No version bump, commit, push or release; publication remains held.
+
+## 2026-11-09 — Large validator reports and left-pane PDF drops (local)
+
+**Bug fix:** The Java desktop/CLI and Python CLI/web validation launchers now allow 256 MiB per work file/report by default instead of 64 MiB. Collection workers apply the same allowance explicitly. VALIDATOR_MAX_WORK_FILE_BYTES overrides remain honored; aggregate scratch stays bounded at 512 MiB. Memory, time, stream-decoding and descriptor limits remain in force. Existing web services need restart to load changed worker code.
+
+**Verification:** The unchanged real Enron 1c collection completes PDF/A-4f and EA-PDF validation with all 1,433 embedded members checked using four bounded workers. The full report is approximately 165 MiB, exceeding the previous per-file limit. Source and PDF hashes remain unchanged, and the original incomplete report is retained separately. Twenty-two Java resource/collection tests and twelve Python worker tests pass, including actual writes beyond 64 MiB, explicit smaller limits, inherited limits and aggregate scratch rejection. The verified local validator JAR and checksum have been replaced at 1.6.0-beta.20. Existing regeneration runs retain their immutable older snapshots.
+
+**Bug fix / UI improvement:** File drag/drop is captured before navigation-pane controls or browser default navigation. Dragenter/dragover advertise a copy operation, and the drop highlight covers the viewer page. Dropping onto the left Messages pane, filter or message buttons uses the same opener as the other panes. Browser tab-strip/address-bar drops remain browser-controlled.
+
+**Verification:** Seven Chromium browser-native file-drop cases and seven Firefox DOM file-drag cases pass, including a left-pane control that stops event bubbling, plus empty left pane, filter, message, center, right and toolbar. The untouched Chromium build also accepted the ordinary pane cases; the user's original browser condition was not reproduced directly. Capture handling covers the demonstrated event-consumption case. Both local viewer ZIPs rebuilt and verified at 0.5.0-beta.20; reload the extension and reopen its viewer tab. No speed/memory benchmark improvement claimed.
+
+Release remains held. No version bump, commit, push or publication.
+
+## 2026-11-09 — Visible warning for incomplete validation (local)
+
+**New code / UI improvement:** Regeneration retains initial validation/conversion evidence, regenerates once with a yellow “WARNING — Initial validation incomplete” notice when a PDF's validation is INCOMPLETE or unavailable, then validates the replacement. The notice is rendered through the normal tagged message-content path and appears on collection covers. It states that checks could not be completed and directs the reader to initial/final reports. It does not invent source data, suppress findings or change INCOMPLETE into PASS. Failed warning generation retains the original PDF and reports failure; creators that ignore the warning configuration cannot silently publish a purported warning replacement.
+
+**Investigation:** The real EmailWithMsgAttachment MSG preserves its nested attachment's 135 stored properties/streams. The validator's parameter comparison nevertheless matches only original size/checksum. A nested Outlook storage has size -1 and no standalone MD5 in its original inventory, while its extracted MSG is 58,880 bytes; the independent nested-content comparison passes. This leaves two parameter-comparison checks unavailable. This validator limitation remains; a warning was added as requested rather than weakening the checks. IntelliJ exposed no run configurations or runnable validator entry point; a temporary read-only probe against the packaged parser supplied the runtime evidence instead.
+
+The reported Drafts collection contains one message with no Date header. Its parent PDF/A-4f check passes, but child MESSAGE_SENT_XMP fails. Both the collection opening page and the embedded email already display INCOMPLETE SOURCE warnings. That is a source-data problem distinct from an incomplete validation attempt.
+
+**Verification:** Twelve isolated regeneration tests and 27 creator accuracy tests pass. The actual reported MSG output was replaced with the visible page-1 warning, inspected visually and revalidated: PDF/A-4f PASS, zero EA-PDF FAIL findings, INCOMPLETE retained. Original source and nested attachment bytes remain identical. A separate real MSG collection regression confirms the cover warning with PDF/A-4f PASS and no EA-PDF failures. Initial/final reports, logs, hashes and the pre-warning PDF are retained locally. No bulk regeneration or clearing of out/ was performed.
+
+The local versioned creator and GUI JARs plus checksums were replaced at 1.6.0-beta.20. Newly started regeneration runs use the warning workflow. An already-running run retains its loaded code and immutable JARs. No version bump, commit, push or release; publication remains held. The validator comparison defect is documented, not fixed by adding the banner.
+
+## 2026-11-09 — Regeneration completion report (local)
+
+**Code improvement / bug fix:** Regeneration ends with separate PASS, FAIL, INCOMPLETE and NOT_APPLICABLE job counts. Every unsuccessful job lists its sources, affected PDF paths, available validation reports/logs and conversion log; rejected conversions explicitly say no PDF was produced. Source-data omissions remain visible even if the generated PDF validates. The same terminal report is retained as summary.txt beside summary.json. A later incomplete document no longer overwrites an earlier FAIL in the same job. Source-integrity failures remain explicit and return a failing exit status.
+
+**Verification:** Nine isolated regeneration tests pass, including mixed outcomes, missing outputs, incomplete source data, report paths and retained summary text. Launcher syntax/help pass and the installed launcher matches the maintained source. No regeneration or clearing of out/ was performed. Already-running processes keep their loaded code; this summary applies to subsequent runs.
+
+## 2026-11-09 — Validator open-file allowance and archive diagnostics (local)
+
+**Bug fix:** Linux Java desktop/CLI workers, collection workers and Python CLI/web workers now use a configurable 16,384-open-file allowance, capped by the inherited hard limit, instead of the Java/Python CLI allowance of 256. VALIDATOR_MAX_OPEN_FILES overrides it. Memory, time and scratch limits remain enforced. Existing web services need restart to load the updated worker code.
+
+**Verification:** Maven verify passes: 266 tests, nine skipped, and two executable-package integration tests. Ten Python worker regressions pass. The unchanged real Acceleo 1m/1mi and Enron 1mi documents now pass both PDF/A-4f and EA-PDF validation. Worker measurements for the latter runs reach about 1,034 descriptors, confirming that 256 was insufficient. Enron 1m separately exceeds the unchanged 64 MiB per-file/report limit; with a bounded 256 MiB override its approximately 70 MiB report completes and both validations pass. Default report-size rejection remains a documented limitation, not a conformance failure. Originals, original reports and runtime snapshots remain intact.
+
+**Source-data diagnosis:** msg.mbox contains four messages; the third and fourth lack Date headers. Its generated 1mi PDF has eight pages, with INCOMPLETE SOURCE banners on pages 5 and 7, not on the first page. PDF/A-4f passes; two MESSAGE_SENT_XMP failures remain because required Sent metadata is missing. A visible warning does not make missing required metadata compliant. No dates were invented and no archive-wide opening banner was added.
+
+The verified local versioned validator JAR and checksum have been replaced at 1.6.0-beta.20. Running regeneration jobs retain their original immutable validator snapshot; corrected rechecks are separate. No version bump or publication.
+
+## 2026-11-09 — Portfolio layouts and attachment message links (local)
+
+**UI improvement / new code:** Freeform uses a randomized, non-overlapping thumbnail arrangement that stays stable during selection and reflows with the pane width. Clicking a thumbnail opens its file. Preview and details (Linear) presents one selected file's metadata above a compact file list, beside the PDF reader. Keyboard/file/cover navigation keeps selected details synchronized. These native layouts do not claim complete ISO Portfolio conformance.
+
+**UI improvement:** Email attachment cards retain the owning subject and add clickable source filenames that navigate to the owning message. All known owners are represented. Source-omitted profiles show the containing PDF filename. Navigation clears a conflicting message filter; ambiguous or absent page mappings disable the link instead of guessing.
+
+**Verification:** 142 viewer unit tests and Chromium/Firefox Portfolio checks pass, including resizing, layout distinction, selection/cover synchronization and six real Portfolio source hashes. Real 1m and 1mi attachment-owner checks each verify 12 links and navigation to the mapped message/page; input hashes remain unchanged. Both local viewer ZIPs rebuilt and verified at 0.5.0-beta.20. Reload extensions and reopen viewer tabs. No measured speed or memory improvement claimed.
+
+Release remains held. No commit, push, GitHub release or version bump; the next requested version bump remains major.
+
+## 2026-11-09 — Regeneration archive scope corrected
+
+**Bug fix:** `everything` covers every supported input file, not a standalone output for every email inside a mailbox. PST and MBOX sources now use only whole-source 1m, 1mi, 1c and 1ci profiles in both modes. No 1s/1si mailbox-extraction jobs are planned. Single-message sources that cannot form 1m/1mi remain explicitly reported as not applicable; collection profiles cover them.
+
+**Code improvement:** EML/MSG archive inputs are randomly grouped separately by type, with at most 20 sources per group. All selected sources are included once per archive profile. Balanced groups avoid singleton remainders where possible; all four profiles share the same grouping. Standalone EML/MSG outputs remain available. A plan.json in each run's evidence records exact group membership before conversion. Dry runs make independent random preview plans. Updated the maintained launcher, installed launcher and help/README.
+
+**Verification:** Six isolated regeneration regressions pass. Read-only planning against the real input inventory covers all 88 inputs with 248 jobs, with no standalone PST/MBOX tasks and bounded EML/MSG groups. Bash syntax and installed help pass. No conversions were run and out/ was not cleared. No measured speed or memory improvement claimed.
+
+## 2026-11-09 — Viewer opening defaults and simpler View options (local)
+
+**UI improvement:** Selected file details starts expanded; users can collapse it. PDF and Portfolio viewing initially use Fit Page, and filename navigation that resets the view also uses Fit Page. Explicit zoom choices and Fit width remain available. Removed the Portfolio size slider from View options; the draggable divider, keyboard resizing and saved sidebar width remain available.
+
+**Opening behavior clarification:** A Portfolio's designated initial file is honored. With no initial file, its own cover document is shown from page 1. Ordinary PDF OpenAction destinations are not currently applied; message navigation can select an email's mapped page. Fit Page controls magnification independently of page selection.
+
+**Verification:** Chromium and Firefox Portfolio checks pass, including all six original source hashes, selected details starting open, Fit Page on initial Portfolio opening, and divider resizing/width retention without the slider. Responsive checks pass at seven window sizes; reader keyboard/scroll/export checks pass. Embedded-search checks pass for four profiles and 36 queries, including filename navigation resetting to page 1 at Fit Page. Both local viewer packages rebuilt and verified at `0.5.0-beta.20`. No performance improvement claimed. Release remains held; no version bump, commit, push or publication.
+
+## 2026-11-09 — Narrow Portfolio Details and documentation cleanup (local)
+
+**UI improvement / new code:** Details initially shows Name and Size only. View options → Details columns exposes all schema fields; hidden fields remain searchable. Compact single-line names preserve their endings and reveal the full filename on hover/focus. View/Download remain stacked. A collapsible Selected file details section below the list shows all available metadata, including exact sizes and full timestamps. Preview and details retains its richer metadata layout. A size column is available even when omitted by the collection schema.
+
+Vertical sidebars default to about 425 pixels. User resizing is saved locally and restored when reopening a file; storage failures do not block resizing. Initial horizontal and navigation-only split behavior remains supported. Sizes are human-readable, dates compact, and sorting retains original values. PDF bookmark styling is compact and preserves the PDF's original hierarchy/order.
+
+**Documentation improvement:** Removed obsolete external-runtime wording from project documentation, including the stale indexing requirement in the viewer guide. Regenerated the PDF manual from its cleaned HTML source; PDF/A-2b validation passes. Viewer build/test tooling and third-party dependency code remain intact.
+
+**Verification:** All 140 viewer unit tests pass. Chromium and Firefox Portfolio acceptance passes, including 400–450-pixel default width, compact rows without horizontal overflow, optional columns, selected metadata, full filename on focus, persistence across reopening, drag/keyboard resizing and existing navigation. All six supplied Portfolio source hashes remain unchanged; embedded EA-PDF profiles and downloads remain covered. Both local viewer ZIPs rebuilt and verified at `0.5.0-beta.20`. No speed or memory improvement is claimed.
+
+Release remains held. No version bump, commit, push, GitHub release, email conversion or JAR replacement. Reload the extension and reopen viewer tabs to use the local builds.
+
+## 2026-11-09 — Compact Portfolio views and draggable divider (local)
+
+**UI improvement / bug fix:** Filmstrip now uses compact thumbnail-and-filename rows without metadata cards. Preview and details displays a smaller preview beside compact label/value metadata. Details headers, dates and sizes stay on one line; wide tables scroll horizontally instead of squeezing words into narrow columns.
+
+**New code:** A visible, draggable divider resizes the Portfolio and document panes left/right, or top/bottom for a horizontal initial split. Pointer capture supports mouse/touch dragging. The focused divider supports arrow keys, Shift for larger steps, and Home/End. Dragging keeps both panes usable, updates the existing size slider, preserves sidebar width across layout changes/hiding, and cleans up on leaving Portfolio view. Narrow windows retain their single-pane layout.
+
+**Verification:** Chromium and Firefox presentation checks cover native horizontal/vertical dragging, keyboard resizing, width retention, divider removal, non-wrapping headers/dates/sizes, and distinct compact layouts. The supplied cheat-sheet sample measured 78 px for the first Filmstrip row and about 147 px for Preview and details in Chromium at the tested width; this is a layout measurement, not a performance benchmark. Portfolio regression checks cover all six supplied files with unchanged source hashes, including nested EA-PDF profiles, downloads and responsive navigation. Both local viewer packages rebuilt at `0.5.0-beta.20`.
+
+**Version/release instruction:** The next version bump must be a major-version bump, including the browser viewer; this is also recorded in AGENTS.md. No version bump or publication now. Release remains held; no commit, push, conversion or JAR replacement.
+
+## 2026-11-09 — Portfolio layouts stay in the sidebar (local)
+
+**UI improvement / bug fix:** Selecting Details or Filmstrip now keeps Portfolio navigation in the left pane, as do the other visible layout choices. Filmstrip runs vertically in the sidebar. Layout changes and hiding/revealing the pane retain the chosen sidebar width. Initial opening still honors the PDF's stored split direction/position and the default initial presentation.
+
+**Verification:** Chromium and Firefox Portfolio checks pass, including actual pane geometry, width retention, initial split preferences, all six supplied Portfolio samples, nested EA-PDF navigation and narrow-window browsing. The mobile check now waits for its requested window resize to settle before clicking. Both local viewer ZIPs were rebuilt and verified at `0.5.0-beta.20`. Release remains held; no version bump, commit, push or publication.
+
+## 2026-11-09 — Portfolio navigation and interface follow-up (local; release held)
+
+**UI improvement / code improvement:** Portfolio uses the EA-PDF reader's shared folder, message, document, eye and download icons, selection/focus styling and pane controls. Added folder breadcrumbs with Previous/Next/Up, Previous/Next file controls, keyboard opening, visible PDF bookmarks and document paths, adjustable split size and stored presentation colors. Hiding/revealing the pane preserves its layout. Narrow windows use a full-width Portfolio pane; selecting a PDF opens the reader and Show portfolio returns to browsing.
+
+**New code:** Embedded Go-To links/bookmarks resolve named destinations and explicit destination pages through parent/child chains and nested collections. Targets support exact EmbeddedFiles byte keys and attachment annotations by page/index or name. Cyclic, deep, missing, ambiguous and external-root targets produce an explicit message. Stored folder thumbnails decode lazily under image/mask/encoded-size limits; unsupported previews retain icons. Collection editing, executable legacy navigators, external-root opening and destination zoom/coordinate settings remain unsupported; native layouts are approximations, not a full ISO conformance claim.
+
+**Bug fixes:** A file selection arriving during a layout render is queued instead of discarded. Switching to Email view after explicitly selecting a different Portfolio member keeps that newly selected file; an untouched mode switch still restores the previous email/page. The additional Foxit sample exposed and verified this stale-selection fix. Parent and document-path navigation also keep nested Portfolio panes synchronized.
+
+**Verification:** All 140 viewer unit tests and 44 maintained PDF.js source tests pass. Upstream: 133 specs, zero failures, one OffscreenCanvas-dependent pending spec. Full Chromium and Firefox acceptance passed, followed by focused checks of the final Portfolio changes. All six supplied Portfolios are covered, including the new Foxit files (7 and 82 members) and Nitro file (6 members). Their original SHA-256 hashes are unchanged. The 82-member Foxit sample's nine-folder hierarchy matches an independent read-only inventory; representative ordinary PDFs and all six embedded EA-PDF profiles open correctly. Native ZIP downloads match embedded bytes. Additional controls cover encrypted-member retry/cancellation, named/indexed annotation links, a 1,200-member listing, mouse-to-arrow focus, folder history, a selection made while rendering, and 390-pixel pane/reader switching. EA-PDF Messages, search, filtering and independent CSV remain under regression coverage. No speed or memory benchmark improvement is claimed.
+
+Both local viewer packages are rebuilt at the existing version, `0.5.0-beta.20`; reload the extension and reopen viewer tabs to use these local changes. Versioning/publication remains held at the user's request. No commit, push, GitHub release, source conversion or JAR replacement.
+
+## 2026-11-09 — Local Portfolio viewer development
+
+**New code / UI improvement:** Document detection gives recognized EA-PDF identification priority over Collection dictionaries. EA-PDF keeps its email interface; generic collections select Portfolio view, and ordinary PDFs keep document viewing. An explicit switch exposes Portfolio presentation for EA-PDF collections and restores the selected document/email/page on return. Generic portfolios can also expose the email interface of their EA-PDF members. Detection is not validation.
+
+The independent presentation model adds schema/CI columns, typed multi-field sorting, metadata filtering, exact initial-file keys, view/split preferences, folders, downloads and bounded lazy previews. The PDF.js metadata pass is opt-in; frozen EA-PDF inspection results remain unchanged. The viewer README records resource bounds and remaining features; this is not a full ISO Portfolio conformance claim.
+
+Three private real Portfolio samples (four PDF members, five email-source members and nine cheat-sheet PDFs) pass Chromium/Firefox acceptance with unchanged original SHA-256 hashes. All six EA-PDF profiles retain their default email interface. Verification: 137 viewer units, 42 maintained source-patch tests, 133 upstream specs with zero failures and one documented pending spec; full Chromium/Firefox acceptance and final focused view-state/download checks pass. Both local viewer packages rebuilt and verified. No version bump or publication.
+
 ## 2026-11-08 — Beta.20 release verification
 
 Creator and validator are `1.6.0-beta.20`; the browser viewer is `0.5.0-beta.20` (manifest `0.5.0.20`). This release includes the reader, indexing, security, creator-option and regeneration changes recorded below. CSV export remains available.

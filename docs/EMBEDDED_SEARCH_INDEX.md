@@ -172,8 +172,8 @@ Example, from the repository root (use a fresh temporary directory):
 ```sh
 TASK_DIR=$(mktemp -d /tmp/eapdf-index-benchmark-XXXXXX)
 mvn -Deapdf.build.directory="$TASK_DIR/creator" package
-javac -cp "$TASK_DIR/creator/emailtopdfa-1.6.0-beta.20.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/MetadataIndexBenchmark.java
-EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-1.6.0-beta.20.jar" eapdf.MetadataIndexBenchmark in/sample.eml "$TASK_DIR/fixtures" 100 1000 10000
+javac -cp "$TASK_DIR/creator/emailtopdfa-2.0.0-beta.1.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/MetadataIndexBenchmark.java
+EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-2.0.0-beta.1.jar" eapdf.MetadataIndexBenchmark in/sample.eml "$TASK_DIR/fixtures" 100 1000 10000
 # Run in a temporary viewer working copy with dependencies installed and bundles built:
 EAPDF_INDEX_BENCHMARK="$TASK_DIR/fixtures" npm run benchmark:metadata-index
 ```
@@ -270,7 +270,7 @@ Original MIME/source bytes and unrendered embedded attachment contents are not
 indexed. There is no OCR. All four archive profiles (`1m`, `1mi`, `1c`, `1ci`)
 are supported; standalone `1s`/`1si` keep ordinary PDF.js search.
 
-Full-text generation uses PDFBox in the Java process; Node.js is not required.
+Full-text generation uses PDFBox within the Java process.
 The creator extracts each rendered page with PDFTextStripper in content-stream
 order, preserves PDFTextStripper's emitted text and inserts a separator only at
 proven disjoint backward horizontal LTR run boundaries, then normalizes the
@@ -549,8 +549,8 @@ by `browser-viewer/scripts/fulltext-index-benchmark.mjs`. First generate the
 Phase 1 paired real-source scaling fixtures using the instructions above. Then:
 
 ```sh
-javac -cp "$TASK_DIR/creator/emailtopdfa-1.6.0-beta.20.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/FullTextIndexBenchmark.java
-EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-1.6.0-beta.20.jar" eapdf.FullTextIndexBenchmark "$TASK_DIR/fixtures" "$TASK_DIR/fulltext"
+javac -cp "$TASK_DIR/creator/emailtopdfa-2.0.0-beta.1.jar" -d "$TASK_DIR/classes" scripts/java/eapdf/FullTextIndexBenchmark.java
+EAPDF_CONFIG="$PWD/config/eapdf_config.json" java -Xmx2g -cp "$TASK_DIR/classes:$TASK_DIR/creator/emailtopdfa-2.0.0-beta.1.jar" eapdf.FullTextIndexBenchmark "$TASK_DIR/fixtures" "$TASK_DIR/fulltext"
 # From a built temporary viewer working copy, run each kind: common, rare, phrase.
 EAPDF_FULLTEXT_BENCHMARK="$TASK_DIR/fulltext" EAPDF_QUERY_KIND=common npm run benchmark:fulltext-index
 ```

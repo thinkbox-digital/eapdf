@@ -9,7 +9,7 @@ try{
  await page.locator('#file').setInputFiles(resolve('tests/fulltext-index/mbox_sample_1mi.pdf'));
  const ready=()=>page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');await ready();
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#viewport')).overflowX==='hidden');
- assert.equal(await page.locator('#zoom').inputValue(),'fit-width');
+ assert.equal(await page.locator('#zoom').inputValue(),'fit-page');
  await page.locator('#zoom').selectOption('1.5');await ready();
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#viewport')).overflowX==='auto');
  assert.ok(await page.locator('#viewport').evaluate(e=>e.scrollWidth>e.clientWidth));

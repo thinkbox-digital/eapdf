@@ -24,11 +24,11 @@ All settings are positive integers, with JVM properties taking precedence over c
 | --- | --- | --- |
 | `EAPDF_JOB_TIMEOUT_SECONDS` | `eapdf.jobTimeoutSeconds` | 600 seconds per conversion worker |
 | `EAPDF_WORKER_HEAP_BYTES` | `eapdf.workerHeapBytes` | Automatic: half available memory; explicit worker or launcher limits remain effective |
-| `EAPDF_WORKER_ADDRESS_BYTES` | `eapdf.workerAddressBytes` | Chosen heap plus 4 GiB of native address space (unless explicitly set) |
-| `EAPDF_MAX_TEMP_BYTES` | `eapdf.maxTempBytes` | 2 GiB temporary workspace and publication-preparation budget |
-| `EAPDF_MAX_TEMP_FILES` | `eapdf.maxTempFiles` | 100,000 temporary files/inodes |
-| `EAPDF_MAX_OUTPUT_BYTES` | `eapdf.maxOutputBytes` | 1 GiB per PDF/output and total staged output |
-| `EAPDF_MAX_FONT_BYTES` | `eapdf.maxFontBytes` | 16 MiB per configured font |
+| `EAPDF_WORKER_ADDRESS_BYTES` | `eapdf.workerAddressBytes` | Chosen heap plus 4 GiB native headroom plus the scratch allowance for file mappings (unless explicitly set) |
+| `EAPDF_MAX_TEMP_BYTES` | `eapdf.maxTempBytes` | 80% of available working-disk space at job admission |
+| `EAPDF_MAX_TEMP_FILES` | `eapdf.maxTempFiles` | No fixed default count; explicit overrides remain effective |
+| `EAPDF_MAX_OUTPUT_BYTES` | `eapdf.maxOutputBytes` | Half the working-storage allowance |
+| `EAPDF_MAX_FONT_BYTES` | `eapdf.maxFontBytes` | Java heap bytes / 32 per configured font |
 
 The former `EAPDF_MAX_MESSAGES`, `EAPDF_MAX_MIME_PARTS`, `EAPDF_MAX_MIME_DEPTH`,
 `EAPDF_MAX_PAGES`, `EAPDF_MAX_TOTAL_PAGES` and `EAPDF_MAX_TOTAL_IMAGE_PIXELS`
@@ -133,10 +133,11 @@ may use half the temporary-storage allowance; the former 8x input / 16 GiB cap i
 removed. Explicit limits still win. Four rendering jobs are requested by the
 corpus runner and web converter; large corpus inputs run alone.
 
-The web application's default request cap follows disk space, up to 16 GiB.
+The web application's separate upload admission cap is 64 MiB by default and can
+be configured through `VALIDATOR_MAX_CONTENT_LENGTH`.
 Worker deadlines follow input bytes, bounded at 24 hours; explicit job/request
 limits still win. Worker memory is shared across the configured job-slot count.
-The per-file disk limit follows free disk space, up to 64 GiB per file. Conversion
+The per-file disk limit follows each job’s free-disk share, without a fixed GiB ceiling. Conversion
 logs are retained on disk; truncating their on-page tail does not stop conversion.
 Validation JSON is retained separately from its bounded console log. Docker
 veraPDF uses the same size-based deadline calculation (the existing

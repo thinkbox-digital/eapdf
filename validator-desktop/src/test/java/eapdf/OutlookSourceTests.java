@@ -20,6 +20,11 @@ class OutlookSourceTests {
     return Files.readAllBytes(path);
   }
 
+  // Required synthetic fixture: missing resources fail instead of silently skipping coverage.
+  static byte[] nativeReplyFixture() throws Exception {
+    return Files.readAllBytes(Path.of("../src/test/resources/eapdf/outlook-regression/native-reply.msg"));
+  }
+
   @Test void originalStoredHeadersAndBodyTypesAreAvailable() throws Exception {
     var evidence = OutlookSource.inspect(source("TxtSampleEmail.msg"));
     assertNotNull(evidence);
@@ -88,12 +93,15 @@ class OutlookSourceTests {
   }
 
   @Test void nativeCorePreservesTheStoredSubmissionInstantAndDoesNotClaimHeaders() throws Exception {
-    var core = OutlookSource.nativeCore(source("2019.10.08 DEP response.msg"));
+    var core = OutlookSource.nativeCore(nativeReplyFixture());
     assertNotNull(core);
     assertEquals(java.time.Instant.parse("2019-10-08T14:07:48.3287079Z"), core.sent());
-    assertEquals("RE: Application of Jeffry Spinney, 126 Golden Ridge Road, Alna", core.text().get("Subject"));
-    assertEquals(68096, core.size());
-    assertNull(OutlookSource.inspect(source("2019.10.08 DEP response.msg")));
+    assertEquals("Synthetic Outlook regression", core.text().get("Subject"));
+    assertEquals(nativeReplyFixture().length, core.size());
+    assertEquals("<parent@example.org>", core.reply());
+    assertTrue(core.attachments().isEmpty());
+    assertFalse(core.addresses().containsKey("From"), "An unresolved represented author must not borrow the delegate mailbox");
+    assertNull(OutlookSource.inspect(nativeReplyFixture()));
     assertNull(OutlookSource.nativeCore(source("TxtSampleEmail.msg")));
     assertEquals(1, OutlookSource.nativeCore(source("test_internal.msg")).attachments().size());
   }
@@ -101,25 +109,40 @@ class OutlookSourceTests {
   @ParameterizedTest @CsvSource({"Subject,Wrong,MESSAGE_METADATA_MATCH_SOURCE", "SizeInBytes,1,MESSAGE_METADATA_MATCH_SOURCE",
       "Sent,2019-10-16T12:40:52Z,MESSAGE_METADATA_MATCH_SOURCE", "Sent,2019-10-08T14:07:48Z,MESSAGE_METADATA_MATCH_SOURCE", "NumberAttachments,1,MESSAGE_METADATA_MATCH_SOURCE"})
   void nativeCoreRejectsDefiniteContradictions(String property, String value, String code) throws Exception {
-    byte[] bytes = source("2019.10.08 DEP response.msg");
-    var core = OutlookSource.nativeCore(bytes); assertNotNull(core);
-    String xml = "<rdf:RDF xmlns:rdf='" + EaPdfChecks.RDF + "' xmlns:m='" + EaPdfChecks.MAIL + "'>"
-        + "<rdf:li rdf:parseType='Resource'><m:Mail_GUID>uuid:source</m:Mail_GUID><m:Subject>" + core.text().get("Subject") + "</m:Subject>"
-        + "<m:messageid>&lt;BL0PR0901MB2404E6978B5DD7E702A36251849A0@BL0PR0901MB2404.namprd09.prod.outlook.com&gt;</m:messageid>"
-        + "<m:Sent>" + core.sent() + "</m:Sent><m:SizeInBytes>" + bytes.length + "</m:SizeInBytes>"
+    var report = nativeReplyComparison(property, value);
+    assertTrue(report.items.asList().stream().map(item -> item.getAsJsonObject()).anyMatch(item ->
+        code.equals(item.get("code").getAsString()) && "FAIL".equals(item.get("level").getAsString())), report.items.toString());
+    assertTrue(report.items.asList().stream().map(item -> item.getAsJsonObject()).anyMatch(item ->
+        "MESSAGE_SOURCE_COVERAGE".equals(item.get("code").getAsString()) && "PASS".equals(item.get("level").getAsString())), report.items.toString());
+  }
+
+  @Test void matchingSyntheticNativeMetadataHasNoContradictions() throws Exception {
+    var report = nativeReplyComparison(null, null);
+    assertFalse(report.items.asList().stream().anyMatch(item ->
+        "FAIL".equals(item.getAsJsonObject().get("level").getAsString())), report.items.toString());
+    assertTrue(report.items.asList().stream().anyMatch(item ->
+        "MESSAGE_SOURCE_COVERAGE".equals(item.getAsJsonObject().get("code").getAsString())
+        && "PASS".equals(item.getAsJsonObject().get("level").getAsString())), report.items.toString());
+  }
+
+  private JavaValidation.Report nativeReplyComparison(String property, String value) throws Exception {
+    byte[] bytes = nativeReplyFixture();
+    String xml = "<rdf:RDF xmlns:rdf='" + EaPdfChecks.RDF + "' xmlns:m='" + EaPdfChecks.MAIL + "' xmlns:foaf='" + EaPdfChecks.FOAF + "'>"
+        + "<rdf:li rdf:parseType='Resource'><m:Mail_GUID>uuid:source</m:Mail_GUID><m:Subject>Synthetic Outlook regression</m:Subject>"
+        + "<m:messageid>&lt;synthetic-outlook@example.org&gt;</m:messageid>"
+        + "<m:Sent>2019-10-08T14:07:48.3287079Z</m:Sent><m:SizeInBytes>" + bytes.length + "</m:SizeInBytes>"
+        + "<m:To><rdf:Seq><rdf:li rdf:parseType='Resource'><foaf:Agent foaf:mbox='mailto:first@example.org'/></rdf:li></rdf:Seq></m:To>"
+        + "<m:In-Reply-To><rdf:Bag><rdf:li>&lt;parent@example.org&gt;</rdf:li></rdf:Bag></m:In-Reply-To>"
         + "<m:NumberAttachments>0</m:NumberAttachments></rdf:li></rdf:RDF>";
     var factory = javax.xml.parsers.DocumentBuilderFactory.newInstance(); factory.setNamespaceAware(true);
     var document = factory.newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
     var email = (org.w3c.dom.Element) document.getDocumentElement().getFirstChild();
-    ((org.w3c.dom.Element) email.getElementsByTagNameNS(EaPdfChecks.MAIL, property).item(0)).setTextContent(value);
+    if (property != null) ((org.w3c.dom.Element) email.getElementsByTagNameNS(EaPdfChecks.MAIL, property).item(0)).setTextContent(value);
     var spec = new COSDictionary();
     var file = new EaPdfChecks.Embedded("source.msg", spec, null, bytes, "source.msg", "application/vnd.ms-outlook", "", "Source");
-    var report = new JavaValidation.Report("native MSG comparison");
+    var report = new JavaValidation.Report("synthetic native MSG comparison");
     new MetadataChecks(report, List.of(file), List.of(spec), List.of(email), List.of(), List.of(), "s").emails();
-    assertTrue(report.items.asList().stream().map(item -> item.getAsJsonObject()).anyMatch(item ->
-        code.equals(item.get("code").getAsString()) && "FAIL".equals(item.get("level").getAsString())), report.items.toString());
-    assertTrue(report.items.asList().stream().map(item -> item.getAsJsonObject()).anyMatch(item ->
-        "MESSAGE_SOURCE_COVERAGE".equals(item.get("code").getAsString()) && "PASS".equals(item.get("level").getAsString())));
+    return report;
   }
 
   @Test void redirectAnnotationsAreComparedUsingTheirStoredDestinations() {
@@ -189,7 +212,7 @@ class OutlookSourceTests {
       assertFalse(core.addresses().containsKey("To")); assertFalse(core.addresses().containsKey("Cc")); assertFalse(core.addresses().containsKey("Bcc"));
       assertTrue(core.addresses().containsKey("From"));
     }
-    assertFalse(OutlookSource.nativeCore(source("2019.10.08 DEP response.msg")).addresses().containsKey("From"));
+    assertFalse(OutlookSource.nativeCore(nativeReplyFixture()).addresses().containsKey("From"));
   }
 
   @Test void emptyRawTextCannotReplaceKnownNativeMailboxes() throws Exception {

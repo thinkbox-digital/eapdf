@@ -13,7 +13,7 @@ Current contents include:
 
 `EAPDF_CONFIG` selects the JSON configuration file. An explicitly selected missing or unreadable file is an error; only an absent default configuration falls back to built-in settings. The supported `configVersion` is `1`; unsupported versions or invalid value types stop loading with an explanation. Unknown keys produce warnings that include the full setting name.
 
-- `searchIndex.enabled` defaults to `true` for embedded search indexes. `searchIndex.fullTextEnabled` independently controls full-text generation for `1m`, `1mi`, `1c`, and `1ci`; it uses built-in PDFBox extraction, with no Node.js requirement. Extraction failures or exceeded limits produce a warning and retain ordinary PDF.js searching. See [format, limits and fallback](../docs/EMBEDDED_SEARCH_INDEX.md).
+- `searchIndex.enabled` defaults to `true` for embedded search indexes. `searchIndex.fullTextEnabled` independently controls full-text generation for `1m`, `1mi`, `1c`, and `1ci`; it uses built-in PDFBox extraction. Extraction failures or exceeded limits produce a warning and retain ordinary PDF.js searching. See [format, limits and fallback](../docs/EMBEDDED_SEARCH_INDEX.md).
 - `accessibility.addPdfUaFeatures` enables semantic headings, paragraphs, tables, image descriptions, and annotation associations in message PDFs and collection/archival front matter. It remains partial accessibility support, not proven PDF/UA conformance.
 - The remaining `accessibility.experimental` setting are unavailable. Setting them to `true` produces a warning; they do not change output.
 
@@ -25,13 +25,10 @@ These environment variables also have JVM property equivalents:
 
 | Environment variable | JVM property | Default |
 | --- | --- | --- |
-| `EAPDF_MAX_MESSAGE_BYTES` | `eapdf.maxMessageBytes` | 64 MiB, capped at one sixteenth of the Java heap |
-| `EAPDF_MAX_BODY_CHARS` | `eapdf.maxBodyChars` | 2,097,152 characters, capped at one sixty-fourth of the Java heap |
-| `EAPDF_MAX_MESSAGES` | `eapdf.maxMessages` | 10,000 messages/inputs or collection members |
-| `EAPDF_MAX_METADATA_BYTES` | `eapdf.maxMetadataBytes` | 32 MiB of estimated record/warning/checkpoint metadata, capped at one eighth of the Java heap |
-| `EAPDF_MAX_MIME_DEPTH` | `eapdf.maxMimeDepth` | 32 multipart nesting levels, never more than 64 |
-| `EAPDF_MAX_MIME_PARTS` | `eapdf.maxMimeParts` | 2,000 MIME parts per message |
-| `EAPDF_MAX_IMAGE_PIXELS` | `eapdf.maxImagePixels` | 16,000,000 pixels per raster image, capped at Java heap bytes / 32 |
+| `EAPDF_MAX_MESSAGE_BYTES` | `eapdf.maxMessageBytes` | One sixteenth of the Java heap |
+| `EAPDF_MAX_BODY_CHARS` | `eapdf.maxBodyChars` | Java heap bytes / 64 characters |
+| `EAPDF_MAX_METADATA_BYTES` | `eapdf.maxMetadataBytes` | One eighth of the Java heap for estimated record/warning/checkpoint metadata |
+| `EAPDF_MAX_IMAGE_PIXELS` | `eapdf.maxImagePixels` | Java heap bytes / 32 pixels per raster image |
 | `EAPDF_WORKER_TIMEOUT_SECONDS` | `eapdf.workerTimeoutSeconds` | 300 seconds per awaited parallel worker |
 | `EAPDF_WORKER_SHUTDOWN_SECONDS` | `eapdf.workerShutdownSeconds` | 5 seconds to wait for cancelled workers |
 | `EAPDF_FALLBACK_FONTS` | `eapdf.fallbackFonts` | Bundled DejaVu Sans, Droid Sans Fallback and Nanum Gothic; up to 16 fallback TTF paths in total |
@@ -68,3 +65,8 @@ The value becomes the first `dc:creator` item. `xmp:CreatorTool` and
 metadata structure separately from provenance-backed attribution.
 
 Branding, finding-aid generation and PREMIS output have been removed. Old configuration keys for these features are ignored with an unknown-setting warning. Collections retain their required cover page. The GUI checkbox is **Accessibility (PDF/UA)**.
+
+The regeneration workflow sets `validationWarning` after a failed or incomplete
+validation attempt. The “WARNING — Validation requires review” banner and its explanation are rendered visibly in message PDFs, with a notice
+on collection covers. The initial and final validation reports remain in the
+run evidence directory. The normal default is an empty string.

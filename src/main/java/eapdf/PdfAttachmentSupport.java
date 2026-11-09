@@ -45,6 +45,14 @@ final class PdfAttachmentSupport {
         PdfMailWriter.drawText(content, font, 11f, 46.8f, 535f, "EA-PDF 1" + profile + " collection");
         PdfMailWriter.drawText(content, font, 11f, 46.8f, 515f, summary.countsText());
         PdfMailWriter.drawText(content, font, 11f, 46.8f, 495f, "Open the contained email PDFs from the Messages pane.");
+        if (!Common.nz(EapdfConfig.get().validationWarning).isBlank()) {
+          content.setNonStrokingColor(new java.awt.Color(255, 245, 206));
+          content.addRect(41f, 403f, 710f, 48f); content.fill();
+          content.setNonStrokingColor(java.awt.Color.BLACK);
+          PdfMailWriter.drawText(content, font, 12f, 46.8f, 433f, "WARNING — Validation requires review");
+          PdfMailWriter.drawText(content, font, 10f, 46.8f, 415f,
+              "Conformance was not established by the initial check. Consult the initial and final validation reports.");
+        }
         if (incomplete) PdfMailWriter.drawText(content, font, 11f, 46.8f, 475f,
             "INCOMPLETE SOURCE — see conversion warnings in the contained email PDFs.");
       }

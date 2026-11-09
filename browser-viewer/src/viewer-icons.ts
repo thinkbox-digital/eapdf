@@ -1,0 +1,7 @@
+export function treeIcon(kind:'folder'|'message'|'document'|'attachment'|'code'|'view'|'download'|'search'|'close'|'left'|'right'|'up'|'minus'|'plus'|'warning'):SVGSVGElement {
+  const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('aria-hidden','true');icon.setAttribute('focusable','false');icon.classList.add('tree-icon');
+  const paths=kind==='search'?['M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14','m15 15 6 6']:kind==='close'?['m6 6 12 12M18 6 6 18']:kind==='left'?['m15 5-7 7 7 7']:kind==='right'?['m9 5 7 7-7 7']:kind==='up'?['m5 12 7-7 7 7M12 5v15']:kind==='minus'?['M5 12h14']:kind==='plus'?['M5 12h14M12 5v14']:kind==='warning'?['m12 3 10 18H2Z','M12 9v5M12 17v1']:kind==='attachment'?['M8 13l7-7a3 3 0 0 1 4 4L9 20a5 5 0 0 1-7-7L12 3','M5 15l9-9']:kind==='code'?['m8 6-6 6 6 6M16 6l6 6-6 6M14 3l-4 18']:kind==='view'?['M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z','M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0']:kind==='download'?['M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5']:kind==='folder'?['M3 7V5h6l2 2h10v13H3Z','M3 10h18l-3 10H3Z']:kind==='message'?['M3 5h18v14H3Z','m3 6 9 7 9-7']:['M5 3h9l5 5v13H5Z','M14 3v6h5M8 13h8M8 17h8'];
+  paths.forEach((d,index)=>{const path=document.createElementNS(icon.namespaceURI,'path');path.setAttribute('d',d);if(kind==='folder')path.setAttribute('class',index?'folder-open':'folder-closed');icon.append(path);});
+  return icon;
+}

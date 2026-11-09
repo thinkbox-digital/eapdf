@@ -1,0 +1,107 @@
+--- a/src/core/document_assets.js
++++ b/src/core/document_assets.js
+@@ -5,2 +5,3 @@
+ import { Dict, Name, Ref } from "./primitives.js";
++import { collectionPresentation } from "./collection_presentation.js";
+ import { BaseStream } from "./base_stream.js";
+@@ -120,2 +121,3 @@
+   async inspect(options = {}) {
++    if (options.presentationOnly === true) return collectionPresentation(this.root, this.catalog.xref);
+     const limits = {};
+--- /dev/null
++++ b/src/core/collection_presentation.js
+@@ -0,0 +1,94 @@
++/* Copyright 2026 EA-PDF contributors. SPDX-License-Identifier: Apache-2.0 */
++import { Dict, Name, Ref } from "./primitives.js";
++import { stringToPDFString } from "./string_utils.js";
++import { MissingDataException } from "./core_utils.js";
++
++// An opt-in, metadata-only pass. Never decodes embedded file payloads or executes layouts.
++export async function collectionPresentation(root, xref) {
++  const result = { initial: null, initialHex: null, view: "D", layouts: [], fields: [],
++    sort: [], ascending: [], folders: [], entries: [], split: null, colors: [], notices: [] };
++  let steps = 0, characters = 0;
++  const fetch = raw => raw instanceof Ref ? xref.fetch(raw) : raw;
++  const path = (raw, fallback) => raw instanceof Ref ? `object:${raw.num}:${raw.gen}` : fallback;
++  const check = () => { if (++steps > 200000 || characters > 8 * 1024 * 1024) throw new Error("Portfolio metadata limit reached; listing is incomplete."); };
++  const value = raw => {
++    check(); const v = fetch(raw);
++    if (typeof v === "string") { characters += v.length; if (v.length > 65536) throw new Error("Portfolio field exceeds text limit."); return stringToPDFString(v, true); }
++    if (v instanceof Name) { characters += v.name.length; if (v.name.length > 65536) throw new Error("Portfolio name exceeds text limit."); return v.name; }
++    if (typeof v === "boolean" || (typeof v === "number" && Number.isFinite(v))) return v;
++    return null;
++  };
++  const hex = s => typeof s === "string" ? Array.from(s, c => c.charCodeAt(0).toString(16).padStart(2, "0")).join("") : null;
++  const get = (d, k) => d instanceof Dict ? value(d.getRaw(k)) : null;
++  const list = raw => { const v = fetch(raw); return (Array.isArray(v) ? v.slice(0,256) : [v]).map(value); };
++  const keys = dict => {
++    const result = [];
++    for (const key of dict.getKeys()) {
++      check(); characters += key.length;
++      if (key.length > 65536) throw new Error("Portfolio key exceeds text limit.");
++      if (result.length === 256) { notice(new Error("Portfolio has more than 256 metadata fields; extra fields are omitted.")); break; }
++      result.push(key);
++    }
++    return result;
++  };
++  const item = spec => {
++    const ci = spec.get("CI"), values = [];
++    if (ci instanceof Dict) for (const key of keys(ci)) {
++      if (key === "Type") continue;
++      const raw = ci.get(key);
++      values.push([key, raw instanceof Dict ? get(raw,"D") : value(raw), raw instanceof Dict ? get(raw,"P") : null]);
++    }
++    return values;
++  };
++  const notice = error => { if (error instanceof MissingDataException) throw error; const text = String(error.message || error); if (!result.notices.includes(text)) result.notices.push(text); };
++  try {
++    const col = root.get("Collection"); if (!(col instanceof Dict)) throw new Error("Collection dictionary is unavailable.");
++    const initial = col.get("D");
++    if (typeof initial === "string") { result.initial = value(initial); result.initialHex = hex(initial); }
++    result.view = get(col,"View") || "D";
++    const navigator = col.get("Navigator"); if (navigator instanceof Dict) result.layouts = list(navigator.getRaw("Layout"));
++    const schema = col.get("Schema");
++    if (schema instanceof Dict) for (const key of keys(schema)) {
++      if (key === "Type") continue; const f = schema.get(key);
++      if (!(f instanceof Dict)) { notice(new Error("Invalid collection field: " + key)); continue; }
++      result.fields.push({ key, label:get(f,"N"), subtype:get(f,"Subtype"), order:get(f,"O"), visible:get(f,"V") !== false });
++    }
++    const sort = col.get("Sort"); if (sort instanceof Dict) { result.sort = list(sort.getRaw("S")); result.ascending = list(sort.getRaw("A")); if (typeof sort.get("A") === "boolean") result.ascendingAll = sort.get("A"); }
++    const split = col.get("Split"); if (split instanceof Dict) result.split = { direction:get(split,"Direction"), position:get(split,"Position") };
++    const colors = col.get("Colors"); if (colors instanceof Dict) for (const key of ["Background","CardBackground","CardBorder","PrimaryText","SecondaryText"]) result.colors.push([key,list(colors.getRaw(key))]);
++    const seenFolders = new Set(), pending = [{raw:col.getRaw("Folders"),parent:null,fallback:"catalog/Collection/Folders"}];
++    while (pending.length) {
++      check(); if (steps % 256 === 0) await new Promise(resolve => setTimeout(resolve,0));
++      const node = pending.pop(); if (!node.raw) continue;
++      const folder = fetch(node.raw), id = path(node.raw,node.fallback);
++      if (!(folder instanceof Dict)) { notice(new Error("Invalid portfolio folder.")); continue; }
++      if (seenFolders.has(folder)) { notice(new Error("Cyclic or shared portfolio folder.")); continue; } seenFolders.add(folder);
++      const declaredParent = folder.getRaw("Parent");
++      if (node.parent && path(declaredParent,"") !== node.parent) notice(new Error("Folder parent reference disagrees with its hierarchy."));
++      result.folders.push({ path:id,parent:node.parent,number:get(folder,"ID"),name:get(folder,"Name"),description:get(folder,"Desc"),created:get(folder,"CreationDate"),modified:get(folder,"ModDate"),values:item(folder) });
++      pending.push({raw:folder.getRaw("Next"),parent:node.parent,fallback:id+"/Next"},{raw:folder.getRaw("Child"),parent:id,fallback:id+"/Child"});
++    }
++    const names = root.get("Names"), seenNames = new Set(), queue = [names instanceof Dict ? names.getRaw("EmbeddedFiles") : null];
++    while (queue.length) {
++      check(); await new Promise(resolve => setTimeout(resolve,0));
++      const node = fetch(queue.pop()); if (!node) continue;
++      if (!(node instanceof Dict)) { notice(new Error("Invalid EmbeddedFiles name tree.")); continue; }
++      if (seenNames.has(node)) { notice(new Error("Cyclic or shared EmbeddedFiles name tree.")); continue; } seenNames.add(node);
++      const pairs = node.get("Names"), kids = node.get("Kids");
++      if (Array.isArray(kids)) { if (kids.length > 200000) throw new Error("Portfolio name-tree limit reached."); for (let k=kids.length-1;k>=0;k--) queue.push(kids[k]); }
++      if (!Array.isArray(pairs)) continue;
++      for (let i=0;i+1<pairs.length;i+=2) {
++        check(); if (i % 256 === 0) await new Promise(resolve => setTimeout(resolve,0));
++        try {
++          const spec = fetch(pairs[i+1]); if (!(spec instanceof Dict) || typeof pairs[i] !== "string") { notice(new Error("Invalid collection member.")); continue; }
++          const ef=spec.get("EF"); let stream;
++          if (ef instanceof Dict) stream=ef.get("UF") || ef.get("F") || ef.get(ef.getKeys().next().value);
++          const params=stream?.dict?.get("Params");
++          result.entries.push({ key:value(pairs[i]),keyHex:hex(pairs[i]),filePath:path(pairs[i+1],""),
++            name:get(spec,"UF") || get(spec,"F"),description:get(spec,"Desc"),created:get(params,"CreationDate"),modified:get(params,"ModDate"),size:get(params,"Size"),compressedSize:get(stream?.dict,"Length"),values:item(spec) });
++        } catch(error) { notice(error); }
++      }
++    }
++  } catch(error) { notice(error); }
++  return {files:[],diagnostics:[],presentation:result};
++}

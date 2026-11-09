@@ -26,6 +26,7 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.security import check_password_hash
 from urllib.parse import urlsplit
 from rule_documentation import specification_context_html
+from validation_worker import available_memory_bytes, disk_allowances
 
 
 ROOT = Path(__file__).resolve().parent
@@ -35,20 +36,6 @@ VERSION_PATH = ROOT / "VERSION"
 WEB_TMP_ROOT = ROOT / ".validator_web_tmp"
 GENERATOR_TMP_ROOT = ROOT / ".generator_web_tmp"
 OUT_PDF_ROOT = ROOT / "out"
-def available_memory_bytes():
-    available = 1024**3
-    try:
-        available = int(re.search(r"MemAvailable:\s+(\d+)", Path("/proc/meminfo").read_text()).group(1)) * 1024
-    except (OSError, AttributeError):
-        pass
-    for limit, used in (("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory.current"),
-                        ("/sys/fs/cgroup/memory/memory.limit_in_bytes", "/sys/fs/cgroup/memory/memory.usage_in_bytes")):
-        try:
-            available = min(available, max(0, int(Path(limit).read_text()) - int(Path(used).read_text())))
-        except (OSError, ValueError):
-            pass
-    return available
-
 
 def workload_seconds(size, configured, minimum=600):
     return max(1, configured) if configured else min(86400, max(minimum, 600 + size // (128 * 1024)))
@@ -75,8 +62,7 @@ JOB_DEADLINE = ContextVar("validator_job_deadline", default=None)
 VALIDATION_MEMORY_MB = int(os.environ.get("VALIDATOR_JOB_MEMORY_MB", "0"))
 GENERATION_TIMEOUT = int(os.environ.get("GENERATOR_JOB_TIMEOUT", "0"))
 GENERATION_MEMORY_MB = int(os.environ.get("GENERATOR_JOB_MEMORY_MB", "0"))
-MAX_WORK_FILE_BYTES = max(1, int(os.environ.get("VALIDATOR_MAX_WORK_FILE_BYTES", str(64 * 1024**2))))
-MAX_JOB_WORK_BYTES = max(1, int(os.environ.get("VALIDATOR_MAX_SCRATCH_BYTES", str(512 * 1024**2))))
+MAX_WORK_FILE_BYTES, MAX_JOB_WORK_BYTES = disk_allowances(ROOT, MAX_CONCURRENT_JOBS)
 MAX_LOG_BYTES = 4 * 1024 * 1024
 VALIDATION_WORKER_SCRIPT = """
 import runpy
@@ -90,6 +76,10 @@ if sys.platform != "win32":
     resource.setrlimit(resource.RLIMIT_AS, (limit, hard_limit))
     file_limit = int(sys.argv[5])
     resource.setrlimit(resource.RLIMIT_FSIZE, (file_limit, file_limit))
+    inherited_soft, inherited_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    requested = max(1, int(os.environ.get("VALIDATOR_MAX_OPEN_FILES", str(inherited_soft if inherited_hard == resource.RLIM_INFINITY else inherited_hard))))
+    descriptor_limit = requested if inherited_hard == resource.RLIM_INFINITY else min(requested, inherited_hard)
+    resource.setrlimit(resource.RLIMIT_NOFILE, (descriptor_limit, descriptor_limit))
 from contextlib import redirect_stdout
 from pathlib import Path
 report_json = Path(sys.argv[3] + ".json")
@@ -1126,18 +1116,18 @@ def bounded_subprocess(command, timeout, cwd=None, env=None, logs=None, work_roo
     finishes = time.monotonic() + timeout
     roots = tuple(Path(p) for p in work_roots) + ((Path(logs),) if logs is not None else ())
     def over_budget():
-        size = count = 0
+        size = 0
         for root in roots:
             if not root.exists(): continue
             for path in root.rglob("*"):
                 try:
                     if path.is_symlink() or not path.is_file(): continue
-                    size += path.stat().st_size; count += 1
+                    size += path.stat().st_size
                 except FileNotFoundError:
                     continue
                 except OSError:
                     return True
-                if size > MAX_JOB_WORK_BYTES or count > 10000: return True
+                if size > MAX_JOB_WORK_BYTES: return True
         return False
     if logs is not None: Path(logs).mkdir(parents=True, exist_ok=True)
     with (Path(logs) / "conversion.log").open("w+b") if logs is not None else tempfile.TemporaryFile() as stdout_file, \
@@ -1191,6 +1181,8 @@ def run_command(cmd, cwd=None):
     timeout = workload_seconds(input_bytes(cmd[-1]), GENERATION_TIMEOUT, minimum=1800)
     environment = dict(os.environ)
     environment.setdefault("EAPDF_WORKER_HEAP_BYTES", str(max(256, memory - 512) * 1024**2))
+    environment.setdefault("EAPDF_MAX_TEMP_BYTES", str(MAX_JOB_WORK_BYTES))
+    environment.setdefault("EAPDF_MAX_OUTPUT_BYTES", str(MAX_WORK_FILE_BYTES))
     logs = Path(cmd[cmd.index("--out") + 1]) if "--out" in cmd else None
     executed = list(cmd)
     scratch = None
@@ -1201,7 +1193,7 @@ def run_command(cmd, cwd=None):
             executed = [arg for arg in executed if not arg.startswith("-Djava.io.tmpdir=")]
             executed.insert(1, "-Djava.io.tmpdir=" + str(scratch))
         code, stdout, stderr = bounded_subprocess(
-            [sys.executable, "-c", worker, str(memory + 4096), *executed], timeout, cwd, env=environment, logs=logs)
+            [sys.executable, "-c", worker, str(memory + 4096 + (MAX_JOB_WORK_BYTES + 1024**2 - 1) // 1024**2), *executed], timeout, cwd, env=environment, logs=logs)
     finally:
         if scratch is not None: shutil.rmtree(scratch)
     return {
@@ -2888,6 +2880,7 @@ def run_pdf_validation(path):
                str(MAX_WORK_FILE_BYTES)]
     container_name = "eapdf-web-" + job_id
     environment = dict(os.environ, VERAPDF_JOB_CONTAINER=container_name,
+                       VALIDATOR_JOB_MEMORY_MB=str(memory_mb), TMPDIR=str(report_directory),
                        EAPDF_VERAPDF_HEAP_MB=str(max(128, memory_mb // 2)),
                        VALIDATOR_CHILD_TEMP_ROOT=str(report_directory / "children"))
     try:

@@ -19,12 +19,27 @@ final class ValidationSession implements AutoCloseable {
     private byte[] reserve = new byte[512 * 1024];
     private final Thread shutdown;
 
-    ValidationSession(Path input, Path output) throws IOException {
+    ValidationSession(Path input, Path output) throws IOException { this(input, output, false); }
+    ValidationSession(Path input, Path output, boolean recoverUpstream) throws IOException {
         this.input = input.toAbsolutePath(); this.output = output.toAbsolutePath();
         if (this.input.normalize().equals(this.output.normalize()) || (Files.exists(this.output) && Files.isSameFile(this.input, this.output))) throw new IOException("The report must not overwrite the input PDF.");
         progress = this.output.resolveSibling(this.output.getFileName() + ".progress.json");
         pdfa = new JsonObject(); pdfa.addProperty("status", "NOT_RUN");
         pdfa.addProperty("ran", false); pdfa.addProperty("compliant", false); pdfa.addProperty("profile_allowed", false);
+        if (recoverUpstream) {
+            Path brief = this.output.resolveSibling(this.output.getFileName() + ".summary.json");
+            if (Files.isRegularFile(brief)) try (var reader = Files.newBufferedReader(brief)) {
+                JsonObject prior = JsonParser.parseReader(reader).getAsJsonObject();
+                JsonObject summary = prior.getAsJsonObject("summary");
+                if (this.input.toString().equals(JavaValidation.text(summary, "file"))) {
+                    if (prior.has("pdfa")) pdfa = prior.getAsJsonObject("pdfa").deepCopy();
+                    if (prior.has("iso32005")) iso32005 = prior.getAsJsonObject("iso32005").deepCopy();
+                    if (summary.has("last_stage")) stage = summary.get("last_stage").getAsString();
+                }
+            } catch (IOException | RuntimeException error) {
+                System.err.println("Unable to recover prior upstream validation outcome: " + error.getMessage());
+            }
+        }
         snapshot("Validation has not finished.", "RUNNING");
         shutdown = new Thread(() -> {
             if (!complete) failed("Validation was interrupted during " + stage + ".");
@@ -113,6 +128,7 @@ final class ValidationSession implements AutoCloseable {
         result.add("summary", summary); result.add("pdfa", pdfa); result.add("items", items);
         writeAtomic(output, result);
         JsonObject brief = new JsonObject(); brief.add("summary", summary); brief.add("pdfa", pdfa);
+        if (iso32005 != null) brief.add("iso32005", iso32005);
         java.util.List<String> failures = new java.util.ArrayList<>();
         if ("FAIL".equals(upstream)) failures.add("PDFA_FIRST_PASS");
         if (iso32005 != null && "FAIL".equals(JavaValidation.text(iso32005, "status"))) failures.add("ISO32005_UPSTREAM");

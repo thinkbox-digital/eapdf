@@ -11,11 +11,16 @@ final class PstJobBudget {
 
   static PstJobBudget forInput(String entry, String[] arguments, Path temporary) throws Exception {
     var budget = new PstJobBudget();
+    long space = Files.getFileStore(temporary).getUsableSpace() / 5 * 4;
+    if (space < 1) throw Common.fail("No available conversion working storage");
+    budget.defaults.put("eapdf.maxTempBytes", space);
+    budget.defaults.put("eapdf.maxOutputBytes", space / 2);
+    budget.defaults.put("eapdf.maxTempFiles", Long.MAX_VALUE);
     if (entry.equals("eapdf.GmailDownloadToPdf")) {
       int limit = (Integer) GmailDownloadToPdf.parseArgs(arguments).getOrDefault("limit", 0);
       if (limit > 0 && limit <= 200 && System.getProperty("eapdf.workerHeapBytes") == null
           && System.getenv("EAPDF_WORKER_HEAP_BYTES") == null)
-        budget.defaults.put("eapdf.workerHeapBytes", Math.min(2L * 1024 * 1024 * 1024, ConversionMemory.defaultHeap(512L * 1024 * 1024)));
+        budget.defaults.put("eapdf.workerHeapBytes", ConversionMemory.defaultHeap(512L * 1024 * 1024));
       return budget;
     }
     if (!entry.equals("eapdf.EmailToPDFA")) return budget;
@@ -25,16 +30,13 @@ final class PstJobBudget {
     long bytes = inputBytes(path);
     if (bytes < 128L * 1024 * 1024) {
       if (System.getProperty("eapdf.workerHeapBytes") == null && System.getenv("EAPDF_WORKER_HEAP_BYTES") == null)
-        budget.defaults.put("eapdf.workerHeapBytes", Math.min(2L * 1024 * 1024 * 1024, ConversionMemory.defaultHeap(512L * 1024 * 1024)));
+        budget.defaults.put("eapdf.workerHeapBytes", ConversionMemory.defaultHeap(512L * 1024 * 1024));
       return budget;
     }
     long messages = 250000; // Input bytes cannot safely predict how many short emails it contains.
     long heap = ConversionMemory.defaultHeap(512L * 1024 * 1024);
-    long space = Math.max(1024 * 1024, Files.getFileStore(temporary).getUsableSpace() * 4 / 5);
     budget.defaults.put("eapdf.workerHeapBytes", heap);
-    budget.defaults.put("eapdf.workerAddressBytes", Math.max(4L * 1024 * 1024 * 1024, heap + 4L * 1024 * 1024 * 1024));
-    budget.defaults.put("eapdf.maxMetadataBytes", Math.min(heap / 8, bytes / 2 + 32L * 1024 * 1024));
-    budget.defaults.put("eapdf.maxTempFiles", Math.min(1500000, Math.max(100000, messages * 6)));
+    budget.defaults.put("eapdf.maxMetadataBytes", heap / 8);
     // Scratch contains expanded streams, rendered pages and staged outputs together.
     // PST size is not an upper bound on this expansion. Reserve disk headroom;
     // the supervisor still enforces the aggregate allowance and explicit overrides.
@@ -62,8 +64,9 @@ final class PstJobBudget {
 
   void useWorkerHeap(long heap) {
     defaults.put("eapdf.workerHeapBytes", heap);
-    defaults.put("eapdf.workerAddressBytes", Math.max(4L * 1024 * 1024 * 1024,
-        Math.addExact(heap, 4L * 1024 * 1024 * 1024)));
+    defaults.put("eapdf.maxMetadataBytes", heap / 8);
+    defaults.put("eapdf.workerAddressBytes", Math.addExact(Math.addExact(heap, 4L * 1024 * 1024 * 1024),
+        setting("eapdf.maxTempBytes", "EAPDF_MAX_TEMP_BYTES", 0)));
   }
 
   long setting(String property, String environment, long fallback) {

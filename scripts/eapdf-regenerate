@@ -5,8 +5,11 @@ project=/media/lepore/Work/thinkbox/eapdf
 if (($# == 0)); then
   printf '%s\n' 'Usage: eapdf-regenerate sample|everything [options]' \
     'Both modes CLEAR the project out/ directory when run.' \
-    'sample: two small inputs per type; everything: every supported input, all applicable profiles.' \
+    'sample: two small inputs per type; everything: every supported input file.' \
+    'PST/MBOX: whole-source 1m, 1mi, 1c and 1ci archives; no individual-email PDFs.' \
+    'EML/MSG: standalone PDFs plus random archive groups of up to 20 messages per type.' \
     'Completed PDFs appear immediately after each creator job; validation results follow.' \
+    'Ends with failed/incomplete files and report paths; saves summary.txt with the run evidence.' \
     'Uses concurrent Java processes, limited automatically by available CPU and memory.' \
     'Example: eapdf-regenerate everything --workers 4 --jobs 2' \
     'Default creator: Thinkbox.DIGITAL (no creator argument required).' \

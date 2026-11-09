@@ -219,6 +219,16 @@ public final class JavaValidation {
     } finally { if (interrupted) Thread.currentThread().interrupt(); }
   }
 
+  static String failureReason(Throwable error) {
+    var seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<Throwable, Boolean>());
+    var text = new StringBuilder();
+    for (Throwable cause = error; cause != null && seen.add(cause); cause = cause.getCause()) {
+      if (!text.isEmpty()) text.append("; caused by ");
+      text.append(cause);
+    }
+    return text.toString();
+  }
+
   private static JsonObject pdfaOnCurrentThread(Path path, byte[] profile) {
     JsonObject out = new JsonObject();
     out.addProperty("file", path.toString());
@@ -275,7 +285,7 @@ public final class JavaValidation {
       out.add("compliant", com.google.gson.JsonNull.INSTANCE);
       out.addProperty("profile_name", ""); out.addProperty("job_end_status", ""); out.addProperty("failed_rules", 0);
       out.addProperty("message", "veraPDF could not parse the input PDF: " + invalid.getMessage());
-    } catch (Exception error) { out.addProperty("message", "PDF/A checks could not finish: " + error); } finally {
+    } catch (Exception error) { out.addProperty("message", "PDF/A checks could not finish: " + failureReason(error)); } finally {
       // GFModelParser.close() closes the file but retains thread-local models.
       // Release the same four containers reset by its next parser construction,
       // before loading the next document/EA-PDF graph on this thread.

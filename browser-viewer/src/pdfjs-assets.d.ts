@@ -1,4 +1,5 @@
 import 'pdfjs-dist/types/src/display/api.js';
+import type {PortfolioData} from './portfolio.js';
 import type { PartLocator } from './pdfjs-document-parts.js';
 export type AssetValue = Readonly<{ kind: string; value?: string | number | boolean; bytesHex?: string }>;
 export type AssetOrigin = Readonly<{ kind: 'name-tree' | 'catalog-af' | 'object-af' | 'annotation'; locator: PartLocator; pageIndex: number | null; nameTreeKey: AssetValue }>;
@@ -16,6 +17,9 @@ export type DocumentAssets = Readonly<{ apiVersion: 1; documentId: string; files
 export type FileBytesRequest = Readonly<{ documentId: string; fileId: string; streamId: string; maxBytes: number }>;
 declare module 'pdfjs-dist/types/src/display/api.js' {
   interface PDFDocumentProxy {
+    getDocumentAssets(options: {embeddedTarget:{page:number;annotation:number|string}}): Promise<{target:string}>;
+    getDocumentAssets(options: {folderThumbnail:string}): Promise<{thumbnail:{width:number;height:number;data:Uint8Array}}>;
+    getDocumentAssets(options: {presentationOnly:true}): Promise<{presentation:PortfolioData}>;
     getDocumentAssets(options?: Partial<AssetLimits>): Promise<DocumentAssets>;
     getAssociatedFileBytes(request: FileBytesRequest): Promise<Uint8Array>;
   }

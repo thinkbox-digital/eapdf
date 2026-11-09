@@ -112,6 +112,7 @@ export class AttachmentViewer {
     this.canvas.hidden=true;this.canvas.width=this.canvas.height=0;this.content.textContent='';this.busy=false;
   }
   private controls():void {
+    this.previous.hidden=this.next.hidden=!this.pdf||this.pdf.numPages<=1;
     this.previous.disabled=this.busy||!this.pdf||this.page<=1;
     this.next.disabled=this.busy||!this.pdf||this.page>=this.pdf.numPages;
     this.zoom.disabled=this.busy||(!this.pdf&&!this.image);

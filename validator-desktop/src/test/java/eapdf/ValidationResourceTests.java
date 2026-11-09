@@ -124,6 +124,21 @@ class ValidationResourceTests {
             assertEquals("INCOMPLETE", report.summary().get("status").getAsString());
         }
     }
+    @Test void supervisorFailureKeepsUpstreamCheckpointsButANewRunResetsThem() throws Exception {
+        Path input = Files.writeString(temporary.resolve("email.pdf"), "fixture"), output = temporary.resolve("checkpoint.json");
+        try (var session = new ValidationSession(input, output)) {
+            ValidationSession.pdfaFinished(JsonParser.parseString("{\"status\":\"PASS\"}").getAsJsonObject());
+            ValidationSession.isoFinished(JsonParser.parseString("{\"status\":\"FAIL\"}").getAsJsonObject());
+            session.failed("Worker stopped.");
+        }
+        try (var session = new ValidationSession(input, output, true)) { session.failed("Supervisor observed worker termination."); }
+        var recovered = JsonParser.parseString(Files.readString(output)).getAsJsonObject();
+        assertEquals("PASS", recovered.getAsJsonObject("pdfa").get("status").getAsString());
+        assertEquals("FAIL", recovered.getAsJsonObject("summary").get("status").getAsString());
+        try (var session = new ValidationSession(input, output)) { session.failed("Starting a separate run."); }
+        var fresh = JsonParser.parseString(Files.readString(output)).getAsJsonObject();
+        assertEquals("NOT_RUN", fresh.getAsJsonObject("pdfa").get("status").getAsString());
+    }
     @Test void childBudgetsAreCheckedBeforeAdmissionAndSupportOrdinaryLargeCollections() {
         var children = new JavaValidation.Children();
         assertTrue(children.accepts(300L * 1024 * 1024, 0));
