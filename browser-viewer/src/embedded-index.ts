@@ -71,7 +71,7 @@ export async function decodeIndex(doc:BrowserDocument,check:()=>void):Promise<In
     requireIndex(!legacy||same([mid,subject,from,to,cc,bcc,sent],[message.internetMessageId.value??'',...['Subject','Raw-From','Raw-To','Raw-Cc','Raw-Bcc','Sent'].map(k=>data[k]??'')]),'metadata differs from catalog XMP');
     const label=data.Subject||fileLabel(file),document=doc.name+' / '+fileLabel(file),searchText=metadataSearchText(data);
     characters+=label.length+document.length+searchText.length;requireIndex(characters<=INDEX_LIMITS.characters,'retained metadata limit');
-    rows.set(file.id,{path:[{fileId:file.id,streamPath:stream.locator.path}],messageId:guid,mailGuid:guid,label,document,searchText,sender:data.From||data['Raw-From'],sent:data.Sent});
+    rows.set(file.id,{path:[{fileId:file.id,streamPath:stream.locator.path}],messageId:guid,mailGuid:guid,label,document,searchText,sender:data.From||data['Raw-From'],sent:data.Sent,internetMessageId:message.internetMessageId.value??undefined,inReplyTo:data['In-Reply-To'],references:data.References});
   }
   requireIndex(count===header.messages,'incomplete index');
   for(const file of doc.inspection.files){

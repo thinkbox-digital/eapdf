@@ -1,6 +1,6 @@
-# EA-PDF browser viewer — beta 1.0.0-beta.1
+# EA-PDF browser viewer — beta 1.0.0-beta.2
 
-Current beta: `1.0.0-beta.1`, with creator/validator `2.0.0-beta.1`.
+Current beta: `1.0.0-beta.2`, with creator/validator `2.0.0-beta.2`.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
 6.5.438 and retains the existing Chromium/Firefox architecture.
@@ -15,13 +15,22 @@ is a document error, not a guessed association.
 
 CSV export reads email metadata directly and does not require an embedded finding aid.
 
-**Export CSV** includes PDF paths, collection folder paths, sender,
-recipients, subject, date, Message-ID, attachment counts and attachment names.
-Multiple folder memberships and nested collections are preserved. Mail GUID is
-not exported. Missing counts are blank; recorded zero counts remain zero. Names
-come from email metadata, so a `ci` finding aid does not claim that original
-attachment bytes are embedded. Unreadable or conflicting information prevents a
-misleading complete export. Export covers the selected PDF and its children.
+**Export metadata…** opens a selection dialog. CSV export lets you choose PDF
+paths, folder paths, sender, recipients, subject, date, attachment counts and
+attachment names, for the current message or the entire open file/collection.
+Message-ID and Mail GUID are not included. Multiple folder memberships and nested
+collections are preserved. Missing counts are blank; recorded zero counts remain
+zero. Attachment information does not imply that attachment contents are embedded.
+Unreadable or conflicting information prevents a misleading complete CSV export.
+
+Original XMP mode discovers metadata streams on PDF objects, including collection
+children. Preview XML without editing it, download a single original stream, or
+export selected streams as a ZIP with their document paths and owner locations in
+`manifest.json`. Downloads preserve decoded stream bytes without reserializing XML.
+Shared metadata remains whole: current-message XMP scope includes its containing
+PDF and may therefore describe other messages. Previews provide successive 256 KiB sections;
+export allows up to 32 MiB per stream and 64 MiB total. Unavailable content is
+reported in the dialog and ZIP manifest; partial exports are explicitly identified.
 
 The redundant Email Details pane, printing and user-controlled rotation remain
 removed. Intrinsic PDF page orientation is respected. Search opens from the header
@@ -361,3 +370,13 @@ between children (individual PDF operations retain their 60-second timeout), wit
 scans and conflicting identities leave ownership unresolved. Verified links are reused for
 the session and survive inspection refreshes. Closing the document cancels the
 scan and disposes its workers.
+
+## Conversations
+
+Select **Conversations** to reconstruct reply chains from embedded XMP Message-ID, References and In-Reply-To fields. Select **Messages** to return to the folder view. The per-open-file cache avoids rereading XMP when switching views. A single email remains a standalone message.
+
+The right pane shows the selected conversation. Up/Down selects the previous/next message; scrolling at the edge of a message does the same. Other right-pane sections begin collapsed in Conversations. **Confirmed** identifies header-based relationships. Optional experimental subject inference groups separate chains under a conversation heading, with component roots ordered by date; it does not establish a reply parent.
+
+Files in each **Files in this PDF** group sort oldest first using the owning email's Sent date. Multi-message members use their earliest available message date. Dates read from indexed child metadata update the order when background indexing completes. Undated files follow dated files, with stable message/folder order as a fallback. No message dates are inferred from filenames.
+
+Threading is local to the open document, reads existing metadata, and does not modify PDFs or certify RFC 5256 conformance. Metadata and reconstruction limits produce a visible notice; missing headers and independent PDFs cannot be fully threaded.

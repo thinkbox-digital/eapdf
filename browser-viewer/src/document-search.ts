@@ -44,10 +44,18 @@ function* normalizedParts(text:string):Generator<{value:string;start:number;end:
   }
 }
 export function normalizeSearchText(text:string):string{let result='';for(const part of normalizedParts(text))result+=part.value;return result;}
+// Unicode letters, digits, combining marks and underscores belong to words.
+// Use code points at both edges so astral letters cannot create false boundaries.
+export function wholeWordAt(text:string,start:number,end:number):boolean{
+  const before=Array.from(text.slice(Math.max(0,start-2),start)).at(-1)??'';
+  const after=end<text.length?String.fromCodePoint(text.codePointAt(end)!):'';
+  return !/[\p{L}\p{N}\p{M}_]/u.test(before)&&!/[\p{L}\p{N}\p{M}_]/u.test(after);
+}
 export function textMatches(text:string,query:string,maximum=Infinity):TextMatch[]{
   const needle=normalizeSearchText(query);if(!needle)return [];
   const folded=normalizeSearchText(text),result:TextMatch[]=[];
-  for(let from=0;result.length<maximum;){const at=folded.indexOf(needle,from);if(at<0)break;result.push({start:at,end:at+needle.length});from=at+needle.length;}
+  for(let from=0;result.length<maximum;){const at=folded.indexOf(needle,from);if(at<0)break;
+    if(wholeWordAt(folded,at,at+needle.length))result.push({start:at,end:at+needle.length});from=at+needle.length;}
   let offset=0,start=0,end=0;
   for(const part of normalizedParts(text)){
     const next=offset+part.value.length;

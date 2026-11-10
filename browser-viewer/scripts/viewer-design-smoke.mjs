@@ -16,8 +16,8 @@ try{
  const initialSubjects=await page.locator('#tree button[data-embedded-file-id] .message-subject').allTextContents();
  assert.ok(initialSubjects.includes('Feature Generators'),'subjects must appear before opening child PDFs');
  assert.ok(!initialSubjects.some(label=>label==='Feature Generators_000006_1s.pdf'));
- const dimensions=()=>page.evaluate(()=>{const box=id=>document.querySelector(id).getBoundingClientRect();return {workspace:box('#workspace').width,left:box('#navigation-panel').width,right:box('#details-panel').width,reader:box('.reader-pane').width,footer:box('footer').bottom,overflow:document.documentElement.scrollWidth>innerWidth};});
- const desktop=await dimensions();assert.equal(desktop.left,432);assert.equal(desktop.right,432);assert.equal(desktop.reader,736);assert.equal(desktop.overflow,false);assert.ok(desktop.footer<=1050);
+ const dimensions=()=>page.evaluate(()=>{const box=id=>document.querySelector(id).getBoundingClientRect();return {workspace:box('#workspace').width,left:box('#navigation-panel').width,right:box('#details-panel').width,reader:box('.reader-pane').width,dividers:[...document.querySelectorAll('.pane-divider')].reduce((sum,e)=>sum+e.getBoundingClientRect().width,0),footer:box('footer').bottom,overflow:document.documentElement.scrollWidth>innerWidth};});
+ const desktop=await dimensions();assert.equal(desktop.left,432);assert.equal(desktop.right,432);assert.equal(desktop.reader,desktop.workspace-desktop.left-desktop.right-desktop.dividers);assert.equal(desktop.overflow,false);assert.ok(desktop.footer<=1050);
  await page.locator('#open-search').click();await page.locator('#search-scope').selectOption('collection');await page.locator('#search').fill('email');await page.locator('#search-submit').click();await ready();
  assert.equal(await page.locator('#results-tab').getAttribute('aria-selected'),'true');assert.equal(await page.locator('#browse-panel').isVisible(),true);
  const groups=await page.locator('.result-heading').allTextContents();assert.ok(groups.length>1);assert.ok(groups.every(name=>!name.includes('pst_quality-attached-message_1c.pdf')));assert.ok(await page.locator('.match-excerpt mark').count()>0);
@@ -66,7 +66,7 @@ try{
   await page.locator('#'+show).click();assert.ok(await page.locator('#'+panel).isVisible());assert.equal(await page.evaluate(()=>document.activeElement.id),hide);
  }
  await mkdir('test-results',{recursive:true});await page.screenshot({path:'test-results/viewer-design-desktop.png',fullPage:true});
- await page.setViewportSize({width:900,height:950});await page.waitForFunction(()=>document.querySelector('#workspace').dataset.layout==='medium');const medium=await dimensions();assert.equal(medium.left,270);assert.equal(medium.right,0);assert.equal(medium.overflow,false);
+ await page.setViewportSize({width:900,height:950});await page.waitForFunction(()=>document.querySelector('#workspace').dataset.layout==='medium');const medium=await dimensions();assert.equal(medium.left,medium.workspace*desktop.left/desktop.workspace);assert.equal(medium.right,0);assert.equal(medium.overflow,false);
  await page.setViewportSize({width:600,height:950});await page.waitForFunction(()=>document.querySelector('#workspace').dataset.layout==='compact');assert.equal((await dimensions()).overflow,false);await page.screenshot({path:'test-results/viewer-design-narrow.png',fullPage:true});
  await page.locator('#close').click();assert.equal(await page.locator('#results-tab').isDisabled(),true);assert.equal(await page.locator('#browse-tab').getAttribute('aria-selected'),'true');
  // Keep optional PREMIS grouping coverage independent of current conversion defaults.

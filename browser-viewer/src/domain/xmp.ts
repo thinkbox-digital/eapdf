@@ -73,6 +73,9 @@ export function parseXmp(text: string | null, loc: ObjectLocator, parse: (source
       if(kind==='email'&&['Subject','Raw-From','Raw-To','Sent','Raw-Cc','Raw-Bcc'].includes(key)){
         const value=displayText(nodes,at(where,key),key);if(value!==null)display[key]=value;
       }
+      if(kind==='email'&&['In-Reply-To','References'].includes(key)){
+        display[key]=nodes.flatMap(node=>typeof node==='string'?[node]:[...node.getElementsByTagNameNS(NS.rdf,'li')].length?[...node.getElementsByTagNameNS(NS.rdf,'li')].map(li=>li.textContent??''):[node.textContent??'']).join(' ');
+      }
       if(['From','To','Cc','Bcc'].includes(key)) {
         const foaf='http://xmlns.com/foaf/0.1/';
         display[key]=nodes.flatMap(n=>typeof n==='string'?[]:[...n.getElementsByTagNameNS(NS.rdf,'li')].map(li=>{

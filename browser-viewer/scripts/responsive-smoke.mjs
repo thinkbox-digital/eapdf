@@ -30,7 +30,7 @@ try{
   const result=await page.evaluate(()=>{const b=id=>document.getElementById(id).getBoundingClientRect();return {width:innerWidth,height:innerHeight,mode:document.querySelector('#workspace').dataset.layout,left:b('navigation-panel').width,right:b('details-panel').width,viewport:b('viewport').height,overflow:document.documentElement.scrollWidth>innerWidth,footer:document.querySelector('footer').getBoundingClientRect().bottom};});
   assert.equal(result.overflow,false,JSON.stringify(result));assert.ok(result.viewport>100,JSON.stringify(result));assert.ok(result.footer<=height+1,JSON.stringify(result));
   if(result.mode==='wide'){assert.ok(Math.abs(result.left-width*.27)<1);assert.ok(Math.abs(result.right-width*.27)<1);}
-  if(result.mode==='medium'){assert.equal(result.left,270);assert.equal(result.right,0);}
+  if(result.mode==='medium'){assert.ok(result.left>=200&&result.left<width*.5);assert.equal(result.right,0);}
   if(result.mode==='compact'){assert.equal(result.left,0);assert.equal(result.right,0);}
   results.push(result);await page.screenshot({path:`test-results/responsive-${width}x${height}${suffix}.png`});
  }

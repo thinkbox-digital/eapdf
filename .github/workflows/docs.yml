@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      - 'browser-viewer/docs/**'
+      - 'scripts/check_public_docs.py'
+      - 'AGENTS.md'
       - 'config/README.md'
       - 'validator-desktop/README.md'
       - 'CONTRIBUTING.md'
@@ -15,6 +18,9 @@ on:
   pull_request:
     paths:
       - 'docs/**'
+      - 'browser-viewer/docs/**'
+      - 'scripts/check_public_docs.py'
+      - 'AGENTS.md'
       - 'config/README.md'
       - 'validator-desktop/README.md'
       - 'CONTRIBUTING.md'
@@ -41,6 +47,8 @@ jobs:
           cache: pip
           cache-dependency-path: requirements-site.txt
       - run: python -m pip install -r requirements-site.txt
+      - name: Check documentation privacy
+        run: python scripts/check_public_docs.py
       - name: Build documentation strictly
         run: python scripts/build_documentation.py --output "$RUNNER_TEMP/eapdf-site"
       - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4

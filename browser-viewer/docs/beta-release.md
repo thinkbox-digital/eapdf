@@ -1,16 +1,22 @@
-# Viewer 1.0.0-beta.1 — beta release (2026-11-08)
+# Viewer 1.0.0-beta.2 — 2026-11-10
 
-Packages accompany EA-PDF 2.0.0-beta.1. This beta fixes Messages-pane arrow
+Integrated Conversations view with cached indexing, right-pane reply trees and navigation. Optional subject inference groups separate chains without inventing message parents. Embedded file groups now sort oldest first by owning-email date.
+
+Packages retain the main viewer identity; reload an existing unpacked extension after replacing its files. Firefox installation remains temporary until signed. This is beta software.
+
+# Viewer 1.0.0-beta.2 — beta release (2026-11-08)
+
+Packages accompany EA-PDF 2.0.0-beta.2. This beta fixes Messages-pane arrow
 navigation and stale filtering status, adds compact filtering indexes, and moves
 large metadata parsing off the UI thread. CSV export remains available.
 
 ## Install or update
 
 Download the packages from the
-[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.0.0-beta.1):
+[GitHub beta release](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.0.0-beta.2):
 
-- `eapdf-viewer-1.0.0-beta.1-chromium.zip`
-- `eapdf-viewer-1.0.0-beta.1-firefox.zip`
+- `eapdf-viewer-1.0.0-beta.2-chromium.zip`
+- `eapdf-viewer-1.0.0-beta.2-firefox.zip`
 
 Extract the new ZIP. Chromium: open `chrome://extensions`, enable Developer mode
 and load the extracted directory with **Load unpacked**. Firefox: open
@@ -18,13 +24,13 @@ and load the extracted directory with **Load unpacked**. Firefox: open
 its `manifest.json`. Packages are unsigned; Firefox installation ends on exit.
 
 Remove or disable the older installation, and close old viewer tabs. The footer
-must show `1.0.0-beta.1`; the extension manager shows `0.5.0.20`. Reloading an older
+must show `1.0.0-beta.2`; the extension manager shows `1.0.0.2`. Reloading an older
 extracted directory does not update it. Workspace builds use
 `browser-viewer/dist/chromium/` or `browser-viewer/dist/firefox/manifest.json`.
 
 ## Example emails
 
-Download [the example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.1/ea-pdf-examples-2.0.0-beta.1.zip),
+Download [the example bundle](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/ea-pdf-examples-2.0.0-beta.2.zip),
 or see the [example inventory](../../examples/README.md).
 
 ## Use and limitations

@@ -5,6 +5,21 @@ const results=[],hash=b=>createHash('sha256').update(b).digest('hex');
 try{
  const worker=context.serviceWorkers()[0]??await context.waitForEvent('serviceworker'),page=await context.newPage();await page.goto(`chrome-extension://${new URL(worker.url()).host}/viewer.html`);
  const ready=async()=>{await page.waitForFunction(()=>!document.querySelector('#file').disabled);await page.waitForTimeout(300);await page.waitForFunction(()=>!document.querySelector('#file').disabled);};
+ for(const fixture of ['../examples/eml/eml_Agenda_and_timeline_slides_1s.pdf','../examples/msg/msg_TxtSampleEmailWithAttachment_1s.pdf','../examples/mbox/mbox_enron-sample_1s.pdf','../examples/pst/pst_quality-attached-message_1s.pdf','../examples/msg/msg_TxtSampleEmailWithAttachment_archive_1c.pdf']){
+  const path=resolve(fixture),before=hash(await readFile(path));await ready();await page.locator('#file').setInputFiles(path);await ready();
+  assert.equal(await page.locator('#files a, #files [role="link"], #files .file-message-link, #files .file-name-link').count(),0);
+  assert.ok(await page.locator('#files strong.file-name').count()>0,'Filenames remain plain text');
+  assert.ok(await page.locator('#files button[data-file-id]').count()>0,'Downloads remain available');
+  assert.ok(await page.locator('#files button[data-view-file-id]').count()>0,'View controls remain available');
+  assert.equal(await page.locator('#files .file-message-source, #files .file-message-owner button').count(),0);
+  const preview=page.locator('#files button[data-view-file-id][title^="View "]');
+  if(fixture.endsWith('_1s.pdf')&&await preview.count()){
+   await preview.first().click();await ready();
+   await page.locator('#attachment-viewer').waitFor({state:'visible'});
+   await page.locator('#attachment-close').click();
+  }
+  assert.equal(hash(await readFile(path)),before);results.push({fixture,sha256:before,status:'PASS'});
+ }
  for(const profile of ['1m','1mi']){
   const path=resolve(`../out/mbox/mbox_3p-dev_c216f5b5d7_${profile}.pdf`);try{await access(path);}catch{console.log('SKIP private regression:',path);continue;}
   const before=hash(await readFile(path));await ready();await page.locator('#file').setInputFiles(path);await ready();
@@ -19,14 +34,11 @@ try{
     }));
    }finally{session.close();document.querySelector('#owner-reference').remove();}
   });
-  const links=await page.locator('#files .file-message-link').evaluateAll(nodes=>nodes.map(n=>({messageId:n.dataset.ownerMessageId,label:n.textContent,fileId:n.closest('.file-card').dataset.associatedFileId,disabled:n.disabled})));
-  assert.ok(links.length>=2,'Real archive must contain multiple attachment owners');
-  for(const link of links){const expected=reference.find(r=>r.messageId===link.messageId&&r.fileId===link.fileId);assert.ok(expected,JSON.stringify({link,reference:reference.slice(0,2)}));for(const name of expected.names)assert.ok(link.label.includes(name));assert.equal(link.disabled,!expected.page);}
-  const target=reference.find(r=>r.page>1&&links.some(l=>l.messageId===r.messageId));assert.ok(target);
-  await page.locator('#files .file-message-link').filter({hasText:target.names[0]}).evaluateAll((buttons,id)=>buttons.find(b=>b.dataset.ownerMessageId===id).click(),target.messageId);await ready();
-  assert.equal(Number(await page.locator('#page').inputValue()),target.page);assert.equal(await page.locator(`#tree button[data-message-id="${target.messageId}"]`).getAttribute('aria-current'),'true');
-  assert.equal(await page.locator('#files-title').textContent(),'Files in this email');
-  assert.equal(hash(await readFile(path)),before);results.push({profile,sha256:before,links:links.length,destination_page:target.page,status:'PASS'});
+  assert.equal(await page.locator('#files a, #files .file-message-link, #files .file-name-link, #files [role="link"]').count(),0);
+  const owners=await page.locator('#files .file-message-owner').evaluateAll(nodes=>nodes.map(n=>({messageId:n.dataset.ownerMessageId,label:n.textContent,fileId:n.closest('.file-card').dataset.associatedFileId,buttons:n.querySelectorAll('button').length})));
+  assert.ok(owners.length>=2,'Real archive must contain multiple attachment owners');
+  for(const owner of owners){const expected=reference.find(r=>r.messageId===owner.messageId&&r.fileId===owner.fileId);assert.ok(expected);for(const name of expected.names)assert.ok(!owner.label.includes(name),'Owner source filename must not be displayed');assert.equal(owner.buttons,0);}
+  assert.equal(hash(await readFile(path)),before);results.push({profile,sha256:before,owners:owners.length,status:'PASS'});
   await mkdir('test-results',{recursive:true});await page.screenshot({path:`test-results/attachment-owner-${profile}.png`});
  }
  await writeFile('test-results/attachment-owners.json',JSON.stringify(results,null,2)+'\n');console.log(JSON.stringify(results));

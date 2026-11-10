@@ -8,7 +8,7 @@ export async function checkPortfolioNavigation(browser){
  const work=await mkdtemp(join(tmpdir(),'eapdf-portfolio-links-'));const results=[];
  const until=async fn=>{const end=Date.now()+45000;while(Date.now()<end){if(await fn())return;await new Promise(r=>setTimeout(r,100));}throw new Error('Portfolio navigation check timed out: '+await browser.evaluate(()=>document.querySelector('#status').textContent));};
  const open=async(name,options)=>{console.log('Portfolio navigation:',name);await ready();const path=join(work,name);await writeFile(path,portfolioFixture(options));await browser.open(path);await until(async()=>await browser.evaluate(n=>document.querySelector('#header-filename').textContent===n&&!document.querySelector('#file').disabled,name));};
- const linked=async(index=0,wait=true)=>{await ready();await until(async()=>await browser.evaluate(i=>!!document.querySelectorAll('.internal-links a')[i],index));await browser.evaluate(i=>document.querySelectorAll('.internal-links a')[i].click(),index);if(wait)await ready();};
+ const linked=async(index=0,wait=true)=>{await ready();await until(async()=>await browser.evaluate(i=>!!document.querySelectorAll('.internal-links a:not(.file-attachment-link)')[i],index));await browser.evaluate(i=>document.querySelectorAll('.internal-links a:not(.file-attachment-link)')[i].click(),index);if(wait)await ready();};
  const status=()=>browser.evaluate(()=>document.querySelector('#status').textContent);
  try{
   const back=portfolioFixture({collection:false,pages:2,files:[],links:[{target:'<< /R /P >>',dest:'[0 /Fit]'}]});

@@ -24,11 +24,13 @@
     "vendor/pdfjs-patches/0004-inspection-yield.patch": "b3e3ef5ebdfaec061b85a9179a78f2401b929485f9a282857257c0b2c2320658",
     "vendor/pdfjs-patches/0005-zero-width-xref.patch": "bf25e1643a7f6351a9fb06d2e9f178fcd9cd9bc1d5cde976d0b9e11b96c81055",
     "vendor/pdfjs-patches/0006-collection-presentation.patch": "1dc9ff984e956ddcdf94da1fa6a4950a6efe089ce6e9f792751a205d7a948c61",
-    "vendor/pdfjs-patches/0007-collection-navigation.patch": "97693e1d0e8f963763e00fc393de3c0e295a36a0a0104d12d9bd7160ddb830b9"
+    "vendor/pdfjs-patches/0007-collection-navigation.patch": "97693e1d0e8f963763e00fc393de3c0e295a36a0a0104d12d9bd7160ddb830b9",
+    "vendor/pdfjs-patches/0008-metadata-extraction.patch": "d24007c43d04bbf99015228aca61b7f8ee659e8e2f1a2a5b7456337818634279",
+    "vendor/pdfjs-patches/0009-named-opening.patch": "9980dabc6a3afc0aff21d65a676f2c5b3d45e969061605e16f57fc1aa3e52c3c"
   },
   "outputs": {
     "vendor/pdfjs-patched/pdf.mjs": "b8cd5105b3bb5d2814e9e73cdc8863a4c33557102b1eb634e7a410c1a600b730",
-    "vendor/pdfjs-patched/pdf.worker.mjs": "8774f66704e9d1c86319d9f8c0c42b6cdff7fd6a64263223862ac8f8cdab616e"
+    "vendor/pdfjs-patched/pdf.worker.mjs": "269df32d8d0d4cae420ef2d353d0c92e4f17c0cb87dcfeba869b6a29b823798e"
   },
   "internalEventBuildDefine": "0a475cb6-573c-46ed-869d-fa7c5839d995",
   "patches": [
@@ -38,6 +40,8 @@
     "vendor/pdfjs-patches/0004-inspection-yield.patch",
     "vendor/pdfjs-patches/0005-zero-width-xref.patch",
     "vendor/pdfjs-patches/0006-collection-presentation.patch",
-    "vendor/pdfjs-patches/0007-collection-navigation.patch"
+    "vendor/pdfjs-patches/0007-collection-navigation.patch",
+    "vendor/pdfjs-patches/0008-metadata-extraction.patch",
+    "vendor/pdfjs-patches/0009-named-opening.patch"
   ]
 }

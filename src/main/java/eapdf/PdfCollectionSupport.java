@@ -50,6 +50,50 @@ final class PdfCollectionSupport {
 
 
 
+  // Collection wrapper pages describe the whole archive, not an individual email (§7.6).
+  static PDDocument buildCollectionStartPage(List<EmailRecord> records, String profile,
+      String fontPath, boolean debug) throws Exception {
+    long attachments = records.stream().mapToLong(r -> Math.max(r.attachmentCount, 0)).sum();
+    int folders = buildFolderSections(records).size();
+    long incomplete = records.stream().filter(r -> !r.sourceProblems.isEmpty()).count();
+    StringBuilder html = new StringBuilder("<!DOCTYPE html><html><head><meta charset=\"utf-8\"/>");
+    html.append("<style>@page { size: letter; margin: 0.7in; }")
+        .append("html, body, body * { font-family: ArchiveFont !important; }")
+        .append("body { font-size: 11pt; color: #222; line-height: 1.45; }")
+        .append("h1 { font-size: 26pt; margin: 0 0 8px; } h2 { font-size: 14pt; margin-top: 24px; }")
+        .append(".profile { color: #555; margin-bottom: 24px; }")
+        .append("table { width: 100%; border-collapse: collapse; margin: 20px 0; }")
+        .append("th, td { text-align: left; padding: 10px; border-bottom: 1px solid #ccc; }")
+        .append("th { width: 65%; } .warning { border: 2px solid #8b6500; padding: 10px; margin: 16px 0; }")
+        .append("</style></head><body><h1>Email Collection</h1><p class=\"profile\">EA-PDF 1")
+        .append(Common.escapeHtml(profile)).append(" — ")
+        .append("ci".equals(profile) ? "Isolated collection" : "Email archive")
+        .append("</p><p>This PDF contains a collection of email messages stored as embedded PDF files.</p>")
+        .append("<table><tr><th scope=\"row\">Messages</th><td>").append(records.size())
+        .append("</td></tr><tr><th scope=\"row\">Folders</th><td>").append(folders)
+        .append("</td></tr><tr><th scope=\"row\">Attachments</th><td>").append(attachments)
+        .append("</td></tr></table>")
+        .append("<p>Messages and their attachments are counted once per message, even when a message appears in more than one folder.</p>")
+        .append("<h2>Open the collection</h2><p>In the EA-PDF viewer, select a message in the Messages pane. ")
+        .append("In another PDF reader, open the embedded message PDFs from its collection or attachments panel.</p>");
+    if ("ci".equals(profile)) html.append("<h2>About this copy</h2><p>This isolated collection retains message renderings, folders and attachment information. ")
+        .append("Source email files and attachment contents are omitted. The attachment count describes the messages, not downloadable attachment contents.</p>");
+    String warning = Common.nz(EapdfConfig.get().validationWarning);
+    if (!warning.isBlank()) {
+      System.err.println("warning: VALIDATION WARNING BANNER: " + warning);
+      html.append("<div class=\"warning\"><p><strong>WARNING — Validation requires review</strong></p><p>")
+          .append(Common.escapeHtml(warning)).append("</p></div>");
+    }
+    if (incomplete > 0) html.append("<div class=\"warning\"><p><strong>INCOMPLETE SOURCE — conversion warnings</strong></p><p>")
+        .append(incomplete).append(" message(s) have source-data warnings. Review the warnings in the embedded messages.</p></div>");
+    html.append("</body></html>");
+    byte[] rendered = PdfMailWriter.renderHtmlPdf(html.toString(), PdfMailWriter.ROOT_URI(), fontPath, new EmailRecord(), debug);
+    PDDocument document = Loader.loadPDF(new org.apache.pdfbox.io.RandomAccessReadBuffer(rendered),
+        org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache());
+    try { ProcessingLimits.accountPages(document.getNumberOfPages()); return document; }
+    catch (Exception error) { document.close(); throw error; }
+  }
+
   static String buildMessageCollectionRenderHtml(List<PdfMailWriter.CollectionMember> members, String collectionProfile, String folderName) {
     StringBuilder s = new StringBuilder();
     s.append("<!DOCTYPE html><html><head><meta charset=\"utf-8\"/>");

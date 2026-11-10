@@ -59,3 +59,5 @@ Rules:
 - The major-version bump and publication were authorized on 2026-11-09: creator/validator 2.0.0-beta.1 and browser viewer 1.0.0-beta.1. Future publication requires user authorization.
 
 - For eapdf-regenerate, both sample and everything must keep each PST/MBOX as whole-source 1m/1mi/1c/1ci archives; never schedule individual-email 1s/1si extraction from those containers. Random EML/MSG archive groups must be bounded (currently 20 sources), cover every selected source and record their membership in run evidence.
+
+- Keep private correspondence and sample contributors anonymous in first-party documentation and release notes. Use generic interoperability labels; do not publish contributor names, company names or private sample filenames. Preserve required legal attribution and original input bytes. Run `python3 scripts/check_public_docs.py` before publication.

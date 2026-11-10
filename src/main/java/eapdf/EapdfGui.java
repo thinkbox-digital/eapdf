@@ -275,14 +275,13 @@ public class EapdfGui {
     Runnable update = () -> {
       Choice choice = (Choice) choices.getSelectedItem();
       if (choice == null) return;
-      String kept = localInput ? "Keeps source emails or PST message exports, and attachment contents."
+      String kept = localInput ? "Keeps source emails or PST message exports, existing folders, and attachment contents."
           : "Keeps original emails and attachment contents.";
       String omitted = "Original emails and attachment contents are omitted.";
       String text;
       if (choice.code.equals("c") || choice.code.equals("ci")) {
         text = "Stores separate email PDFs inside one collection. "
-            + (choice.code.equals("ci") ? omitted : kept)
-            + " Use a PDF reader with an attachments panel.";
+            + (choice.code.equals("ci") ? omitted : kept);
       } else if (choice.archiveMode) {
         text = "Combines at least two emails into one readable document. "
             + (choice.code.equals("mi") ? omitted : kept);
@@ -322,8 +321,16 @@ public class EapdfGui {
     JCheckBox unreadOnlyBox = new JCheckBox("Unread only");
     JSpinner limitSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 100000, 1));
     RunConfigControls configControls = buildRunConfigControls();
+    userField.setToolTipText("Gmail account email address, or leave blank to use the account you authorize in the browser.");
+    credentialsField.setToolTipText("Select the Google OAuth client credentials JSON file for this application.");
+    tokenDirField.setToolTipText("Folder used to store and reuse Gmail authorization tokens. Leave blank to use .gmail_token_store in your home directory.");
+    folderField.setToolTipText("Gmail folder or label to download. Leave blank for all mail.");
+    outDirField.setToolTipText("Required destination folder for the downloaded emails and generated EA-PDF files.");
+    unreadOnlyBox.setToolTipText("Download only messages marked unread in Gmail; their read status is not changed.");
+    limitSpinner.setToolTipText("Maximum number of messages to download. Set 0 to download all matching messages.");
+    ((JSpinner.DefaultEditor) limitSpinner.getEditor()).getTextField().setToolTipText(limitSpinner.getToolTipText());
 
-    addRow(panel, gc, 0, "User", userField);
+    addRow(panel, gc, 0, "Email address", userField);
     addPathRow(panel, gc, 1, "Credentials JSON", credentialsField, e -> choosePath(credentialsField, JFileChooser.FILES_ONLY, false));
     addPathRow(panel, gc, 2, "Token directory", tokenDirField, e -> choosePath(tokenDirField, JFileChooser.DIRECTORIES_ONLY, false, credentialsField));
     addRow(panel, gc, 3, "Folder / label", folderField);
@@ -378,6 +385,8 @@ public class EapdfGui {
     label.setLabelFor(password);
     password.getAccessibleContext().setAccessibleName("Signing certificate password");
     password.setToolTipText("Enter the password that unlocks your signing certificate; it is not saved in the configuration.");
+    label.setLabelFor(password);
+    label.setToolTipText(password.getToolTipText());
     JPanel content = new JPanel(new BorderLayout(0, 8));
     content.add(label, BorderLayout.NORTH);
     content.add(password, BorderLayout.CENTER);
@@ -733,7 +742,10 @@ public class EapdfGui {
     left.weightx = 0;
     left.fill = GridBagConstraints.NONE;
     left.anchor = GridBagConstraints.NORTHWEST;
-    panel.add(new JLabel(label), left);
+    JLabel fieldLabel = new JLabel(label);
+    fieldLabel.setLabelFor(component);
+    fieldLabel.setToolTipText(tooltipFor(component, label));
+    panel.add(fieldLabel, left);
 
     GridBagConstraints right = (GridBagConstraints) gc.clone();
     right.gridy = row;
@@ -744,11 +756,22 @@ public class EapdfGui {
     panel.add(component, right);
   }
 
+  static String tooltipFor(Component component, String fallback) {
+    if (component instanceof javax.swing.JComponent field && field.getToolTipText() != null)
+      return field.getToolTipText();
+    if (component instanceof java.awt.Container container)
+      for (Component child : container.getComponents()) {
+        String help = tooltipFor(child, null);
+        if (help != null) return help;
+      }
+    return fallback;
+  }
+
   static void addMissingTooltips(Component component, String context) {
     if (component instanceof javax.swing.JComponent field && field.getToolTipText() == null) {
       if (field instanceof javax.swing.AbstractButton button)
         field.setToolTipText(button.getText() == null || button.getText().isBlank() ? context : button.getText());
-      else if (field instanceof javax.swing.text.JTextComponent || field instanceof JComboBox<?> || field instanceof JSpinner)
+      else if ((field instanceof javax.swing.text.JTextComponent text && text.isEditable()) || field instanceof JComboBox<?> || field instanceof JSpinner)
         field.setToolTipText(context);
     }
     if (component instanceof java.awt.Container container)

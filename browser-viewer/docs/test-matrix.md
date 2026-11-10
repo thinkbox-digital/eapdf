@@ -114,3 +114,24 @@ unique text on another page, and checks the displayed page and highlight.
 hash-verified source rebuild. At repository root, run
 `python3 -B -m unittest regression.test_worker regression.test_web` for the
 real-JVM aggregate scratch-budget and cleanup regression.
+
+## Section 8 acceptance
+
+Run `npm run test:section8` from browser-viewer. The suite builds both viewers and records group results in test-results/section8-acceptance.json. Set SECTION8_EXTERNAL_SAMPLE to a local external-sample threading collection to include its unnamed-root regression. Synthetic mutations isolate malformed-input cases; published real-message PDFs provide the baseline.
+
+| Requirement | Coverage |
+|---|---|
+| PDF/A page and annotation rendering | Five PDF.js compatibility formats, three rounds; representative rendering only, not complete PDF/A qualification |
+| EA-PDF identification and unsupported versions | Visible claim and unsupported embedded-version warning |
+| Read-only operation | Original hash unchanged after attachment interaction |
+| Initial viewing mode | UseAttachments and UseOutlines on a medium viewport |
+| Outlines | Visible bookmark panel and bookmark activation |
+| Embedded-file extraction | Name-tree, annotation-only and object-AF asset fixtures; independent byte comparisons |
+| File descriptions | Stored Unicode description shown in Files pane |
+| Attachment annotations and Contents | Unicode comment and native PPTX download through page icon |
+| Collections and filenames | Collection fixtures, invalid path rejection, case collisions, unnamed root allowed, unnamed child rejected |
+| XMP display and extraction | Object metadata, original-byte ZIP comparison, 300,000-character paged preview |
+| Boundary/error handling | Cancellation, unreadable streams, unknown/foreign locators, invalid counts, ambiguous metadata and empty selection |
+| URL policy | Code path remains explicit-annotation only; exhaustive URI/action coverage outstanding |
+
+Resource budgets remain finite. PDF OpenAction page/zoom handling is not implemented; Collection /D initial-member selection is separate and implemented. An invalid Collection /D currently falls back to a file rather than warning. These remain known navigation gaps.

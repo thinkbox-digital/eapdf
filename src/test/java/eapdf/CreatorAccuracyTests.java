@@ -284,7 +284,7 @@ class CreatorAccuracyTests {
       EmailRecord record = parse("Fri, 16 Oct 2026 12:00:00 +0000", "text/plain", "Original body", "warning.eml");
       try (PDDocument document = Loader.loadPDF(create(record, "s"))) {
         String text = new PDFTextStripper().getText(document);
-        Assertions.assertTrue(text.contains("WARNING — Validation requires review"));
+        Assertions.assertTrue(text.contains("WARNING — Validation requires review"), text);
         Assertions.assertTrue(text.contains("Review <initial> and final reports."));
         Assertions.assertTrue(text.contains("Original body"));
         Assertions.assertFalse(text.contains("INCOMPLETE SOURCE"));
@@ -299,11 +299,11 @@ class CreatorAccuracyTests {
     String previous = EapdfConfig.get().validationWarning;
     try {
       EapdfConfig.get().validationWarning = "One or more validation checks failed.";
-      var summary = new PdfMailWriter.CollectionRunSummary("1", "", 1, 1);
-      try (var document = PdfAttachmentSupport.buildCollectionFrontMatter("c", summary, TestSupport.fontPath(), false)) {
+      var record = AttachmentProfilePolicyTests.record("Collection preview");
+      try (var document = PdfCollectionSupport.buildCollectionStartPage(List.of(record), "c", TestSupport.fontPath(), false)) {
         String text = new PDFTextStripper().getText(document);
-        Assertions.assertTrue(text.contains("WARNING — Validation requires review"));
-        Assertions.assertTrue(text.contains("Conformance was not established"));
+        Assertions.assertTrue(text.contains("WARNING — Validation requires review"), text);
+        Assertions.assertTrue(text.contains("One or more validation checks failed."));
         Assertions.assertFalse(text.contains("could not be completed"));
       }
     } finally { EapdfConfig.get().validationWarning = previous; }

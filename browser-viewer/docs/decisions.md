@@ -131,7 +131,7 @@
 - Fix immediate worker cancellation, distinguish timeout errors, and prevent a
   worker starting after cancelled asynchronous input hashing. Delay the initial
   file picker until the application handlers are ready.
-- The supplied BFO file stores single-email fields directly on its document RDF
+- The supplied external-sample file stores single-email fields directly on its document RDF
   subject. Read those explicit fields only for s/si with no email container and
   an explicit identity. Do not manufacture body-page ownership; this file has no
   BodyRendering DPart. No existing frozen semantic expectation changes.

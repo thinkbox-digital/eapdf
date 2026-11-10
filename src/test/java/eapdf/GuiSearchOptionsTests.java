@@ -29,4 +29,12 @@ class GuiSearchOptionsTests {
   for(var control:new JComponent[]{field,button,spinner,choice})assertFalse(control.getToolTipText().isBlank());
   field.setToolTipText("Specific help");EapdfGui.addMissingTooltips(panel,"Other");assertEquals("Specific help",field.getToolTipText());
  }
+ @org.junit.jupiter.api.Test void labelsUseEntryHelpInsidePathPanels() {
+  var panel=new javax.swing.JPanel(new java.awt.BorderLayout());
+  var entry=new javax.swing.JTextField();entry.setToolTipText("Specific destination help");
+  var browse=new javax.swing.JButton("Browse");browse.setToolTipText("Browse help");
+  panel.add(entry,java.awt.BorderLayout.CENTER);panel.add(browse,java.awt.BorderLayout.EAST);
+  assertEquals(entry.getToolTipText(),EapdfGui.tooltipFor(panel,"Destination"));
+  assertEquals("Fallback",EapdfGui.tooltipFor(new javax.swing.JPanel(),"Fallback"));
+ }
 }

@@ -347,7 +347,9 @@ class RefinedRuleTests {
     }
   }
 
-  @Test void identicalSourceOccurrencesDoNotEachInheritTheCombinedChildCount() throws Exception {
+  @ParameterizedTest
+  @ValueSource(strings = {"distinct", "combined", "missing-name", "unknown-name", "ambiguous-binding", "same-name", "wrong-count", "duplicate-guid", "failed-child"})
+  void identicalSourceOccurrencesRequireVerifiedDistinctBindings(String scenario) throws Exception {
     try (var document = Loader.loadPDF(SAMPLE.toFile())) {
       var xml = metadata(document); Element asset = firstRecord(xml, "assets");
       Element number = xml.createElementNS(MAIL, "pdfmailmeta:NumberMessages"); number.setTextContent("1"); asset.appendChild(number);
@@ -360,7 +362,9 @@ class RefinedRuleTests {
       String digest = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("MD5").digest(bytes));
       var second = new COSDictionary(source); second.setString("F", "duplicate.eml"); second.setString("UF", "duplicate.eml");
       var firstFile = new Embedded("", source, stream(source), bytes, field(asset, "Filename"), "message/rfc822", digest, "Source");
-      var secondFile = new Embedded("", second, stream(source), bytes, "duplicate.eml", "message/rfc822", digest, "Source");
+      var secondFile = new Embedded("", second, stream(source), bytes,
+          "same-name".equals(scenario) ? field(asset, "Filename") : "duplicate.eml", "message/rfc822", digest, "Source");
+      if ("wrong-count".equals(scenario)) fieldElement(duplicate, "NumberMessages").setTextContent("2");
       var report = new JavaValidation.Report("duplicate-source-occurrences");
       var checks = new MetadataChecks(report, List.of(firstFile, secondFile), List.of(source, second), List.of(), List.of(asset, duplicate), List.of(), "c");
       checks.assets();
@@ -368,13 +372,28 @@ class RefinedRuleTests {
       checks.childCounts(child);
       JsonObject another = child.deepCopy();
       for (var row : another.getAsJsonArray("items")) if ("MESSAGE_SOURCE_COVERAGE".equals(JavaValidation.text(row.getAsJsonObject(), "code"))
-          && row.getAsJsonObject().get("details").isJsonObject())
-        row.getAsJsonObject().getAsJsonObject("details").addProperty("Mail_GUID", "uuid:00000000-0000-4000-8000-000000000002");
+          && row.getAsJsonObject().get("details").isJsonObject()) {
+        var details = row.getAsJsonObject().getAsJsonObject("details");
+        if (!"duplicate-guid".equals(scenario)) details.addProperty("Mail_GUID", "uuid:00000000-0000-4000-8000-000000000002");
+        if (!"combined".equals(scenario)) details.addProperty("source", "duplicate.eml");
+        if ("missing-name".equals(scenario)) details.remove("source");
+        if ("unknown-name".equals(scenario)) details.addProperty("source", "unknown.eml");
+        if ("ambiguous-binding".equals(scenario)) details.addProperty("source_occurrence_unique", false);
+      }
+      if ("failed-child".equals(scenario)) another.getAsJsonObject("summary").addProperty("status", "FAIL");
       checks.childCounts(another); checks.finishChildren(true);
       checks.renderedCounts(new ContentOwnership.Result(Set.of(), true));
       var counts = rows(report, "ASSET_NUMBERMESSAGES_MATCH_RENDERED");
-      assertFalse(level(counts, "FAIL"));
-      assertEquals(2, counts.stream().filter(row -> "WARN".equals(row.get("level").getAsString())).count());
+      assertEquals(2, counts.size());
+      if ("distinct".equals(scenario)) {
+        assertTrue(counts.stream().allMatch(row -> "PASS".equals(JavaValidation.text(row, "level"))));
+        assertTrue(counts.stream().allMatch(row -> row.getAsJsonObject("details").get("rendered_messages").getAsInt() == 1));
+      } else if (Set.of("combined", "wrong-count").contains(scenario)) {
+        assertTrue(level(counts, "FAIL"));
+      } else {
+        assertFalse(level(counts, "FAIL"));
+        assertEquals(2, counts.stream().filter(row -> "WARN".equals(row.get("level").getAsString())).count());
+      }
     }
   }
 }

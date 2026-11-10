@@ -41,6 +41,8 @@ final class MetadataChecks {
   private final Map<Element, EaPdfChecks.Embedded> assetBindings = new java.util.IdentityHashMap<>();
   private final Map<String, Set<COSDictionary>> sourceOccurrences = new java.util.HashMap<>();
   private final Map<String, Set<String>> childRenderedSources = new java.util.HashMap<>();
+  private final Map<COSDictionary, Set<String>> childRenderedOccurrences = new java.util.IdentityHashMap<>();
+  private final Set<String> ambiguousChildOccurrences = new HashSet<>();
   private boolean childCountsComplete = true, childrenFinished;
   private final Map<Source, List<NativeAttachment>> attachmentInventories = new java.util.HashMap<>();
   private final Map<Element, List<Element>> attachmentOwnerCache = new java.util.IdentityHashMap<>();
@@ -429,7 +431,9 @@ final class MetadataChecks {
       var evidence = new java.util.LinkedHashMap<String, Object>();
       evidence.put("assertion", "T16-NumberMessages"); evidence.put("check", "rendered_message_count");
       evidence.put("file", field(asset, "Filename")); evidence.put("declared", field(asset, "NumberMessages"));
-      if (file != null && sourceOccurrences.getOrDefault(file.md5().toLowerCase(Locale.ROOT) + ":" + file.size(), Set.of()).size() > 1) {
+      String sourceKey = file == null ? "" : file.md5().toLowerCase(Locale.ROOT) + ":" + file.size();
+      boolean repeated = sourceOccurrences.getOrDefault(sourceKey, Set.of()).size() > 1;
+      if (repeated && (!Set.of("c", "ci").contains(profile) || ambiguousChildOccurrences.contains(sourceKey))) {
         report.unavailable("ASSET_NUMBERMESSAGES_MATCH_RENDERED", "Identical source bytes occur in more than one source file; their individual rendered-message counts cannot be assigned by checksum alone.", evidence);
         continue;
       }
@@ -437,10 +441,13 @@ final class MetadataChecks {
         boolean known = childrenFinished && childCountsComplete && file != null && sourceSpecSet.contains(file.spec());
         if (!known) report.unavailable("ASSET_NUMBERMESSAGES_MATCH_RENDERED", "Validated child evidence does not establish this source asset's rendered-message count.", evidence);
         else {
-          long count = childRenderedSources.getOrDefault(file.md5().toLowerCase(Locale.ROOT) + ":" + file.size(), Set.of()).size();
-          evidence.put("rendered_messages", count); evidence.put("evidence", "validated child source bytes and independently owned content");
+          long count = repeated ? childRenderedOccurrences.getOrDefault(file.spec(), Set.of()).size()
+              : childRenderedSources.getOrDefault(sourceKey, Set.of()).size();
+          evidence.put("rendered_messages", count); evidence.put("evidence", repeated
+              ? "unique parent source file matched to validated child source filename, bytes and message ownership"
+              : "validated child source bytes and independently owned content");
           report.check("ASSET_NUMBERMESSAGES_MATCH_RENDERED", integerEquals(field(asset, "NumberMessages"), count),
-              "NumberMessages was compared with rendered emails in the validated collection children, using source byte identity.", evidence);
+              "NumberMessages was compared with rendered emails in the validated collection children, using verified source identity.", evidence);
         }
         continue;
       }
@@ -472,6 +479,18 @@ final class MetadataChecks {
         String guid = JavaValidation.text(details, "Mail_GUID");
         String key = JavaValidation.text(details, "source_md5").toLowerCase(Locale.ROOT) + ":" + details.get("source_size").getAsLong();
         if (guid.isEmpty() || sources.put(guid, key) != null) childCountsComplete = false;
+        if (sourceOccurrences.getOrDefault(key, Set.of()).size() > 1) {
+          // A checksum identifies content, not an occurrence. Require the child's
+          // independently unique source binding and an exact, unique parent
+          // filename match among files with those same verified bytes.
+          Set<COSDictionary> matches = identitySet();
+          String filename = JavaValidation.text(details, "source");
+          for (var file : files) if (sourceSpecSet.contains(file.spec()) && file.name().equals(filename)
+              && key.equals(file.md5().toLowerCase(Locale.ROOT) + ":" + file.size())) matches.add(file.spec());
+          if (!"true".equals(JavaValidation.text(details, "source_occurrence_unique")) || matches.size() != 1)
+            ambiguousChildOccurrences.add(key);
+          else childRenderedOccurrences.computeIfAbsent(matches.iterator().next(), ignored -> new HashSet<>()).add(guid);
+        }
       }
     }
     if (declared < 1 || sources.size() != declared) { childCountsComplete = false; return; }
@@ -627,7 +646,8 @@ final class MetadataChecks {
         remaining.remove(source);
         sourceBindings.put(email, source);
         if (!emails.isEmpty()) report.check("MESSAGE_SOURCE_COVERAGE", true, "The email has one uniquely matched preserved source.",
-            Map.of("Mail_GUID", guid, "source", source.file().name(), "source_md5", source.file().md5(), "source_size", source.file().size()));
+            Map.of("Mail_GUID", guid, "source", source.file().name(), "source_md5", source.file().md5(), "source_size", source.file().size(),
+                "source_occurrence_unique", sourceOccurrences.getOrDefault(source.file().md5().toLowerCase(Locale.ROOT) + ":" + source.file().size(), Set.of()).size() == 1));
         try { compare(email, source); }
         catch (jakarta.mail.internet.ParseException error) {
           report.unavailable("ATTACHMENT_NATIVE_BYTES_SOURCE_FIDELITY_RECOMMENDED", "Malformed original MIME parameters prevent a complete attachment inventory: " + error.getMessage());

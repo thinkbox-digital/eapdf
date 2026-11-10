@@ -8,7 +8,7 @@ import {checkReadingTools} from './reading-checks.mjs';
 import { spawn,execFileSync } from 'node:child_process';
 import { createServer } from 'node:net';
 import { once } from 'node:events';
-import { mkdir, writeFile, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { mkdir, writeFile, mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { checkTripAttachments } from './trip-attachment-checks.mjs';
@@ -117,10 +117,11 @@ try {
     await execute("document.querySelector('#close').click();");
     await open(resolve(process.env.EAPDF_SIGNED_INDEX_FIXTURES??'tests/fulltext-index',`mbox_sample_${profile}.pdf`));
     await execute("document.querySelector('#open-search').click();document.querySelector('#search-scope').value='collection';document.querySelector('#search').value='Power VaR';document.querySelector('#find').click();");
-    await until(()=>execute("return document.querySelector('#collection-search-summary').textContent.includes('Embedded PDFBox text index') && document.querySelector('#viewport').getAttribute('aria-busy')==='false';"));
+    await until(()=>execute("return /^\\d+ matching pages\\.$/.test(document.querySelector('#collection-search-summary').textContent) && document.querySelector('#viewport').getAttribute('aria-busy')==='false';"));
     assert.ok(await execute("return document.querySelectorAll('#text-layer .current-match').length>0;"),'Indexed first page highlights in Firefox');
+    const total=await execute("return Number(document.querySelector('#search-status').textContent.match(/of (\\d+)/)[1]);");assert.ok(total>=2);
     await execute("document.querySelector('#collection-matches button[data-match-index=\"1\"]').click();");
-    await until(()=>execute("return document.querySelector('#viewport').getAttribute('aria-busy')==='false' && document.querySelector('#search-status').textContent.includes('Match 2 of 3') && document.querySelectorAll('#text-layer .current-match').length>0;"));
+    await until(()=>execute("return document.querySelector('#viewport').getAttribute('aria-busy')==='false' && document.querySelector('#search-status').textContent.includes('Match 2 of "+total+"') && document.querySelectorAll('#text-layer .current-match').length>0;"));
     assert.ok(await execute("return document.querySelectorAll('#text-layer .current-match').length>0;"),'Indexed destination highlights in Firefox');
   }
   await execute("document.querySelector('#close').click();");
@@ -128,7 +129,7 @@ try {
   await execute("document.querySelector('#search-scope').value='document';");
   let uiResults;
   if (process.env.M5_UI === '1') {
-    const ready = () => until(() => execute("return document.querySelector('#viewport').getAttribute('aria-busy') === 'false';"));
+    const ready = () => until(() => execute("return !document.querySelector('#file').disabled && document.querySelector('#viewport').getAttribute('aria-busy') === 'false';"));
     const click = async selector => {
       const found = await call('/element', {using:'css selector', value:selector});
       await call(`/element/${found['element-6066-11e4-a52e-4f735466cecf']}/click`, {});
@@ -141,14 +142,19 @@ try {
         await call('/actions',{actions:[{type:'pointer',id:'portfolio-mouse',parameters:{pointerType:'mouse'},actions:[{type:'pointerMove',duration:0,origin:'viewport',x:point.x,y:point.y},{type:'pointerDown',button:0},{type:'pointerMove',duration:250,origin:'viewport',x:point.x+dx,y:point.y+dy},{type:'pointerUp',button:0}]}]});
       },
       download: async selector => {
-        for (const file of await readdir(downloadDir)) await rm(join(downloadDir, file));
+        for (const file of await readdir(downloadDir)) await rm(join(downloadDir, file),{force:true});
         await click(selector);
-        let files;
+        let previous='',downloaded;
         await until(async () => {
-          files = await readdir(downloadDir);
-          return files.length === 1 && !files[0].endsWith('.part');
+          const files=await readdir(downloadDir);
+          if(files.length!==1||files[0].endsWith('.part')){previous='';return false;}
+          try{
+            const path=join(downloadDir,files[0]),info=await stat(path),signature=files[0]+'|'+info.size;
+            if(signature!==previous){previous=signature;return false;}
+            downloaded=await readFile(path);return downloaded.length===info.size;
+          }catch(error){if(error.code!=='ENOENT')throw error;previous='';return false;}
         });
-        return readFile(join(downloadDir, files[0]));
+        return downloaded;
       },
     };
     const presentation=await checkPortfolioPresentation(adapter);await writeFile('test-results/portfolio-presentation-firefox.json',JSON.stringify(presentation,null,2)+'\n');

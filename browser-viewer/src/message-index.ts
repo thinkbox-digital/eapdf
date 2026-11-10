@@ -2,7 +2,7 @@ import {readEmbeddedIndex,metadataSearchText} from './embedded-index.js';
 import type {BrowserDocument,BrowserSession} from './browser-session.js';
 import {fileLabel} from './navigation.js';
 import type {SearchStep} from './collection-search.js';
-export type IndexedMessage={path:SearchStep[];messageId:string;mailGuid?:string;label:string;document:string;searchText:string;sender?:string;sent?:string};
+export type IndexedMessage={path:SearchStep[];messageId:string;mailGuid?:string;label:string;document:string;searchText:string;sender?:string;sent?:string;internetMessageId?:string;inReplyTo?:string;references?:string};
 export type MessageIndex={messages:IndexedMessage[];incomplete:string[];notices?:string[];source?:'embedded'|'scanned'|'mixed'};
 /** Retain only bounded display metadata; release the isolated PDF session after indexing. */
 export async function indexMessages(session:BrowserSession,root:BrowserDocument,check:()=>void,progress:(count:number)=>void,discovered?:(messages:readonly IndexedMessage[])=>void,forceScan=false):Promise<MessageIndex>{
@@ -35,7 +35,7 @@ export async function indexMessages(session:BrowserSession,root:BrowserDocument,
         const label=data.Subject||doc.name,searchText=metadataSearchText(data);
         characters+=label.length+name.length+searchText.length;
         if(characters>8_000_000){problem('Email metadata search limit reached.');stopped=true;return;}
-        messages.push({path,messageId:m.id,label,document:name,searchText,sender:data.From||data['Raw-From'],sent:data.Sent});
+        messages.push({path,messageId:m.id,label,document:name,searchText,sender:data.From||data['Raw-From'],sent:data.Sent,internetMessageId:m.internetMessageId?.value??undefined,inReplyTo:data['In-Reply-To'],references:data.References});
         if(messages.length%250===0){progress(messages.length);await new Promise(resolve=>setTimeout(resolve,0));check();}
       }
       discovered?.(messages.slice(first));

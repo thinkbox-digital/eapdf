@@ -4,7 +4,7 @@ import {decodeEmbeddedGzip} from './embedded-index.js';
 import {sha256Blob} from './blob-hash.js';
 import {sha256} from './domain/hashes.js';
 import {fileLabel} from './navigation.js';
-import {normalizeSearchText} from './document-search.js';
+import {normalizeSearchText,wholeWordAt} from './document-search.js';
 export const FULLTEXT_LIMITS={compressed:16*1024**2,decoded:128*1024**2,documents:100000,pages:200000,terms:250000,postings:5000000,characters:32000000,row:16*1024**2,retained:256*1024**2};
 type IndexedDoc={route:string[][];md5:string;size:number;pages:number};
 type IndexedPage={doc:number;page:number;text:number;guid:string};
@@ -140,12 +140,13 @@ export async function queryFullTextIndex(index:FullTextIndex,root:BrowserDocumen
   check();requireValue(performance.now()<deadline,'indexed query time limit');const text=index.texts[id]!,at=text.indexOf(needle);if(at<0)continue;
   // Parsing already verifies canonical text. Its offsets need no normalization or
   // glyph remapping here; PDF.js establishes original glyph offsets on selection.
-  let count=1;
+  let count=wholeWordAt(text,at,at+needle.length)?1:0,firstMatch=count?at:-1;
   for(let from=at+needle.length;;){const next=text.indexOf(needle,from);if(next<0)break;
-   requireValue(++count<=1000000,'match count limit');from=next+needle.length;
+   if(wholeWordAt(text,next,next+needle.length)){if(firstMatch<0)firstMatch=next;requireValue(++count<=1000000,'match count limit');}from=next+needle.length;
    if(count%4096===0){check();requireValue(performance.now()<deadline,'indexed query time limit');}
   }
-  hits.set(id,{count,excerpt:text.slice(Math.max(0,at-60),at+needle.length+120),hash:await sha256(encoder.encode(text))});
+  if(!count)continue;
+  hits.set(id,{count,excerpt:text.slice(Math.max(0,firstMatch-60),firstMatch+needle.length+120),hash:await sha256(encoder.encode(text))});
  }
  const matches:CollectionMatch[]=[];let retained=0;const direct=collectionSteps(root);
  for(const [ordinal,page] of index.pages.entries()){if(ordinal%1000===0){check();requireValue(performance.now()<deadline,'indexed query time limit');await new Promise(r=>setTimeout(r,0));}const hit=hits.get(page.text);if(!hit)continue;const doc=index.documents[page.doc]!,route=doc.route;

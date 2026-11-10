@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 KINDS = ('eml', 'msg', 'mbox', 'pst')
 ARCHIVE_PROFILES = ('1m', '1mi', '1c', '1ci')
 ARCHIVE_GROUP_SIZE = 20
+MAX_PST_BYTES = 250_000_000  # 250 MB (decimal), inclusive.
 
 
 def digest(path):
@@ -30,10 +31,14 @@ def inventory(root):
     return sorted((p for p in (root/'in').rglob('*') if p.is_file()), key=lambda p: str(p))
 
 
+def oversized_pst(path):
+    return path.suffix.lower() == ".pst" and path.stat().st_size > MAX_PST_BYTES
+
+
 def tasks_for(paths, mode):
     selected = []
     for kind in KINDS:
-        candidates = [p for p in paths if p.suffix.lower() == '.'+kind]
+        candidates = [p for p in paths if p.suffix.lower() == '.'+kind and not oversized_pst(p)]
         if mode == 'sample':
             candidates = sorted(candidates, key=lambda p: (p.stat().st_size, str(p)))[:2]
         selected.extend(candidates)
@@ -57,9 +62,9 @@ def tasks_for(paths, mode):
                 tasks.extend({'id':f'{kind}_group_{index+1:03d}_{profile}',
                               'type':kind,'profile':profile,'sources':members}
                              for profile in ARCHIVE_PROFILES)
-    # Publish representative grouped EML/MSG archives before long mailbox jobs
-    # occupy all workers. Stable sorting preserves each group's profile order.
-    tasks.sort(key=lambda task: (task['type'] not in ('eml', 'msg'),
+    # Keep each input type together, with grouped archives before its standalone
+    # PDFs. EML/MSG work precedes the longer whole-mailbox jobs.
+    tasks.sort(key=lambda task: (KINDS.index(task['type']),
                                  task['profile'] not in ARCHIVE_PROFILES))
     return selected, tasks
 
@@ -284,7 +289,7 @@ def snapshot_jars(args, evidence):
 
 
 def main():
-    parser=argparse.ArgumentParser(description='Clear project out/ and regenerate a sample or every supported in/ file. Logs and Java validation reports go under output/.',epilog='Examples: eapdf-regenerate sample; eapdf-regenerate everything --workers 4 --jobs 2. Use --dry-run to preview without clearing out/. EML/MSG sources are randomly grouped by type into archives of up to 20 messages, covering every selected source. Each PST/MBOX source produces only 1m, 1mi, 1c and 1ci archives; no individual-message extraction. Single-email 1m/1mi cases are reported not applicable.')
+    parser=argparse.ArgumentParser(description='Clear project out/ and regenerate a sample or every supported in/ file. Logs and Java validation reports go under output/.',epilog='Examples: eapdf-regenerate sample; eapdf-regenerate everything --workers 4 --jobs 2. Use --dry-run to preview without clearing out/. EML/MSG sources are randomly grouped by type into archives of up to 20 messages, covering every selected source. Each PST/MBOX source produces only 1m, 1mi, 1c and 1ci archives; no individual-message extraction. PST files larger than 250 MB (250,000,000 bytes) are skipped. Single-email 1m/1mi cases are reported not applicable.')
     parser.add_argument('mode',choices=('sample','everything'))
     parser.add_argument('--creator',default=os.environ.get('EAPDF_CREATOR'))
     parser.add_argument('--workers',type=int,help='Concurrent Java jobs (default: CPU/memory bounded auto)')
@@ -301,7 +306,10 @@ def main():
     heap=max(256*1024**2,memory//args.workers-1024**3)
     if memory//args.workers<1280*1024**2: parser.error('Too many workers for currently available memory; reduce --workers.')
     paths=inventory(ROOT);selected,tasks=tasks_for(paths,args.mode)
-    if not selected: parser.error('No supported inputs found under in/.')
+    skipped=[{'path':str(p.relative_to(ROOT)),'size_bytes':p.stat().st_size,
+              'reason':'PST exceeds 250 MB (250,000,000 bytes)'} for p in paths if oversized_pst(p)]
+    for item in skipped: print(f"SKIP {item['path']}: {item['reason']} ({item['size_bytes']} bytes)",flush=True)
+    if not selected: parser.error('No eligible supported inputs found under in/.')
     print(f'{args.mode}: {len(selected)} sources, {len(tasks)} profile jobs; {args.workers} processes × {args.jobs} threads; {heap//1024**2} MiB heap per job.',flush=True)
     if args.dry_run:
         for task in tasks: print(task['id']+': '+', '.join(str(p.relative_to(ROOT)) for p in task['sources']))
@@ -326,7 +334,7 @@ def main():
         evidence=Path(tempfile.mkdtemp(prefix='regenerate-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-',dir=ROOT/'output'))
         snapshot_jars(args,evidence)
         hashes={str(p):digest(p) for p in selected}
-        (evidence/'sources.json').write_text(json.dumps({'selected':[{'path':str(p.relative_to(ROOT)),'sha256':hashes[str(p)]} for p in selected],'not_selected':[str(p.relative_to(ROOT)) for p in paths if p not in selected],'unsupported':[str(p.relative_to(ROOT)) for p in paths if p.suffix.lower()[1:] not in KINDS]},indent=2)+'\n')
+        (evidence/'sources.json').write_text(json.dumps({'selected':[{'path':str(p.relative_to(ROOT)),'sha256':hashes[str(p)]} for p in selected],'skipped':skipped,'not_selected':[str(p.relative_to(ROOT)) for p in paths if p not in selected],'unsupported':[str(p.relative_to(ROOT)) for p in paths if p.suffix.lower()[1:] not in KINDS]},indent=2)+'\n')
         (evidence/'plan.json').write_text(json.dumps([{**task,'sources':[str(p.relative_to(ROOT)) for p in task['sources']]} for task in tasks],indent=2)+'\n')
         config_file=evidence/'config.json';config_file.write_text(json.dumps(config,indent=2)+'\n')
         print('Clearing '+str(ROOT/'out')+'; evidence: '+str(evidence),flush=True)

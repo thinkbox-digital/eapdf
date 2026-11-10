@@ -21,6 +21,7 @@ declare module 'pdfjs-dist/types/src/display/api.js' {
     getDocumentAssets(options: {folderThumbnail:string}): Promise<{thumbnail:{width:number;height:number;data:Uint8Array}}>;
     getDocumentAssets(options: {presentationOnly:true}): Promise<{presentation:PortfolioData}>;
     getDocumentAssets(options?: Partial<AssetLimits>): Promise<DocumentAssets>;
+    getAssociatedFileBytes(request: {documentId:string;metadataId:string;maxBytes:number}): Promise<Uint8Array>;
     getAssociatedFileBytes(request: FileBytesRequest): Promise<Uint8Array>;
   }
 }

@@ -93,9 +93,10 @@ export class PortfolioModel {
     }
     return names;
   }
-  initial():PortfolioRow|'container'|'empty'{
+  initial():PortfolioRow|'container'|'empty'|'invalid'{
     if(this.data.initialHex===null)return 'container';
-    return this.rows.find(r=>r.entry?.keyHex===this.data.initialHex)??this.sorted(this.rows.filter(r=>r.kind==='file'))[0]??'empty';
+    const matches=this.rows.filter(r=>r.kind==='file'&&r.entry?.keyHex===this.data.initialHex);
+    return matches.length===1?matches[0]!:'invalid';
   }
   layout():string {
     if(this.data.view!=='C')return ['D','T','H'].includes(this.data.view)?this.data.view:'D';

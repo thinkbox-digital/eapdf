@@ -115,15 +115,23 @@ class RemainingWorkflowTests {
   }
 
   @Test
-  void disabledCollectionFindingAidAndBrandingLeaveRequiredFrontMatterOnly() throws Exception {
+  void collectionStartsWithStatisticsAndCollectionInstructions() throws Exception {
     {
       for (String profile : List.of("c", "ci")) {
         Path output = tempDir.resolve("minimal_1" + profile + ".pdf");
         EmailRecord record = AttachmentProfilePolicyTests.record("Optional features off");
         PdfMailWriter.writeEaPdfCollection(output, List.of(record), TestSupport.fontPath(), TestSupport.iccPath(), false, tempDir, profile);
         try (PDDocument document = Loader.loadPDF(output.toFile())) {
-          String text = new PDFTextStripper().getText(document);
+          String text = new PDFTextStripper().getText(document).replaceAll("\\s+", " ");
           Assertions.assertTrue(text.contains("Email Collection"));
+          Assertions.assertFalse(text.contains("Optional features off"));
+          Assertions.assertEquals(1, document.getNumberOfPages());
+          Assertions.assertTrue(text.contains("EA-PDF 1" + profile));
+          Assertions.assertTrue(text.contains("Messages 1"), text);
+          Assertions.assertTrue(text.contains("Folders 1"), text);
+          Assertions.assertTrue(text.contains("Attachments 1"), text);
+          Assertions.assertTrue(text.contains("select a message in the Messages pane"), text);
+          Assertions.assertEquals("ci".equals(profile), text.contains("Source email files and attachment contents are omitted"));
           Assertions.assertFalse(text.contains("Finding Aid"));
           Assertions.assertFalse(text.contains("Email converted by ThinkBox"));
           var files = AttachmentProfilePolicyTests.files(document);
@@ -138,6 +146,26 @@ class RemainingWorkflowTests {
         }
         Assertions.assertFalse(Files.exists(output.resolveSibling(output.getFileName().toString().replace(".pdf", "_index.xlsx"))));
       }
+    }
+  }
+
+  @Test
+  void collectionSummaryCountsMessagesOnceAcrossFolderAliases() throws Exception {
+    var first = AttachmentProfilePolicyTests.record("First subject must not appear on cover");
+    first.folderMemberships.addAll(List.of("Collection/Inbox", "Collection/Sent"));
+    var second = AttachmentProfilePolicyTests.record("Second subject must not appear on cover");
+    second.folderMemberships.add("Collection/Sent");
+    second.sourceProblems.add("Missing original data");
+    try (var document = PdfCollectionSupport.buildCollectionStartPage(List.of(first, second), "ci", TestSupport.fontPath(), false)) {
+      String text = new PDFTextStripper().getText(document);
+      Assertions.assertTrue(text.contains("Messages 2"), text);
+      Assertions.assertTrue(text.contains("Folders 2"), text);
+      Assertions.assertTrue(text.contains("Attachments 2"), text);
+      Assertions.assertTrue(text.contains("INCOMPLETE SOURCE"), text);
+      Assertions.assertTrue(text.contains("1 message(s) have source-data warnings"), text);
+      Assertions.assertFalse(text.contains(first.subject));
+      Assertions.assertFalse(text.contains(second.subject));
+      Assertions.assertEquals(1, document.getNumberOfPages());
     }
   }
 

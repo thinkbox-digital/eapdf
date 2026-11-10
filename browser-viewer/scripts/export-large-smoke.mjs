@@ -14,7 +14,7 @@ try{
  await page.waitForFunction(()=>!document.querySelector('#file').disabled);
  const openStart=Date.now();await page.locator('#file').setInputFiles(input);await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false',null,{timeout:600000});
  assert.equal(await page.locator('#export-csv').isEnabled(),true);const openMs=Date.now()-openStart;console.log(JSON.stringify({phase:"opened",openMs}));
- const download=Promise.race([page.waitForEvent('download',{timeout:600000}),page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Metadata export failed:'),null,{timeout:600000}).then(async()=>{throw Error(await page.locator('#status').textContent());})]);const started=Date.now();await page.locator('#export-csv').click();
+ const download=Promise.race([page.waitForEvent('download',{timeout:600000}),page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Metadata export failed:'),null,{timeout:600000}).then(async()=>{throw Error(await page.locator('#status').textContent());})]);const started=Date.now();await page.locator('#export-csv').click();await page.locator('#metadata-save').click();
  let dialogMs=null;
  if(!baseline){await page.locator('#export-dialog').waitFor({state:'visible',timeout:2000});dialogMs=Date.now()-started;await mkdir('test-results',{recursive:true});await page.screenshot({path:'test-results/export-large-dialog.png'});}
  const timer=setInterval(()=>{void page.locator('#status').textContent().then(status=>console.log(JSON.stringify({phase:'export',elapsedMs:Date.now()-started,status}))).catch(()=>{});},30000);

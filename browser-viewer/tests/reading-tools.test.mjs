@@ -135,3 +135,11 @@ test('spatial boundary preserves contiguous words, overlaps, marks and unsupport
  assert.equal(pdfSearchText([item('a',60,6),item('b',40,6,{transform:[12,0,0,12,NaN,100]})]),'ab');
  assert.equal(pdfSearchText([{str:'con'},{str:'tract'}]),'contract','text-only callers retain PDF.js fragment semantics');
 });
+
+test('whole-word search rejects partial Unicode words and keeps complete phrases',()=>{
+ assert.equal(textMatches('email emails preemail email_2','email').length,1);
+ assert.equal(textMatches('école écoles','école').length,1);
+ assert.equal(textMatches('𐐀mail mail','mail').length,1);
+ assert.equal(textMatches('annual report annual reports','annual report').length,1);
+ assert.equal(textMatches('(email), EMAIL!','email').length,2);
+});

@@ -61,17 +61,41 @@ class RegenerationTests(unittest.TestCase):
             self.assertEqual(8,len(tasks))
             self.assertTrue(all(t['profile'] in runner.ARCHIVE_PROFILES and len(t['sources'])==1 for t in tasks))
 
-    def test_grouped_archives_are_queued_before_standalones_and_mailboxes(self):
+    def test_grouped_archives_run_with_their_type_before_mailboxes(self):
         paths=[self.source(f'{i}.{kind}') for kind in runner.KINDS for i in range(2)]
         for mode in ('sample','everything'):
             _,tasks=runner.tasks_for(paths,mode)
             grouped=[t for t in tasks if t['type'] in ('eml','msg') and t['profile'] in runner.ARCHIVE_PROFILES]
             self.assertEqual(8,len(grouped))
-            self.assertEqual(grouped,tasks[:len(grouped)])
+            self.assertEqual(sorted((t['type'] for t in tasks),key=runner.KINDS.index),[t['type'] for t in tasks])
+            for kind in ('eml','msg'):
+                same_type=[t for t in tasks if t['type']==kind]
+                self.assertEqual([t for t in grouped if t['type']==kind],same_type[:4])
             self.assertTrue(all(len(t['sources'])==2 for t in grouped))
             containers=[i for i,t in enumerate(tasks) if t['type'] in ('pst','mbox')]
             singles=[i for i,t in enumerate(tasks) if t['profile'] in ('1s','1si')]
             self.assertLess(max(singles),min(containers))
+
+    def test_pst_size_limit_is_inclusive_and_does_not_apply_to_mbox(self):
+        below=self.source('below.pst');exact=self.source('exact.PST');large=self.source('large.PsT');mbox=self.source('large.mbox')
+        for path,size in ((below,runner.MAX_PST_BYTES-1),(exact,runner.MAX_PST_BYTES),(large,runner.MAX_PST_BYTES+1),(mbox,runner.MAX_PST_BYTES+1)):
+            with path.open('r+b') as stream: stream.truncate(size)
+        for mode in ('sample','everything'):
+            selected,tasks=runner.tasks_for([large,below,exact,mbox],mode)
+            self.assertCountEqual([below,exact,mbox],selected)
+            self.assertTrue(all(large not in t['sources'] for t in tasks))
+            self.assertEqual(12,len(tasks))
+
+    def test_dry_run_reports_oversized_pst_without_touching_output(self):
+        self.source('one.eml');large=self.source('large.PST')
+        with large.open('r+b') as stream: stream.truncate(runner.MAX_PST_BYTES+1)
+        (self.root/'VERSION').write_text('2.0.0-beta.1')
+        (self.root/'out').mkdir();existing=self.root/'out/keep.pdf';existing.write_bytes(b'preserve')
+        with patch.object(sys,'argv',['eapdf-regenerate','everything','--dry-run','--workers','1']),patch.object(runner,'available_memory',return_value=8*1024**3),redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(0,runner.main())
+        self.assertIn('SKIP in/large.PST: PST exceeds 250 MB',output.getvalue())
+        self.assertIn('1 sources, 6 profile jobs',output.getvalue())
+        self.assertEqual(b'preserve',existing.read_bytes())
 
     def test_failed_document_is_not_downgraded_by_later_incomplete_document(self):
         source=self.source('mixed.eml');runner.clear_output(self.root)

@@ -8,16 +8,16 @@
 
 Convert email into EA-PDF files using Java, PDFBox, and XMP metadata.
 
-Current beta version: `2.0.0-beta.1`
+Current beta version: `2.0.0-beta.2`
 
 The separate [browser viewer beta](browser-viewer/docs/beta-release.md) opens local
 EA-PDF files and embedded PDFs recursively in Firefox and Chromium. It also
 shows metadata, image and text attachments, with normal downloads for Office files.
-Viewer version `1.0.0-beta.1` includes collection-wide email search, CSV finding
+Viewer version `1.0.0-beta.2` includes collection-wide email search, CSV finding
 aids with folder and attachment details, and paced file downloads. Installation and tested limits
 are documented in that guide.
 
-Latest release: [v2.0.0-beta.1](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.0.0-beta.1). Java 21 or later is required.
+Latest release: [v2.0.0-beta.2](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.0.0-beta.2). Java 21 or later is required.
 
 The current source tree adds optional [embedded metadata and full-text indexes](docs/EMBEDDED_SEARCH_INDEX.md).
 Full-text generation uses built-in PDFBox extraction and shared text normalization.
@@ -47,12 +47,16 @@ Running either generation mode clears this checkout’s `out/` directory. `--dry
 only prints the plan. The default creator is `Thinkbox.DIGITAL`; no creator argument
 is needed. Concurrent Java processes are bounded automatically by available CPU
 and memory, with two creator threads per process by default. `sample` selects the
-two smallest sources of each type. `everything` covers every supported source in
-appropriate profiles. Each PST/MBOX source produces whole-source `1m`, `1mi`,
+two smallest eligible sources of each type. `everything` covers every eligible
+supported source in appropriate profiles. Both modes skip PSTs larger than
+250 MB (250,000,000 bytes), printing each skip and recording its size and reason
+in the run’s `sources.json`. Each PST/MBOX source produces whole-source `1m`, `1mi`,
 `1c` and `1ci` archives only; neither mode extracts individual emails into standalone
 PDFs. EML/MSG inputs retain standalone `1s`/`1si` outputs and are also randomly
 grouped by type into archives of up to 20 messages, using all four archive profiles.
-Every selected source is covered; groups are balanced to avoid singleton remainders.
+Jobs stay together by type: EML groups and standalone PDFs, then MSG groups and
+standalone PDFs, then MBOX/PST archives. Every selected source is covered; groups
+are balanced to avoid singleton remainders.
 A one-message source cannot produce 1m/1mi and is reported as not applicable.
 The run’s `plan.json` records the exact random group membership; a dry run makes
 an independent preview plan.
@@ -170,12 +174,12 @@ All six profiles currently use PDF 2.0 / PDF/A-4f output in this generator. Sele
 
 | Download | Purpose |
 | --- | --- |
-| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.1/emailtopdfa-2.0.0-beta.1-gui.jar) | Convert local email sources through the desktop app. |
-| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.1/emailtopdfa-2.0.0-beta.1.jar) | Run local email and Gmail workflows from the command line. |
-| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.1/eapdf-validator-2.0.0-beta.1.jar) | Validate a PDF using the bundled Java engines and current rules. |
-| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.1/eapdf-viewer-1.0.0-beta.1-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
-| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.1/eapdf-viewer-1.0.0-beta.1-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
-| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.1/ea-pdf-examples-2.0.0-beta.1.zip) | Regenerated examples with source hashes and recorded validation results. |
+| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/emailtopdfa-2.0.0-beta.2-gui.jar) | Convert local email sources through the desktop app. |
+| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/emailtopdfa-2.0.0-beta.2.jar) | Run local email and Gmail workflows from the command line. |
+| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/eapdf-validator-2.0.0-beta.2.jar) | Validate a PDF using the bundled Java engines and current rules. |
+| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/eapdf-viewer-1.0.0-beta.2-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
+| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/eapdf-viewer-1.0.0-beta.2-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
+| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/ea-pdf-examples-2.0.0-beta.2.zip) | Regenerated examples with source hashes and recorded validation results. |
 
 Each JAR includes its runtime libraries. The release also includes the updated specification-author review document, license notices and `SHA256SUMS.txt`. Run a desktop app with `java -jar downloaded-file.jar`.
 
@@ -200,36 +204,36 @@ mvn package
 
 Artifacts:
 
-- CLI fat jar: `target/emailtopdfa-2.0.0-beta.1.jar`
-- GUI fat jar: `target/emailtopdfa-2.0.0-beta.1-gui.jar`
+- CLI fat jar: `target/emailtopdfa-2.0.0-beta.2.jar`
+- GUI fat jar: `target/emailtopdfa-2.0.0-beta.2-gui.jar`
 
 The current creator build is also available in `dist/`:
 
 ```bash
-java -Xmx2g -jar dist/emailtopdfa-2.0.0-beta.1.jar --jobs 2 --out out file.eml
-java -jar dist/emailtopdfa-2.0.0-beta.1-gui.jar
+java -Xmx2g -jar dist/emailtopdfa-2.0.0-beta.2.jar --jobs 2 --out out file.eml
+java -jar dist/emailtopdfa-2.0.0-beta.2-gui.jar
 ```
 
-The web creator uses the newer of `dist/emailtopdfa-2.0.0-beta.1.jar` and the current-version
+The web creator uses the newer of `dist/emailtopdfa-2.0.0-beta.2.jar` and the current-version
 CLI JAR in `target/`. Restart an already
 running web process to load a changed application or creator JAR selection.
 
 Convert a local email source:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.1.jar eapdf.EmailToPDFA --jobs 2 file.eml
+java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.2.jar eapdf.EmailToPDFA --jobs 2 file.eml
 ```
 
 Write output to a custom directory:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.1.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
+java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.2.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
 ```
 
 Generate an archive profile:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.1.jar eapdf.EmailToPDFA \
+java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.2.jar eapdf.EmailToPDFA \
   --jobs 2 --archive-profile m \
   --archive-output archive_1m.pdf \
   file.mbox
@@ -238,7 +242,7 @@ java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.1.jar eapdf.EmailToPDFA \
 Validate a PDF with the standalone Java engine:
 
 ```bash
-java -Xmx4g -cp dist/eapdf-validator-2.0.0-beta.1.jar eapdf.JavaValidation archive_1m.pdf validation.json
+java -Xmx4g -cp dist/eapdf-validator-2.0.0-beta.2.jar eapdf.JavaValidation archive_1m.pdf validation.json
 ```
 
 The CLI example gives the JVM 4 GiB; choose a heap suited to the file and available
@@ -277,7 +281,7 @@ python validator_web.py
 Launch the desktop GUI:
 
 ```bash
-java -jar target/emailtopdfa-2.0.0-beta.1-gui.jar
+java -jar target/emailtopdfa-2.0.0-beta.2-gui.jar
 ```
 
 Tracked examples are grouped by source format under [`examples/`](examples/):
@@ -317,8 +321,8 @@ python3 -B scripts/regenerate_email_samples.py
 To use the local verified build and retain detailed validation reports:
 
 ```bash
-EAPDF_GENERATOR_CLASSPATH="$PWD/dist/emailtopdfa-2.0.0-beta.1.jar" \
-EAPDF_VALIDATOR_JAR="$PWD/dist/eapdf-validator-2.0.0-beta.1.jar" \
+EAPDF_GENERATOR_CLASSPATH="$PWD/dist/emailtopdfa-2.0.0-beta.2.jar" \
+EAPDF_VALIDATOR_JAR="$PWD/dist/eapdf-validator-2.0.0-beta.2.jar" \
 EAPDF_SAMPLE_REPORT_DIR="/tmp/eapdf-example-reports" \
 python3 -B scripts/regenerate_email_samples.py
 ```

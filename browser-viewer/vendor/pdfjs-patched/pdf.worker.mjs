@@ -39461,6 +39461,7 @@ class DocumentAssets {
   constructor(catalog, root) {
     this.catalog = catalog;
     this.root = root;
+    this.metadataStreams = new Map();
     this.registered = new Map();
   }
   async inspect(options = {}) {
@@ -39649,6 +39650,7 @@ class DocumentAssets {
                 text: null
               };
               metadata.set(mloc.path, item);
+              this.metadataStreams.set(mloc.path, rawMeta);
               let metadataStream;
               try {
                 if (DecodeStream.remainingBudget < limits.maxMetadataBytes + 1) this.catalog.xref.clearObjectStreamCache?.();
@@ -39750,10 +39752,21 @@ class DocumentAssets {
     documentId,
     fileId,
     streamId,
+    metadataId,
     maxBytes
   }) {
     if (documentId !== this.catalog.pdfManager.docId) throw new Error("Foreign document locator");
     if (!Number.isSafeInteger(maxBytes) || maxBytes < 0 || maxBytes > 536870912) throw new Error("Invalid extraction limit");
+    if (metadataId !== undefined) {
+      if (typeof metadataId !== "string" || !this.metadataStreams.has(metadataId)) throw new Error("Metadata stream was not discovered in this document");
+      const raw = this.metadataStreams.get(metadataId);
+      const stream = raw instanceof Ref ? this.catalog.xref.fetch(raw) : raw;
+      try {
+        return boundedBytes(stream, maxBytes);
+      } finally {
+        if (raw instanceof Ref) discardStructuralStream(stream);
+      }
+    }
     const registered = this.registered.get(fileId + "|" + streamId);
     if (!registered) throw new Error("Stream is not a discovered EF target of this file");
     if (!registered.ref) return boundedBytes(registered.stream, maxBytes);
@@ -42592,7 +42605,7 @@ class Catalog {
         destDict,
         resultObj
       });
-      if (Array.isArray(resultObj.dest)) {
+      if (Array.isArray(resultObj.dest) || typeof resultObj.dest === "string") {
         openAction.set("dest", resultObj.dest);
       } else if (resultObj.action) {
         openAction.set("action", resultObj.action);
