@@ -1,3 +1,4 @@
+import {expandFolders} from './ui-checks.mjs';
 import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {resolve} from 'node:path';
@@ -43,7 +44,7 @@ export async function checkReadingTools(browser){
  assert.equal(await browser.evaluate(()=>document.querySelector('#text-layer').dataset.structure==='unavailable'),false);checks.push('upstream structure layer loads without errors');
  assert.equal(await browser.evaluate(()=>document.querySelector('#restart').hidden),true);checks.push('recovery control hidden during normal reading');
  await browser.open(resolve('tests/metadata-index/mbox_sample_1ci.pdf'));
- await browser.click('#tree button[data-embedded-file-id]');await browser.ready();
+ await expandFolders(browser);await browser.click('#tree button[data-embedded-file-id]');await browser.ready();
  const childId=await browser.evaluate(()=>document.querySelector('#tree button[aria-current]').dataset.documentId);
  assert.equal(await browser.evaluate(()=>document.activeElement===document.querySelector('#tree button[aria-current]')),true,'replacement child row receives focus');
  await browser.evaluate(()=>document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true})));await browser.ready();

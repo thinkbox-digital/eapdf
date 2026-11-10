@@ -17,7 +17,7 @@ for name in sorted(set(filter(None,paths))):
         continue
     if name in ['THIRD_PARTY_NOTICES.md','docs/THIRD_PARTY_LICENSES.md']:
         continue
-    if (p.suffix.lower() in ['.md','.txt'] and ('/' not in name or name.startswith(('docs/', 'browser-viewer/docs/')) or name.endswith('/README.md'))) or (name.startswith('browser-viewer/docs/') and p.suffix=='.json'):
+    if (p.suffix.lower() in ['.md','.txt'] and ('/' not in name or name.startswith(('docs/', 'browser-viewer/docs/')) or name.endswith('/README.md'))) or (name.startswith('browser-viewer/docs/') and p.suffix=='.json') or (name.startswith('docs/') and p.suffix.lower()=='.html'):
         for number,line in enumerate(p.read_text(errors='replace').splitlines(),1):
             if pattern.search(line):failures.append(f'{name}:{number}: private contributor reference; anonymize it')
     elif p.suffix.lower()=='.docx' and '/' not in name:
