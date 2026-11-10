@@ -11,3 +11,8 @@ test('unnamed collection root is allowed while unnamed child folders are rejecte
  const d=doc(['<0>message.pdf']);d.collection.value.folders=[{parentId:null,name:{value:''}}];assert.doesNotThrow(()=>checkCollectionNames(d));
  d.collection.value.folders.push({parentId:'root',name:{value:''}});assert.throws(()=>checkCollectionNames(d),/folder name/);
 });
+
+test('Unicode byte-order marks do not turn valid folder prefixes into filename characters',()=>{
+ assert.doesNotThrow(()=>checkCollectionNames(doc(['\uFEFF<0>Archive.zip'])));
+ for(const names of [['\uFEFF<0>bad/name.pdf'],['\uFEFF<0>x.pdf','<0>x.pdf']])assert.throws(()=>checkCollectionNames(doc(names)),/Invalid/);
+});
