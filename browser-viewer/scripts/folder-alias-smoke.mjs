@@ -20,7 +20,7 @@ try{
      const observed=value=>({state:'present',value});
      const folders=[{id:'aliases',parentId:null,name:observed('Collection')},{id:'left',parentId:'aliases',name:observed('Label A')},{id:'right',parentId:'aliases',name:observed('Label B')}];
      const files=Array.from({length:300},(_,i)=>({...source,id:'alias-file-'+i,filename:observed(`Message ${i}.pdf`),unicodeFilename:observed(`Message ${i}.pdf`)}));
-     doc.inspection={...doc.inspection,files,collection:observed({...doc.inspection.collection.value,folders,entries:files.flatMap(f=>['left','right'].map(id=>({fileId:f.id,folderIds:observed([id]),nameTreeKey:observed(`<${id}>${f.filename.value}`)})))})};
+     doc.inspection={...doc.inspection,files,collection:observed({...doc.inspection.collection.value,folders,entries:files.flatMap(f=>['left','right'].map(id=>({fileId:f.id,folderIds:observed([id]),nameTreeKey:observed(`<${id==='left'?1:2}>${f.filename.value}`)})))})};
      this.rememberMessageIndex(doc,{messages:[],incomplete:[],source:'embedded'});
     }
    }
@@ -33,7 +33,7 @@ try{
  const positions=async title=>page.locator('#tree button').evaluateAll((nodes,title)=>nodes.filter(n=>n.title===title).map(n=>({folder:n.closest('details')?.querySelector('summary')?.dataset.folderId,current:n.getAttribute('aria-current')})),title);
  const clickIn=async(title,folder)=>{
   await page.locator(`#tree summary[data-folder-id="${folder}"]`).locator('..').locator('button').evaluateAll((nodes,title)=>nodes.find(n=>n.title===title).click(),title);await ready();
-  const rows=await positions(title);assert.equal(rows.filter(r=>r.current==='true').length,1);assert.equal(rows.find(r=>r.current==='true').folder,folder);
+  const rows=await positions(title);assert.equal(rows.filter(r=>r.current==='true').length,1,JSON.stringify({folder,rows,status:await page.locator('#status').textContent()}));assert.equal(rows.find(r=>r.current==='true').folder,folder);
   assert.equal(await page.locator('#page-surface').isVisible(),true);
  };
  const path=resolve('../out/gmail_ALL_MAIL_1c.pdf');

@@ -55,7 +55,7 @@ try{
   if(shape==='pst')await page.waitForFunction(()=>document.querySelector('#subject-index-cancel').hidden,{timeout:90000});
   assert.equal(await page.locator('#message-count').textContent(),String(count));assert.equal(await page.locator('#search-panel').isVisible(),false);
   await page.keyboard.press('Tab');await page.locator('#open-search').focus();assert.deepEqual(await page.locator('#open-search').evaluate(e=>{const s=getComputedStyle(e);return [s.outlineWidth,s.outlineOffset,s.outlineColor];}),['2px','2px','rgb(31, 78, 140)']);
-  if(shape==='single'){const notice=page.locator('.empty-file-notice');assert.equal(await notice.count(),0,'A zero-byte attachment in 1s must not claim source omission');assert.equal(await page.locator('.file-card').filter({hasText:'0 B'}).locator('.file-actions button').count(),0);}
+  if(shape==='single'){const notice=page.locator('.empty-file-notice');assert.equal(await notice.count(),0,'A zero-byte attachment in 1s must not claim source omission');assert.equal(await page.locator('.file-card').filter({hasText:'0 B'}).locator('.file-actions button').count(),1,'Empty attachments retain their download control');}
   for(const width of [1440,1100]){
    await page.setViewportSize({width,height:900});await page.waitForTimeout(350);await ready();await audit();
    const filename=`${shape}-${width}.png`;await page.screenshot({path:join(screens,filename)});report.screens.push(filename);

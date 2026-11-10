@@ -117,10 +117,11 @@ try {
     await execute("document.querySelector('#close').click();");
     await open(resolve(process.env.EAPDF_SIGNED_INDEX_FIXTURES??'tests/fulltext-index',`mbox_sample_${profile}.pdf`));
     await execute("document.querySelector('#open-search').click();document.querySelector('#search-scope').value='collection';document.querySelector('#search').value='Power VaR';document.querySelector('#find').click();");
-    await until(()=>execute("return document.querySelector('#collection-search-summary').textContent.includes('Embedded PDFBox text index') && document.querySelector('#viewport').getAttribute('aria-busy')==='false';"));
+    await until(()=>execute("return /^\\d+ matching pages\\.$/.test(document.querySelector('#collection-search-summary').textContent) && document.querySelector('#viewport').getAttribute('aria-busy')==='false';"));
     assert.ok(await execute("return document.querySelectorAll('#text-layer .current-match').length>0;"),'Indexed first page highlights in Firefox');
+    const total=await execute("return Number(document.querySelector('#search-status').textContent.match(/of (\\d+)/)[1]);");assert.ok(total>=2);
     await execute("document.querySelector('#collection-matches button[data-match-index=\"1\"]').click();");
-    await until(()=>execute("return document.querySelector('#viewport').getAttribute('aria-busy')==='false' && document.querySelector('#search-status').textContent.includes('Match 2 of 3') && document.querySelectorAll('#text-layer .current-match').length>0;"));
+    await until(()=>execute("return document.querySelector('#viewport').getAttribute('aria-busy')==='false' && document.querySelector('#search-status').textContent.includes('Match 2 of "+total+"') && document.querySelectorAll('#text-layer .current-match').length>0;"));
     assert.ok(await execute("return document.querySelectorAll('#text-layer .current-match').length>0;"),'Indexed destination highlights in Firefox');
   }
   await execute("document.querySelector('#close').click();");

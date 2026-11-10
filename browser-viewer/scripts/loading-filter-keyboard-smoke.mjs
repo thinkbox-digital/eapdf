@@ -29,7 +29,7 @@ try{
  await page.keyboard.press('ArrowUp');await ready();assert.equal(await first.getAttribute('aria-current'),'true');
  // Opening an embedded message replaces its tree row; focus must follow the replacement.
  await page.locator('#file').setInputFiles(resolve('tests/metadata-index/mbox_sample_1ci.pdf'));await ready();
- await page.locator('#tree button[data-embedded-file-id]').first().click();await ready();
+ await page.locator('#tree details').evaluateAll(nodes=>nodes.forEach(n=>n.open=true));await page.locator('#tree button[data-embedded-file-id]').first().click();await ready();
  const selected=page.locator('#tree button[aria-current]');const firstChild=await selected.getAttribute('data-document-id');
  assert.equal(await selected.evaluate(e=>e===document.activeElement),true,'opened collection child must receive focus');
  await page.keyboard.press('ArrowDown');await ready();assert.notEqual(await selected.getAttribute('data-document-id'),firstChild);

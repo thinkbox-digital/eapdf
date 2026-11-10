@@ -150,7 +150,6 @@ export async function queryFullTextIndex(index:FullTextIndex,root:BrowserDocumen
  }
  const matches:CollectionMatch[]=[];let retained=0;const direct=collectionSteps(root);
  for(const [ordinal,page] of index.pages.entries()){if(ordinal%1000===0){check();requireValue(performance.now()<deadline,'indexed query time limit');await new Promise(r=>setTimeout(r,0));}const hit=hits.get(page.text);if(!hit)continue;const doc=index.documents[page.doc]!,route=doc.route;
-  if(!route.length&&root.inspection.collection.value&&['c','ci'].includes(root.inspection.identification?.declaredProfile.value??''))continue;
   const target=route.length?direct.get(JSON.stringify(route[0])):undefined;const path=target?[target.step]:[];
   const document=root.name+route.map((keys,n)=>' / '+(n===0?target!.name:keys[0]!.replace(/^<\d+>/,''))).join('');
   retained+=document.length+hit.excerpt.length+JSON.stringify(route).length;requireValue(retained<=10000000,'search result memory limit');

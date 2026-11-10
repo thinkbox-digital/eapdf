@@ -79,7 +79,7 @@ test('nested routes, duplicate child names and multiple folder aliases keep dist
  f.rows.splice(1,0,['D',[[alias],'a'.repeat(32),100,1]],['D',[[['<3>same.pdf']],'b'.repeat(32),100,1]],['D',[[alias,['nested.pdf']],'c'.repeat(32),100,1]]);
  const position=f.rows.findIndex(r=>r[0]==='T');f.rows.splice(position,0,['P',[1,1,0,'duplicate-guid']],['P',[2,1,0,'duplicate-guid']],['P',[3,1,0,'nested-guid']]);f.header.documents=4;f.header.pages=4;
  const index=await parseFullTextIndex(f.encode(),f.root,()=>{}),matches=await queryFullTextIndex(index,f.root,'needle',()=>{});
- assert.equal(matches.length,3);assert.equal(matches[0].document,matches[1].document);assert.notDeepEqual(matches[0].path,matches[1].path);assert.deepEqual(matches[2].indexed.route,[alias,['nested.pdf']]);
+ assert.equal(matches.length,4);assert.deepEqual(matches[0].path,[],'Visible collection cover remains searchable');assert.equal(matches[1].document,matches[2].document);assert.notDeepEqual(matches[1].path,matches[2].path);assert.deepEqual(matches[3].indexed.route,[alias,['nested.pdf']]);
  f.rows[1][1][0]=[['<1>same.pdf']];await assert.rejects(parseFullTextIndex(f.encode(),f.root,()=>{}));
 });
 

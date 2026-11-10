@@ -364,3 +364,7 @@ footer #status{flex:0 1 auto}footer .privacy-note{margin-left:auto}
 
 #thread-preview li.standalone-message { padding-left:12px; }
 .standalone-message > .thread-marker { display:none; }
+
+/* Keep new disclosures and document bookmarks usable with pointer and keyboard. */
+#outline button { min-height:44px; }
+#navigation-panel #outline-panel > summary, #message-details-disclosure > summary, #thread-details-disclosure > summary, .thread-diagnostics > summary { min-height:44px; display:flex; align-items:center; cursor:pointer; }

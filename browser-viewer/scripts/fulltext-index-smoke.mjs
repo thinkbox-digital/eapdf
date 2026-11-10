@@ -59,7 +59,7 @@ try{
      return {source:result.source,incomplete:result.incomplete,notices:result.notices,count:result.matches.reduce((n,m)=>n+m.count,0)};
     }finally{session.close();}
    });
-   assert.equal(legacy.source,'scanned');assert.deepEqual(legacy.incomplete,[]);assert.equal(legacy.count,/_1ci?\.pdf$/.test(name)?2:3);
+   assert.equal(legacy.source,'scanned');assert.deepEqual(legacy.incomplete,[]);assert.equal(legacy.count,3);
    assert.ok(legacy.notices.some(n=>n.includes('unsupported full-text format/engine')));
   }
  }
@@ -87,24 +87,26 @@ try{
  await page.waitForFunction(()=>/^\d+ matching pages\.$/.test(document.querySelector('#collection-search-summary').textContent));
  await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
  assert.ok(await page.locator('#text-layer .current-match').count()>0,'verified first page must highlight');
+ const totalMatches=Number((await page.locator('#search-status').innerText()).match(/of (\d+)/)[1]);assert.ok(totalMatches>=2);
  await page.locator('#find').click();
  await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false'&&document.querySelector('#breadcrumbs').textContent.includes('Power VaR'));
  assert.ok(await page.locator('#text-layer .current-match').count()>0,'verified child page must highlight');
- assert.match(await page.locator('#search-status').innerText(),/Match 2 of 2/);
+ assert.equal(await page.locator('#search-status').innerText(),`Match 2 of ${totalMatches} in collection.`);
  await page.locator('#close').click();
  // Simulate extraction disagreement on selection, after the file/index was verified.
  await page.evaluate(async()=>{
-  const {BrowserSession}=await import('./browser-session.js'),original=BrowserSession.prototype.child;let inject=true;
-  BrowserSession.prototype.child=async function(...args){const doc=await original.apply(this,args);if(inject){inject=false;const getPage=doc.pdf.getPage.bind(doc.pdf);let change=true;
-   doc.pdf.getPage=async(...params)=>{const page=await getPage(...params),getText=page.getTextContent.bind(page);page.getTextContent=async(...options)=>{const content=await getText(...options);if(change){change=false;return {...content,items:[{str:'simulated changed page'}]};}return content;};return page;};
+  const {BrowserSession}=await import('./browser-session.js'),original=BrowserSession.prototype.child;let inject=true;window.disagreementInjected=false;
+  BrowserSession.prototype.child=async function(...args){const doc=await original.apply(this,args);if(inject&&!this.options.reuseWorker){inject=false;window.disagreementSession=this;window.disagreementRoot=args[0];const getPage=doc.pdf.getPage.bind(doc.pdf);let change=true;
+   doc.pdf.getPage=async(...params)=>{const page=await getPage(...params),getText=page.getTextContent.bind(page);page.getTextContent=async(...options)=>{const content=await getText(...options);if(change){change=false;window.disagreementInjected=true;return {...content,items:[{str:'simulated changed page'}]};}return content;};return page;};
   }return doc;};
  });
  await page.locator('#file').setInputFiles(resolve(fixtureDirectory,'mbox_sample_1ci.pdf'));
  await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false'&&document.querySelector('#subject-index-progress').dataset.complete==='true');
  await page.locator('#open-search').click();await page.locator('#search').fill('Power VaR');await page.locator('#find').click();
  await page.waitForFunction(()=>/^\d+ matching pages\.$/.test(document.querySelector('#collection-search-summary').textContent)&&document.querySelector('#viewport').getAttribute('aria-busy')==='false');
- await page.waitForFunction(()=>document.querySelector('#search-status').textContent.includes('Match 1 of 2')&&document.querySelector('#viewport').getAttribute('aria-busy')==='false');
- assert.match(await page.locator('#search-status').innerText(),/Match 1 of 2/);
+ if(!await page.evaluate(()=>window.disagreementInjected))await page.evaluate(()=>{const child=[...document.querySelectorAll('#collection-matches button[data-match-index]')].find(b=>b.closest('.collection-result')?.querySelector('.result-heading')?.textContent!=='Collection overview');if(!child)throw Error('No child match to verify');child.click();});
+ await page.waitForFunction(async()=>{if(!window.disagreementInjected)return false;const {readFullTextIndex}=await import('./fulltext-index.js');const loaded=await readFullTextIndex(window.disagreementSession,window.disagreementRoot,()=>{});return loaded.diagnostic?.includes('disagrees')&&document.querySelector('#viewport').getAttribute('aria-busy')==='false'&&/^Match 1 of \d+ in collection\.$/.test(document.querySelector('#search-status').textContent);});
+ assert.match(await page.locator('#search-status').innerText(),/^Match 1 of \d+ in collection\.$/);
  assert.match(await page.locator('#collection-search-summary').innerText(),/^\d+ matching pages\.$/);
  await page.locator('#close').click();
  await mkdir('test-results',{recursive:true});await writeFile(process.env.EAPDF_SIGNED_INDEX_FIXTURES?'test-results/fulltext-index-signed.json':'test-results/fulltext-index.json',JSON.stringify({status:'PASS',reports,highlighting:'PASS'},null,2)+'\n');console.log(JSON.stringify({status:'PASS',profiles:reports.length,queries:reports.reduce((n,r)=>n+r.queries.length,0),highlighting:'PASS'}));

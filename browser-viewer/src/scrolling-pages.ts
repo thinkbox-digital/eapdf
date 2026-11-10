@@ -222,7 +222,7 @@ export class ScrollingPages {
           for(const [annotationIndex,annotation] of annotations.entries()){
             if(annotation.subtype==='FileAttachment'&&Array.isArray(annotation.rect)){
               const rect=[...view.convertToViewportPoint(annotation.rect[0],annotation.rect[1]),...view.convertToViewportPoint(annotation.rect[2],annotation.rect[3])],link=document.createElement('a');link.href='#';
-              const contents=annotation.contentsObj?.str||annotation.file?.filename||'Open attachment';link.title=contents;link.setAttribute('aria-label',contents);
+              link.classList.add('file-attachment-link');const contents=annotation.contentsObj?.str||annotation.file?.filename||'Open attachment';link.title=contents;link.setAttribute('aria-label',contents);
               Object.assign(link.style,{left:`${Math.min(rect[0],rect[2])}px`,top:`${Math.min(rect[1],rect[3])}px`,width:`${Math.max(16,Math.abs(rect[2]-rect[0]))}px`,height:`${Math.max(16,Math.abs(rect[3]-rect[1]))}px`});
               link.addEventListener('click',event=>{event.preventDefault();if(epoch===this.epoch)this.onAttachment?.(slot.number,annotation.id??annotationIndex);});slot.links.append(link);continue;
             }

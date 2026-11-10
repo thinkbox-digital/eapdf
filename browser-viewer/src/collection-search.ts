@@ -13,8 +13,7 @@ export async function searchCollection(session:BrowserSession,root:BrowserDocume
     return true;
   };
   async function visit(doc:BrowserDocument,path:SearchStep[],name:string):Promise<void>{
-    const hiddenCover=!!doc.inspection.collection.value&&['c','ci'].includes(doc.inspection.identification?.declaredProfile.value??'');
-    for(let page=1;!hiddenCover&&page<=doc.pdf.numPages;page++){
+    for(let page=1;page<=doc.pdf.numPages;page++){
       if(!withinBudget())return;
       const p=await doc.run(doc.pdf.getPage(page));
       try{const content=await doc.run(p.getTextContent());check();const value=pdfSearchText(content.items);pages++;progress(pages);
