@@ -16,7 +16,7 @@ function fixture(texts=['Contract contract contracts.\n東京 café ﬁancée İ
  const header={format:'eapdf-search-index',version:3,profile:'1mi',engine:'pdfbox-nfkd-space-fold-v3',complete:true,documents:1,pages:texts.length,texts:texts.length,terms:terms.size,postings};
  const encode=(edit={})=>{const body=rows.map(r=>JSON.stringify(r)+'\n').join('');return new TextEncoder().encode(JSON.stringify({...header,sha256:createHash('sha256').update(body).digest('hex'),...edit})+'\n'+body);};return {root,rows,header,encode};
 }
-test('substring, phrases, case, whitespace, Unicode and repeated matches equal legacy semantics',async()=>{
+test('whole words, phrases, case, whitespace and Unicode agree with page search',async()=>{
  const f=fixture(),index=await parseFullTextIndex(f.encode(),f.root,()=>{});
  for(const query of ['contract','CONTRACT','tract','contract contract','Two spaces','Two  spaces','three   spaces','東京','café','cafe','ﬁancée','fiancée','İ','σ','😀','absent',' ','.']){
   const result=await queryFullTextIndex(index,f.root,query,()=>{}),expected=index.texts.flatMap((text,n)=>{const matches=textMatches(text,query);return matches.length?[{page:n+1,count:matches.length}]:[];});
@@ -79,7 +79,7 @@ test('nested routes, duplicate child names and multiple folder aliases keep dist
  f.rows.splice(1,0,['D',[[alias],'a'.repeat(32),100,1]],['D',[[['<3>same.pdf']],'b'.repeat(32),100,1]],['D',[[alias,['nested.pdf']],'c'.repeat(32),100,1]]);
  const position=f.rows.findIndex(r=>r[0]==='T');f.rows.splice(position,0,['P',[1,1,0,'duplicate-guid']],['P',[2,1,0,'duplicate-guid']],['P',[3,1,0,'nested-guid']]);f.header.documents=4;f.header.pages=4;
  const index=await parseFullTextIndex(f.encode(),f.root,()=>{}),matches=await queryFullTextIndex(index,f.root,'needle',()=>{});
- assert.equal(matches.length,4);assert.equal(matches[1].document,matches[2].document);assert.notDeepEqual(matches[1].path,matches[2].path);assert.deepEqual(matches[3].indexed.route,[alias,['nested.pdf']]);
+ assert.equal(matches.length,3);assert.equal(matches[0].document,matches[1].document);assert.notDeepEqual(matches[0].path,matches[1].path);assert.deepEqual(matches[2].indexed.route,[alias,['nested.pdf']]);
  f.rows[1][1][0]=[['<1>same.pdf']];await assert.rejects(parseFullTextIndex(f.encode(),f.root,()=>{}));
 });
 
@@ -89,7 +89,7 @@ test('normalization maps highlights to original glyphs and whitespace',()=>{
  assert.deepEqual(textMatches('Power   VaR','power var'),[{start:0,end:11}]);
  assert.deepEqual(textMatches('ﬁancée','fiancée'),[{start:0,end:6}]);
  assert.deepEqual(textMatches('Café','Café'),[{start:0,end:4}]);
- assert.equal(textMatches('Café','cafe').length,1); // substring ends before the retained accent
+ assert.equal(textMatches('Café','cafe').length,0); // a combining mark remains part of the word
 });
 
 function signedBinding(){

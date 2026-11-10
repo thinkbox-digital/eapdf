@@ -32,38 +32,6 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
 final class PdfAttachmentSupport {
   private PdfAttachmentSupport() {}
 
-  static PDDocument buildCollectionFrontMatter(String profile,
-                                                                   PdfMailWriter.CollectionRunSummary summary,
-                                                                   String fontPath, boolean incomplete) throws Exception {
-    PDDocument document = new PDDocument(org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache());
-    try {
-      PDPage page = new PDPage(new PDRectangle(PDRectangle.LETTER.getHeight(), PDRectangle.LETTER.getWidth()));
-      document.addPage(page);
-      PDType0Font font = PdfMailWriter.loadUiFont(document, fontPath);
-      try (PDPageContentStream content = new PDPageContentStream(document, page)) {
-        PdfMailWriter.drawText(content, font, 20f, 46.8f, 565f, "Email Collection");
-        PdfMailWriter.drawText(content, font, 11f, 46.8f, 535f, "EA-PDF 1" + profile + " collection");
-        PdfMailWriter.drawText(content, font, 11f, 46.8f, 515f, summary.countsText());
-        PdfMailWriter.drawText(content, font, 11f, 46.8f, 495f, "Open the contained email PDFs from the Messages pane.");
-        if (!Common.nz(EapdfConfig.get().validationWarning).isBlank()) {
-          content.setNonStrokingColor(new java.awt.Color(255, 245, 206));
-          content.addRect(41f, 403f, 710f, 48f); content.fill();
-          content.setNonStrokingColor(java.awt.Color.BLACK);
-          PdfMailWriter.drawText(content, font, 12f, 46.8f, 433f, "WARNING — Validation requires review");
-          PdfMailWriter.drawText(content, font, 10f, 46.8f, 415f,
-              "Conformance was not established by the initial check. Consult the initial and final validation reports.");
-        }
-        if (incomplete) PdfMailWriter.drawText(content, font, 11f, 46.8f, 475f,
-            "INCOMPLETE SOURCE — see conversion warnings in the contained email PDFs.");
-      }
-      ProcessingLimits.accountPages(document.getNumberOfPages());
-      return document;
-    } catch (Exception error) {
-      document.close();
-      throw error;
-    }
-  }
-
   static PDComplexFileSpecification embedStandaloneCatalogBytes(PDDocument doc, String filename, byte[] bytes, String description,
                                                                 String mime, String relationship, boolean addFirst) throws Exception {
     if (bytes == null || bytes.length == 0 || Common.nz(filename).isBlank()) return null;

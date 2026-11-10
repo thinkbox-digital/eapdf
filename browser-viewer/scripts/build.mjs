@@ -32,6 +32,7 @@ try {
   const patch = await verifyPatchedPdfjs();
   execFileSync(process.execPath, ['node_modules/typescript/bin/tsc', '--outDir', temporary], { stdio: 'inherit' });
   execFileSync('node_modules/.bin/esbuild',['src/interpret-worker.ts','--bundle','--format=esm','--platform=browser','--outfile='+join(temporary,'interpret-worker.js')],{stdio:'inherit'});
+  execFileSync('node_modules/.bin/esbuild',['src/thread-worker.ts','--bundle','--format=esm','--platform=browser','--outfile='+join(temporary,'thread-worker.js')],{stdio:'inherit'});
   await rm('dist', { recursive: true, force: true });
   for (const browser of ['chromium', 'firefox']) {
     const directory = join('dist', browser);

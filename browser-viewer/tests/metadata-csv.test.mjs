@@ -4,7 +4,8 @@ import {csvCell,metadataCsv} from '../dist/chromium/metadata-csv.js';
 const doc=(name='mail.pdf')=>({name,details:new Map([['email',{From:'Alice <a@example.org>',To:'Bob <b@example.org>',Subject:'Hello, "Bob"\n안녕',Sent:'2026-10-29T12:00:00Z'}]]),inspection:{diagnostics:[],coverage:{metadata:'present',associatedFiles:'present'},metadataRecords:[],messages:[{id:'message',metadataRecordId:'email',internetMessageId:{value:'<id>'},mailGuid:{value:'uuid:1'}}],collection:{state:'missing',value:null},files:[]}});
 const run=(d,child=()=>{throw Error('unexpected child');},check=()=>{})=>metadataCsv(d,child,check,()=>{});
 test('CSV flattens line breaks while preserving quoted Unicode and blank values',async()=>{
- const result=await run(doc());assert.equal(result.rows,1);const text=await result.blob.text();assert.doesNotMatch(text,/Mail GUID|uuid:1/);
+ const result=await run(doc());assert.equal(result.rows,1);const text=await result.blob.text();assert.doesNotMatch(text,/Mail GUID|uuid:1|Message-ID|<id>/);
+ assert.equal(text.split('\r\n')[0],'"PDF","Folder paths","From","To","Cc","Bcc","Subject","Sent","Attachment count","Attachment names"');
  assert.match(text,/"Hello, ""Bob"" 안녕"/);assert.match(text,/"Bob <b@example.org>","",""/);assert.match(text,/"2026-10-29T12:00:00Z"/);
  const bytes=new Uint8Array(await result.blob.arrayBuffer());assert.deepEqual([...bytes.slice(0,3)],[239,187,191]);
 });
@@ -24,13 +25,14 @@ test('unreadable or conflicting displayed metadata blocks export instead of beco
   const d=doc();d.inspection.diagnostics=[{code}];await assert.rejects(run(d),/could not be read unambiguously/);
  }
  const d=doc();delete d.details.get('email').Sent;
- assert.match(await (await run(d)).blob.text(),/,"","<id>","",""\r\n/,'an absent date remains blank without a substitute');
+ assert.match(await (await run(d)).blob.text(),/,"","",""\r\n/,'an absent date remains blank without a substitute');
 });
-test('collection visits members sequentially, keeps repeated message IDs and includes PDF path',async()=>{
+test('collection visits members sequentially, keeps messages with repeated IDs and includes PDF path',async()=>{
  const d=doc('collection.pdf');d.inspection.collection={state:'present',value:{folders:[],entries:[{fileId:'a',folderIds:{state:'present',value:[]}},{fileId:'b',folderIds:{state:'present',value:[]}}]}};
  d.inspection.files=['a','b'].map(id=>({id,unicodeFilename:{value:id+'.pdf'},streams:[{mimeType:{value:'application/pdf'}}]}));
  let active=0;const result=await run(d,async(_,f)=>{assert.equal(active++,0);await new Promise(r=>setTimeout(r,1));active--;return doc(f.id+'.pdf');});
  assert.equal(result.rows,2);assert.match(await result.blob.text(),/collection.pdf \/ b.pdf/);
+ assert.doesNotMatch(await result.blob.text(),/Message-ID|<id>/);
  assert.doesNotMatch(await result.blob.text(),/"collection.pdf","Alice/);
 });
 test('unreadable children, inspection limits, empty metadata and cancellation do not return partial exports',async()=>{
@@ -67,7 +69,7 @@ test('CSV includes declared attachment counts and names, preserves duplicate nam
  d.inspection.metadataRecords=[{id:'email',kind:'email',fields:{NumberAttachments:present('0')}}];
  assert.match(await (await run(d)).blob.text(),/,"0",""\r\n/);
  d.inspection.metadataRecords=[];
- assert.match(await (await run(d)).blob.text(),/,"<id>","",""\r\n/,'missing count is blank, never zero');
+ assert.match(await (await run(d)).blob.text(),/,"2026-10-29T12:00:00Z","",""\r\n/,'missing count is blank, never zero');
 });
 test('CSV rejects invalid attachment counts, conflicting counts and unidentified owners',async()=>{
  for(const count of ['-1','999999999999999999999','text','0']){
@@ -112,8 +114,10 @@ test('CSV replaces embedded tabs in all exported fields without changing the sou
  d.inspection.metadataRecords=[{id:'a',kind:'attachment',owners:present(['message']),fields:{Filename:present('file\tname.txt')}}];
  const csv=await (await run(d)).blob.text();
  assert.doesNotMatch(csv,/\t/);
- for(const value of ['mail archive.pdf','Hello  world','Alice <a@example.org>','<id part>','file name.txt'])assert.ok(csv.includes(value));
+ for(const value of ['mail archive.pdf','Hello  world','Alice <a@example.org>','file name.txt'])assert.ok(csv.includes(value));
  assert.equal(d.details.get('email').Subject,'Hello\t\tworld');
+ assert.doesNotMatch(csv,/<id part>/);
+ assert.equal(d.inspection.messages[0].internetMessageId.value,'<id\tpart>');
  assert.equal(csvCell('\t=1'),'"\' =1"');
 });
 test('every CSV record occupies one physical line even with international line separators',async()=>{
@@ -121,4 +125,17 @@ test('every CSV record occupies one physical line even with international line s
  const value=await(await run(d)).blob.text();assert.equal(value.split('\r\n').length,3);
  assert.match(value,/"a b c d e f g h i"/);assert.equal(d.details.get('email').Subject,original);
  assert.doesNotMatch(value.replaceAll('\r\n',''),/[\r\n\u0085\u2028\u2029\v\f]/u);
+});
+
+test('selected CSV fields preserve chosen order and current-message scope',async()=>{
+ const d=doc();d.inspection.messages.push({id:'other',metadataRecordId:'other'});d.details.set('other',{Subject:'Excluded'});
+ const result=await metadataCsv(d,()=>{throw Error('unexpected child');},()=>{},()=>{},()=>{},{fields:['Subject','From'],messageId:'message'});
+ assert.equal(result.rows,1);const text=await result.blob.text();assert.equal(text.split('\r\n')[0],'"Subject","From"');assert.doesNotMatch(text,/Excluded|Attachment count|Sent/);
+ await assert.rejects(metadataCsv(d,()=>{},()=>{},()=>{},()=>{},{fields:[]}),/at least one/);
+ await assert.rejects(metadataCsv(d,()=>{},()=>{},()=>{},()=>{},{messageId:'missing'}),/No email metadata/);
+});
+
+test('current child export retains its parent collection folder memberships',async()=>{
+ const root=collection('root.pdf',[folder('in','Inbox'),folder('sent','Sent')],[{fileId:'email',folderIds:present(['in'])},{fileId:'email',folderIds:present(['sent'])}],[member('email')]);
+ const child=doc('child.pdf');child.parent=root;child.parentFileId='email';const csv=await(await run(child)).blob.text();assert.match(csv,/root.pdf \/ child.pdf/);assert.match(csv,/\/Inbox; \/Sent/);
 });

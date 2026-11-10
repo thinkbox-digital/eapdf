@@ -57,7 +57,7 @@ for(const [name,edit,pattern] of [
  ['row limit',f=>{f.rows[0][2]='x'.repeat(INDEX_LIMITS.row);f.pack();},/row/],
  ['message limit',f=>f.pack({messages:INDEX_LIMITS.messages+1}),/count/],
 ])test(name+' triggers safe index rejection',async()=>{const f=fixture();edit(f);await assert.rejects(decodeIndex(f.doc,()=>{}),pattern);const result=await readEmbeddedIndex(f.doc,()=>{});assert.match(result.diagnostic,/Reading child PDFs instead/);});
-function leaf(root,n){return {name:'child-'+n+'.pdf',inspection:{coverage:{metadata:'present'},collection:{state:'missing'},diagnostics:[],messages:[{id:'child-record-'+n,metadataRecordId:'guid-'+n}]},details:root.details};}
+function leaf(root,n){return {name:'child-'+n+'.pdf',inspection:{coverage:{metadata:'present'},collection:{state:'missing'},diagnostics:[],messages:[{id:'child-record-'+n,metadataRecordId:'guid-'+n,internetMessageId:root.inspection.messages[n].internetMessageId}]},details:root.details};}
 test('legacy and corrupt indexes fall back with identical metadata and paths',async()=>{
  const {doc,pack}=fixture();const fast=await indexMessages({},doc,()=>{},()=>{});let opened=0,released=0;
  const session={child:async(_d,file)=>{opened++;return leaf(doc,Number(file.id.slice(5)));},release:async()=>{released++;}};

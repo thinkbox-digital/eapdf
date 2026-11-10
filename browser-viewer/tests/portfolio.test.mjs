@@ -17,7 +17,7 @@ test('Portfolio sorting uses numeric/date values, tie breakers and ignores displ
  assert.ok(pdfDate('D:20240101120000+02\'00\'')<pdfDate('D:20240101110000Z'));assert.equal(pdfDate('D:20240231'),null);assert.equal(pdfDate('invalid'),null);
 });
 test('initial target distinguishes missing from empty/unmatched byte strings and uses sorted fallback',()=>{
- const data={...base(),entries:[entry('b'),entry('a')]};const model=new PortfolioModel(data,inspection());assert.equal(model.initial(),'container');data.initialHex='';assert.equal(model.initial().name,'a');data.initialHex=Buffer.from('b').toString('hex');assert.equal(model.initial().name,'b');data.entries=[];assert.equal(new PortfolioModel(data,inspection()).initial(),'empty');
+ const data={...base(),entries:[entry('b'),entry('a')]};const model=new PortfolioModel(data,inspection());assert.equal(model.initial(),'container');data.initialHex='';assert.equal(model.initial(),'invalid');data.initialHex=Buffer.from('b').toString('hex');assert.equal(model.initial().name,'b');data.entries=[];assert.equal(new PortfolioModel(data,inspection()).initial(),'invalid');
 });
 test('membership comes only from the collection name tree, with correct folder root fallback',()=>{
  const data={...base(),folders:[{path:'root',parent:null,number:0,name:'Root',values:[]},{path:'child',parent:'root',number:1,name:'Child',values:[]}],entries:[entry('<1>x'),entry('plain'),entry('<99>bad'),entry('<1>')]};

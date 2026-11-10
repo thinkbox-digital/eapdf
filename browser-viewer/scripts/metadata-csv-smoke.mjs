@@ -31,12 +31,13 @@ try{
  await page.waitForFunction(()=>!document.querySelector('#file').disabled);
  assert.equal(await page.locator('#export-csv').isDisabled(),true);
  for(const profile of ['1s','1mi','1c','1ci']){
-  await page.locator('#file').setInputFiles(resolve(`../examples/eml/eml_sample_${profile}.pdf`));await ready();
-  const download=page.waitForEvent('download');await page.locator('#export-csv').click();const saved=await download;await ready();
+  const stem='eml_Agenda_and_timeline_slides'+(profile==='1s'?'':'_archive')+'_'+profile;
+  await page.locator('#file').setInputFiles(resolve('../examples/eml/'+stem+'.pdf'));await ready();
+  const download=page.waitForEvent('download');await page.locator('#export-csv').click();await page.locator('#metadata-save').click();const saved=await download;await ready();
   const csv=await readFile(await saved.path(),'utf8');assert.match(csv,/"From","To","Cc","Bcc","Subject","Sent"/);
-  assert.match(await page.locator('#status').textContent(),/^Exported metadata for [1-9]\d* messages\.$/);
-  assert.equal(saved.suggestedFilename(),`eml_sample_${profile}-metadata.csv`);
-  assert.equal(await page.locator('#canvas').isVisible(),true);
+  assert.match(await page.locator('#status').textContent(),/^Exported finding aid for [1-9]\d* messages\.$/);
+  assert.equal(saved.suggestedFilename(),stem+'-finding-aid.csv');
+  assert.equal(await page.locator('#export-csv').isEnabled(),true);
   console.log(`PASS real ${profile} CSV download (${Buffer.byteLength(csv)} bytes)`);
  }
  const parsed=await page.evaluate(async()=>{
@@ -48,11 +49,11 @@ try{
  });
  assert.equal(parsed.Subject,'Long subject '.repeat(800));assert.equal(parsed.Bcc,'Hidden <hidden@example.org>');
  await page.locator('#file').setInputFiles(resolve('tests/fixtures/ordinary.pdf'));await ready();
- await page.locator('#export-csv').click();await ready();assert.match(await page.locator('#status').textContent(),/No email metadata found/);
+ assert.equal(await page.locator('#export-csv').isVisible(),false);
  const manifest=JSON.parse(await readFile('tests/inspection/manifest.json','utf8'));
  const corrupt=manifest.fixtures.find(f=>f.id==='ci-corrupt-child');
  await page.locator('#file').setInputFiles(resolve('..',corrupt.sourcePath));await ready();
  let downloaded=false;page.on('download',()=>{downloaded=true;});
- await page.locator('#export-csv').click();await ready();assert.match(await page.locator('#status').textContent(),/^Metadata export failed:/);assert.equal(downloaded,false);
+ await page.locator('#export-csv').click();await page.locator('#metadata-save').click();await ready();assert.match(await page.locator('#status').textContent(),/^Metadata export failed:/);assert.equal(downloaded,false);
  assert.deepEqual(errors,[]);console.log('PASS full-length metadata, Bcc, ordinary PDF, and corrupt collection handling; no page errors.');
 }finally{await context.close();if(server)await new Promise(r=>server.close(r));}

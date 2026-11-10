@@ -1,3 +1,11 @@
+## 2026-11-10 — 2.0.0-beta.2 / viewer 1.0.0-beta.2
+
+**New code:** Integrated local Conversations view with cached XMP threading, a right-pane conversation tree, within-thread keyboard/scroll navigation, missing-parent context and optional subject inference. Confirmed relationships remain header based; subject matches group independent chains beneath a non-message heading.
+
+**Bug fixes:** Files within each embedded-file group sort oldest first by owning-message Sent date, with undated files last. Conversation expansion preserves scroll position. Collection covers, initial viewing destinations, whole-word filtering, metadata CSV/XMP export and message PDF downloads are included, together with converter/validator GUI refinements. Regeneration skips PSTs above 250 MB.
+
+**Code improvement:** Anonymized first-party interoperability documentation and removed internal verification files from tracking. Added a documentation privacy check; original input bytes and legal attribution remain unchanged. Threading reads existing metadata and does not change generated PDF content or claim complete RFC 5256 conformance.
+
 # Changelog
 
 ## 2.0.0-beta.1 — 2026-11-09

@@ -1,6 +1,6 @@
 {
   "name": "eapdf-browser-viewer",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
@@ -10,7 +10,7 @@
   },
   "packageManager": "npm@11.17.0",
   "scripts": {
-    "check": "tsc --noEmit && node scripts/inspection-contract.mjs --check",
+    "check": "python3 ../scripts/check_public_docs.py && tsc --noEmit && node scripts/inspection-contract.mjs --check",
     "test:m1": "node --test tests/inspection-contract.test.mjs && python3 -B -m unittest discover -s reference -p 'test_*.py' -v",
     "fixtures:check": "python3 -B reference/fixtures.py",
     "build": "node scripts/build.mjs",
@@ -18,7 +18,7 @@
     "verify:pdfjs": "node scripts/pdfjs-patch.mjs",
     "test:m2": "npm run build && node --test tests/document-parts.test.mjs && npm run test:parts",
     "test:parts": "node scripts/document-parts-smoke.mjs",
-    "test": "npm run build && node --test tests/*.test.mjs && npm run test:browser && npm run test:parts && npm run test:ui && npm run test:reading && npm run test:downloads && npm run test:retry && npm run test:loading && npm run test:associations && npm run test:inspection-warning && npm run test:supplements && npm run test:export && npm run test:allocation && npm run test:navigation && npm run test:collection-matches && npm run test:design && npm run test:progressive && npm run test:responsive && npm run test:redesign && npm run test:pdfjs-compat && npm run test:metadata-index && npm run test:fulltext-index && npm run test:reader-polish && npm run test:viewer-improvements && npm run test:loading-filter-keyboard && npm run test:attachment-window && npm run test:portfolio && npm run test:attachment-owners && npm run test:file-drop",
+    "test": "npm run build && node --test tests/*.test.mjs && npm run test:browser && npm run test:parts && npm run test:ui && npm run test:reading && npm run test:downloads && npm run test:retry && npm run test:loading && npm run test:associations && npm run test:inspection-warning && npm run test:supplements && npm run test:export && npm run test:allocation && npm run test:navigation && npm run test:collection-matches && npm run test:design && npm run test:progressive && npm run test:responsive && npm run test:redesign && npm run test:pdfjs-compat && npm run test:metadata-index && npm run test:fulltext-index && npm run test:reader-polish && npm run test:viewer-improvements && npm run test:loading-filter-keyboard && npm run test:attachment-window && npm run test:portfolio && npm run test:attachment-owners && npm run test:file-drop && npm run test:folder-aliases && npm run test:message-download && npm run test:metadata-export && npm run test:collection-start && npm run test:portfolio-opening && node scripts/thread-preview-smoke.mjs",
     "test:browser": "node scripts/browser-smoke.mjs",
     "test:firefox": "node scripts/firefox-smoke.mjs && node scripts/file-drop-firefox-smoke.mjs",
     "verify:licenses": "node scripts/licenses.mjs",
@@ -55,7 +55,14 @@
     "test:portfolio": "node scripts/portfolio-smoke.mjs",
     "test:attachment-owners": "node scripts/attachment-owner-smoke.mjs",
     "test:file-drop": "node scripts/file-drop-smoke.mjs",
-    "test:file-drop:firefox": "node scripts/file-drop-firefox-smoke.mjs"
+    "test:file-drop:firefox": "node scripts/file-drop-firefox-smoke.mjs",
+    "test:folder-aliases": "node scripts/folder-alias-smoke.mjs",
+    "test:message-download": "node scripts/message-download-smoke.mjs",
+    "test:metadata-export": "node scripts/metadata-export-smoke.mjs",
+    "test:collection-start": "node scripts/collection-start-smoke.mjs",
+    "test:section8": "npm run check && npm run build && node scripts/section8-acceptance.mjs",
+    "test:portfolio-opening": "node scripts/portfolio-opening-smoke.mjs",
+    "test:thread-preview": "npm run check && npm run build && node --test tests/thread-graph.test.mjs && node scripts/thread-preview-smoke.mjs"
   },
   "dependencies": {
     "@xmldom/xmldom": "0.9.12",

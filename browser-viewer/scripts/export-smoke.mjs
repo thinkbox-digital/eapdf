@@ -19,18 +19,19 @@ try{
  });
  await page.locator('#file').setInputFiles(resolve('../examples/pst/pst_quality-attached-message_1m.pdf'));await ready();
  const before=await page.evaluate(()=>window.exportOpenCount);
- let saved=page.waitForEvent('download');await page.locator('#export-csv').click();const flat=await saved;await ready();
+ let saved=page.waitForEvent('download');await page.locator('#export-csv').click();await page.locator('#metadata-save').click();const flat=await saved;await ready();
  assert.equal(await page.evaluate(()=>window.exportOpenCount),before,'flat export must reuse loaded metadata');assert.match(await readFile(await flat.path(),'utf8'),/"Folder paths"/);
  await page.locator('#file').setInputFiles(resolve('../examples/pst/pst_quality-attached-message_1c.pdf'));await ready();
+ const canvasVisible=await page.locator('#canvas').isVisible();
  await page.evaluate(()=>{window.exportDelay=1800;});let downloads=0;page.on('download',()=>downloads++);
  for(const mode of ['Cancel','Escape']){
-  await page.locator('#export-csv').click();await page.locator('#export-dialog').waitFor({state:'visible'});assert.match(await page.locator('#export-message').textContent(),/Preparing/);
+  await page.locator('#export-csv').click();await page.locator('#metadata-save').click();await page.locator('#export-dialog').waitFor({state:'visible'});assert.match(await page.locator('#export-message').textContent(),/Preparing/);
   if(mode==='Cancel')await page.locator('#export-cancel').click();else await page.keyboard.press('Escape');await ready();
-  assert.equal(await page.locator('#export-dialog').isVisible(),false);assert.match(await page.locator('#status').textContent(),/cancelled/);assert.equal(await page.locator('#canvas').isVisible(),true);
+  assert.equal(await page.locator('#export-dialog').isVisible(),false);assert.match(await page.locator('#status').textContent(),/cancelled/);assert.equal(await page.locator('#canvas').isVisible(),canvasVisible);
  }
  assert.equal(downloads,0);
- await page.evaluate(()=>{window.exportDelay=0;window.exportFailure=true;});await page.locator('#export-csv').click();await ready();assert.match(await page.locator('#status').textContent(),/Export test failure/);assert.equal(await page.locator('#export-dialog').isVisible(),false);
- await page.evaluate(()=>{window.exportFailure=false;window.exportWorkers=0;window.Worker=new Proxy(window.Worker,{construct(target,args){window.exportWorkers++;return Reflect.construct(target,args);}});});saved=page.waitForEvent('download');await page.locator('#export-csv').click();await saved;await ready();
+ await page.evaluate(()=>{window.exportDelay=0;window.exportFailure=true;});await page.locator('#export-csv').click();await page.locator('#metadata-save').click();await ready();assert.match(await page.locator('#status').textContent(),/Export test failure/);assert.equal(await page.locator('#export-dialog').isVisible(),false);
+ await page.evaluate(()=>{window.exportFailure=false;window.exportWorkers=0;window.Worker=new Proxy(window.Worker,{construct(target,args){window.exportWorkers++;return Reflect.construct(target,args);}});});saved=page.waitForEvent('download');await page.locator('#export-csv').click();await page.locator('#metadata-save').click();await saved;await ready();
  assert.match(await page.locator('#status').textContent(),/Exported finding aid for 7 messages/);
  assert.equal(await page.evaluate(()=>window.exportWorkers),2,'the export uses a parent worker and reuses a child worker');
  assert.ok(await page.evaluate(()=>window.parentRefreshes.length>0&&window.parentRefreshes.every(v=>v===false)));

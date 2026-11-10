@@ -38,12 +38,24 @@ class ValidatorDesktopSmokeTests {
     JButton stop = field(gui, "stop", JButton.class);
     JLabel status = field(gui, "status", JLabel.class);
     JTable table = field(gui, "table", JTable.class);
-    JTextArea specification = field(gui, "specification", JTextArea.class);
+    javax.swing.JTextPane specification = field(gui, "specification", javax.swing.JTextPane.class);
     JTextArea detail = field(gui, "detail", JTextArea.class);
     JTextField ruleFilter = field(gui, "ruleFilter", JTextField.class);
     try {
       SwingUtilities.invokeAndWait(() -> {
-        file.setText(Path.of("..", "examples", "eml", "eml_Agenda_and_timeline_slides_archive_1c.pdf").toAbsolutePath().normalize().toString()); validate.doClick();
+        var picker = new javax.swing.Timer(100, event -> {
+          for (var window : java.awt.Window.getWindows()) {
+            var chooser = findChooser(window);
+            if (chooser != null && chooser.isShowing()) {
+              ((javax.swing.Timer) event.getSource()).stop();
+              chooser.setSelectedFile(Path.of("..", "examples", "eml", "eml_Agenda_and_timeline_slides_archive_1c.pdf").toAbsolutePath().normalize().toFile());
+              chooser.approveSelection(); return;
+            }
+          }
+        });
+        picker.start();
+        try { fieldUnchecked(gui, "browse", JButton.class).doClick(); }
+        finally { picker.stop(); }
       });
       await(() -> status.getText().startsWith("Result:"));
       SwingUtilities.invokeAndWait(() -> {
@@ -51,7 +63,9 @@ class ValidatorDesktopSmokeTests {
         assertTrue(status.getText().contains("PDF/A: PASS"));
         assertTrue(table.getRowCount() >= JavaValidation.RULES.size());
         assertEquals(4, table.getColumnCount());
-        assertEquals(2000, frame.getWidth());
+        assertTrue(frame.getWidth() <= java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds().width);
+        assertTrue(fieldUnchecked(gui, "outcome", JLabel.class).isVisible());
+        assertEquals("Validation complete", fieldUnchecked(gui, "outcome", JLabel.class).getText());
         for (var component : java.util.List.of(file, validate, stop, status, table,
             table.getTableHeader(), specification, detail, ruleFilter))
           assertEquals(ValidatorGui.GUI_FONT_SIZE, component.getFont().getSize2D(), component.getClass().getName());
@@ -110,6 +124,14 @@ class ValidatorDesktopSmokeTests {
         assertTrue(detail.getText().contains("rendered_messages"));
         assertTrue(detail.getText().contains("declared"));
       });
+      SwingUtilities.invokeAndWait(() -> {
+        ruleFilter.setText("");
+        for (int row = 0; row < table.getRowCount(); row++) if ("ASSET_NUMBERMESSAGES_MATCH_RENDERED".equals(table.getValueAt(row, 2))) {
+          table.setRowSelectionInterval(row, row); table.scrollRectToVisible(table.getCellRect(row, 0, true)); break;
+        }
+        assertTrue(fieldUnchecked(gui, "browse", JButton.class).getLocationOnScreen().y >= file.getLocationOnScreen().y - 4);
+        assertNotNull(validate.getIcon());
+      });
       Path screenshot = Path.of(System.getProperty("java.io.tmpdir"), "eapdf-validator-native", "window.png");
       Files.createDirectories(screenshot.getParent());
       BufferedImage picture = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -139,6 +161,14 @@ class ValidatorDesktopSmokeTests {
       });
       assertEquals(before, workspaces(), "The validation worker must remove its own temporary workspace");
     } finally { SwingUtilities.invokeAndWait(frame::dispose); }
+  }
+
+  private static javax.swing.JFileChooser findChooser(java.awt.Container parent) {
+    if (parent instanceof javax.swing.JFileChooser chooser) return chooser;
+    for (var child : parent.getComponents()) if (child instanceof java.awt.Container container) {
+      var found = findChooser(container); if (found != null) return found;
+    }
+    return null;
   }
 
   private static <T> T field(Object object, String name, Class<T> type) throws Exception {

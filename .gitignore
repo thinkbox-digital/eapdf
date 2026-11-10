@@ -111,3 +111,8 @@ in/email/test3_old.eml
 /browser-viewer/docs/scrolling-results.md
 /fixed.md
 /unfixed.md
+
+# Local correspondence and interoperability evidence are not public documentation.
+/browser-viewer/docs/private/
+/browser-viewer/docs/m6-verification.json
+/browser-viewer/docs/navigation-verification.json

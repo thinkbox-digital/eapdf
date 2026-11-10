@@ -5,7 +5,8 @@ export async function checkReadingTools(browser){
  const checks=[];
  for(const profile of ['c','ci']){
    await browser.open(resolve(`../examples/pst/pst_quality-attached-message_1${profile}.pdf`));
-   const csv=await browser.download('#export-csv');
+   await browser.click('#export-csv');
+   const csv=await browser.download('#metadata-save');
    const rows=JSON.parse(execFileSync(process.env.M1_PYTHON??'python3',['-B','-c','import csv,json,sys; print(json.dumps(list(csv.DictReader(sys.stdin))))'],{input:csv.toString('utf8').replace(/^\uFEFF/,''),encoding:'utf8'}));
    assert.equal(rows.length,7);assert.equal(rows.some(r=>'Mail GUID' in r),false);
    assert.ok(rows.every(r=>r['Folder paths']==='/Collection/Début du fichier de données Outlook'));

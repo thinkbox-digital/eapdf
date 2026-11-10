@@ -14,7 +14,7 @@ export async function checkTextFragments(evaluate){
    await layer.render(p,1);
    const counts=['contract','annual report','email','Belmonte mailto'].map(query=>({query,scan:textMatches(text,query).length,highlight:layer.highlight(query),marks:[...container.querySelectorAll('mark')].map(m=>m.textContent)}));
    const raw=content.items.filter(i=>'str'in i).map(i=>i.str+(i.hasEOL?'\n':'')).join('');
-   layer.clear();return {counts,oldEmailCount:textMatches(raw,'email').length,cleared:container.childNodes.length===0};
+   layer.clear();return {counts,oldEmailCount:(raw.toLowerCase().match(/email/g)??[]).length,cleared:container.childNodes.length===0};
   }finally{layer.clear();container.remove();p.cleanup();await task.destroy();}
  });
  assert.deepEqual(fragmentCheck.counts.map(({scan,highlight})=>({scan,highlight})),[{scan:2,highlight:2},{scan:1,highlight:1},{scan:1,highlight:1},{scan:1,highlight:1}]);assert.ok(fragmentCheck.cleared);

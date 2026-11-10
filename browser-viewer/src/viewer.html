@@ -6,10 +6,10 @@
 </head>
 <body>
   <header class="app-header">
-    <a class="brand" href="viewer.html" aria-label="EA-PDF viewer home"><span class="brand-square" aria-hidden="true"></span>EA-PDF Viewer</a>
+    <a class="brand" href="viewer.html" aria-label="EA-PDF viewer home"><span class="brand-square" aria-hidden="true"></span>EA-PDF viewer</a>
     <div class="header-actions"><label class="open-file" title="Open PDF">Open PDF…<input id="file" disabled type="file" accept=".pdf,application/pdf" aria-label="Open PDF"></label></div>
     <span id="header-filename" title=""></span>
-    <div class="global-actions"><button id="portfolio-toggle" hidden>Portfolio view</button><button id="portfolio-show" hidden>Show portfolio</button><button id="open-search" class="secondary" aria-controls="search-panel" aria-expanded="false">Search</button><button id="export-csv" class="secondary" disabled title="Export email metadata, folder paths and attachment lists">Export CSV</button><button id="restart" class="quiet" hidden disabled title="Close cached documents and reopen the original PDF at the beginning">Reopen PDF</button><button id="close" class="quiet icon-button" disabled aria-label="Close viewer" title="Close viewer">Close viewer</button></div>
+    <div class="global-actions"><button id="portfolio-toggle" hidden>Portfolio view</button><button id="portfolio-show" hidden>Show portfolio</button><button id="open-search" class="secondary" aria-controls="search-panel" aria-expanded="false">Search</button><button id="export-csv" class="secondary" disabled title="Export email metadata, folder paths and attachment lists">Export metadata…</button><button id="restart" class="quiet" hidden disabled title="Close cached documents and reopen the original PDF at the beginning">Reopen PDF</button><button id="close" class="quiet icon-button" disabled aria-label="Close viewer" title="Close viewer">Close viewer</button></div>
   </header>
   <section id="linked-file" hidden><span id="linked-label"></span><button id="open-linked">Open linked PDF</button></section>
   <section id="search-panel" class="toolbar search-toolbar" role="dialog" aria-label="Search PDFs" hidden><div class="search-panel-heading"><h2>Search</h2><button id="close-search" class="icon-button" type="button" aria-label="Close search" title="Close search">Close search</button></div>
@@ -26,34 +26,56 @@
           <button id="browse-tab" role="tab" aria-selected="true" aria-controls="browse-panel">Browse messages</button>
           <button id="results-tab" role="tab" aria-selected="false" aria-controls="collection-results" tabindex="-1" disabled>Search results</button>
         </div>
-        <label class="message-filter"><span class="sr-only">Filter messages by subject, sender or date</span><input id="message-filter" type="search" placeholder="Filter by subject, sender or date" aria-label="Filter messages by subject, sender or date"></label><span id="filter-status" class="filter-status" role="status"></span>
+        <label class="message-filter"><span class="sr-only">Filter messages by subject, sender or date</span><input id="message-filter" type="search" title="Match whole words in the subject, sender or date" placeholder="Filter by subject, sender or date" aria-label="Filter messages by subject, sender or date"></label><span id="filter-status" class="filter-status" role="status"></span>
       </div>
       <div id="subject-index-progress" hidden><span id="subject-index-status" role="status"></span> <button id="subject-index-cancel" type="button">Stop indexing</button></div>
       <div id="browse-panel"><details id="outline-panel" hidden><summary>PDF bookmarks</summary><ul id="outline"></ul></details><ul id="tree"></ul></div>
       
     </aside>
+    <div id="resize-navigation" class="pane-divider" role="separator" tabindex="0" aria-label="Resize messages pane" aria-controls="navigation-panel" aria-orientation="vertical" title="Drag to resize messages. Use Left and Right arrows when focused."></div>
     <section class="reader-pane" aria-label="Document reader">
       <div class="reader-heading"><button id="show-navigation" class="quiet" hidden aria-expanded="false" aria-controls="navigation-panel">Show messages</button><button id="show-details" class="quiet" hidden aria-expanded="false" aria-controls="details-panel">Show files</button></div>
       <nav id="breadcrumbs" aria-label="Document path"></nav>
       <div class="page-toolbar">
-    <nav aria-label="Page controls"><button id="back" title="Return to parent PDF" aria-label="Return to parent PDF" disabled><span aria-hidden="true">↑</span><span class="parent-label"> Parent</span></button><span class="divider"></span><span class="page-position-controls"><button id="previous" title="Previous page" aria-label="Previous page" disabled>‹</button><label class="page-label">Page <input id="page" type="text" inputmode="numeric" autocomplete="off" aria-label="Page number" title="Type a page number and press Enter" value="1" disabled></label><span id="pages">of 0</span><button id="next" title="Next page" aria-label="Next page" disabled>›</button><button id="retry" hidden disabled>Retry page</button></span><span class="page-zoom-controls"><button id="zoom-out" title="Zoom out" aria-label="Zoom out" disabled>−</button><select id="zoom" aria-label="Zoom" disabled><option value="fit-width">Fit width</option><option value="fit-page" selected>Fit page</option><option value="0.5">50%</option><option value="0.6">60%</option><option value="0.7">70%</option><option value="0.8">80%</option><option value="0.9">90%</option><option value="1">100%</option><option value="1.1">110%</option><option value="1.2">120%</option><option value="1.3">130%</option><option value="1.4">140%</option><option value="1.5">150%</option><option value="1.6">160%</option><option value="1.7">170%</option><option value="1.8">180%</option><option value="1.9">190%</option><option value="2">200%</option></select><button id="zoom-in" title="Zoom in" aria-label="Zoom in" disabled>+</button></span></nav>
+    <nav aria-label="Page controls"><button id="back" title="Return to parent PDF" aria-label="Return to parent PDF" disabled><span aria-hidden="true">↑</span><span class="parent-label"> Parent</span></button><span class="divider"></span><span class="page-position-controls"><button id="previous" title="Previous page" aria-label="Previous page" disabled>‹</button><label class="page-label">Page <input id="page" type="text" inputmode="numeric" autocomplete="off" aria-label="Page number" title="Type a page number and press Enter" value="1" disabled></label><span id="pages">of 0</span><button id="next" title="Next page" aria-label="Next page" disabled>›</button><button id="retry" hidden disabled>Retry page</button></span><span class="page-zoom-controls"><button id="zoom-out" title="Zoom out" aria-label="Zoom out" disabled>−</button><select id="zoom" aria-label="Zoom" disabled><option value="fit-width">Fit width</option><option value="fit-page" selected>Fit page</option><option value="0.5">50%</option><option value="0.6">60%</option><option value="0.7">70%</option><option value="0.8">80%</option><option value="0.9">90%</option><option value="1">100%</option><option value="1.1">110%</option><option value="1.2">120%</option><option value="1.3">130%</option><option value="1.4">140%</option><option value="1.5">150%</option><option value="1.6">160%</option><option value="1.7">170%</option><option value="1.8">180%</option><option value="1.9">190%</option><option value="2">200%</option></select><button id="zoom-in" title="Zoom in" aria-label="Zoom in" disabled>+</button></span><button id="download-message" type="button" title="Select a message to download as a PDF" disabled>Download this message</button></nav>
       </div>
     <main id="viewport" tabindex="0" aria-label="PDF pages; scroll to read more" aria-busy="false">
       <div id="empty-state"><img class="empty-logo" src="assets/thinkbox_logo.jpg" alt="ThinkBox Digital" width="656" height="555"><h2>Your email—complete, authentic, accessible, structured.</h2><p>Open or drop a PDF to browse its messages and embedded files.</p><p class="muted">Files selected here stay on your device.</p></div>
       <div id="page-surface" hidden><canvas id="canvas" hidden aria-label="Rendered PDF page"></canvas><div id="text-layer" class="textLayer"></div></div>
     </main>
     </section>
+    <div id="resize-details" class="pane-divider" role="separator" tabindex="0" aria-label="Resize files pane" aria-controls="details-panel" aria-orientation="vertical" title="Drag to resize files. Use Left and Right arrows when focused."></div>
     <aside id="details-panel" class="details-panel" aria-label="Files and document information">
       <div class="details-heading"><h2><span id="files-title">Files in this PDF</span> <span id="file-count" class="badge">0</span></h2><button id="toggle-details" aria-label="Hide files pane" title="Hide files pane" class="quiet" aria-expanded="true" aria-controls="details-panel">Hide pane</button></div>
-        <section class="detail-section files-section"><div id="files"></div><dl id="selection-details"></dl></section>
+        <section class="detail-section files-section"><div id="files"></div><details id="message-details-disclosure"><summary>Message details</summary><dl id="selection-details"></dl></details></section>
     </aside>
   </div>
-  <footer><span id="status" role="status" aria-live="polite">Loading viewer…</span><span class="privacy-note"><span id="declared-profile" hidden></span><span id="viewer-version">viewer __VIEWER_VERSION__</span></span></footer>
+  <footer><span id="status" role="status" aria-live="polite">Loading viewer…</span><span id="archive-stats" hidden></span><span class="privacy-note"><span id="declared-profile" hidden></span><span id="viewer-version">viewer __VIEWER_VERSION__</span></span></footer>
   <dialog id="loading-dialog" aria-labelledby="loading-title" aria-describedby="loading-message">
     <h2 id="loading-title">Opening EA-PDF</h2>
     <p id="loading-message"></p>
     <progress id="loading-progress" aria-label="Opening archive"></progress>
     <button id="loading-cancel" type="button" autofocus>Cancel</button>
+  </dialog>
+  <dialog id="metadata-dialog" aria-labelledby="metadata-title">
+    <h2 id="metadata-title">Export metadata</h2>
+    <div class="metadata-options">
+      <label>Format <select id="metadata-format"><option value="csv">CSV — selected fields</option><option value="xmp">Original XMP — metadata streams</option></select></label>
+      <label>Scope <select id="metadata-scope"><option value="all">Entire open file / collection</option><option id="metadata-current" value="current">Current message</option></select></label>
+    </div>
+    <p id="metadata-note"></p>
+    <div class="metadata-selection"><button id="metadata-all" type="button">Select all</button><button id="metadata-none" type="button">Clear selection</button></div>
+    <fieldset id="metadata-fields"><legend>CSV fields</legend></fieldset>
+    <section id="metadata-xml" hidden>
+      <button id="metadata-load" type="button">Load metadata</button>
+      <div id="metadata-packets" aria-label="Metadata streams"></div>
+      <p id="metadata-owner"></p>
+      <div><button id="metadata-previous" type="button" disabled>Previous section</button> <span id="metadata-position"></span> <button id="metadata-next" type="button" disabled>Next section</button></div>
+      <textarea id="metadata-preview" readonly aria-label="Original XMP preview" spellcheck="false"></textarea>
+      <button id="metadata-save-one" type="button" disabled>Download this XMP</button>
+    </section>
+    <p id="metadata-state" role="status" aria-live="polite"></p>
+    <div class="metadata-actions"><button id="metadata-save" type="button">Export CSV</button><button id="metadata-close" type="button">Close</button></div>
   </dialog>
   <dialog id="export-dialog" aria-labelledby="export-title" aria-describedby="export-message export-elapsed">
     <h2 id="export-title">Export Finding Aid</h2>

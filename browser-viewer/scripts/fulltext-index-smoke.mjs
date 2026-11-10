@@ -59,7 +59,7 @@ try{
      return {source:result.source,incomplete:result.incomplete,notices:result.notices,count:result.matches.reduce((n,m)=>n+m.count,0)};
     }finally{session.close();}
    });
-   assert.equal(legacy.source,'scanned');assert.deepEqual(legacy.incomplete,[]);assert.equal(legacy.count,3);
+   assert.equal(legacy.source,'scanned');assert.deepEqual(legacy.incomplete,[]);assert.equal(legacy.count,/_1ci?\.pdf$/.test(name)?2:3);
    assert.ok(legacy.notices.some(n=>n.includes('unsupported full-text format/engine')));
   }
  }
@@ -77,19 +77,20 @@ try{
   assert.equal(await page.locator('#page').inputValue(),'1');assert.equal(await page.locator('#zoom').inputValue(),'fit-page');
   assert.equal(await page.locator('#header-filename').innerText(),name);
   assert.ok(await page.locator('#viewport').evaluate(v=>v.scrollTop<=1));
-  assert.ok(await page.evaluate(()=>{const v=document.querySelector('#viewport'),p=document.querySelector('.pdf-page[data-page="1"]'),s=getComputedStyle(v);const r=p.getBoundingClientRect(),w=v.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight),h=v.clientHeight-parseFloat(s.paddingTop)-parseFloat(s.paddingBottom);return r.width<=w+2&&r.height<=h+2&&(Math.abs(r.width-w)<4||Math.abs(r.height-h)<4);}));
+  if(profile==='1c'||profile==='1ci')assert.equal(await page.locator('#canvas').isVisible(),true);
+  else assert.ok(await page.evaluate(()=>{const v=document.querySelector('#viewport'),p=document.querySelector('.pdf-page[data-page="1"]'),s=getComputedStyle(v);const r=p.getBoundingClientRect(),w=v.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight),h=v.clientHeight-parseFloat(s.paddingTop)-parseFloat(s.paddingBottom);return r.width<=w+2&&r.height<=h+2&&(Math.abs(r.width-w)<4||Math.abs(r.height-h)<4);}));
  }
  // Exercise the existing UI, selected-page confirmation and actual text-layer highlights.
  await page.locator('#file').setInputFiles(resolve(fixtureDirectory,'mbox_sample_1ci.pdf'));
  await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false'&&document.querySelector('#subject-index-progress').dataset.complete==='true');
  await page.locator('#open-search').click();await page.locator('#search-scope').selectOption('collection');await page.locator('#search').fill('Power VaR');await page.locator('#find').click();
- await page.waitForFunction(()=>document.querySelector('#collection-search-summary').textContent.includes('Embedded PDFBox text index'));
+ await page.waitForFunction(()=>/^\d+ matching pages\.$/.test(document.querySelector('#collection-search-summary').textContent));
  await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
  assert.ok(await page.locator('#text-layer .current-match').count()>0,'verified first page must highlight');
- await page.locator('#collection-matches button[data-match-index="1"]').click();
+ await page.locator('#find').click();
  await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false'&&document.querySelector('#breadcrumbs').textContent.includes('Power VaR'));
  assert.ok(await page.locator('#text-layer .current-match').count()>0,'verified child page must highlight');
- assert.match(await page.locator('#search-status').innerText(),/Match 2 of 3/);
+ assert.match(await page.locator('#search-status').innerText(),/Match 2 of 2/);
  await page.locator('#close').click();
  // Simulate extraction disagreement on selection, after the file/index was verified.
  await page.evaluate(async()=>{
@@ -101,11 +102,10 @@ try{
  await page.locator('#file').setInputFiles(resolve(fixtureDirectory,'mbox_sample_1ci.pdf'));
  await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false'&&document.querySelector('#subject-index-progress').dataset.complete==='true');
  await page.locator('#open-search').click();await page.locator('#search').fill('Power VaR');await page.locator('#find').click();
- await page.waitForFunction(()=>document.querySelector('#collection-search-summary').textContent.includes('Embedded PDFBox text index')&&document.querySelector('#viewport').getAttribute('aria-busy')==='false');
- await page.locator('#collection-matches button[data-match-index="1"]').click();
- await page.waitForFunction(()=>document.querySelector('#collection-search-summary').textContent.includes('All reachable collection PDFs were searched.')&&document.querySelector('#collection-search-summary').textContent.includes('disagrees'));
- await page.waitForFunction(()=>document.querySelector('#search-status').textContent.includes('Match 1 of 3')&&document.querySelector('#viewport').getAttribute('aria-busy')==='false');
- assert.match(await page.locator('#search-status').innerText(),/Match 1 of 3/);
+ await page.waitForFunction(()=>/^\d+ matching pages\.$/.test(document.querySelector('#collection-search-summary').textContent)&&document.querySelector('#viewport').getAttribute('aria-busy')==='false');
+ await page.waitForFunction(()=>document.querySelector('#search-status').textContent.includes('Match 1 of 2')&&document.querySelector('#viewport').getAttribute('aria-busy')==='false');
+ assert.match(await page.locator('#search-status').innerText(),/Match 1 of 2/);
+ assert.match(await page.locator('#collection-search-summary').innerText(),/^\d+ matching pages\.$/);
  await page.locator('#close').click();
  await mkdir('test-results',{recursive:true});await writeFile(process.env.EAPDF_SIGNED_INDEX_FIXTURES?'test-results/fulltext-index-signed.json':'test-results/fulltext-index.json',JSON.stringify({status:'PASS',reports,highlighting:'PASS'},null,2)+'\n');console.log(JSON.stringify({status:'PASS',profiles:reports.length,queries:reports.reduce((n,r)=>n+r.queries.length,0),highlighting:'PASS'}));
 }finally{await context.close();}

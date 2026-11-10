@@ -8,6 +8,7 @@ const GAP=24,MAX_PIXELS=16_000_000,MAX_RETAINED_PIXELS=32_000_000;
 // Keep light page placeholders for scrolling; retain pixels/text only near the
 // current page. Large archives must not allocate one canvas for every page.
 export class ScrollingPages {
+  onAttachment?:(page:number,annotation:number|string)=>void;
   private doc:Pick<BrowserDocument,'pdf'|'run'>|undefined;
   private pdf:PDFDocumentProxy|undefined;
   private slots:PageSlot[]=[];
@@ -218,7 +219,13 @@ export class ScrollingPages {
         catch(error){if(epoch!==this.epoch)return;slot.layer.clear();slot.box.querySelector('.page-placeholder')!.textContent='Text selection unavailable';}
         try{
           const annotations=await doc.run(page.getAnnotations({intent:'display'}));if(epoch!==this.epoch)return;
-          for(const annotation of annotations.slice(0,500)){
+          for(const [annotationIndex,annotation] of annotations.entries()){
+            if(annotation.subtype==='FileAttachment'&&Array.isArray(annotation.rect)){
+              const rect=[...view.convertToViewportPoint(annotation.rect[0],annotation.rect[1]),...view.convertToViewportPoint(annotation.rect[2],annotation.rect[3])],link=document.createElement('a');link.href='#';
+              const contents=annotation.contentsObj?.str||annotation.file?.filename||'Open attachment';link.title=contents;link.setAttribute('aria-label',contents);
+              Object.assign(link.style,{left:`${Math.min(rect[0],rect[2])}px`,top:`${Math.min(rect[1],rect[3])}px`,width:`${Math.max(16,Math.abs(rect[2]-rect[0]))}px`,height:`${Math.max(16,Math.abs(rect[3]-rect[1]))}px`});
+              link.addEventListener('click',event=>{event.preventDefault();if(epoch===this.epoch)this.onAttachment?.(slot.number,annotation.id??annotationIndex);});slot.links.append(link);continue;
+            }
             if(annotation.subtype!=='Link'||(!annotation.dest&&!annotation.embeddedAction)||!Array.isArray(annotation.rect)||annotation.rect.length!==4||!annotation.rect.every(Number.isFinite))continue;
             const rect=[...view.convertToViewportPoint(annotation.rect[0],annotation.rect[1]),...view.convertToViewportPoint(annotation.rect[2],annotation.rect[3])],left=Math.max(0,Math.min(rect[0]!,rect[2]!)),top=Math.max(0,Math.min(rect[1]!,rect[3]!)),right=Math.min(view.width,Math.max(rect[0]!,rect[2]!)),bottom=Math.min(view.height,Math.max(rect[1]!,rect[3]!));
             if(right<=left||bottom<=top)continue;

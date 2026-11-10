@@ -7,6 +7,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Insets;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.BasicStroke;
+import java.awt.RenderingHints;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -38,6 +46,11 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.RowFilter;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
+import javax.swing.JTabbedPane;
+import javax.swing.Icon;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.KeyStroke;
@@ -74,6 +87,53 @@ public final class ValidatorGui {
       new ValidatorGui(new JavaValidatorEngine()).show();
     });
   }
+  private static final class ResultIcon implements Icon {
+    private final String state;
+    ResultIcon(String state) { this.state = state; }
+    @Override public int getIconWidth() { return 20; }
+    @Override public int getIconHeight() { return 20; }
+    @Override public void paintIcon(Component component, Graphics graphics, int x, int y) {
+      Graphics2D g = (Graphics2D) graphics.create();
+      try {
+        g.translate(x, y); g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setColor(!component.isEnabled() ? new Color(170, 175, 180) : switch (state) {
+          case "PASS" -> new Color(65, 145, 75); case "FAIL", "STOP" -> new Color(192, 65, 45);
+          case "WARN" -> new Color(190, 135, 20); default -> new Color(120, 128, 135);
+        });
+        if ("STOP".equals(state)) { g.fillRect(3, 3, 14, 14); return; }
+        if ("FAIL".equals(state) || "WARN".equals(state)) g.fillPolygon(new int[]{10, 0, 20}, new int[]{0, 19, 19}, 3);
+        else g.fillOval(0, 0, 20, 20);
+        g.setColor(Color.WHITE); g.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        if ("PASS".equals(state)) { g.drawLine(5, 10, 9, 14); g.drawLine(9, 14, 15, 6); }
+        else if ("FAIL".equals(state) || "WARN".equals(state)) { g.drawLine(10, 6, 10, 11); g.fillOval(9, 14, 2, 2); }
+        else g.drawLine(5, 10, 15, 10);
+      } finally { g.dispose(); }
+    }
+  }
+
+  private void setSpecification(String text) {
+    specification.setText(text);
+    var normal = new SimpleAttributeSet(); StyleConstants.setBold(normal, false);
+    specification.getStyledDocument().setCharacterAttributes(0, text.length(), normal, true);
+    var bold = new SimpleAttributeSet(); StyleConstants.setBold(bold, true);
+    int offset = 0;
+    for (String line : text.split("\n", -1)) {
+      if (offset == 0 || line.startsWith("Rule ") || line.startsWith("Section ") || line.endsWith(":"))
+        specification.getStyledDocument().setCharacterAttributes(offset, line.length(), bold, false);
+      offset += line.length() + 1;
+    }
+  }
+
+  private void showOutcome() {
+    String state = result.status();
+    outcome.setText(switch (state) { case "PASS" -> "Validation complete"; case "FAIL" -> "Validation failed"; default -> "Validation incomplete"; });
+    outcome.setBackground(switch (state) { case "PASS" -> new Color(49, 118, 51); case "FAIL" -> new Color(172, 49, 39); default -> new Color(143, 99, 15); });
+    outcome.setForeground(Color.WHITE); outcome.setVisible(true);
+    long count = groups.stream().filter(group -> "WARN".equals(group.level())).mapToLong(FindingGroup::count).sum();
+    warnings.setText(count + (count == 1 ? " warning found" : " warnings found"));
+    warnings.setBackground(new Color(246, 215, 101)); warnings.setForeground(new Color(45, 39, 15)); warnings.setVisible(count > 0);
+  }
+
   interface Engine {
     Result validate(Path input) throws Exception;
     void cancel();
@@ -241,12 +301,15 @@ public final class ValidatorGui {
   private final Engine engine;
   private final JFrame frame = new JFrame("EA-PDF Validator");
   private final JTextField file = new JTextField();
-  private final JButton browse = new JButton("Choose PDF…");
+  private final JButton browse = new JButton("Browse…");
   private final JButton validate = new JButton("Validate");
   private final JButton stop = new JButton("Stop");
-  private final JButton save = new JButton("Save report…");
-  private final JLabel status = new JLabel("Choose one PDF to validate.");
+  private final JButton save = new JButton("Save Report…");
+  private final JLabel status = new JLabel("Ready. Choose a PDF to validate.");
   private final JProgressBar progress = new JProgressBar();
+  private final JProgressBar groupProgress = new JProgressBar();
+  private final JLabel outcome = new JLabel();
+  private final JLabel warnings = new JLabel();
   private final JTextField ruleFilter = new JTextField();
   private final JLabel visibleCount = new JLabel();
   private final DefaultTableModel rows = new DefaultTableModel(new String[]{"Result", "Rule #", "Rule", "Finding"}, 0) {
@@ -256,7 +319,7 @@ public final class ValidatorGui {
   private final JTable table = new JTable(rows);
   private final TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(rows);
   private final JTextArea detail = new JTextArea();
-  private final JTextArea specification = new JTextArea();
+  private final JTextPane specification = new JTextPane();
   private Result result;
   private List<FindingGroup> groups = List.of();
   private boolean running;
@@ -281,52 +344,97 @@ public final class ValidatorGui {
     });
     JPanel content = new JPanel(new BorderLayout(8, 8));
     content.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-    JPanel input = new JPanel(new BorderLayout(8, 8));
-    input.add(new JLabel("PDF:"), BorderLayout.WEST);
+    JPanel input = new JPanel(new BorderLayout(10, 0));
+    JLabel pdfLabel = new JLabel("PDF:"); pdfLabel.setLabelFor(file);
+    input.add(pdfLabel, BorderLayout.WEST);
     input.add(file, BorderLayout.CENTER);
-    input.add(browse, BorderLayout.EAST);
-    JPanel actions = new JPanel();
-    actions.add(validate);
-    actions.add(stop);
-    actions.add(save);
-    JPanel header = new JPanel(new BorderLayout());
+    JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+    actions.add(browse); actions.add(validate); actions.add(stop); actions.add(save);
+    input.add(actions, BorderLayout.EAST);
+    validate.setIcon(new ResultIcon("PASS")); stop.setIcon(new ResultIcon("STOP"));
+    save.setIcon(UIManager.getIcon("FileView.floppyDriveIcon"));
+    validate.setBackground(new Color(47, 110, 163)); validate.setForeground(Color.WHITE);
+    validate.setOpaque(true);
+    for (JButton action : List.of(browse, validate, stop, save)) action.setMargin(new Insets(8, 12, 8, 12));
+    file.setToolTipText("Path to the PDF to validate. Press Enter to start.");
+    browse.setToolTipText("Choose a PDF and start validation immediately.");
+    validate.setToolTipText("Run EA-PDF, PDF/A and applicable ISO 32005 checks locally.");
+    stop.setToolTipText("Stop validation and retain the available findings.");
+    save.setToolTipText("Save the complete validation report as JSON.");
+    ruleFilter.setToolTipText("Filter rule names with case-insensitive keywords. Press Escape to clear.");
+    JPanel header = new JPanel(new BorderLayout(0, 10));
     header.add(input, BorderLayout.NORTH);
-    header.add(actions, BorderLayout.CENTER);
     header.add(new JLabel("EA-PDF, PDF/A and applicable ISO 32005 checks run locally."), BorderLayout.SOUTH);
     content.add(header, BorderLayout.NORTH);
     table.setRowSorter(sorter);
-    DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-    renderer.putClientProperty("html.disable", Boolean.TRUE);
+    DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
+      { putClientProperty("html.disable", Boolean.TRUE); }
+      @Override public Component getTableCellRendererComponent(JTable owner, Object value, boolean selected,
+          boolean focused, int row, int column) {
+        super.getTableCellRendererComponent(owner, value, selected, focused, row, column);
+        setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        setBackground(selected ? owner.getSelectionBackground() : row % 2 == 0 ? Color.WHITE : new Color(241, 243, 245));
+        setForeground(selected ? owner.getSelectionForeground() : new Color(35, 39, 43));
+        setHorizontalAlignment(column == 1 ? CENTER : LEFT);
+        setIcon(column == 0 ? new ResultIcon(String.valueOf(value)) : null);
+        if (column == 0) setText(switch (String.valueOf(value)) {
+          case "PASS" -> "Pass"; case "FAIL" -> "Fail"; case "WARN" -> "Warning"; default -> "N/A";
+        });
+        return this;
+      }
+    };
     table.setDefaultRenderer(Object.class, renderer);
+    table.setDefaultRenderer(Integer.class, renderer);
+    table.setSelectionBackground(new Color(79, 142, 199));
+    table.setSelectionForeground(Color.WHITE);
+    table.setShowHorizontalLines(false); table.setShowVerticalLines(true);
+    table.setGridColor(new Color(210, 214, 218)); table.setFillsViewportHeight(true);
     table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-    table.getColumnModel().getColumn(0).setMaxWidth(110);
-    table.getColumnModel().getColumn(1).setMaxWidth(75);
+    table.getColumnModel().getColumn(0).setMinWidth(115);
+    table.getColumnModel().getColumn(0).setPreferredWidth(125);
+    table.getColumnModel().getColumn(0).setMaxWidth(135);
+    table.getColumnModel().getColumn(1).setMaxWidth(90);
     table.getColumnModel().getColumn(2).setPreferredWidth(260);
     table.getColumnModel().getColumn(3).setPreferredWidth(560);
     detail.setEditable(false);
     detail.setLineWrap(true);
     detail.setWrapStyleWord(true);
     specification.setEditable(false);
-    specification.setLineWrap(true);
-    specification.setWrapStyleWord(true);
+    detail.setMargin(new Insets(12, 12, 12, 12));
+    specification.setMargin(new Insets(12, 12, 12, 12));
     JScrollPane findingPane = new JScrollPane(detail);
-    findingPane.setBorder(BorderFactory.createTitledBorder("Finding"));
+    JTabbedPane findingTabs = new JTabbedPane(); findingTabs.addTab("Finding", findingPane);
     JScrollPane specificationPane = new JScrollPane(specification);
-    specificationPane.setBorder(BorderFactory.createTitledBorder("Specification"));
-    JSplitPane information = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, findingPane, specificationPane);
+    JTabbedPane specificationTabs = new JTabbedPane(); specificationTabs.addTab("Specification", specificationPane);
+    JSplitPane information = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, findingTabs, specificationTabs);
+    information.setContinuousLayout(true); information.setDividerSize(9);
     information.setResizeWeight(0.4);
     JPanel findings = new JPanel(new BorderLayout(8, 8));
     JPanel filter = new JPanel(new BorderLayout(8, 8));
-    filter.add(new JLabel("Keyword in Rule:"), BorderLayout.WEST);
+    filter.setBorder(BorderFactory.createTitledBorder("Search / Filter"));
+    JLabel keywordLabel = new JLabel("Keyword in Rule:"); keywordLabel.setLabelFor(ruleFilter);
+    filter.add(keywordLabel, BorderLayout.WEST);
     filter.add(ruleFilter, BorderLayout.CENTER);
-    filter.add(visibleCount, BorderLayout.EAST);
-    findings.add(filter, BorderLayout.NORTH);
+    JPanel groupStatus = new JPanel(new BorderLayout(8, 0));
+    groupStatus.setBorder(BorderFactory.createTitledBorder("Groups / Progress"));
+    groupProgress.setPreferredSize(new Dimension(130, 18));
+    groupStatus.add(groupProgress, BorderLayout.WEST); groupStatus.add(visibleCount, BorderLayout.CENTER);
+    JPanel filters = new JPanel(new BorderLayout(8, 0));
+    filters.add(filter, BorderLayout.CENTER); filters.add(groupStatus, BorderLayout.EAST);
+    findings.add(filters, BorderLayout.NORTH);
     findings.add(new JScrollPane(table), BorderLayout.CENTER);
     JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, findings, information);
     split.setResizeWeight(0.55);
+    split.setContinuousLayout(true); split.setDividerSize(9);
     content.add(split, BorderLayout.CENTER);
     JPanel footer = new JPanel(new BorderLayout(8, 8));
     footer.add(status, BorderLayout.CENTER);
+    JPanel badges = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+    for (JLabel badge : List.of(outcome, warnings)) {
+      badge.setOpaque(true); badge.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8)); badge.setVisible(false);
+    }
+    badges.add(outcome); badges.add(warnings); footer.add(badges, BorderLayout.EAST);
+    progress.setPreferredSize(new Dimension(0, 8));
     footer.add(progress, BorderLayout.SOUTH);
     content.add(footer, BorderLayout.SOUTH);
     browse.addActionListener(event -> choose());
@@ -371,7 +479,9 @@ public final class ValidatorGui {
     frame.setContentPane(content);
     SwingUtilities.updateComponentTreeUI(frame);
     table.setRowHeight(table.getFontMetrics(table.getFont()).getHeight() + 8);
-    frame.setSize(new Dimension(2000, 1100));
+    var screen = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+    frame.setMinimumSize(new Dimension(Math.min(1050, screen.width), Math.min(650, screen.height)));
+    frame.setSize(new Dimension(Math.min(2000, screen.width - 40), Math.min(1100, screen.height - 60)));
     frame.setLocationRelativeTo(null);
     frame.setVisible(true);
     split.setDividerLocation(0.55);
@@ -386,7 +496,7 @@ public final class ValidatorGui {
     FindingGroup finding = groups.get(table.convertRowIndexToModel(table.getSelectedRow()));
     detail.setText(finding.detailText());
     detail.setCaretPosition(0);
-    specification.setText(SpecificationReferences.text(finding.code()));
+    setSpecification(SpecificationReferences.text(finding.code()));
     specification.setCaretPosition(0);
   }
 
@@ -396,8 +506,10 @@ public final class ValidatorGui {
         return matchesRule(entry.getStringValue(2), ruleFilter.getText());
       }
     });
-    visibleCount.setText(table.getRowCount() + " / " + rows.getRowCount() + " groups"
-        + (result == null ? "" : "; " + result.findings().size() + " findings"));
+    visibleCount.setText(running && result == null ? "Validating…" : table.getRowCount() + " / " + rows.getRowCount() + " groups");
+    visibleCount.setToolTipText(result == null ? "Finding groups shown after validation." : result.findings().size() + " individual findings; the table groups repeated results.");
+    groupProgress.setMaximum(Math.max(1, rows.getRowCount())); groupProgress.setValue(table.getRowCount());
+    groupProgress.setToolTipText("Visible finding groups / all finding groups. This is not a percentage of validation work.");
     selectedFinding();
   }
 
@@ -411,8 +523,7 @@ public final class ValidatorGui {
     }
     if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
       file.setText(chooser.getSelectedFile().getAbsolutePath());
-      clear();
-      status.setText("Ready to validate.");
+      start();
     }
   }
 
@@ -426,6 +537,8 @@ public final class ValidatorGui {
     detail.setText("");
     specification.setText("");
     save.setEnabled(false);
+    outcome.setVisible(false); warnings.setVisible(false);
+    progress.setValue(0); groupProgress.setValue(0);
   }
 
   private void start() {
@@ -461,6 +574,7 @@ public final class ValidatorGui {
                 + (result.profile().isBlank() ? "" : "    EA-PDF: " + result.profile()));
             detail.setText(result.scope());
             save.setEnabled(true);
+            showOutcome();
           }
         } catch (InterruptedException error) {
           Thread.currentThread().interrupt();
@@ -489,7 +603,12 @@ public final class ValidatorGui {
     browse.setEnabled(!value);
     validate.setEnabled(!value);
     stop.setEnabled(value);
-    progress.setIndeterminate(value);
+    progress.setIndeterminate(value); groupProgress.setIndeterminate(value);
+    if (value) { visibleCount.setText("Validating…"); outcome.setVisible(false); warnings.setVisible(false); }
+    else {
+      progress.setValue(result == null ? 0 : 100); filterRules();
+      if (result != null && table.getRowCount() > 0 && table.getSelectedRow() < 0) table.setRowSelectionInterval(0, 0);
+    }
   }
 
   private void requestStop() {

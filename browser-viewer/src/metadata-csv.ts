@@ -56,10 +56,16 @@ function attachmentIndex(inspection:InspectionResult):(message:MailMessage)=>[st
   return [count,names.join('; ')];
   };
 }
+export const CSV_FIELDS = ['PDF','Folder paths','From','To','Cc','Bcc','Subject','Sent','Attachment count','Attachment names'] as const;
+export type CsvField = typeof CSV_FIELDS[number];
+export type CsvOptions = {fields?: readonly CsvField[]; messageId?: string};
 export async function metadataCsv(root:BrowserDocument,
   child:(parent:BrowserDocument,file:AssociatedFile,stream:EmbeddedStream)=>Promise<BrowserDocument>,
-  check:()=>void,progress:(count:number,documentName?:string)=>void,release:(doc:BrowserDocument)=>void|Promise<void>=()=>{}):Promise<{blob:Blob;rows:number}> {
-  const chunks:string[]=['\uFEFF'+['PDF','Folder paths','From','To','Cc','Bcc','Subject','Sent','Message-ID','Attachment count','Attachment names'].map(csvCell).join(',')+'\r\n'];
+  check:()=>void,progress:(count:number,documentName?:string)=>void,release:(doc:BrowserDocument)=>void|Promise<void>=()=>{},options:CsvOptions={}):Promise<{blob:Blob;rows:number}> {
+  const fields=options.fields??CSV_FIELDS;
+  if(!fields.length||fields.some(f=>!CSV_FIELDS.includes(f))||new Set(fields).size!==fields.length)throw new Error('Choose at least one valid CSV field.');
+  const columns=fields.map(f=>CSV_FIELDS.indexOf(f));
+  const chunks:string[]=['\uFEFF'+fields.map(csvCell).join(',')+'\r\n'];
   let rows=0,documents=0,bytes=0;
   const encoder=new TextEncoder();
   async function visit(doc:BrowserDocument,path:string,folderPaths:string[]):Promise<void>{
@@ -77,10 +83,11 @@ export async function metadataCsv(root:BrowserDocument,
     // Collection-level email records index the embedded messages. Export those
     // messages from their PDFs once, retaining repetitions in distinct children.
     for(const message of collection.value?[]:inspection.messages){
+      if(options.messageId&&message.id!==options.messageId)continue;
       const data=doc.details.get(message.metadataRecordId)??{};
       const values=[path,folderPaths.map(p=>p?'/'+p:'/').join('; '),...['From','To','Cc','Bcc'].map(k=>data['Raw-'+k]||data[k]||''),
-        data.Subject??'',data.Sent??'',message.internetMessageId.value??'',...attachments!(message)];
-      const line=values.map(csvCell).join(',')+'\r\n';bytes+=encoder.encode(line).length;
+        data.Subject??'',data.Sent??'',...attachments!(message)];
+      const line=columns.map(i=>csvCell(values[i]!)).join(',')+'\r\n';bytes+=encoder.encode(line).length;
       rows++;if(bytes>64*1024**2)throw new Error('Export exceeds the 64 MiB byte budget; no CSV was downloaded.');
       chunks.push(line);
       if(rows%250===0){progress(rows);await new Promise(resolve=>setTimeout(resolve,0));check();}
@@ -112,7 +119,18 @@ export async function metadataCsv(root:BrowserDocument,
     }
     progress(rows);
   }
-  await visit(root,root.name,['']);check();
+  let path=root.name,folderPaths=[''],ancestor=root;
+  while(ancestor.parent){
+    const parent=ancestor.parent;path=parent.name+' / '+path;
+    if(parent.inspection.collection.value&&ancestor.parentFileId){
+      const local=folderIndex(parent.inspection)(ancestor.parentFileId),combined=new Set<string>();
+      for(const prefix of local)for(const suffix of folderPaths)combined.add([prefix,suffix].filter(Boolean).join('/'));
+      if(combined.size>256)throw new Error('Too many folder paths for this message.');
+      folderPaths=[...combined];
+    }
+    ancestor=parent;
+  }
+  await visit(root,path,folderPaths);check();
   if(!rows)throw new Error('No email metadata found; no CSV was downloaded.');
   return {blob:new Blob(chunks,{type:'text/csv;charset=utf-8'}),rows};
 }

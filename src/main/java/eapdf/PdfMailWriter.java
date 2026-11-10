@@ -1645,13 +1645,12 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
   List<FolderSection> sections = PdfCollectionSupport.buildFolderSections(records);
   if (sections.isEmpty()) throw new IllegalArgumentException("collection requires at least one folder section");
   List<CollectionFolder> folders = PdfCollectionSupport.buildCollectionFolders(sections);
-  CollectionRunSummary runSummary = buildCollectionRunSummary(records, sections);
   ConversionProgress.stage("rendering");
   List<CollectionMember> members = PdfCollectionSupport.buildFolderCollectionMembers(sections, folders, fontPath, iccPath, debug, debugDir, collectionProfile, memberStore);
   ConversionProgress.stage("assembling");
   if (members.isEmpty()) throw new IllegalArgumentException("collection requires at least one embedded EA-PDF member");
-  try (PDDocument archive = PdfAttachmentSupport.buildCollectionFrontMatter(collectionProfile, runSummary,
-      fontPath, records.stream().anyMatch(record -> !record.sourceProblems.isEmpty()))) {
+  try (PDDocument archive = PdfCollectionSupport.buildCollectionStartPage(records,
+      collectionProfile, fontPath, debug)) {
     archive.setVersion(2.0f);
     archive.getDocument().setVersion(2.0f);
     clearImageInterpolation(archive);
@@ -2344,6 +2343,8 @@ static void appendReplyMetadata(StringBuilder metadata, EmailRecord record) {
 static String buildArchiveDescription(List<EmailRecord> records, String archiveProfile) {
   StringBuilder d = new StringBuilder("EA-PDF email archive");
   d.append("; messages=").append(records.size());
+  d.append("; folders=").append(PdfCollectionSupport.buildFolderSections(records).size());
+  d.append("; attachments=").append(records.stream().mapToLong(r -> Math.max(r.attachmentCount, 0)).sum());
   d.append("; conformance=").append(archiveProfile);
   String archiveGlobalId = "";
   List<String> archiveEmails = new ArrayList<>();

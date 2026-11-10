@@ -1,0 +1,42 @@
+--- a/src/core/document_assets.js
++++ b/src/core/document_assets.js
+@@ -121,6 +121,7 @@
+   constructor(catalog, root) {
+     this.catalog = catalog;
+     this.root = root;
++    this.metadataStreams = new Map();
+     this.registered = new Map();
+   }
+ 
+@@ -363,6 +364,7 @@
+                 text: null,
+               };
+               metadata.set(mloc.path, item);
++              this.metadataStreams.set(mloc.path, rawMeta);
+               let metadataStream;
+               try {
+                 if (DecodeStream.remainingBudget < limits.maxMetadataBytes + 1) this.catalog.xref.clearObjectStreamCache?.();
+@@ -507,7 +509,7 @@
+     };
+   }
+ 
+-  read({ documentId, fileId, streamId, maxBytes }) {
++  read({ documentId, fileId, streamId, metadataId, maxBytes }) {
+     if (documentId !== this.catalog.pdfManager.docId)
+       throw new Error("Foreign document locator");
+     if (
+@@ -516,6 +518,14 @@
+       maxBytes > 536870912 // Per-request cap; inspection defaults stay unchanged.
+     )
+       throw new Error("Invalid extraction limit");
++    if (metadataId !== undefined) {
++      if (typeof metadataId !== "string" || !this.metadataStreams.has(metadataId))
++        throw new Error("Metadata stream was not discovered in this document");
++      const raw = this.metadataStreams.get(metadataId);
++      const stream = raw instanceof Ref ? this.catalog.xref.fetch(raw) : raw;
++      try { return boundedBytes(stream, maxBytes); }
++      finally { if (raw instanceof Ref) discardStructuralStream(stream); }
++    }
+     const registered = this.registered.get(fileId + "|" + streamId);
+     if (!registered)
+       throw new Error("Stream is not a discovered EF target of this file");

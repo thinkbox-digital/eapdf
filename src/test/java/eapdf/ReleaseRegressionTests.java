@@ -246,7 +246,8 @@ class ReleaseRegressionTests {
           Assertions.assertTrue(roles.contains("TH"), profile + roles);
           Assertions.assertTrue(roles.contains("TD"), profile + roles);
           }
-          Assertions.assertTrue(roles.contains("H1"), profile + roles);
+          if (!profile.startsWith("c")) Assertions.assertTrue(roles.contains("H1"), profile + roles);
+          else Assertions.assertTrue(roles.contains("P"), profile + roles);
           for (PDPage page : document.getPages()) {
             Assertions.assertTrue(page.getCOSObject().containsKey(COSName.getPDFName("StructParents")));
             for (var annotation : page.getAnnotations()) Assertions.assertTrue(annotation.getCOSObject().containsKey(COSName.getPDFName("StructParent")));
