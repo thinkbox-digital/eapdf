@@ -41,10 +41,10 @@ export async function checkInterface(browser) {
       await browser.click(docSelector(record.documentId)); await browser.ready();
       assert.doesNotMatch((await snapshot()).info, /Conformance/);
       if (record.identification.declaredProfile.value) assert.ok((await snapshot()).info.includes('1'+record.identification.declaredProfile.value));
-      // One nonempty saved payload per document; zero-byte files intentionally disable Download.
-      const file = record.files.find(f => f.streams.some(s => s.extraction === 'present' && s.decodedSize.value !== 0));
+      // Save an independently hashed embedded payload, including empty files.
+      const file = record.files.find(f => f.streams.some(s => s.extraction === 'present'));
       if (file) {
-        const stream = file.streams.find(s => s.extraction === 'present' && s.decodedSize.value !== 0);
+        const stream = file.streams.find(s => s.extraction === 'present');
         const selector = `[data-file-id=${JSON.stringify(file.id)}][data-stream=${JSON.stringify(stream.locator.path)}]`;
         const saved = await browser.download(selector); await browser.ready();
         assert.equal(hash(saved), stream.sha256.value, id+' saved payload');
@@ -65,7 +65,7 @@ export async function checkInterface(browser) {
         }
         const visibleFiles = await browser.evaluate(() => [...document.querySelectorAll('[data-file-id]')].map(b => b.dataset.fileId));
         if(record.messages.length===1){
-          assert.deepEqual([...new Set(visibleFiles)].sort(),record.files.filter(f=>f.streams.some(s=>(s.decodedSize.value??s.declaredSize.value)!==0)).map(f=>f.id).sort(),'single-email row exposes download controls for nonempty document files');
+          assert.deepEqual([...new Set(visibleFiles)].sort(),record.files.filter(f=>f.streams.length).map(f=>f.id).sort(),'single-email row exposes download controls for all embedded streams');
           assert.equal(await browser.evaluate(()=>document.querySelector('[aria-current]')?.hasAttribute('data-document-id')),true,'single email and PDF share one selected row');
         }else assert.ok(visibleFiles.every(fileId => record.files.find(f => f.id === fileId)?.owners.value?.includes(message.id)));
         checks++;
