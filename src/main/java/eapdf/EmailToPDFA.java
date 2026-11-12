@@ -48,7 +48,7 @@ public class EmailToPDFA {
         runSequential(inputs, outDir, fontPath, iccPath, globalId, archiveEmails, debug, debugDir, multiInput, omitSource);
         return;
       }
-      runParallel(inputs, outDir, fontPath, iccPath, globalId, archiveEmails, debug, debugDir, jobs, multiInput, omitSource);
+      runParallel(inputs, outDir, fontPath, iccPath, globalId, archiveEmails, debug, debugDir, jobs, true, omitSource);
     } catch (Common.UserFacingException e) {
       Common.exitWithError(e.getMessage());
     }
@@ -307,12 +307,10 @@ public class EmailToPDFA {
         int localIndex = ++count[0], globalIndex = seq.incrementAndGet();
         pending.addLast(pool.submit(() -> {
           try {
-            processRecord(input, record, outDir, fontPath, iccPath, debug, debugDir, localIndex, globalIndex, multiInput, omitSource);
+            withRecordRelease(
+                () -> processRecord(input, record, outDir, fontPath, iccPath, debug, debugDir, localIndex, globalIndex, multiInput, omitSource),
+                () -> { if (job != null) job.release(record); });
           } catch (Exception error) { throw new CompletionException(error); }
-          finally {
-            if (job != null) try { job.release(record); }
-            catch (IOException error) { throw new CompletionException(error); }
-          }
         }));
       });
       ConversionProgress.inputRead();
@@ -320,6 +318,16 @@ public class EmailToPDFA {
       if (count[0] == 0) throw Common.fail("no messages found in input: " + input);
       System.out.println("input: " + input + " messages: " + count[0]);
     } finally { Common.stopWorkers(pool); }
+  }
+
+  @FunctionalInterface
+  interface RecordConversion { void run() throws Exception; }
+
+  /** Release staged data without masking a conversion failure, including Errors. */
+  static void withRecordRelease(RecordConversion conversion, AutoCloseable release) throws Exception {
+    try (release) {
+      conversion.run();
+    }
   }
 
   static void processRecords(String input, List<EmailRecord> recs, String outDir, String fontPath, String iccPath,

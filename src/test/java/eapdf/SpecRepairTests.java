@@ -125,12 +125,47 @@ class SpecRepairTests {
     }
   }
 
+  @Test void attachedEmailDescriptionPreservesOmissionAndIntegrityDetails() throws Exception {
+    var record = new EmailRecord();
+    var file = new AssociatedFile();
+    file.description = "Attached email exported from PST";
+    file.bytes = new byte[] {1, 2, 3};
+    file.ensureChecksums();
+    record.embedSourceMessage = true;
+    Assertions.assertEquals(file.description, PdfMailWriter.attachmentDescription(record, file));
+    record.embedSourceMessage = false;
+    Assertions.assertEquals(file.description + "; contents omitted by policy; original size=3; original MD5="
+        + file.checksumMd5, PdfMailWriter.attachmentDescription(record, file));
+  }
+
+  @Test void renderSourcePreparationFailureIsReported() throws Exception {
+    EmailRecord record = record("text/plain", "Body");
+    record.associatedFiles.removeIf(file -> "Source".equals(file.afRelationship));
+    record.sourceBytes = new byte[0];
+    record.embedSourceMessage = true;
+    var error = Assertions.assertThrows(IllegalStateException.class,
+        () -> PdfMailWriter.renderAssociatedFiles(record));
+    Assertions.assertTrue(error.getMessage().contains("Could not prepare source email"));
+    Assertions.assertNotNull(error.getCause());
+  }
+
+  @Test void inputSourceDescriptionsAreConsistent() {
+    var expected = Map.of("eml", "Original EML source", "msg", "Original Outlook MSG source",
+        "mbox", "Email source extracted from MBOX", "pst", "Email source exported from PST",
+        "gmail", "Original Gmail email source");
+    expected.forEach((type, description) -> {
+      var record = new EmailRecord();
+      record.sourceType = type;
+      Assertions.assertEquals(description, Common.sourceDescription(record));
+    });
+  }
+
   @Test void mailboxExportBoundaryIsExplicitInPdfAndPremisDescriptions() throws Exception {
     for (String type : List.of("pst", "mbox")) {
       EmailRecord record = record("text/plain", "Exported body");
       record.sourceType = type;
       record.sourcePath = "original." + type;
-      Assertions.assertTrue(Common.sourceDescription(record).contains("Exported RFC 822"));
+      Assertions.assertEquals(type.equals("mbox") ? "Email source extracted from MBOX" : "Email source exported from PST", Common.sourceDescription(record));
       try (var document = Loader.loadPDF(create(record))) {
         String metadata = TestSupport.metadataXml(document);
         Assertions.assertTrue(metadata.contains("preprocessing:"));

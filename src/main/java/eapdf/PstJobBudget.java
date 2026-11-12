@@ -33,7 +33,6 @@ final class PstJobBudget {
         budget.defaults.put("eapdf.workerHeapBytes", ConversionMemory.defaultHeap(512L * 1024 * 1024));
       return budget;
     }
-    long messages = 250000; // Input bytes cannot safely predict how many short emails it contains.
     long heap = ConversionMemory.defaultHeap(512L * 1024 * 1024);
     budget.defaults.put("eapdf.workerHeapBytes", heap);
     budget.defaults.put("eapdf.maxMetadataBytes", heap / 8);
@@ -42,7 +41,8 @@ final class PstJobBudget {
     // the supervisor still enforces the aggregate allowance and explicit overrides.
     budget.defaults.put("eapdf.maxTempBytes", space);
     budget.defaults.put("eapdf.maxOutputBytes", space / 2);
-    budget.defaults.put("eapdf.jobTimeoutSeconds", Math.min(86400, Math.max(600, messages * 2)));
+    // Input bytes cannot predict message count; keep the existing one-day ceiling.
+    budget.defaults.put("eapdf.jobTimeoutSeconds", 86400L);
     System.out.println("Large email input processing: " + bytes + " input bytes; memory and work allowances sized to this input.");
     return budget;
   }

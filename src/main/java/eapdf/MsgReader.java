@@ -133,7 +133,7 @@ class MsgReader {
     msgSrc.mime = r.sourceMime;
     msgSrc.afRelationship = "Source";
     msgSrc.bytes = r.sourceBytes;
-    msgSrc.description = "Original Outlook MSG source";
+    msgSrc.description = Common.sourceDescription(r);
     msgSrc.checksumMd5 = Common.md5Hex(msgSrc.bytes);
     msgSrc.checksumSha256 = Common.sha256Hex(msgSrc.bytes);
     msgSrc.emailAttachment = false;

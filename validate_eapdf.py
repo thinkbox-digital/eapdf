@@ -21,6 +21,17 @@ from functools import lru_cache
 from xml.etree import ElementTree as ET
 from pathlib import Path
 from html import escape as html_escape
+from eapdf_validation import (
+    reporting as _reporting,
+    engines as _engines,
+    report_model as _report_model,
+    pdf_rules as _pdf_rules,
+    media_rules as _media_rules,
+    message_rules as _message_rules,
+    structure_rules as _structure_rules,
+    embedding_rules as _embedding_rules,
+    xmp_rules as _xmp_rules,
+)
 from rule_documentation import specification_context_html
 from email import policy
 from email.parser import BytesParser
@@ -783,76 +794,29 @@ def diagnostic_value(value):
         return tuple(diagnostic_value(member) for member in value)
     return value
 
-class Report:
-    def __init__(self,path):
-        self.path=path
-        self.rulebook_sha256=RULEBOOK_SHA256
-        self.items=[]
-        self.counts=defaultdict(int)
-        self.seen_codes=set()
-        self.delegated_codes=set()
-    def delegates(self,code):
-        return code in self.delegated_codes
-    def add(self,level,code,msg,details=None):
-        if code in PDFA_COVERED_RULES:
-            return
-        self.items.append({"level":level,"code":code,"message":diagnostic_value(msg),"details":diagnostic_value(details)})
-        self.counts[level]+=1
-        self.seen_codes.add(code)
-    def ok(self,code,msg,details=None): self.add("PASS",code,msg,details)
-    def warn(self,code,msg,details=None): self.add("WARN",code,msg,details)
-    def fail(self,code,msg,details=None): self.add("FAIL",code,msg,details)
-    def na(self,code,msg,details=None): self.add("N/A",code,msg,details)
-    def rule_summary(self):
-        order={"FAIL":3,"WARN":2,"PASS":1,"N/A":0}
-        collapsed={}
-        for item in self.items:
-            code=item["code"]
-            if code not in collapsed or order[item["level"]]>order[collapsed[code]]:
-                collapsed[code]=item["level"]
-        counts=defaultdict(int)
-        for code in ALL_RULE_CODES:
-            counts[collapsed.get(code,"N/A")]+=1
-        return {
-            "total": len(ALL_RULE_CODES),
-            "pass": counts["PASS"],
-            "warn": counts["WARN"],
-            "fail": counts["FAIL"],
-            "na": counts["N/A"],
-        }
-    def summary(self):
-        rules=self.rule_summary()
-        return {
-            "file":self.path,
-            "rulebook_sha256":self.rulebook_sha256,
-            "pass":self.counts["PASS"],
-            "warn":self.counts["WARN"],
-            "fail":self.counts["FAIL"],
-            "na":self.counts["N/A"],
-            "rule_pass":rules["pass"],
-            "rule_warn":rules["warn"],
-            "rule_fail":rules["fail"],
-            "rule_na":rules["na"],
-            "rule_total":rules["total"],
-            "status":("FAIL" if self.counts["FAIL"] else
-                      "INCOMPLETE" if any(item["code"]=="VALIDATION_INCOMPLETE" and item["level"]=="WARN"
-                                          for item in self.items) else "PASS")
-        }
+
+class Report(_report_model.ReportModel):
+    @staticmethod
+    def _rulebook_hash():
+        return RULEBOOK_SHA256
+
+    @staticmethod
+    def _covered_rules():
+        return PDFA_COVERED_RULES
+
+    @staticmethod
+    def _rule_codes():
+        return ALL_RULE_CODES
+
+    @staticmethod
+    def _diagnostic_value(value):
+        return diagnostic_value(value)
 
 def combined_validation_status(summary, pdfa):
-    if summary.get("status") == "FAIL" or (pdfa or {}).get("status") == "FAIL":
-        return "FAIL"
-    if summary.get("status") != "PASS" or (pdfa or {}).get("status") != "PASS":
-        return "INCOMPLETE"
-    if not pdfa.get("ran") or pdfa.get("compliant") is not True or pdfa.get("profile_allowed") is not True:
-        return "INCOMPLETE"
-    return "PASS"
+    return _reporting.combined_validation_status(summary, pdfa)
 
 def batch_validation_status(results):
-    statuses=[result["summary"]["status"] for result in results]
-    if "FAIL" in statuses:
-        return "FAIL"
-    return "PASS" if statuses and all(status=="PASS" for status in statuses) else "INCOMPLETE"
+    return _reporting.batch_validation_status(results)
 
 def record_verapdf_delegations(report,pdfa=None):
     # The real first pass remains mandatory, including for collection children.
@@ -878,12 +842,7 @@ def spec_references_for(code):
     return refs
 
 def format_details(details):
-    if details is None:
-        return ""
-    try:
-        return json.dumps(details, ensure_ascii=False, indent=2, sort_keys=True)
-    except Exception:
-        return str(details)
+    return _reporting.format_details(details)
 
 def derive_html_path(pdf_path, html_path):
     if html_path:
@@ -893,288 +852,44 @@ def derive_html_path(pdf_path, html_path):
     p=Path(pdf_path)
     return out_dir / (p.name + "." + uuid.uuid4().hex + ".validation.html")
 
+def _engine_settings():
+    return _engines.EngineSettings(VERAPDF_DOCKER_IMAGE, VERAPDF_CONTAINER_NAME, VERAPDF_MOUNT_ROOT)
+
+
 def _verapdf_default_result(path, status="SKIP", message="veraPDF validation was not run", extra=None):
-    base={
-        "file": str(path),
-        "tool": "veraPDF CLI (Docker)",
-        "image": VERAPDF_DOCKER_IMAGE,
-        "status": status,
-        "message": message,
-        "ran": False,
-        "compliant": None,
-        "profile_name": "",
-        "statement": "",
-        "job_end_status": "",
-        "passed_rules": 0,
-        "failed_rules": 0,
-        "passed_checks": 0,
-        "failed_checks": 0,
-        "rule_summaries": [],
-        "profile_allowed": None,
-        "stderr_severity": "",
-    }
-    if extra:
-        base.update(extra)
-    return base
+    return _engines._verapdf_default_result(path, status, message, extra, image=VERAPDF_DOCKER_IMAGE)
 
 def _verapdf_stderr_severity(stderr):
-    text=(stderr or "").strip()
-    if not text:
-        return ""
-    severe_patterns=(
-        r"(^|\b)SEVERE:",
-        r"(^|\b)ERROR:",
-        r"(^|\b)FATAL:",
-        r"\b[A-Za-z0-9_.]*(Exception|Error)\b",
-    )
-    for pattern in severe_patterns:
-        if re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE):
-            return "ERROR"
-    if re.search(r"(^|\b)WARNING:", text, flags=re.IGNORECASE | re.MULTILINE):
-        return "WARN"
-    return "INFO"
+    return _engines._verapdf_stderr_severity(stderr)
 
 def _docker_work_path(pdf_path):
-    try:
-        rel=pdf_path.resolve().relative_to(VERAPDF_MOUNT_ROOT)
-    except Exception:
-        return None
-    return f"/work/{rel.as_posix()}"
+    return _engines._docker_work_path(pdf_path, mount_root=VERAPDF_MOUNT_ROOT)
 
 def ensure_verapdf_daemon():
-    docker=shutil.which("docker")
-    if not docker:
-        return False, "Docker is not available on PATH."
-    inspect_cmd=[docker, "inspect", "-f", "{{.State.Running}}", VERAPDF_CONTAINER_NAME]
-    try:
-        proc=subprocess.run(inspect_cmd, capture_output=True, text=True, timeout=20, check=False)
-        if proc.returncode == 0:
-            if (proc.stdout or "").strip() == "true":
-                return True, "running"
-            started=subprocess.run([docker, "start", VERAPDF_CONTAINER_NAME], capture_output=True, text=True, timeout=20, check=False)
-            if started.returncode == 0:
-                return True, "started"
-            return False, (started.stderr or started.stdout or "Unable to start veraPDF daemon.").strip()
-    except Exception as e:
-        return False, str(e)
-
-    run_cmd=[
-        docker, "run", "-d",
-        "--name", VERAPDF_CONTAINER_NAME,
-        "-v", f"{VERAPDF_MOUNT_ROOT}:/work",
-        "--entrypoint", "sleep",
-        VERAPDF_DOCKER_IMAGE,
-        "infinity",
-    ]
-    try:
-        proc=subprocess.run(run_cmd, capture_output=True, text=True, timeout=30, check=False)
-        if proc.returncode == 0:
-            return True, "created"
-        return False, (proc.stderr or proc.stdout or "Unable to create veraPDF daemon.").strip()
-    except Exception as e:
-        return False, str(e)
+    return _engines.ensure_verapdf_daemon(settings=_engine_settings(), executables=shutil, processes=subprocess)
 
 def _verapdf_timeout(pdf_path):
-    if VERAPDF_TIMEOUT > 0:
-        return VERAPDF_TIMEOUT
-    try:
-        size = Path(pdf_path).stat().st_size
-    except OSError:
-        size = 0
-    return min(86400, max(600, 600 + size // (128 * 1024)))
+    return _engines._verapdf_timeout(pdf_path, configured_timeout=VERAPDF_TIMEOUT)
 
 
 def _verapdf_heap_mb():
-    # The web parent divides its job allowance between Python and veraPDF.
-    assigned = os.environ.get("EAPDF_VERAPDF_HEAP_MB", "")
-    if assigned:
-        return max(128, int(assigned))
-    available = 1024**3
-    try:
-        available = int(re.search(r"MemAvailable:\s+(\d+)", Path("/proc/meminfo").read_text()).group(1)) * 1024
-    except (OSError, AttributeError):
-        pass
-    for limit, used in (("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory.current"),
-                        ("/sys/fs/cgroup/memory/memory.limit_in_bytes", "/sys/fs/cgroup/memory/memory.usage_in_bytes")):
-        try:
-            available = min(available, max(0, int(Path(limit).read_text()) - int(Path(used).read_text())))
-        except (OSError, ValueError):
-            pass
-    return max(128, available // (4 * 1024**2))
+    return _engines._verapdf_heap_mb()
 
 
 def _verapdf_command(pdf_path, output_format, profile_path=None):
-    docker=shutil.which("docker")
-    if not docker:
-        return None
-    job_container=os.environ.get("VERAPDF_JOB_CONTAINER","")
-    job_prefix=os.environ.get("VERAPDF_JOB_CONTAINER_PREFIX", "")
-    if job_prefix and not job_container:
-        if not re.fullmatch(r"eapdf-web-[0-9a-f]{32}", job_prefix): raise ValueError("Invalid job container prefix")
-        job_container="eapdf-web-"+uuid.uuid4().hex
-    heap_mb = _verapdf_heap_mb()
-    java_options = f"JAVA_OPTS=-Xmx{heap_mb}m -XX:ActiveProcessorCount=4"
-    timeout = _verapdf_timeout(pdf_path)
-    daemon_ok=False
-    if not job_container:
-        daemon_ok,_ = ensure_verapdf_daemon()
-    elif not re.fullmatch(r"eapdf-web-[0-9a-f]{32}",job_container):
-        raise ValueError("Invalid job container identity")
-    daemon_path = _docker_work_path(pdf_path)
-    user_options=["--user",f"{os.getuid()}:{os.getgid()}"] if hasattr(os,"getuid") else []
-    daemon_profile = _docker_work_path(profile_path) if profile_path else None
-    if daemon_ok and daemon_path and (profile_path is None or daemon_profile):
-        return [
-            docker, "exec", *user_options, "-e", java_options, VERAPDF_CONTAINER_NAME,
-            "timeout", "-k", "5", str(timeout), "/opt/verapdf/verapdf",
-            "--format", output_format,
-            *(["--profile", daemon_profile] if profile_path else []),
-            daemon_path,
-        ]
-    container_options=["--name",job_container] if job_container else []
-    if job_prefix: container_options += ["--label", "eapdf.validation-job=" + job_prefix]
-    return [
-        docker,"run","--rm",*container_options,*user_options,
-        "--memory",f"{heap_mb + max(256, heap_mb // 2)}m","--cpus","4","--pids-limit","128","--network","none",
-        "-e",java_options,
-        "-v",f"{pdf_path.parent}:/work:ro",
-        *(["-v",f"{profile_path.parent}:/eapdf-profile:ro"] if profile_path else []),
-        "--entrypoint","timeout",
-        VERAPDF_DOCKER_IMAGE,
-        "-k","5",str(timeout),"/opt/verapdf/verapdf",
-        "--format",output_format,
-        *(["--profile",f"/eapdf-profile/{profile_path.name}"] if profile_path else []),
-        f"/work/{pdf_path.name}",
-    ]
+    return _engines._verapdf_command(pdf_path, output_format, profile_path,
+        settings=_engine_settings(), work_path=_docker_work_path, heap_for=_verapdf_heap_mb,
+        timeout_for=_verapdf_timeout, ensure_daemon=ensure_verapdf_daemon, executables=shutil)
 
 def run_verapdf(path, profile_path=None, expected_profile=None):
-    from validation_worker import docker_command
-    docker=shutil.which("docker")
-    if not docker:
-        return _verapdf_default_result(path, "SKIP", "veraPDF was skipped because Docker is not available on PATH.")
-    pdf_path=Path(path).resolve()
-    cmd=_verapdf_command(pdf_path, "json", profile_path) if profile_path else _verapdf_command(pdf_path, "json")
-    if cmd is None:
-        return _verapdf_default_result(path, "SKIP", "veraPDF was skipped because Docker is not available on PATH.")
-    timeout = _verapdf_timeout(pdf_path)
-    try:
-        proc=subprocess.run(docker_command(cmd),capture_output=True,text=True,timeout=timeout + 10,check=False)
-    except subprocess.TimeoutExpired:
-        return _verapdf_default_result(path, "ERROR", f'veraPDF timed out after {timeout} seconds.')
-    except Exception as e:
-        return _verapdf_default_result(path, "ERROR", f"veraPDF could not be started: {e}")
-    finally:
-        job_container=cmd[cmd.index("--name")+1] if "--name" in cmd else ""
-        if re.fullmatch(r"eapdf-web-[0-9a-f]{32}",job_container):
-            try:
-                subprocess.run(docker_command([docker,"rm","--force",job_container]),stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL,timeout=10,check=False)
-            except (OSError,subprocess.TimeoutExpired):
-                pass
-
-    stdout=(proc.stdout or "").strip()
-    stderr=(proc.stderr or "").strip()
-    stderr_severity=_verapdf_stderr_severity(stderr)
-    if not stdout:
-        message="veraPDF returned no JSON output."
-        if stderr:
-            message += f" stderr: {stderr}"
-        return _verapdf_default_result(path, "ERROR", message, {"exit_code": proc.returncode, "stderr": stderr, "stderr_severity": stderr_severity})
-    json_text=stdout
-    if not json_text.startswith("{"):
-        brace_index=json_text.find("{")
-        if brace_index >= 0:
-            json_text=json_text[brace_index:]
-    try:
-        payload=json.loads(json_text)
-    except Exception as e:
-        message=f"veraPDF returned unreadable JSON: {e}"
-        if stderr:
-            message += f" stderr: {stderr}"
-        return _verapdf_default_result(path, "ERROR", message, {"exit_code": proc.returncode, "stdout": stdout[:4000], "stderr": stderr, "stderr_severity": stderr_severity})
-
-    try:
-        report=payload.get("report",{})
-        jobs=report.get("jobs",[])
-        job=jobs[0] if jobs else {}
-        validations=job.get("validationResult",[])
-        validation=validations[0] if validations else {}
-        details=validation.get("details",{})
-        compliant=validation.get("compliant")
-        status="PASS" if compliant is True else ("FAIL" if compliant is False else "ERROR")
-        message=validation.get("statement") or ("PDF/A validation passed." if compliant else "PDF/A validation failed.")
-        result=_verapdf_default_result(path, status, message, {
-            "ran": True,
-            "compliant": compliant,
-            "profile_name": validation.get("profileName",""),
-            "statement": validation.get("statement",""),
-            "job_end_status": validation.get("jobEndStatus",""),
-            "passed_rules": details.get("passedRules",0),
-            "failed_rules": details.get("failedRules",0),
-            "passed_checks": details.get("passedChecks",0),
-            "failed_checks": details.get("failedChecks",0),
-            "rule_summaries": details.get("ruleSummaries",[]) or [],
-            "exit_code": proc.returncode,
-            "raw_json": payload,
-            "stderr_severity": stderr_severity,
-        })
-        result["profile_allowed"]=(result["profile_name"] == expected_profile if expected_profile else
-                                   result["profile_name"] in ALLOWED_VERAPDF_PROFILES) if result["profile_name"] else False
-        if not result["profile_allowed"]:
-            result["status"]="FAIL" if result["profile_name"] else "ERROR"
-            result["message"]=(f'veraPDF did not use the required profile "{expected_profile}".' if expected_profile else
-                                f'veraPDF validated against "{result["profile_name"]}", which is outside the EA-PDF-allowed PDF/A flavours.')
-        if stderr_severity == "ERROR":
-            if result["status"] != "FAIL": result["status"]="ERROR"
-            if result.get("statement"):
-                result["message"]=f'{result["statement"]} However, veraPDF also reported stderr errors.'
-            else:
-                result["message"]="veraPDF reported stderr errors while processing this file."
-        if stderr:
-            result["stderr"]=stderr
-        if proc.returncode != 0:
-            if result["status"] != "FAIL": result["status"]="ERROR"
-            result["message"]="veraPDF did not complete successfully."
-        return result
-    except Exception as e:
-        return _verapdf_default_result(path, "ERROR", f"veraPDF JSON did not match the expected report shape: {e}", {"exit_code": proc.returncode, "payload": payload})
+    return _engines.run_verapdf(path, profile_path, expected_profile,
+        allowed_profiles=ALLOWED_VERAPDF_PROFILES, command_for=_verapdf_command,
+        default_result=_verapdf_default_result, severity_for=_verapdf_stderr_severity,
+        timeout_for=_verapdf_timeout, executables=shutil, processes=subprocess)
 
 def run_iso32005(path):
-    """Run pinned upstream predicates; no local implementation of ISO inclusion rules."""
-    pin=ISO32005_PROFILE
-    profile_path=ROOT/pin["profile"]
-    try:
-        digest=hashlib.sha256(profile_path.read_bytes()).hexdigest()
-        if digest != pin["profile_sha256"]:
-            raise ValueError("ISO 32005 profile bytes differ from the reviewed profile")
-    except (OSError,ValueError) as error:
-        return _verapdf_default_result(path,"ERROR",str(error),{"profile_verified":False})
-    result=run_verapdf(path,profile_path=profile_path,expected_profile=pin["profile_name"])
-    result.update(profile_sha256=digest,selected_rules=pin["selected_rules"],profile_verified=False)
-    try:
-        upstream=result.get("raw_json",{}).get("report",{})
-        jobs=upstream.get("jobs",[])
-        versions={r["id"]:r["version"] for r in upstream.get("buildInformation",{}).get("releaseDetails",[])}
-        normal=(len(jobs)==1 and len(jobs[0].get("validationResult",[]))==1
-                and result.get("job_end_status")=="normal")
-        counts=(type(result.get("passed_rules")) is int and type(result.get("failed_rules")) is int
-                and result["passed_rules"]>=0 and result["failed_rules"]>=0
-                and result["passed_rules"]+result["failed_rules"]==pin["selected_rules"])
-        trusted=(normal and counts and result.get("status") in {"PASS","FAIL"}
-                 and result.get("ran") is True and result.get("profile_allowed") is True
-                 and result.get("profile_name")==pin["profile_name"]
-                 and all(versions.get(k)==v for k,v in pin["reported_versions"].items())
-                 and result.get("stderr_severity")!="ERROR" and result.get("exit_code") in (0,1))
-        compliant=result.get("compliant")
-        consistent=((compliant is True and result.get("failed_rules")==0 and result.get("exit_code")==0)
-                    or (compliant is False and result.get("failed_rules",0)>0))
-        if trusted and consistent:
-            result.update(status="PASS" if compliant else "FAIL",profile_verified=True)
-        else:
-            result.update(status="ERROR",message="ISO 32005 execution could not be verified: "+result.get("message",""))
-    except (TypeError,KeyError,AttributeError):
-        result.update(status="ERROR",message="ISO 32005 report shape could not be verified")
-    return result
+    return _engines.run_iso32005(path, root=ROOT, pin_config=ISO32005_PROFILE,
+        run_pdfa=run_verapdf, default_result=_verapdf_default_result)
 
 def check_iso32005_upstream(pdf,report,pdfa):
     applicable=((str(pdf.pdf_version)=="2.0" or safe_name(dict_get(pdf.Root,"/Version",None))=="2.0")
@@ -1198,185 +913,16 @@ def check_iso32005_upstream(pdf,report,pdfa):
                 "rule":"ISO32005_UPSTREAM","upstream_status":result.get("status")})
 
 def render_html(report, pdfa=None):
-    summary=report.summary()
-    summary["status"]=combined_validation_status(summary, pdfa)
-    failures=[item for item in report.items if item["level"]=="FAIL"]
-    warns=[item for item in report.items if item["level"]=="WARN"]
-    passes=[item for item in report.items if item["level"]=="PASS"]
-    nas=[item for item in report.items if item["level"]=="N/A"]
-
-    def card(item):
-        refs=spec_references_for(item["code"])
-        spec_html=""
-        if refs:
-            blocks=[]
-            for ref in refs:
-                blocks.append(
-                    "<div class='spec-block'>"
-                    f"<div class='spec-meta'><strong>{html_escape(ref['spec'])}</strong> · {html_escape(ref['source'])}</div>"
-                    "<p><strong>Reviewed summary — paraphrase, not a quotation:</strong></p>"
-                    f"<p>{html_escape(ref['excerpt'])}</p>"
-                    f"{specification_context_html(RULE_TEXT.get(item['code'], {}))}"
-                    "</div>"
-                )
-            spec_html="".join(blocks)
-        else:
-            spec_html="<div class='spec-block'><div class='spec-meta'><strong>No mapped spec excerpt</strong></div><blockquote>This finding is currently treated as an operational diagnostic rather than a requirement cross-reference.</blockquote></div>"
-        details=format_details(item["details"])
-        details_html=f"<pre>{html_escape(details)}</pre>" if details else ""
-        return (
-            f"<section class='item {item['level'].lower()}'>"
-            f"<div class='item-head'><span class='badge {item['level'].lower()}'>{item['level']}</span> "
-            f"<code>{html_escape(item['code'])}</code></div>"
-            "<h3>Finding</h3>"
-            f"<p class='message'>{html_escape(item['message'])}</p>"
-            f"{details_html}"
-            "<h3>Specification</h3>"
-            f"{spec_html}"
-            "</section>"
-        )
-
-    pdfa = pdfa or _verapdf_default_result(summary["file"])
-    pdfa_badge = "pass" if pdfa["status"]=="PASS" else ("warn" if pdfa["status"]=="SKIP" else "fail")
-    pdfa_html = (
-        "<section class='section'>"
-        "<h2>PDF/A First Pass (veraPDF)</h2>"
-        f"<p><strong>Status:</strong> {html_escape(pdfa['status'])}</p>"
-        f"<p><strong>Message:</strong> {html_escape(pdfa.get('message',''))}</p>"
-        f"<p><strong>Profile:</strong> {html_escape(pdfa.get('profile_name','') or 'none')}</p>"
-        f"<p><strong>Checks:</strong> passed={html_escape(str(pdfa.get('passed_checks',0)))} failed={html_escape(str(pdfa.get('failed_checks',0)))}</p>"
-        "</section>"
-    )
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EA-PDF Validation Report</title>
-  <style>
-    :root {{
-      --bg: #f4f0e8;
-      --panel: #fffdf9;
-      --text: #1f1a17;
-      --muted: #6a5d53;
-      --border: #d9cbbc;
-      --fail: #8b1e1e;
-      --warn: #9a6b00;
-      --pass: #1f6a3a;
-      --na: #5a6782;
-    }}
-    * {{ box-sizing: border-box; }}
-    body {{
-      margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      background:
-        radial-gradient(circle at top left, #efe4d2 0, transparent 28%),
-        linear-gradient(180deg, #f8f5ef 0%, var(--bg) 100%);
-      color: var(--text);
-    }}
-    main {{ max-width: 1100px; margin: 0 auto; padding: 32px 20px 48px; }}
-    .hero, .section, .item {{
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(54, 33, 12, 0.06);
-    }}
-    .hero {{ padding: 24px; margin-bottom: 20px; }}
-    .hero h1 {{ margin: 0 0 8px; font-size: 2rem; }}
-    .hero p {{ margin: 6px 0; color: var(--muted); }}
-    .status-line {{ display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }}
-    .pill {{
-      display: inline-block; padding: 8px 12px; border-radius: 999px;
-      border: 1px solid var(--border); background: #f8f1e7; font-size: 0.95rem;
-    }}
-    .pill.fail {{ color: var(--fail); border-color: #e3b5b5; background: #fff1f1; }}
-    .pill.warn {{ color: var(--warn); border-color: #ead6a1; background: #fff8df; }}
-    .pill.pass {{ color: var(--pass); border-color: #bcd7c6; background: #effaf2; }}
-    .pill.na {{ color: var(--na); border-color: #c8d1e6; background: #f2f5fb; }}
-    .section {{ padding: 20px; margin-top: 20px; }}
-    .section h2 {{ margin: 0 0 14px; font-size: 1.25rem; }}
-    .item {{ padding: 18px; margin-top: 16px; }}
-    .item-head {{ display: flex; gap: 10px; align-items: center; }}
-    .badge {{
-      display: inline-block; min-width: 56px; text-align: center; font-weight: 700;
-      padding: 4px 8px; border-radius: 999px; color: white; font-size: 0.8rem;
-    }}
-    .badge.fail {{ background: var(--fail); }}
-    .badge.warn {{ background: var(--warn); }}
-    .badge.pass {{ background: var(--pass); }}
-    .badge.na {{ background: var(--na); }}
-    .message {{ margin: 12px 0; font-size: 1.02rem; }}
-    pre {{
-      background: #f7f3ed; border: 1px solid var(--border); border-radius: 12px;
-      padding: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
-      font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.9rem;
-    }}
-    .spec-block {{
-      margin-top: 12px; padding: 12px 14px; border-left: 4px solid #b58d5a;
-      background: #fcf7ef; border-radius: 10px;
-    }}
-    .spec-meta {{ color: var(--muted); font-size: 0.9rem; margin-bottom: 8px; }}
-    blockquote {{ margin: 0; font-style: italic; color: #3b3027; }}
-    .empty {{ color: var(--muted); margin: 0; }}
-    @media (max-width: 700px) {{
-      .hero h1 {{ font-size: 1.6rem; }}
-    }}
-  </style>
-</head>
-<body>
-  <main>
-    <section class="hero">
-      <h1>EA-PDF Validation Report</h1>
-      <p><strong>File:</strong> {html_escape(summary["file"])}</p>
-      <p><strong>Status:</strong> {html_escape(summary["status"])}</p>
-      <p><strong>Scope:</strong> {html_escape(VALIDATION_SCOPE)}</p>
-      <div class="status-line">
-        <span class="pill {'fail' if summary['fail'] else 'pass'}">Failures: {summary['fail']}</span>
-        <span class="pill {'warn' if summary['warn'] else 'pass'}">Warnings: {summary['warn']}</span>
-        <span class="pill pass">Passes: {summary['pass']}</span>
-        <span class="pill na">N/A: {summary['na']}</span>
-      </div>
-      <div class="status-line">
-        <span class="pill {'fail' if summary['rule_fail'] else 'pass'}">Rule Fail: {summary['rule_fail']}/{summary['rule_total']}</span>
-        <span class="pill {'warn' if summary['rule_warn'] else 'pass'}">Rule Warn: {summary['rule_warn']}/{summary['rule_total']}</span>
-        <span class="pill pass">Rule Pass: {summary['rule_pass']}/{summary['rule_total']}</span>
-        <span class="pill na">Rule N/A: {summary['rule_na']}/{summary['rule_total']}</span>
-      </div>
-      <div class="status-line">
-        <span class="pill {pdfa_badge}">PDF/A First Pass: {html_escape(pdfa['status'])}</span>
-        <span class="pill">Profile: {html_escape(pdfa.get('profile_name','') or 'none')}</span>
-      </div>
-    </section>
-
-    {pdfa_html}
-
-    <section class="section">
-      <h2>Failures</h2>
-      {''.join(card(item) for item in failures) if failures else "<p class='empty'>No failures.</p>"}
-    </section>
-
-    <section class="section">
-      <h2>Warnings</h2>
-      {''.join(card(item) for item in warns) if warns else "<p class='empty'>No warnings.</p>"}
-    </section>
-
-    <section class="section">
-      <h2>Passing Checks</h2>
-      {''.join(card(item) for item in passes) if passes else "<p class='empty'>No passing checks recorded.</p>"}
-    </section>
-
-    <section class="section">
-      <h2>Not Applicable</h2>
-      {''.join(card(item) for item in nas) if nas else "<p class='empty'>No N/A checks recorded.</p>"}
-    </section>
-  </main>
-</body>
-</html>"""
+    context = _reporting.HtmlContext(
+        rule_text=RULE_TEXT, scope=VALIDATION_SCOPE, default_pdfa=_verapdf_default_result,
+        combined_status=combined_validation_status, format_details=format_details,
+        escape=html_escape, spec_references=spec_references_for,
+        specification_context=specification_context_html)
+    return _reporting.render_html(report, pdfa, context=context)
 
 def write_html_report(report, pdf_path, html_path=None, pdfa=None):
-    out=derive_html_path(pdf_path, html_path)
-    out.write_text(render_html(report, pdfa), encoding="utf-8")
-    return out
+    return _reporting.write_html_report(report, pdf_path, html_path, pdfa,
+        derive_path=derive_html_path, render=render_html)
 
 def objgen(x):
     try: return tuple(x.objgen)
@@ -1508,30 +1054,277 @@ def utf8_xmp_error(data):
         return "XML declaration specifies a non-UTF-8 encoding"
     return ""
 
+def _xmp_rules_dependencies():
+    return _xmp_rules.Dependencies(
+        ALLOWED_EAPDF_CONFORMANCE=ALLOWED_EAPDF_CONFORMANCE,
+        ALLOWED_PDFA=ALLOWED_PDFA,
+        NS_DC=NS_DC,
+        NS_PDF=NS_PDF,
+        NS_PDFAID=NS_PDFAID,
+        NS_PDFMAIL=NS_PDFMAIL,
+        NS_PDFMAILID=NS_PDFMAILID,
+        NS_PDFMAILMETA=NS_PDFMAILMETA,
+        NS_XMP=NS_XMP,
+        XmpArray=XmpArray,
+        XmpUri=XmpUri,
+        chain=chain,
+        check_single_source_xmp_semantics=check_single_source_xmp_semantics,
+        datetime_values_match=datetime_values_match,
+        dict_get=dict_get,
+        evidence_unavailable=evidence_unavailable,
+        find_xmp_values=find_xmp_values,
+        first_message_xmp_value=first_message_xmp_value,
+        first_present=first_present,
+        first_xmp_value=first_xmp_value,
+        flatten_attachments=flatten_attachments,
+        flatten_email_records=flatten_email_records,
+        guid_value=guid_value,
+        is_nonneg_int_str=is_nonneg_int_str,
+        is_xmp_text=is_xmp_text,
+        local=local,
+        looks_like_xmp_date=looks_like_xmp_date,
+        looks_like_xmp_datetime=looks_like_xmp_datetime,
+        nonnegative_integer_equals=nonnegative_integer_equals,
+        norm_text=norm_text,
+        observed_pdf_value=observed_pdf_value,
+        pdf_object_identity=pdf_object_identity,
+        pikepdf=pikepdf,
+        qn=qn,
+        read_docinfo=read_docinfo,
+        read_stream=read_stream,
+        safe_name=safe_name,
+        stream_setting=stream_setting,
+        summarize_source_email=summarize_source_email,
+        summarize_source_emails=summarize_source_emails,
+        text_values_match=text_values_match,
+        utf8_xmp_error=utf8_xmp_error,
+        xmp_default_language_values=xmp_default_language_values,
+        xmp_descriptions=xmp_descriptions,
+        xmp_document_property_values=xmp_document_property_values,
+        xmp_property_nodes=xmp_property_nodes,
+        xmp_semantic_type=xmp_semantic_type,
+        xmp_semantic_value=xmp_semantic_value,
+    )
+
+def _embedding_rules_dependencies():
+    return _embedding_rules.Dependencies(
+        ALLOWED_EAPDF_CONFORMANCE=ALLOWED_EAPDF_CONFORMANCE,
+        BytesIO=BytesIO,
+        ET=ET,
+        GENERIC_BAD_MIME=GENERIC_BAD_MIME,
+        MAX_TREE_ITEMS=MAX_TREE_ITEMS,
+        NS_PDFMAILID=NS_PDFMAILID,
+        attachment_candidates_for_embedded=attachment_candidates_for_embedded,
+        attachment_comparison_signature=attachment_comparison_signature,
+        attachment_email_owners=attachment_email_owners,
+        attachment_file_names=attachment_file_names,
+        attachment_source_checksum=attachment_source_checksum,
+        check_ambiguous_source_asset_values=check_ambiguous_source_asset_values,
+        check_xmp_record_array=check_xmp_record_array,
+        collect_file_attachment_annotations=collect_file_attachment_annotations,
+        collect_marked_content_af_specs=collect_marked_content_af_specs,
+        collect_object_af_specs=collect_object_af_specs,
+        defaultdict=defaultdict,
+        dict_get=dict_get,
+        effective_pdf_version=effective_pdf_version,
+        embedded_file_candidates=embedded_file_candidates,
+        embedded_file_observations=embedded_file_observations,
+        evidence_unavailable=evidence_unavailable,
+        first_xmp_value=first_xmp_value,
+        flatten_assets=flatten_assets,
+        flatten_attachments=flatten_attachments,
+        get_af_specs=get_af_specs,
+        get_declared_pdf_version=get_declared_pdf_version,
+        get_embedded_files=get_embedded_files,
+        identity_fields=identity_fields,
+        is_nonneg_int_str=is_nonneg_int_str,
+        is_pdf_array=is_pdf_array,
+        is_xmp_text=is_xmp_text,
+        looks_like_pdf_date=looks_like_pdf_date,
+        map_embedded_by_objgen=map_embedded_by_objgen,
+        map_stream_by_objgen=map_stream_by_objgen,
+        media_type_signature=media_type_signature,
+        nonnegative_integer_equals=nonnegative_integer_equals,
+        norm_text=norm_text,
+        normalize_path_tail=normalize_path_tail,
+        observed_pdf_value=observed_pdf_value,
+        parse_filespec=parse_filespec,
+        parse_nonneg_int_value=parse_nonneg_int_value,
+        pdf_object_identity=pdf_object_identity,
+        pikepdf=pikepdf,
+        re=re,
+        read_metadata_stream=read_metadata_stream,
+        reconstruct_embedded_media_type=reconstruct_embedded_media_type,
+        represented_email_attachment_presence=represented_email_attachment_presence,
+        safe_name=safe_name,
+        source_file_name=source_file_name,
+        source_set_supplements=source_set_supplements,
+        xmp_semantic_type=xmp_semantic_type,
+    )
+
+def _structure_rules_dependencies():
+    return _structure_rules.Dependencies(
+        Decimal=Decimal,
+        InvalidOperation=InvalidOperation,
+        MAIL_STRUCTURE_TYPES=MAIL_STRUCTURE_TYPES,
+        MAX_TREE_ITEMS=MAX_TREE_ITEMS,
+        Report=Report,
+        StructureRoles=StructureRoles,
+        analyze_page_content=analyze_page_content,
+        check_dpart_object_structure=check_dpart_object_structure,
+        check_page_dpart_links=check_page_dpart_links,
+        check_structure_correspondence=check_structure_correspondence,
+        check_user_properties=check_user_properties,
+        datetime=datetime,
+        decoded_source_header=decoded_source_header,
+        defaultdict=defaultdict,
+        dict_get=dict_get,
+        dpart_ancestor_guid=dpart_ancestor_guid,
+        dpart_level_name_assessment=dpart_level_name_assessment,
+        dpart_message_identity=dpart_message_identity,
+        emit_if_unseen=emit_if_unseen,
+        evidence_unavailable=evidence_unavailable,
+        flatten_email_records=flatten_email_records,
+        get_dpart_nodes=get_dpart_nodes,
+        get_outline_items=get_outline_items,
+        get_outline_page_objgens=get_outline_page_objgens,
+        guid_value=guid_value,
+        identity_fields=identity_fields,
+        independent_content_ownership=independent_content_ownership,
+        inspect_dpm_value_graph=inspect_dpm_value_graph,
+        is_pdf_array=is_pdf_array,
+        is_pdf_ascii_string=is_pdf_ascii_string,
+        looks_like_pdf_date=looks_like_pdf_date,
+        norm_text=norm_text,
+        normalize_role_map=normalize_role_map,
+        objgen=objgen,
+        observed_header_source_inventory=observed_header_source_inventory,
+        observed_pdf_value=observed_pdf_value,
+        page_has_visibleish_content=page_has_visibleish_content,
+        page_objgen_map=page_objgen_map,
+        page_range_from_dpart=page_range_from_dpart,
+        parse_userproperties=parse_userproperties,
+        parse_xmp_datetime=parse_xmp_datetime,
+        pdf_object_identity=pdf_object_identity,
+        pikepdf=pikepdf,
+        re=re,
+        safe_name=safe_name,
+        source_email_for_record=source_email_for_record,
+        struct_children=struct_children,
+        structure_field_text_sequences=structure_field_text_sequences,
+        summarize_source_emails=summarize_source_emails,
+        timedelta=timedelta,
+        timezone=timezone,
+        userprop_name=userprop_name,
+        userprop_value_kind=userprop_value_kind,
+        visit_tree_node=visit_tree_node,
+        walk_struct_elems=walk_struct_elems,
+        xmp_value_set=xmp_value_set,
+    )
+
+def _message_rules_dependencies():
+    return _message_rules.Dependencies(
+        Decimal=Decimal,
+        ET=ET,
+        MAX_TREE_ITEMS=MAX_TREE_ITEMS,
+        NS_PDFMAILMETA=NS_PDFMAILMETA,
+        NS_RDF=NS_RDF,
+        XmpArray=XmpArray,
+        attachment_email_owners=attachment_email_owners,
+        check_ambiguous_source_header_values=check_ambiguous_source_header_values,
+        check_native_outlook_core=check_native_outlook_core,
+        check_single_message_metadata=check_single_message_metadata,
+        check_source_field_values=check_source_field_values,
+        check_xmp_record_array=check_xmp_record_array,
+        clean_header_text=clean_header_text,
+        compare_agent_property=compare_agent_property,
+        compare_native_outlook_raw=compare_native_outlook_raw,
+        contains_surrogate=contains_surrogate,
+        decoded_header_text=decoded_header_text,
+        decoded_source_header=decoded_source_header,
+        deepcopy=deepcopy,
+        diagnostic_value=diagnostic_value,
+        evidence_unavailable=evidence_unavailable,
+        find_xmp_values=find_xmp_values,
+        first_message_xmp_value=first_message_xmp_value,
+        first_present=first_present,
+        flatten_attachments=flatten_attachments,
+        flatten_email_records=flatten_email_records,
+        guid_value=guid_value,
+        inspect_outlook_source=inspect_outlook_source,
+        is_nonneg_int_str=is_nonneg_int_str,
+        is_xmp_text=is_xmp_text,
+        looks_like_xmp_datetime=looks_like_xmp_datetime,
+        mailbox_comparison_key=mailbox_comparison_key,
+        md5hex=md5hex,
+        message_xmp_property_present=message_xmp_property_present,
+        nonnegative_integer_equals=nonnegative_integer_equals,
+        norm_text=norm_text,
+        normalize_foaf_agents=normalize_foaf_agents,
+        parse_nonneg_int_value=parse_nonneg_int_value,
+        parse_xmp_datetime=parse_xmp_datetime,
+        qn=qn,
+        raw_address_mailbox_keys=raw_address_mailbox_keys,
+        re=re,
+        select_source_email=select_source_email,
+        sha256hex=sha256hex,
+        source_assertion_key=source_assertion_key,
+        source_date_present=source_date_present,
+        source_file_name=source_file_name,
+        source_header_candidate_failures=source_header_candidate_failures,
+        source_metadata_result=source_metadata_result,
+        summarize_source_email=summarize_source_email,
+        summarize_source_emails=summarize_source_emails,
+        valid_smtp_mailbox=valid_smtp_mailbox,
+        validate_attachment_records=validate_attachment_records,
+        xmp_array_members=xmp_array_members,
+    )
+
+def _media_rules_dependencies():
+    return _media_rules.Dependencies(
+        GENERIC_BAD_MIME=GENERIC_BAD_MIME,
+        MAX_TREE_ITEMS=MAX_TREE_ITEMS,
+        NS_PDFMAILID=NS_PDFMAILID,
+        check_attachment_rendering_media=check_attachment_rendering_media,
+        collect_body_content_sets=collect_body_content_sets,
+        declared_content_sets_are_nonbody=declared_content_sets_are_nonbody,
+        defaultdict=defaultdict,
+        dict_get=dict_get,
+        embedded_file_candidates=embedded_file_candidates,
+        embedded_file_observations=embedded_file_observations,
+        evidence_unavailable=evidence_unavailable,
+        first_xmp_value=first_xmp_value,
+        flatten_assets=flatten_assets,
+        flatten_email_records=flatten_email_records,
+        get_dpart_nodes=get_dpart_nodes,
+        get_embedded_files=get_embedded_files,
+        guid_value=guid_value,
+        identities_match=identities_match,
+        identity_fields=identity_fields,
+        independent_content_ownership=independent_content_ownership,
+        is_nonneg_int_str=is_nonneg_int_str,
+        is_pdf_array=is_pdf_array,
+        is_xmp_text=is_xmp_text,
+        media_type_signature=media_type_signature,
+        nonnegative_integer_equals=nonnegative_integer_equals,
+        norm_text=norm_text,
+        objgen=objgen,
+        observed_pdf_value=observed_pdf_value,
+        original_attachment_media_types=original_attachment_media_types,
+        page_objgen_map=page_objgen_map,
+        page_range_from_dpart=page_range_from_dpart,
+        pikepdf=pikepdf,
+        re=re,
+        safe_name=safe_name,
+        sha256hex=sha256hex,
+        source_email_for_record=source_email_for_record,
+        source_file_name=source_file_name,
+        summarize_source_emails=summarize_source_emails,
+    )
+
+
 def check_xmp_utf8(pdf,report):
-    streams={}
-    for obj in chain((pdf.Root,),pdf.objects):
-        if isinstance(obj,(pikepdf.Dictionary,pikepdf.Stream)):
-            metadata=dict_get(obj,"/Metadata",None)
-            if isinstance(metadata,pikepdf.Stream):
-                streams[pdf_object_identity(metadata)]=metadata
-            if isinstance(obj,pikepdf.Stream) and safe_name(dict_get(obj,"/Type",None))=="Metadata":
-                streams[pdf_object_identity(obj)]=obj
-    if not streams:
-        report.fail("XMP_UTF8","No XMP metadata stream is available to verify UTF-8 encoding")
-        return
-    failures=[]
-    for identity,stream in streams.items():
-        try:
-            error=utf8_xmp_error(read_stream(stream, stream_setting("VALIDATOR_MAX_METADATA_BYTES", 16 * 1024**2)))
-        except Exception as exception:
-            error="Cannot decode metadata stream: "+str(exception)
-        if error:
-            failures.append({"object":identity,"error":error})
-    if failures:
-        report.fail("XMP_UTF8","All XMP streams must use UTF-8, including PDF/A-3 files",{"actual":failures})
-    else:
-        report.ok("XMP_UTF8","All discovered XMP metadata streams use UTF-8",{"count":len(streams)})
+    return _xmp_rules.check_xmp_utf8(_xmp_rules_dependencies(), pdf, report)
 
 def extract_xmp_model(root):
     model={"descriptions":[]}
@@ -1631,19 +1424,7 @@ def xmp_array_members(root,prop):
     return members
 
 def check_xmp_record_array(root,prop,report,code,required=False):
-    values=[xmp_semantic_value(node) for node in xmp_property_nodes(root,NS_PDFMAILMETA,prop)]
-    values.extend(desc.get(qn(NS_PDFMAILMETA,prop)) for desc in xmp_descriptions(root)
-                  if qn(NS_PDFMAILMETA,prop) in desc.attrib)
-    if required and not values:
-        report.fail(code,f"Document XMP must include {prop} as an unordered rdf:Bag, even when empty",
-                    {"property":prop,"present":False})
-    elif any(not isinstance(value,XmpArray) or value.kind!="Bag"
-           or any(not isinstance(member,dict) for member in value) for value in values):
-        report.fail(code,f"Supplied XMP {prop} must be an unordered array of structured records",
-                    {"array_kinds":[getattr(value,"kind",None) for value in values]})
-    elif required:
-        report.ok(code,f"Document XMP includes {prop} as an unordered rdf:Bag; an empty Bag is permitted",
-                  {"property":prop,"records":sum(len(value) for value in values)})
+    return _xmp_rules.check_xmp_record_array(_xmp_rules_dependencies(), root, prop, report, code, required)
 
 def xmp_semantic_value(node):
     resource=node.get(qn(NS_RDF,"resource"))
@@ -2515,104 +2296,7 @@ def page_marked_content_sequences(page, wanted_tags):
             for item in analyze_page_content(page)["sequences"] if item["tag"] in wanted_tags]
 
 def check_custom_tag_operands(pdf,report):
-    """EA-PDF 9.7: compare each sequence with its actual structure owner."""
-    code="CUSTOM_TAG_OPERAND_MATCH"
-    owners=defaultdict(list)
-    stream_pages=defaultdict(set)
-    sequences={}
-    unavailable=[]
-    failures=[]
-    compared=[]
-    observed_keys=set()
-    for number,page in enumerate(pdf.pages,start=1):
-        page_id=pdf_object_identity(page.obj)
-        streams=dict_get(page.obj,"/Contents",[])
-        for stream in streams if is_pdf_array(streams) else [streams]:
-            if isinstance(stream,pikepdf.Stream):
-                stream_pages[pdf_object_identity(stream)].add(page_id)
-        try:
-            for sequence in analyze_page_content(page)["sequences"]:
-                location=(pdf_object_identity(sequence["scope"]),sequence["instruction_index"])
-                sequences.setdefault(location,dict(sequence,page_number=number))
-        except Exception as error:
-            unavailable.append({"page":number,"reason":str(error)})
-
-    seen=set()
-    def walk(element,inherited_page=None,depth=0):
-        visit_tree_node(element,seen,len(seen),depth,"custom operand ownership")
-        page=dict_get(element,"/Pg",inherited_page)
-        tag=safe_name(dict_get(element,"/S",None))
-        children=dict_get(element,"/K",[])
-        for child in children if is_pdf_array(children) else [children]:
-            if dict_get(child,"/S",None) is not None:
-                walk(child,page,depth+1)
-                continue
-            if isinstance(child,int) and not isinstance(child,bool):
-                mcid=child
-                target=page
-                content_page=page
-            elif safe_name(dict_get(child,"/Type",None))=="MCR":
-                mcid=dict_get(child,"/MCID",None)
-                content_page=dict_get(child,"/Pg",page)
-                target=dict_get(child,"/Stm",content_page)
-            else:
-                continue
-            if target is None or not isinstance(mcid,int) or isinstance(mcid,bool) or mcid<0:
-                if tag.startswith("Mail_"):
-                    unavailable.append({"owner":objgen(element),"reason":"Custom content reference has no valid scope/MCID"})
-                continue
-            scope=pdf_object_identity(target)
-            aliases=stream_pages.get(scope,set())
-            page_id=pdf_object_identity(content_page)
-            if page_id in aliases:
-                scope=page_id
-            elif len(aliases)==1:
-                scope=next(iter(aliases))
-            elif aliases:
-                unavailable.append({"owner":objgen(element),"reason":"Content stream reference has ambiguous page scope"})
-                continue
-            owners[(scope,mcid)].append({"tag":tag,"object":objgen(element)})
-
-    structure=dict_get(pdf.Root,"/StructTreeRoot",None)
-    roots=dict_get(structure,"/K",[])
-    try:
-        for root in roots if is_pdf_array(roots) or isinstance(roots,list) else [roots]:
-            walk(root)
-    except Exception as error:
-        unavailable.append({"reason":str(error)})
-    for sequence in sequences.values():
-        mcid=sequence["mcid"]
-        valid_mcid=isinstance(mcid,int) and not isinstance(mcid,bool) and mcid>=0
-        key=(pdf_object_identity(sequence["scope"]),mcid) if valid_mcid else None
-        if key is not None:
-            observed_keys.add(key)
-        candidates=owners.get(key,[]) if valid_mcid else []
-        if not sequence["tag"].startswith("Mail_") and not any(c["tag"].startswith("Mail_") for c in candidates):
-            continue
-        detail={"page":sequence["page_number"],"scope":objgen(sequence["scope"]),
-                "mcid":mcid,"actual":sequence["tag"],"owners":candidates}
-        if len(candidates)!=1:
-            unavailable.append(dict(detail,reason="No unique corresponding structure owner is available"))
-        elif sequence["tag"]!=candidates[0]["tag"]:
-            failures.append(dict(detail,expected=candidates[0]["tag"]))
-        else:
-            compared.append(detail)
-    for key,candidates in owners.items():
-        if key not in observed_keys and any(c["tag"].startswith("Mail_") for c in candidates):
-            unavailable.append({"scope":key[0],"mcid":key[1],"owners":candidates,
-                                "reason":"Custom structure content reference has no observed sequence"})
-    details={"comparisons":compared,"unavailable":unavailable}
-    if failures:
-        report.fail(code,"Marked-content operands differ from their corresponding custom structure element names",
-                    dict(details,actual=failures))
-    elif unavailable:
-        report.warn(code,"Custom marked-content operand ownership could not be fully verified",dict(details,assessment="unavailable"))
-        report.warn("VALIDATION_INCOMPLETE","Custom marked-content operand comparisons require available content ownership",details)
-    elif compared:
-        report.ok(code,"Marked-content operands match their corresponding custom structure element names",details)
-    else:
-        report.na(code,"No custom marked-content sequences or custom owners of marked content require comparison",
-                  {"reason":"No observed sequence uses a custom EA-PDF operand or has a custom EA-PDF structure owner."})
+    return _structure_rules.check_custom_tag_operands(_structure_rules_dependencies(), pdf, report)
 
 def parse_rect_coords(value):
     if value is None:
@@ -2715,19 +2399,7 @@ def collect_file_attachment_annotations(pdf):
     return out
 
 def check_file_attachment_contents(pdf,report):
-    annotations=collect_file_attachment_annotations(pdf)
-    code="ANNOTATION_CONTENTS_REQUIRED"
-    if not annotations:
-        report.na(code,"No FileAttachment annotation requires Contents",{"reason":"No FileAttachment annotations are present."})
-    for annotation in annotations:
-        details={key:annotation[key] for key in ("page","objgen","contents")}
-        if not annotation["contents_is_text"]:
-            report.fail(code,"FileAttachment annotation requires a PDF text-string Contents entry",details)
-        elif annotation["contents_unavailable"]:
-            report.warn(code,"Attachment annotation Contents text could not be decoded",dict(details,assessment="unavailable"))
-            report.warn("VALIDATION_INCOMPLETE","Attachment annotation Contents could not be assessed",{"rules":[code],"assessment":"unavailable"})
-        else:
-            report.ok(code,"FileAttachment annotation contains Contents text",details)
+    return _embedding_rules.check_file_attachment_contents(_embedding_rules_dependencies(), pdf, report)
 
 def extract_actionable_urls(text):
     if not text:
@@ -3189,163 +2861,7 @@ def attachment_comparison_signature(attachment):
     return size,checksum,media_type_signature(content_type)
 
 def check_attachment_stream_consistency(attachments, files, report, email_records=(), source_summaries=(), ambiguities=None, owner_scopes=None):
-    """Check associated native bytes, independently of body annotations.
-
-    This is bounded internal consistency, not an original-attachment inventory
-    or occurrence/owner proof. Equivalent metadata candidates permit the same
-    comparisons for each record; size/type never select among differing records.
-    A supplied size/checksum/media value contradicted by every possible native payload can
-    fail independently while the association remains unavailable.
-    """
-    comparison_groups={}
-    unavailable=[]
-    native_files=[fileinfo for fileinfo in files if fileinfo.get("afrelationship") not in ("Source","Alternative")]
-    source_checksums={id(att):attachment_source_checksum(att,{"identity":identity_fields(att)},email_records,source_summaries,
-                                                      getattr(report,"_email_source_summaries",None))
-                      for att in attachments}
-    comparison_candidates={}
-    possible_files=defaultdict(list)
-    attachment_owners={id(att):attachment_email_owners(att,email_records) for att in attachments} if owner_scopes else {}
-    for fileinfo in native_files:
-        scope=(owner_scopes or {}).get(tuple(fileinfo.get("objgen") or ()))
-        scoped_attachments=[att for att in attachments if len(attachment_owners[id(att)])!=1
-                            or id(attachment_owners[id(att)][0]) in scope] if scope else attachments
-        candidates=attachment_candidates_for_embedded(fileinfo,scoped_attachments,source_checksums)
-        for attachment in candidates:
-            possible_files[id(attachment)].append(fileinfo)
-        if len(candidates)>1:
-            signature=attachment_comparison_signature(candidates[0])
-            if signature is None or any(attachment_comparison_signature(att)!=signature for att in candidates[1:]):
-                unavailable.append({"filenames":sorted(attachment_file_names(fileinfo)),"candidate_count":len(candidates)})
-                continue
-        comparison_candidates[id(fileinfo)]=len(candidates)
-        if candidates:
-            key=tuple(id(attachment) for attachment in candidates)
-            comparison_groups.setdefault(key,[]).append(fileinfo)
-    failures=[]
-    media_failures=[]
-    parameter_failures=[]
-    comparisons=[]
-    associations={}
-    def check_unavailable_comparison(attachment):
-        # Do not choose an occurrence using the field being checked. A failure
-        # needs a nonempty candidate set and a contradiction from every member;
-        # a missing observation or any compatible value prevents that failure.
-        candidates=possible_files[id(attachment)]
-        if not candidates:
-            declared_media=attachment.get("Content-Type")
-            if native_files and is_xmp_text(declared_media) and ";" in declared_media:
-                unavailable.append({"filename":attachment.get("Filename"),"xmp_content_type":declared_media,
-                    "candidate_count":0,"parameter_comparison_unavailable":True,
-                    "reason":"Native files exist but no payload association establishes the declared parameter comparison"})
-            return
-        mismatches=[]
-        declared_size=attachment.get("SizeInBytes")
-        if is_nonneg_int_str(declared_size) and all(
-                type(f.get("size")) is int and f["size"]>=0
-                and not nonnegative_integer_equals(declared_size,f["size"]) for f in candidates):
-            mismatches.append("SizeInBytes")
-        declared_checksum=attachment.get("CheckSum")
-        if is_xmp_text(declared_checksum) and re.fullmatch(r"[0-9A-Fa-f]{32}",declared_checksum) and all(
-                isinstance(f.get("md5"),str) and re.fullmatch(r"[0-9A-Fa-f]{32}",f["md5"])
-                and declared_checksum.lower()!=f["md5"].lower() for f in candidates):
-            mismatches.append("CheckSum")
-        declared_media=attachment.get("Content-Type")
-        if is_xmp_text(declared_media) and declared_media.strip():
-            observed=[]
-            for fileinfo in candidates:
-                actual=fileinfo.get("reconstructed_media_type")
-                if "reconstructed_media_type" not in fileinfo:
-                    subtype=fileinfo.get("subtype")
-                    parameters=fileinfo.get("media_type_parameters","")
-                    if isinstance(subtype,str) and subtype and isinstance(parameters,str):
-                        actual=subtype+";"+parameters
-                observed.append(actual if isinstance(actual,str) and actual else None)
-            detail={"filename":attachment.get("Filename"),"xmp_content_type":declared_media,
-                "native_candidates":[{"objgen":f.get("objgen"),"reconstructed_media_type":actual}
-                                     for f,actual in zip(candidates,observed)],
-                "association_scope":"all_candidate_payloads","unique_occurrence_identity":False}
-            if all(actual is not None and media_type_signature(actual)!=media_type_signature(declared_media)
-                   for actual in observed):
-                media_failures.append(detail)
-            if ";" in declared_media:
-                expected="application/octet-stream;"+declared_media.split(";",1)[1]
-                if all(actual is not None and media_type_signature("application/octet-stream;"+actual.partition(";")[2])
-                       !=media_type_signature(expected) for actual in observed):
-                    parameter_failures.append(detail)
-                else:
-                    unavailable.append(dict(detail,parameter_comparison_unavailable=True))
-        if mismatches:
-            failures.append({"filename":attachment.get("Filename"),
-                "xmp_size":declared_size,"xmp_checksum":declared_checksum,
-                "native_candidates":[{"objgen":f.get("objgen"),"size":f.get("size"),"checksum":f.get("md5")}
-                                     for f in candidates],
-                "mismatched_fields":mismatches,"association_scope":"all_candidate_payloads",
-                "unique_occurrence_identity":False})
-    for attachment in attachments:
-        candidates=[fileinfo for record_ids,group in comparison_groups.items()
-                    if id(attachment) in record_ids for fileinfo in group]
-        if not candidates:
-            check_unavailable_comparison(attachment)
-            if native_files:
-                unavailable.append({"filename":attachment.get("Filename"),"reason":"No unique native payload association established"})
-            continue
-        observations={(fileinfo.get("size"),fileinfo.get("md5"),media_type_signature(
-            fileinfo.get("reconstructed_media_type",str(fileinfo.get("subtype",""))+
-                         (";"+fileinfo["media_type_parameters"] if fileinfo.get("media_type_parameters") else ""))))
-                      for fileinfo in candidates}
-        if len(observations)>1:
-            check_unavailable_comparison(attachment)
-            unavailable.append({"filename":attachment.get("Filename"),"candidate_count":len(candidates),
-                                "reason":"Multiple native payloads have different size/checksum/media observations"})
-            continue
-        fileinfo=candidates[0]
-        size,checksum=fileinfo.get("size"),norm_text(fileinfo.get("md5","")).lower()
-        if size is None or not re.fullmatch(r"[0-9a-f]{32}",checksum):
-            check_unavailable_comparison(attachment)
-            unavailable.append({"filename":attachment.get("Filename"),"reason":"Native payload observations unavailable"})
-            continue
-        for candidate in candidates:
-            # The caller only needs media-type evidence. A projection avoids
-            # returning an arbitrary owner's record for equivalent candidates.
-            associations[id(candidate)]=(attachment if comparison_candidates[id(candidate)]==1
-                                         else {"Content-Type":attachment["Content-Type"]})
-        detail={"filename":attachment.get("Filename"),"native_files":[f.get("objgen") for f in candidates],
-                "xmp_size":attachment.get("SizeInBytes"),"actual_size":size,
-                "xmp_checksum":attachment.get("CheckSum"),"actual_checksum":checksum}
-        if any(comparison_candidates[id(candidate)]>1 for candidate in candidates):
-            detail.update(association_scope="equivalent_metadata_comparisons",unique_occurrence_identity=False)
-        mismatches=[]
-        if is_nonneg_int_str(attachment.get("SizeInBytes")) and not nonnegative_integer_equals(attachment["SizeInBytes"],size):
-            mismatches.append("SizeInBytes")
-        declared=attachment.get("CheckSum")
-        if is_xmp_text(declared) and re.fullmatch(r"[0-9A-Fa-f]{32}",declared) and declared.lower()!=checksum:
-            mismatches.append("CheckSum")
-        comparisons.append(detail)
-        if mismatches:
-            failures.append(dict(detail,mismatched_fields=mismatches))
-    for field,code in (("SizeInBytes","ATTACHMENT_XMP_SIZE_MATCH"),("CheckSum","ATTACHMENT_XMP_CHECKSUM_MATCH")):
-        bad=[detail for detail in failures if field in detail["mismatched_fields"]]
-        comparable=[detail for detail in comparisons if
-                    (is_nonneg_int_str(detail.get("xmp_size")) if field=="SizeInBytes" else
-                     isinstance(detail.get("xmp_checksum"),str) and re.fullmatch(r"[0-9A-Fa-f]{32}",detail["xmp_checksum"]))]
-        if bad:
-            report.fail(code,"Attachment XMP "+field+" differs from associated native bytes",{"field":field,"actual":bad})
-        elif comparable:
-            report.ok(code,"Attachment XMP "+field+" agrees with associated native bytes",{"field":field,"comparisons":comparable})
-        if unavailable and (field=="SizeInBytes" or any("CheckSum" in attachment for attachment in attachments)):
-            report.warn(code,"Native-byte comparison is unavailable for unresolved associations",{"field":field,"assessment":"unavailable","actual":unavailable})
-        elif field=="CheckSum" and not any("CheckSum" in attachment for attachment in attachments):
-            report.na(code,"No optional attachment CheckSum is supplied")
-    if media_failures:
-        report.fail("EMBEDDED_MEDIA_TYPE_MATCH_XMP","Attachment XMP media type contradicts every possible native payload",{"actual":media_failures})
-    if parameter_failures:
-        report.fail("EMBEDDED_MEDIA_TYPE_MATCH_XMP","Attachment XMP media parameters contradict every possible native payload",{"actual":parameter_failures})
-    if unavailable:
-        report.warn("VALIDATION_INCOMPLETE","Attachment native-byte consistency could not be fully verified",{"assessment":"unavailable"})
-    if ambiguities is not None:
-        ambiguities.extend(unavailable)
-    return associations
+    return _embedding_rules.check_attachment_stream_consistency(_embedding_rules_dependencies(), attachments, files, report, email_records, source_summaries, ambiguities, owner_scopes)
 
 def dpart_message_identity(item, by_objgen):
     cur=item
@@ -3979,62 +3495,19 @@ def collect_all_fonts(pdf):
             out.append({"page":i+1,"name":name,"subtype":subtype,"basefont":base,"embedded":font_embedded(font),"objgen":objgen(font)})
     return out
 
+def _pdf_rule_context(pdf, report):
+    objects = _pdf_rules.PdfObjects(dict_get, observed_pdf_value, safe_name, norm_text)
+    return _pdf_rules.PdfRuleContext(pdf, report, objects)
+
+
 def check_pdf_version(pdf,report):
-    hdr,rv=get_declared_pdf_version(pdf)
-    root_ver=dict_get(pdf.Root,"/Version",None)
-    effective=effective_pdf_version(hdr,rv)
-    allowed_versions=("1.7","2.0")
-    if hdr in allowed_versions:
-        report.ok("PDF_HEADER_VERSION_READ","PDF header version allowed",{"header_version":hdr})
-    else:
-        report.fail("PDF_HEADER_VERSION_READ","PDF header version must be 1.7 or 2.0",{"header_version":hdr,"expected_versions":list(allowed_versions)})
-    if root_ver is not None and not isinstance(root_ver,pikepdf.Name):
-        report.fail("PDF_CATALOG_VERSION","Catalog /Version must be a PDF name",{
-            "actual":observed_pdf_value(root_ver),"is_pdf_name":False,"header_version":hdr})
-    elif root_ver is not None and re.fullmatch(r"[0-9]\.[0-9]",rv) and effective in allowed_versions:
-        report.ok("PDF_CATALOG_VERSION","Catalog /Version is a PDF version name with an allowed effective version",{
-            "catalog_version":rv,"header_version":hdr,"effective_version":effective})
-    elif root_ver is not None:
-        report.fail(
-            "PDF_CATALOG_VERSION",
-            "Catalog /Version is malformed or yields an unsupported effective version",
-            {"catalog_version":rv,"header_version":hdr,"effective_version":effective},
-        )
-    elif hdr in allowed_versions:
-        report.ok(
-            "PDF_CATALOG_VERSION",
-            "Catalog /Version absent, but header provides an allowed PDF version",
-            {"catalog_version":"","header_version":hdr},
-        )
-    else:
-        report.fail(
-            "PDF_CATALOG_VERSION",
-            "Catalog /Version absent and header does not provide an allowed PDF version",
-            {"catalog_version":"","header_version":hdr},
-        )
-    if effective in allowed_versions:
-        report.ok("PDF_EFFECTIVE_VERSION","Effective PDF version allowed",{"header_version":hdr,"catalog_version":rv,"effective_version":effective})
-    else:
-        report.fail("PDF_EFFECTIVE_VERSION","Effective PDF version must be 1.7 or 2.0",{"header_version":hdr,"catalog_version":rv,"effective_version":effective})
+    return _pdf_rules.check_pdf_version(_pdf_rule_context(pdf, report), declared_version=get_declared_pdf_version, effective_version=effective_pdf_version)
 
 def check_pages(pdf,report):
-    n=len(pdf.pages)
-    if n>0: report.ok("PAGE_COUNT","Document has pages",{"pages":n})
-    else: report.fail("PAGE_COUNT","Document has no pages",{"pages":n})
+    return _pdf_rules.check_pages(_pdf_rule_context(pdf, report))
 
 def check_output_intents(pdf,report):
-    oi=dict_get(pdf.Root,"/OutputIntents",None)
-    if oi is None or len(oi)==0:
-        report.fail("OUTPUT_INTENT","Missing OutputIntent",{"OutputIntents":observed_pdf_value(oi)})
-        return
-    good=False
-    details=[]
-    for x in oi:
-        d={"S":safe_name(dict_get(x,"/S",None)),"OutputConditionIdentifier":norm_text(str(dict_get(x,"/OutputConditionIdentifier",""))),"Info":norm_text(str(dict_get(x,"/Info","")))}
-        details.append(d)
-        if d["S"]=="GTS_PDFA1": good=True
-    if good: report.ok("OUTPUT_INTENT","OutputIntent present",details)
-    else: report.fail("OUTPUT_INTENT","OutputIntent present but missing /S /GTS_PDFA1",details)
+    return _pdf_rules.check_output_intents(_pdf_rule_context(pdf, report))
 
 def expected_navigation_mode(eapdf_conf, efiles=None, afiles=None, root_xml=None):
     if not eapdf_conf:
@@ -4063,241 +3536,19 @@ def expected_navigation_mode(eapdf_conf, efiles=None, afiles=None, root_xml=None
 
 
 def check_catalog_rules(pdf,report,eapdf_conf=None,efiles=None,afiles=None,root_xml=None):
-    root=pdf.Root
-    if dict_get(root,"/PieceInfo",None) is None:
-        report.ok("CATALOG_PIECEINFO","Catalog PieceInfo absent",{"PieceInfo":None})
-    else:
-        report.fail("CATALOG_PIECEINFO","Catalog PieceInfo must not be present",{"PieceInfo":observed_pdf_value(root.PieceInfo)})
-    vp=dict_get(root,"/ViewerPreferences",None)
-    if vp is None:
-        report.fail("VIEWER_PREFS","ViewerPreferences missing",{"ViewerPreferences":""})
-    else:
-        report.ok("VIEWER_PREFS","ViewerPreferences present",{"ViewerPreferences":observed_pdf_value(vp)})
-        ddt=dict_get(vp,"/DisplayDocTitle",None)
-        if ddt is True:
-            report.ok("DISPLAY_DOCTITLE","ViewerPreferences DisplayDocTitle is true",{"actual":observed_pdf_value(ddt)})
-        else:
-            report.fail("DISPLAY_DOCTITLE","ViewerPreferences DisplayDocTitle must be true",{"actual":observed_pdf_value(ddt)})
-    page_mode=safe_name(dict_get(root,"/PageMode",None))
-    nfsm=safe_name(dict_get(vp,"/NonFullScreenPageMode",None)) if vp is not None else ""
-    expected_mode = expected_navigation_mode(eapdf_conf, efiles, afiles, root_xml)
-    if page_mode:
-        report.ok("PAGEMODE_PRESENT","PageMode present",{"PageMode":page_mode,"NonFullScreenPageMode":nfsm})
-    else:
-        details = {"PageMode":"","NonFullScreenPageMode":nfsm}
-        if expected_mode:
-            details["expected"] = expected_mode
-            if eapdf_conf:
-                details["profile"] = eapdf_conf
-        report.fail("PAGEMODE_PRESENT","PageMode missing",details)
-    if vp is not None:
-        if nfsm:
-            report.ok("NONFULLSCREENPAGEMODE_PRESENT","ViewerPreferences NonFullScreenPageMode present",{"NonFullScreenPageMode":nfsm})
-        else:
-            details = {"NonFullScreenPageMode":""}
-            if expected_mode:
-                details["expected"] = expected_mode
-                if eapdf_conf:
-                    details["profile"] = eapdf_conf
-            report.fail("NONFULLSCREENPAGEMODE_PRESENT","ViewerPreferences NonFullScreenPageMode missing",details)
+    return _pdf_rules.check_catalog_rules(_pdf_rule_context(pdf, report), eapdf_conf, efiles, afiles, root_xml, navigation_mode=expected_navigation_mode)
 
 def check_pdfa_xmp(root_xml,report):
-    part=first_xmp_value(root_xml,NS_PDFAID,"part")
-    conf=first_xmp_value(root_xml,NS_PDFAID,"conformance")
-    if str(part) in ("3","4"):
-        report.ok("PDFA_PART","pdfaid:part present and allowed",{"part":str(part)})
-    else:
-        report.fail("PDFA_PART","pdfaid:part must be 3 or 4",{"part":part})
-    cu=str(conf).upper() if conf is not None else ""
-    if (int(part) if str(part).isdigit() else None, cu if cu else None) in ALLOWED_PDFA:
-        report.ok("PDFA_CONFORMANCE","pdfaid:conformance allowed for declared part",{"part":str(part),"conformance":cu})
-    else:
-        report.fail("PDFA_CONFORMANCE","Disallowed PDF/A conformance for EA-PDF",{"part":str(part),"conformance":cu})
-    return (int(part) if str(part).isdigit() else None), cu
+    return _xmp_rules.check_pdfa_xmp(_xmp_rules_dependencies(), root_xml, report)
 
 def check_eapdf_xmp(root_xml,nsmap,report):
-    need={NS_PDFMAIL:"pdfmail",NS_PDFMAILID:"pdfmailid",NS_PDFMAILMETA:"pdfmailmeta"}
-    for uri,pfx in need.items():
-        if uri in nsmap.values():
-            actual=[k for k,v in nsmap.items() if v==uri]
-            if pfx in actual:
-                report.ok("XMP_NS_PREFIX","Required EA-PDF namespace and prefix present",{"uri":uri,"prefix":pfx})
-            else:
-                report.fail("XMP_NS_PREFIX","EA-PDF namespace present with wrong prefix",{"uri":uri,"expected_prefix":pfx,"actual_prefixes":actual})
-        else:
-            report.fail("XMP_NS_PREFIX","Required EA-PDF namespace missing",{"uri":uri,"expected_prefix":pfx})
-    creator=find_xmp_values(root_xml,NS_DC,"creator")
-    creator_arrays=xmp_document_property_values(root_xml,NS_DC,"creator")
-    first_creators=[value[0] if isinstance(value,XmpArray) and value else "" for value in creator_arrays]
-    producer_values=xmp_document_property_values(root_xml,NS_PDF,"Producer")
-    cdate_values=xmp_document_property_values(root_xml,NS_XMP,"CreateDate")
-    producer=producer_values[0] if producer_values else ""
-    cdate=cdate_values[0] if cdate_values else ""
-    title_values=xmp_default_language_values(root_xml,NS_DC,"title")
-    title=title_values[0] if len(title_values)==1 else ""
-    creator_details={"value":creator,"first_values":first_creators,
-                     "types":[xmp_semantic_type(value) for value in creator_arrays]}
-    if creator_arrays and all(isinstance(value,XmpArray) and value.kind=="Seq" and value
-            and all(is_xmp_text(name) for name in value) and norm_text(value[0]) for value in creator_arrays):
-        report.ok("XMP_CREATOR","Ordered dc:creator entity names include the required populated first item; attribution is checked separately",creator_details)
-    else:
-        report.fail("XMP_CREATOR","EA-PDF requires ordered dc:creator names with a populated first item",creator_details)
-    producer_details={"value":producer,"values":producer_values,
-                      "types":[xmp_semantic_type(value) for value in producer_values]}
-    if producer_values and all(is_xmp_text(value) and norm_text(value) for value in producer_values):
-        report.ok("XMP_PRODUCER","EA-PDF creation software field pdf:Producer is normal Text",producer_details)
-    else:
-        report.fail("XMP_PRODUCER","EA-PDF requires pdf:Producer as normal Text naming the creation tool",producer_details)
-    cdate_details={"value":cdate,"values":cdate_values,
-                   "types":[xmp_semantic_type(value) for value in cdate_values]}
-    if cdate_values and all(looks_like_xmp_date(value) for value in cdate_values):
-        report.ok("XMP_CREATEDATE","EA-PDF creation date field xmp:CreateDate is an XMP Date",cdate_details)
-    else:
-        report.fail("XMP_CREATEDATE","EA-PDF requires xmp:CreateDate as an XMP Date",cdate_details)
-    title_details={"value":title,"default_values":title_values,"expected":'dc:title["x-default"] Text item'}
-    if len(title_values)==1:
-        report.ok("XMP_TITLE","dc:title x-default Text item is set",title_details)
-    else:
-        report.warn("XMP_TITLE","Recommended dc:title x-default Text item is missing or ambiguous",title_details)
-    versions=xmp_document_property_values(root_xml,NS_PDFMAILID,"version")
-    revisions=xmp_document_property_values(root_xml,NS_PDFMAILID,"rev")
-    conformances=xmp_document_property_values(root_xml,NS_PDFMAILID,"conformance")
-    v=versions[0] if versions else ""
-    r=revisions[0] if revisions else ""
-    c=conformances[0] if conformances else ""
-    version_details={"actual":v}
-    revision_details={"actual":r}
-    if len(versions)!=1 or not is_xmp_text(v):
-        version_details.update(values=versions,types=[xmp_semantic_type(value) for value in versions])
-    if len(revisions)!=1 or not is_xmp_text(r):
-        revision_details.update(values=revisions,types=[xmp_semantic_type(value) for value in revisions])
-    if versions and all(is_xmp_text(value) and nonnegative_integer_equals(value,1) for value in versions): report.ok("EAPDF_VERSION","pdfmailid:version is 1",version_details)
-    else: report.fail("EAPDF_VERSION","pdfmailid:version must be 1",version_details)
-    if revisions and all(is_xmp_text(value) and nonnegative_integer_equals(value,2024) for value in revisions): report.ok("EAPDF_REV","pdfmailid:rev is 2024",revision_details)
-    else: report.fail("EAPDF_REV","pdfmailid:rev must be 2024",revision_details)
-    if conformances and all(is_xmp_text(value) and value in ALLOWED_EAPDF_CONFORMANCE for value in conformances):
-        report.ok("EAPDF_CONFORMANCE_VALUE","pdfmailid:conformance allowed",{"actual":c})
-    else:
-        report.fail("EAPDF_CONFORMANCE_VALUE","pdfmailid:conformance invalid",{"actual":c,"values":conformances,
-                    "types":[xmp_semantic_type(value) for value in conformances],"allowed":sorted(ALLOWED_EAPDF_CONFORMANCE)})
-    cstr=c if is_xmp_text(c) else ""
-    if "i" not in cstr or (cstr.endswith("i") and cstr.count("i")==1):
-        report.ok("EAPDF_CONFORMANCE_I_LAST","pdfmailid:conformance uses i only as a trailing designator",{"actual":c})
-    else:
-        report.fail("EAPDF_CONFORMANCE_I_LAST","pdfmailid:conformance must use i only as a trailing designator",{"actual":c})
-    return str(c)
+    return _xmp_rules.check_eapdf_xmp(_xmp_rules_dependencies(), root_xml, nsmap, report)
 
 def check_keywords(pdf,root_xml,pdfa_part,report):
-    xmp_keywords=first_xmp_value(root_xml,NS_PDF,"Keywords")
-    if "EA-PDF" in str(xmp_keywords):
-        report.ok("XMP_KEYWORDS","XMP pdf:Keywords contains EA-PDF",{"value":xmp_keywords})
-    else:
-        report.fail("XMP_KEYWORDS","XMP pdf:Keywords must include EA-PDF",{"value":xmp_keywords})
-    info=read_docinfo(pdf)
-    if pdfa_part==3:
-        if info:
-            report.ok("DOCINFO_PRESENT","Document Info present for PDF/A-3",{"keys":sorted(info.keys()),"values":info})
-        else:
-            report.fail("DOCINFO_PRESENT","Document Info required for PDF/A-3",{"values":info})
-        kw=info.get("Keywords","")
-        if "EA-PDF" in kw:
-            report.ok("DOCINFO_KEYWORDS","Document Info Keywords contains EA-PDF",{"value":kw})
-        else:
-            report.fail("DOCINFO_KEYWORDS","Document Info Keywords must include EA-PDF for PDF/A-3",{"value":kw})
-    else:
-        if info:
-            report.warn("DOCINFO_PRESENT","Document Info present in PDF/A-4 based file",{"keys":sorted(info.keys()),"values":info})
-        else:
-            report.ok("DOCINFO_PRESENT","No Document Info present in PDF/A-4 based file",{"values":info})
+    return _xmp_rules.check_keywords(_xmp_rules_dependencies(), pdf, root_xml, pdfa_part, report)
 
 def check_docinfo_consistency(pdf,root_xml,pdfa_part,report):
-    if pdfa_part!=3: return
-    info=read_docinfo(pdf)
-    if not info: return
-    info_object=dict_get(pdf.trailer,"/Info",None)
-    field_codes={"Title":"DOCINFO_TITLE_MATCH","Author":"DOCINFO_AUTHOR_MATCH",
-                 "Subject":"DOCINFO_SUBJECT_MATCH","Keywords":"DOCINFO_KEYWORDS",
-                 "Creator":"DOCINFO_CREATOR_MATCH","Producer":"DOCINFO_PRODUCER_MATCH",
-                 "CreationDate":"DOCINFO_CREATIONDATE_MATCH","ModDate":"DOCINFO_MODDATE_MATCH"}
-    for field,code in field_codes.items():
-        if field not in info:
-            continue
-        value=dict_get(info_object,"/"+field,None)
-        if value is None:
-            # ISO32000-2 7.3.9: null dictionary entries are absent.
-            info.pop(field,None)
-        elif not isinstance(value,pikepdf.String):
-            report.fail(code,"Document Info field must retain its PDF string type",{
-                "field":field,"actual":observed_pdf_value(value),"is_pdf_string":False,
-                "expected":"PDF string; numbers, names, arrays and dictionaries are not string values"})
-            info.pop(field,None)
-    title_values=xmp_default_language_values(root_xml,NS_DC,"title")
-    subject_values=xmp_default_language_values(root_xml,NS_DC,"description")
-    xmp_title=title_values[0] if len(title_values)==1 else None
-    xmp_subject=subject_values[0] if len(subject_values)==1 else None
-    xmp_producer=first_xmp_value(root_xml,NS_PDF,"Producer")
-    xmp_creator=find_xmp_values(root_xml,NS_DC,"creator")
-    xmp_creator_tool=first_xmp_value(root_xml,NS_XMP,"CreatorTool")
-    xmp_create_date=first_xmp_value(root_xml,NS_XMP,"CreateDate")
-    xmp_modify_date=first_xmp_value(root_xml,NS_XMP,"ModifyDate")
-    if "Title" in info:
-        if xmp_title is not None and text_values_match(info["Title"], xmp_title):
-            report.ok("DOCINFO_TITLE_MATCH","Document Info Title matches XMP dc:title",{"title":info["Title"]})
-        elif xmp_title is not None:
-            report.fail("DOCINFO_TITLE_MATCH","Document Info Title differs from XMP dc:title",{"docinfo":info["Title"],"xmp":xmp_title})
-        else:
-            report.fail("DOCINFO_TITLE_MATCH","Document Info Title has no matching XMP dc:title",{"docinfo":info["Title"]})
-    if "Producer" in info:
-        if xmp_producer and text_values_match(info["Producer"], xmp_producer):
-            report.ok("DOCINFO_PRODUCER_MATCH","Document Info Producer matches XMP pdf:Producer",{"producer":info["Producer"]})
-        elif xmp_producer:
-            report.fail("DOCINFO_PRODUCER_MATCH","Document Info Producer differs from XMP pdf:Producer",{"docinfo":info["Producer"],"xmp":xmp_producer})
-        else:
-            report.fail("DOCINFO_PRODUCER_MATCH","Document Info Producer has no matching XMP pdf:Producer",{"docinfo":info["Producer"]})
-    if "Author" in info:
-        first=norm_text(xmp_creator[0] if xmp_creator else "")
-        if first and text_values_match(info["Author"], first):
-            report.ok("DOCINFO_AUTHOR_MATCH","Document Info Author matches first XMP dc:creator",{"author":info["Author"]})
-        elif first:
-            report.fail("DOCINFO_AUTHOR_MATCH","Document Info Author differs from first XMP dc:creator",{"docinfo":info["Author"],"xmp":first})
-        else:
-            report.fail("DOCINFO_AUTHOR_MATCH","Document Info Author has no matching XMP dc:creator",{"docinfo":info["Author"]})
-    if "Subject" in info:
-        if xmp_subject is not None and text_values_match(info["Subject"], xmp_subject):
-            report.ok("DOCINFO_SUBJECT_MATCH","Document Info Subject matches XMP dc:description",{"subject":info["Subject"]})
-        elif xmp_subject is not None:
-            report.fail("DOCINFO_SUBJECT_MATCH","Document Info Subject differs from XMP dc:description",{"docinfo":info["Subject"],"xmp":xmp_subject})
-        else:
-            report.fail("DOCINFO_SUBJECT_MATCH","Document Info Subject has no matching XMP dc:description",{"docinfo":info["Subject"]})
-    if "Creator" in info:
-        if xmp_creator_tool and text_values_match(info["Creator"], xmp_creator_tool):
-            report.ok("DOCINFO_CREATOR_MATCH","Document Info Creator matches XMP xmp:CreatorTool",{"creator":info["Creator"]})
-        elif xmp_creator_tool:
-            report.fail("DOCINFO_CREATOR_MATCH","Document Info Creator differs from XMP xmp:CreatorTool",{"docinfo":info["Creator"],"xmp":xmp_creator_tool})
-        else:
-            report.fail("DOCINFO_CREATOR_MATCH","Document Info Creator has no matching XMP xmp:CreatorTool",{"docinfo":info["Creator"]})
-    if "CreationDate" in info:
-        if xmp_create_date and datetime_values_match(info["CreationDate"], xmp_create_date):
-            report.ok("DOCINFO_CREATIONDATE_MATCH","Document Info CreationDate matches XMP xmp:CreateDate",{"creation_date":info["CreationDate"],"xmp":xmp_create_date})
-        elif xmp_create_date:
-            report.fail("DOCINFO_CREATIONDATE_MATCH","Document Info CreationDate differs from XMP xmp:CreateDate",{"docinfo":info["CreationDate"],"xmp":xmp_create_date})
-        else:
-            report.fail("DOCINFO_CREATIONDATE_MATCH","Document Info CreationDate has no matching XMP xmp:CreateDate",{"docinfo":info["CreationDate"]})
-    if "ModDate" in info:
-        if xmp_modify_date and datetime_values_match(info["ModDate"], xmp_modify_date):
-            report.ok("DOCINFO_MODDATE_MATCH","Document Info ModDate matches XMP xmp:ModifyDate",{"mod_date":info["ModDate"],"xmp":xmp_modify_date})
-        elif xmp_modify_date:
-            report.fail("DOCINFO_MODDATE_MATCH","Document Info ModDate differs from XMP xmp:ModifyDate",{"docinfo":info["ModDate"],"xmp":xmp_modify_date})
-        else:
-            report.fail("DOCINFO_MODDATE_MATCH","Document Info ModDate has no matching XMP xmp:ModifyDate",{"docinfo":info["ModDate"]})
-    if "Keywords" in info:
-        values=xmp_document_property_values(root_xml,NS_PDF,"Keywords")
-        details={"docinfo":info["Keywords"],"xmp_values":values,
-                 "types":[xmp_semantic_type(value) for value in values]}
-        if values and all(is_xmp_text(value) and text_values_match(info["Keywords"],value) for value in values):
-            report.ok("DOCINFO_KEYWORDS","Document Info Keywords matches XMP pdf:Keywords",details)
-        else:
-            report.fail("DOCINFO_KEYWORDS","Document Info Keywords requires matching normal XMP pdf:Keywords Text",details)
+    return _xmp_rules.check_docinfo_consistency(_xmp_rules_dependencies(), pdf, root_xml, pdfa_part, report)
 
 
 def source_set_supplements(root_xml,afiles):
@@ -4313,235 +3564,13 @@ def source_set_supplements(root_xml,afiles):
         and a.get("ContentType")==f["subtype"] for a in assets)]
 
 def check_source_file_sets(pdf,root_xml,afiles,report,expected_sets=None):
-    """expected_sets maps a primary PDF filename to required companion filenames.
-
-    Supply the original inventory when available: a PDF alone cannot establish
-    that a completely unrecorded companion ever existed. Multiple Source AFs
-    are independent assets unless there is actual file-set evidence.
-    """
-    sources={}
-    related_streams={}
-    errors=[]
-    unavailable=[]
-    unknown_names=defaultdict(int)
-    declarations=0
-    for spec in dict_get(pdf.Root,"/AF",[]) or []:
-        if safe_name(dict_get(spec,"/AFRelationship",None))!="Source":
-            continue
-        name=str(dict_get(spec,"/UF",dict_get(spec,"/F","")))
-        related=set()
-        sources[name]=related
-        rf=dict_get(spec,"/RF",None)
-        if rf is None:
-            continue
-        declarations+=1
-        ef=dict_get(spec,"/EF",None)
-        if not isinstance(rf,pikepdf.Dictionary) or not rf or not isinstance(ef,pikepdf.Dictionary) \
-                or safe_name(dict_get(spec,"/Type",None))!="Filespec" or not spec.is_indirect:
-            errors.append({"primary":name,"error":"RF requires an indirect Filespec and RF/EF dictionaries"})
-            continue
-        for key,array in rf.items():
-            if key not in ef or not isinstance(ef[key],pikepdf.Stream) or not is_pdf_array(array) \
-                    or not array or len(array)%2 or len(array)>MAX_TREE_ITEMS*2:
-                errors.append({"primary":name,"key":key,"error":"RF requires an EF key and nonempty filename/stream pairs"})
-                continue
-            for index in range(0,len(array),2):
-                filename,stream=array[index],array[index+1]
-                if not isinstance(filename,pikepdf.String) or not isinstance(stream,pikepdf.Stream) \
-                        or safe_name(dict_get(stream,"/Type",None))!="EmbeddedFile":
-                    errors.append({"primary":name,"key":key,"pair":index//2,"error":"Invalid related filename or embedded stream"})
-                    continue
-                try:
-                    decoded=str(filename)
-                except UnicodeError as error:
-                    decoded=None
-                    unknown_names[name]+=1
-                    unavailable.append({"primary":name,"key":key,"pair":index//2,
-                                        "filename_bytes":bytes(filename).hex(),"reason":str(error)})
-                if decoded is not None:
-                    if not decoded.strip():
-                        errors.append({"primary":name,"key":key,"pair":index//2,"error":"Invalid related filename or embedded stream"})
-                        continue
-                    related.add(decoded)
-                identity=pdf_object_identity(stream)
-                if identity not in related_streams:
-                    # An unknown name supplies no filename association evidence.
-                    # Retain the stream so checksum/byte/asset checks can proceed.
-                    value=filename if decoded is not None else pikepdf.String("")
-                    related_streams[identity]=parse_filespec(decoded or "",pikepdf.Dictionary(
-                        F=value,UF=value,EF=pikepdf.Dictionary(UF=stream)),source="RF")
-                    if decoded is None:
-                        related_streams[identity]["filename_unavailable"]=True
-    supplements=source_set_supplements(root_xml,afiles)
-    supplement_names={f["ufilename"] or f["filename"] for f in supplements}
-    for primary,members in (expected_sets or {}).items():
-        available=sources.get(primary,set()) | {f["ufilename"] or f["filename"] for f in afiles
-            if f["afrelationship"]=="Supplement" and f.get("stream") is not None}
-        missing=set(members)-available
-        if primary not in sources or len(missing)>unknown_names[primary]:
-            details={"primary":primary,"error":"Required source set is not preserved through RF or catalog Supplement"}
-            if unknown_names[primary]:
-                details.update(missing_candidates=sorted(missing),minimum_missing=len(missing)-unknown_names[primary])
-            else:
-                details["missing"]=sorted(missing)
-            errors.append(details)
-    if errors:
-        report.fail("SOURCE_FILE_SET","Source email file sets require valid RF entries or all required catalog Supplement members",{"actual":errors})
-    elif not unavailable and (declarations or supplements or expected_sets):
-        report.ok("SOURCE_FILE_SET","Declared source file-set relationships are valid",{"related_sets":declarations,"supplements":sorted(supplement_names),"original_inventory_supplied":expected_sets is not None})
-    elif not unavailable:
-        report.na("SOURCE_FILE_SET","No source file set is identified",{"reason":"No RF, source-asset Supplement metadata or original file-set inventory is present. Independent Source assets do not imply a file set; omitted undeclared companions cannot be inferred from the PDF alone."})
-    if unavailable:
-        report.warn("SOURCE_FILE_SET","Related-file filename comparison is unavailable",{
-            "assessment":"unavailable","actual":unavailable,"original_inventory_supplied":expected_sets is not None})
-        report.warn("VALIDATION_INCOMPLETE","Required source file-set filename checks could not be completed",{
-            "assessment":"unavailable","rules":["SOURCE_FILE_SET"]})
-    return related_streams,supplements
+    return _embedding_rules.check_source_file_sets(_embedding_rules_dependencies(), pdf, root_xml, afiles, report, expected_sets)
 
 def check_collection_content(pdf,efiles,afiles,eapdf_conf,report,related_streams=(),supplements=()):
-    if eapdf_conf not in ("c","ci"):
-        report.na("COLLECTION_CONTENT_TYPES","Contained-file restrictions apply only to collection profiles")
-        return
-    sources={f["objgen"] for f in afiles if f["afrelationship"]=="Source"}
-    source_members={f["objgen"] for f in supplements}
-    invalid=[]
-    checked=0
-    for file in embedded_file_candidates(pdf,efiles,afiles):
-        if file["objgen"] in sources | source_members or file.get("ef_objgen") in related_streams:
-            continue
-        checked+=1
-        try:
-            with pikepdf.Pdf.open(BytesIO(file["bytes"])) as child:
-                metadata=ET.fromstring(read_metadata_stream(child))
-                valid=first_xmp_value(metadata,NS_PDFMAILID,"conformance") in ALLOWED_EAPDF_CONFORMANCE \
-                    and first_xmp_value(metadata,NS_PDFMAILID,"version")=="1" \
-                    and first_xmp_value(metadata,NS_PDFMAILID,"rev")=="2024"
-        except Exception:
-            valid=False
-        if not valid:
-            invalid.append({"filename":file["ufilename"] or file["filename"] or file["tree_name"],"relationship":file["afrelationship"]})
-    if invalid:
-        report.fail("COLLECTION_CONTENT_TYPES","Every contained file except original source assets must be an EA-PDF",{"actual":invalid})
-    else:
-        report.ok("COLLECTION_CONTENT_TYPES","Contained files are EA-PDFs or declared original source assets",{"checked":checked})
+    return _embedding_rules.check_collection_content(_embedding_rules_dependencies(), pdf, efiles, afiles, eapdf_conf, report, related_streams, supplements)
 
 def check_embedded_files(pdf,root_xml,eapdf_conf,pdfa_part,report):
-    efiles=get_embedded_files(pdf)
-    afiles=get_af_specs(pdf)
-    marked_afiles=collect_marked_content_af_specs(pdf)
-    object_afiles=collect_object_af_specs(pdf)
-    source_optional_profile = eapdf_conf in ("si","mi","ci")
-    afarr=dict_get(pdf.Root,"/AF",None)
-    if efiles:
-        report.ok("EMBEDDEDFILES_PRESENT","EmbeddedFiles name tree present",{"count":len(efiles),"files":embedded_file_observations(efiles)})
-    elif source_optional_profile and (afarr is None or len(afarr)==0) and not marked_afiles:
-        report.ok("EMBEDDEDFILES_PRESENT","EmbeddedFiles name tree absent because this source-optional profile does not embed a source email or other associated files",{"count":len(efiles),"files":[]})
-    else:
-        report.fail("EMBEDDEDFILES_PRESENT","EmbeddedFiles name tree missing or empty",{"count":len(efiles),"files":[]})
-    isolated=eapdf_conf.endswith("i") if eapdf_conf else False
-    if isolated:
-        if afarr is None:
-            report.ok("AF_RULE","Isolated profile may omit catalog AF",{"AF":None})
-        else:
-            report.ok("AF_RULE","Catalog AF present in isolated profile",{"count":len(afarr),"files":embedded_file_observations(afiles)})
-    else:
-        if source_optional_profile and (afarr is None or len(afarr)==0):
-            report.ok("AF_RULE","Source-optional profile may omit catalog AF when no source email or other associated files are embedded",{"AF":observed_pdf_value(afarr)})
-        elif afarr is None or len(afarr)==0:
-            report.fail("AF_RULE","Non-isolated profile must have catalog AF with at least one entry",{"AF":observed_pdf_value(afarr)})
-        else:
-            report.ok("AF_RULE","Catalog AF present for non-isolated profile",{"count":len(afarr),"files":embedded_file_observations(afiles)})
-    byspec=map_embedded_by_objgen(efiles)
-    bystream=map_stream_by_objgen(efiles)
-    _=bystream
-    associated_seen=set()
-    associated_count=0
-    for af in object_afiles + marked_afiles:
-        identity=af["objgen"]
-        if identity and identity!=(0,0):
-            if identity in associated_seen:
-                continue
-            associated_seen.add(identity)
-        associated_count+=1
-        for key,stream in af.get("embedded_streams") or [("missing",None)]:
-            date=dict_get(dict_get(stream,"/Params",None),"/ModDate",None)
-            detail={"filename":af["ufilename"] or af["filename"],"objgen":identity,
-                    "association":af["source"],"ef_key":key,"actual":observed_pdf_value(date)}
-            if isinstance(date,pikepdf.String) and looks_like_pdf_date(str(date)):
-                report.ok("ASSOCIATED_FILE_MODDATE","Associated embedded file has a ModDate PDF date string",detail)
-            else:
-                report.fail("ASSOCIATED_FILE_MODDATE","Associated embedded file Params requires a ModDate PDF date string",detail)
-        if af["objgen"] in byspec:
-            report.ok("AF_IN_NAME_TREE","AF file specification also listed in EmbeddedFiles name tree",{"filename":af["ufilename"] or af["filename"] or af["tree_name"],"objgen":af["objgen"]})
-        else:
-            report.fail("AF_IN_NAME_TREE","AF file specification missing from EmbeddedFiles name tree",{"filename":af["ufilename"] or af["filename"] or af["tree_name"],"objgen":af["objgen"]})
-    if not associated_count:
-        report.na("ASSOCIATED_FILE_MODDATE","No associated embedded files require ModDate",{"reason":"No AF array or AF marked-content file associations were found."})
-    source=[f for f in afiles if f["afrelationship"]=="Source"]
-    if isolated:
-        if source:
-            report.warn("SOURCE_IN_ISOLATED","Isolated source provenance cannot be inferred from associated-file presence",{
-                "count":len(source),"files":embedded_file_observations(source),"assessment":"unavailable",
-                "reason":"Isolated profiles may retain partial or modified originals. Independent provenance is needed to establish faithful preservation."})
-        else: report.ok("SOURCE_IN_ISOLATED","Isolated profile contains no Source AF",{"count":len(source),"files":[]})
-    else:
-        if source:
-            report.ok("SOURCE_AF","Non-isolated profile has Source AF",{"count":len(source),"files":embedded_file_observations(source)})
-        elif source_optional_profile:
-            report.ok("SOURCE_AF","Source-optional profile may omit the embedded Source AF",{"count":len(source),"files":[]})
-        else:
-            report.fail("SOURCE_AF","Non-isolated profile must contain at least one Source AF",{"count":len(source),"files":[]})
-    for f in embedded_file_candidates(pdf,efiles,afiles):
-        name=f["ufilename"] or f["filename"] or f["tree_name"]
-        if f["stream"] is None:
-            report.fail("EMBEDDED_STREAM","Embedded file specification lacks embedded file stream",{"name":name})
-            continue
-        for key,stream in f["embedded_streams"]:
-            details={"name":name,"ef_key":key}
-            if not isinstance(dict_get(stream,"/Subtype",None),pikepdf.Name):
-                report.warn("EMBEDDED_MEDIATYPE_RECONSTRUCTION","Media-type reconstruction unavailable until the upstream Subtype requirement is satisfied",dict(details,assessment="unavailable",reason="Subtype is not a PDF name"))
-                continue
-            try:
-                media_type=reconstruct_embedded_media_type(stream)
-            except (ValueError,UnicodeError) as error:
-                report.fail("EMBEDDED_MEDIATYPE_RECONSTRUCTION","Embedded media type cannot be reconstructed under EA-PDF 9.4",dict(details,reason=str(error)))
-            else:
-                report.ok("EMBEDDED_MEDIATYPE_RECONSTRUCTION","Embedded media type reconstructed from UTF-8 name and PDF parameter text",dict(details,media_type=media_type))
-        parameter_size=dict_get(dict_get(f.get("stream"),"/Params",None),"/Size",None)
-        if parameter_size is None:
-            report.warn("EMBEDDED_SIZE_RECOMMENDED","Embedded file stream should supply /Size",{"name":name,"actual":len(f["bytes"])})
-            report.na("EMBEDDED_SIZE_MATCH","No supplied /Size to compare",{"name":name})
-        elif type(parameter_size) is int and len(f["bytes"])==parameter_size:
-            report.ok("EMBEDDED_SIZE_RECOMMENDED","Embedded file stream supplies /Size",{"name":name})
-            report.ok("EMBEDDED_SIZE_MATCH","Embedded file stream length matches Params /Size",{"name":name,"size":parameter_size})
-        else:
-            report.ok("EMBEDDED_SIZE_RECOMMENDED","Embedded file stream supplies /Size",{"name":name})
-            report.fail("EMBEDDED_SIZE_MATCH","Embedded file stream length does not match integer Params /Size",{"name":name,"size":observed_pdf_value(parameter_size),"actual":len(f["bytes"])})
-        (report.ok if f.get("checksum_parameter_present") else report.warn)("EMBEDDED_MD5_RECOMMENDED",
-            "Embedded file stream should supply /CheckSum",{"name":name,"present":bool(f.get("checksum_parameter_present"))})
-        if f.get("checksum_parameter_present") and f.get("checksum_parameter_valid"):
-            if norm_text(f["checksum"]).lower()==f["md5"].lower():
-                report.ok("EMBEDDED_MD5_MATCH","Embedded file /CheckSum matches data MD5",{"name":name,"md5":f["md5"]})
-            else:
-                report.fail("EMBEDDED_MD5_MATCH","Embedded file /CheckSum does not match data MD5",{"name":name,"pdf_checksum":f["checksum"],"actual_md5":f["md5"]})
-        else:
-            report.na("EMBEDDED_MD5_MATCH","No readable supplied /CheckSum to compare; supplied type is checked separately",{"name":name})
-        if f.get("checksum_parameter_present"):
-            if f.get("checksum_parameter_valid"):
-                report.ok("EMBEDDED_MD5_BINARY_FORMAT","Embedded-file CheckSum parameter contains 16 binary MD5 bytes",{"name":name,"checksum":f["checksum"],"binary_format":f.get("checksum_parameter_valid")})
-            else:
-                report.fail("EMBEDDED_MD5_BINARY_FORMAT","Embedded-file CheckSum parameter must be a 16-byte PDF string, not hexadecimal text",{"name":name,"checksum":f["checksum"],"binary_format":f.get("checksum_parameter_valid")})
-    if "EMBEDDED_STREAM" not in report.seen_codes:
-        candidates=embedded_file_candidates(pdf,efiles,afiles)
-        if candidates:
-            absent=[file.get("filename","") for file in candidates if file.get("stream") is None]
-            if absent:
-                report.fail("EMBEDDED_STREAM","File specifications require embedded streams",{"files":absent})
-            else:
-                report.ok("EMBEDDED_STREAM","All inspected file specifications have embedded streams",{"files":len(candidates)})
-    if "EMBEDDED_MEDIATYPE_RECONSTRUCTION" not in report.seen_codes:
-        report.na("EMBEDDED_MEDIATYPE_RECONSTRUCTION","No readable embedded streams require media-type reconstruction",{"reason":"No embedded file stream was available; required stream presence is evaluated separately."})
-    return efiles,afiles
+    return _embedding_rules.check_embedded_files(_embedding_rules_dependencies(), pdf, root_xml, eapdf_conf, pdfa_part, report)
 
 def represented_email_attachment_presence(root_xml,afiles,source_bindings=None):
     """Known attachment presence, or None when the represented original is unknown."""
@@ -4563,1130 +3592,37 @@ def represented_email_attachment_presence(root_xml,afiles,source_bindings=None):
     return with_attachments>0
 
 def check_profile_rules(pdf,efiles,afiles,eapdf_conf,pdfa_part,report,root_xml=None):
-    if not eapdf_conf:
-        report.warn("PROFILE_RULES_SKIPPED","Skipped EA-PDF profile-specific checks because XMP profile declaration is unavailable",{"profile":eapdf_conf})
-        return
-    report.ok("PROFILE_RULES_SKIPPED","EA-PDF profile-specific checks were applied",{"profile":eapdf_conf})
-    root=pdf.Root
-    page_mode_value=dict_get(root,"/PageMode",None)
-    page_mode=safe_name(page_mode_value)
-    page_mode_is_name=isinstance(page_mode_value,pikepdf.Name)
-    vp=dict_get(root,"/ViewerPreferences",None)
-    nfsm_value=dict_get(vp,"/NonFullScreenPageMode",None)
-    nfsm=safe_name(nfsm_value)
-    nfsm_is_name=isinstance(nfsm_value,pikepdf.Name)
-    non_source=[f for f in efiles if f["afrelationship"]!="Source"]
-    has_non_source_embeds=len(non_source)>0
-    has_email_attachments=represented_email_attachment_presence(
-        root_xml,afiles,getattr(report,"_email_source_summaries",None))
-    if eapdf_conf in ("m","mi"):
-        if page_mode_is_name and page_mode=="UseOutlines": report.ok("PROFILE_PAGEMODE_MULTI","Profile PageMode correct",{"profile":eapdf_conf,"PageMode":page_mode,"is_pdf_name":page_mode_is_name})
-        else: report.fail("PROFILE_PAGEMODE_MULTI","PDF/mail-1{m,mi} must use PageMode UseOutlines",{"profile":eapdf_conf,"PageMode":page_mode,"is_pdf_name":page_mode_is_name})
-        if nfsm_is_name and nfsm=="UseOutlines": report.ok("PROFILE_NFSM_MULTI","Profile NonFullScreenPageMode correct",{"profile":eapdf_conf,"NonFullScreenPageMode":nfsm,"is_pdf_name":nfsm_is_name})
-        else: report.fail("PROFILE_NFSM_MULTI","PDF/mail-1{m,mi} must use NonFullScreenPageMode UseOutlines",{"profile":eapdf_conf,"NonFullScreenPageMode":nfsm,"is_pdf_name":nfsm_is_name})
-    elif eapdf_conf in ("c","ci"):
-        if page_mode_is_name and page_mode=="UseAttachments": report.ok("PROFILE_PAGEMODE_CONTAINER","Profile PageMode correct",{"profile":eapdf_conf,"PageMode":page_mode,"is_pdf_name":page_mode_is_name})
-        else: report.fail("PROFILE_PAGEMODE_CONTAINER","PDF/mail-1{c,ci} must use PageMode UseAttachments",{"profile":eapdf_conf,"PageMode":page_mode,"is_pdf_name":page_mode_is_name})
-        expected_nfsm="UseOutlines" if str(pdfa_part)=="3" else "UseAttachments"
-        details={"profile":eapdf_conf,"NonFullScreenPageMode":nfsm,"is_pdf_name":nfsm_is_name,
-                 "expected":expected_nfsm,"local_interpretation":"REEXAM-5"}
-        if nfsm_is_name and nfsm==expected_nfsm: report.ok("PROFILE_NFSM_CONTAINER","Profile NonFullScreenPageMode correct",details)
-        else: report.fail("PROFILE_NFSM_CONTAINER","Collection NonFullScreenPageMode must use the value permitted for its PDF version",details)
-        if dict_get(root,"/Collection",None) is not None:
-            report.ok("PROFILE_COLLECTION","Container profile has Collection dictionary",{"Collection":observed_pdf_value(root.Collection)})
-        else:
-            report.fail("PROFILE_COLLECTION","PDF/mail-1{c,ci} should have Collection dictionary",{"Collection":None})
-    elif eapdf_conf in ("s","si"):
-        if has_email_attachments is None:
-            for field,value,is_name,codes,allowed in (
-                    ("PageMode",page_mode,page_mode_is_name,
-                     ("PROFILE_PAGEMODE_SINGLE_NO_ATTACHMENTS","PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS"),
-                     {"UseOutlines","UseAttachments"}),
-                    ("NonFullScreenPageMode",nfsm,nfsm_is_name,
-                     ("PROFILE_NFSM_SINGLE_NO_ATTACHMENTS","PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS"),
-                     {"UseOutlines"} if pdfa_part==3 else {"UseOutlines","UseAttachments"})):
-                invalid=not is_name or value not in allowed
-                for code in codes:
-                    emit=report.fail if invalid else report.warn
-                    emit(code,"Viewer mode violates every possible attachment branch" if invalid else
-                         "Viewer attachment condition is unavailable without a matched original",{
-                             field:value,"is_pdf_name":is_name,"source_ownership":"unassigned",
-                             "assessment":"all_branches_contradicted" if invalid else "unavailable",
-                             "possible_values":sorted(allowed)})
-            report.warn("VALIDATION_INCOMPLETE","Single-message viewer attachment conditions could not be established")
-            return
-        use_attachments = has_email_attachments
-        expected_pm="UseAttachments" if use_attachments else "UseOutlines"
-        if use_attachments:
-            if page_mode_is_name and page_mode==expected_pm:
-                report.ok("PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS","Profile PageMode consistent with attachment-aware rule",{"profile":eapdf_conf,"PageMode":page_mode,"is_pdf_name":page_mode_is_name,"heuristic_has_non_source_embeds":has_non_source_embeds,"source_email_has_attachments":has_email_attachments})
-            else:
-                report.fail("PROFILE_PAGEMODE_SINGLE_WITH_ATTACHMENTS","PDF/mail-1{s,si} with attachments must use PageMode UseAttachments",{"profile":eapdf_conf,"PageMode":page_mode,"is_pdf_name":page_mode_is_name,"expected":expected_pm,"heuristic_has_non_source_embeds":has_non_source_embeds,"source_email_has_attachments":has_email_attachments})
-        else:
-            if page_mode_is_name and page_mode==expected_pm:
-                report.ok("PROFILE_PAGEMODE_SINGLE_NO_ATTACHMENTS","Profile PageMode consistent with no-attachment rule",{"profile":eapdf_conf,"PageMode":page_mode,"is_pdf_name":page_mode_is_name})
-            else:
-                report.fail("PROFILE_PAGEMODE_SINGLE_NO_ATTACHMENTS","PDF/mail-1{s,si} without attachments must use PageMode UseOutlines",{"profile":eapdf_conf,"PageMode":page_mode,"is_pdf_name":page_mode_is_name,"expected":expected_pm})
-        expect_nfsm="UseOutlines" if not use_attachments else ("UseOutlines" if pdfa_part==3 else "UseAttachments")
-        if use_attachments:
-            if nfsm_is_name and nfsm==expect_nfsm:
-                report.ok("PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS","Profile NonFullScreenPageMode consistent with attachment-aware rule",{"profile":eapdf_conf,"NonFullScreenPageMode":nfsm,"is_pdf_name":nfsm_is_name,"expected":expect_nfsm})
-            else:
-                report.fail("PROFILE_NFSM_SINGLE_WITH_ATTACHMENTS","PDF/mail-1{s,si} with attachments must use the required NonFullScreenPageMode",{"profile":eapdf_conf,"NonFullScreenPageMode":nfsm,"is_pdf_name":nfsm_is_name,"expected":expect_nfsm,"source_email_has_attachments":has_email_attachments,"pdfa_part":pdfa_part})
-        else:
-            if nfsm_is_name and nfsm==expect_nfsm:
-                report.ok("PROFILE_NFSM_SINGLE_NO_ATTACHMENTS","Profile NonFullScreenPageMode consistent with no-attachment rule",{"profile":eapdf_conf,"NonFullScreenPageMode":nfsm,"is_pdf_name":nfsm_is_name})
-            else:
-                report.fail("PROFILE_NFSM_SINGLE_NO_ATTACHMENTS","PDF/mail-1{s,si} without attachments must use NonFullScreenPageMode UseOutlines",{"profile":eapdf_conf,"NonFullScreenPageMode":nfsm,"is_pdf_name":nfsm_is_name,"expected":expect_nfsm})
+    return _embedding_rules.check_profile_rules(_embedding_rules_dependencies(), pdf, efiles, afiles, eapdf_conf, pdfa_part, report, root_xml)
 
 def check_outlines(pdf,report):
-    outlines=dict_get(pdf.Root,"/Outlines",None)
-    if outlines is None:
-        report.fail("OUTLINES_PRESENT","Document catalog Outlines entry missing",{"Outlines":None})
-        return [],[]
-    report.ok("OUTLINES_PRESENT","Document catalog Outlines entry present",{"Outlines":observed_pdf_value(outlines)})
-    items=get_outline_items(pdf)
-    if items:
-        report.ok("OUTLINE_ITEMS_PRESENT","Outline items present",{"count":len(items),"items":observed_pdf_value(items)})
-    else:
-        report.fail("OUTLINE_ITEMS_PRESENT","No outline items found",{"count":len(items),"items":[]})
-    pages=get_outline_page_objgens(pdf)
-    return items,pages
+    return _structure_rules.check_outlines(_structure_rules_dependencies(), pdf, report)
 
 def check_page_dpart_links(pdf,nodes,report):
-    page_map=page_objgen_map(pdf)
-    leaf_ranges={}
-    coverage_changes=[0]*(len(pdf.pages)+1)
-    previous_range=None
-    ordering_errors=[]
-    ordering_count=0
-    for item in nodes:
-        if item["child_count"]:
-            continue
-        bounds=page_range_from_dpart(item,page_map)
-        if bounds is None:
-            continue
-        start_page,end_page,_,_=bounds
-        if previous_range is not None and start_page<=previous_range[1]:
-            ordering_count+=1
-            if len(ordering_errors)<25:
-                ordering_errors.append({"previous_range":previous_range,
-                                        "range":[start_page,end_page],"objgen":item["objgen"]})
-        previous_range=[start_page,end_page]
-        leaf_ranges[item["objgen"]]=(start_page,end_page)
-        coverage_changes[start_page-1]+=1
-        coverage_changes[end_page]-=1
-    missing=[]
-    uncovered=[]
-    overlapping=[]
-    invalid=[]
-    affected=[]
-    page_issues={}
-    coverage=0
-    for page_number,page in enumerate(pdf.pages,start=1):
-        coverage+=coverage_changes[page_number-1]
-        link=dict_get(page.obj,"/DPart",None)
-        issues=[]
-        if link is None:
-            missing.append(page_number)
-            issues.append("Page dictionary has no /DPart entry")
-        else:
-            linked_range=leaf_ranges.get(objgen(link)) if isinstance(link,pikepdf.Dictionary) and link.is_indirect else None
-            if linked_range is None:
-                invalid.append(page_number)
-                issues.append("/DPart does not reference a reachable leaf content set with a valid page range")
-            elif not linked_range[0]<=page_number<=linked_range[1]:
-                invalid.append(page_number)
-                issues.append("/DPart references a content set whose page range does not include this page")
-        if coverage==0:
-            uncovered.append(page_number)
-            issues.append("No DPart content-set range covers this page")
-        elif coverage>1:
-            overlapping.append(page_number)
-            issues.append("More than one DPart content-set range covers this page")
-        if issues:
-            affected.append(page_number)
-            if len(page_issues)<25:
-                page_issues[f"PDF page {page_number}"]={"page_object":objgen(page.obj),"issues":issues}
-    if not affected and not ordering_count:
-        report.ok("PAGE_DPART_PRESENT","Every PDF page links to its unique DPart range and leaf ranges follow page-tree order",{"page_count":len(pdf.pages)})
-        return
-    reasons=[]
-    for pages,reason in ((missing,"Missing /DPart entry"),
-                         (uncovered,"Not covered by any DPart content-set range"),
-                         (overlapping,"Covered by overlapping DPart content-set ranges"),
-                         (invalid,"Invalid or mismatched /DPart link")):
-        if not pages:
-            continue
-        label="PDF page" if len(pages)==1 else "PDF pages"
-        numbers=", ".join(str(number) for number in pages[:25])
-        if len(pages)>25:
-            numbers+=f" (first 25 of {len(pages)})"
-        reasons.append(f"{reason} on {label} {numbers}")
-    if ordering_count:
-        reasons.append("DPart leaf page ranges do not follow page-tree order")
-    report.fail("PAGE_DPART_PRESENT","; ".join(reasons),
-                {"pages":affected[:25],"count":len(affected),"page_numbering":"1-based PDF page numbers",
-                 "missing_dpart_pages":missing[:25],"uncovered_pages":uncovered[:25],
-                 "overlapping_pages":overlapping[:25],"ordering_violations":ordering_count,
-                 "ordering_errors":ordering_errors,
-                 "invalid_dpart_pages":invalid[:25],"page_issues":page_issues})
+    return _structure_rules.check_page_dpart_links(_structure_rules_dependencies(), pdf, nodes, report)
 
 def check_dpart_and_content_sets(pdf,root_xml,eapdf_conf,report,outline_pages):
-    page_map=page_objgen_map(pdf)
-    dpart_root,dpart_rootnode,nodes=get_dpart_nodes(pdf)
-    if dpart_root is None:
-        report.fail("DPARTROOT_PRESENT","Document catalog DPartRoot missing",{"DPartRoot":None})
-        return []
-    report.ok("DPARTROOT_PRESENT","Document catalog DPartRoot present",{"DPartRoot":observed_pdf_value(dpart_root)})
-    if dpart_rootnode is None:
-        report.fail("DPM_ROOTNODE_PRESENT","DPartRootNode missing from DPartRoot",{"DPartRootNode":None})
-        return []
-    report.ok("DPM_ROOTNODE_PRESENT","DPartRootNode present",{"DPartRootNode":observed_pdf_value(dpart_rootnode)})
-    check_dpart_object_structure(dpart_root,dpart_rootnode,nodes,report)
-
-    check_page_dpart_links(pdf,nodes,report)
-
-    mail_guid_set=xmp_value_set(root_xml,"Mail_GUID")
-    messageid_set=xmp_value_set(root_xml,"messageid","Message-ID")
-    leaf_nodes=[]
-    msg_nodes=[]
-    for item in nodes:
-        dpm=item["dpm"]
-        is_leaf=item["start"] is not None or item["end"] is not None
-        is_identity_intermediate=(not is_leaf) and ("Mail_GUID" in dpm or "Mail_MessageID" in dpm)
-        if is_identity_intermediate:
-            msg_nodes.append(item)
-        if is_identity_intermediate or "Mail_GUID" in dpm:
-            try:
-                val=guid_value(dpm["Mail_GUID"]) if isinstance(dpm.get("Mail_GUID"),pikepdf.String) else ""
-            except (UnicodeError,ValueError,pikepdf.PdfError):
-                val=None
-            if val is None:
-                for code in (("DPM_MAIL_GUID_PRESENT","DPM_MAIL_GUID_MATCH") if is_identity_intermediate else ("DPM_MAIL_GUID_MATCH",)):
-                    report.warn(code,"DPM GUID text could not be decoded",
-                                {"objgen":item["objgen"],"assessment":"unavailable","actual":observed_pdf_value(dpm["Mail_GUID"])})
-                report.warn("VALIDATION_INCOMPLETE","Required DPM GUID presence and correspondence could not be assessed",
-                            {"rules":(["DPM_MAIL_GUID_PRESENT","DPM_MAIL_GUID_MATCH"] if is_identity_intermediate else ["DPM_MAIL_GUID_MATCH"]),"assessment":"unavailable","objgen":item["objgen"]})
-            elif val:
-                if is_identity_intermediate:
-                    report.ok("DPM_MAIL_GUID_PRESENT","Intermediate DPM node contains Mail_GUID",{"objgen":item["objgen"],"Mail_GUID":val})
-                if val in mail_guid_set:
-                    report.ok("DPM_MAIL_GUID_MATCH","DPM Mail_GUID matches document XMP",{"value":val})
-                else:
-                    report.fail("DPM_MAIL_GUID_MATCH","DPM Mail_GUID missing from document XMP",{"value":val,"objgen":item["objgen"]})
-            else:
-                code="DPM_MAIL_GUID_PRESENT" if is_identity_intermediate else "DPM_MAIL_GUID_MATCH"
-                report.fail(code,"DPM Mail_GUID requires a nonempty PDF text string matching document XMP",{"objgen":item["objgen"],"actual":observed_pdf_value(dpm.get("Mail_GUID"))})
-        if "Mail_MessageID" in dpm:
-            value=dpm["Mail_MessageID"]
-            try:
-                mid=norm_text(str(value)) if isinstance(value,pikepdf.String) else ""
-            except (UnicodeError,ValueError,pikepdf.PdfError):
-                mid=None
-            if mid is None:
-                report.warn("DPM_MAIL_MESSAGEID_MATCH","DPM Mail_MessageID text could not be decoded",
-                            {"objgen":item["objgen"],"assessment":"unavailable","value":observed_pdf_value(value)})
-                report.warn("VALIDATION_INCOMPLETE","Supplied DPM MessageID correspondence could not be assessed",
-                            {"rules":["DPM_MAIL_MESSAGEID_MATCH"],"assessment":"unavailable","objgen":item["objgen"]})
-            elif isinstance(value,pikepdf.String) and mid in messageid_set:
-                report.ok("DPM_MAIL_MESSAGEID_MATCH","DPM Mail_MessageID matches document XMP",{"value":mid})
-            else:
-                report.fail("DPM_MAIL_MESSAGEID_MATCH","DPM Mail_MessageID must be a PDF text string matching document XMP",{"value":observed_pdf_value(value),"objgen":item["objgen"]})
-
-        if is_leaf:
-            leaf_nodes.append(item)
-            if isinstance(dict_get(item["node"],"/DPM",None),pikepdf.Dictionary):
-                report.ok("DPM_LEAF_REQUIRED","Leaf DPart node contains a /DPM dictionary",{"objgen":item["objgen"],"DPM":observed_pdf_value(dpm)})
-            else:
-                report.fail("DPM_LEAF_REQUIRED","Leaf DPart node must contain a /DPM dictionary",{"objgen":item["objgen"]})
-            ctype=safe_name(dpm.get("Mail_ContentSetType",None))
-            desc_value=dpm.get("Mail_Desc")
-            desc_unavailable=False
-            try:
-                desc=norm_text(desc_value) if isinstance(desc_value,pikepdf.String) else ""
-            except (UnicodeError,ValueError,pikepdf.PdfError):
-                desc=""
-                desc_unavailable=True
-            subtype=safe_name(dpm.get("Mail_Subtype",None))
-            if dpm.get("Mail_ContentSetType") is not None:
-                report.ok("DPM_CONTENTSETTYPE_PRESENT","Leaf DPM node contains Mail_ContentSetType",{"objgen":item["objgen"],"type":ctype})
-            else:
-                report.fail("DPM_CONTENTSETTYPE_PRESENT","Leaf DPM node missing Mail_ContentSetType",{"objgen":item["objgen"]})
-            if desc_unavailable:
-                report.warn("DPM_DESC_REQUIRED","DPM description text could not be decoded",
-                            {"objgen":item["objgen"],"assessment":"unavailable","actual":observed_pdf_value(desc_value)})
-                report.warn("VALIDATION_INCOMPLETE","DPM human-readable description could not be assessed",
-                            {"rules":["DPM_DESC_REQUIRED"],"assessment":"unavailable","objgen":item["objgen"]})
-            elif desc:
-                report.ok("DPM_DESC_REQUIRED","Leaf DPM node contains Mail_Desc",{"objgen":item["objgen"],"Mail_Desc":desc})
-            else:
-                report.fail("DPM_DESC_REQUIRED","Leaf DPM node requires Mail_Desc as a human-readable PDF text string",{"objgen":item["objgen"],"actual":observed_pdf_value(desc_value)})
-            if ctype in ("BodyRendering","AttachmentRendering"):
-                if dpm.get("Mail_Subtype") is not None:
-                    report.ok("DPM_SUBTYPE_REQUIRED","Leaf DPM node contains Mail_Subtype where required",{"objgen":item["objgen"],"type":ctype,"subtype":subtype})
-                else:
-                    report.fail("DPM_SUBTYPE_REQUIRED","Leaf DPM node missing Mail_Subtype for rendering content set",{"objgen":item["objgen"],"type":ctype})
-            if eapdf_conf in ("c","ci") and ctype=="AttachmentList":
-                report.fail("DPM_ATTACHMENTLIST_FORBIDDEN","AttachmentList DPM content set forbidden in container profiles",{"objgen":item["objgen"]})
-            if eapdf_conf in ("c","ci") and ctype in {"AttachmentRendering","BodyRendering","EmailHeaderRendering","RawEmailRendering"}:
-                report.fail("DPM_CONTAINER_CONTENTSET_TYPES","Email rendering Content Set type is forbidden in container profiles",{"objgen":item["objgen"],"type":ctype,"profile":eapdf_conf})
-
-            rng=page_range_from_dpart(item,page_map)
-            if rng is None:
-                report.fail("CONTENT_SET_COUNT","Leaf DPart Start/End do not resolve to pages",{"objgen":item["objgen"]})
-            else:
-                start_idx,end_idx,start_og,_=rng
-                if end_idx >= start_idx:
-                    report.ok("CONTENT_SET_COUNT","Leaf DPart defines a content set page range",{"objgen":item["objgen"],"start_page":start_idx,"end_page":end_idx})
-                nonblank=False
-                for pno in range(start_idx,end_idx+1):
-                    if page_has_visibleish_content(pdf.pages[pno-1]):
-                        nonblank=True
-                        break
-                if nonblank:
-                    report.ok("CONTENT_SET_NONBLANK","Content set is not blank",{"objgen":item["objgen"],"start_page":start_idx,"end_page":end_idx})
-                else:
-                    report.fail("CONTENT_SET_NONBLANK","Content set appears blank",{"objgen":item["objgen"],"start_page":start_idx,"end_page":end_idx})
-                if start_og in outline_pages:
-                    report.ok("CONTENT_SET_OUTLINE_REF","First page of content set is referenced by an outline item",{"objgen":item["objgen"],"start_page":start_idx})
-                else:
-                    report.fail("CONTENT_SET_OUTLINE_REF","First page of content set is not referenced by any outline item",{"objgen":item["objgen"],"start_page":start_idx})
-
-    if not leaf_nodes:
-        report.fail("DPM_LEAF_REQUIRED","DPart tree contains no leaf content-set nodes",{"count":0})
-
-    if eapdf_conf in ("s","si"):
-        if len(msg_nodes)==1:
-            report.ok("DPM_INTERMEDIATE_COUNT_SINGLE","Single-message profile has exactly one intermediate DPM email node",{"count":len(msg_nodes)})
-        else:
-            report.fail("DPM_INTERMEDIATE_COUNT_SINGLE","Single-message profile must have exactly one intermediate DPM email node",{"count":len(msg_nodes)})
-        if len(leaf_nodes)>=1:
-            report.ok("PROFILE_EMAIL_COUNT_SINGLE","Single-message profile has at least one content set",{"content_sets":len(leaf_nodes)})
-        else:
-            report.fail("PROFILE_EMAIL_COUNT_SINGLE","Single-message profile must have at least one content set",{"content_sets":len(leaf_nodes)})
-    elif eapdf_conf in ("m","mi"):
-        if len(msg_nodes)>=2:
-            report.ok("DPM_INTERMEDIATE_COUNT_MULTI","Multi-message profile has at least two intermediate DPM email nodes",{"count":len(msg_nodes)})
-        else:
-            report.fail("DPM_INTERMEDIATE_COUNT_MULTI","Multi-message profile must have at least two intermediate DPM email nodes",{"count":len(msg_nodes)})
-        if len(leaf_nodes)>=2:
-            report.ok("PROFILE_EMAIL_COUNT_MULTI","Multi-message profile has at least two content sets",{"content_sets":len(leaf_nodes)})
-        else:
-            report.fail("PROFILE_EMAIL_COUNT_MULTI","Multi-message profile must have at least two content sets",{"content_sets":len(leaf_nodes)})
-    elif eapdf_conf in ("c","ci"):
-        if len(msg_nodes)==0:
-            report.ok("DPM_INTERMEDIATE_COUNT_CONTAINER","Container profile has no intermediate DPM email nodes",{"count":len(msg_nodes)})
-        else:
-            report.fail("DPM_INTERMEDIATE_COUNT_CONTAINER","Container profile must not have intermediate DPM email nodes",{"count":len(msg_nodes)})
-    if "DPM_KEY_PREFIX" not in report.seen_codes:
-        report.ok("DPM_KEY_PREFIX","EA-PDF DPM fields use the Mail_ prefix; unrelated extension keys are allowed",{"nodes":len(nodes),"extension_keys":sorted({key for item in nodes for key in item["dpm"] if not key.startswith("Mail_")}),"scope":"Unprefixed extensions cannot satisfy required Mail_ fields; extension intent is not inferred from a key name."})
-    if eapdf_conf in ("c","ci") and "DPM_ATTACHMENTLIST_FORBIDDEN" not in report.seen_codes:
-        report.ok("DPM_ATTACHMENTLIST_FORBIDDEN","Container content sets do not use AttachmentList",{"content_sets":len(leaf_nodes)})
-    if eapdf_conf in ("c","ci") and "DPM_CONTAINER_CONTENTSET_TYPES" not in report.seen_codes and leaf_nodes:
-        report.ok("DPM_CONTAINER_CONTENTSET_TYPES","Container content sets do not use the four prohibited email rendering types",{"content_sets":len(leaf_nodes)})
-    return leaf_nodes
+    return _structure_rules.check_dpart_and_content_sets(_structure_rules_dependencies(), pdf, root_xml, eapdf_conf, report, outline_pages)
 
 def check_collection_rules(pdf,eapdf_conf,report):
-    root=pdf.Root
-    collection=dict_get(root,"/Collection",None)
-    if eapdf_conf in ("c","ci"):
-        if collection is None:
-            report.fail("COLLECTION_REQUIRED","Container profile requires Collection dictionary",{"Collection":None})
-            return
-        report.ok("COLLECTION_REQUIRED","Container profile has Collection dictionary",{"Collection":observed_pdf_value(collection)})
-    else:
-        if collection is None:
-            report.ok("COLLECTION_FORBIDDEN","Non-container profile has no Collection dictionary",{"Collection":None})
-        else:
-            report.fail("COLLECTION_FORBIDDEN","Non-container profile must not have Collection dictionary",{"Collection":observed_pdf_value(collection)})
-        return
-    hdr,rv=get_declared_pdf_version(pdf)
-    effective=effective_pdf_version(hdr,rv)
-    if effective=="1.7":
-        ext=dict_get(root,"/Extensions",None)
-        adbe=dict_get(ext,"/ADBE",None) if ext is not None else None
-        base_value=dict_get(adbe,"/BaseVersion",None) if adbe is not None else None
-        base=safe_name(base_value)
-        level=dict_get(adbe,"/ExtensionLevel",None) if adbe is not None else None
-        if (isinstance(base_value,pikepdf.Name) and base=="1.7"
-                and isinstance(level,int) and not isinstance(level,bool) and level==5):
-            report.ok("COLLECTION_EXTENSIONS","PDF 1.7 container has required Adobe Extension Level 5 metadata",{"BaseVersion":base,"ExtensionLevel":observed_pdf_value(level)})
-        else:
-            report.fail("COLLECTION_EXTENSIONS","PDF 1.7 container missing required Adobe Extension Level 5 metadata",{"BaseVersion":base,"ExtensionLevel":str(level)})
-    if dict_get(collection,"/D",None) is None:
-        report.ok("COLLECTION_D_FORBIDDEN","Collection.D is absent",{"D":None})
-    else:
-        report.fail("COLLECTION_D_FORBIDDEN","Collection.D must not be present",{"D":observed_pdf_value(collection.D)})
-    view=safe_name(dict_get(collection,"/View",None))
-    if view=="H":
-        report.fail("COLLECTION_VIEW_FORBIDDEN","Collection.View must not be H",{"View":view})
-    else:
-        report.ok("COLLECTION_VIEW_FORBIDDEN","Collection.View is allowed",{"View":view})
-    nav=dict_get(collection,"/Navigator",None)
-    if nav is not None and (dict_get(nav,"/SWF",None) is not None or dict_get(nav,"/APIVersion",None) is not None):
-        report.fail("COLLECTION_NAVIGATOR_FORBIDDEN","Collection.Navigator must not contain SWF or APIVersion",{"Navigator":observed_pdf_value(nav)})
-    else:
-        report.ok("COLLECTION_NAVIGATOR_FORBIDDEN","Collection.Navigator contains no forbidden SWF/APIVersion entries",{"Navigator":observed_pdf_value(nav)})
-    schema=dict_get(collection,"/Schema",None)
-    if schema is None:
-        report.fail("COLLECTION_SCHEMA_PRESENT","Collection.Schema missing",{"Schema":None})
-        return
-    report.ok("COLLECTION_SCHEMA_PRESENT","Collection.Schema present",{"Schema":observed_pdf_value(schema)})
-    message_required={"To":"S","From":"S","Sent":"D","Subject":"S","Message-ID":"S","Cc":"S","Bcc":"S","Size":"Size","Attachments":"N"}
-    required = message_required
-    for name,subtype in required.items():
-        field=dict_get(schema,"/"+name,None)
-        if field is None:
-            report.fail("COLLECTION_SCHEMA_FIELD","Required Collection schema field missing",{"field":name,"actual_subtype":None,"expected_subtype":subtype})
-            continue
-        actual_value=dict_get(field,"/Subtype",None)
-        actual=safe_name(actual_value)
-        is_name=isinstance(actual_value,pikepdf.Name)
-        if is_name and actual==subtype:
-            report.ok("COLLECTION_SCHEMA_FIELD","Required Collection schema field present with correct subtype",{"field":name,"subtype":actual,"is_pdf_name":is_name})
-        else:
-            report.fail("COLLECTION_SCHEMA_FIELD","Collection schema field has wrong subtype",{"field":name,"expected_subtype":subtype,"actual_subtype":actual,"is_pdf_name":is_name})
-    for name,field in schema.items():
-        e=dict_get(field,"/E",None)
-        if e is None or e is False:
-            report.ok("COLLECTION_SCHEMA_E_FALSE","Collection schema field E entry absent or false",{"field":name,"actual":observed_pdf_value(e)})
-        else:
-            report.fail("COLLECTION_SCHEMA_E_FALSE","Collection schema field E entry must be false",{"field":name,"actual":observed_pdf_value(e)})
+    return _embedding_rules.check_collection_rules(_embedding_rules_dependencies(), pdf, eapdf_conf, report)
 
 def check_logical_structure(pdf,eapdf_conf,report):
-    st=dict_get(pdf.Root,"/StructTreeRoot",None)
-    if st is None:
-        report.warn("STRUCTTREE_PRESENT","StructTreeRoot not present",{"StructTreeRoot":None})
-        return
-    report.ok("STRUCTTREE_PRESENT","StructTreeRoot present",{"StructTreeRoot":observed_pdf_value(st)})
-    k=dict_get(st,"/K",None)
-    root_elem=None
-    if is_pdf_array(k) or isinstance(k,list):
-        if len(k)==1:
-            root_elem=k[0]
-    else:
-        root_elem=k
-    roles=StructureRoles(st,str(pdf.pdf_version)=="2.0" or safe_name(dict_get(pdf.Root,"/Version",None))=="2.0")
-    root_role,role_error=roles.element(root_elem) if isinstance(root_elem,pikepdf.Dictionary) else ("","Root must be exactly one structure dictionary")
-    if role_error==StructureRoles.LIMIT:
-        report.warn("STRUCTTREE_ROOT_DOCUMENT",role_error,{"assessment":"unavailable"})
-        return
-    if root_role=="Document":
-        report.ok("STRUCTTREE_ROOT_DOCUMENT","StructTreeRoot K resolves through the applicable role map to exactly one Document dictionary",{"K":observed_pdf_value(k),"array_length":len(k) if is_pdf_array(k) or isinstance(k,list) else None})
-    else:
-        report.fail("STRUCTTREE_ROOT_DOCUMENT","StructTreeRoot K must resolve through the applicable role map to exactly one Document dictionary",{"K":observed_pdf_value(k),"array_length":len(k) if is_pdf_array(k) or isinstance(k,list) else None})
-        return
-    elems=[]
-    walk_struct_elems(root_elem,elems,None,class_map=dict_get(st,"/ClassMap",None))
-    attribute_errors=[{"object":e["objgen"],"errors":e["attribute_errors"]} for e in elems if e["attribute_errors"]]
-    if attribute_errors:
-        report.warn("VALIDATION_INCOMPLETE","Structure attributes could not be resolved completely",{"attributes":attribute_errors})
-    custom=[e for e in elems if e["type"].startswith("Mail_")]
-    custom_types={e["type"] for e in custom}
-    rolemap=normalize_role_map(dict_get(st,"/RoleMap",None))
-    required_map={"Mail_Message":"Document","Mail_ContentGroup":"Part","Mail_ContentSet":"Art"}
-    if custom_types:
-        missing=[]
-        for k,v in required_map.items():
-            if k in custom_types and rolemap.get(k)!=v:
-                missing.append({"tag":k,"expected":v,"actual":rolemap.get(k,"")})
-        if missing:
-            report.fail("ROLEMAP_MAIL_TAGS","RoleMap missing or incorrect for EA-PDF custom tags",{"mappings":missing})
-        else:
-            report.ok("ROLEMAP_MAIL_TAGS","RoleMap contains required mappings for EA-PDF custom tags",{"count":len(custom_types),"mappings":rolemap,"custom_tags":sorted(custom_types)})
-        namespaces=dict_get(st,"/Namespaces",None)
-        ns_ok=True
-        limited=False
-        if roles.pdf20:
-            for element in custom:
-                binding=dict_get(element["elem"],"/NS",None)
-                resolved,error=roles.element(element["elem"])
-                limited |= error==StructureRoles.LIMIT
-                if (not isinstance(binding,pikepdf.Dictionary) or norm_text(dict_get(binding,"/NS",""))!="https://pdfa.org/ns/ea-pdf/mail-1"
-                    or dict_get(dict_get(binding,"/RoleMapNS",None),"/"+element["type"],None) is None
-                    or (error!=StructureRoles.LIMIT and (not resolved or (element["type"] in required_map and resolved!=required_map[element["type"]])))):
-                    ns_ok=False
-        if not ns_ok:
-            report.fail("ROLEMAPNS_PRESENT","PDF 2.0 custom tags require registered EA-PDF namespaces and valid RoleMapNS chains to required standard roles",{"Namespaces":observed_pdf_value(namespaces),"custom_tags":sorted(custom_types)})
-        elif limited:
-            report.warn("ROLEMAPNS_PRESENT",StructureRoles.LIMIT,{"assessment":"unavailable"})
-        else:
-            report.ok("ROLEMAPNS_PRESENT","Namespace role mappings resolve to required standard roles",{"Namespaces":observed_pdf_value(namespaces),"custom_tags":sorted(custom_types)})
-    msg=[e for e in custom if e["type"]=="Mail_Message"]
-    cset=[e for e in custom if e["type"]=="Mail_ContentSet"]
-    cgroup=[e for e in custom if e["type"]=="Mail_ContentGroup"]
-    fields=[e for e in custom if e["type"]=="Mail_Field"]
-    fieldnames=[e for e in custom if e["type"]=="Mail_FieldName"]
-    fieldvalues=[e for e in custom if e["type"]=="Mail_FieldValue"]
-    if not custom_types.intersection(MAIL_STRUCTURE_TYPES):
-        for code in ("MAIL_MESSAGE_COUNT_SINGLE","MAIL_MESSAGE_COUNT_MULTI","MAIL_CONTENTSET_COUNT"):
-            report.na(code,"Optional EA-PDF custom tags are not used",{"reason":"Standard logical structure does not require the optional EA-PDF custom vocabulary."})
-        if eapdf_conf in ("c","ci"):
-            report.ok("MAIL_MESSAGE_COUNT_CONTAINER","Container profile has no Mail_Message logical elements",{"count":0})
-    elif eapdf_conf in ("s","si"):
-        if len(msg)==1:
-            report.ok("MAIL_MESSAGE_COUNT_SINGLE","Single-message profile has one Mail_Message logical element",{"count":len(msg)})
-        else:
-            report.fail("MAIL_MESSAGE_COUNT_SINGLE","Single-message profile must have exactly one Mail_Message logical element",{"count":len(msg)})
-    elif eapdf_conf in ("m","mi"):
-        if len(msg)>=2:
-            report.ok("MAIL_MESSAGE_COUNT_MULTI","Multi-message profile has at least two Mail_Message logical elements",{"count":len(msg)})
-        else:
-            report.fail("MAIL_MESSAGE_COUNT_MULTI","Multi-message profile must have at least two Mail_Message logical elements",{"count":len(msg)})
-    elif eapdf_conf in ("c","ci"):
-        if len(msg)==0:
-            report.ok("MAIL_MESSAGE_COUNT_CONTAINER","Container profile has no Mail_Message logical elements",{"count":len(msg)})
-        else:
-            report.fail("MAIL_MESSAGE_COUNT_CONTAINER","Container profile must not have Mail_Message logical elements",{"count":len(msg)})
-    if cset:
-        report.ok("MAIL_CONTENTSET_COUNT","Logical structure contains Mail_ContentSet elements",{"count":len(cset)})
-    elif custom_types.intersection(MAIL_STRUCTURE_TYPES):
-        report.fail("MAIL_CONTENTSET_COUNT","Logical structure must contain at least one Mail_ContentSet element",{"count":len(cset)})
-    # Table 11 constrains only the six defined custom tags as immediate children.
-    # Standard tags and unrelated extension tags do not close that vocabulary.
-    for elements,code,allowed,minimum in (
-        (msg,"MAIL_MESSAGE_CHILDREN",{"Mail_ContentGroup","Mail_ContentSet"},1),
-        (cgroup,"MAIL_CONTENTGROUP_CHILDREN",{"Mail_ContentSet"},1),
-        (cset,"MAIL_CONTENTSET_CHILDREN",{"Mail_Field"},0),
-        (fields,"MAIL_FIELD_CHILDREN",{"Mail_FieldName","Mail_FieldValue"},1),
-    ):
-        for e in elements:
-            kids=[safe_name(dict_get(child,"/S",None)) for child in struct_children(e["elem"])]
-            forbidden=[tag for tag in kids if tag in MAIL_STRUCTURE_TYPES and tag not in allowed]
-            required={"Mail_FieldName"} if e["type"]=="Mail_Field" else allowed
-            count=sum(tag in required for tag in kids)
-            details={"objgen":e["objgen"],"children":kids,"allowed_custom_children":sorted(allowed),
-                     "forbidden_custom_children":forbidden,"required_child_count":count,"minimum":minimum}
-            if count>=minimum and not forbidden:
-                report.ok(code,f"{e['type']} immediate children satisfy Table 11",details)
-            else:
-                report.fail(code,f"{e['type']} immediate children must satisfy Table 11",details)
-    for e in fieldvalues:
-        parent_kids=[safe_name(dict_get(child,"/S",None)) for child in struct_children(e["parent"])]
-        if safe_name(dict_get(e["parent"],"/S",None))=="Mail_Field" and "Mail_FieldName" in parent_kids:
-            report.ok("MAIL_FIELDVALUE_WITH_NAME","Mail_FieldValue occurs with sibling Mail_FieldName",{"objgen":e["objgen"],"siblings":parent_kids})
-        else:
-            report.fail("MAIL_FIELDVALUE_WITH_NAME","Mail_FieldValue must not occur without Mail_FieldName in same Mail_Field",{"objgen":e["objgen"],"siblings":parent_kids})
-    for code, elems_list, tag in (
-        ("MAIL_FIELD_PROFILE_USE", fields, "Mail_Field"),
-        ("MAIL_FIELDNAME_PROFILE_USE", fieldnames, "Mail_FieldName"),
-        ("MAIL_FIELDVALUE_PROFILE_USE", fieldvalues, "Mail_FieldValue"),
-    ):
-        if eapdf_conf in ("c","ci") and elems_list:
-            report.fail(code, f"Container profiles must not use {tag} tags", {"count":len(elems_list)})
-        else:
-            report.ok(code, f"{tag} usage is confined to permitted mail profiles", {"count":len(elems_list)})
-    check_user_properties(custom,report)
+    return _structure_rules.check_logical_structure(_structure_rules_dependencies(), pdf, eapdf_conf, report)
 
 def check_structure_correspondence(pdf,report):
-    errors=[]
-    def problem(message):
-        if len(errors)<100:
-            errors.append(message)
-    actual={}
-    scopes={}
-    locations=set()
-    object_pages={}
-    stream_scopes={}
-    for page_number,page in enumerate(pdf.pages,start=1):
-        page_id=pdf_object_identity(page.obj)
-        scopes[page_id]=page.obj
-        contents=dict_get(page.obj,"/Contents",None)
-        for stream in contents if is_pdf_array(contents) else [contents]:
-            if isinstance(stream,pikepdf.Stream):
-                stream_scopes[pdf_object_identity(stream)]=page_id
-        object_pages.setdefault(page_id,set()).add(page_id)
-        for annotation in dict_get(page.obj,"/Annots",[]):
-            scopes[pdf_object_identity(annotation)]=annotation
-            object_pages.setdefault(pdf_object_identity(annotation),set()).add(page_id)
-        try:
-            content=analyze_page_content(page)
-        except Exception as error:
-            problem(f"Page {page_number}: {error}")
-            continue
-        for scope_id,scope in content["forms"].items():
-            scopes[scope_id]=scope
-            object_pages.setdefault(scope_id,set()).add(page_id)
-        for sequence in content["sequences"]:
-            mcid=sequence["mcid"]
-            if mcid is None:
-                continue
-            scope=sequence["scope"]
-            scope_id=pdf_object_identity(scope)
-            scopes[scope_id]=scope
-            object_pages.setdefault(scope_id,set()).add(page_id)
-            if not isinstance(mcid,int) or isinstance(mcid,bool) or mcid<0:
-                problem(f"Page {page_number}: MCID must be a nonnegative integer")
-                continue
-            location=(scope_id,sequence["instruction_index"])
-            key=(scope_id,mcid)
-            if location in locations:
-                continue
-            locations.add(location)
-            if key in actual:
-                problem(f"Duplicate MCID {mcid} in content scope {scope_id}")
-            actual[key]=sequence
-    structure=dict_get(pdf.Root,"/StructTreeRoot",None)
-    if structure is None:
-        if actual:
-            problem("Marked content has MCIDs but no StructTreeRoot")
-        if errors:
-            report.fail("STRUCTURE_CORRESPONDENCE","Content markings are invalid",{"errors":errors})
-        return
-    parent_tree={}
-    visited=set()
-    def read_number_tree(node,depth=0):
-        visit_tree_node(node,visited,len(visited),depth,"ParentTree")
-        entries=dict_get(node,"/Nums",None)
-        children=dict_get(node,"/Kids",None)
-        if entries is not None and children is not None:
-            problem("ParentTree node has both Nums and Kids")
-        keys=[]
-        if entries is not None:
-            if not is_pdf_array(entries) or len(entries)%2:
-                raise ValueError("ParentTree Nums must contain key/value pairs")
-            for index in range(0,len(entries),2):
-                key=entries[index]
-                if not isinstance(key,int) or isinstance(key,bool) or key<0:
-                    raise ValueError("ParentTree keys must be nonnegative integers")
-                if key in parent_tree or (keys and key<=keys[-1]):
-                    problem("ParentTree keys are duplicated or out of order")
-                keys.append(key)
-                parent_tree[key]=entries[index+1]
-                if len(parent_tree)>MAX_TREE_ITEMS:
-                    raise ValueError("Excessively large ParentTree")
-        if children is not None:
-            if not is_pdf_array(children) or not len(children):
-                raise ValueError("ParentTree Kids must be a nonempty array")
-            for child in children:
-                child_keys=read_number_tree(child,depth+1)
-                if child_keys and keys and child_keys[0]<=keys[-1]:
-                    problem("ParentTree child key ranges overlap or are out of order")
-                keys.extend(child_keys)
-        limits=dict_get(node,"/Limits",None)
-        if limits is not None and (not keys or list(limits)!=[keys[0],keys[-1]]):
-            problem("ParentTree Limits do not describe its actual keys")
-        return keys
-    try:
-        tree=dict_get(structure,"/ParentTree",None)
-        if tree is not None:
-            read_number_tree(tree)
-        owners={}
-        object_owners={}
-        elements={}
-        visited_elements=set()
-        def walk_element(element,parent,inherited_page=None,depth=0):
-            visit_tree_node(element,visited_elements,len(visited_elements),depth,"structure correspondence")
-            element_id=pdf_object_identity(element)
-            elements[element_id]=element
-            if not objgen(element) or objgen(element)==(0,0):
-                problem("Structure element is not an indirect object")
-            if pdf_object_identity(dict_get(element,"/P",None))!=pdf_object_identity(parent):
-                problem(f"Structure element {element_id} has the wrong parent")
-            if not isinstance(dict_get(element,"/S",None),pikepdf.Name):
-                problem(f"Structure element {element_id} has no structure type name")
-            page=dict_get(element,"/Pg",inherited_page)
-            linked_content=set()
-            # ISO 32000-2 Table 355 makes K optional (for example, a blank cell).
-            kids=dict_get(element,"/K",None)
-            entries=[] if kids is None else kids if is_pdf_array(kids) else [kids]
-            for child in entries:
-                if isinstance(child,pikepdf.Dictionary) and (dict_get(child,"/S",None) is not None or safe_name(dict_get(child,"/Type",None))=="StructElem"):
-                    linked_content.update(walk_element(child,element,page,depth+1))
-                    continue
-                if isinstance(child,int) and not isinstance(child,bool):
-                    mcid=child
-                    target=page
-                    content_page=page
-                elif safe_name(dict_get(child,"/Type",None))=="MCR":
-                    mcid=dict_get(child,"/MCID",None)
-                    content_page=dict_get(child,"/Pg",page)
-                    target=dict_get(child,"/Stm",content_page)
-                elif safe_name(dict_get(child,"/Type",None))=="OBJR":
-                    target=dict_get(child,"/Obj",None)
-                    target_id=pdf_object_identity(target)
-                    if target is None or target_id in object_owners:
-                        problem("OBJR is missing its object or references it more than once")
-                    object_owners[target_id]=element_id
-                    if target_id in object_pages:
-                        linked_content.add((target_id,None))
-                    content_page=dict_get(child,"/Pg",page)
-                    if content_page is not None and pdf_object_identity(content_page) not in object_pages.get(target_id,set()):
-                        problem("OBJR object is not on its declared page")
-                    scopes[target_id]=target
-                    continue
-                else:
-                    problem(f"Structure element {element_id} has an invalid K entry")
-                    continue
-                if not isinstance(mcid,int) or isinstance(mcid,bool) or mcid<0 or target is None:
-                    problem("Structure content reference requires a nonnegative MCID and page or stream")
-                    continue
-                target_id=pdf_object_identity(target)
-                target_id=stream_scopes.get(target_id,target_id)
-                key=(target_id,mcid)
-                if key in owners:
-                    problem(f"MCID {mcid} is referenced by more than one structure entry")
-                owners[key]=element_id
-                if key not in actual:
-                    problem(f"Structure references missing MCID {mcid} in {target_id}")
-                else:
-                    linked_content.add(key)
-                if content_page is None or pdf_object_identity(content_page) not in object_pages.get(target_id,set()):
-                    problem("Structure content reference does not point to a page using that content")
-            if safe_name(dict_get(element,"/S",None)) in ("Mail_Message","Mail_ContentGroup","Mail_ContentSet") and not linked_content:
-                problem(f"EA-PDF structure element {element_id} has no content connection")
-            return linked_content
-        roots=dict_get(structure,"/K",[])
-        for root in roots if is_pdf_array(roots) else [roots]:
-            walk_element(root,structure)
-        used_keys={}
-        expected_entries={}
-        for key in actual:
-            scope_id,mcid=key
-            if key not in owners:
-                problem(f"Marked MCID {mcid} in {scope_id} has no structure reference")
-            scope=scopes[scope_id]
-            tree_key=dict_get(scope,"/StructParents",None)
-            if not isinstance(tree_key,int) or isinstance(tree_key,bool) or tree_key<0:
-                problem(f"Content scope {scope_id} has no valid StructParents key")
-                continue
-            if tree_key in used_keys and used_keys[tree_key]!=scope_id:
-                problem("Different content scopes share a StructParents key")
-            used_keys[tree_key]=scope_id
-            expected_entries[(tree_key,mcid)]=owners.get(key)
-        for target_id,owner in object_owners.items():
-            tree_key=dict_get(scopes[target_id],"/StructParent",None)
-            if not isinstance(tree_key,int) or isinstance(tree_key,bool) or tree_key<0 or tree_key in used_keys:
-                problem("OBJR object has a missing, invalid, or reused StructParent key")
-                continue
-            used_keys[tree_key]=target_id
-            expected_entries[(tree_key,None)]=owner
-        marked_scopes={key[0] for key in actual}
-        for target_id,target in scopes.items():
-            single=dict_get(target,"/StructParent",None)
-            plural=dict_get(target,"/StructParents",None)
-            if single is not None and target_id not in object_owners:
-                problem("Object with StructParent has no OBJR structure reference")
-            if plural is not None and target_id not in marked_scopes:
-                if plural in parent_tree and any(item is not None for item in parent_tree[plural]):
-                    problem("StructParents lookup contains entries for content with no MCIDs")
-        for (tree_key,mcid),owner in expected_entries.items():
-            entry=parent_tree.get(tree_key)
-            if mcid is not None:
-                entry=entry[mcid] if is_pdf_array(entry) and mcid<len(entry) else None
-            if entry is None or owner is None or pdf_object_identity(entry)!=owner:
-                problem(f"ParentTree entry {tree_key}/{mcid} disagrees with its structure owner")
-        for tree_key,entry in parent_tree.items():
-            entries=enumerate(entry) if is_pdf_array(entry) else [(None,entry)]
-            for mcid,owner in entries:
-                if owner is not None and (tree_key,mcid) not in expected_entries:
-                    problem(f"Orphan ParentTree entry {tree_key}/{mcid}")
-        next_key=dict_get(structure,"/ParentTreeNextKey",None)
-        if next_key is not None and (not isinstance(next_key,int) or isinstance(next_key,bool) or next_key<0 or (parent_tree and next_key<=max(parent_tree))):
-            problem("ParentTreeNextKey does not exceed existing keys")
-    except Exception as error:
-        problem(str(error))
-    if errors:
-        report.fail("STRUCTURE_CORRESPONDENCE","Page markings, structure references, and ParentTree disagree",{"errors":errors})
-    else:
-        report.ok("STRUCTURE_CORRESPONDENCE","Page markings, structure references, and ParentTree agree in both directions",{"marked_content":len(actual),"parent_tree_keys":len(parent_tree)})
+    return _structure_rules.check_structure_correspondence(_structure_rules_dependencies(), pdf, report)
 
 def check_user_properties(custom_elems,report):
-    allowed={
-        "Mail_MessageID":("string",{"Mail_Message"}),
-        "Mail_GUID":("string",{"Mail_Message"}),
-        "Mail_ContentSetType":("string",{"Mail_ContentGroup","Mail_ContentSet"}),
-        "Mail_Subtype":("string",{"Mail_ContentSet"}),
-        "Mail_To":("string",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_Raw_To":("string",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_From":("string",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_Raw_From":("string",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_Sent":("pdf-date",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_Raw_Sent":("string",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_Subject":("string",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_SizeInBytes":("nonneg-int",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_NumberAttachments":("nonneg-int",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_Cc":("string",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_Raw_Cc":("string",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_Bcc":("string",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_Raw_Bcc":("string",{"Mail_Message","Mail_FieldValue"}),
-        "Mail_InReplyTo":("string",{"Mail_Message","Mail_FieldValue"}),
-    }
-    for elem in custom_elems:
-        for prop in parse_userproperties(elem["attrs"]):
-            raw_name=dict_get(prop,"/N",None)
-            name=userprop_name(prop)
-            value=dict_get(prop,"/V",None)
-            if is_pdf_ascii_string(raw_name):
-                report.ok("USERPROPS_NAME_ASCII","UserProperties N entry is a PDF ASCII string",{"name":name,"tag":elem["type"]})
-            else:
-                raw=bytes(raw_name) if isinstance(raw_name,pikepdf.String) else None
-                report.fail("USERPROPS_NAME_ASCII","UserProperties N must use PDF ASCII string bytes",{
-                    "name":name,"tag":elem["type"],"is_pdf_string":raw is not None,
-                    "raw_hex":raw[:64].hex() if raw is not None else None,
-                    "byte_length":len(raw) if raw is not None else None,
-                    "raw_hex_truncated":raw is not None and len(raw)>64})
-            if name in allowed:
-                kind,scope=allowed[name]
-                if elem["type"] in scope:
-                    report.ok("USERPROPS_TAG_SCOPE","UserProperties attribute used on allowed tag",{"name":name,"tag":elem["type"]})
-                else:
-                    report.fail("USERPROPS_TAG_SCOPE","UserProperties attribute used on disallowed tag",{"name":name,"tag":elem["type"],"allowed_tags":sorted(scope)})
-                actual_kind=userprop_value_kind(value)
-                good=False
-                if kind=="string":
-                    good=actual_kind=="string"
-                elif kind=="pdf-date":
-                    good=actual_kind=="string" and looks_like_pdf_date(value)
-                elif kind=="nonneg-int":
-                    good=actual_kind=="int" and value>=0
-                if good:
-                    report.ok("USERPROPS_TYPE","UserProperties V entry has allowed type",{"name":name,"tag":elem["type"],"actual":actual_kind,"value":observed_pdf_value(value)})
-                else:
-                    report.fail("USERPROPS_TYPE","UserProperties V entry has wrong type",{"name":name,"tag":elem["type"],"expected":kind,"actual":actual_kind,"value":observed_pdf_value(value)})
-            else:
-                actual_kind=userprop_value_kind(value)
-                mail_field=name is not None and name.startswith("Mail_")
-                if value is None:
-                    report.fail("USERPROPS_TYPE","UserProperties V entry is required",{"name":name,"tag":elem["type"],"actual":"missing"})
-                elif not mail_field:
-                    report.ok("USERPROPS_TYPE","Generic UserProperties V entry is present; no EA field type is prescribed",{"name":name,"tag":elem["type"],"actual":actual_kind,"value":observed_pdf_value(value)})
-                elif actual_kind in ("string","int","real","bool"):
-                    report.ok("USERPROPS_TYPE","UserProperties custom Mail_* field uses permitted generic type",{"name":name,"tag":elem["type"],"actual":actual_kind,"value":observed_pdf_value(value)})
-                else:
-                    report.fail("USERPROPS_TYPE","UserProperties custom Mail_* field must be string, number, or Boolean",{"name":name,"tag":elem["type"],"actual":actual_kind})
-                if mail_field:
-                    scope={"Mail_Message","Mail_FieldName","Mail_FieldValue"}
-                    if elem["type"] in scope:
-                        report.ok("USERPROPS_TAG_SCOPE","Custom email header attribute used on allowed tag",{"name":name,"tag":elem["type"]})
-                    else:
-                        report.fail("USERPROPS_TAG_SCOPE","Custom email header attribute used on disallowed tag",{"name":name,"tag":elem["type"],"allowed_tags":sorted(scope)})
+    return _structure_rules.check_user_properties(_structure_rules_dependencies(), custom_elems, report)
 
 def check_user_property_source_values(elems,root_xml,afiles,report):
-    code="USERPROPS_VALUES_UNMODIFIED"
-    candidates=[]
-    for elem in elems:
-        if not elem["type"].startswith("Mail_"):
-            continue
-        for prop in parse_userproperties(elem["attrs"]):
-            name=userprop_name(prop)
-            if name is not None and name.startswith("Mail_") and name not in {"Mail_GUID","Mail_ContentSetType","Mail_Subtype"}:
-                candidates.append((elem,prop,name))
-    sources=summarize_source_emails(afiles)
-    if not candidates or not sources:
-        reason=("No source-derived mail UserProperties are declared." if not candidates else
-                "No inspectable retained source email is available for attribute comparison.")
-        report.na(code,"Source-value recommendation cannot be compared",{"reason":reason})
-        return
-    records=flatten_email_records(root_xml) if root_xml is not None else []
-    by_element={id(elem["elem"]):elem for elem in elems}
-    header_names={"Mail_MessageID":"message-id","Mail_InReplyTo":"in-reply-to","Mail_Sent":"date",
-                  "Mail_Raw_Sent":"date"}
-    for field in ("To","From","Cc","Bcc","Subject"):
-        header_names["Mail_"+field]=field.lower()
-        if field!="Subject":
-            header_names["Mail_Raw_"+field]=field.lower()
-
-    def unfolded(text):
-        # Unfold field lines and remove separator padding; retain internal spaces.
-        return re.sub(r"\r?\n(?=[ \t])","",str(text)).strip(" \t")
-
-    def date_value(value):
-        text=str(value)
-        if not looks_like_pdf_date(value):
-            return None
-        match=re.fullmatch(r"D:([0-9]{4}(?:[0-9]{2}){0,5})(.*)",text)
-        if match is None:
-            return None
-        local,suffix=match.groups()
-        fields=[int(local[index:index+2]) if len(local)>index else default
-                for index,default in ((4,1),(6,1),(8,0),(10,0),(12,0))]
-        digits=suffix[1:].replace("'","") if suffix else ""
-        offset=timedelta(hours=int(digits[:2] or 0),minutes=int(digits[2:] or 0))
-        if suffix.startswith("-"):
-            offset=-offset
-        try:
-            return datetime(int(local[:4]),*fields,tzinfo=timezone(offset))
-        except ValueError:
-            return None
-
-    for elem,prop,name in candidates:
-        value=dict_get(prop,"/V",None)
-        kind=userprop_value_kind(value)
-        detail={"name":name,"tag":elem["type"],"object":elem["objgen"],"value":observed_pdf_value(value)}
-        owner=elem
-        seen=set()
-        while owner is not None and owner["type"]!="Mail_Message":
-            if id(owner) in seen:
-                owner=None
-                break
-            seen.add(id(owner))
-            owner=by_element.get(id(owner["parent"]))
-        identity={}
-        if owner is not None:
-            try:
-                for prop in parse_userproperties(owner["attrs"]):
-                    identity_name=userprop_name(prop)
-                    if identity_name not in {"Mail_GUID","Mail_MessageID"}:
-                        continue
-                    identity_value=dict_get(prop,"/V",None)
-                    if not isinstance(identity_value,pikepdf.String):
-                        raise ValueError("Message identity is not a PDF string")
-                    identity[identity_name]=str(identity_value)
-            except (UnicodeError,ValueError,pikepdf.PdfError):
-                identity={}  # Wrong/unreadable identity data cannot select a source owner.
-        guid=identity.get("Mail_GUID","")
-        message_id=identity.get("Mail_MessageID","")
-        owners=[record for record in records if
-                (guid and identity_fields(record)["Mail_GUID"]==guid) or
-                (not guid and message_id and identity_fields(record)["Message-ID"]==message_id)]
-        source=source_email_for_record(owners[0],records,sources,getattr(report,"_email_source_summaries",None)) if len(owners)==1 else None
-        if source is None:
-            report.warn(code,"Attribute source comparison is unavailable",dict(detail,
-                comparison="unavailable",reason="The enclosing message, its XMP identity or its original source is not unique.",
-                Mail_GUID=guid))
-            continue
-        detail.update(Mail_GUID=guid,source=source["source_filename"],source_sha256=source["source_sha256"])
-        if name=="Mail_NumberAttachments" and not source.get("attachment_inventory_available",True):
-            report.warn(code,"Original Outlook attachment count is unavailable",dict(detail,assessment="unavailable"))
-            continue
-        if name in {"Mail_SizeInBytes","Mail_NumberAttachments"}:
-            expected=source["size_in_bytes" if name=="Mail_SizeInBytes" else "mime_attachment_count"]
-            if kind!="int" or value<0:
-                report.na(code,"Invalid attribute type is checked separately",dict(detail,reason="USERPROPS_TYPE checks this nonnegative integer constraint."))
-                continue
-            equal=value==expected
-        elif name=="Mail_Sent":
-            expected=source.get("sent_norm","")
-            if kind!="string" or not looks_like_pdf_date(value):
-                report.na(code,"Invalid attribute date is checked separately",dict(detail,reason="USERPROPS_TYPE checks the PDF-date constraint."))
-                continue
-            original=parse_xmp_datetime(expected)
-            actual=date_value(value)
-            if original is None or actual is None:
-                report.warn(code,"Attribute date comparison is unavailable",dict(detail,
-                    comparison="unavailable",reason="The source date or PDF date cannot be converted to a comparable instant."))
-                continue
-            equal=actual is not None and actual==original
-        else:
-            header=header_names.get(name,name[5:].lower())
-            original_values=source.get("header_values",{}).get(header,[])
-            if "header_values" not in source or len(original_values)>1:
-                report.warn(code,"Attribute header comparison is unavailable",dict(detail,
-                    comparison="unavailable",reason="Original header values are unavailable or the header occurs more than once."))
-                continue
-            expected=unfolded(original_values[0]) if original_values else ""
-            if not name.startswith("Mail_Raw_"):
-                try:
-                    expected=decoded_source_header(expected)
-                except (LookupError,UnicodeError,ValueError):
-                    report.warn(code,"Attribute header decoding is unavailable",dict(detail,
-                        comparison="unavailable",reason="The original header encoding cannot be decoded."))
-                    continue
-            if kind=="string":
-                try:
-                    actual=unfolded(value) if name.startswith("Mail_Raw_") else str(value)
-                except (UnicodeError,ValueError,pikepdf.PdfError):
-                    report.warn(code,"Attribute source text comparison is unavailable",dict(detail,
-                        comparison="unavailable",reason="The attribute string cannot be decoded for header comparison."))
-                    continue
-                equal=actual==expected
-            elif name not in header_names and kind in {"int","real","bool"}:
-                try:
-                    equal=(expected.lower()==str(value).lower() if kind=="bool" else Decimal(str(value))==Decimal(expected))
-                except InvalidOperation:
-                    equal=False
-            else:
-                report.na(code,"Invalid attribute type is checked separately",dict(detail,reason="USERPROPS_TYPE checks this header's value type."))
-                continue
-        detail.update(expected=expected,comparison="equal" if equal else "different")
-        if equal:
-            report.ok(code,"Attribute value agrees with its owning source email",detail)
-        else:
-            report.warn(code,"Attribute value SHOULD NOT be truncated or modified from its owning source email",detail)
+    return _structure_rules.check_user_property_source_values(_structure_rules_dependencies(), elems, root_xml, afiles, report)
 
 def check_ambiguous_source_asset_values(asset,candidates,report):
-    # A universally contradicted value is invalid even without assigning an
-    # owner. Compatible or unavailable observations block that field's failure.
-    # Use only the association candidates, never values under test to pick one.
-    if not candidates:
-        return
-    observations=[{"filename":f.get("ufilename") or f.get("filename") or f.get("tree_name"),
-                   "size":f.get("size"),
-                   "media_type":f.get("reconstructed_media_type",f.get("subtype"))}
-                  for f in candidates]
-    details={"asset":asset,"source_candidates":observations,
-             "association_scope":"all_candidate_sources","unique_occurrence_identity":False}
-    size=asset.get("SizeInBytes")
-    if is_xmp_text(size) and is_nonneg_int_str(size) and all(
-            type(item["size"]) is int and item["size"]>=0
-            and not nonnegative_integer_equals(size,item["size"]) for item in observations):
-        report.fail("ASSET_SIZE_MATCH","Asset size is contradicted by every possible embedded Source",details)
-    media=asset.get("ContentType")
-    if is_xmp_text(media) and media.strip() and all(
-            isinstance(item["media_type"],str) and item["media_type"]
-            and media_type_signature(media)!=media_type_signature(item["media_type"]) for item in observations):
-        report.fail("ASSET_CONTENTTYPE_MATCH","Asset media type is contradicted by every possible embedded Source",details)
+    return _embedding_rules.check_ambiguous_source_asset_values(_embedding_rules_dependencies(), asset, candidates, report)
 
 def check_asset_metadata(root_xml,efiles,afiles,eapdf_conf,report,related_assets=()):
-    if root_xml is None:
-        report.warn("ASSET_XMP_SKIPPED","Skipped asset metadata checks because XMP metadata is unavailable",{"xmp_readable":False})
-        return [],[]
-    report.ok("ASSET_XMP_SKIPPED","Asset metadata checks were applied because XMP metadata was readable",{"xmp_readable":True})
-    check_xmp_record_array(root_xml,"assets",report,"ASSET_XMP")
-    assets=flatten_assets(root_xml)
-    attachments=flatten_attachments(root_xml)
-    isolated=eapdf_conf.endswith("i") if eapdf_conf else False
-    source_optional_profile = eapdf_conf in ("si","mi","ci")
-    src=[f for f in afiles if f["afrelationship"]=="Source"]+source_set_supplements(root_xml,afiles)+list(related_assets)
-    if not assets and src and not isolated:
-        missing_detail={"source_files":[f["ufilename"] or f["filename"] or f["tree_name"] for f in src]}
-        for code, msg in (
-            ("ASSET_XMP_FIELDS","Required asset XMP records are missing, so asset field presence cannot be validated"),
-            ("ASSET_SIZE_TYPE","Required asset XMP records are missing, so asset SizeInBytes cannot be validated"),
-            ("ASSET_CHECKSUM_FORM","Required asset XMP records are missing, so asset CheckSum format cannot be validated"),
-            ("ASSET_CONTENTTYPE","Required asset XMP records are missing, so asset ContentType cannot be validated"),
-            ("ASSET_MATCH","Required asset XMP records are missing, so embedded Source files cannot be matched to asset records"),
-            ("ASSET_MD5_MATCH","Required asset XMP records are missing, so embedded Source file checksums cannot be matched to asset records"),
-            ("ASSET_SIZE_MATCH","Required asset XMP records are missing, so embedded Source file sizes cannot be matched to asset records"),
-            ("ASSET_CONTENTTYPE_MATCH","Required asset XMP records are missing, so embedded Source file content types cannot be matched to asset records"),
-        ):
-            report.fail(code, msg, missing_detail)
-    if isolated:
-        if assets:
-            report.ok("ASSET_XMP","Source asset XMP present in isolated profile",{"count":len(assets),"assets":assets})
-        elif not src:
-            report.ok("ASSET_XMP","Isolated profile omits both embedded Source AF and source asset XMP",{"assets":assets,"source_files":embedded_file_observations(src)})
-        else:
-            report.warn("ASSET_XMP","Embedded Source AF present in isolated profile but no source asset XMP found",{"source_files":[f["ufilename"] or f["filename"] or f["tree_name"] for f in src]})
-    else:
-        if assets:
-            report.ok("ASSET_XMP","Source asset XMP assets present",{"count":len(assets),"assets":assets})
-        elif source_optional_profile and not src:
-            report.ok("ASSET_XMP","Source-optional profile omits both embedded Source AF and source asset XMP",{"assets":assets,"source_files":embedded_file_observations(src)})
-        else:
-            report.fail("ASSET_XMP","Non-isolated profile must include pdfmailmeta:assets in XMP",{"assets":assets})
-    for a in assets:
-        miss=[k for k in ("Filename","SizeInBytes","ContentType","Checksum") if not norm_text(a.get(k,""))]
-        miss=list(dict.fromkeys(miss+[k for k in ("Filename","ContentType","Checksum")
-                                     if not is_xmp_text(a.get(k))]))
-        if miss:
-            report.fail("ASSET_XMP_FIELDS","Asset XMP record requires canonical fields with normal text values",{"asset":a,"missing_or_invalid":miss})
-            if "SizeInBytes" in miss:
-                report.fail("ASSET_SIZE_TYPE","Asset XMP SizeInBytes missing",{"asset":a})
-            if "Checksum" in miss:
-                report.fail("ASSET_CHECKSUM_FORM","Asset XMP checksum missing",{"asset":a})
-            if "ContentType" in miss:
-                report.fail("ASSET_CONTENTTYPE","Asset XMP content type missing",{"asset":a})
-            continue
-        report.ok("ASSET_XMP_FIELDS","Asset XMP record contains required fields",{"asset":a})
-        if is_nonneg_int_str(a.get("SizeInBytes","")):
-            report.ok("ASSET_SIZE_TYPE","Asset XMP SizeInBytes is a non-negative integer",{"Filename":a.get("Filename"),"SizeInBytes":a.get("SizeInBytes")})
-        else:
-            report.fail("ASSET_SIZE_TYPE","Asset XMP SizeInBytes must be a non-negative integer",{"asset":a})
-        csum=str(a.get("Checksum",""))
-        if re.fullmatch(r"[0-9A-Fa-f]{32}",csum):
-            report.ok("ASSET_CHECKSUM_FORM","Asset XMP checksum format valid",{"Filename":a.get("Filename"),"Checksum":csum})
-        else:
-            report.fail("ASSET_CHECKSUM_FORM","Asset XMP checksum must be 32 hex chars",{"asset":a})
-        ctype=norm_text(a.get("ContentType",""))
-        report.ok("ASSET_CONTENTTYPE","Asset XMP content type text is present",{"Filename":a.get("Filename"),"ContentType":ctype})
-        if ctype in GENERIC_BAD_MIME:
-            report.warn("ASSET_CONTENTTYPE_GENERIC","Asset XMP uses discouraged generic media type",{"Filename":a.get("Filename"),"ContentType":ctype})
-        num_messages=a.get("NumberMessages","")
-        if "NumberMessages" in a:
-            if is_nonneg_int_str(num_messages):
-                report.ok("ASSET_NUMBERMESSAGES_TYPE","Asset XMP NumberMessages is a non-negative integer",{"Filename":a.get("Filename"),"NumberMessages":str(num_messages)})
-            else:
-                report.fail("ASSET_NUMBERMESSAGES_TYPE","Supplied asset NumberMessages must be a non-negative integer",{
-                    "asset":a,"actual_type":xmp_semantic_type(num_messages)})
-    matches=[]
-    unmatched_assets=[]
-    remaining=list(src)
-    ambiguous_sources=set()
-    ambiguous_assets=0
-    for a in assets:
-        found=None
-        afn=normalize_path_tail(a.get("Filename",""))
-        named=[f for f in remaining if afn and afn==normalize_path_tail(source_file_name(f))]
-        checksum=a.get("Checksum","")
-        checksummed=[f for f in remaining if is_xmp_text(checksum)
-                     and re.fullmatch(r"[0-9A-Fa-f]{32}",checksum)
-                     and checksum.lower()==f["md5"].lower()]
-        # Original XMP paths and sanitized PDF filenames can collide. A unique
-        # checksum match must not be overridden by the first matching basename.
-        candidates=checksummed or named
-        if len(candidates)==1:
-            found=candidates[0]
-        elif candidates:
-            named_candidates=[f for f in candidates if any(f is item for item in named)]
-            if len(named_candidates)==1:
-                found=named_candidates[0]
-            elif all(f["bytes"]==candidates[0]["bytes"] and
-                     media_type_signature(f.get("reconstructed_media_type",f["subtype"]))==
-                     media_type_signature(candidates[0].get("reconstructed_media_type",candidates[0]["subtype"]))
-                     for f in candidates):
-                # Identical payload/media observations give the same comparisons;
-                # this does not establish original filename or occurrence identity.
-                found=candidates[0]
-            else:
-                ambiguous_assets+=1
-                ambiguous_sources.update(id(f) for f in candidates)
-                report.warn("ASSET_MATCH","Source asset association is ambiguous",{
-                    "asset":a,"assessment":"unavailable",
-                    "candidates":[f["ufilename"] or f["filename"] or f["tree_name"] for f in candidates]})
-                report.warn("VALIDATION_INCOMPLETE","Source asset comparisons require an unambiguous association")
-                check_ambiguous_source_asset_values(a,candidates,report)
-                if (is_xmp_text(checksum) and re.fullmatch(r"[0-9A-Fa-f]{32}",checksum)
-                        and not any(checksum.lower()==f["md5"].lower() for f in src)):
-                    report.fail("ASSET_MD5_MATCH","Asset checksum does not match any embedded Source candidate",{
-                        "asset":a,"source_checksums":[f["md5"] for f in src]})
-                continue
-        if found is None:
-            unmatched_assets.append(a)
-            report.fail("ASSET_MATCH","Could not match XMP asset record to embedded Source file",{"asset":a})
-            continue
-        remaining.remove(found)
-        fn=found["ufilename"] or found["filename"] or found["tree_name"]
-        details={"asset_filename":a.get("Filename"),"embedded_filename":fn,"embedded_md5":found["md5"],"embedded_size":found["size"],"embedded_subtype":found["subtype"],"xmp_checksum":a.get("Checksum"),"xmp_size":a.get("SizeInBytes"),"xmp_contenttype":a.get("ContentType")}
-        if str(a.get("Checksum","")).lower()==found["md5"].lower():
-            report.ok("ASSET_MD5_MATCH","XMP asset checksum matches embedded Source file",details)
-        else:
-            report.fail("ASSET_MD5_MATCH","XMP asset checksum does not match embedded Source file",dict(details,**{"xmp_checksum":a.get("Checksum")}))
-        try:
-            if not is_xmp_text(a.get("SizeInBytes")):
-                report.warn("ASSET_SIZE_MATCH","Source size comparison is unavailable for an invalid semantic value",{
-                    **details,"state":"unavailable","actual_type":xmp_semantic_type(a.get("SizeInBytes")),
-                    "reason":"SizeInBytes must first satisfy its simple integer type; the schema violation is reported separately."})
-            elif nonnegative_integer_equals(a.get("SizeInBytes"),found["size"]):
-                report.ok("ASSET_SIZE_MATCH","XMP asset size matches embedded Source file",details)
-            else:
-                report.fail("ASSET_SIZE_MATCH","XMP asset size does not match embedded Source file",dict(details,**{"xmp_size":a.get("SizeInBytes")}))
-        except Exception:
-            report.fail("ASSET_SIZE_MATCH","XMP asset size not comparable",dict(details,**{"xmp_size":a.get("SizeInBytes")}))
-        reconstructed=found.get("reconstructed_media_type",found["subtype"])
-        details["embedded_media_type"]=reconstructed
-        if reconstructed and media_type_signature(a.get("ContentType",""))==media_type_signature(reconstructed):
-            report.ok("ASSET_CONTENTTYPE_MATCH","XMP asset content type matches embedded Source file",details)
-        else:
-            report.fail("ASSET_CONTENTTYPE_MATCH","XMP asset content type does not match embedded Source file",dict(details,**{"xmp_contenttype":a.get("ContentType")}))
-        report.ok("ASSET_MATCH","XMP asset record matched an embedded Source file",details)
-        matches.append((a,found))
-    ambiguous_remaining=sum(id(f) in ambiguous_sources for f in remaining)
-    if ambiguous_remaining>ambiguous_assets:
-        report.fail("SOURCE_WITHOUT_XMP","There are more unmatched Source files than ambiguous asset records",{
-            "unmatched_source_candidates":ambiguous_remaining,"ambiguous_asset_records":ambiguous_assets,
-            "minimum_unrepresented_sources":ambiguous_remaining-ambiguous_assets})
-    for f in remaining:
-        details={"filename":f["ufilename"] or f["filename"] or f["tree_name"],"md5":f["md5"],"size":f["size"],"contenttype":f["subtype"]}
-        if id(f) in ambiguous_sources:
-            report.warn("SOURCE_WITHOUT_XMP","Source metadata coverage is unavailable because asset association is ambiguous",dict(details,assessment="unavailable"))
-        else:
-            report.fail("SOURCE_WITHOUT_XMP","Embedded Source file lacks matching XMP asset record",details)
-    if any(file["afrelationship"]=="Source" for file in afiles) and "SOURCE_WITHOUT_XMP" not in report.seen_codes:
-        report.ok("SOURCE_WITHOUT_XMP","All retained Source files have matching asset metadata")
-    return assets,attachments
+    return _embedding_rules.check_asset_metadata(_embedding_rules_dependencies(), root_xml, efiles, afiles, eapdf_conf, report, related_assets)
 
 def valid_smtp_mailbox(value):
     from email.headerregistry import Address
@@ -6163,90 +4099,7 @@ def source_metadata_result(report,level,field,message,details=None,required=Fals
 
 
 def check_source_field_values(record,source,report):
-    if source.get("native_outlook") is not None:
-        return
-    fields=(("Raw-To","raw_to"),("Raw-From","raw_from"),("Raw-Cc","raw_cc"),
-            ("Raw-Bcc","raw_bcc"),("Raw-Sent","sent_raw"),("Subject","subject"),
-            ("In-Reply-To","in_reply_to"),("messageid","message_id"))
-    for field,source_field in fields:
-        actual=first_present(record,field,"Message-ID") if field=="messageid" else record.get(field,"")
-        supplied=field in record or field=="messageid" and "Message-ID" in record
-        expected=source.get(source_field,"")
-        required=bool(expected) and field in ("Subject","In-Reply-To","messageid")
-        if required:
-            source_metadata_result(report,"PASS" if actual else "FAIL",field,
-                "Nonempty original Core Field requires corresponding email metadata",{"source":expected,"xmp":actual},True)
-        if not supplied:
-            continue
-        shape=(isinstance(actual,XmpArray) and actual.kind=="Bag" and all(is_xmp_text(value) for value in actual)
-               if field=="In-Reply-To" else is_xmp_text(actual))
-        if not shape:
-            source_metadata_result(report,"N/A",field,"Source value comparison requires the independently checked metadata type")
-            continue
-        if contains_surrogate(expected):
-            source_metadata_result(report,"WARN",field,"Source-header value comparison is unavailable for undecodable octets",
-                                   {"assessment":"unavailable","source_escaped":diagnostic_value(expected)})
-            report.warn("VALIDATION_INCOMPLETE","Required source-header comparison could not be completed",{"field":field,"assessment":"unavailable"})
-            continue
-        detail={"xmp":actual,"source":expected}
-        if field=="In-Reply-To":
-            actual_ids=sorted(token for value in actual for token in re.findall(r"<[^>]*>|[^\s]+",decoded_header_text(value)))
-            expected_ids=sorted(re.findall(r"<[^>]*>|[^\s]+",decoded_header_text(expected)))
-            equal=actual_ids==expected_ids
-        elif field in ("Raw-To","Raw-From","Raw-Cc","Raw-Bcc"):
-            original=source.get("header_values",{}).get(field[4:].lower(),[])
-            original_keys=raw_address_mailbox_keys(", ".join(original)) if original and all(isinstance(value,str) for value in original) else None
-            actual_keys=raw_address_mailbox_keys(actual)
-            equal=decoded_header_text(actual)==decoded_header_text(expected)
-            if original_keys is not None and actual_keys is not None and original_keys!=actual_keys:
-                equal=False
-                detail.update(source=original,xmp_mailboxes=actual_keys,source_mailboxes=original_keys)
-        elif field=="Subject":
-            if norm_text(actual)==norm_text(expected):
-                equal=True
-            else:
-                try:
-                    original=clean_header_text(decoded_source_header(expected))
-                except ValueError:
-                    source_metadata_result(report,"WARN",field,"Source Subject normalization is unavailable for this encoding",dict(detail,assessment="unavailable"))
-                    report.warn("VALIDATION_INCOMPLETE","Required source Subject comparison could not be completed",{"field":field,"assessment":"unavailable"})
-                    continue
-                try:
-                    supplied_text=clean_header_text(decoded_source_header(actual))
-                except ValueError:
-                    supplied_text=norm_text(actual)
-                equal=supplied_text==original
-        else:
-            equal=decoded_header_text(actual)==decoded_header_text(expected)
-        source_metadata_result(report,"PASS" if equal else "FAIL",field,"Email metadata compared with its matched original Core Field",detail)
-    sent_value=record.get("Sent","")
-    sent=parse_xmp_datetime(sent_value);expected_sent=parse_xmp_datetime(source.get("sent_norm"))
-    if looks_like_xmp_datetime(sent_value) and (source.get("sent_norm") or source.get("sent_normalization_unavailable")):
-        detail={"xmp":sent_value,"source":source.get("sent_raw")}
-        if sent is None or expected_sent is None or sent.tzinfo is None or expected_sent.tzinfo is None:
-            source_metadata_result(report,"WARN","Sent","Source date comparison is unavailable for this valid dateTime",dict(detail,assessment="unavailable"))
-            report.warn("VALIDATION_INCOMPLETE","Required source date comparison could not be completed",{"field":"Sent","assessment":"unavailable"})
-        else:
-            def fraction(value):
-                found=re.search(r"\.([0-9]+)(?:Z|[+-][0-9]{2}:[0-9]{2})?$",str(value).strip())
-                return Decimal("0."+found.group(1)) if found else Decimal(0)
-            equal=(sent.replace(microsecond=0)==expected_sent.replace(microsecond=0)
-                   and fraction(sent_value)==fraction(source.get("sent_norm","")))
-            source_metadata_result(report,"PASS" if equal else "FAIL","Sent","Email sent instant compared with the matched original",detail)
-    for field,expected in (("SizeInBytes",source.get("size_in_bytes",0)),("NumberAttachments",source.get("mime_attachment_count",0))):
-        if field=="NumberAttachments" and not source.get("attachment_inventory_available",True):
-            source_metadata_result(report,"WARN",field,"Original attachment count is unavailable",{"assessment":"unavailable","reason":source.get("attachment_error")})
-            continue
-        if field=="NumberAttachments" and expected:
-            source_metadata_result(report,"PASS" if record.get(field) else "FAIL",field,
-                "An original with attachments requires NumberAttachments",{"source":expected,"xmp":record.get(field)},True)
-        if field not in record:
-            continue
-        if not is_nonneg_int_str(record[field]):
-            source_metadata_result(report,"N/A",field,"Source count comparison requires the independently checked nonnegative integer type")
-            continue
-        source_metadata_result(report,"PASS" if nonnegative_integer_equals(record[field],expected) else "FAIL",field,
-            "Email metadata count or size compared with the matched original",{"xmp":record[field],"source":expected})
+    return _message_rules.check_source_field_values(_message_rules_dependencies(), record, source, report)
 
 
 def source_assertion_key(item):
@@ -6270,138 +4123,10 @@ def source_header_candidate_failures(root_xml,record,source_file,eapdf_conf,path
 
 
 def check_ambiguous_source_header_values(root_xml,record,afiles,eapdf_conf,report):
-    """Reject field contradictions shared by every possible original.
-
-    Do not use the fields under test to select an owner or exclude candidates.
-    An unsupported original or recovered header inventory blocks this proof.
-    """
-    files=[source for source in afiles if source.get("afrelationship")=="Source"]
-    sources=summarize_source_emails(files)
-    if not sources or len(sources)!=len(files) or any(source.get("header_parse_defects") for source in sources):
-        return
-    incomplete=[source for source in sources if source.get("uninspected_email_candidates")]
-    if incomplete:
-        report.warn("MESSAGE_SOURCE_COVERAGE","Known nested mail candidates or mailbox envelopes have not been inspected",{
-            "assessment":"unavailable","source_ownership":"unassigned",
-            "candidate_universe":"incomplete","sources":[{
-                "source":source.get("source_filename"),"sha256":source.get("source_sha256"),
-                "uninspected":source["uninspected_email_candidates"]} for source in incomplete]})
-        report.warn("VALIDATION_INCOMPLETE","Outer email headers cannot establish a universal original-source contradiction")
-        return
-    work=getattr(report,"_source_header_candidate_checks",0)+len(files)
-    if work>MAX_TREE_ITEMS:
-        report.warn("VALIDATION_INCOMPLETE","Ambiguous source-header comparisons exceeded the configured item limit",{
-            "candidate_count":len(files),"limit":MAX_TREE_ITEMS})
-        return
-    report._source_header_candidate_checks=work
-    candidate_failures=[]
-    candidate_reports=[]
-    for source_file in files:
-        source=summarize_source_email([source_file])
-        failures=source_header_candidate_failures(root_xml,record,source_file,eapdf_conf,report.path)
-        candidate_failures.append({source_assertion_key(item) for item in failures})
-        candidate_reports.append((source,failures))
-    common=set.intersection(*candidate_failures)
-    if not common and all(candidate_failures):
-        report.fail("MESSAGE_SOURCE_COVERAGE","No inspectable original satisfies the supplied email Core Fields",{
-            "candidate_count":len(sources),"source_ownership":"unassigned",
-            "candidates":[{"source":source.get("source_filename"),"sha256":source.get("source_sha256"),"findings":candidate}
-                          for source,candidate in candidate_reports]})
-    for code,field in sorted(common):
-        if any(source_assertion_key(item)==(code,field) and item["level"]=="FAIL" for item in report.items):
-            continue
-        report.fail(code,"Email metadata is contradicted by every inspectable original source",{
-            "field":field,"candidate_count":len(sources),"source_ownership":"unassigned",
-            "candidates":[{"source":source.get("source_filename"),"sha256":source.get("source_sha256"),
-                           "findings":[item for item in candidate if source_assertion_key(item)==(code,field)]}
-                          for source,candidate in candidate_reports]})
+    return _message_rules.check_ambiguous_source_header_values(_message_rules_dependencies(), root_xml, record, afiles, eapdf_conf, report)
 
 def check_message_metadata(root_xml,afiles,eapdf_conf,report):
-    if root_xml is None:
-        return
-    report._email_source_summaries={}
-    report._eapdf_conf=eapdf_conf
-    report._originals_supplied=any(source.get("afrelationship")=="Source" for source in afiles)
-    check_xmp_record_array(root_xml,"attachments",report,"ATTACHMENT_XMP_CONTAINER",required=True)
-    if eapdf_conf in ("c","ci"):
-        # Declared attachment records retain Table 19's required fields in containers.
-        # Native payload/source comparisons are performed in the owning email children.
-        validate_attachment_records(flatten_attachments(root_xml),[],report)
-        return
-    if eapdf_conf not in ("s","si","m","mi"):
-        return
-    email_nodes=xmp_array_members(root_xml,"email")
-    records=flatten_email_records(root_xml)
-    if not email_nodes or len(email_nodes)!=len(records):
-        check_single_message_metadata(root_xml,afiles,eapdf_conf,report)
-        return
-    sources=summarize_source_emails(afiles)
-    remaining=list(sources)
-    attachment_nodes=xmp_array_members(root_xml,"attachments")
-    attachment_records=flatten_attachments(root_xml)
-    attachment_owners=[attachment_email_owners(attachment,records) for attachment in attachment_records]
-    assigned_attachments=set()
-    for index,(record,node) in enumerate(zip(records,email_nodes),start=1):
-        scoped=ET.Element(qn(NS_RDF,"RDF"))
-        description=ET.SubElement(scoped,qn(NS_RDF,"Description"))
-        container=ET.SubElement(ET.SubElement(description,qn(NS_PDFMAILMETA,"email")),qn(NS_RDF,"Bag"))
-        container.append(deepcopy(node))
-        attachment_bag=ET.SubElement(ET.SubElement(description,qn(NS_PDFMAILMETA,"attachments")),qn(NS_RDF,"Bag"))
-        guid=guid_value(record.get("Mail_GUID",""))
-        for attachment_index,(attachment,attachment_node) in enumerate(zip(attachment_records,attachment_nodes)):
-            owners=attachment_owners[attachment_index]
-            if len(owners)==1 and owners[0] is record:
-                attachment_bag.append(deepcopy(attachment_node))
-                assigned_attachments.add(attachment_index)
-        selected=select_source_email(record,remaining)
-        if selected is not None and (sum(source.get("afrelationship")=="Source" for source in afiles)>1
-                                     or selected.get("uninspected_email_candidates")):
-            # Scored header values are a tentative match, not independent
-            # ownership evidence for a contradictory field under test.
-            chosen=next((source for source in afiles if source.get("_email_summary") is selected),None)
-            work=getattr(report,"_source_header_candidate_checks",0)+1
-            if chosen is None or work>MAX_TREE_ITEMS:
-                selected=None
-            else:
-                report._source_header_candidate_checks=work
-                if source_header_candidate_failures(scoped,record,chosen,eapdf_conf,report.path):
-                    selected=None
-        if selected is not None:
-            remaining.remove(selected)
-        report._email_source_summaries[index]=selected
-        scoped_sources=[]
-        if selected is not None:
-            for source_file in afiles:
-                if source_file.get("objgen")==selected["source_objgen"] and sha256hex(source_file.get("bytes",b""))==selected["source_sha256"]:
-                    scoped_source=dict(source_file)
-                    scoped_source["_email_summary"]=dict(selected,mail_guid=guid)
-                    scoped_sources=[scoped_source]
-                    break
-            report.ok("MESSAGE_SOURCE_COVERAGE","Email metadata is matched to one inspectable source email",{
-                "email":index,"Mail_GUID":guid,"source":selected["source_filename"],
-                "source_sha256":selected["source_sha256"],"source_objgen":selected["source_objgen"],
-                "source_md5":md5hex(scoped_sources[0]["bytes"]) if scoped_sources else None,
-                "source_size":len(scoped_sources[0]["bytes"]) if scoped_sources else None})
-        elif sources or any(source.get("afrelationship")=="Source" for source in afiles):
-            report.warn("MESSAGE_SOURCE_COVERAGE","Email metadata cannot be matched unambiguously to a source email",{
-                "email":index,"Mail_GUID":guid,"source_ownership":"unassigned"})
-            report.warn("VALIDATION_INCOMPLETE","Source-header comparisons could not be completed for an email",{"email":index})
-        first_item=len(report.items)
-        check_single_message_metadata(scoped,scoped_sources,eapdf_conf,report)
-        if selected is None and sources:
-            check_ambiguous_source_header_values(scoped,record,afiles,eapdf_conf,report)
-        if selected is None and len(records)==1 and eapdf_conf in ("s","si"):
-            originals=[source for source in afiles if source.get("afrelationship")=="Source"]
-            if len(originals)==1:
-                check_native_outlook_core(record,originals[0],report,
-                    [attachment for attachment,owners in zip(attachment_records,attachment_owners)
-                     if len(owners)==1 and owners[0] is record])
-        for item in report.items[first_item:]:
-            item["details"]=dict(item.get("details") or {},email=index,Mail_GUID=guid)
-    unassigned=[attachment for index,attachment in enumerate(attachment_records) if index not in assigned_attachments]
-    if unassigned:
-        validate_attachment_records(unassigned,[],report)
-        report.warn("VALIDATION_INCOMPLETE","Attachment records could not be assigned to one email without relying on duplicate or missing Message-IDs",{"count":len(unassigned)})
+    return _message_rules.check_message_metadata(_message_rules_dependencies(), root_xml, afiles, eapdf_conf, report)
 
 def compare_native_outlook_raw(record,native,field,report):
     from collections import Counter
@@ -6428,236 +4153,19 @@ def compare_native_outlook_raw(record,native,field,report):
         report.warn(code,"Raw-"+field+" cannot be compared with the stored Outlook fields",dict(detail,assessment="unavailable"))
 
 def check_native_outlook_core(record,source,report,attachments=None,native=None):
-    """Check definite stored MAPI facts without claiming a header inventory."""
-    name=norm_text(source.get("ufilename") or source.get("filename") or source.get("tree_name","")).lower()
-    if norm_text(source.get("subtype","")).lower()!="application/vnd.ms-outlook" and not name.endswith(".msg"):
-        return
-    if native is None:
-        native=inspect_outlook_source(source.get("bytes") or b"",native_core_only=True)
-    if native is None:
-        return
-    detail={"source":source_file_name(source),"evidence":"stored MSG properties; transport headers remain unavailable"}
-    for field,code in (("Subject","MESSAGE_SUBJECT_XMP"),("messageid","MESSAGE_ID_XMP")):
-        if field not in native:
-            continue
-        actual=first_present(record,"messageid","Message-ID") if field=="messageid" else record.get(field,"")
-        if is_xmp_text(actual) and norm_text(actual)==norm_text(native[field]):
-            source_metadata_result(report,"PASS",field,"Email metadata agrees with the stored Outlook property",detail)
-        else:
-            source_metadata_result(report,"FAIL",field,"Email metadata differs from the stored Outlook property",dict(detail,xmp=actual,source_value=native[field]),required=bool(native[field]) and not bool(actual))
-    for field,code in (("SizeInBytes","MESSAGE_SIZE_XMP"),("NumberAttachments","MESSAGE_ATTACHMENT_COUNT_XMP")):
-        if native.get(field) is not None and (field in record or field=="NumberAttachments" and native[field]>0):
-            equal=parse_nonneg_int_value(record.get(field))==native[field]
-            source_metadata_result(report,"PASS" if equal else "FAIL",field,"Email metadata compared with stored MSG evidence",dict(detail,source_value=native[field],xmp=record.get(field)),required=field=="NumberAttachments" and native[field]>0 and field not in record)
-    from collections import Counter
-    for field,expected in native["addresses"].items():
-        value=record.get(field,[])
-        actual=[agent for member in value for agent in normalize_foaf_agents(member)] if isinstance(value,list) else []
-        raw=native.get("raw_addresses",{}).get(field)
-        present=(norm_text(record.get("Raw-"+field,""))==norm_text(raw["display"]) if not expected and raw and raw["display"] else not expected or bool(actual))
-        source_metadata_result(report,"PASS" if present else "FAIL",field,"Stored Outlook mailboxes require corresponding metadata",detail,True)
-        valid=all(not agent.get("mbox_uri_error") and valid_smtp_mailbox(agent.get("mbox","")) for agent in actual)
-        equal=valid and Counter(mailbox_comparison_key(agent["mbox"]) for agent in actual)==Counter(mailbox_comparison_key(address) for address in expected)
-        source_metadata_result(report,"PASS" if equal else "FAIL",field,
-            "Mailbox occurrences compared with the stored Outlook recipient table; original header order remains unavailable",
-            dict(detail,expected=expected,xmp=[agent.get("mbox","") for agent in actual]))
-    if attachments is not None:
-        validate_attachment_records(attachments,{"attachments":native["attachments"] or [],"attachment_inventory_available":native["attachments"] is not None,"attachment_error":native["attachment_error"],
-            "message_id":native.get("messageid",""),"mail_guid":guid_value(record.get("Mail_GUID","")),"native_files":source.get("_native_files",source.get("_email_summary",{}).get("native_files",[]))},report)
-    for field in ("To","From","Cc","Bcc"):
-        if field not in native["addresses"]:
-            for required in (False,True):
-                source_metadata_result(report,"WARN",field,"Stored Outlook addresses cannot be resolved to SMTP mailboxes",dict(detail,assessment="unavailable"),required)
-        if "Raw-"+field in record:
-            compare_native_outlook_raw(record,native,field,report)
-    if "Raw-Sent" in record:
-        source_metadata_result(report,"WARN","Raw-Sent","The MSG has no transport Date header for comparing Raw-Sent",dict(detail,assessment="unavailable"))
-    expected_reply=sorted(re.findall(r"<[^>]*>|[^\s]+",native.get("reply","")))
-    actual=record.get("In-Reply-To",[])
-    actual_reply=sorted(token for value in (actual if isinstance(actual,list) else [actual]) for token in re.findall(r"<[^>]*>|[^\s]+",str(value)))
-    source_metadata_result(report,"PASS" if actual_reply==expected_reply else "FAIL","In-Reply-To","Reply identifiers compared with the stored Outlook In-Reply-To property",detail,required=bool(expected_reply) and not bool(actual_reply))
-    report.na("MESSAGE_RAW_SENT_OMIT_IF_VALID","No transport Date header is stored in this MSG",detail)
-    if "Sent" in native:
-        actual=record.get("Sent","")
-        if not actual:
-            source_metadata_result(report,"FAIL","Sent","Stored Outlook submission time requires Sent metadata",detail,True)
-        elif is_xmp_text(actual) and looks_like_xmp_datetime(actual):
-            # Reuse the existing exact instant/fraction comparison; this is not a Date header.
-            check_source_field_values({"Sent":actual},{"sent_norm":native["Sent"],"sent_raw":native["Sent"],
-                "size_in_bytes":native["SizeInBytes"],"mime_attachment_count":0},report)
+    return _message_rules.check_native_outlook_core(_message_rules_dependencies(), record, source, report, attachments, native)
 
 def check_single_message_metadata(root_xml,afiles,eapdf_conf,report):
-    if root_xml is None:
-        return
-    msgid=first_message_xmp_value(root_xml,"messageid","Message-ID")
-    mail_guid=guid_value(first_message_xmp_value(root_xml,"Mail_GUID"))
-    if msgid:
-        report.ok("MESSAGE_ID_XMP","pdfmailmeta:messageid present",{"value":msgid})
-    else:
-        report.ok("MESSAGE_ID_XMP","pdfmailmeta:messageid absent, which is allowed",{"value":msgid})
-    if mail_guid:
-        report.ok("MAIL_GUID_XMP","pdfmailmeta:Mail_GUID present",{"value":mail_guid})
-    elif eapdf_conf in ("s","si","m","mi"):
-        report.fail("MAIL_GUID_XMP","pdfmailmeta:Mail_GUID required for mail profiles",{"value":mail_guid})
-    else:
-        report.warn("MAIL_GUID_XMP","pdfmailmeta:Mail_GUID not found",{"value":mail_guid})
-    if eapdf_conf in ("s","si","m","mi"):
-        summary=summarize_source_email(afiles)
-        if summary is None:
-            supplied_original=any(source.get("afrelationship")=="Source" for source in afiles) or getattr(report,"_originals_supplied",False)
-            omitted=eapdf_conf.endswith("i") and not supplied_original
-            for code in ("MESSAGE_CORE_FIELDS_SOURCE_REQUIRED","MESSAGE_METADATA_MATCH_SOURCE"):
-                if omitted:
-                    report.na(code,"Original comparison was not performed: isolated output omits original sources",{"field":"all","scope":"original-source comparison"})
-                else:
-                    evidence_unavailable(report,code,"An independently associated readable original is unavailable",{"field":"all"})
-            if any(source.get("afrelationship")=="Source" for source in afiles):
-                report.warn("MESSAGE_SOURCE_COVERAGE","Attached original sources cannot be inspected for this email",{
-                    "assessment":"unavailable","reason":"No supported source email summary could be obtained."})
-                report.warn("VALIDATION_INCOMPLETE","Required source-header comparisons could not be completed",{
-                    "assessment":"unavailable"})
-            for prop,presence_code,foaf_code in (("To","MESSAGE_TO_XMP","MESSAGE_TO_FOAF"),
-                                               ("From","MESSAGE_FROM_XMP","MESSAGE_FROM_FOAF"),
-                                               ("Cc","MESSAGE_CC_XMP","MESSAGE_CC_FOAF"),
-                                               ("Bcc","MESSAGE_BCC_XMP","MESSAGE_BCC_FOAF")):
-                compare_agent_property(root_xml,report,prop,None,presence_code,foaf_code)
-            attachments=flatten_attachments(root_xml)
-            attachment_summary = summarize_source_emails(afiles) if eapdf_conf in ("m", "mi") else []
-            validate_attachment_records(attachments,attachment_summary,report)
-            return
-        if summary.get("native_outlook") is not None:
-            records=flatten_email_records(root_xml)
-            if len(records)==1:
-                check_native_outlook_core(records[0],dict(summary["native_source"],_native_files=summary.get("native_files",[])),report,flatten_attachments(root_xml),summary["native_outlook"])
-            return
-        compare_agent_property(root_xml,report,"To",summary["to_agents"],"MESSAGE_TO_XMP","MESSAGE_TO_FOAF",summary["raw_to"])
-        compare_agent_property(root_xml,report,"From",summary["from_agents"],"MESSAGE_FROM_XMP","MESSAGE_FROM_FOAF",summary["raw_from"])
-        compare_agent_property(root_xml,report,"Cc",summary["cc_agents"],"MESSAGE_CC_XMP","MESSAGE_CC_FOAF",summary["raw_cc"])
-        compare_agent_property(root_xml,report,"Bcc",summary["bcc_agents"],"MESSAGE_BCC_XMP","MESSAGE_BCC_FOAF",summary["raw_bcc"])
-        sent=first_message_xmp_value(root_xml,"Sent")
-        raw_sent=first_message_xmp_value(root_xml,"Raw-Sent")
-        raw_sent_present=message_xmp_property_present(root_xml,"Raw-Sent")
-        raw_to=first_message_xmp_value(root_xml,"Raw-To")
-        raw_from=first_message_xmp_value(root_xml,"Raw-From")
-        raw_cc=first_message_xmp_value(root_xml,"Raw-Cc")
-        raw_bcc=first_message_xmp_value(root_xml,"Raw-Bcc")
-        subject=first_message_xmp_value(root_xml,"Subject")
-        in_reply_to=find_xmp_values(root_xml,NS_PDFMAILMETA,"In-Reply-To")
-        if not in_reply_to:
-            emails=flatten_email_records(root_xml)
-            for email in emails:
-                val=first_present(email,"In-Reply-To")
-                if val:
-                    in_reply_to=[val]
-                    break
-        size_in_bytes=first_message_xmp_value(root_xml,"SizeInBytes")
-        number_attachments=first_message_xmp_value(root_xml,"NumberAttachments","Mail_NumberAttachments")
-        if source_date_present(summary):
-            if sent:
-                report.ok("MESSAGE_SENT_XMP","XMP Sent present",{"value":sent})
-                if looks_like_xmp_datetime(sent):
-                    report.ok("MESSAGE_SENT_FORMAT","XMP Sent is a valid xsd:dateTime",{"value":sent})
-                else:
-                    report.fail("MESSAGE_SENT_FORMAT","XMP Sent must be a valid xsd:dateTime",{"value":sent})
-            else:
-                report.fail("MESSAGE_SENT_XMP","XMP Sent missing even though source email has Date header",{"source_date":summary["sent_raw"]})
-            if summary.get("sent_normalization_unavailable"):
-                report.warn("MESSAGE_RAW_SENT_REQUIRED_IF_INVALID","Raw-Sent applicability cannot be established within the source date parser's range",{
-                    "source_date":summary["sent_raw"],"assessment":"unavailable"})
-                report.warn("VALIDATION_INCOMPLETE","Required source date normalization assessment could not be completed",{"assessment":"unavailable"})
-            elif not summary["sent_norm"]:
-                if raw_sent_present:
-                    report.ok("MESSAGE_RAW_SENT_REQUIRED_IF_INVALID","XMP Raw-Sent present for non-normalizable source date",{"value":raw_sent})
-                else:
-                    report.fail("MESSAGE_RAW_SENT_REQUIRED_IF_INVALID","XMP Raw-Sent required when source Date header is not a valid XMP dateTime",{"source_date":summary["sent_raw"]})
-            elif raw_sent_present:
-                report.warn("MESSAGE_RAW_SENT_OMIT_IF_VALID","XMP Raw-Sent SHOULD be omitted when the source date is valid",{"value":raw_sent,"source_date":summary["sent_raw"]})
-            else:
-                report.ok("MESSAGE_RAW_SENT_OMIT_IF_VALID","XMP Raw-Sent is omitted because source Date header is already a valid XMP dateTime",{"source_date":summary["sent_raw"]})
-        if summary["raw_to"]:
-            if message_xmp_property_present(root_xml,"Raw-To"):
-                report.ok("MESSAGE_RAW_TO_XMP","XMP Raw-To present",{"value":raw_to})
-            else:
-                report.na("MESSAGE_RAW_TO_XMP","Optional Raw-To is not supplied",{"reason":"Raw-To is an optional property; no value is supplied for this email."})
-        if summary["raw_from"]:
-            if message_xmp_property_present(root_xml,"Raw-From"):
-                report.ok("MESSAGE_RAW_FROM_XMP","XMP Raw-From present",{"value":raw_from})
-            else:
-                report.na("MESSAGE_RAW_FROM_XMP","Optional Raw-From is not supplied",{"reason":"Raw-From is an optional property; no value is supplied for this email."})
-        if summary["raw_cc"]:
-            if message_xmp_property_present(root_xml,"Raw-Cc"):
-                report.ok("MESSAGE_RAW_CC_XMP","XMP Raw-Cc present",{"value":raw_cc})
-            else:
-                report.na("MESSAGE_RAW_CC_XMP","Optional Raw-Cc is not supplied",{"reason":"Raw-Cc is an optional property; no value is supplied for this email."})
-        if summary["raw_bcc"]:
-            if message_xmp_property_present(root_xml,"Raw-Bcc"):
-                report.ok("MESSAGE_RAW_BCC_XMP","XMP Raw-Bcc present",{"value":raw_bcc})
-            else:
-                report.na("MESSAGE_RAW_BCC_XMP","Optional Raw-Bcc is not supplied",{"reason":"Raw-Bcc is an optional property; no value is supplied for this email."})
-        records=flatten_email_records(root_xml)
-        record=records[0] if len(records)==1 else {
-            field:first_message_xmp_value(root_xml,field) for field in
-            ("Subject","messageid","Message-ID","Sent","Raw-Sent","Raw-To","Raw-From","Raw-Cc","Raw-Bcc","SizeInBytes","NumberAttachments","In-Reply-To")
-            if message_xmp_property_present(root_xml,field)}
-        check_source_field_values(record,summary,report)
-        attachments=flatten_attachments(root_xml)
-        attachment_summary = summarize_source_emails(afiles) if eapdf_conf in ("m", "mi") else summary
-        validate_attachment_records(attachments,attachment_summary,report)
+    return _message_rules.check_single_message_metadata(_message_rules_dependencies(), root_xml, afiles, eapdf_conf, report)
 
 def check_standard_xmp_semantics(root_xml, afiles, report):
-    sources=[source for source in afiles if summarize_source_emails([source])]
-    if not sources:
-        check_single_source_xmp_semantics(root_xml,[],report)
-    for source in sources:
-        check_single_source_xmp_semantics(root_xml,[source],report)
+    return _xmp_rules.check_standard_xmp_semantics(_xmp_rules_dependencies(), root_xml, afiles, report)
 
 def check_single_source_xmp_semantics(root_xml, afiles, report):
-    if root_xml is None:
-        return
-    summary=summarize_source_email(afiles)
-    creator_vals=xmp_document_property_values(root_xml,NS_DC,"creator")
-    creator=(creator_vals[0][0] if creator_vals and isinstance(creator_vals[0],XmpArray) and creator_vals[0] else "")
-    producer=first_xmp_value(root_xml,NS_PDF,"Producer")
-    cdate=first_xmp_value(root_xml,NS_XMP,"CreateDate")
-
-    if creator:
-        report.warn("XMP_CREATOR_SEMANTICS","dc:creator identifies the responsible person, organization or service; software belongs in xmp:CreatorTool and pdf:Producer. Attribution requires independent creation provenance",{
-            "value":creator,"assessment":"unavailable",
-            "reason":"A person's, organization's or service's creator name may resemble an email address or match an email sender.",
-            "needed_evidence":"Independent evidence of the entity responsible for creating the EA-PDF resource; first-item presence is checked separately."})
-
-    if producer:
-        report.warn("XMP_PRODUCER_SEMANTICS","Producer attribution requires independent creation provenance",{
-            "value":producer,"assessment":"unavailable",
-            "reason":"The PDF creation tool has no required name grammar; mailbox-like text or sender equality does not prove wrong attribution.",
-            "needed_evidence":"Independent evidence of the tool that created the PDF; required property presence is checked separately."})
-
-    if cdate:
-        report.warn("XMP_CREATEDATE_SEMANTICS","Creation provenance cannot be established from xmp:CreateDate and source Sent alone",{
-            "value":cdate,"source_sent":summary.get("sent_raw","") if summary else "",
-            "assessment":"unavailable",
-            "reason":"Equality, ordering or difference between the dates does not prove which resource or event the timestamp describes.",
-            "needed_evidence":"Independent evidence of the EA-PDF creation event; required field presence and PDF/A metadata validation remain separate.",
-            "upstream_issue":"https://github.com/pdf-association/report-an-issue/issues/22",
-        })
+    return _xmp_rules.check_single_source_xmp_semantics(_xmp_rules_dependencies(), root_xml, afiles, report)
 
 def check_source_media_types(afiles,eapdf_conf,report):
-    source=[f for f in afiles if f["afrelationship"]=="Source"]
-    if not source:
-        if eapdf_conf in ("si","mi","ci"):
-            report.ok("SOURCE_MIME_NONE","Source-optional profile omits an embedded Source AF, so no source media type is available to check",{"source_files":embedded_file_observations(source)})
-        else:
-            report.warn("SOURCE_MIME_NONE","No Source AF files available for media type checks",{"source_files":embedded_file_observations(source)})
-        return
-    for f in source:
-        ct=norm_text(f["subtype"])
-        name=f["ufilename"] or f["filename"] or f["tree_name"]
-        if ct in GENERIC_BAD_MIME:
-            report.warn("SOURCE_MIME_GENERIC","Source file uses discouraged generic media type",{"filename":name,"contenttype":ct})
-        elif ct:
-            report.ok("SOURCE_MIME_TYPE","Source file media type present",{"filename":name,"contenttype":ct})
-        else:
-            report.fail("SOURCE_MIME_TYPE","Source file media type missing",{"filename":name,"contenttype":ct})
+    return _media_rules.check_source_media_types(_media_rules_dependencies(), afiles, eapdf_conf, report)
 
 def email_part_looks_like_attachment(part):
     return email_part_is_mime_attachment(part)
@@ -7496,120 +5004,15 @@ def evidence_unavailable(report,code,message,details):
 
 
 def check_content_ownership_evidence(pdf,xroot,report):
-    evidence=independent_content_ownership(pdf,xroot,report)
-    nodes=evidence["nodes"];by_object={node["objgen"]:node for node in nodes}
-    leaves=[node for node in nodes if not node["child_count"]]
-    pages=page_objgen_map(pdf);declared=set();complete=bool(leaves);unavailable_ancestry=False
-    code="DPM_EMAIL_CONTENT_SET_OWNERSHIP"
-    for node in leaves:
-        if node["objgen"] in evidence["document_wide"]:
-            continue
-        owner,owner_state=dpart_ancestor_guid(node,by_object)
-        unavailable_ancestry=unavailable_ancestry or owner_state=="unavailable"
-        independent=evidence["owners"].get(node["objgen"],set())
-        bounds=page_range_from_dpart(node,pages)
-        kind=safe_name(node["dpm"].get("Mail_ContentSetType"))
-        details={"assertion":"DPM-EMAIL-OWNERSHIP","objgen":node["objgen"],"content_set_type":kind,
-                 "dpm_owner":owner,"dpm_owner_state":owner_state,"independent_owners":sorted(independent)}
-        if owner and bounds:
-            declared.add(owner)
-        leaf_guid=node["dpm"].get("Mail_GUID")
-        try:
-            conflict=bool(owner and isinstance(leaf_guid,pikepdf.String) and str(leaf_guid)!=owner)
-        except (ValueError,UnicodeError,pikepdf.PdfError):
-            conflict=False
-        if ((owner_state in {"missing","conflicting"} and kind in {"BodyRendering","AttachmentRendering","EmailHeaderRendering","RawEmailRendering"})
-                or conflict or owner and len(independent)==1 and owner not in independent):
-            complete=False
-            report.fail(code,"Content-set ownership contradicts its email DPart ancestry",details)
-        elif not bounds or not owner or len(independent)!=1:
-            complete=False
-            evidence_unavailable(report,code,"Content-set ownership cannot be proved from DPart identifiers alone",details)
-        else:
-            evidence["rendered_guids"].add(owner)
-            report.ok(code,"Independently connected email content agrees with its DPart ancestor",details)
-    for record in flatten_email_records(xroot) if xroot is not None else []:
-        guid=guid_value(record.get("Mail_GUID",""))
-        if not guid:
-            complete=False
-        elif guid not in declared and not unavailable_ancestry:
-            complete=False
-            report.fail(code,"An email XMP record has no reachable content set under its email DPart node",
-                        {"assertion":"DPM-EMAIL-OWNERSHIP","Mail_GUID":guid})
-    if not leaves:
-        evidence_unavailable(report,code,"No reachable content sets establish email ownership",{"assertion":"DPM-EMAIL-OWNERSHIP"})
-    evidence["complete"]=complete
-    return evidence
+    return _structure_rules.check_content_ownership_evidence(_structure_rules_dependencies(), pdf, xroot, report)
 
 
 def check_rendered_asset_counts(xroot,afiles,report,ownership):
-    records=flatten_email_records(xroot) if xroot is not None else []
-    bindings=getattr(report,"_email_source_summaries",{})
-    sources=[file for file in afiles if file.get("afrelationship")=="Source"]
-    by_checksum=defaultdict(dict)
-    for source in sources:
-        if source.get("objgen") not in (None,(0,0)):
-            by_checksum[str(source.get("md5","")).lower()][source["objgen"]]=source
-    all_bound=ownership["complete"] and bool(records) and all(
-        bindings.get(index) is not None and guid_value(record.get("Mail_GUID","")) in ownership["rendered_guids"]
-        for index,record in enumerate(records,1))
-    counts=defaultdict(int)
-    if all_bound:
-        for index in range(1,len(records)+1):
-            summary=bindings[index]
-            counts[(summary.get("source_objgen"),summary.get("source_sha256"))]+=1
-    for asset in flatten_assets(xroot) if xroot is not None else []:
-        if "NumberMessages" not in asset:
-            continue
-        if not is_nonneg_int_str(asset["NumberMessages"]):
-            report.na("ASSET_NUMBERMESSAGES_MATCH_RENDERED","Rendered count comparison requires the separately checked integer type",{"file":asset.get("Filename")})
-            continue
-        checksum=asset.get("Checksum")
-        unique=by_checksum.get(checksum.lower(),{}) if is_xmp_text(checksum) and re.fullmatch(r"[0-9a-fA-F]{32}",checksum) else {}
-        details={"assertion":"T16-NumberMessages","check":"rendered_message_count","file":asset.get("Filename"),"declared":asset["NumberMessages"]}
-        known=len(unique)==1 and all_bound
-        if not known:
-            evidence_unavailable(report,"ASSET_NUMBERMESSAGES_MATCH_RENDERED","The integer value does not establish this source's successfully rendered message count",details)
-            continue
-        source=next(iter(unique.values()))
-        checksum=source.get("sha256") or sha256hex(source.get("bytes",b""))
-        count=counts.get((source["objgen"],checksum),0)
-        details["rendered_messages"]=count
-        (report.ok if nonnegative_integer_equals(asset["NumberMessages"],count) else report.fail)(
-            "ASSET_NUMBERMESSAGES_MATCH_RENDERED","NumberMessages compared with independently bound, rendered email records",details)
+    return _media_rules.check_rendered_asset_counts(_media_rules_dependencies(), xroot, afiles, report, ownership)
 
 
 def check_native_media_parameters(file,expected,report,evidence="associated XMP"):
-    supplied=dict_get(file.get("stream"),"/Mail_MediaTypeParameters",None)
-    detail={"file":source_file_name(file),"supplied":observed_pdf_value(supplied),"evidence":evidence}
-    if expected is None:
-        code="EMBEDDED_MEDIATYPE_PARAMETERS_TYPE"
-        if supplied is None:
-            report.na(code,"No Mail_MediaTypeParameters value is supplied",detail)
-        else:
-            (report.ok if isinstance(supplied,pikepdf.String) else report.fail)(code,"Supplied Mail_MediaTypeParameters must be a PDF text string",detail)
-        return
-    # Agreement with stored XMP belongs to the complete reconstructed media rule.
-    if evidence!="original attachment bytes":
-        return
-    wanted=expected.partition(";")[2] if isinstance(expected,str) else ""
-    detail["expected_parameters"]=wanted
-    if not wanted.strip():
-        for code in ("EMBEDDED_MEDIATYPE_PARAMETERS_REQUIRED","SOURCE_MEDIATYPE_PARAMETERS_MATCH"):
-            report.na(code,"The independently matched original supplies no media parameters",detail)
-        return
-    (report.ok if supplied is not None else report.fail)("EMBEDDED_MEDIATYPE_PARAMETERS_REQUIRED",
-        "Original media parameters require Mail_MediaTypeParameters on the embedded stream",detail)
-    if supplied is None or not isinstance(supplied,pikepdf.String):
-        report.na("SOURCE_MEDIATYPE_PARAMETERS_MATCH","Original parameter value comparison requires a supplied PDF string; presence and type are reported separately",detail)
-        return
-    try:
-        actual=str(supplied)
-    except (ValueError,UnicodeError,pikepdf.PdfError):
-        evidence_unavailable(report,"SOURCE_MEDIATYPE_PARAMETERS_MATCH","The stored media-parameter string cannot be decoded",detail)
-        return
-    (report.ok if media_type_signature("application/octet-stream;"+wanted)==media_type_signature("application/octet-stream;"+actual) else report.fail)(
-        "SOURCE_MEDIATYPE_PARAMETERS_MATCH","Stored media parameters compared with independently associated original attachment bytes",detail)
+    return _media_rules.check_native_media_parameters(_media_rules_dependencies(), file, expected, report, evidence)
 
 
 def original_attachment_media_types(file,source):
@@ -7634,126 +5037,11 @@ def original_attachment_media_types(file,source):
 
 
 def check_body_media_types(pdf,xroot,afiles,report,profile=None):
-    code="DPM_BODY_MEDIA_TYPE_MATCH_SOURCE"
-    profile=profile or (first_xmp_value(xroot,NS_PDFMAILID,"conformance") if xroot is not None else "")
-    sources=summarize_source_emails(afiles)
-    bindings=getattr(report,"_email_source_summaries",None)
-    _root,_rootnode,nodes=get_dpart_nodes(pdf)
-    evidence=independent_content_ownership(pdf,xroot,report)
-    records=flatten_email_records(xroot) if xroot is not None else []
-    original_omitted=str(profile).endswith("i") and not any(file.get("afrelationship")=="Source" for file in afiles)
-    attachment_nodes=[node for node in nodes if not node["child_count"] and safe_name(node["dpm"].get("Mail_ContentSetType"))=="AttachmentRendering"]
-    check_attachment_rendering_media(pdf,records,sources,bindings,attachment_nodes,evidence,report,afiles,original_omitted)
-    if declared_content_sets_are_nonbody(pdf,nodes):
-        report.na(code,"No declared BodyRendering Content Set requires a body-media comparison",
-                  {"assertion":"T8-SUBTYPE","check":"body_source_media_type","reason":"Every declared Content Set has a known non-body type and a valid page range; no BodyRendering DPart is declared."})
-        return
-    if original_omitted:
-        report.na(code,"Original body-media comparison was not performed: isolated output omits original sources",
-                  {"assertion":"T8-SUBTYPE","check":"body_source_media_type","scope":"original-source comparison only"})
-        return
-    if xroot is None or not sources or not records:
-        evidence_unavailable(report,code,"No inspectable source body is available for an applicable media-type comparison",
-                             {"assertion":"T8-SUBTYPE","check":"body_source_media_type","xmp_readable":xroot is not None,"inspectable_sources":len(sources)})
-        return
-    bodies=collect_body_content_sets(pdf,nodes)
-    checked=0
-    comparisons=[]
-    unresolved=[]
-    failures=[]
-    for record in records:
-        source=source_email_for_record(record,records,sources,bindings)
-        expected=set(source.get("body_media_types",[])) if source else set()
-        relevant=[body for body in bodies if identities_match(record,body["identity"])]
-        if not expected or not relevant:
-            unresolved.append(identity_fields(record))
-            continue
-        for body in relevant:
-            independent=evidence["owners"].get(body.get("objgen"),set())
-            if not body.get("subtype") or independent!={guid_value(record.get("Mail_GUID",""))}:
-                unresolved.append(identity_fields(record))
-                continue
-            checked+=1
-            comparisons.append({"identity":identity_fields(record),"pages":body["pages"],"actual":body["subtype"],"source_media_types":sorted(expected)})
-            if media_type_signature(body["subtype"]) not in {media_type_signature(value) for value in expected}:
-                failures.append({"identity":identity_fields(record),"pages":body["pages"],"actual":body["subtype"],"source_media_types":sorted(expected)})
-    if failures:
-        report.fail(code,"BodyRendering media type differs from every relevant source body representation",{"assertion":"T8-SUBTYPE","check":"body_source_media_type","actual":failures})
-    elif unresolved:
-        evidence_unavailable(report,code,"Some source body media types could not be compared unambiguously",{"assertion":"T8-SUBTYPE","check":"body_source_media_type","actual":unresolved})
-    else:
-        report.ok(code,"BodyRendering media types agree with inspectable source body representations",{"assertion":"T8-SUBTYPE","check":"body_source_media_type","content_sets":checked,"comparisons":comparisons})
+    return _media_rules.check_body_media_types(_media_rules_dependencies(), pdf, xroot, afiles, report, profile)
 
 
 def check_attachment_rendering_media(pdf,records,sources,bindings,nodes,ownership,report,afiles,original_omitted=False):
-    code="DPM_ATTACHMENT_MEDIA_TYPE_MATCH_SOURCE"
-    if not nodes:
-        detail={"assertion":"T8-SUBTYPE","check":"attachment_source_media_type"}
-        if declared_content_sets_are_nonbody(pdf,ownership["nodes"],"AttachmentRendering"):
-            report.na(code,"No AttachmentRendering content set activates the attachment-source comparison",detail)
-        elif original_omitted:
-            report.na(code,"Original attachment-rendering comparison was not performed: isolated output omits original sources",detail)
-        else:
-            evidence_unavailable(report,code,"The Content Set inventory cannot establish whether an attachment-rendering comparison applies",detail)
-        return
-    candidates=getattr(report,"_embedded_media_candidates",None)
-    if candidates is None:
-        candidates=embedded_file_candidates(pdf,get_embedded_files(pdf),afiles)
-    by_spec=defaultdict(list)
-    for file in candidates:
-        by_spec[file.get("objgen")].append(file)
-    page_map=page_objgen_map(pdf);work=0
-    for node in nodes:
-        detail={"assertion":"T8-SUBTYPE","check":"attachment_source_media_type","objgen":node["objgen"]}
-        if original_omitted:
-            report.na(code,"Original attachment-rendering comparison was not performed: isolated output omits original sources",detail)
-            continue
-        owners=ownership["owners"].get(node["objgen"],set())
-        matches=[record for record in records if guid_value(record.get("Mail_GUID","")) in owners] if len(owners)==1 else []
-        source=source_email_for_record(matches[0],records,sources,bindings) if len(matches)==1 else None
-        raw=node["dpm"].get("Mail_Subtype")
-        subtype=safe_name(raw) if isinstance(raw,pikepdf.Name) else ""
-        bounds=page_range_from_dpart(node,page_map)
-        detail["declared"]=subtype
-        if not source or not subtype or not bounds:
-            evidence_unavailable(report,code,"Attachment rendering needs an independently owned source and readable subtype",detail)
-            continue
-        associated=set();contexts=[node["node"],dict_get(node["node"],"/DPM",None)]
-        for number in range(bounds[0],bounds[1]+1):
-            work+=1
-            if work>MAX_TREE_ITEMS:
-                evidence_unavailable(report,code,"Attachment-rendering inspection reached its limit",detail);return
-            contexts.append(pdf.pages[number-1].obj)
-        for context in contexts:
-            associated_files=dict_get(context,"/AF",[])
-            if not is_pdf_array(associated_files) and associated_files!=[]:
-                evidence_unavailable(report,code,"Attachment-rendering source association is not an AF array",detail)
-                associated.clear();break
-            for spec in associated_files or []:
-                work+=1
-                if work>MAX_TREE_ITEMS:
-                    evidence_unavailable(report,code,"Attachment-rendering inspection reached its limit",detail);return
-                if safe_name(dict_get(spec,"/AFRelationship",None))=="Source":
-                    associated.add(objgen(spec))
-        types=set()
-        for spec in associated:
-            for file in by_spec.get(spec,[]):
-                types.update(original_attachment_media_types(file,source))
-        if len(types)==1 and next(iter(types)):
-            expected=next(iter(types));detail["source_type"]=expected
-            (report.ok if media_type_signature(subtype)==media_type_signature(expected) else report.fail)(
-                code,"AttachmentRendering subtype compared with original payload bytes explicitly associated with its content",detail)
-        else:
-            originals=source.get("mime_attachments",source.get("attachments",[]))
-            work+=len(originals)
-            if work>MAX_TREE_ITEMS:
-                evidence_unavailable(report,code,"Attachment-rendering source comparison reached its limit",detail);return
-            contradicted=bool(originals) and source.get("attachment_inventory_available",True) and all(
-                item.get("content_type") and media_type_signature(subtype)!=media_type_signature(item["content_type"]) for item in originals)
-            if contradicted:
-                report.fail(code,"AttachmentRendering subtype contradicts every attachment in its independently established original email",detail)
-            else:
-                evidence_unavailable(report,code,"No unique original payload association establishes the attachment-rendering media type",detail)
+    return _media_rules.check_attachment_rendering_media(_media_rules_dependencies(), pdf, records, sources, bindings, nodes, ownership, report, afiles, original_omitted)
 
 def core_field_text_evidence(pdf,xroot,page_analysis):
     if xroot is None or not page_analysis:
@@ -8082,96 +5370,7 @@ def observed_header_source_inventory(elements,page_analysis,xroot,afiles,owner_r
     return inventory
 
 def check_tagging_recommendations(pdf,dpart_nodes,elements,report,xroot=None,afiles=(),page_analysis=None):
-    code="CUSTOM_CONTENTSETS_TAGGEDPDF_RECOMMENDED"
-    pages=page_objgen_map(pdf)
-    scoped=set()
-    content_sets=[]
-    owner_ranges=[]
-    by_node={node["objgen"]:node for node in dpart_nodes if node.get("objgen")}
-    unresolved=[]
-    for node in dpart_nodes:
-        if node.get("start") is None and node.get("end") is None:
-            continue
-        span=page_range_from_dpart(node,pages)
-        content_sets.append({"object":node["objgen"],"type":safe_name(node["dpm"].get("Mail_ContentSetType"))})
-        if span is None:
-            unresolved.append({"object":node["objgen"],"reason":"Content Set page range is unavailable"})
-        else:
-            scoped.update(range(span[0],span[1]+1))
-            owner_ranges.append({"identity":dpart_message_identity(node,by_node),"pages":list(range(span[0],span[1]+1))})
-    details={"strength":"SHOULD","scope":"All declared DPart Content Sets, a conservative superset of custom Content Sets",
-             "content_sets":content_sets,"pages":sorted(scoped),
-             "limits":"Syntactic content/annotation connections only; semantic equivalence and identification of every custom Content Set are not certified."}
-    object_references=set()
-    for element in elements:
-        children=dict_get(element["elem"],"/K",[])
-        for child in children if is_pdf_array(children) else [children]:
-            if safe_name(dict_get(child,"/Type",None))=="OBJR":
-                target=dict_get(child,"/Obj",None)
-                if target is not None:
-                    object_references.add(pdf_object_identity(target))
-    structure=dict_get(pdf.Root,"/StructTreeRoot",None)
-    marked=dict_get(dict_get(pdf.Root,"/MarkInfo",None),"/Marked",False) is True
-    coverage=[]
-    for number in sorted(scoped):
-        paint=analyze_page_content(pdf.pages[number-1])["paint_coverage"]
-        coverage.append(dict(page=number,**paint))
-        if paint["unmarked"] or not paint["structured"]:
-            unresolved.append({"page":number,"reason":"Unmarked paint or no structurally marked non-artifact paint",**paint})
-        for annotation in dict_get(pdf.pages[number-1].obj,"/Annots",[]):
-            if pdf_object_identity(annotation) not in object_references:
-                unresolved.append({"page":number,"object":objgen(annotation),"reason":"Annotation has no structure object reference"})
-    details["page_coverage"]=coverage
-    correspondence=[item["level"] for item in report.items if item["code"]=="STRUCTURE_CORRESPONDENCE"]
-    if structure is not None and not correspondence:
-        evidence=Report(report.path)
-        check_structure_correspondence(pdf,evidence)
-        correspondence=[item["level"] for item in evidence.items if item["code"]=="STRUCTURE_CORRESPONDENCE"]
-    connected=bool(correspondence) and set(correspondence)=={"PASS"}
-    if content_sets and scoped and structure is not None and marked and connected and not unresolved:
-        emit_if_unseen(report,"ok",code,"Declared Content Set page streams have connected structure coverage and a Tagged PDF declaration",details)
-    else:
-        details.update(assessment="unavailable" if not content_sets else "partial",unresolved=unresolved,
-                       structure_present=structure is not None,marked=marked,correspondence_verified=connected,
-                       reason="A structure root alone does not prove tagged page content; the custom subset and annotation semantics still require review.")
-        emit_if_unseen(report,"warn",code,"Tagged content coverage could not be established for every declared Content Set page",details)
-
-    code="HEADER_FIELDS_TAGGED_RECOMMENDED"
-    custom=[element for element in elements if element["type"].startswith("Mail_")]
-    if not custom:
-        emit_if_unseen(report,"na",code,"Header-tagging recommendation is conditional on custom EA-PDF tags",
-                       {"reason":"No custom EA-PDF structure tags are used; the section 9.7 custom-tag premise is absent."})
-        return
-    field_tags=[element for element in custom if element["type"] in ("Mail_FieldName","Mail_FieldValue")]
-    fields=[element for element in custom if element["type"]=="Mail_Field"]
-    text={item["field_objgen"]:item for item in structure_field_text_sequences(pdf)}
-    verified=[]
-    unresolved=[]
-    field_ids={field["objgen"] for field in fields}
-    for element in field_tags:
-        if element["parent_objgen"] not in field_ids:
-            unresolved.append({"object":element["objgen"],"reason":"Field markup has no immediate Mail_Field parent"})
-    for field in fields:
-        children=[element for element in field_tags if element["parent_objgen"]==field["objgen"]]
-        names=[element for element in children if element["type"]=="Mail_FieldName"]
-        missing=[element["objgen"] for element in children if not text.get(element["objgen"],{}).get("has_text_object")]
-        if not names or missing:
-            unresolved.append({"object":field["objgen"],"reason":"Missing rendered field-name or name/value text connection","unrendered":missing})
-        else:
-            verified.append({"object":field["objgen"],"names":len(names),
-                             "values":sum(element["type"]=="Mail_FieldValue" for element in children)})
-    # Observed field pairs cannot prove that no rendered header was omitted from
-    # tagging. That requires a source/rendered-header inventory beyond this view.
-    source_inventory=[]
-    inventory=observed_header_source_inventory(elements,page_analysis,xroot,afiles,owner_ranges,source_inventory,
-                                              getattr(report,"_email_source_summaries",None))
-    emit_if_unseen(report,"warn",code,"Observed header markup does not establish complete tagging of all rendered headers",
-                   {"strength":"SHOULD","assessment":"partial" if verified else "unavailable",
-                    "verified_fields":verified,"unresolved_fields":unresolved,"rendered_header_inventory":inventory,
-                    "source_header_inventory":source_inventory,
-                    "source_inventory_scope":"Ordered parsed headers of uniquely selected retained sources for custom Mail_Message owners. Unobserved source occurrences do not establish missing tags or whether a header was rendered.",
-                    "inventory_scope":"Observed custom Mail_Field elements only; standard-tagged, untagged and unrecognized rendered headers are not enumerated.",
-                    "needed_evidence":"An inventory of all rendered header names and nonempty values, matched to their structure/content connections."})
+    return _structure_rules.check_tagging_recommendations(_structure_rules_dependencies(), pdf, dpart_nodes, elements, report, xroot, afiles, page_analysis)
 
 def structure_content_dpm_assessments(pdf,elements,dpart_nodes):
     """Resolve connected DPart candidates without consulting tested attributes."""
@@ -8400,187 +5599,11 @@ def document_wide_content_pages(pdf,dpart_nodes):
     return {page for page,owners in candidates.items() if owners==[True]}
 
 def check_content_set_tag_coverage(pdf,leaf_nodes,content_rows,report):
-    """Prove each Content Set has a connected tag; counts do not establish counterparts."""
-    code="CONTENT_SET_MAIL_CONTENTSET_TAGGED"
-    details={"mail_contentset_tags":len(content_rows),"content_sets":len(leaf_nodes)}
-    work=0
-    def tick(items=1):
-        nonlocal work
-        work+=items
-        if work>MAX_TREE_ITEMS:
-            raise ValueError("Content Set coverage exceeds configured traversal limits")
-    try:
-        if any(item["code"]=="STRUCTURE_CORRESPONDENCE" and item["level"]=="FAIL" for item in report.items):
-            raise ValueError("Structure/content correspondence is invalid; tag counterparts cannot be verified")
-        if not leaf_nodes:
-            raise ValueError("DPart Content Set inventory is unavailable")
-        tick(len(pdf.pages))
-        page_map=page_objgen_map(pdf)
-        targets=set(range(1,len(leaf_nodes)+1))
-        by_node={pdf_object_identity(item["node"]):number for number,item in enumerate(leaf_nodes,1)}
-        page_sets=defaultdict(set)
-        invalid=set()
-        unavailable=[]
-        for number,item in enumerate(leaf_nodes,1):
-            tick()
-            bounds=page_range_from_dpart(item,page_map) if isinstance(item["node"],pikepdf.Dictionary) else None
-            if bounds is None:
-                invalid.add(number)
-                unavailable.append({"content_set":number,"reason":"Content Set dictionary or page range is unavailable"})
-                continue
-            for page in range(bounds[0],bounds[1]+1):
-                tick()
-                page_sets[page].add(number)
-        covered=set()
-        possible=set(invalid)
-        page_links={}
-        identities=[tuple(row.get("objgen") or ()) for row in content_rows]
-        aliased=len(set(identities))!=len(identities)
-        for row in content_rows:
-            tick()
-            known=set()
-            uncertain=set()
-            unknown=aliased or bool(row["unavailable"]) or not row["references"]
-            for reference in row["references"]:
-                tick()
-                choices=set()
-                reference_unknown=False
-                pages=reference["pages"]
-                if not pages:
-                    unknown=True
-                for page in pages:
-                    tick()
-                    if not isinstance(page,int) or isinstance(page,bool) or not 1<=page<=len(pdf.pages):
-                        unknown=True
-                        continue
-                    if page not in page_links:
-                        page_links[page]=by_node.get(pdf_object_identity(dict_get(pdf.pages[page-1].obj,"/DPart",None)))
-                    direct=page_links[page]
-                    ranges=page_sets.get(page,set())
-                    tick(len(ranges))
-                    if len(ranges)==1 and direct in ranges:
-                        choices.add(direct)
-                    else:
-                        reference_unknown=True
-                        choices.update(ranges)
-                        if direct is not None:
-                            choices.add(direct)
-                        if not choices:
-                            unknown=True
-                if reference_unknown or len(choices)!=1:
-                    uncertain.update(choices)
-                else:
-                    known.update(choices)
-            if unknown:
-                possible.update(targets)
-                unavailable.append({"tag_objgen":row["objgen"],"reason":"Tag content connection is unavailable or its structure identity is not distinct"})
-            elif uncertain or len(known)!=1:
-                possible.update(known|uncertain)
-                unavailable.append({"tag_objgen":row["objgen"],"content_set_candidates":sorted(known|uncertain),
-                                    "reason":"Tag does not establish a single Content Set counterpart"})
-            else:
-                covered.update(known)
-        missing=targets-covered
-        unverified=missing&possible
-        definite=missing-possible
-        details.update(verified_content_sets=sorted(covered),untagged_content_sets=sorted(definite),
-                       unverified_content_sets=sorted(unverified))
-        if unverified:
-            details["unavailable"]=unavailable[:25]
-        if definite:
-            report.fail(code,"Some DPart Content Sets have no corresponding Mail_ContentSet tag content",details)
-        elif unverified:
-            report.warn(code,"Content Set custom-tag coverage remains unavailable",dict(details,assessment="unavailable"))
-        else:
-            report.ok(code,"Every DPart Content Set has verified Mail_ContentSet tag content",details)
-        if unverified:
-            report.warn("VALIDATION_INCOMPLETE","Some Content Set tag counterparts remain unavailable",
-                        {"rules":[code],"assessment":"unavailable","content_sets":sorted(unverified)})
-    except (ValueError,TypeError,pikepdf.PdfError) as error:
-        report.warn(code,"Content Set custom-tag coverage remains unavailable",
-                    dict(details,assessment="unavailable",reason=str(error)))
-        report.warn("VALIDATION_INCOMPLETE","Content Set tag coverage could not be established",
-                    {"rules":[code],"assessment":"unavailable"})
+    return _structure_rules.check_content_set_tag_coverage(_structure_rules_dependencies(), pdf, leaf_nodes, content_rows, report)
 
 
 def check_content_set_art_usage(pdf,leaf_nodes,content_rows,report):
-    """Check each observed article's actual Content Set counterpart, not counts."""
-    code="MAIL_CONTENTSET_ART_ONLY"
-    details={"articles":len(content_rows),"content_sets":len(leaf_nodes)}
-    work=0
-    def tick(items=1):
-        nonlocal work
-        work+=items
-        if work>MAX_TREE_ITEMS:
-            raise ValueError("Art Content Set assessment exceeds configured traversal limits")
-    try:
-        if not leaf_nodes:
-            raise ValueError("DPart Content Set inventory is unavailable")
-        if any(item["code"]=="STRUCTURE_CORRESPONDENCE" and item["level"]=="FAIL" for item in report.items):
-            raise ValueError("Structure/content correspondence is invalid")
-        tick(len(pdf.pages))
-        page_map=page_objgen_map(pdf)
-        page_sets=defaultdict(set)
-        by_node={pdf_object_identity(item["node"]):number for number,item in enumerate(leaf_nodes,1)}
-        for number,item in enumerate(leaf_nodes,1):
-            tick()
-            bounds=page_range_from_dpart(item,page_map) if isinstance(item["node"],pikepdf.Dictionary) else None
-            if bounds is None:
-                raise ValueError("DPart Content Set page range is unavailable")
-            for page in range(bounds[0],bounds[1]+1):
-                tick()
-                page_sets[page].add(number)
-        verified=[]
-        bad=[]
-        unavailable=[]
-        identities=[tuple(row.get("objgen") or ()) for row in content_rows]
-        aliased=len(set(identities))!=len(identities)
-        for row in content_rows:
-            tick()
-            known=set()
-            unknown=aliased or bool(row["unavailable"]) or not row["references"]
-            for reference in ([] if row.get("role_unavailable") else row["references"]):
-                tick()
-                pages=reference["pages"]
-                choices=set()
-                reference_known=bool(pages)
-                for page in pages:
-                    tick()
-                    if not isinstance(page,int) or isinstance(page,bool) or not 1<=page<=len(pdf.pages):
-                        reference_known=False
-                        continue
-                    candidates=page_sets.get(page,set())
-                    tick(len(candidates))
-                    direct=by_node.get(pdf_object_identity(dict_get(pdf.pages[page-1].obj,"/DPart",None)))
-                    if len(candidates)!=1 or direct not in candidates:
-                        reference_known=False
-                    choices.update(candidates)
-                if reference_known and len(choices)==1:
-                    known.update(choices)
-                else:
-                    unknown=True
-            item={"tag_objgen":row["objgen"],"content_sets":sorted(known)}
-            if len(known)>1:
-                bad.append(item)
-            elif not unknown and len(known)==1:
-                verified.append(item)
-            if unknown:
-                unavailable.append(item)
-        details.update(verified_articles=verified[:25],cross_content_set_articles=bad[:25],
-                       unavailable_articles=unavailable[:25])
-        if bad:
-            report.fail(code,"Art content crosses distinct DPart Content Sets",details)
-        elif unavailable:
-            report.warn(code,"Art Content Set correspondence remains unavailable",dict(details,assessment="unavailable"))
-        else:
-            report.ok(code,"Each observed Art has content connected to one DPart Content Set",details)
-        if unavailable:
-            report.warn("VALIDATION_INCOMPLETE","Some Art Content Set counterparts remain unavailable",
-                        {"rules":[code],"assessment":"unavailable"})
-    except (ValueError,TypeError,pikepdf.PdfError) as error:
-        report.warn(code,"Art Content Set correspondence remains unavailable",dict(details,assessment="unavailable",reason=str(error)))
-        report.warn("VALIDATION_INCOMPLETE","Art Content Set counterparts could not be established",
-                    {"rules":[code],"assessment":"unavailable"})
+    return _structure_rules.check_content_set_art_usage(_structure_rules_dependencies(), pdf, leaf_nodes, content_rows, report)
 
 
 def check_additional_rule_coverage(pdf, xroot, xmp_bytes, efiles, afiles, eapdf_conf, pdfa_part, report):
@@ -9650,26 +6673,10 @@ def check_additional_rule_coverage(pdf, xroot, xmp_bytes, efiles, afiles, eapdf_
             emit_if_unseen(report,"ok",code,f"Elements are nested below {wanted_parent}",{"count":len(elems_list)})
 
 def check_fonts(pdf,report):
-    fonts=collect_all_fonts(pdf)
-    if not fonts:
-        report.warn("FONTS_NONE","No fonts found in page resources",{"count":len(fonts),"fonts":fonts})
-        return
-    if all(report.delegates(code) for code in ("FONTS_EMBEDDED","FONTS_MISSING","FONTS_ALL_EMBEDDED")):
-        return
-    embedded=[f for f in fonts if f["embedded"]]
-    missing=[f for f in fonts if not f["embedded"]]
-    if embedded:
-        report.ok("FONTS_EMBEDDED","Embedded fonts found",{"count":len(embedded),"fonts":embedded})
-    if missing:
-        report.fail("FONTS_MISSING","Some fonts are not embedded",{"count":len(missing),"fonts":missing[:25]})
-    else:
-        report.ok("FONTS_ALL_EMBEDDED","All discovered fonts are embedded",{"count":len(fonts),"fonts":fonts})
+    return _pdf_rules.check_fonts(_pdf_rule_context(pdf, report), fonts_for=collect_all_fonts)
 
 def check_xmp_dependent_unchecked(report,xmp_bytes=b""):
-    details={"xmp_readable":False,"metadata_bytes":len(xmp_bytes)}
-    report.fail("PDFA_XMP_UNCHECKED","Could not validate PDF/A identification metadata because XMP metadata is missing or unreadable",details)
-    report.fail("EAPDF_XMP_UNCHECKED","Could not validate EA-PDF identification metadata because XMP metadata is missing or unreadable",details)
-    report.fail("XMP_KEYWORDS_UNCHECKED","Could not validate XMP keywords because XMP metadata is missing or unreadable",details)
+    return _xmp_rules.check_xmp_dependent_unchecked(_xmp_rules_dependencies(), report, xmp_bytes)
 
 def build_validation_context(pdf, xroot, eapdf_conf, pdfa_part, efiles, afiles, source_bindings=None):
     source_files=[f for f in afiles if f["afrelationship"]=="Source"]
@@ -10000,107 +7007,7 @@ def finalize_rule_matrix(report, ctx):
 
 
 def check_required_email_metadata(root_xml,conformance,report):
-    if root_xml is None or conformance not in {"s","si","m","mi"}:
-        return
-    containers=xmp_property_nodes(root_xml,NS_PDFMAILMETA,"email")
-    values=[xmp_semantic_value(node) for node in containers]
-    container_details={"containers":[[local(child.tag) for child in container] for container in containers],"emails":flatten_email_records(root_xml)}
-    container_details["count"]=len(container_details["emails"])
-    valid_container=bool(containers) and all(isinstance(value,XmpArray) and value.kind=="Bag"
-                             and all(isinstance(member,dict) for member in value) for value in values)
-    if not valid_container:
-        report.fail("EMAIL_XMP_CONTAINER","Email Core Fields must be stored in an unordered rdf:Bag of email containers",container_details)
-    else:
-        report.ok("EMAIL_XMP_CONTAINER","Email Core Fields use unordered email containers",container_details)
-    records=flatten_email_records(root_xml)
-    expected_count=1 if conformance in {"s","si"} else 2
-    cardinality={"count":len(records),"profile":conformance,"expected":"exactly one" if expected_count==1 else "at least two"}
-    if not valid_container:
-        evidence_unavailable(report,"EMAIL_XMP_CARDINALITY","Malformed email containers do not establish a reliable record count",cardinality)
-    else:
-        valid_count=len(records)>=expected_count and (expected_count!=1 or len(records)==1)
-        (report.ok if valid_count else report.fail)("EMAIL_XMP_CARDINALITY","Email metadata count compared with the declared profile",cardinality)
-    if not records:
-        records=[{"Sent":first_message_xmp_value(root_xml,"Sent"),
-                  "Mail_GUID":first_message_xmp_value(root_xml,"Mail_GUID")}]
-    identifiers=set()
-    attachment_records=flatten_attachments(root_xml)
-    # Table 19's GUID is the containing email's generated GUID. Establish a
-    # complete typed inventory before proving that a referenced owner is absent.
-    email_guids={guid_value(record.get("Mail_GUID")) for record in records}-{''}
-    guid_inventory_complete=bool(records) and all(guid_value(record.get("Mail_GUID")) for record in records)
-    for attachment in attachment_records:
-        guid=attachment.get("Mail_GUID")
-        if not is_xmp_text(guid) or guid in email_guids:
-            continue
-        details={"Filename":attachment.get("Filename"),"Mail_GUID":guid,
-                 "known_email_guids":sorted(email_guids-{''}),"complete_guid_inventory":guid_inventory_complete}
-        if guid_inventory_complete:
-            report.fail("ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID",
-                        "Attachment Mail_GUID does not identify any email in document XMP",details)
-        else:
-            report.warn("ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID",
-                        "Attachment GUID correspondence is unavailable because email GUID metadata is incomplete",
-                        dict(details,assessment="unavailable"))
-            report.warn("VALIDATION_INCOMPLETE","Attachment GUID owner correspondence could not be assessed",
-                        {"rules":["ATTACHMENT_XMP_MAIL_GUID_IF_NO_MESSAGE_ID"],"assessment":"unavailable"})
-    for index,record in enumerate(records, start=1):
-        # Supplied Table 18 types are file-internal requirements. Source absence
-        # cannot turn malformed metadata into N/A or merely a recommendation.
-        text_fields={"Subject":"MESSAGE_SUBJECT_XMP","Raw-To":"MESSAGE_RAW_TO_XMP",
-                     "Raw-From":"MESSAGE_RAW_FROM_XMP","Raw-Cc":"MESSAGE_RAW_CC_XMP",
-                     "Raw-Bcc":"MESSAGE_RAW_BCC_XMP","Raw-Sent":"MESSAGE_RAW_SENT_REQUIRED_IF_INVALID",
-                     "messageid":"MESSAGE_ID_XMP","Message-ID":"MESSAGE_ID_XMP"}
-        for field,code in text_fields.items():
-            if field in record:
-                valid=is_xmp_text(record[field])
-                report.add("PASS" if valid else "FAIL",code,
-                           "Supplied email free text has the required simple-string type" if valid else
-                           "Supplied email free text must be a normal simple string",{
-                               "email":index,"field":field,"value":record[field],"actual_type":xmp_semantic_type(record[field]),
-                               "source_comparison":"Not established by this schema check"})
-        if "Message-ID" in record and "messageid" in record:
-            canonical,legacy=record["Message-ID"],record["messageid"]
-            if is_xmp_text(canonical) and is_xmp_text(legacy) and canonical!=legacy:
-                report.fail("MESSAGE_ID_XMP","Message-ID aliases contain conflicting identifiers",
-                            {"email":index,"Message-ID":canonical,"messageid":legacy})
-        if "In-Reply-To" in record:
-            replies=record["In-Reply-To"]
-            valid=isinstance(replies,XmpArray) and replies.kind=="Bag" and all(is_xmp_text(value) for value in replies)
-            report.add("PASS" if valid else "FAIL","MESSAGE_INREPLYTO_XMP",
-                       "Reply identifiers use an unordered Bag of text strings" if valid else
-                       "In-Reply-To must be an unordered rdf:Bag of normal text strings",
-                       {"email":index,"value":replies,"actual_type":xmp_semantic_type(replies),
-                        "local_interpretation":"SPEC-INREPLYTO-ARRAY"})
-        for field,code in (("SizeInBytes","MESSAGE_SIZE_XMP"),("NumberAttachments","MESSAGE_ATTACHMENT_COUNT_XMP")):
-            if field in record:
-                valid=is_xmp_text(record[field]) and is_nonneg_int_str(record[field])
-                report.add("PASS" if valid else "FAIL",code,
-                           "Supplied email count has the required nonnegative-integer type" if valid else
-                           "Supplied email count must be a nonnegative integer simple value",{
-                               "email":index,"field":field,"value":record[field],"actual_type":xmp_semantic_type(record[field]),
-                               "source_comparison":"Not established by this schema check"})
-        sent=first_present(record,"Sent")
-        guid=guid_value(record.get("Mail_GUID",""))
-        if not sent:
-            report.fail("MESSAGE_SENT_XMP","Every email requires XMP Sent, including isolated emails",{"email":index,"value":sent})
-        elif not looks_like_xmp_datetime(sent):
-            report.fail("MESSAGE_SENT_FORMAT","XMP Sent must be a valid xsd:dateTime",{"email":index,"value":sent,"actual_type":xmp_semantic_type(sent)})
-        else:
-            report.ok("MESSAGE_SENT_XMP","Email XMP Sent is present",{"email":index,"value":sent})
-            report.ok("MESSAGE_SENT_FORMAT","XMP Sent is a valid xsd:dateTime",{"email":index,"value":sent})
-        if not guid:
-            report.fail("MAIL_GUID_XMP","Every email requires Mail_GUID as an XMP normal simple string",
-                        {"email":index,"value":record.get("Mail_GUID"),"expected_type":"normal string",
-                         "actual_type":("URI" if isinstance(record.get("Mail_GUID"),XmpUri) else
-                                        "array" if isinstance(record.get("Mail_GUID"),list) else
-                                        type(record.get("Mail_GUID")).__name__)})
-        elif guid in identifiers:
-            report.fail("MAIL_GUID_UNIQUE","Mail_GUID must uniquely identify an email",{"email":index,"value":guid})
-        else:
-            report.ok("MAIL_GUID_XMP","Email XMP Mail_GUID is present",{"email":index,"value":guid})
-            identifiers.add(guid)
-            report.ok("MAIL_GUID_UNIQUE","Email Mail_GUID is unique within this document",{"email":index,"value":guid})
+    return _xmp_rules.check_required_email_metadata(_xmp_rules_dependencies(), root_xml, conformance, report)
 
 def dpart_level_name_assessment(value):
     """Keep Name/NMTOKEN-only and undecodable interpretations unavailable."""
@@ -10188,103 +7095,7 @@ def inspect_dpm_value_graph(dpm,state):
     return errors,name_errors,unavailable
 
 def check_dpart_object_structure(dpart_root,root_node,nodes,report):
-    errors=[]
-    if not isinstance(dpart_root,pikepdf.Dictionary):
-        errors.append({"object":"DPartRoot","reason":"DPartRoot must be a PDF dictionary, not a stream or other object"})
-    unavailable=[]
-    dpm_unavailable=[]
-    dpm_state={"seen":{},"items":0,"limited":False,"unavailable_values":False}
-    root_type=dict_get(dpart_root,"/Type",None)
-    if root_type is not None and (not isinstance(root_type,pikepdf.Name) or root_type!=pikepdf.Name('/DPartRoot')):
-        errors.append({"object":"DPartRoot","key":"Type","actual":observed_pdf_value(root_type),"reason":"If supplied, Type must be the PDF name DPartRoot"})
-    record_level=dict_get(dpart_root,"/RecordLevel",None)
-    if record_level is not None and (not isinstance(record_level,int) or isinstance(record_level,bool)):
-        errors.append({"object":"DPartRoot","key":"RecordLevel","actual":observed_pdf_value(record_level),"reason":"If supplied, RecordLevel must be a PDF integer"})
-    depths={}
-    for item in nodes:
-        depths[item["objgen"]]=0 if item["parent"] is None else depths.get(objgen(item["parent"]),-1)+1
-    level_count=max(depths.values(),default=-1)+1
-    if isinstance(record_level,int) and not isinstance(record_level,bool) and nodes and not 0<=record_level<level_count:
-        errors.append({"object":"DPartRoot","key":"RecordLevel","actual":record_level,"levels":level_count,
-                       "reason":"RecordLevel must identify an actual zero-based hierarchy level"})
-    labels=dict_get(dpart_root,"/NodeNameList",None)
-    if labels is not None:
-        if not is_pdf_array(labels):
-            errors.append({"object":"DPartRoot","key":"NodeNameList","reason":"If supplied, NodeNameList must be an array of PDF names"})
-        elif len(labels)!=level_count:
-            errors.append({"object":"DPartRoot","key":"NodeNameList","actual_entries":len(labels),"expected_levels":level_count,"reason":"NodeNameList must have one entry for each actual hierarchy level"})
-        else:
-            for index,label in enumerate(labels):
-                state,reason=dpart_level_name_assessment(label)
-                detail={"key":"NodeNameList","index":index,"actual":observed_pdf_value(label),"reason":reason}
-                if state=="invalid":errors.append(detail)
-                elif state=="unavailable":unavailable.append(detail)
-    if not getattr(dpart_root,"is_indirect",False) or not getattr(root_node,"is_indirect",False):
-        errors.append("DPartRoot and DPartRootNode must be indirect objects")
-    for item in nodes:
-        node=item["node"]
-        if not isinstance(node,pikepdf.Dictionary):
-            errors.append({"objgen":item["objgen"],"reason":"DPart nodes must be PDF dictionaries, not streams or other objects"})
-        node_type=dict_get(node,"/Type",None)
-        if node_type is not None and (not isinstance(node_type,pikepdf.Name) or node_type!=pikepdf.Name('/DPart')):
-            errors.append({"objgen":item["objgen"],"key":"Type","actual":observed_pdf_value(node_type),"reason":"If supplied, Type must be the PDF name DPart"})
-        expected_parent=item["parent"] if item["parent"] is not None else dpart_root
-        actual_parent=dict_get(node,"/Parent",None)
-        if actual_parent is None or objgen(actual_parent)!=objgen(expected_parent):
-            errors.append({"objgen":item["objgen"],"reason":"Missing or incorrect DPart Parent"})
-        if not getattr(node,"is_indirect",False):
-            errors.append({"objgen":item["objgen"],"reason":"DPart must be indirect"})
-        children=dict_get(node,"/DParts",None)
-        if children is not None:
-            if not is_pdf_array(children) or not len(children):
-                errors.append({"objgen":item["objgen"],"reason":"DParts must be a nonempty array of arrays"})
-            elif any(not is_pdf_array(group) or not len(group)
-                     or any(not isinstance(child,pikepdf.Dictionary) or not child.is_indirect for child in group)
-                     for group in children):
-                errors.append({"objgen":item["objgen"],"reason":"DParts groups must contain indirect DPart dictionary references"})
-            if item["start"] is not None or item["end"] is not None:
-                errors.append({"objgen":item["objgen"],"reason":"Non-leaf DParts cannot specify Start or End"})
-        elif item["start"] is None:
-            errors.append({"objgen":item["objgen"],"reason":"Leaf DPart requires Start"})
-        elif item["end"] is not None and objgen(item["start"])==objgen(item["end"]):
-            errors.append({"objgen":item["objgen"],"reason":"Single-page DPart must omit End"})
-        if dict_get(node,"/Metadata",None) is not None:
-            errors.append({"objgen":item["objgen"],"key":"Metadata",
-                           "reason":"Published Table409 correction prohibits XMP metadata streams in DPart dictionaries"})
-        dpm=item["dpm"]
-        raw_dpm=dict_get(node,"/DPM",None)
-        if isinstance(raw_dpm,pikepdf.Dictionary) and not dpm_state["limited"]:
-            value_errors,name_errors,value_unavailable=inspect_dpm_value_graph(raw_dpm,dpm_state)
-            errors.extend(dict(problem,objgen=item["objgen"]) for problem in value_errors)
-            dpm_unavailable.extend(dict(problem,objgen=item["objgen"]) for problem in value_unavailable)
-            for problem in name_errors:
-                report.fail("DPM_NAME_TYPES","DPM name value must contain valid decoded UTF-8",dict(problem,objgen=item["objgen"]))
-        if raw_dpm is not None and not isinstance(raw_dpm,pikepdf.Dictionary):
-            errors.append({"objgen":item["objgen"],"reason":"DPM must be a dictionary"})
-        for key in ("Mail_ContentSetType","Mail_Subtype"):
-            if key not in dpm:
-                continue
-            valid=isinstance(dpm[key],pikepdf.Name)
-            if valid:
-                try:
-                    bytes(dpm[key])[1:].decode("utf-8")
-                except UnicodeError:
-                    valid=False
-            if not valid:
-                report.fail("DPM_NAME_TYPES","DPM content set type and subtype must be PDF names with valid decoded UTF-8",{"objgen":item["objgen"],"key":key,"value":observed_pdf_value(dpm[key])})
-    if "DPM_NAME_TYPES" not in report.seen_codes:
-        if dpm_state["unavailable_values"]:
-            report.warn("DPM_NAME_TYPES","Some DPM name values could not be inspected",{"state":"unverified","assessment":"unavailable"})
-        else:
-            report.ok("DPM_NAME_TYPES","Inspected DPM names contain valid UTF-8 and required type/subtype fields use names",{"nodes":len(nodes)})
-    if errors:
-        report.fail("DPART_OBJECT_STRUCTURE","DPart object structure does not satisfy ISO 32000-2",{"errors":errors,"unavailable_name_checks":unavailable,"unavailable_dpm_checks":dpm_unavailable})
-    elif unavailable or dpm_unavailable:
-        report.warn("DPART_OBJECT_STRUCTURE","DPart hierarchy/metadata conformance could not be fully assessed",{"state":"unverified","assessment":"unavailable","names":unavailable,"dpm":dpm_unavailable})
-    else:
-        report.ok("DPART_OBJECT_STRUCTURE","DPart parents, indirect references, page ranges and supplied optional entry types/counts are valid",{"DPartRoot":objgen(dpart_root),"DPartRootNode":objgen(root_node),"nodes":[{"objgen":item["objgen"],"parent":objgen(dict_get(item["node"],"/Parent",None)),"start":objgen(item["start"]),"end":objgen(item["end"]),"child_count":item["child_count"]} for item in nodes]})
-    if unavailable or dpm_unavailable:
-        report.warn("VALIDATION_INCOMPLETE","DPart hierarchy or DPM conformance remains unavailable",{"rules":["DPART_OBJECT_STRUCTURE"],"assessment":"unavailable"})
+    return _structure_rules.check_dpart_object_structure(_structure_rules_dependencies(), dpart_root, root_node, nodes, report)
 
 class ChildValidationContext:
     def __init__(self,include_pdfa=False):
@@ -10322,30 +7133,7 @@ def child_rendered_source_proof(result):
     return messages if len(messages)==next(iter(counts)) else None
 
 def check_collection_asset_counts(xroot,afiles,report):
-    proof=getattr(report,"_collection_count_proof",{"complete":False,"messages":{}})
-    counts=defaultdict(int)
-    for source in proof["messages"].values():
-        counts[source]+=1
-    sources=defaultdict(set)
-    for file in afiles:
-        if file.get("afrelationship")=="Source" and file.get("objgen") not in (None,(0,0)):
-            sources[(str(file.get("md5","")).lower(),file.get("size"))].add(file["objgen"])
-    for asset in flatten_assets(xroot) if xroot is not None else []:
-        if "NumberMessages" not in asset:
-            continue
-        if not is_nonneg_int_str(asset["NumberMessages"]):
-            report.na("ASSET_NUMBERMESSAGES_MATCH_RENDERED","Rendered count comparison requires the separately checked integer type",{"file":asset.get("Filename")})
-            continue
-        checksum=asset.get("Checksum");size=parse_nonneg_int_value(asset.get("SizeInBytes"))
-        key=(checksum.lower(),size) if is_xmp_text(checksum) else None
-        detail={"assertion":"T16-NumberMessages","check":"rendered_message_count","scope":"validated collection children",
-                "file":asset.get("Filename"),"declared":asset["NumberMessages"]}
-        if not proof["complete"] or key is None or len(sources.get(key,set()))!=1:
-            evidence_unavailable(report,"ASSET_NUMBERMESSAGES_MATCH_RENDERED","Validated children do not establish a complete source-bound rendered message count",detail)
-            continue
-        count=counts.get(key,0);detail["rendered_messages"]=count
-        (report.ok if nonnegative_integer_equals(asset["NumberMessages"],count) else report.fail)(
-            "ASSET_NUMBERMESSAGES_MATCH_RENDERED","NumberMessages compared with distinct source-bound messages in validated children",detail)
+    return _embedding_rules.check_collection_asset_counts(_embedding_rules_dependencies(), xroot, afiles, report)
 
 def check_collection_children(efiles,eapdf_conf,report,context,depth,source_assets=(),related_streams=()):
     if eapdf_conf not in ("c","ci"):

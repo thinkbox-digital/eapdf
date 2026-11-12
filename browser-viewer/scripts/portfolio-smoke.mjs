@@ -8,8 +8,8 @@ const context=await chromium.launchPersistentContext('',{headless:true,executabl
 let page;
 try{
  const worker=context.serviceWorkers()[0]??await context.waitForEvent('serviceworker');page=await context.newPage();await page.setViewportSize({width:1600,height:1000});await page.goto(`chrome-extension://${new URL(worker.url()).host}/viewer.html`);
- const ready=()=>page.waitForFunction(()=>!document.querySelector('#file').disabled);
- const open=async path=>{await ready();if(await page.locator('#attachment-viewer').isVisible())await page.locator('#attachment-close').click();await page.locator('#file').setInputFiles(path);await page.waitForFunction(name=>document.querySelector('#header-filename').textContent===name&&!document.querySelector('#file').disabled,path.split('/').at(-1),{timeout:90000});};
+ const ready=()=>page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false'&&!document.querySelector('#loading-dialog').open,null,{timeout:90000});
+ const open=async path=>{await ready();if(await page.locator('#attachment-viewer').isVisible())await page.locator('#attachment-close').click();await page.locator('#file').setInputFiles(path);await page.waitForFunction(name=>document.querySelector('#header-filename').textContent===name&&document.querySelector('#viewport').getAttribute('aria-busy')==='false'&&!document.querySelector('#loading-dialog').open,path.split('/').at(-1),{timeout:90000});};
  const fixture=async(name,options)=>{const path=join(work,name);await writeFile(path,portfolioFixture(options));await open(path);};
  const names=()=>page.locator('[data-portfolio-row]').allTextContents();
  await fixture('collection.pdf',{outside:true,files:[['zeta.txt','zeta payload',10],['alpha.txt','alpha payload',2],['unrelated.pdf','not a member',3]]});

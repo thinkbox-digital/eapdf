@@ -344,7 +344,8 @@ final class PdfCreationValidator {
       if (base instanceof COSDictionary dictionary) {
         visitor.accept(dictionary);
         for (COSBase value : dictionary.getValues()) if (value != null) pending.add(value);
-      } else if (base instanceof COSArray array) {
+      } else {
+        COSArray array = (COSArray)base;
         for (COSBase value : array) if (value != null) pending.add(value);
       }
     }

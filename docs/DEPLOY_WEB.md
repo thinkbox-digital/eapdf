@@ -13,6 +13,23 @@ pip install --require-hashes -r requirements-web.lock
 
 `requirements-web.txt` records supported version ranges; `requirements-web.lock` pins the reviewed dependency closure and artifact hashes for deployment. Regenerate the lock in an isolated environment with `pip-compile --generate-hashes --output-file requirements-web.lock requirements-web.txt`, then rerun the public regressions before adopting updates.
 
+Existing deployments must install the updated lock and restart their Python web workers to load pikepdf 10.18.0 and pypdf 7.0.1. The pikepdf minimum includes the fix for the [cyclic JBIG2 native crash](https://github.com/pikepdf/pikepdf/issues/753). pypdf 7.0.1 includes an image-buffer sizing security fix and text-decoding fixes. Updating the checkout alone does not update an existing virtual environment:
+
+```bash
+cd /opt/eapdf
+env -u PYTHONPATH PYTHONNOUSERSITE=1 PIP_USER=0 .venv/bin/python -m pip install --require-hashes -r requirements-web.lock
+env -u PYTHONPATH PYTHONNOUSERSITE=1 .venv/bin/python -m pip check
+env -u PYTHONPATH PYTHONNOUSERSITE=1 .venv/bin/python -c 'import pikepdf, pypdf; print("pikepdf", pikepdf.__version__, "pypdf", pypdf.__version__)'
+sudo systemctl restart validator-web.service
+```
+
+Use the actual checkout and virtual-environment paths if they differ from the service template. Restart separately managed Gunicorn workers through their process manager. Disposable validator workers and their resource limits remain required after this dependency update.
+
+Deploy the complete source checkout, including the internal `eapdf_validation/`
+and `eapdf_web/` packages alongside the root Python entry points. Copying only
+`validate_eapdf.py` or `validator_web.py` is insufficient. CLI commands and the
+`validator_web:app` WSGI entry point are unchanged.
+
 Generation also needs Java 21 and a current generator JAR built with `mvn package`. Validation needs Docker and the configured veraPDF image (default `ghcr.io/verapdf/cli:v1.31.18`). Pre-pull the image before starting the service. The service account needs read access to application files and write access to `.validator_web_tmp`, `.generator_web_tmp`, and `out`.
 
 Docker access must work for the service account without an interactive shell. Docker socket access is effectively host administrator access; review that deployment decision rather than granting it blindly. Without usable Docker, validation cannot establish a passing PDF/A result. Web checks use private, named containers with read-only input mounts, no networking, a finite memory limit, and a Java heap sized from the job allowance.

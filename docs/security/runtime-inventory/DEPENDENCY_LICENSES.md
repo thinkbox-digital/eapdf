@@ -47,7 +47,7 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Creator | org.apache.commons:commons-math3 | 3.6.1 | Apache License, Version 2.0 |
 | Creator | org.apache.httpcomponents:httpclient | 4.5.14 | Apache License, Version 2.0 |
 | Creator | org.apache.httpcomponents:httpcore | 4.4.16 | Apache License, Version 2.0 |
-| Creator | org.apache.logging.log4j:log4j-api | 2.24.3 | Apache-2.0 |
+| Creator | org.apache.logging.log4j:log4j-api | 2.25.5 | Apache-2.0 |
 | Creator | org.apache.pdfbox:fontbox | 3.0.8 | Apache-2.0 |
 | Creator | org.apache.pdfbox:pdfbox-io | 3.0.8 | Apache-2.0 |
 | Creator | org.apache.pdfbox:pdfbox | 3.0.8 | Apache-2.0 |
@@ -86,7 +86,7 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Java validator | net.sf.saxon:Saxon-HE | 12.8 | Mozilla Public License Version 2.0 |
 | Java validator | org.apache.commons:commons-collections4 | 4.5.0 | Apache-2.0 |
 | Java validator | org.apache.commons:commons-math3 | 3.6.1 | Apache License, Version 2.0 |
-| Java validator | org.apache.logging.log4j:log4j-api | 2.24.3 | Apache-2.0 |
+| Java validator | org.apache.logging.log4j:log4j-api | 2.25.5 | Apache-2.0 |
 | Java validator | org.apache.pdfbox:fontbox | 3.0.8 | Apache-2.0 |
 | Java validator | org.apache.pdfbox:pdfbox-io | 3.0.8 | Apache-2.0 |
 | Java validator | org.apache.pdfbox:pdfbox | 3.0.8 | Apache-2.0 |
@@ -104,7 +104,7 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Java validator | org.xmlresolver:xmlresolver | 5.3.3 | Apache License version 2.0 |
 | Java validator | org.xmlresolver:xmlresolver | 5.3.3 | Apache License version 2.0 |
 | Python/web | blinker | 1.9.0 | MIT License |
-| Python/web | click | 8.5.0 | BSD-3-Clause |
+| Python/web | click | 8.5.1 | BSD-3-Clause |
 | Python/web | flask | 3.1.3 | BSD-3-Clause |
 | Python/web | gunicorn | 26.2.0 | MIT |
 | Python/web | itsdangerous | 2.2.0 | BSD License |
@@ -113,7 +113,7 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Python/web | markupsafe | 3.0.4 | BSD-3-Clause |
 | Python/web | olefile | 0.46 | BSD License |
 | Python/web | packaging | 26.3 | Apache-2.0 OR BSD-2-Clause |
-| Python/web | pikepdf | 10.17.0 | MPL-2.0 |
+| Python/web | pikepdf | 10.18.0 | MPL-2.0 |
 | Python/web | pillow | 12.3.0 | MIT-CMU |
-| Python/web | pypdf | 6.21.4 | BSD-3-Clause |
+| Python/web | pypdf | 7.0.1 | BSD-3-Clause |
 | Python/web | werkzeug | 3.1.9 | BSD-3-Clause |

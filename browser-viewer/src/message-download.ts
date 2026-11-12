@@ -3,7 +3,8 @@ import type {MailMessage} from './domain/inspection.js';
 import {messagePages} from './navigation.js';
 export type MessageDownload={name:string;pages:number[]|null};
 /** Keep complete single-message PDFs byte-for-byte; extract only proven body pages from aggregates. */
-export function messageDownload(doc:BrowserDocument,message?:MailMessage):MessageDownload|undefined {
+export function messageDownload(doc:BrowserDocument,message?:MailMessage,wholeDocument=false):MessageDownload|undefined {
+  if(wholeDocument)return {name:doc.name,pages:null};
   if(doc.inspection.collection.value)return;
   if(doc.inspection.messages.length===1)return {name:doc.name,pages:null};
   if(!message)return;

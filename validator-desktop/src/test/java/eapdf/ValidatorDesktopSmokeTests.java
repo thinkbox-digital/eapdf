@@ -24,6 +24,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 /** Run on a real graphical desktop with -Deapdf.validator.uiTest=true. */
 @EnabledIfSystemProperty(named = "eapdf.validator.uiTest", matches = "true")
 class ValidatorDesktopSmokeTests {
+  @org.junit.jupiter.api.io.TempDir Path temporary;
   @Test void windowValidatesARealFileAndStopsASecondRunWithoutLeavingWorkFiles() throws Exception {
     assertFalse(GraphicsEnvironment.isHeadless(), "A graphical desktop is required for this test");
     Set<Path> before = workspaces();
@@ -42,6 +43,11 @@ class ValidatorDesktopSmokeTests {
     JTextArea detail = field(gui, "detail", JTextArea.class);
     JTextField ruleFilter = field(gui, "ruleFilter", JTextField.class);
     try {
+      SwingUtilities.invokeAndWait(() -> {
+        file.setText(temporary.resolve("missing.pdf").toString());validate.doClick();
+        assertEquals("Validation did not start.",status.getText());
+        assertTrue(detail.getText().contains("cannot be read"));assertFalse(stop.isEnabled());
+      });
       SwingUtilities.invokeAndWait(() -> {
         var picker = new javax.swing.Timer(100, event -> {
           for (var window : java.awt.Window.getWindows()) {
@@ -132,6 +138,23 @@ class ValidatorDesktopSmokeTests {
         assertTrue(fieldUnchecked(gui, "browse", JButton.class).getLocationOnScreen().y >= file.getLocationOnScreen().y - 4);
         assertNotNull(validate.getIcon());
       });
+      Path savedReport=temporary.resolve("desktop-report.json");
+      SwingUtilities.invokeAndWait(() -> {
+        var picker=new javax.swing.Timer(100,event->{
+          for(var window:java.awt.Window.getWindows()){
+            var chooser=findChooser(window);
+            if(chooser!=null&&chooser.isShowing()){
+              ((javax.swing.Timer)event.getSource()).stop();chooser.setSelectedFile(savedReport.toFile());chooser.approveSelection();return;
+            }
+          }
+        });
+        picker.start();try{fieldUnchecked(gui,"save",JButton.class).doClick();}finally{picker.stop();}
+      });
+      assertTrue(Files.isRegularFile(savedReport));
+      assertEquals("PASS",ValidatorGui.Result.parse(Files.readString(savedReport)).status());
+      String evidence=System.getProperty("eapdf.ui.evidence");
+      if(evidence!=null){Path retained=Files.createDirectories(Path.of(evidence));Files.copy(savedReport,retained.resolve("desktop-report.json"),java.nio.file.StandardCopyOption.REPLACE_EXISTING);}
+
       Path screenshot = Path.of(System.getProperty("java.io.tmpdir"), "eapdf-validator-native", "window.png");
       Files.createDirectories(screenshot.getParent());
       BufferedImage picture = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_INT_RGB);

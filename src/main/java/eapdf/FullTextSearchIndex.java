@@ -260,7 +260,7 @@ final class FullTextSearchIndex {
   }
   /** Scalar normalization is shared with the viewer, including UTF-16 posting offsets. */
   static String normalize(String text){
-    text=text.replaceAll("(\\p{Ll})-\\n(?=\\p{Ll})|((?:\\p{Lu}))-\\n(?=\\p{L})", "$1$2");
+    text=text.replaceAll("(\\p{Ll})-\\n(?=\\p{Ll})|(\\p{Lu})-\\n(?=\\p{L})", "$1$2");
     var result=new StringBuilder();boolean space=false;
     for(int offset=0;offset<text.length();){
       int cp=text.codePointAt(offset);offset+=Character.charCount(cp);

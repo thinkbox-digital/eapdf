@@ -39,7 +39,7 @@ final class EmailStyles {
         // Preserve the original choice when visibility cannot be established.
       }
     }
-    return visible.body() == null ? "" : visible.body().text();
+    return visible.body().text();
   }
 
   static String scoped(Document document, EmailRecord record) {

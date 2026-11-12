@@ -1,3 +1,32 @@
+# Dated repository audit
+
+This file preserves dated checkpoints, including explicitly local/unreleased work.
+Use [current project status](PROJECT_STATUS.md) and [architecture decisions](ARCHITECTURE.md)
+for the current handover; do not treat historical counts or then-open findings as
+a fresh acceptance run.
+
+## 2026-11-10 — Python dependency refresh and viewer export/status cleanup
+
+**Bug fix / dependency update:** Raise the pypdf minimum and hash lock from 7.0.0 to 7.0.1, retaining pikepdf 10.18.0. The upstream release includes image-buffer sizing security and text-decoding fixes. Regenerated the Python runtime inventory and current license/version documentation. Only pypdf changed relative to the preceding local lock. All 42 public Python regressions pass; pypdf 7.0.0 versus 7.0.1 produces identical validator text/link analysis for all 26 published examples (1,909 pages), with source hashes unchanged. Hash-checked installation, pip consistency and runtime inventory checks pass. These are local source changes; the deployed environment still needs the lock installed and web workers restarted.
+
+**UI improvement:** Collection search summaries show only the matching-page count. Removed the Message-ID header and values from the shared CSV exporter for standalone, aggregate and collection messages. Metadata and duplicate-message row preservation remain unchanged. Both viewer packages rebuilt at 1.0.0-beta.1. All 17 CSV unit tests, browser export acceptance and full-text index acceptance (four profiles, 36 queries, highlighting and fallback) pass. Viewer TypeScript/inspection-contract checks pass. The expected browser was initially unavailable; an older installed binary could not load the extension. The matching Chromium build was then installed temporarily and the checks passed.
+
+**PDF.js assessment since Friday:** Baseline is Friday November 6's last commit, `8f0b079` (beta.17 release). The upstream dependency remains 6.5.438; the built display-layer module is unchanged, and the adapter's only diff is a comment. Four local patches were added: inspection scheduling/yielding, zero-width xref handling, Portfolio presentation and embedded navigation. The generated worker differs by 385 added and six removed lines. The existing getDocumentAssets API gained presentation, folder-thumbnail and embedded-target requests. Viewer-side changes are broader: verified embedded search indexes and text normalization/highlighting, worker/metadata lifetime management, and Portfolio navigation. A fresh upstream-versus-patched differential check passes on classic, compressed, incremental, recovery and encrypted PDFs for three open/render/cleanup rounds each, comparing text and rendered pixels. This bounded synthetic corpus does not establish compatibility with every PDF or a measured speed improvement.
+
+No application version bump, push, release or live-service restart. Unrelated local files and deletions remain untouched.
+
+## 2026-11-09 — Cyclic JBIG2 dependency fix and required GitHub checks
+
+**Bug fix:** Raise the web/Python validator minimum to pikepdf 10.18.0 and the quality-test pin to the same version for [upstream issue 753](https://github.com/pikepdf/pikepdf/issues/753). Regenerated the web hash lock; pikepdf is its only changed package version. Refreshed the Python CycloneDX inventory, installed-version snapshot and license tables from the exact locked runtime, correcting older snapshot versions already superseded in the lock. Historical fixture provenance and the viewer's separate frozen inspection-oracle requirements remain unchanged. Production validator code, CLI behavior and worker isolation are unchanged.
+
+**Regression evidence:** New raw-PDF fixtures cover self-referencing and two-stream `/JBIG2Globals` cycles, including malformed page content. Every native read/check/save and validator probe runs through the existing resource-limited subprocess controller. The negative control on 10.17.0 reproduces SIGSEGV (exit -11) in both native probes and both malformed-content validator probes; the test runner survives. On 10.18.0 all probes complete: unreadable content produces a caught validation failure, never a false PASS or crashed-worker fallback. External PDF/A availability is stubbed only in these focused subprocess tests.
+
+**Verification:** All 42 public Python regressions pass with the exact web lock; all 8 quality-gate tests pass with the quality dependency pin. Real EML, MSG and whole-source MBOX conversion acceptance passes source fidelity, visual baselines and standalone Java EA-PDF/PDF/A validation using the existing 2.0.0-beta.1 JARs and two conversion workers. Source hashes, logs and Java reports were retained locally. Hash-checked dependency installation, pip consistency, inventory consistency and documentation build/local-link checks pass. Java/viewer source was not changed or rebuilt. No new remote CI run is claimed for these unpublished edits.
+
+**Repository protection:** Enabled and independently read back `main` branch protection: GitHub Actions checks `java-builds`, `pdfjs-pin`, `python-regressions`, `conversion-acceptance`, `Viewer (chromium)` and `Viewer (firefox)` are required, with strict up-to-date checks and administrator enforcement. Force pushes and deletion are disabled; no reviewer-approval requirement was introduced. Path-filtered documentation jobs are not globally required.
+
+**Deployment:** Install `requirements-web.lock` into the deployed virtual environment and restart the web workers; see DEPLOY_WEB.md. The live service was not upgraded or restarted. No version bump, commit, push or release was performed. Existing local PST deletions and untracked reference PDFs remain untouched.
+
 ## 2026-11-09 — Adaptive resources and truthful validation outcomes (local)
 
 ## 2026-11-09 — Major beta release verification

@@ -3,7 +3,8 @@
     "eapdf.MsgAddressPreservationTests.suppliedOutlookMessageRetainsItsTransportRecipientOrder": "Requires a separately supplied Outlook fixture",
     "eapdf.MsgSentDateTests.suppliedNativeSubmissionFractionSurvivesIntoXmpExactly": "Requires a separately supplied Outlook fixture",
     "eapdf.MsgThreadPreservationTests.suppliedTransportFieldsKeepPriorityWhileMissingFieldsAreRecovered": "Requires a separately supplied Outlook fixture",
-    "eapdf.MsgThreadPreservationTests.suppliedOutlookReplyRetainsItsNativeThreadFields": "Requires a separately supplied Outlook fixture"
+    "eapdf.MsgThreadPreservationTests.suppliedOutlookReplyRetainsItsNativeThreadFields": "Requires a separately supplied Outlook fixture",
+    "eapdf.CreatorDesktopSmokeTests.choosesInputAndOutputReportsErrorsConvertsAndStops": "Opt-in real graphical desktop workflow; run with eapdf.creator.uiTest=true"
   },
   "validator": {
     "eapdf.OutlookSourceTests.nativeCorePreservesTheStoredSubmissionInstantAndDoesNotClaimHeaders": "Requires a separately supplied Outlook fixture",

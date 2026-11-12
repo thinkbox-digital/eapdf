@@ -1,4 +1,8 @@
-import {filesInMessageOrder} from './files-message-order.js';
+import {SearchController} from './search-controller.js';
+import {MessageTree,type PdfPlacement} from './message-tree.js';
+import {FilesPanel} from './files-panel.js';
+import {element,text,button,visiblePaneControls} from './viewer-elements.js';
+import {isPdf,canView,sizeLabel} from './attachment-types.js';
 import {ThreadPreview} from './thread-preview.js';
 import {openingDestination,type OpeningDestination} from './opening-destination.js';
 import {checkCollectionNames} from './collection-names.js';
@@ -9,15 +13,11 @@ import {treeIcon} from './viewer-icons.js';
 import {detectDocument,PortfolioModel,type PortfolioRow} from './portfolio.js';
 import {resolveEmbeddedLink,type EmbeddedAction} from './embedded-navigation.js';
 import {PortfolioView} from './portfolio-view.js';
-import {resolveStep,invalidateFullTextIndex,fullTextPageOwners} from './fulltext-index.js';
-import {readEmbeddedIndex,metadataSearchText} from './embedded-index.js';
+import {readEmbeddedIndex} from './embedded-index.js';
 import {saveBlob} from './downloads.js';
-import {indexMessages,type MessageIndex,type IndexedMessage} from './message-index.js';
-import {searchCollection,searchIndexedCollection,type CollectionMatch} from './collection-search.js';
-import {DocumentSearch,textMatches,pdfSearchText} from './document-search.js';
+import {indexMessages,type IndexedMessage} from './message-index.js';
 import {BrowserSession,type BrowserDocument} from './browser-session.js';
 import {AttachmentViewer} from './attachment-viewer.js';
-import {VirtualList} from './virtual-list.js';
 import {ScrollingPages} from './scrolling-pages.js';
 import type {AssociatedFile,EmbeddedStream,MailMessage} from './domain/inspection.js';
 import {fileLabel,messagePages,folderFiles} from './navigation.js';
@@ -25,17 +25,12 @@ import {metadataCsv,type CsvOptions} from './metadata-csv.js';
 import {MetadataDialog} from './metadata-dialog.js';
 import {setupLinkedOpening} from './linked-opening.js';
 
-function element<T extends HTMLElement>(id:string):T {const node=document.getElementById(id);if(!node)throw new Error('Missing element: '+id);return node as T;}
-function text<K extends keyof HTMLElementTagNameMap>(tag:K,value:string){const node=document.createElement(tag);node.textContent=value;return node;}
-function button(label:string,action:()=>void){const node=text('button',label);node.type='button';node.addEventListener('click',action);return node;}
-
 const fileInput=element<HTMLInputElement>('file'),pageInput=element<HTMLInputElement>('page'),zoom=element<HTMLSelectElement>('zoom');
 const status=element('status'),tree=element('tree'),files=element('files');
 const surface=element('page-surface'),viewport=element('viewport'),empty=element('empty-state');
 const search=element<HTMLInputElement>('search'),searchStatus=element('search-status');
 const attachmentViewer=new AttachmentViewer();
 let portfolioView:PortfolioView|undefined,portfolioDocument:BrowserDocument|undefined;
-const fileDescriptions=new WeakMap<BrowserDocument,Map<string,string>>();
 const initializedViews=new WeakSet<BrowserDocument>();
 const openingWarnings=new WeakMap<BrowserDocument,string>();
 const openingPlans=new WeakMap<BrowserDocument,OpeningDestination>();
@@ -64,7 +59,7 @@ const threadPreview=new ThreadPreview(()=>{
   if(edge===-1){const range=messagePages(doc.inspection,matches[0]!);pageNumber=range.at(-1)??doc.pdf.numPages;await render(token,false);viewport.scrollTop=viewport.scrollHeight-viewport.clientHeight;}else if(edge===1)viewport.scrollTop=0;
  });}};
 });
-const finder=new DocumentSearch();let searchEpoch=0;
+
 const selectedMessage=(doc:BrowserDocument)=>doc.inspection.messages.find(m=>m.id===savedMessages.get(doc));
 function displayedMessageDownload(doc:BrowserDocument) {
   let message=selectedMessage(doc);
@@ -72,7 +67,7 @@ function displayedMessageDownload(doc:BrowserDocument) {
     const owners=new Set(doc.inspection.parts.filter(part=>part.dpm.Mail_ContentSetType?.value==='BodyRendering'&&part.pageRange.state==='present'&&part.pageRange.value.start<pageNumber&&part.pageRange.value.end>=pageNumber-1).flatMap(part=>part.messageIds.value??[]));
     if(owners.size===1)message=doc.inspection.messages.find(m=>owners.has(m.id));
   }
-  return messageDownload(doc,message);
+  return messageDownload(doc,message,!!portfolioView);
 }
 let exportSession:BrowserSession|undefined;
 let cancelExport:(()=>void)|undefined;
@@ -80,38 +75,32 @@ const exportDialog=element<HTMLDialogElement>('export-dialog');
 const metadataDialog=new MetadataDialog();
 element('export-cancel').addEventListener('click',()=>cancelExport?.());
 exportDialog.addEventListener('cancel',event=>{event.preventDefault();cancelExport?.();});
-let searchSession:BrowserSession|undefined;
+
 let browseSession:BrowserSession|undefined;
 let browseEpoch=0;
 const browseCompleted=new WeakSet<BrowserDocument>();
 const browseMessageCounts=new WeakMap<BrowserDocument,number>();
-const browseDisplay=new WeakMap<BrowserDocument,Map<string,Record<string,string>>>();
-const browseSubjects=new WeakMap<BrowserDocument,Map<string,string>>();
-type CollectionResults={root:BrowserDocument;query:string;result:Awaited<ReturnType<typeof searchCollection>>;index:number;occurrence:number;total:number;offsets:Float64Array};
-let collectionResults:CollectionResults|undefined;
-let collectionList:VirtualList<CollectionMatch>|undefined;
+
 let session:BrowserSession|undefined,current:BrowserDocument|undefined,busy=false,generation=0,pageNumber=1,editingPage=false,renderedZoom=1;
 let renderedViewportWidth=0,renderedViewportHeight=0;
-const nodes=new Map<BrowserDocument,HTMLLIElement>(),savedMessages=new Map<BrowserDocument,string|undefined>(),savedPages=new Map<BrowserDocument,number>();
-type PdfLink={file:AssociatedFile;stream:EmbeddedStream};
-const pdfKey=(file:AssociatedFile,stream:EmbeddedStream)=>JSON.stringify([file.id,stream.locator.path]);
-type PdfPlacement={row?:HTMLLIElement;list?:VirtualList<PdfLink>;index:number};
-const pdfPlacements=new WeakMap<BrowserDocument,Map<string,PdfPlacement[]>>();
-const documentPlacements=new WeakMap<BrowserDocument,PdfPlacement>();
-const lazyMessages=new WeakMap<BrowserDocument,{list:VirtualList<MailMessage>;indices:Map<string,number>}>();
-const virtualLists=new Set<{close:()=>void}>();
-const documentLists=new WeakMap<BrowserDocument,Set<{close:()=>void}>>();
-function rememberList(doc:BrowserDocument,list:{close:()=>void}):void{virtualLists.add(list);let owned=documentLists.get(doc);if(!owned){owned=new Set();documentLists.set(doc,owned);}owned.add(list);}
-let fileList:VirtualList<AssociatedFile>|undefined;
+const savedMessages=new Map<BrowserDocument,string|undefined>(),savedPages=new Map<BrowserDocument,number>();
+const messageTree=new MessageTree(tree,{
+  busy:()=>busy,singleMessage,
+  openDocument:(doc,message,node,fromTop)=>void operation(ticket=>showDocument(doc,ticket,message,node,undefined,fromTop)),
+  openEmbedded:(doc,file,stream,placement)=>void operation(ticket=>openChild(doc,file,stream,ticket,undefined,placement))
+});
+const searchController=new SearchController({
+ get doc(){return current;},get session(){return session;},get page(){return pageNumber;},set page(value){pageNumber=value;},
+ get generation(){return generation;},get busy(){return busy;},operation,check,openChild,showDocument,render,syncMessageToPage,navigationTab
+},{search,searchStatus,status,tree,viewport,pages});
+const {filter,filterResults}=searchController;
 const pageOwners=new WeakMap<BrowserDocument,Map<number,MailMessage|null>>();
 // PDF points use 72 units/inch; browser CSS uses 96.
 const PDF_TO_CSS=96/72;
-const isPdf=(file:AssociatedFile,stream:EmbeddedStream)=>stream.mimeType.value?.split(';')[0]?.toLowerCase()==='application/pdf'||/\.pdf$/i.test(fileLabel(file));
-const canView=(file:AssociatedFile,stream:EmbeddedStream)=>isPdf(file,stream)||/^(text\/|message\/(rfc822|global)|image\/(png|jpeg|gif|svg\+xml)|application\/(json|xml))/.test(stream.mimeType.value??'')||/\.(png|jpe?g|gif|txt|csv|tsv|log|json|xml|html?|eml|svg|md)$/i.test(fileLabel(file));
-function sizeLabel(size:number|null):string {if(size===null)return 'Size not recorded';if(size<1024)return `${size} B`;if(size<1024**2)return `${(size/1024).toFixed(1)} KiB`;return `${(size/1024**2).toFixed(1)} MiB`;}
+
 function collectionOverview(doc:BrowserDocument|undefined):boolean{return !!doc?.inspection.collection.value&&['c','ci'].includes(doc.inspection.identification.declaredProfile.value??'')&&!portfolioView;}
 function controls():void {
-  fileInput.disabled=busy;const available=!!current;
+  fileInput.disabled=false;const available=!!current;
   portfolioView?.setBusy(busy);
   element<HTMLButtonElement>('portfolio-toggle').disabled=element<HTMLButtonElement>('portfolio-show').disabled=busy;
   const scope=element<HTMLSelectElement>('search-scope');scope.disabled=busy||!available;scope.options[0]!.disabled=collectionOverview(current);if(collectionOverview(current))scope.value='collection';
@@ -127,7 +116,8 @@ function controls():void {
   element<HTMLButtonElement>('close').disabled=!session;
   const download=element<HTMLButtonElement>('download-message'),plan=current?displayedMessageDownload(current):undefined;
   download.disabled=busy||!plan;
-  download.title=plan?(plan.pages?'Download this message’s pages as a PDF':'Download this message as its original PDF'):'Select a message to download as a PDF';
+  for(const node of download.childNodes)if(node.nodeType===Node.TEXT_NODE)node.textContent=portfolioView?'Download active file':'Download this message';
+  download.title=portfolioView&&plan?`Download ${plan.name} as its original PDF`:plan?(plan.pages?'Download this message’s pages as a PDF':'Download this message as its original PDF'):'Select a message to download as a PDF';
   for(const b of document.querySelectorAll<HTMLButtonElement>('#tree button,#files button,#breadcrumbs button'))b.disabled=busy||b.dataset.unavailable==='true';
   if(!editingPage||document.activeElement!==pageInput){pageInput.value=String(pageNumber);pageInput.removeAttribute('aria-invalid');editingPage=false;}
   for(const id of ['previous','next','back','zoom-in','zoom-out']){const control=element<HTMLButtonElement>(id);control.setAttribute('aria-disabled',String(control.disabled));}
@@ -164,13 +154,12 @@ function close():void {
   threadPreview.reset();finishLoading();metadataDialog.close();cancelExport?.();
   portfolioView?.close();portfolioView=undefined;portfolioDocument=undefined;portfolioReturn=undefined;
   element('portfolio-toggle').hidden=element('portfolio-show').hidden=true;delete document.body.dataset.documentKind;
-  metadataEpoch++;forceMetadataScan=false;metadataSession?.close();metadataSession=undefined;metadataIndex=undefined;clearTimeout(filterTimer);
-  filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;filter.value='';filtered=undefined;tree.hidden=false;element('filter-status').textContent='';keyboardSelection=undefined;
-  for(const list of virtualLists)list.close();virtualLists.clear();fileList?.close();fileList=undefined;
-  cancelLinked();stopBrowseIndex();element('subject-index-progress').hidden=true;searchSession?.close();searchSession=undefined;exportSession?.close();exportSession=undefined;
-  generation++;searchEpoch++;collectionResults=undefined;failedPages.clear();finder.clear();pages.clear();attachmentViewer.close();session?.close();session=undefined;current=undefined;
-  nodes.clear();savedPages.clear();savedMessages.clear();busy=false;pageNumber=1;editingPage=false;
-  element('restart').hidden=true;empty.hidden=false;element('collection-results').hidden=true;collectionList?.close();collectionList=undefined;element('collection-matches').replaceChildren();element('outline').replaceChildren();element('outline-panel').hidden=true;
+  searchController.reset();keyboardSelection=undefined;
+  messageTree.closeLists();filesPanel.close();
+  cancelLinked();stopBrowseIndex();element('subject-index-progress').hidden=true;exportSession?.close();exportSession=undefined;
+  generation++;failedPages.clear();pages.clear();attachmentViewer.close();session?.close();session=undefined;current=undefined;
+  messageTree.clear();savedPages.clear();savedMessages.clear();busy=false;pageNumber=1;editingPage=false;
+  element('restart').hidden=true;empty.hidden=false;element('collection-results').hidden=true;element('collection-matches').replaceChildren();element('outline').replaceChildren();element('outline-panel').hidden=true;
   for(const panel of [tree,files,element('breadcrumbs')])panel.replaceChildren();
   element('declared-profile').textContent='';element('declared-profile').hidden=true;
   element('archive-stats').hidden=true;
@@ -196,19 +185,19 @@ async function render(ticket:number,followMessage=true):Promise<void>{
   try{
     await session.ensure(doc);check(ticket);
     status.textContent=`Rendering page ${pageNumber}…`;
-    const range=filteredPages(doc);if(range)pageNumber=Math.max(range[0]!,Math.min(range.at(-1)!,pageNumber));
+    const range=searchController.filteredPages(doc);if(range)pageNumber=Math.max(range[0]!,Math.min(range.at(-1)!,pageNumber));
     const scale=await pageScale(doc,pageNumber);check(ticket);
     renderedViewportWidth=viewport.clientWidth;renderedViewportHeight=viewport.clientHeight;
-    empty.hidden=true;await pages.show(doc,scale,pageNumber,search.value,true,filteredPages(doc));check(ticket);renderedZoom=scale/PDF_TO_CSS;
+    empty.hidden=true;await pages.show(doc,scale,pageNumber,search.value,true,searchController.filteredPages(doc));check(ticket);renderedZoom=scale/PDF_TO_CSS;
     empty.hidden=true;status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages}`;savedPages.set(doc,pageNumber);if(followMessage)syncMessageToPage();
   }catch(error){if(ticket===generation&&current===doc)failedPages.add(pageNumber);throw error;}
 }
 
-function markSelection(node:HTMLElement|undefined):void {for(const n of tree.querySelectorAll('[aria-current]'))n.removeAttribute('aria-current');node?.setAttribute('aria-current','true');for(let parent=node?.parentElement;parent&&parent!==tree;parent=parent.parentElement)if(parent instanceof HTMLDetailsElement)parent.open=true;else if(parent.tagName==='UL'&&parent.hidden){parent.hidden=false;parent.parentElement?.querySelector(':scope > .document-disclosure')?.setAttribute('aria-expanded','true');}}
+function markSelection(node:HTMLElement|undefined):void {messageTree.markSelection(node);}
 // Update selection only: following the page must never navigate back to a
 // message's first page. Cache ownership instead of rescanning DParts on scroll.
 function syncMessageToPage():void {
-  const doc=current,root=doc?nodes.get(doc):undefined;
+  const doc=current;
   if(!doc||doc.inspection.collection.value||doc.inspection.messages.length<2)return;
   let owners=pageOwners.get(doc);
   if(!owners){
@@ -219,9 +208,7 @@ function syncMessageToPage():void {
     pageOwners.set(doc,owners);
   }
   const message=owners.get(pageNumber)??undefined;
-  const lazy=lazyMessages.get(doc),index=message?lazy?.indices.get(message.id):undefined;
-  const ensured=index===undefined?undefined:lazy?.list.rowAt(index)?.querySelector<HTMLButtonElement>('button');
-  const row=ensured??(message?root?.querySelector<HTMLButtonElement>(`:scope > ul > li > button[data-message-id="${CSS.escape(message.id)}"]`):root?.querySelector<HTMLButtonElement>(':scope > button[data-document-id]'));
+  const row=messageTree.messageRow(doc,message);
   const changed=savedMessages.get(doc)!==message?.id;
   if(changed){savedMessages.set(doc,message?.id);showFiles(doc,message);}
   if(!row||(!changed&&row.hasAttribute('aria-current')))return;
@@ -268,74 +255,17 @@ function refreshInspection(doc:BrowserDocument):void {
   const mismatches=doc.inspection.diagnostics.filter(d=>d.code==='CHECKSUM_MISMATCH');
   if(mismatches.length){status.textContent='Warning: an embedded file differs from its recorded checksum.';}
 }
-function fileCategory(file:AssociatedFile):string {
-  const premis=/(?:^|[_. -])premis(?:[_. -]|$)/i.test(fileLabel(file))&&/\.xml$/i.test(fileLabel(file))
-    ||file.streams.some(stream=>/premis/i.test(stream.mimeType.value??''));
-  if(premis||file.afRelationship.value==='Supplement')return 'Technical and supporting files';
-  if(file.afRelationship.value==='Source')return 'Email sources';
-  return file.owners.value?.length?'Email attachments':'Archive files';
-}
-const fileCategoryOrder=['Email sources','Email attachments','Archive files','Technical and supporting files'];
-function showFiles(doc:BrowserDocument,message?:MailMessage):void {
-  threadPreview.sync(doc,message);
-  fileList?.close();fileList=undefined;files.replaceChildren();const selected=filesInMessageOrder(doc.inspection,doc.inspection.files.filter(f=>!message||f.owners.value?.includes(message.id)),file=>fileCategoryOrder.indexOf(fileCategory(file)),session?.cachedMessageIndex(doc)?.messages,doc.details);element('file-count').textContent=String(selected.length);
-  element('files-title').textContent=message||singleMessage(doc)?'Files in this email':'Files in this PDF';
-  const detailList=element('selection-details');detailList.replaceChildren();
-  const selectedMessage=message??singleMessage(doc),metadata=selectedMessage?doc.details.get(selectedMessage.metadataRecordId):undefined;
-  const collection=doc.parent?.inspection.collection.value;const folderNames=new Set<string>();
-  if(collection)for(const entry of collection.entries.filter(e=>e.fileId===doc.parentFileId))for(let id of entry.folderIds.value??[]){const names:string[]=[],seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);const folder=collection.folders.find(f=>f.id===id);if(!folder)break;if(folder.name.value)names.unshift(folder.name.value);id=folder.parentId??'';}if(names.length)folderNames.add(names.join(' / '));}
-  for(const [key,value]of [['Folder',[...folderNames].join('; ')||metadata?.Folder||metadata?.['Folder paths']]])if(value){detailList.append(text('dt',key!),text('dd',value));}
-  if(doc.inspection.coverage.associatedFiles!=='present'){const note=text('p','Some embedded files could not be listed.');note.className='file-note';files.append(note);}
-  if(message&&doc.inspection.diagnostics.some(d=>d.code==='FILE_EMAIL_ASSOCIATION_MISSING')){const note=text('p','Some files could not be linked to an email.');note.className='file-note';files.append(note);}
-  if(!selected.length){if(doc.inspection.coverage.associatedFiles==='present'){const note=text('p',message&&doc.inspection.files.length?'No files are associated with this email in the PDF.':'No embedded files in this selection.');note.className='muted';files.append(note);}}
-  const list=text('ul','');files.append(list);
-  const createFile=(file:AssociatedFile)=>{
-    const row=text('li','');row.className='file-card';row.dataset.associatedFileId=file.id;const label=text('strong',fileLabel(file));label.className='file-name';label.title=fileLabel(file);const icon=treeIcon(/\.eml$/i.test(fileLabel(file))?'message':/\.(xml|json|html?)$/i.test(fileLabel(file))?'code':file.afRelationship.value!=='Supplement'&&file.afRelationship.value!=='Source'&&file.owners.value?.length?'attachment':'document');icon.classList.add('file-icon');const heading=text('div','');heading.className='file-heading';heading.append(label);row.append(icon,heading);
-    const storedDescription=fileDescriptions.get(doc)?.get(file.locator.path);
-    if(storedDescription){const detail=text('p',storedDescription);detail.className='file-description';row.append(detail);}
-    const category=fileCategory(file);
-    if(selected.length>256){const role=text('p',category);role.className='file-role';row.append(role);}
-    const owners=doc.inspection.messages.filter(m=>file.owners.value?.includes(m.id));
-    if(category==='Email attachments'&&owners.length){
-      const links=text('div','');links.className='file-message-links';row.append(links);
-      for(const owner of owners){
-        const subject=doc.details.get(owner.metadataRecordId)?.Subject;
-        const item=text('div','');item.className='file-message-owner';
-        if(subject){const description=text('span',subject);description.className='file-message-subject';description.title=subject;item.append(description);}
-        item.dataset.ownerMessageId=owner.id;links.append(item);
-      }
-    }else{
-      const description=owners[0]?doc.details.get(owners[0].metadataRecordId)?.Subject:undefined;
-      if(description&&description!==fileLabel(file)){const detail=text('p',description);detail.className='file-description';detail.title=description;row.append(detail);}
-    }
-    for(const stream of file.streams){
-      const size=stream.decodedSize.value??stream.declaredSize.value;
-      const facts=text('span',sizeLabel(size)+(file.streams.length>1?' · '+stream.efKeys.join('/'):'') );facts.className='file-size';heading.append(facts);
-      const actions=text('div','');actions.className='file-actions';if(file.streams.length>1){row.classList.add('multiple-streams');actions.setAttribute('role','group');actions.setAttribute('aria-label',stream.efKeys.join('/'));const streamLabel=text('span',stream.efKeys.join('/'));streamLabel.className='stream-label';actions.append(streamLabel);}row.append(actions);
-      const save=button(file.afRelationship.value==='Source'&&/\.eml$/i.test(fileLabel(file))?'Download email (.eml)':'Download',()=>void operation(async ticket=>{checkCollectionNames(doc.inspection);status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);await saveBlob(new Blob([new Uint8Array(data)],{type:'application/octet-stream'}),fileLabel(file),()=>check(ticket));check(ticket);refreshInspection(doc);status.textContent=`Download requested: ${fileLabel(file)} (${sizeLabel(data.length)}).${doc.inspection.diagnostics.some(d=>d.code==='CHECKSUM_MISMATCH')?' Warning: recorded checksum mismatch.':''}`;}));save.replaceChildren(treeIcon('download'));save.classList.add('icon-button');save.setAttribute('aria-label',`Download ${fileLabel(file)}`);save.title=`Download ${fileLabel(file)}`;save.dataset.fileId=file.id;save.dataset.stream=stream.locator.path;actions.append(save);
-      if(size===0){save.title+=' (empty file)';}
-      else if(canView(file,stream)){
-        const view=button(isPdf(file,stream)?'Open PDF':'View',()=>void operation(async ticket=>{
+const filesPanel=new FilesPanel({files,count:element('file-count'),title:element('files-title'),details:element('selection-details')},{
+  busy:()=>busy,conversationsEnabled:()=>threadPreview.enabled,
+  index:doc=>session?.cachedMessageIndex(doc)?.messages,singleMessage,
+  download:(doc,file,stream)=>void operation(async ticket=>{checkCollectionNames(doc.inspection);status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);await saveBlob(new Blob([new Uint8Array(data)],{type:'application/octet-stream'}),fileLabel(file),()=>check(ticket));check(ticket);refreshInspection(doc);status.textContent=`Download requested: ${fileLabel(file)} (${sizeLabel(data.length)}).${doc.inspection.diagnostics.some(d=>d.code==='CHECKSUM_MISMATCH')?' Warning: recorded checksum mismatch.':''}`;}),
+  view:(doc,file,stream)=>void operation(async ticket=>{
           if(isPdf(file,stream)){await openChild(doc,file,stream,ticket);return;}
           checkCollectionNames(doc.inspection);status.textContent=`Reading ${fileLabel(file)}…`;const data=await session!.bytes(doc,file,stream);check(ticket);refreshInspection(doc);await attachmentViewer.open(data,fileLabel(file),stream.mimeType.value??'',()=>{[...files.querySelectorAll<HTMLButtonElement>('button[data-view-file-id]')].find(b=>b.dataset.viewFileId===file.id&&b.dataset.viewStream===stream.locator.path)?.focus({preventScroll:true});});check(ticket);status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages}`;
-        }));view.className='view-action';view.replaceChildren(treeIcon('view'));view.classList.add('icon-button');view.setAttribute('aria-label',`View ${fileLabel(file)}`);view.title=`${isPdf(file,stream)?'Open':'View'} ${fileLabel(file)}`;view.dataset.viewFileId=file.id;view.dataset.viewStream=stream.locator.path;actions.prepend(view);
-      }
-    }
-    if(!file.streams.length){const note=text('p','Embedded content is missing or cannot be read.');note.className='file-note';row.append(note);}
-    for(const b of row.querySelectorAll<HTMLButtonElement>('button'))b.disabled=busy||b.dataset.unavailable==='true';
-    return row;
-  };
-  const declaredProfile=doc.inspection.identification.declaredProfile;
-  const isolated=declaredProfile.state==='present'&&['si','mi','ci'].includes(declaredProfile.value??'');
-  const emptyNotice=()=>{const note=text('p','This profile of EA-PDF does not embed source messages.');note.className='file-note empty-file-notice';const warning=treeIcon('warning');warning.removeAttribute('aria-hidden');warning.setAttribute('role','img');warning.setAttribute('aria-label','Warning');note.prepend(warning);return note;};
-  if(selected.length>256){if(isolated)list.before(emptyNotice());fileList=new VirtualList(list,files.closest('aside')!,selected,createFile,220);}
-  else {
-    const groups=new Map<string,AssociatedFile[]>();
-    for(const file of selected){const category=fileCategory(file),name=category==='Archive files'?'Other files':category;const group=groups.get(name)??[];group.push(file);groups.set(name,group);}
-    if(isolated&&!groups.size)list.before(emptyNotice());
-    const noticeGroup=groups.has('Email attachments')?'Email attachments':groups.keys().next().value;
-    for(const [name,group]of groups){const section=text('li',''),disclosure=text('details',''),heading=text('summary',''),title=text('span',name),count=text('span',String(group.length)),items=text('ul','');section.className='file-category';heading.className='file-category-heading';count.className='badge';const chevron=treeIcon('right');chevron.classList.add('disclosure-icon');heading.append(chevron,title,count);const defaultOpen=name==='Email sources'||name==='Email attachments'||name==='Technical and supporting files'||name==='Other files';disclosure.dataset.defaultOpen=String(defaultOpen);disclosure.open=!threadPreview.enabled&&defaultOpen;disclosure.append(heading);if(isolated&&name===noticeGroup)disclosure.append(emptyNotice());disclosure.append(items);section.append(disclosure);list.append(section);for(const file of group)items.append(createFile(file));}
-  }
+        })
+});
+function showFiles(doc:BrowserDocument,message?:MailMessage):void {
+  threadPreview.sync(doc,message);filesPanel.show(doc,message);
 }
 function singleMessage(doc:BrowserDocument):MailMessage|undefined {
   return !doc.inspection.collection.value&&doc.inspection.messages.length===1?doc.inspection.messages[0]:undefined;
@@ -344,9 +274,9 @@ async function showDocument(doc:BrowserDocument,ticket:number,message?:MailMessa
   checkCollectionNames(doc.inspection);
   let opening:OpeningDestination|null=null,openingWarning='';
   message??=singleMessage(doc);
-  if(!fileDescriptions.has(doc)){
+  if(!filesPanel.hasDescriptions(doc)){
     await session!.ensure(doc);const assets=await doc.run(doc.pdf.getDocumentAssets());check(ticket);
-    fileDescriptions.set(doc,new Map(assets.files.filter(f=>typeof f.description.value==='string').map(f=>[f.locator.path,String(f.description.value)])));
+    filesPanel.setDescriptions(doc,new Map(assets.files.filter(f=>typeof f.description.value==='string').map(f=>[f.locator.path,String(f.description.value)])));
   }
   if(!initializedViews.has(doc)){
     try{const style=getComputedStyle(viewport);opening=await openingDestination(doc,viewport.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight),viewport.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom),()=>check(ticket));}
@@ -358,11 +288,10 @@ async function showDocument(doc:BrowserDocument,ticket:number,message?:MailMessa
   if(doc.parent?.inspection.collection.state==='present'&&!portfolioModels.has(doc.parent)){
     const data=await session!.portfolio(doc.parent);check(ticket);portfolioModels.set(doc.parent,new PortfolioModel(data,doc.parent.inspection));
   }
-  await session!.ensure(doc);if(!doc.inspection.collection.value)await session!.associateFiles(doc);check(ticket);message=message?doc.inspection.messages.find(m=>m.id===message!.id):undefined;if(current!==doc)finder.clear();if(current)savedPages.set(current,pageNumber);current=doc;editingPage=false;savedMessages.set(doc,message?.id);
+  await session!.ensure(doc);if(!doc.inspection.collection.value)await session!.associateFiles(doc);check(ticket);message=message?doc.inspection.messages.find(m=>m.id===message!.id):undefined;if(current!==doc)searchController.documentChanged();if(current)savedPages.set(current,pageNumber);current=doc;editingPage=false;savedMessages.set(doc,message?.id);
   const destinations=message?messagePages(doc.inspection,message):[];pageNumber=fromTop||edge===1?1:edge===-1?doc.pdf.numPages:destinations[0]??savedPages.get(doc)??1;
-  markSelection(node??nodes.get(doc)?.querySelector<HTMLButtonElement>(':scope > button')??undefined);showInformation(doc);showFiles(doc,singleMessage(doc)?undefined:message);searchStatus.textContent='';
+  markSelection(node??messageTree.node(doc)?.querySelector<HTMLButtonElement>(':scope > button')??undefined);showInformation(doc);showFiles(doc,singleMessage(doc)?undefined:message);searchStatus.textContent='';
   portfolioView?.syncDocument(doc.parent===portfolioDocument?doc.parentFileId:undefined);
-  if(fromTop)zoom.value='fit-page';
   if(opening){openingPlans.set(doc,opening);savedMessages.delete(doc);pageNumber=opening.page;if(![...zoom.options].some(o=>o.value===opening!.zoom)){const option=document.createElement('option');option.value=opening.zoom;option.textContent=`${Math.round(Number(opening.zoom)*100)}%`;zoom.append(option);}zoom.value=opening.zoom;}
   await render(ticket,false);
   if(opening&&(opening.left!==null||opening.top!==null)){
@@ -377,33 +306,16 @@ async function showDocument(doc:BrowserDocument,ticket:number,message?:MailMessa
   if(fromTop){viewport.scrollTop=0;viewport.scrollLeft=0;}
   await showOutline(doc,ticket);
   if(edge===-1)viewport.scrollTop=viewport.scrollHeight-viewport.clientHeight;
-  if(edge){nodes.get(doc)?.querySelector('button')?.scrollIntoView({block:'nearest'});status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages} · ${edge===1?'Next':'Previous'} file in this folder`;}
+  if(edge){messageTree.node(doc)?.querySelector('button')?.scrollIntoView({block:'nearest'});status.textContent=`${doc.name} · Page ${pageNumber} of ${doc.pdf.numPages} · ${edge===1?'Next':'Previous'} file in this folder`;}
   if(message&&!destinations.length)status.textContent+=' — Message page mapping unavailable; showing document page.';
   if(doc.inspection.coverage.metadata==='unavailable'){
     status.textContent+=' — Email metadata unavailable.';
   }
 }
-function replacePdfPlacement(placement:PdfPlacement,row:HTMLLIElement,reveal=false):void {
-  if(placement.list){
-    if(reveal)placement.list.replaceRow(placement.index,row);else placement.list.invalidateRow(placement.index,row);
-  }else placement.row?.replaceWith(row);
-  placement.row=row;
-}
 async function openChild(parent:BrowserDocument,file:AssociatedFile,stream:EmbeddedStream,ticket:number,edge?:-1|1,placement?:PdfPlacement):Promise<void>{
   checkCollectionNames(parent.inspection);
   status.textContent=`Opening ${fileLabel(file)}…`;const child=await session!.child(parent,file,stream,false);check(ticket);
-  const previous=documentPlacements.get(child);
-  placement??=previous??pdfPlacements.get(parent)?.get(pdfKey(file,stream))?.[0];
-  placement?.list?.rowAt(placement.index);
-  let row=nodes.get(child);
-  if(!row)row=documentTree(child);
-  if(placement&&previous!==placement){
-    // One opened subtree follows the chosen alias; restore a link at its old location.
-    // Both locations retain the same file/stream identity and cached document.
-    documentPlacements.delete(child);
-    if(previous)replacePdfPlacement(previous,pdfTreeRow(parent,{file,stream},previous));
-    documentPlacements.set(child,placement);replacePdfPlacement(placement,row,true);
-  }else if(!placement&&!row.isConnected)nodes.get(parent)?.querySelector(':scope > ul')?.append(row);
+  const row=messageTree.attachChild(parent,file,stream,child,placement);
   const single=!child.inspection.collection.value&&child.inspection.messages.length===1?child.inspection.messages[0]:undefined;
   await showDocument(child,ticket,single,row.querySelector('button')??undefined,edge);
   if(portfolioView&&detectDocument(child.inspection).kind==='portfolio')await activatePortfolio(child,ticket,true);
@@ -414,14 +326,7 @@ function scrollFile(direction:-1|1):boolean {
   const doc=current,parent=doc?.parent;
   const atEdge=direction===1?viewport.scrollTop+viewport.clientHeight>=viewport.scrollHeight-2:viewport.scrollTop<=2;
   if(!busy&&doc&&atEdge&&threadPreview.navigate(direction,true))return true;
-  if(filtered&&filter.value.trim()){
-    if(busy||!doc)return false;
-    if(direction===1?viewport.scrollTop+viewport.clientHeight<viewport.scrollHeight-2:viewport.scrollTop>2)return false;
-    const next=filtered.index+direction;
-    if(filtered.index<0)return true;
-    if(next<0||next>=filtered.matches.length){status.textContent=direction===1?'End of filtered messages.':'Beginning of filtered messages.';return true;}
-    void operation(ticket=>openFiltered(next,ticket,direction));return true;
-  }
+  const filteredScroll=searchController.scrollFiltered(direction);if(filteredScroll!==undefined)return filteredScroll;
   if(busy||!doc||!parent||!doc.inspection.messages.length||doc.inspection.collection.value)return false;
   if(direction===1?viewport.scrollTop+viewport.clientHeight<viewport.scrollHeight-2:viewport.scrollTop>2)return false;
   const siblings=folderFiles(parent.inspection,doc.parentFileId??''),index=siblings.findIndex(f=>f.id===doc.parentFileId);
@@ -469,7 +374,7 @@ viewport.addEventListener('touchend',event=>{
 },{passive:true});
 function stopBrowseIndex():void {
   browseEpoch++;browseSession?.close();browseSession=undefined;
-  metadataIndex=undefined;
+  searchController.metadataWork=undefined;
   element('subject-index-status').textContent='Subject indexing stopped. Unread subjects still show filenames.';
   element('subject-index-cancel').hidden=true;
 }
@@ -477,23 +382,9 @@ element('subject-index-cancel').addEventListener('click',stopBrowseIndex);
 function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
   if(detectDocument(doc.inspection).kind!=='eapdf'||!doc.inspection.collection.value||browseCompleted.has(doc)||browseSession)return;
   const main=session!,epoch=++browseEpoch,isolated=new BrowserSession({},{reuseWorker:true});browseSession=isolated;
-  const subjects=browseSubjects.get(doc)??new Map<string,string>();browseSubjects.set(doc,subjects);
-  const counts=new Map<string,number>();const display=new Map<string,Record<string,string>>();browseDisplay.set(doc,display);
   const checkIndex=()=>{check(ticket);if(epoch!==browseEpoch)throw new Error('Subject indexing cancelled.');};
-  const update=(messages:readonly IndexedMessage[])=>{
-    checkIndex();const changed=new Set<string>();
-    for(const message of messages){
-      if(message.path.length!==1)continue;
-      const step=message.path[0]!,key=JSON.stringify([step.fileId,step.streamPath]),count=(counts.get(key)??0)+1;counts.set(key,count);changed.add(key);
-      if(count===1){subjects.set(key,message.label);display.set(key,{From:message.sender??'',Sent:message.sent??''});}else{subjects.delete(key);display.delete(key);}
-    }
-    // Update mounted rows in place, preserving focus, expansion and scroll position.
-    for(const node of nodes.get(doc)?.querySelectorAll<HTMLButtonElement>('[data-embedded-file-id]')??[]){
-      const key=JSON.stringify([node.dataset.embeddedFileId,node.dataset.embeddedStream]);if(!changed.has(key))continue;
-      const label=subjects.get(key);
-      node.querySelector('.message-text')?.remove();messageLabel(node,label||node.title,display.get(JSON.stringify([node.dataset.embeddedFileId,node.dataset.embeddedStream])));if(label){node.querySelector('.tree-icon')?.replaceWith(treeIcon('message'));}
-    }
-  };
+  const updateSubjects=messageTree.subjectUpdater(doc);
+  const update=(messages:readonly IndexedMessage[])=>{checkIndex();updateSubjects(messages);};
   element('subject-index-progress').hidden=false;element('subject-index-progress').dataset.complete='false';element('subject-index-cancel').hidden=false;
   element('subject-index-status').textContent='Reading subjects in the background… You can browse now.';
   const work=(async()=>{
@@ -514,102 +405,29 @@ function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
       }
       checkIndex();main.rememberMessageIndex(doc,indexed);browseCompleted.add(doc);browseMessageCounts.set(doc,indexed.messages.length);
       if(current===doc)showFiles(doc,singleMessage(doc)?undefined:selectedMessage(doc));
-      const collection=doc.inspection.collection.value;if(collection)for(const summary of nodes.get(doc)?.querySelectorAll<HTMLElement>('summary[data-folder-id]')??[]){const members=new Set<string>();for(const entry of collection.entries)for(let id of entry.folderIds.value??[]){const seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);if(id===summary.dataset.folderId)members.add(entry.fileId);id=collection.folders.find(f=>f.id===id)?.parentId??'';}}const count=indexed.messages.filter(m=>m.path[0]&&members.has(m.path[0].fileId)).length;const pill=text('span',String(count));pill.className='folder-count';summary.querySelector('.folder-count')?.remove();summary.append(pill);}
+      messageTree.updateFolderCounts(doc,indexed.messages);
       element('subject-index-status').textContent=indexed.incomplete.length?`Subjects partially indexed: ${indexed.incomplete.join(' ')}`:`Subjects ready · ${indexed.messages.length} emails. ${(indexed.notices??[]).join(' ')}`;
       element('subject-index-cancel').hidden=true;element('subject-index-progress').dataset.complete=String(!indexed.incomplete.length);element('message-count').textContent=String(indexed.messages.length);return indexed;
     }finally{isolated.close();if(browseSession===isolated)browseSession=undefined;}
   })();
-  if(!doc.parent)metadataIndex=work;
+  if(!doc.parent)searchController.metadataWork=work;
   void work.catch(error=>{
     if(ticket!==generation||epoch!==browseEpoch)return;
-    if(!doc.parent&&metadataIndex===work)metadataIndex=undefined;
+    if(!doc.parent&&searchController.metadataWork===work)searchController.metadataWork=undefined;
     element('subject-index-status').textContent=`Subject indexing could not finish: ${error instanceof Error?error.message:String(error)}`;
     element('subject-index-cancel').hidden=true;
   });
 }
 
-function messageLabel(node:HTMLButtonElement,label:string,details?:Record<string,string>):void {
-  const content=text('span',''),subject=text('span',label);content.className='message-text';subject.className='message-subject';subject.title=label;content.append(subject);
-  const secondary=[details?.From||details?.['Raw-From'],details?.Sent].filter(Boolean).join(' · ');
-  if(secondary){const meta=text('span',''),sender=text('span',details?.From||details?.['Raw-From']||''),date=text('span',details?.Sent?.match(/^\d{4}-\d{2}-\d{2}/)?.[0]||details?.Sent||'');meta.className='message-meta';meta.title=secondary;sender.className='message-sender';date.className='message-date';meta.append(sender);if(date.textContent)meta.append(text('span','·'),date);content.append(meta);}
-  for(const child of [...node.childNodes])if(child.nodeType===Node.TEXT_NODE)child.remove();node.append(content);
+function evictDocument(doc:BrowserDocument):void {
+  messageTree.evict(doc);savedMessages.delete(doc);savedPages.delete(doc);
+  pageOwners.delete(doc);browseCompleted.delete(doc);browseMessageCounts.delete(doc);
 }
-function pdfTreeRow(doc:BrowserDocument,{file,stream}:PdfLink,placement:PdfPlacement):HTMLLIElement{
-    for(const [child,existing] of nodes)if(child.parent===doc&&child.parentFileId===file.id&&child.parentStreamPath===stream.locator.path&&documentPlacements.get(child)===placement)return existing;
-    const subject=browseSubjects.get(doc)?.get(pdfKey(file,stream));
-    const item=text('li',''),openFile=button(subject||fileLabel(file),()=>void operation(ticket=>openChild(doc,file,stream,ticket,undefined,placement)));
-    openFile.disabled=busy;openFile.dataset.embeddedFileId=file.id;openFile.dataset.embeddedStream=stream.locator.path;openFile.title=fileLabel(file);openFile.prepend(treeIcon(subject?'message':'document'));messageLabel(openFile,subject||fileLabel(file),browseDisplay.get(doc)?.get(pdfKey(file,stream)));item.append(openFile);return item;
-}
-function evictDocument(doc:BrowserDocument):void{
-  const row=nodes.get(doc);nodes.delete(doc);savedMessages.delete(doc);savedPages.delete(doc);
-  for(const list of documentLists.get(doc)??[]){list.close();virtualLists.delete(list);}documentLists.delete(doc);
-  pdfPlacements.delete(doc);lazyMessages.delete(doc);pageOwners.delete(doc);browseCompleted.delete(doc);browseMessageCounts.delete(doc);browseSubjects.delete(doc);browseDisplay.delete(doc);
-  const parent=doc.parent,file=parent?.inspection.files.find(f=>f.id===doc.parentFileId),stream=file?.streams.find(s=>s.locator.path===doc.parentStreamPath);
-  const placement=documentPlacements.get(doc);documentPlacements.delete(doc);
-  if(parent&&file&&stream&&placement)replacePdfPlacement(placement,pdfTreeRow(parent,{file,stream},placement));else row?.remove();
-}
-function documentTree(doc:BrowserDocument):HTMLLIElement {
-  const single=singleMessage(doc),label=single?(doc.details.get(single.metadataRecordId)?.Subject||doc.name):doc.name;
-  const row=text('li',''),open=button(label,()=>void operation(ticket=>showDocument(doc,ticket,single,open,undefined,true)));open.dataset.documentId=doc.inspection.documentId;open.title=doc.name;if(single)open.dataset.messageId=single.id;open.prepend(treeIcon(single?'message':'document'));messageLabel(open,label,single?doc.details.get(single.metadataRecordId):undefined);open.classList.add('root-document');row.append(open);nodes.set(doc,row);
-  const list=text('ul','');row.append(list);const collection=doc.inspection.collection.value;
-  // Collection metadata describes the member emails, not body pages in the cover PDF.
-  if(!collection&&!single){
-    const makeMessage=(message:MailMessage,index:number)=>{
-      const item=text('li',''),label=doc.details.get(message.metadataRecordId)?.Subject??`Message ${index+1}`;
-      const choose=button(label,()=>void operation(ticket=>showDocument(doc,ticket,message,choose)));choose.disabled=busy;choose.dataset.messageId=message.id;choose.prepend(treeIcon('message'));messageLabel(choose,label,doc.details.get(message.metadataRecordId));item.append(choose);return item;
-    };
-    if(doc.inspection.messages.length>256){
-      const virtual=new VirtualList(list,tree.closest('aside')!,doc.inspection.messages,makeMessage,40);
-      lazyMessages.set(doc,{list:virtual,indices:new Map(doc.inspection.messages.map((m,i)=>[m.id,i]))});rememberList(doc,virtual);
-    }else doc.inspection.messages.forEach((message,index)=>list.append(makeMessage(message,index)));
-  }
-
-  const folders=new Map<string,HTMLUListElement>(),folderRows:HTMLDetailsElement[]=[];
-  if(collection){
-    const orderedFolders=[...collection.folders].sort((a,b)=>(a.name.value??'').localeCompare(b.name.value??'',undefined,{numeric:true,sensitivity:'base'}));
-    for(const folder of orderedFolders)folders.set(folder.id,text('ul',''));
-    for(const folder of orderedFolders){
-      const item=text('li',''),details=text('details',''),label=text('summary',folder.name.value??'Folder');label.dataset.folderId=folder.id;const chevron=treeIcon('right');chevron.classList.add('disclosure-icon');label.prepend(chevron,treeIcon('folder'));details.open=false;details.append(label,folders.get(folder.id)!);folderRows.push(details);item.append(details);
-      const seen=new Set([folder.id]);let p=folder.parentId,valid=true;
-      while(p){if(seen.has(p)){valid=false;break;}seen.add(p);const ancestor=collection.folders.find(f=>f.id===p);if(!ancestor){valid=false;break;}p=ancestor.parentId;}
-      (valid&&folder.parentId?folders.get(folder.parentId)!:list).append(item);
-    }
-  }
-  // Keep embedded PDFs separate from virtual message rows so remounting messages
-  // never removes attachment navigation. Each folder retains its own member list.
-  const groups=new Map<HTMLElement,PdfLink[]>();
-  const entriesByFile=new Map<string,NonNullable<typeof collection>['entries'][number][]>();
-  for(const entry of collection?.entries??[]){const group=entriesByFile.get(entry.fileId)??[];group.push(entry);entriesByFile.set(entry.fileId,group);}
-  const attachments=collection?list:text('ul','');if(!collection)row.append(attachments);
-  for(const file of doc.inspection.files)for(const stream of file.streams){
-    if(!isPdf(file,stream))continue;
-    const entries=entriesByFile.get(file.id)??[],ids=new Set(entries.flatMap(e=>e.folderIds.value??[]));
-    const targets=entries.every(e=>e.folderIds.state==='present')&&ids.size
-      ?new Set([...ids].map(id=>folders.get(id)??attachments)):new Set([attachments]);
-    for(const target of targets){const group=groups.get(target)??[];group.push({file,stream});groups.set(target,group);}
-  }
-  const positions=new Map<string,PdfPlacement[]>();pdfPlacements.set(doc,positions);
-  for(const [target,items] of groups){
-    const placements=items.map((item,index)=>{const placement:PdfPlacement={index},key=pdfKey(item.file,item.stream),aliases=positions.get(key)??[];aliases.push(placement);positions.set(key,aliases);return placement;});
-    const makePdf=(item:PdfLink,index:number)=>{const placement=placements[index]!,row=pdfTreeRow(doc,item,placement);placement.row=row;return row;};
-    if(items.length>256){
-      let memberList=target;
-      if(target.children.length){const item=text('li',''),nested=text('ul','');item.append(nested);target.append(item);memberList=nested;}
-      const virtual=new VirtualList(memberList,tree.closest('aside')!,items,makePdf,40);rememberList(doc,virtual);
-      for(const placement of placements)placement.list=virtual;
-    }else items.forEach((item,index)=>target.append(makePdf(item,index)));
-  }
-  // Empty folders have no disclosure control; populated folders start collapsed.
-  for(const details of folderRows)if(!details.querySelector(':scope > ul')!.children.length){const label=text('div','');label.className='folder-label';label.append(...details.querySelector('summary')!.childNodes);label.querySelector('.disclosure-icon')?.remove();details.replaceWith(label);}
-  if([...row.children].some(child=>child.tagName==='UL'&&child.children.length)){
-    const toggle=button('',()=>{const expanded=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',String(expanded));for(const child of row.children)if(child.tagName==='UL')(child as HTMLElement).hidden=!expanded;});toggle.className='document-disclosure icon-button';toggle.setAttribute('aria-label',`Expand or collapse ${doc.name}`);toggle.title=`Expand or collapse ${doc.name}`;toggle.setAttribute('aria-expanded','true');toggle.append(treeIcon('right'));open.classList.add('has-disclosure');row.classList.add('document-row');row.append(toggle);
-  }
-  return row;
-}
+function documentTree(doc:BrowserDocument):HTMLLIElement {return messageTree.build(doc);}
 async function openFile(file:Blob,name:string):Promise<void>{
   // A file picker may finish while a layout/zoom render is in flight. Keep the
   // latest explicit selection and open it when that operation releases the UI.
-  if(busy){pendingOpen={file,name};return;}close();zoom.value='fit-page';element('linked-file').hidden=true;session=new BrowserSession({},{onEvict:evictDocument,keepDocuments:()=>current?[current]:[]});const active=session;
+  if(busy){pendingOpen={file,name};return;}close();zoom.value=matchMedia('(max-width:799px)').matches?'fit-width':'fit-page';element('linked-file').hidden=true;session=new BrowserSession({},{onEvict:evictDocument,keepDocuments:()=>current?[current]:[]});const active=session;
   await operation(async ticket=>{
     status.textContent=`Opening ${name}…`;
     tree.hidden=true;
@@ -652,7 +470,7 @@ async function activatePortfolio(doc:BrowserDocument,ticket:number,initial=false
     cover:()=>void operation(async active=>{portfolioView?.revealPreview();await showDocument(doc,active);portfolioReturn=undefined;}),
     thumbnail:async row=>{if(row.directory){await session!.ensure(doc);const result=await doc.run(doc.pdf.getDocumentAssets({folderThumbnail:row.directory.path}));check(ticket);return result.thumbnail;}const file=row.file,stream=file?.streams[0];if(!file||!stream)throw new Error('No preview available.');const bytes=await session!.bytes(doc,file,stream);check(ticket);return bytes;},
     download:row=>void operation(async active=>{const file=row.file,stream=file?.streams.find(s=>s.efKeys.includes('/UF'))??file?.streams[0];if(!file||!stream)throw new Error('This collection member is unavailable.');const bytes=await session!.bytes(doc,file,stream);check(active);await saveBlob(new Blob([new Uint8Array(bytes)],{type:'application/octet-stream'}),row.name,()=>check(active));check(active);}),
-    parent:doc.parent?()=>void operation(async active=>{await showDocument(doc.parent!,active);portfolioReturn=undefined;await activatePortfolio(doc.parent!,active);}):undefined,
+    parent:doc.parent?()=>void operation(active=>returnToParent(doc.parent!,active)):undefined,
   });
   portfolioView.syncDocument(current?.parent===doc?current.parentFileId:undefined);
   showInformation(current??doc);
@@ -718,7 +536,18 @@ async function exportCsv(doc:BrowserDocument,options:CsvOptions,ticket:number){
   }
 }
 element('close').addEventListener('click',close);window.addEventListener('pagehide',close);
-element('back').addEventListener('click',()=>{if(current?.parent){const parent=current.parent;void operation(async ticket=>{await showDocument(parent,ticket,parent.inspection.messages.find(m=>m.id===savedMessages.get(parent)));if(portfolioView)portfolioReturn=undefined;if(portfolioView&&parent.inspection.collection.state==='present'&&parent!==portfolioDocument)await activatePortfolio(parent,ticket);});}});
+async function returnToParent(parent:BrowserDocument,ticket:number):Promise<void>{
+  await showDocument(parent,ticket,undefined,undefined,undefined,true);
+  if(portfolioView){
+    portfolioReturn=undefined;
+    if(parent.inspection.collection.state==='present'&&parent!==portfolioDocument)await activatePortfolio(parent,ticket);
+    portfolioView.resetToTop();
+  }else{
+    element('navigation-panel').scrollTop=0;
+    element('navigation-panel').scrollLeft=0;
+  }
+}
+element('back').addEventListener('click',()=>{const parent=current?.parent;if(parent)void operation(ticket=>returnToParent(parent,ticket));});
 element('previous').addEventListener('click',()=>void operation(async ticket=>{pageNumber=Math.max(1,pageNumber-1);await render(ticket);}));
 element('next').addEventListener('click',()=>void operation(async ticket=>{pageNumber=Math.min(current?.pdf.numPages??1,pageNumber+1);await render(ticket);}));
 function jumpToEnteredPage():void {
@@ -745,27 +574,26 @@ for(const [id,step]of [['zoom-out',-1],['zoom-in',1]] as const)element(id).addEv
   const next=step>0?levels.find(value=>value>displayed+.0001):levels.findLast(value=>value<displayed-.0001);
   if(next!==undefined)zoom.value=String(next);await render(ticket,false);
 }));
-function clearSearch():void {
-  searchEpoch++;searchSession?.close();collectionResults=undefined;finder.clear();pages.highlight('');
-  collectionList?.close();collectionList=undefined;element('collection-matches').replaceChildren();element('collection-search-summary').textContent='';searchStatus.textContent='';
-  element<HTMLButtonElement>('results-tab').disabled=true;navigationTab('browse');
-}
-search.addEventListener('input',()=>{if(!search.value.trim())clearSearch();});
-search.addEventListener('keydown',event=>{if(event.key==='Escape'){if(!event.defaultPrevented){event.preventDefault();closeSearch();}}else if(event.key==='Enter'){event.preventDefault();void (element<HTMLSelectElement>('search-scope').value==='collection'?findInCollection(event.shiftKey?-1:1):findMatch(event.shiftKey?-1:1));}});
+
+search.addEventListener('input',()=>{if(!search.value.trim())searchController.clearSearch();});
+search.addEventListener('keydown',event=>{if(event.key==='Escape'){if(!event.defaultPrevented){event.preventDefault();closeSearch();}}else if(event.key==='Enter'){event.preventDefault();void (element<HTMLSelectElement>('search-scope').value==='collection'?searchController.findInCollection(event.shiftKey?-1:1):searchController.findMatch(event.shiftKey?-1:1));}});
 async function followEmbeddedLink(source:BrowserDocument,action:EmbeddedAction,ticket:number):Promise<void>{
   const target=await resolveEmbeddedLink(session!,source,action,()=>check(ticket));check(ticket);
   portfolioReturn=undefined;
-  clearMessageFilterForSearch();
+  searchController.clearMessageFilterForSearch();
   const path:BrowserDocument[]=[];for(let d:BrowserDocument|null=target.doc;d;d=d.parent)path.unshift(d);
-  for(const doc of path)if(!nodes.has(doc)){const row=documentTree(doc);const parent=doc.parent&&nodes.get(doc.parent);(parent?.querySelector(':scope > ul')??tree).append(row);}
+  for(const doc of path)if(!messageTree.node(doc)){const row=documentTree(doc);const parent=doc.parent&&messageTree.node(doc.parent);(parent?.querySelector(':scope > ul')??tree).append(row);}
   if(portfolioView){let container:BrowserDocument|null=target.doc.inspection.collection.state==='present'?target.doc:target.doc.parent;while(container&&container.inspection.collection.state!=='present')container=container.parent;
     if(container&&container!==portfolioDocument)await activatePortfolio(container,ticket);
     const row=portfolioView?.model.rows.find(r=>r.file?.id===target.doc.parentFileId);if(row)portfolioView?.show(row);portfolioView?.revealPreview();
   }
   await showDocument(target.doc,ticket);pageNumber=target.page;await render(ticket,false);
 }
+const displayedOutlines=new WeakMap<HTMLElement,BrowserDocument>();
 async function showOutline(doc:BrowserDocument,ticket:number):Promise<void>{
-  const panel=element(portfolioView?'portfolio-outline-panel':'outline-panel'),list=element(portfolioView?'portfolio-outline':'outline');list.replaceChildren();panel.hidden=true;
+  const panel=element(portfolioView?'portfolio-outline-panel':'outline-panel');
+  if(displayedOutlines.get(panel)===doc)return;
+  const list=element(portfolioView?'portfolio-outline':'outline');list.replaceChildren();panel.hidden=true;if(panel instanceof HTMLDetailsElement)panel.open=false;
   try{const entries=await doc.run(doc.pdf.getOutline());check(ticket);if(current!==doc||!entries)return;let count=0;
     const pending=entries.slice().reverse().map(item=>({item,parent:list})),seen=new Set<typeof entries[number]>();
     while(pending.length){
@@ -783,137 +611,18 @@ async function showOutline(doc:BrowserDocument,ticket:number):Promise<void>{
       if(++count%250===0){await new Promise(resolve=>setTimeout(resolve,0));check(ticket);}
     }
     panel.hidden=!list.children.length;
-    if(!panel.hidden){const mode=await doc.run(doc.pdf.getPageMode());check(ticket);if(mode==='UseOutlines'&&panel instanceof HTMLDetailsElement)panel.open=true;}
+    displayedOutlines.set(panel,doc);
   }catch(error){if(ticket===generation&&current===doc){list.append(text('li','Bookmarks could not be read.'));panel.hidden=false;}}
 }
-async function showCollectionMatch(cached:CollectionResults,index:number,occurrence:number,ticket:number):Promise<void>{
-  const match=cached.result.matches[index];if(!match)return;
-  const rejectIndex=():never=>{
-    invalidateFullTextIndex(cached.root);collectionResults=undefined;pages.highlight('');
-    setTimeout(()=>{if(ticket===generation&&search.value.trim()===cached.query.trim())void findInCollection(1,true);},0);
-    throw new Error('Indexed destination disagrees with the PDF. Restarting with PDF.js search.');
-  };
-  let doc=cached.root;
-  for(let depth=0;depth<(match.indexed?.route.length??match.path.length);depth++){
-    const step=match.indexed?resolveStep(doc,match.indexed.route[depth]!):match.path[depth];
-    if(!step)return rejectIndex();
-    const file=doc.inspection.files.find(f=>f.id===step.fileId),stream=file?.streams.find(s=>s.locator.path===step.streamPath);
-    if(!file||!stream){if(match.indexed)rejectIndex();throw new Error('Search destination is no longer available.');}
-    if(current?.parent===doc&&current.parentFileId===step.fileId&&current.parentStreamPath===step.streamPath)doc=current;
-    else{try{await openChild(doc,file,stream,ticket);doc=current!;}catch(error){check(ticket);if(match.indexed)rejectIndex();throw error;}}
-  }
-  if(match.indexed){
-    if(match.page<1||match.page>doc.pdf.numPages)rejectIndex();
-    let verified=false;
-    try{
-      const page=await doc.run(doc.pdf.getPage(match.page));let value='';
-      try{const content=await doc.run(page.getTextContent());value=pdfSearchText(content.items);}finally{page.cleanup();}
-      check(ticket);const actual=textMatches(value,cached.query);
-      verified=actual.length>0&&actual.length===match.count&&(fullTextPageOwners(doc).get(match.page)??'')===match.indexed.guid;
-    }catch{check(ticket);}
-    if(!verified)rejectIndex();
-  }
-  const wasFiltered=!!filteredPages(doc);clearMessageFilterForSearch();
-  if(current!==doc)await showDocument(doc,ticket);
-  if(wasFiltered||pageNumber!==match.page){pageNumber=match.page;await render(ticket,false);}
-  check(ticket);syncMessageToPage();const highlighted=pages.highlight(cached.query,{page:match.page,index:occurrence});
-  cached.index=index;cached.occurrence=occurrence;
-  const number=cached.offsets[index]!+occurrence+1;
-  collectionList?.rowAt(index);
-  searchStatus.textContent=`Match ${number} of ${cached.total} in collection${cached.result.incomplete.length?' (incomplete search)':''}.`;
-  if(match.indexed&&highlighted!==match.count){pages.highlight(cached.query);searchStatus.textContent+=' Matching page verified; precise occurrence highlighting is unavailable for this text layout.';}
-  for(const node of element('collection-matches').querySelectorAll<HTMLButtonElement>('button[data-match-index]')){
-    if(Number(node.dataset.matchIndex)===index)node.setAttribute('aria-current','true');else node.removeAttribute('aria-current');
-  }
-  const active=element('collection-matches').querySelector<HTMLElement>('button[aria-current]');
-  if(active&&!element('collection-results').hidden){
-    const panel=element('collection-results'),bounds=panel.getBoundingClientRect(),box=active.getBoundingClientRect();
-    const top=bounds.top;
-    if(box.top<top)panel.scrollTop-=Math.ceil(top-box.top);
-    else if(box.bottom>bounds.bottom)panel.scrollTop+=Math.ceil(box.bottom-bounds.bottom);
-  }
-}
-async function findInCollection(direction:1|-1=1,first=false):Promise<void>{
-  if(!current||!session||!search.value.trim())return;
-  await operation(async ticket=>{
-    const query=search.value.trim();let root=current!;while(root.parent)root=root.parent;
-    const cached=collectionResults;
-    if(cached&&cached.root===root&&cached.query.toLowerCase()===query.toLowerCase()){
-      if(!cached.result.matches.length){searchStatus.textContent=cached.result.incomplete.length?'No matches found in an incomplete collection search.':'No matching text in this collection.';return;}
-      let index=cached.index,occurrence=cached.occurrence+direction;
-      if(index<0){index=direction===1?0:cached.result.matches.length-1;occurrence=direction===1?0:cached.result.matches[index]!.count-1;}
-      else if(occurrence>=cached.result.matches[index]!.count){index=(index+1)%cached.result.matches.length;occurrence=0;}
-      else if(occurrence<0){index=(index+cached.result.matches.length-1)%cached.result.matches.length;occurrence=cached.result.matches[index]!.count-1;}
-      navigationTab('results');
-      await showCollectionMatch(cached,first?0:index,first?0:occurrence,ticket);return;
-    }
-    collectionResults=undefined;
-    const epoch=++searchEpoch;const checkSearch=()=>{check(ticket);if(epoch!==searchEpoch)throw new Error('Search cancelled.');};
-    const main=session!,isolated=new BrowserSession({},{reuseWorker:true});searchSession=isolated;
-    element('cancel-search').hidden=false;const list=element('collection-matches');collectionList?.close();collectionList=undefined;list.replaceChildren();element<HTMLButtonElement>('results-tab').disabled=false;navigationTab('results');
-    element('collection-search-summary').textContent='Searching collection…';
-    try{
-      const fast=await searchIndexedCollection(main,root,query,checkSearch);let result=fast.result;
-      if(!result){const blob=await main.sourceBlob(root);checkSearch();const copy=await isolated.open(blob,root.name);checkSearch();
-        result=await searchCollection(isolated,copy,query,checkSearch,count=>{searchStatus.textContent=`Searching collection · ${count} pages…`;},true);
-        if(fast.diagnostic)result.notices=[fast.diagnostic];
-      }checkSearch();
-      const offsets=new Float64Array(result.matches.length+1);for(let i=0;i<result.matches.length;i++)offsets[i+1]=offsets[i]!+result.matches[i]!.count;
-      const saved:CollectionResults={root,query,result,index:-1,occurrence:0,total:offsets[result.matches.length]!,offsets};collectionResults=saved;
-      const groups=new Map<string,HTMLUListElement>(),virtual=result.matches.length>256;
-      const create=(match:CollectionMatch,index:number)=>{
-        const key=JSON.stringify(match.indexed?.route??match.path);let group=virtual?undefined:groups.get(key);
-        const container=text('li','');
-        if(!group){
-          container.className='collection-result';
-          const name=match.path.length?match.document.split(' / ').at(-1)!:'Collection overview';
-          const heading=text('h3','');heading.className='result-heading';heading.title=name;heading.append(treeIcon('document'),text('span',name));
-          group=text('ul','');group.className='result-pages';container.append(heading,group);
-          if(!virtual){list.append(container);groups.set(key,group);}
-        }
-        const row=text('li',''),choose=button('',()=>void operation(async active=>{
-          if(collectionResults!==saved)return;search.value=saved.query;element<HTMLSelectElement>('search-scope').value='collection';
-          await showCollectionMatch(saved,index,0,active);
-        }));choose.className='collection-hit';choose.dataset.matchIndex=String(index);
-        if(saved.index===index)choose.setAttribute('aria-current','true');
-        const meta=text('span','');meta.className='match-meta';const selected=text('span','✓ Viewing');selected.className='match-selected';
-        meta.append(text('span',`Page ${match.page} · ${match.count} ${match.count===1?'match':'matches'}`),selected);
-        const excerpt=text('span','');excerpt.className='match-excerpt';let offset=0;excerpt.append(document.createTextNode('“'));
-        for(const found of textMatches(match.excerpt,query)){
-          excerpt.append(document.createTextNode(match.excerpt.slice(offset,found.start)),text('mark',match.excerpt.slice(found.start,found.end)));offset=found.end;
-        }
-        excerpt.append(document.createTextNode(match.excerpt.slice(offset)+'”'));
-        choose.append(meta,excerpt);row.append(choose);group.append(row);return container;
-      };
-      if(virtual)collectionList=new VirtualList(list,element('collection-results'),result.matches,create,150);
-      else result.matches.forEach(create);
-      element('collection-search-summary').textContent=`${result.matches.length} matching pages.`;
-      if(result.matches.length){const index=direction===1?0:result.matches.length-1;await showCollectionMatch(saved,index,direction===1?0:result.matches[index]!.count-1,ticket);}
-      else searchStatus.textContent=result.incomplete.length?'No matches found in an incomplete collection search.':'No matching text in this collection.';
-    }catch(error){if(epoch!==searchEpoch){searchStatus.textContent='Search cancelled.';element('collection-search-summary').textContent='Search cancelled; no complete result set was produced.';}else throw error;}
-    finally{isolated.close();if(searchSession===isolated)searchSession=undefined;element('cancel-search').hidden=true;}
-  });
-}
-async function findMatch(direction:1|-1):Promise<void>{
-  const query=search.value.trim(),doc=current;if(!query||!doc)return;
-  await operation(async ticket=>{
-    const epoch=++searchEpoch;const checkSearch=()=>{check(ticket);if(epoch!==searchEpoch)throw new Error('Search cancelled.');};
-    element('cancel-search').hidden=false;searchStatus.textContent='Searching this PDF…';
-    try{await session!.ensure(doc);const result=await finder.find(doc,query,pageNumber,direction,checkSearch);checkSearch();
-      if('page'in result){clearMessageFilterForSearch();pageNumber=result.page;await render(ticket);checkSearch();pages.highlight(query,result);searchStatus.textContent=`Match ${result.index+1} of ${result.count} on page ${result.page}`;}
-      else searchStatus.textContent=result.incomplete?'Search limit reached; results are incomplete.':'No matching text in this document.';
-    }catch(error){if(epoch!==searchEpoch){searchStatus.textContent='Search cancelled.';return;}throw error;}
-    finally{element('cancel-search').hidden=true;}
-  });
-}
-element('search-form').addEventListener('submit',event=>{event.preventDefault();finder.resetCursor();void (element<HTMLSelectElement>('search-scope').value==='collection'?findInCollection(1,true):findMatch(1));});
-element('find').addEventListener('click',()=>void (element<HTMLSelectElement>('search-scope').value==='collection'?findInCollection():findMatch(1)));
-element('find-previous').addEventListener('click',()=>void (element<HTMLSelectElement>('search-scope').value==='collection'?findInCollection(-1):findMatch(-1)));
-element('cancel-search').addEventListener('click',()=>{searchEpoch++;searchSession?.close();searchStatus.textContent='Cancelling search…';});
+
+element('search-form').addEventListener('submit',event=>{event.preventDefault();searchController.resetCursor();void (element<HTMLSelectElement>('search-scope').value==='collection'?searchController.findInCollection(1,true):searchController.findMatch(1));});
+element('find').addEventListener('click',()=>void (element<HTMLSelectElement>('search-scope').value==='collection'?searchController.findInCollection():searchController.findMatch(1)));
+element('find-previous').addEventListener('click',()=>void (element<HTMLSelectElement>('search-scope').value==='collection'?searchController.findInCollection(-1):searchController.findMatch(-1)));
+element('cancel-search').addEventListener('click',()=>{searchController.cancelSearch();});
 element('download-message').addEventListener('click',()=>void operation(async ticket=>{
   const doc=current,active=session;if(!doc||!active)return;
   const plan=displayedMessageDownload(doc);if(!plan)return;
-  status.textContent='Preparing message PDF…';
+  status.textContent=portfolioView?'Preparing active PDF…':'Preparing message PDF…';
   const blob=await messagePdf(active,doc,plan,()=>check(ticket));
   await saveBlob(blob,plan.name,()=>check(ticket));check(ticket);
   status.textContent=`Download requested: ${plan.name}${plan.pages?' · Message pages exported as PDF.':''}`;
@@ -923,79 +632,8 @@ element('restart').addEventListener('click',()=>{
   const doc=current;if(!doc||busy)return;let root=doc;while(root.parent)root=root.parent;
   void operation(async ticket=>{const blob=await session!.sourceBlob(root);check(ticket);busy=false;await openFile(blob,root.name);status.textContent='PDF reopened. Select a message to continue.';});
 });
-const filter=element<HTMLInputElement>('message-filter');
-const filterResults=text('ul','');filterResults.id='filter-results';filterResults.hidden=true;tree.before(filterResults);
-let filterList:VirtualList<IndexedMessage>|undefined;
-let filtered:{root:BrowserDocument;matches:IndexedMessage[];index:number;doc?:BrowserDocument}|undefined;
-function filteredPages(doc:BrowserDocument):number[]|undefined {
-  if(!filtered||filtered.doc!==doc||!filter.value.trim())return;
-  const item=filtered.matches[filtered.index],message=doc.inspection.messages.find(m=>item?.mailGuid?m.mailGuid.value===item.mailGuid:m.id===item?.messageId);
-  const mapped=message?messagePages(doc.inspection,message):[];
-  return mapped.length?mapped:undefined;
-}
-async function openFiltered(index:number,ticket:number,edge?:-1|1):Promise<void>{
-  const state=filtered,item=state?.matches[index];if(!state||!item)return;
-  let doc=state.root;
-  for(const step of item.path){const file=doc.inspection.files.find(f=>f.id===step.fileId),stream=file?.streams.find(s=>s.locator.path===step.streamPath);
-    if(!file||!stream)throw new Error('Email destination is no longer available.');
-    doc=await session!.child(doc,file,stream,false);check(ticket);
-  }
-  if(filtered!==state)return;
-  const candidates=doc.inspection.messages.filter(m=>item.mailGuid?m.mailGuid.value===item.mailGuid:m.id===item.messageId);
-  const message=candidates.length===1?candidates[0]:undefined;
-  if(item.mailGuid&&(!message||doc.inspection.messages.length!==1||metadataSearchText(doc.details.get(message.metadataRecordId)??{})!==item.searchText)){
-    forceMetadataScan=true;metadataIndex=undefined;session!.rememberMessageIndex(state.root,undefined);filtered=undefined;
-    await filterMessages();throw new Error('Embedded index disagrees with the selected email. Search was rebuilt from child PDFs.');
-  }
-  if(!message)throw new Error('Email metadata is no longer available.');
-  state.index=index;state.doc=doc;
-  await showDocument(doc,ticket,message);
-  if(edge===-1){const mapped=filteredPages(doc);pageNumber=mapped?.at(-1)??doc.pdf.numPages;await render(ticket,false);viewport.scrollTop=viewport.scrollHeight-viewport.clientHeight;}
-  for(const button of filterResults.querySelectorAll('button')){if(button.dataset.messageIndex===String(index))button.setAttribute('aria-current','true');else button.removeAttribute('aria-current');}
-  status.textContent+=` · Filtered email ${index+1} of ${state.matches.length}`;
-}
-let forceMetadataScan=false;
-let metadataSession:BrowserSession|undefined,metadataIndex:Promise<MessageIndex>|undefined,metadataEpoch=0,filterRevision=0;
-let filterTimer:ReturnType<typeof setTimeout>|undefined;
-async function filterMessages():Promise<void>{
-  filterList?.close();filterList=undefined;filterResults.replaceChildren();
-  const query=filter.value.trim().toLowerCase();tree.hidden=!!query;filterResults.hidden=!query;
-  if(!query||!current||!session)return;
-  const ticket=generation,epoch=metadataEpoch,revision=filterRevision;let root=current;while(root.parent)root=root.parent;
-  const checkIndex=()=>{check(ticket);if(epoch!==metadataEpoch)throw new Error('Email search cancelled.');};
-  const cachedIndex=forceMetadataScan?undefined:session.cachedMessageIndex(root);
-  if(!metadataIndex&&cachedIndex)metadataIndex=Promise.resolve(cachedIndex);
-  if(!metadataIndex&&!root.inspection.collection.value){
-    metadataIndex=indexMessages(session,root,checkIndex,()=>{}).then(result=>{checkIndex();session!.rememberMessageIndex(root,result);return result;});
-  }
-  if(!metadataIndex){
-    const main=session,isolated=new BrowserSession({},{reuseWorker:true});metadataSession=isolated;
-    metadataIndex=(async()=>{try{
-      const blob=await main.sourceBlob(root);checkIndex();const copy=await isolated.open(blob,root.name);checkIndex();
-      return await indexMessages(isolated,copy,checkIndex,count=>{if(filter.value.trim())element('filter-status').textContent=`Reading email list · ${count} emails…`;},undefined,forceMetadataScan);
-    }finally{isolated.close();if(metadataSession===isolated)metadataSession=undefined;}})();
-  }
-  element('filter-status').textContent='Finding emails…';
-  try{
-    const result=await metadataIndex;checkIndex();if(revision!==filterRevision||query!==filter.value.trim().toLowerCase())return;
-    const matches=result.messages.filter(m=>textMatches(m.searchText,query).length>0);
-    filtered={root,matches,index:-1};
-    const matchIndices=new Map(matches.map((item,index)=>[item,index]));
-    const create=(item:IndexedMessage)=>{const row=text('li',''),name=item.document.split(' / ').at(-1)!;
-      const index=matchIndices.get(item)!,choose=button(item.label,()=>void operation(active=>openFiltered(index,active)));choose.dataset.messageIndex=String(index);if(filtered?.index===index)choose.setAttribute('aria-current','true');choose.title=name;choose.prepend(treeIcon('message'));messageLabel(choose,item.label,{From:item.sender??'',Sent:item.sent??''});row.append(choose);
-      return row;};
-    if(matches.length>256)filterList=new VirtualList(filterResults,tree.closest('aside')!,matches,create,60);else for(const item of matches)filterResults.append(create(item));
-    element('filter-status').textContent=`${matches.length} matching emails. ${result.incomplete.length?'Search incomplete: '+result.incomplete.join(' '):'All reachable email metadata searched.'} ${(result.notices??[]).join(' ')}`;
-  }catch(error){if(ticket===generation&&epoch===metadataEpoch&&revision===filterRevision){metadataIndex=undefined;element('filter-status').textContent=`Email search could not finish: ${error instanceof Error?error.message:String(error)}`;}}
-}
-function clearMessageFilterForSearch(reason='Email filter cleared to show whole-document search results.'):void {
-  if(!filter.value && !filtered)return;
-  filter.value='';filtered=undefined;filterRevision++;clearTimeout(filterTimer);
-  filterList?.close();filterList=undefined;filterResults.replaceChildren();
-  filterResults.hidden=true;tree.hidden=false;
-  element('filter-status').textContent=reason;
-}
-filter.addEventListener('input',()=>{const restricted=current&&filteredPages(current);filtered=undefined;if(restricted&&!busy)void operation(ticket=>render(ticket,false));filterRevision++;clearTimeout(filterTimer);if(!filter.value.trim()){filterList?.close();filterList=undefined;filterResults.replaceChildren();filterResults.hidden=true;tree.hidden=false;element('filter-status').textContent='';return;}filterTimer=setTimeout(()=>void filterMessages(),200);});
+
+filter.addEventListener('input',()=>searchController.onFilterInput());
 cancelLinked=setupLinkedOpening(openFile,message=>{status.textContent=message;});
 status.textContent='Open or drop a PDF to begin.';controls();
 
@@ -1087,20 +725,7 @@ function activateMessage(next:HTMLElement|undefined):void {
   keyboardSelection=()=>document.querySelector<HTMLElement>(selector);
   next.focus();next.click();
 }
-function adjacentMessage(target:HTMLElement,direction:number):HTMLElement|undefined {
-  for(const [doc,row] of nodes){
-    const messageIndex=target.dataset.messageId?lazyMessages.get(doc)?.indices.get(target.dataset.messageId):undefined;
-    const messages=lazyMessages.get(doc);
-    if(messages&&messageIndex!==undefined&&messageIndex+direction>=0&&messageIndex+direction<doc.inspection.messages.length)
-      return messages.list.rowAt(messageIndex+direction)?.querySelector<HTMLButtonElement>('button')??undefined;
-    const owner=target.dataset.embeddedFileId?doc:row.querySelector(':scope > button')===target?doc.parent:undefined;
-    const fileId=target.dataset.embeddedFileId??doc.parentFileId,stream=target.dataset.embeddedStream??doc.parentStreamPath;
-    const lazy=owner&&fileId&&stream?pdfPlacements.get(owner)?.get(JSON.stringify([fileId,stream]))?.find(p=>p.row?.contains(target)):undefined;
-    if(lazy?.list){const next=lazy.list.rowAt(lazy.index+direction)?.querySelector<HTMLButtonElement>('button');if(next)return next;}
-  }
-  const rows=visiblePaneControls(tree).filter(n=>n.matches('button[data-message-id],button[data-embedded-file-id]'));
-  const index=rows.indexOf(target);return rows[index<0?(direction===1?0:rows.length-1):index+direction];
-}
+function adjacentMessage(target:HTMLElement,direction:number):HTMLElement|undefined {return messageTree.adjacentMessage(target,direction);}
 tree.addEventListener('keydown',event=>{
  const target=event.target;if(!(target instanceof HTMLElement)||event.altKey||event.ctrlKey||event.metaKey)return;
  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();if(!busy)activateMessage(adjacentMessage(target,event.key==='ArrowDown'?1:-1));return;}
@@ -1111,18 +736,13 @@ tree.addEventListener('keydown',event=>{
  if(next){event.preventDefault();next.focus();}
 });
 // Arrow keys move through pane controls; Enter/Space retain native activation.
-function visiblePaneControls(pane:HTMLElement):HTMLElement[]{return [...pane.querySelectorAll<HTMLElement>('button,summary,a[href]')].filter(node=>node.getClientRects().length&&!node.closest('[hidden],[inert]')&&!node.matches(':disabled'));}
 document.addEventListener('keydown',event=>{
  if(event.defaultPrevented||event.altKey||event.ctrlKey||event.metaKey||!['ArrowUp','ArrowDown'].includes(event.key))return;
  const target=event.target;if(!(target instanceof HTMLElement)||target.closest('input,textarea,select,[contenteditable=true]'))return;
  const direction=event.key==='ArrowDown'?1:-1;
  if(viewport.contains(target)){event.preventDefault();const edge=direction===1?viewport.scrollTop+viewport.clientHeight>=viewport.scrollHeight-2:viewport.scrollTop<=2;if(!busy&&edge&&threadPreview.navigate(direction,true))return;viewport.scrollBy({top:direction*60,behavior:'instant'});return;}
  const pane=target.closest<HTMLElement>('#navigation-panel,#details-panel,.reader-pane,#search-panel');if(!pane)return;
- if(collectionList&&target.matches('#collection-matches button[data-match-index]')){
-  const index=Number(target.dataset.matchIndex)+direction;
-  if(collectionResults&&index>=0&&index<collectionResults.result.matches.length){event.preventDefault();activateMessage(collectionList.rowAt(index)?.querySelector<HTMLButtonElement>('button[data-match-index]')??undefined);}return;
- }
- if(filterList&&target.matches('#filter-results button[data-message-index]')){event.preventDefault();activateMessage(filterList.rowAt(Number(target.dataset.messageIndex)+direction)?.querySelector<HTMLButtonElement>('button')??undefined);return;}
+ const neighbor=searchController.virtualNeighbor(target,direction);if(neighbor){if(neighbor.consume){event.preventDefault();activateMessage(neighbor.row);}return;}
  if(target.closest('#filter-results,#collection-matches')){event.preventDefault();const list=target.closest<HTMLElement>('#filter-results,#collection-matches')!,rows=visiblePaneControls(list),index=rows.indexOf(target);activateMessage(rows[index+direction]);return;}
  if(target===element('navigation-panel')||target===tree){event.preventDefault();activateMessage(adjacentMessage(tree.querySelector<HTMLElement>('button[aria-current]')??target,direction));return;}
  const controls=visiblePaneControls(pane),index=controls.indexOf(target),next=controls[index<0?(direction===1?0:controls.length-1):index+direction];

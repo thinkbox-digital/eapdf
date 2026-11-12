@@ -1,6 +1,6 @@
-# EA-PDF browser viewer — beta 1.0.0-beta.2
+# EA-PDF browser viewer — beta 1.1.0-beta.1
 
-Current beta: `1.0.0-beta.2`, with creator/validator `2.0.0-beta.2`.
+Current beta: `1.1.0-beta.1`, with creator/validator `2.1.0-beta.1`.
 
 This demonstration focuses on viewing emails and their files. It uses PDF.js
 6.5.438 and retains the existing Chromium/Firefox architecture.
@@ -9,7 +9,7 @@ Read emails, browse collection folders, search text, zoom or fit pages, and
 view/download embedded files. Image and text previews have a fixed title bar with
 a labeled **× Close** button at the top right; Escape also closes the preview
 and returns focus to its View control. The file panel identifies the containing PDF and
-links owning emails automatically. New creator output records explicit file
+identifies owning emails automatically. New creator output records explicit file
 ownership; older files can use bounded header matching. Insufficient evidence
 is a document error, not a guessed association.
 
@@ -103,8 +103,8 @@ in `releases/`; the [current checkpoint](docs/beta-release.md#verified-scope) re
   match. Escape closes the panel without discarding results. Clearing the input
   clears results and highlights. Collection results show the matching filename
   once, with highlighted excerpts, inside the panel.
-- **Export metadata CSV** downloads one row per message from the currently displayed
-  PDF and recursively from its embedded collection PDFs. Columns: PDF, Folder paths, From, To, Cc, Bcc, Subject, Sent, Message-ID, Attachment count, Attachment names. Mail GUID is not exported. Values come from
+- **Export metadata…** opens the field/scope selector. CSV exports one row per
+  message for the selected current-message or complete-file/collection scope. Columns: PDF, Folder paths, From, To, Cc, Bcc, Subject, Sent, Attachment count, Attachment names. Message-ID and Mail GUID are not exported. Values come from
   EA-PDF metadata; missing values stay blank, and dates retain their stored format.
   Raw address headers take precedence when available. CSV uses UTF-8 with a BOM;
   formula-like cells receive a leading apostrophe for spreadsheet safety.
@@ -117,7 +117,7 @@ in `releases/`; the [current checkpoint](docs/beta-release.md#verified-scope) re
 - Right-click a web PDF link and choose **Open in EA-PDF viewer**, then explicitly
   open the linked file in the new tab. Site access may require browser approval.
 
-## Portfolio viewing (local development)
+## Portfolio viewing
 
 On opening, document identification selects the interface. A recognized EA-PDF
 version/profile keeps the existing email interface, including Messages, filtering,
@@ -380,3 +380,30 @@ The right pane shows the selected conversation. Up/Down selects the previous/nex
 Files in each **Files in this PDF** group sort oldest first using the owning email's Sent date. Multi-message members use their earliest available message date. Dates read from indexed child metadata update the order when background indexing completes. Undated files follow dated files, with stable message/folder order as a fallback. No message dates are inferred from filenames.
 
 Threading is local to the open document, reads existing metadata, and does not modify PDFs or certify RFC 5256 conformance. Metadata and reconstruction limits produce a visible notice; missing headers and independent PDFs cannot be fully threaded.
+
+The right pane’s **Message details** section shows folder paths and appears only when a folder path is available for the selected message.
+The section starts expanded; its arrow collapses or expands the folder details.
+
+Email source descriptions are concise: “Original EML source”, “Original Outlook MSG source”, “Email source extracted from MBOX”, “Email source exported from PST” and “Original Gmail email source”. Detailed MBOX/PST preprocessing provenance remains in PDF metadata. The viewer shortens known legacy generator descriptions without modifying the PDF; older Gmail sources sharing the generic RFC 822 description appear as EML sources because their origin cannot be inferred reliably.
+
+Code improvement: the metadata-export checkbox is labelled “PDF filename / path”, with help explaining that it identifies the containing PDF and its path inside a collection. The exported CSV column remains named PDF for compatibility.
+
+Code improvement: attached emails from PST use “Attached email exported from PST”. Omitted-content notices and original size/checksum details remain. The viewer also shortens the known legacy attachment description in existing PDFs.
+
+Bug fix: in Portfolio view, the page toolbar offers “Download active file” and downloads the displayed PDF unchanged, including ordinary PDFs without email metadata. Email-view message extraction remains unchanged. Portfolio filenames use a single native tooltip rather than overlapping native and custom tooltips.
+
+UI improvement: Chromium viewer scrollbars use 110% of the measured native thickness in both directions (16px baseline when overlay scrollbars report zero). Firefox retains system scrollbar sizing because it does not expose exact numeric scrollbar thickness.
+
+UI improvement: Parent returns to the parent overview and resets left-pane navigation to the top in Portfolio and EA-PDF views. Center-pane vertical padding is halved at each responsive size; horizontal padding is unchanged.
+
+Bug fix / accessibility improvement (12 November 2026): source preparation failures in the render path now report their cause; Portfolio filenames have one readable tooltip on hover or focus. Chromium scrollbars use 24px tracks and thumbs with a 48px minimum length. A permanent Portfolio browser regression covers byte-identical active-file download and Parent navigation in Portfolio and EA-PDF views.
+
+UI improvement (12 November 2026): PDF Bookmarks starts collapsed when opening a document in both EA-PDF and Portfolio views. The disclosure remains available for bookmark navigation.
+
+Bug fix (12 November 2026): same-document message navigation keeps PDF Bookmarks mounted instead of clearing and rebuilding it. Open PDF remains usable while a navigation operation is busy; a selected new file is queued until that operation finishes.
+
+UI improvement (12 November 2026): PDF Bookmarks has a visible caret in EA-PDF and Portfolio views that rotates when the section opens.
+
+Bug fix (12 November 2026): file descriptions offer Show more / Show less to read the complete stored description, including text omitted from a compact or simplified preview. PDF Bookmarks behavior is unchanged.
+
+Sender and recipient names are read from both supported FOAF attribute and element forms; conflicting values are reported. Show more is offered when a description is shortened or does not fit, and updates when the pane width changes. On screens up to 799px wide, a new file defaults to Fit width when no explicit PDF opening destination overrides it. A zoom selected by the reader is retained during resizing and ordinary message navigation.

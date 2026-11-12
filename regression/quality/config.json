@@ -3,5 +3,8 @@
   "creator": "EA-PDF regression test organization",
   "accessibility": {
     "addPdfUaFeatures": true
+  },
+  "premis": {
+    "enabled": false
   }
 }

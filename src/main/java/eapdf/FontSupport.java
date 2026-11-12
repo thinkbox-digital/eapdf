@@ -120,8 +120,10 @@ final class FontSupport {
     document.outputSettings().prettyPrint(false);
     for (var body : document.select("body")) {
       body.traverse((node, depth) -> {
-        if (node instanceof org.jsoup.nodes.TextNode text
-            && !java.util.Set.of("style", "script").contains(text.parent().nodeName())
+        if (!(node instanceof org.jsoup.nodes.TextNode text)) return;
+        var parent = text.parent();
+        if (parent != null
+            && !java.util.Set.of("style", "script").contains(parent.nodeName())
             && text.getWholeText().indexOf('\uFEFF') >= 0) {
           text.text(pdfText(text.getWholeText()));
         }

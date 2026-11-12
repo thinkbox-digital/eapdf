@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "EA-PDF creator",
-      "version": "1.6.0-beta.7"
+      "version": "2.1.0-beta.1"
     },
     "properties": [
       {
@@ -1236,13 +1236,13 @@
       "type": "library",
       "group": "org.apache.logging.log4j",
       "name": "log4j-api",
-      "version": "2.24.3",
-      "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.24.3",
-      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-api@2.24.3",
+      "version": "2.25.5",
+      "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.25.5",
+      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-api@2.25.5",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "5b4a0a0cd0e751ded431c162442bdbdd53328d1f8bb2bae5fc1bbeee0f66d80f"
+          "content": "64777f73ea0b3104c04eb82befbdccc30a425a19e83ad06cb2f93aa303511863"
         }
       ],
       "properties": [
@@ -1782,12 +1782,12 @@
     },
     {
       "type": "file",
-      "name": "emailtopdfa.jar",
-      "bom-ref": "artifact:emailtopdfa.jar",
+      "name": "emailtopdfa-2.1.0-beta.1.jar",
+      "bom-ref": "artifact:emailtopdfa-2.1.0-beta.1.jar",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "ec453459839ff740efa5779af20be64d214b88ca308a4eb993ed8499ba58c9e9"
+          "content": "e0906260b41475bbfe56c2f33f2b2041ee7a4359bab9dd65e9c6fd3b2b4caf4b"
         }
       ]
     }

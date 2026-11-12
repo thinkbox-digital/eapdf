@@ -402,9 +402,8 @@ class PstReader {
         af.mime = "message/rfc822";
         af.rawContentType = af.mime;
         af.inline = false;
-        af.emailAttachment = true;
         af.afRelationship = "Data";
-        af.description = "Attached PST email reconstructed as RFC 822 with headers, body, and nested attachments";
+        af.description = "Attached email exported from PST";
         for (AssociatedFile companion : child.associatedFiles) {
           if (!companion.sourceSetMember) continue;
           companion.filename = "attached-" + (i + 1) + "-" + companion.filename;
@@ -425,7 +424,6 @@ class PstReader {
         Common.sourceProblem(r, "PST attachment could not be extracted (method " + method + "): " + af.filename);
         continue;
       }
-      if (af.bytes == null) throw Common.fail("Missing PST attachment data: " + af.filename);
       normalizeAttachmentContentType(r, af);
       long size = af.bytes.length;
       for (AssociatedFile existing : r.associatedFiles) size += existing.size();

@@ -64,7 +64,7 @@ class Common {
         break;
       }
       try {
-        workers.awaitTermination(Math.min(remaining, java.util.concurrent.TimeUnit.SECONDS.toNanos(1)), java.util.concurrent.TimeUnit.NANOSECONDS);
+        if (workers.awaitTermination(Math.min(remaining, java.util.concurrent.TimeUnit.SECONDS.toNanos(1)), java.util.concurrent.TimeUnit.NANOSECONDS)) break;
       } catch (InterruptedException exception) {
         interrupted = true;
       }
@@ -256,7 +256,7 @@ class Common {
 
   static void validateArchiveOptions(Map<String, Object> options) {
     Object profile = options.get("archive-profile");
-    if (profile != null && !Set.of("m", "mi", "c", "ci").contains(profile)) {
+    if (profile != null && (!(profile instanceof String value) || !Set.of("m", "mi", "c", "ci").contains(value))) {
       throw fail("unsupported --archive-profile (expected m, mi, c, or ci): " + profile);
     }
     if (options.containsKey("archive-output") && profile == null) throw fail("--archive-output requires --archive-profile");
@@ -324,7 +324,7 @@ class Common {
         PdfSigning.signConfigured(temporary);
         if (checked) {
           ConversionProgress.stage("checking_signature_output");
-          PdfCreationValidator.validate(temporary, expected, outermost);
+          PdfCreationValidator.validate(temporary, expected, true);
         }
       }
       if (outermost) ConversionProgress.creationChecked(destination, temporary, expected, checked);
@@ -338,7 +338,7 @@ class Common {
   }
 
   static void dbg(EmailRecord r, String s) {
-    r.debugLog.add(s);
+    if (r != null) r.debugLog.add(s);
     System.out.println("[debug] " + s);
   }
 
@@ -601,7 +601,7 @@ class Common {
     public void write(byte[] b, int off, int len) throws IOException {
       delegate.write(b, off, len);
       PerFileLogCapture capture = ACTIVE_LOG_CAPTURE.get();
-      if (capture != null && b != null && len > 0) {
+      if (capture != null && len > 0) {
         capture.append(new String(b, off, len, StandardCharsets.UTF_8));
       }
     }
@@ -716,8 +716,14 @@ static String sourceDerivation(EmailRecord record) {
 }
 
 static String sourceDescription(EmailRecord record) {
-  String derivation = sourceDerivation(record);
-  return derivation.isBlank() ? "Source email" : "Exported RFC 822 conversion source. " + derivation;
+  return switch (nz(record.sourceType)) {
+    case "eml" -> "Original EML source";
+    case "msg" -> "Original Outlook MSG source";
+    case "mbox" -> "Email source extracted from MBOX";
+    case "pst" -> "Email source exported from PST";
+    case "gmail" -> "Original Gmail email source";
+    default -> "Source email";
+  };
 }
 
 static String collectionFilename(String filename) {
@@ -742,7 +748,7 @@ static boolean sameContentType(String first, String second) {
     var expectedParameters = expected.getParameterList();
     var actualParameters = actual.getParameterList();
     if ((expectedParameters == null ? 0 : expectedParameters.size()) != (actualParameters == null ? 0 : actualParameters.size())) return false;
-    if (expectedParameters != null) {
+    if (expectedParameters != null && actualParameters != null) {
       var names = expectedParameters.getNames();
       while (names.hasMoreElements()) {
         String name = names.nextElement();
@@ -1133,7 +1139,7 @@ static String stripInvalidXml(String s) {
       String webp = new String(b, 8, 4, StandardCharsets.ISO_8859_1);
       if ("RIFF".equals(riff) && "WEBP".equals(webp)) return "image/webp";
     }
-    if (b.length >= 2 && b[0] == 'B' && b[1] == 'M') return "image/bmp";
+    if (b[0] == 'B' && b[1] == 'M') return "image/bmp";
     if (b.length >= 5) {
       String s = new String(b, 0, Math.min(b.length, 256), StandardCharsets.UTF_8).toLowerCase(Locale.ROOT);
       if (s.contains("<svg")) return "image/svg+xml";

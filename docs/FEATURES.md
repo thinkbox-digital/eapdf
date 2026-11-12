@@ -1,115 +1,58 @@
-# Feature List
+# Feature inventory
 
-This file summarizes the current feature set of the project at a high level.
+Current scope is summarised here; release and unreleased status live in
+[project status](PROJECT_STATUS.md). Operational details belong to the linked
+guides, not duplicate release-version tables.
 
-Current tracked release:
-- `2.0.0-beta.1`
+## Creator
 
-Features include opt-in Gmail checkpoints, bounded processing, streaming PDF completion, multilingual font fallback, and semantic accessibility structures across all six profiles. Full PDF/UA conformance remains unverified.
+- EML, MSG, PST, MBOX and Gmail inputs, with original containers retained separately.
+- Six EA-PDF profiles: 1s, 1si, 1m, 1mi, 1c and 1ci; PDF 2.0 / PDF/A-4f output.
+- Non-isolated source/message exports and attachment contents; explicit source
+  omissions for isolated profiles.
+- HTML/text rendering, bounded font/image handling, source metadata and file ownership.
+- 1c/1ci cover statistics/instructions and folder memberships; 1m/1mi message content.
+- Optional embedded metadata/full-text indexes, accessibility structures and signing.
+- Bounded parallel processing, supervised workers and recoverable staged publication.
+- Gmail read-only OAuth, selection/limits and optional resumable checkpoints.
+- Desktop Local Email/Gmail tabs, per-run index/accessibility/signing controls,
+  creator identity, label/field help, progress, cancellation and Summary/Details.
 
-See also:
-- [CHANGELOG.md](CHANGELOG.md)
-- [eapdf_decision_tree.pdf](eapdf_decision_tree.pdf)
+Creator branding, finding-aid PDFs/XLSX and PREMIS generation are removed. Legacy
+artifacts can contain these assets; the reader can still expose them. These
+removals do not remove reader CSV export. See [conversion operations](CONVERSION_OPERATIONS.md),
+[configuration](../config/README.md) and [Gmail](GMAIL.md).
 
-## Input Types
+## Reader
 
-- Local `.eml`
-- Local `.msg`
-- Local `.pst`
-- Local `.mbox`
-- Gmail mailbox/label download via Gmail API
+- Local message/folder and recursive embedded-PDF navigation; adjustable panes,
+  natural folder names and initial viewing destinations.
+- Whole-word document/collection search and message filtering; verified indexes
+  with ordinary traversal fallback.
+- Conversations with per-open-document caching, expandable trees, right-pane
+  message selection and within-conversation keyboard/edge-scroll navigation.
+  Optional subject inference groups chains; Confirmed header relationships remain distinct.
+- File categories sorted oldest first by owning-message date, undated last;
+  View/Open PDF only for supported previews, and downloads including empty files.
+- Download the displayed message as PDF; metadata field/scope selection for CSV;
+  byte-preserving original-XMP download/ZIP export. CSV excludes Message-ID and Mail GUID.
+- Archive totals in the status bar; 1c/1ci cover remains visible.
+- Optional generic Portfolio presentation, stored opening targets, folders,
+  metadata views and explicit embedded navigation.
 
-## EA-PDF Output Profiles
+The reader does not validate conformance or execute attachments/PDF scripts.
+Office documents use normal downloads. See [viewer use](../browser-viewer/README.md)
+and [browser security](../browser-viewer/docs/security.md).
 
-- `1s`
-- `1si`
-- `1m`
-- `1mi`
-- `1c`
-- `1ci`
+## Validation and limits
 
-## Email Conversion Features
+The standalone Java validator combines EA-PDF checks with veraPDF checks and
+recursive member assessment. The Python/web workbench supplies its documented
+validation/reporting workflows. PASS, FAIL and INCOMPLETE remain separate; no
+resource exhaustion or unavailable evidence becomes a successful full assessment.
 
-- RFC822 email normalization
-- MSG parsing
-- PST mailbox extraction
-- MBOX splitting and conversion
-- HTML + text body handling
-- attachment harvesting and embedding
-- EA-PDF metadata generation
-- PDF/A validation workflow
-
-## Gmail Features
-
-- Gmail API OAuth desktop-app flow
-- mailbox/label selection
-- unread-only filter
-- message limit filter
-- per-message output
-- archive/container output
-
-## Finding Aid Features
-
-- PDF index pages for archive/container outputs
-- separate finding-aid PDF and XLSX sidecars for `1c`/`1ci`; neither is embedded
-- XLSX embedding retained for flat `1m`/`1mi` archives
-- optional external XLSX controlled by `excelEnabled`
-- ordinary finding-aid PDF sidecars contain no XLSX or synthetic EML
-- clickable finding-aid message links
-
-## Metadata Features
-
-- EA-PDF XMP metadata
-- PDF/A metadata
-- optional PREMIS XML embedding
-- optional PREMIS pretty-printed sidecar XML
-
-## Accessibility / PDF-UA-Style Features
-
-Config-gated features include:
-
-- `/MarkInfo`
-- `/Lang`
-- reading direction
-- page labels
-- selected PDF/UA-style catalog improvements
-
-## GUI Features
-
-- desktop GUI for local email and Gmail workflows
-- per-run GUI feature toggles for branding, finding aid, PREMIS, and PDF/UA settings
-- tooltip help for GUI feature toggles
-
-## Validation Features
-
-- EA-PDF rule validation
-- veraPDF PDF/A validation
-- combined comparison web UI
-- PDF/A fail also treated as EA-PDF fail in web UI
-- per-file HTML validation reports
-- direct links to saved validation reports from the web UI
-
-## Logging And Debugging
-
-- per-file logs in local per-file logs
-- optional debug output directories
-- validation HTML reports saved locally in the configured report directory
-
-## Examples
-
-- checked-in sample PDFs in [examples](../examples/)
-- includes the six core email profile samples
-
-## Performance Features
-
-- threaded local conversion via `--jobs`
-- parallel archive input reading
-- parallel archive message rendering
-- parallel collection member generation
-
-## Documentation
-
-- Gmail setup guide
-- deployment notes
-- validator coverage notes
-- searchable workflow decision tree PDF
+Accessibility structures are not proof of PDF/UA conformance. Document/profile
+identification, preservation fidelity, human accessibility, signature trust and
+attachment safety are separate questions. See [coverage](VALIDATOR_COVERAGE.md),
+[security boundaries](security/HARDENING.md), [signing](DIGITAL_SIGNATURES.md) and
+[embedded index limits](EMBEDDED_SEARCH_INDEX.md).

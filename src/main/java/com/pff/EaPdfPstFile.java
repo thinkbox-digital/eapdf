@@ -34,7 +34,7 @@ public final class EaPdfPstFile extends PSTFile {
     var result = new HashMap<Integer, PSTDescriptorItem>();
     var seen = new java.util.HashSet<Long>();
     for (int i = 0; i < count; i++) {
-      long bid = input.seekAndReadLong(header + i * entry + (ansi ? 4 : 8), ansi ? 4 : 8) & ~1L;
+      long bid = input.seekAndReadLong(header + (long) i * entry + (ansi ? 4 : 8), ansi ? 4 : 8) & ~1L;
       if (bid == 0 || !seen.add(bid)) throw new PSTException("Invalid or repeated subnode leaf block");
       for (var item : descriptors(readLeaf(bid), true).entrySet()) {
         if (result.putIfAbsent(item.getKey(), item.getValue()) != null)

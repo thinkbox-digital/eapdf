@@ -1,3 +1,18 @@
+# Dated change history
+
+This file preserves dated checkpoints, including explicitly local/unreleased work.
+Use [current project status](PROJECT_STATUS.md) and [architecture decisions](ARCHITECTURE.md)
+for the current handover; do not treat historical counts or then-open findings as
+a fresh acceptance run.
+
+## 2026-11-12 — 2.1.0-beta.1 / viewer 1.1.0-beta.1
+
+- **Bug fixes:** readable sender/recipient names, stable bookmark navigation, Portfolio active-file downloads and Parent navigation, expandable file descriptions and clearer source descriptions.
+- **UI improvements:** wider Chromium scrollbars, corrected folder alignment, collapsed bookmark sections with a caret, narrow-screen Fit width defaults and retained reader zoom.
+- **Code improvement:** separate rendering, GUI processes, viewer controllers, validation rule families and web services; preserve public interfaces and validation behavior. No measured performance claim.
+- **Bug fixes:** update Python/web parser dependencies and Java runtime dependencies; reinstall the web lock and restart deployed workers.
+- **Documentation:** consolidate the user manual, architecture, project status and dated verification evidence.
+
 ## 2026-11-10 — 2.0.0-beta.2 / viewer 1.0.0-beta.2
 
 **New code:** Integrated local Conversations view with cached XMP threading, a right-pane conversation tree, within-thread keyboard/scroll navigation, missing-parent context and optional subject inference. Confirmed relationships remain header based; subject matches group independent chains beneath a non-message heading.
@@ -7,6 +22,24 @@
 **Code improvement:** Anonymized first-party interoperability documentation and removed internal verification files from tracking. Added a documentation privacy check; original input bytes and legal attribution remain unchanged. Threading reads existing metadata and does not change generated PDF content or claim complete RFC 5256 conformance.
 
 # Changelog
+
+## Additional changes included in 2.1.0-beta.1
+
+- **Code improvement:** Complete the agreed responsibility refactor across creation, viewer search/tree/files, validation rule families and web jobs/pages; preserve public interfaces, navigation ownership and validation outcomes. No measured performance claim.
+
+- **Bug fixes:** Restore EA-PDF bookmarks and requested opening panes, display file descriptions, enable page attachment controls, reject invalid collection names and warn on unsupported child versions.
+- **Code improvement:** Page through complete available XMP text in the metadata dialog.
+
+- **Bug fix:** Display 1c/1ci collection start pages in the viewer instead of hiding them behind the message-selection prompt.
+
+- **Bug fix:** Restore collection start pages with message, folder and attachment statistics for 1c/1ci output.
+- **New code:** Replace Export CSV with an Export metadata dialog offering selected CSV fields, message/collection scope, original XMP previews and byte-preserving downloads.
+
+- **Bug fix:** Update pypdf to 7.0.1 for upstream image-buffer sizing and text-decoding fixes.
+- **UI improvement:** Show only the matching-page count in collection search summaries and remove Message-ID from all viewer CSV exports.
+
+- **Bug fix:** Require pikepdf 10.18.0 for the Python/web validator to prevent native crashes on cyclic JBIG2 streams; add isolated subprocess regressions. Existing deployments must install the updated web lock and restart their workers.
+- **Repository checks:** Protect `main` with all six release-guide quality checks, including administrator enforcement.
 
 ## 2.0.0-beta.1 — 2026-11-09
 

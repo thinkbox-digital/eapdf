@@ -46,7 +46,7 @@ Set `EAPDF_GMAIL_RESUME_DIR` to a private directory before running the same Gmai
 
 ```bash
 export EAPDF_GMAIL_RESUME_DIR="$HOME/.local/share/emailtopdfa/gmail-resume"
-java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf --folder INBOX --out-pdf /tmp/eapdf-gmail
+java -cp dist/emailtopdfa-2.1.0-beta.1.jar eapdf.GmailDownloadToPdf --folder INBOX --out-pdf /tmp/eapdf-gmail
 ```
 
 The existing credential discovery and OAuth settings still apply. `-Deapdf.gmailResumeDir=/private/path` is the equivalent JVM setting.
@@ -146,7 +146,7 @@ Relevant code:
 ### One PDF Per Message
 
 ```bash
-java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.1.0-beta.1.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --out-pdf out
 ```
@@ -154,7 +154,7 @@ java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
 ### Archive Output (`1m`, `1mi`, `1c`, `1ci`)
 
 ```bash
-java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.1.0-beta.1.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --archive-profile m \
   --archive-output /tmp/eapdf-gmail-inbox_1m.pdf
@@ -163,7 +163,7 @@ java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
 ### Use An Explicit Credentials File
 
 ```bash
-java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.1.0-beta.1.jar eapdf.GmailDownloadToPdf \
   --credentials config/credentials.json \
   --folder ALL_MAIL
 ```
@@ -171,7 +171,7 @@ java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
 ### Use A Custom Token Directory
 
 ```bash
-java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.1.0-beta.1.jar eapdf.GmailDownloadToPdf \
   --credentials config/credentials.json \
   --token-dir .gmail_token_store_local \
   --folder ALL_MAIL
@@ -180,7 +180,7 @@ java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
 ### Only Unread Messages
 
 ```bash
-java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.1.0-beta.1.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --unread-only
 ```
@@ -188,7 +188,7 @@ java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
 ### Limit The Number Of Downloaded Messages
 
 ```bash
-java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.1.0-beta.1.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --limit 100
 ```
@@ -266,7 +266,7 @@ Default:
 Use a fresh token directory:
 
 ```bash
-java -cp dist/emailtopdfa-2.0.0-beta.2.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.1.0-beta.1.jar eapdf.GmailDownloadToPdf \
   --credentials config/credentials.json \
   --token-dir .gmail_token_store_test \
   --folder INBOX

@@ -1,14 +1,14 @@
 package eapdf;
+import eapdf.PdfAttachmentSupport.*;
+import eapdf.PdfCollectionSupport.*;
+
 
 import org.apache.pdfbox.Loader;
 import java.io.*;
 import java.awt.image.BufferedImage;
-import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -17,8 +17,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.logging.Level;
-import javax.net.ssl.SSLException;
 import com.openhtmltopdf.extend.FSStream;
 import com.openhtmltopdf.extend.FSStreamFactory;
 import com.openhtmltopdf.extend.FSUriResolver;
@@ -27,8 +25,6 @@ import org.jsoup.nodes.*;
 import org.jsoup.parser.*;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.openhtmltopdf.outputdevice.helper.ExternalResourceControlPriority;
-import com.openhtmltopdf.swing.NaiveUserAgent;
-import com.openhtmltopdf.util.XRLog;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.multipdf.PDFCloneUtility;
 import org.apache.pdfbox.pdmodel.*;
@@ -54,15 +50,26 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 class PdfMailWriter {
 static final EapdfConfig CONFIG = EapdfConfig.get();
-static final String EMBEDDED_LINK_PREFIX = "https://eapdf.local/attachment/";
-static final String EMBEDDED_BADGE_LINK_PREFIX = EMBEDDED_LINK_PREFIX + "badge/";
+static final PdfMetadataWriter METADATA = new PdfMetadataWriter(CONFIG, new PdfMetadataWriter.Assets() {
+  public boolean include(EmailRecord r, AssociatedFile f) { return includeAssociatedFile(r,f); }
+  public int size(EmailRecord r, AssociatedFile f) { return storedAttachmentSize(r,f); }
+  public String mime(AssociatedFile f, String name) throws Exception { return embeddedAssetContentType(f,name); }
+  public String description(EmailRecord r, AssociatedFile f) { return attachmentDescription(r,f); }
+  public int folders(List<EmailRecord> records) { return PdfCollectionSupport.buildFolderSections(records).size(); }
+  public List<PdfMetadataWriter.Asset> archive(List<EmailRecord> records) throws Exception {
+    return buildArchiveEmbeddedFilePlans(records).stream().map(p -> new PdfMetadataWriter.Asset(p.filename,p.file.size(),p.mime,p.checksumMd5,p.relationship,p.file.sourceSetMember)).toList();
+  }
+});
+static final MailHtmlRenderer HTML = new MailHtmlRenderer(PdfMailWriter::pdfUaFeaturesEnabled, PdfMailWriter::chooseEaPdfConformance, PdfMailWriter::renderAssociatedFiles);
+static final String EMBEDDED_LINK_PREFIX = PdfAttachmentSupport.EMBEDDED_LINK_PREFIX;
+static final String EMBEDDED_BADGE_LINK_PREFIX = PdfAttachmentSupport.EMBEDDED_BADGE_LINK_PREFIX;
 static final Set<String> PDF17_STRUCTURE_ROLES = Set.of("Art", "BlockQuote", "TOC", "TOCI", "Index", "Private", "Quote", "Note", "Reference", "BibEntry", "Code");
-static final ConcurrentMap<String, String> FAILED_REMOTE_ASSET_URLS = new ConcurrentHashMap<>();
-static final FSUriResolver REMOTE_ASSET_URI_RESOLVER = new RemoteAssetUriResolver();
-static final FSStreamFactory REMOTE_ASSET_STREAM_FACTORY = new BlacklistingHttpStreamFactory();
-static final InheritableThreadLocal<EmailRecord> ACTIVE_RENDER_RECORD = new InheritableThreadLocal<>();
-static final ThreadLocal<Set<String>> RENDERED_IMAGES = new ThreadLocal<>();
-static final ThreadLocal<Map<String, String>> ORIENTED_IMAGE_URIS = new ThreadLocal<>();
+static final ConcurrentMap<String, String> FAILED_REMOTE_ASSET_URLS = MailRenderPolicy.FAILED_REMOTE_ASSET_URLS;
+static final FSUriResolver REMOTE_ASSET_URI_RESOLVER = MailRenderPolicy.REMOTE_ASSET_URI_RESOLVER;
+static final FSStreamFactory REMOTE_ASSET_STREAM_FACTORY = MailRenderPolicy.REMOTE_ASSET_STREAM_FACTORY;
+static final InheritableThreadLocal<EmailRecord> ACTIVE_RENDER_RECORD = MailRenderPolicy.ACTIVE_RENDER_RECORD;
+static final ThreadLocal<Set<String>> RENDERED_IMAGES = MailRenderPolicy.RENDERED_IMAGES;
+static final ThreadLocal<Map<String, String>> ORIENTED_IMAGE_URIS = MailRenderPolicy.ORIENTED_IMAGE_URIS;
 
 static {
   // Lossless compression only; preserve an explicit PDFBox override.
@@ -70,160 +77,27 @@ static {
   configureRendererLogging();
 }
 
-static final class NullFsStream implements FSStream {
-  @Override
-  public InputStream getStream() {
-    return null;
-  }
-
-  @Override
-  public Reader getReader() {
-    return null;
-  }
-}
-
-
-static final class BlacklistingHttpStreamFactory implements FSStreamFactory {
-  @Override
-  public FSStream getUrl(String url) {
-    String key = remoteAssetKey(url);
-    if (key == null) return new NullFsStream();
-    blacklistRemoteAsset(key, "External resource loading is disabled");
-    return new NullFsStream();
-  }
-}
-
-static final class RemoteAssetUriResolver implements FSUriResolver {
-  final FSUriResolver delegate = new NaiveUserAgent.DefaultUriResolver();
-
-  @Override
-  public String resolveURI(String baseUri, String uri) {
-    EmailRecord record = ACTIVE_RENDER_RECORD.get();
-    boolean cid = uri != null && uri.regionMatches(true, 0, "cid:", 0, 4);
-    AssociatedFile image = null;
-    if (record != null && uri != null) {
-      if (cid) image = findCidAsset(uri, record.associatedFiles);
-      else image = findLocationAsset(uri, record);
-    }
-    if (image != null && image.hasData() && image.size() > 0) {
-      byte[] bytes = image.data();
-      String mime = Common.detectMimeType(image.filename, image.mime, bytes);
-      if (!mime.startsWith("image/")) return null;
-      ProcessingLimits.checkMessage(bytes.length, "inline CID image");
-      checkRenderImage(bytes);
-      return orientRenderImage("data:" + mime + ";base64," + Base64.getEncoder().encodeToString(bytes));
-    }
-    if (cid) return null;
-    String rawKey = remoteAssetKey(uri);
-    if (rawKey != null && FAILED_REMOTE_ASSET_URLS.containsKey(rawKey)) {
-      recordBlacklistedRemoteAssetEncounter(rawKey);
-      return null;
-    }
-    String resolved = delegate.resolveURI(baseUri, uri);
-    String resolvedKey = remoteAssetKey(resolved);
-    if (resolvedKey != null && FAILED_REMOTE_ASSET_URLS.containsKey(resolvedKey)) {
-      recordBlacklistedRemoteAssetEncounter(resolvedKey);
-      return null;
-    }
-    if (resolved == null && rawKey != null) blacklistRemoteAsset(rawKey, "Remote asset URI resolution failed");
-    if (isAllowedRenderResource(resolved)) return orientRenderImage(resolved);
-    if (resolvedKey != null) blacklistRemoteAsset(resolvedKey, "External resource loading is disabled");
-    return null;
-  }
-}
-
 static boolean isAllowedRenderResource(String uri) {
-  if (uri == null) return false;
-  if (uri.regionMatches(true, 0, "data:", 0, 5)) {
-    int comma = uri.indexOf(',');
-    if (comma < 0) return false;
-    String header = uri.substring(0, comma).toLowerCase(Locale.ROOT);
-    if (header.startsWith("data:image/")) {
-      byte[] bytes = decodeRenderImageUri(uri);
-      ProcessingLimits.checkMessage(bytes.length, "inline data image");
-      checkRenderImage(bytes);
-    }
-    return true;
-  }
-  EmailRecord record = ACTIVE_RENDER_RECORD.get();
-  if (record == null || !record.renderAssets.containsKey(uri)) return false;
-  checkRenderImage(record.renderAssets.get(uri));
-  return true;
+  return MailRenderPolicy.isAllowedRenderResource(uri);
 }
 
 static byte[] decodeRenderImageUri(String uri) {
-  int comma = uri.indexOf(',');
-  String header = uri.substring(0, comma).toLowerCase(Locale.ROOT);
-  return header.endsWith(";base64") ? Base64.getMimeDecoder().decode(uri.substring(comma + 1))
-      : java.net.URLDecoder.decode(uri.substring(comma + 1).replace("+", "%2B"), StandardCharsets.ISO_8859_1)
-          .getBytes(StandardCharsets.ISO_8859_1);
+  return MailRenderPolicy.decodeRenderImageUri(uri);
 }
 
 static String orientRenderImage(String uri) {
-  EmailRecord record = ACTIVE_RENDER_RECORD.get();
-  if (record == null || uri == null) return uri;
-  Map<String, String> cache = ORIENTED_IMAGE_URIS.get();
-  if (cache != null && cache.containsKey(uri)) return cache.get(uri);
-  byte[] bytes = record.renderAssets.get(uri);
-  if (bytes == null) {
-    if (!uri.regionMatches(true, 0, "data:image/jpeg", 0, 15)
-        && !uri.regionMatches(true, 0, "data:image/jpg", 0, 14)) return uri;
-    bytes = decodeRenderImageUri(uri);
-  }
-  if (bytes.length < 2 || (bytes[0] & 0xff) != 0xff || (bytes[1] & 0xff) != 0xd8) return uri;
-  try {
-    byte[] display = ImageOrientation.orientedPng(bytes);
-    if (display == null) return uri;
-    // The original JPEG's pixels were already charged by the resource check.
-    Set<String> images = RENDERED_IMAGES.get();
-    if (images != null) images.add(HexFormat.of().formatHex(
-        java.security.MessageDigest.getInstance("SHA-256").digest(display)));
-    String oriented = "eapdf-image:" + Common.sha256Hex(display);
-    record.renderAssets.put(oriented, display);
-    if (cache != null) cache.put(uri, oriented);
-    return oriented;
-  } catch (Common.UserFacingException limit) {
-    throw limit;
-  } catch (Exception error) {
-    Common.warn(ACTIVE_RENDER_RECORD.get(), "Could not apply photo orientation; retained the original image display.");
-    return uri;
-  }
+  return MailRenderPolicy.orientRenderImage(uri);
 }
 
 static void checkRenderImage(byte[] bytes) {
-  int[] dimensions = sniffImageSize(bytes);
-  Set<String> images = RENDERED_IMAGES.get();
-  if (images == null || dimensions[0] == 0) return;
-  try {
-    if (images.add(HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes)))) {
-      ProcessingLimits.accountImage((long) dimensions[0] * dimensions[1]);
-    }
-  } catch (java.security.NoSuchAlgorithmException error) {
-    throw new IllegalStateException(error);
-  }
+  MailRenderPolicy.checkRenderImage(bytes);
 }
 
 static FSStream trustedRenderAsset(String uri) {
-  EmailRecord record = ACTIVE_RENDER_RECORD.get();
-  byte[] bytes = record == null ? null : record.renderAssets.get(uri);
-  if (bytes == null) return new NullFsStream();
-  return new FSStream() {
-    public InputStream getStream() { return new ByteArrayInputStream(bytes); }
-    public Reader getReader() { return new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8); }
-  };
+  return MailRenderPolicy.trustedRenderAsset(uri);
 }
 
-static class MessageSegment {
-  final EmailRecord record;
-  final int startPage;
-  final int endPage;
-  COSDictionary semanticTree;
-  MessageSegment(EmailRecord record, int startPage, int endPage) {
-    this.record = record;
-    this.startPage = startPage;
-    this.endPage = endPage;
-  }
-}
+
 
 static class RenderedMessagePart {
   final EmailRecord record;
@@ -243,114 +117,17 @@ static class SingleMessageBuildResult {
   }
 }
 
-static class ArchiveEmbeddedFilePlan {
-  final List<EmailRecord> owners = new ArrayList<>();
-  final EmailRecord record;
-  final AssociatedFile file;
-  final String requestedName;
-  final String filename;
-  final String mime;
-  final String relationship;
-  final String checksumMd5;
 
-  ArchiveEmbeddedFilePlan(EmailRecord record, AssociatedFile file, String requestedName, String filename, String mime, String relationship, String checksumMd5) {
-    this.record = record;
-    this.file = file;
-    this.requestedName = requestedName;
-    this.owners.add(record);
-    this.filename = filename;
-    this.mime = mime;
-    this.relationship = relationship;
-    this.checksumMd5 = checksumMd5;
-  }
-}
 
-static class ArchivePendingFile {
-  final EmailRecord record;
-  final AssociatedFile file;
-  final String requestedName;
 
-  ArchivePendingFile(EmailRecord record, AssociatedFile file, String requestedName) {
-    this.record = record;
-    this.file = file;
-    this.requestedName = requestedName;
-  }
-}
 
-static class EmbeddedFileBindings {
-  final Map<EmailRecord, PDComplexFileSpecification> sourceFiles = new IdentityHashMap<>();
-  final Map<String, PDComplexFileSpecification> filesByToken = new LinkedHashMap<>();
-}
 
-static class CollectionMember {
-  final String groupName;
-  final String subject;
-  final String childProfile;
-  final List<EmailRecord> records;
-  final int folderId;
-  final int orderIndex;
-  final String filename;
-  byte[] pdfBytes;
-  Path pdfPath;
-  int storedPdfSize;
-  final int attachmentCount;
-  final String sentDisplay;
 
-  CollectionMember(String groupName, String subject, String childProfile, List<EmailRecord> records, int folderId, int orderIndex, String filename, byte[] pdfBytes,
-                   int attachmentCount, String sentDisplay) {
-    this.groupName = groupName;
-    this.subject = subject;
-    this.childProfile = childProfile;
-    this.records = records;
-    this.folderId = folderId;
-    this.orderIndex = orderIndex;
-    this.filename = filename;
-    this.pdfBytes = pdfBytes;
-    this.attachmentCount = attachmentCount;
-    this.sentDisplay = sentDisplay;
-  }
 
-  void stage(PayloadStore store) throws IOException {
-    if (store == null || pdfBytes == null) return;
-    storedPdfSize = pdfBytes.length;
-    pdfPath = store.write(pdfBytes);
-    pdfBytes = null;
-  }
 
-  byte[] pdfData() throws IOException {
-    return pdfBytes != null ? pdfBytes : Files.readAllBytes(pdfPath);
-  }
 
-  int pdfSize() {
-    return pdfBytes != null ? pdfBytes.length : storedPdfSize;
-  }
-}
 
-static class CollectionFolder {
-  final String name;
-  final int id;
-  int messageCount;
-  long totalSizeBytes;
 
-  CollectionFolder(String name, int id, int messageCount) {
-    this.name = name;
-    this.id = id;
-    this.messageCount = messageCount;
-  }
-}
-
-static class FolderSection {
-  final String folderName;
-  final List<EmailRecord> records;
-  final List<MessageSegment> messageSegments = new ArrayList<>();
-  int summaryStartPage;
-  int totalSizeBytes;
-
-  FolderSection(String folderName, List<EmailRecord> records) {
-    this.folderName = folderName;
-    this.records = records;
-  }
-}
 
 static class PageLinkTarget {
   final int sourcePageNumber;
@@ -430,7 +207,8 @@ static List<AssociatedFile> renderAssociatedFiles(EmailRecord r) {
   if (!hasSource && r.embedSourceMessage) {
     try {
       byte[] sourceBytes = r.sourceBytes == null ? Common.synthesizeEml(r) : r.sourceBytes;
-      if (sourceBytes != null && sourceBytes.length > 0) {
+      if (sourceBytes.length == 0) throw new IllegalStateException("Source message is empty");
+      {
         AssociatedFile af = new AssociatedFile();
         af.filename = Common.nz(r.sourceFilename).isBlank() ? "message.eml" : r.sourceFilename;
         af.mime = Common.nz(r.sourceMime).isBlank() ? "message/rfc822" : r.sourceMime;
@@ -441,7 +219,8 @@ static List<AssociatedFile> renderAssociatedFiles(EmailRecord r) {
         af.launchToken = attachmentLaunchToken(af);
         out.add(0, af);
       }
-    } catch (Exception ignored) {
+    } catch (Exception error) {
+      throw new IllegalStateException("Could not prepare source email for PDF rendering: " + error.getMessage(), error);
     }
   }
   return out;
@@ -504,16 +283,15 @@ static String nativeAttachmentToken(EmailRecord record, AssociatedFile file) {
 }
 
 static String nativeAttachmentHtml(EmailRecord record, AssociatedFile file) {
-  return attachmentDisplayHtml(file);
+  return HTML.nativeAttachmentHtml(record, file);
 }
 
 static String attachmentDisplayHtml(AssociatedFile af) {
-  return Common.escapeHtml(Common.nz(af.filename));
+  return HTML.attachmentDisplayHtml(af);
 }
 
 static String attachmentTextWithBadgeHtml(AssociatedFile af) {
-  if (af == null) return "";
-  return attachmentDisplayHtml(af);
+  return HTML.attachmentTextWithBadgeHtml(af);
 }
 
 static String pdfaComplianceLabel() {
@@ -521,660 +299,75 @@ static String pdfaComplianceLabel() {
 }
 
 static byte[] renderHtmlPdf(String html, String baseUri, String fontPath, EmailRecord r, boolean debug) throws Exception {
-  return renderHtmlPdf(html, baseUri, fontPath, r, debug, PdfMailWriter::renderXhtmlPdf);
+  return HTML.renderHtmlPdf(html, baseUri, fontPath, r, debug);
 }
 
-interface XhtmlRenderer {
-  byte[] render(String xhtml, String baseUri, String fontPath) throws Exception;
-}
+interface XhtmlRenderer extends MailHtmlRenderer.XhtmlRenderer {}
 
 static byte[] renderHtmlPdf(String html, String baseUri, String fontPath, EmailRecord r, boolean debug, XhtmlRenderer renderer) throws Exception {
-  Document d = Jsoup.parse(Common.nz(html), "", Parser.xmlParser());
-  d.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
-  d.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
-  d.outputSettings().charset(StandardCharsets.UTF_8);
-  d.outputSettings().prettyPrint(false);
-
-  for (Element e : d.select("img")) {
-    if (!e.hasAttr("alt")) {
-      e.attr("alt", pdfUaFeaturesEnabled() ? "Image from the original email" : "");
-      if (pdfUaFeaturesEnabled()) Common.warn(r, "An email image has no source alternative text; a generic description is used and should be reviewed for accessibility.");
-    }
-  }
-
-  String finalXhtml = d.outerHtml();
-  if (debug) {
-    Common.dbg(r, "final xhtml len=" + finalXhtml.length());
-    Common.dbg(r, "final xhtml preview=" + Common.preview(finalXhtml, 260));
-  }
-
-  EmailRecord previousRecord = ACTIVE_RENDER_RECORD.get();
-  Set<String> previousImages = RENDERED_IMAGES.get();
-  Map<String, String> previousOrientations = ORIENTED_IMAGE_URIS.get();
-  RENDERED_IMAGES.set(new HashSet<>());
-  ORIENTED_IMAGE_URIS.set(new HashMap<>());
-  ACTIVE_RENDER_RECORD.set(r);
-  try {
-    try {
-      byte[] rendered = renderer.render(finalXhtml, baseUri, fontPath);
-      if (debug) Common.dbg(r, "OpenHTMLtoPDF run complete");
-      return rendered;
-    } catch (Exception ex) {
-      for (Throwable cause = ex; cause != null && cause.getCause() != cause; cause = cause.getCause()) {
-        if (cause instanceof Common.UserFacingException limit) throw limit;
-      }
-      String fallbackXhtml = buildPlainTextFallbackXhtml(html);
-      if (debug) {
-        Common.dbg(r, "OpenHTMLtoPDF primary render failed: " + ex.getClass().getSimpleName() + ": " + Common.nz(ex.getMessage()));
-        Common.dbg(r, "retrying render with plain-text fallback xhtml");
-      }
-      try {
-        byte[] rendered = renderer.render(fallbackXhtml, baseUri, fontPath);
-        Common.warn(r, "Reduced rendering: HTML failed (" + ex.getClass().getSimpleName() + ": "
-            + Common.nz(ex.getMessage()) + "); used plain text. Images, formatting, and links may be missing.");
-        if (debug) Common.dbg(r, "OpenHTMLtoPDF fallback render complete");
-        return rendered;
-      } catch (Exception fallbackEx) {
-        fallbackEx.addSuppressed(ex);
-        throw fallbackEx;
-      }
-    }
-  } finally {
-    if (previousImages == null) RENDERED_IMAGES.remove();
-    else RENDERED_IMAGES.set(previousImages);
-    if (previousOrientations == null) ORIENTED_IMAGE_URIS.remove();
-    else ORIENTED_IMAGE_URIS.set(previousOrientations);
-    r.renderAssets.clear();
-    r.renderBaseUri = "";
-    if (previousRecord == null) ACTIVE_RENDER_RECORD.remove();
-    else ACTIVE_RENDER_RECORD.set(previousRecord);
-  }
+  return HTML.renderHtmlPdf(html, baseUri, fontPath, r, debug, renderer);
 }
 
 static byte[] renderXhtmlPdf(String xhtml, String baseUri, String fontPath) throws Exception {
-  return renderXhtmlPdf(xhtml, baseUri, fontPath, true);
+  return HTML.renderXhtmlPdf(xhtml, baseUri, fontPath);
 }
 
 static byte[] renderXhtmlPdf(String xhtml, String baseUri, String fontPath, boolean fitWideContent) throws Exception {
-  ByteArrayOutputStream baos = new ByteArrayOutputStream();
-  PdfRendererBuilder builder = new PdfRendererBuilder();
-  builder.useFastMode();
-  // The patched API calls base PDF/A-4 PDFA_4_A; it does not create PDF/A-4f.
-  // Final assembly supplies EA-PDF identification, associated files and 4f XMP.
-  builder.usePdfAConformance(PdfRendererBuilder.PdfAConformance.PDFA_4_A);
-  builder.useColorProfile(Files.readAllBytes(Path.of(Common.resolveIccPath(null))));
-  FontSupport.register(builder, new File(fontPath), "ArchiveFont");
-  EmailRecord renderRecord = ACTIVE_RENDER_RECORD.get();
-  builder.usePdfUaAccessibility(pdfUaFeaturesEnabled() || (renderRecord != null && !Common.nz(renderRecord.headerTagMarker).isBlank()), 2);
-  xhtml = FontSupport.configure(builder, fontPath, xhtml, ACTIVE_RENDER_RECORD.get());
-  builder.useUriResolver(REMOTE_ASSET_URI_RESOLVER);
-  builder.useProtocolsStreamImplementation(REMOTE_ASSET_STREAM_FACTORY, "http", "https");
-  builder.useProtocolsStreamImplementation(PdfMailWriter::trustedRenderAsset, "file", "eapdf-image");
-  builder.useExternalResourceAccessControl((uri, type) -> isAllowedRenderResource(uri),
-      ExternalResourceControlPriority.RUN_AFTER_RESOLVING_URI);
-  builder.withHtmlContent(xhtml, baseUri);
-  builder.toStream(baos);
-  String fittedXhtml = null;
-  try (var renderer = builder.buildPdfRenderer()) {
-    renderer.layout();
-    if (fitWideContent && renderRecord != null) {
-      var root = renderer.getRootBox();
-      var page = root.getLayer().getPages().get(0);
-      var context = renderer.getSharedContext().newLayoutContextInstance();
-      int paintedWidth = root.getPaintingInfo().getOuterMarginCorner().width;
-      int availableWidth = page.getContentWidth(context);
-      if (paintedWidth > availableWidth + 1) {
-        // Preserve fixed email tables at their authored size instead of clipping columns.
-        float dotsPerPoint = renderer.getDotsPerPoint();
-        float width = (float) Math.ceil((page.getWidth(context) + paintedWidth - availableWidth) / dotsPerPoint) + 1f;
-        float height = page.getHeight(context) / dotsPerPoint;
-        Document fitted = Jsoup.parse(xhtml, "", Parser.xmlParser());
-        fitted.outputSettings().syntax(Document.OutputSettings.Syntax.xml).prettyPrint(false);
-        fitted.head().appendElement("style").text("@page {size:" + width + "pt " + height + "pt;}");
-        fittedXhtml = fitted.outerHtml();
-      }
-    }
-    if (fittedXhtml == null) {
-      renderer.setListener(new com.openhtmltopdf.pdfboxout.PDFCreationListener() {
-        private boolean counted;
-        public void preOpen(com.openhtmltopdf.pdfboxout.PdfBoxRenderer r) {}
-        public void preWrite(com.openhtmltopdf.pdfboxout.PdfBoxRenderer r, int count) {}
-        public void onClose(com.openhtmltopdf.pdfboxout.PdfBoxRenderer r) {
-          if (!counted) { counted = true; ProcessingLimits.accountPages(r.getPdfDocument().getNumberOfPages()); }
-        }
-      });
-      renderer.createPDF();
-    }
-  }
-  if (fittedXhtml != null) return renderXhtmlPdf(fittedXhtml, baseUri, fontPath, false);
-  byte[] rendered = baos.toByteArray();
-  return rendered;
+  return HTML.renderXhtmlPdf(xhtml, baseUri, fontPath, fitWideContent);
 }
 
 static String buildPlainTextFallbackXhtml(String html) throws Exception {
-  String text = Common.stripHtml(Common.nz(html));
-  if (text.isBlank()) text = "(message content could not be rendered as HTML)";
-  StringBuilder s = new StringBuilder();
-  s.append("<!DOCTYPE html><html><head><meta charset=\"utf-8\"/>");
-  s.append("<style>");
-  s.append(messagePageStyle(ACTIVE_RENDER_RECORD.get()));
-  s.append("body { margin: 8px 8px 0; font-family: ArchiveFont; font-size: 11pt; color: #222; line-height: 1.35; }");
-  s.append("pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; }");
-  s.append("</style></head><body><pre>");
-  s.append(Common.escapeHtml(text));
-  s.append("</pre></body></html>");
-  return s.toString();
+  return HTML.buildPlainTextFallbackXhtml(html);
 }
 
 static String messagePageStyle(EmailRecord record) throws Exception {
-  return "@page { size: letter; margin: 0.65in; }";
+  return HTML.messagePageStyle(record);
 }
 
 static int detectPrimaryContentWidthPx(String emailHtml) {
-  try {
-    Document d = Jsoup.parseBodyFragment(Common.nz(emailHtml));
-    for (Element el : d.body().children()) {
-      Integer width = extractElementWidthPx(el);
-      if (width != null && width >= 200 && width <= 2000) return width;
-      for (Element nested : el.select("table,div")) {
-        width = extractElementWidthPx(nested);
-        if (width != null && width >= 200 && width <= 2000) return width;
-      }
-    }
-  } catch (Exception ignored) {
-  }
-  return 0;
+  return HTML.detectPrimaryContentWidthPx(emailHtml);
 }
 
 static Integer extractElementWidthPx(Element el) {
-  if (el == null) return null;
-  String widthAttr = Common.nz(el.attr("width")).trim();
-  if (!widthAttr.isBlank()) {
-    String digits = widthAttr.replaceAll("[^0-9.]", "");
-    if (!digits.isBlank()) {
-      try { return (int)Math.round(Double.parseDouble(digits)); } catch (Exception ignored) {}
-    }
-  }
-  String style = Common.nz(el.attr("style")).trim();
-  if (!style.isBlank()) {
-    java.util.regex.Matcher m = java.util.regex.Pattern.compile("(^|;)\\s*width\\s*:\\s*([0-9.]+)px\\b", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(style);
-    if (m.find()) {
-      try { return (int)Math.round(Double.parseDouble(m.group(2))); } catch (Exception ignored) {}
-    }
-  }
-  return null;
+  return HTML.extractElementWidthPx(el);
 }
 
 static String buildRenderHtml(EmailRecord r, boolean debug, Path assetDir) throws Exception {
-  return buildRenderHtml(r, debug, assetDir, null);
+  return HTML.buildRenderHtml(r, debug, assetDir);
 }
 
 static String buildRenderHtml(EmailRecord r, boolean debug, Path assetDir, String profileOverride) throws Exception {
-  return buildRenderHtml(r, debug, assetDir, profileOverride, "");
+  return HTML.buildRenderHtml(r, debug, assetDir, profileOverride);
 }
 
 static String buildRenderHtml(EmailRecord r, boolean debug, Path assetDir, String profileOverride, String archiveSourceName) throws Exception {
-  if (Common.nz(r.headerTagMarker).isBlank()) r.headerTagMarker = "EA-PDF-" + UUID.randomUUID() + ":";
-  for (String warning : r.conversionWarnings) System.err.println("warning: " + warning);
-  r.embedSourceMessage = !chooseEaPdfConformance(r, profileOverride).endsWith("i");
-  String htmlBody = Common.htmlBody(r);
-  String textBody = Common.textBody(r);
-  ProcessingLimits.checkBody(htmlBody, r.sourcePath);
-  ProcessingLimits.checkBody(textBody, r.sourcePath);
-  String original = !htmlBody.isBlank() ? htmlBody : Common.plainTextToHtml(textBody);
-  original = Common.stripInvalidXml(original);
-  String emailHtml = canonicalizeEmailHtml(original, r, debug);
-  emailHtml = rewriteCidToFileUris(emailHtml, r.associatedFiles, r, debug, assetDir);
-  emailHtml = Common.stripInvalidXml(emailHtml);
-  Document styledEmail = Jsoup.parse(emailHtml, "", Parser.xmlParser());
-  StringBuilder emailStyles = new StringBuilder();
-  for (Element style : styledEmail.select("style")) {
-    emailStyles.append(style.wholeText()).append('\n');
-    style.remove();
-  }
-  emailHtml = styledEmail.html();
-
-  if (looksEmpty(emailHtml)) {
-    if (debug) Common.dbg(r, "html body empty after canonicalization; fallback to text html");
-    emailHtml = Common.plainTextToHtml(Common.textBody(r));
-  }
-  r.renderContentWidthPx = detectPrimaryContentWidthPx(emailHtml);
-  if (debug) Common.dbg(r, "detected content width px=" + r.renderContentWidthPx);
-
-  StringBuilder s = new StringBuilder();
-  s.append("<!DOCTYPE html><html><head><meta charset=\"utf-8\"/>");
-  s.append("<style>");
-  s.append(messagePageStyle(r));
-  s.append("html, body { font-family: ArchiveFont; }");
-  s.append("body { margin: 8px 8px 0; font-size: 11pt; color: #222; line-height: 1.35; }");
-  s.append(".hdr { margin-bottom: 18px; }");
-  s.append(".hdr-table { border-collapse: collapse; }");
-  s.append(".hdr-table td { padding: 2px 0; }");
-  s.append(".hdr-table .label { width: 96px; padding-right: 8px; box-sizing: border-box; white-space: nowrap; }");
-  s.append(".hdr-table .value { padding-left: 0; }");
-  s.append(".label-strong { font-weight: bold; }");
-  s.append(".message-body { margin-top: 12px; word-wrap: break-word; }");
-  s.append(".message-body pre { white-space: pre-wrap; word-wrap: break-word; }");
-  s.append(".message-body table[data-ea-table-head] { -fs-table-paginate: paginate; }");
-  String[] legacySizes = {"x-small", "small", "medium", "large", "x-large", "xx-large", "48px"};
-  for (int index = 0; index < legacySizes.length; index++) {
-    s.append(".ea-email-body font[data-ea-font-size='").append(index + 1)
-        .append("'] { font-size:").append(legacySizes[index]).append("; }");
-  }
-  s.append(".message-body ol[type='1'] { list-style-type: decimal; }");
-  s.append(".message-body ol[type='a'] { list-style-type: lower-alpha; }");
-  s.append(".message-body ol[type='A'] { list-style-type: upper-alpha; }");
-  s.append(".message-body ol[type='i'] { list-style-type: lower-roman; }");
-  s.append(".message-body ol[type='I'] { list-style-type: upper-roman; }");
-  s.append(".message-body ul[type='disc'] { list-style-type: disc; }");
-  s.append(".message-body ul[type='circle'] { list-style-type: circle; }");
-  s.append(".message-body ul[type='square'] { list-style-type: square; }");
-  // Leave room for ordinary email headers and source captions around a portrait image.
-  s.append(".message-body img { display: inline-block; max-width: 100%; max-height: 6.5in; height: auto; page-break-inside: avoid; }");
-  s.append(".attachments { clear: both; margin-top: 18px; font-size: 9.5pt; color: #444; width: 100%; word-wrap: break-word; }");
-  s.append(".attachments.source-only { margin-top: 0; }");
-  s.append(".att-line { margin: 3px 0 0 12px; }");
-  s.append(".att-parent { margin-top: 4px; font-weight: bold; color: #3e4f63; }");
-  s.append(".attachments.source-only .att-parent { margin-top: 0; }");
-  s.append(".att-child { margin-left: 24px; }");
-  s.append(".att-meta { color: #72675b; font-weight: normal; }");
-  s.append(".message-delimiter { margin-top: 22px; page-break-inside: avoid; width: 100%; }");
-  s.append(".message-delimiter-label { font-size: 8.5pt; color: #7f7462; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }");
-  s.append(".hdr-table th, .hdr-table td { vertical-align: top; }");
-  s.append(".pagebreak { page-break-before: always; }");
-  s.append(emailStyles);
-  s.append("</style></head><body>");
-  if (!Common.nz(EapdfConfig.get().validationWarning).isBlank()) {
-    System.err.println("warning: VALIDATION WARNING BANNER: " + EapdfConfig.get().validationWarning);
-    s.append("<div style='border:2px solid #8b6500;background:#fff5ce;padding:10px;margin-bottom:12px;color:#473500'>")
-        .append("<p><strong>WARNING — Validation requires review</strong></p><p>")
-        .append(Common.escapeHtml(EapdfConfig.get().validationWarning)).append("</p></div>");
-  }
-  if (!r.sourceProblems.isEmpty()) {
-    s.append("<div style='border:2px solid #8b3500;padding:10px;margin-bottom:12px;color:#582400'>")
-        .append("<p><strong>INCOMPLETE SOURCE — conversion warnings</strong></p><ul>");
-    for (String problem : r.sourceProblems) s.append("<li>").append(Common.escapeHtml(problem)).append("</li>");
-    s.append("</ul></div>");
-  }
-
-  s.append("<div class=\"hdr\"><table class=\"hdr-table\" data-eapdf-header=\"").append(r.headerTagMarker).append("\">");
-  appendHeaderRow(s, "From", Common.displayAddressHeader(r.from, r.fromAgents));
-  if (!Common.nz(r.rawReplyTo).isBlank()) {
-    String replyTo = Common.addrListLenient(r.rawReplyTo);
-    appendHeaderRow(s, "Reply-To", Common.displayAddressHeader(replyTo.isBlank() ? r.rawReplyTo : replyTo,
-        Common.internetAddressListLenient(r.rawReplyTo)));
-  }
-  appendHeaderRow(s, "Date", !Common.nz(r.rawDateHeader).isBlank() ? Common.nz(r.rawDateHeader) : Common.nz(r.date));
-  appendHeaderRow(s, "To", Common.displayAddressHeader(r.to, r.toAgents));
-  if (!Common.nz(r.cc).isBlank()) appendHeaderRow(s, "Cc", Common.displayAddressHeader(r.cc, r.ccAgents));
-  if (!Common.nz(r.bcc).isBlank()) appendHeaderRow(s, "Bcc", Common.displayAddressHeader(r.bcc, r.bccAgents));
-  appendHeaderRow(s, "Subject", Common.nz(r.subject));
-  if (!Common.nz(r.messageId).isBlank()) appendHeaderRow(s, "Message-ID", Common.nz(r.messageId));
-  if (!Common.nz(r.folderPath).isBlank()) appendHeaderRow(s, "Folder", Common.nz(r.folderPath));
-  if (!Common.nz(r.archiveGlobalId).isBlank()) appendHeaderRow(s, "Archive Global ID", Common.nz(r.archiveGlobalId));
-  if (!r.archiveEmails.isEmpty()) appendHeaderRow(s, "Archive Email(s)", String.join(", ", r.archiveEmails));
-  s.append("</table></div>");
-
-  s.append("<div class=\"message-body\">").append(emailHtml).append("</div>");
-  List<AssociatedFile> displayFiles = renderAssociatedFiles(r);
-  boolean hasEmailAttachments = r.associatedFiles.stream().anyMatch(file -> file != null && file.emailAttachment);
-  boolean hasFileList = !displayFiles.isEmpty() || hasEmailAttachments;
-  if (hasFileList) {
-  s.append(hasEmailAttachments ? "<div class=\"attachments\">" : "<div class=\"attachments source-only\">");
-  AssociatedFile sourceDisplay = null;
-  for (AssociatedFile af : displayFiles) {
-    if ("Source".equals(Common.nz(af.afRelationship))) {
-      sourceDisplay = af;
-      break;
-    }
-  }
-  if (sourceDisplay != null) {
-    s.append("<div class=\"att-line att-parent\">")
-     .append("Source file: ")
-     .append(Common.escapeHtml(archiveSourceName.isBlank() ? Common.nz(sourceDisplay.filename) : archiveSourceName))
-     .append(" <span class=\"att-meta\">[")
-     .append(Common.escapeHtml(Common.nz(sourceDisplay.mime)))
-     .append("]</span></div>");
-    List<String> sourceAttachmentNames = new ArrayList<>();
-    for (AssociatedFile af : r.associatedFiles) {
-      if (af == null || !af.emailAttachment) continue;
-      sourceAttachmentNames.add(nativeAttachmentHtml(r, af));
-    }
-    if (!sourceAttachmentNames.isEmpty()) {
-      s.append("<div class=\"att-line att-child\">")
-       .append("Source file attachments:");
-      for (String attachment : sourceAttachmentNames) {
-        s.append("<div class=\"att-line\">").append(attachment).append("</div>");
-      }
-      s.append("</div>");
-    }
-  } else {
-    for (AssociatedFile af : displayFiles) {
-      s.append("<div class=\"att-line\">")
-       .append(attachmentTextWithBadgeHtml(af))
-       .append(" <span class=\"att-meta\">[")
-       .append(Common.escapeHtml(Common.nz(af.mime)))
-       .append("; ")
-       .append(Common.escapeHtml(Common.nz(af.afRelationship).isBlank() ? "Data" : Common.nz(af.afRelationship)))
-       .append("]</span></div>");
-    }
-    for (AssociatedFile af : r.associatedFiles) {
-      if (af != null && af.emailAttachment) {
-        s.append("<div class=\"att-line\">").append(nativeAttachmentHtml(r, af)).append("</div>");
-      }
-    }
-  }
-  s.append("</div>");
-  }
-  s.append("</body></html>");
-
-  String out = SemanticStructure.headerHtml(Common.stripInvalidXml(s.toString()), r.headerTagMarker);
-  ProcessingLimits.checkBody(out, r.sourcePath);
-  if (debug) {
-    Common.dbg(r, "final render html len=" + out.length());
-    Common.dbg(r, "final render html preview=" + Common.preview(out, 260));
-  }
-  return out;
+  return HTML.buildRenderHtml(r, debug, assetDir, profileOverride, archiveSourceName);
 }
 
 static String canonicalizeEmailHtml(String html, EmailRecord r, boolean debug) {
-  String src = Common.stripInvalidXml(html);
-  if (r != null) r.renderBaseUri = Common.nz(r.bodyBaseUri);
-  if (src.isBlank()) return "";
-
-  Document d = Jsoup.parse(src);
-  Element base = d.selectFirst("base[href]");
-  if (r != null && base != null && !base.attr("href").isBlank()) {
-    String href = base.attr("href").trim();
-    try {
-      r.renderBaseUri = new URI(r.renderBaseUri).resolve(new URI(href)).toString();
-    } catch (URISyntaxException invalidBase) {
-      r.renderBaseUri = href;
-    }
-  }
-  d.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
-  d.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
-  d.outputSettings().charset(StandardCharsets.UTF_8);
-  d.outputSettings().prettyPrint(false);
-  String preservedStyles = EmailStyles.scoped(d, r);
-  for (Element e : d.select("script,style,meta[http-equiv=refresh],link[rel=stylesheet],base")) e.remove();
-  // Hidden HTML inputs carry form submission data, not visible email content.
-  // Rendering them creates hidden PDF widgets without appearances. Keep their
-  // original markup in the embedded source, but omit them from the page.
-  for (Element e : d.select("input[type=hidden]")) e.remove();
-  for (Element e : d.getAllElements()) {
-    if (pdfUaFeaturesEnabled() && !e.hasAttr("lang") && e.hasAttr("xml:lang")) {
-      e.attr("lang", e.attr("xml:lang"));
-    }
-    String tag = Common.nz(e.tagName());
-    if (tag.contains(":")) {
-      e.tagName("span");
-    }
-    List<String> namespacedAttrs = new ArrayList<>();
-    e.attributes().forEach(attr -> {
-      if (Common.nz(attr.getKey()).contains(":")) namespacedAttrs.add(attr.getKey());
-    });
-    for (String key : namespacedAttrs) e.removeAttr(key);
-  }
-
-  Element body = d.body();
-  BodyColors bodyColors = legacyBodyColorStyles(body);
-  String inner = body != null ? body.html() : d.html();
-
-  Document wrap = Jsoup.parse("<div id=\"email-root\"></div>", "", Parser.xmlParser());
-  wrap.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
-  wrap.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
-  wrap.outputSettings().charset(StandardCharsets.UTF_8);
-  wrap.outputSettings().prettyPrint(false);
-
-  Element root = wrap.selectFirst("div#email-root");
-  Element sourceBody = root.appendElement("div").addClass("ea-email-body");
-  if (body != null) {
-    body.attributes().forEach(attribute -> sourceBody.attr(attribute.getKey(), attribute.getValue()));
-    sourceBody.addClass("ea-email-body");
-  }
-  if (pdfUaFeaturesEnabled() && !sourceBody.hasAttr("lang")) {
-    Element sourceHtml = d.selectFirst("html[lang]");
-    if (sourceHtml != null) sourceBody.attr("lang", sourceHtml.attr("lang"));
-  }
-  sourceBody.html(Common.stripInvalidXml(inner));
-  for (Element pre : sourceBody.select("pre")) {
-    int[] column = new int[1];
-    pre.forEachNode(node -> {
-      if (node instanceof org.jsoup.nodes.TextNode text) {
-        text.text(Common.expandTabs(text.getWholeText(), column));
-      } else if (node instanceof Element element && "br".equals(element.normalName())) {
-        column[0] = 0;
-      }
-    });
-  }
-  if (preservedStyles.isBlank() && !bodyColors.background()) trimTrailingEmptyContent(sourceBody);
-  linkifyBodyText(sourceBody);
-  if (!bodyColors.css().isBlank() || !preservedStyles.isBlank()) {
-    root.prependElement("style").text(bodyColors.css() + preservedStyles);
-  }
-
-  for (Element e : wrap.select("img")) {
-    if (e.hasAttr("src")) e.attr("src", normalizeRemoteAssetUrl(Common.stripInvalidXml(Common.nz(e.attr("src")).trim())));
-  }
-
-  for (Element e : wrap.select("[src]")) {
-    e.attr("src", normalizeRemoteAssetUrl(e.attr("src")));
-  }
-  for (Element e : wrap.select("[href]")) {
-    String safe = safeRenderedHref(e.attr("href"), r);
-    if (safe == null) e.removeAttr("href"); else e.attr("href", safe);
-  }
-  for (Element e : wrap.getAllElements()) {
-    for (var attribute : new ArrayList<>(e.attributes().asList())) {
-      String key = attribute.getKey().toLowerCase(Locale.ROOT);
-      if (key.startsWith("on") || Set.of("action", "formaction").contains(key)) e.removeAttr(attribute.getKey());
-    }
-  }
-
-  for (Element e : wrap.select("font[size]")) {
-    var size = java.util.regex.Pattern.compile("^[\\t\\n\\f\\r ]*([+-]?)([0-9]+)")
-        .matcher(e.attr("size"));
-    if (!size.find()) continue;
-    int value = 0;
-    for (char digit : size.group(2).toCharArray()) value = Math.min(10, value * 10 + digit - '0');
-    if ("+".equals(size.group(1))) value += 3;
-    else if ("-".equals(size.group(1))) value = 3 - value;
-    e.attr("data-ea-font-size", Integer.toString(Math.max(1, Math.min(7, value))));
-  }
-
-  for (Element table : sourceBody.select("table")) {
-    if (table.children().stream().anyMatch(child -> "thead".equals(child.normalName()))) {
-      table.attr("data-ea-table-head", "");
-    }
-  }
-
-  StringBuilder presentationStyles = new StringBuilder();
-  var colorParser = new com.openhtmltopdf.css.parser.CSSParser((uri, message) -> {});
-  int presentationIndex = 0;
-  for (Element e : wrap.select("[width],[height],[align],[background],font[color],hr[color],img[hspace],img[vspace],br[clear],td[nowrap],th[nowrap]")) {
-    StringBuilder declarations = new StringBuilder();
-    if (Set.of("td", "th").contains(e.normalName()) && e.hasAttr("nowrap")) {
-      declarations.append("white-space:nowrap;");
-    }
-    if (e.hasAttr("background")) {
-      String background = normalizeRemoteAssetUrl(e.attr("background"));
-      e.removeAttr("background");
-      if (!background.isBlank()) declarations.append("background-image:url('")
-          .append(background.replace("'", "%27")).append("');");
-    }
-    if ("br".equals(e.normalName())) {
-      String clear = e.attr("clear").trim().toLowerCase(Locale.ROOT);
-      if ("all".equals(clear)) clear = "both";
-      if (Set.of("left", "right", "both").contains(clear)) {
-        // The renderer applies float clearing only to block-level breaks.
-        declarations.append("display:block;clear:").append(clear).append(';');
-      }
-    }
-    if ("img".equals(e.normalName())) {
-      for (String spacing : List.of("hspace", "vspace")) {
-        String value = e.attr(spacing).trim();
-        if (!value.matches("\\d+")) continue;
-        String[] sides = "hspace".equals(spacing) ? new String[]{"left", "right"} : new String[]{"top", "bottom"};
-        for (String side : sides) declarations.append("margin-").append(side).append(':').append(value).append("px;");
-      }
-    }
-    if (e.hasAttr("align")) {
-      String alignment = e.attr("align").trim().toLowerCase(Locale.ROOT);
-      String tag = e.normalName();
-      if ("hr".equals(tag) && Set.of("left", "right", "center").contains(alignment)) {
-        declarations.append("margin-left:").append("left".equals(alignment) ? "0" : "auto")
-            .append(";margin-right:").append("right".equals(alignment) ? "0" : "auto").append(';');
-      } else if ("table".equals(tag) && "center".equals(alignment)) {
-        declarations.append("margin-left:auto;margin-right:auto;");
-      } else if (Set.of("img", "table").contains(tag) && Set.of("left", "right").contains(alignment)) {
-        declarations.append("float:").append(alignment).append(';');
-      } else if ("img".equals(tag) && Set.of("top", "middle", "bottom").contains(alignment)) {
-        declarations.append("vertical-align:").append(alignment).append(';');
-      } else if (Set.of("left", "right", "center", "justify").contains(alignment)) {
-        declarations.append("text-align:").append(alignment).append(';');
-      }
-      e.removeAttr("align");
-    }
-    if (Set.of("font", "hr").contains(e.normalName()) && e.hasAttr("color")) {
-      String color = e.attr("color").trim();
-      var value = color.isBlank() ? null : colorParser.parsePropertyValue(
-          com.openhtmltopdf.css.constants.CSSName.COLOR, com.openhtmltopdf.css.sheet.StylesheetInfo.AUTHOR, color);
-      if (value != null) {
-        if ("hr".equals(e.normalName())) {
-          declarations.append("border-color:").append(value.getCssText()).append(";border-style:solid;");
-        } else {
-          declarations.append("color:").append(value.getCssText()).append(';');
-        }
-      }
-      e.removeAttr("color");
-    }
-    for (String dimension : List.of("width", "height")) {
-      String value = e.attr(dimension).trim();
-      if (value.matches("\\d+")) declarations.append(dimension).append(':').append(value).append("px;");
-      else if (value.matches("(?:\\d+(?:\\.\\d+)?|\\.\\d+)%"))
-        declarations.append(dimension).append(':').append(value).append(';');
-      e.removeAttr(dimension);
-    }
-    if (declarations.length() == 0) continue;
-    // Legacy presentation attributes are defaults; scoped author rules and inline CSS take priority.
-    e.attr("data-ea-presentation", Integer.toString(presentationIndex));
-    presentationStyles.append(".ea-email-body").append(e == sourceBody ? "" : " ")
-        .append("[data-ea-presentation='").append(presentationIndex++)
-        .append("'] {").append(declarations).append("}\n");
-  }
-  if (presentationStyles.length() > 0) root.prependElement("style").text(presentationStyles.toString());
-
-  String out = Common.stripInvalidXml(root.outerHtml());
-  if (debug) {
-    Common.dbg(r, "canonicalized email html len=" + out.length());
-    Common.dbg(r, "canonicalized email html preview=" + Common.preview(out, 220));
-  }
-  return out;
+  return HTML.canonicalizeEmailHtml(html, r, debug);
 }
 
-private record BodyColors(String css, boolean background) {}
 
-static BodyColors legacyBodyColorStyles(Element body) {
-  if (body == null) return new BodyColors("", false);
-  var parser = new com.openhtmltopdf.css.parser.CSSParser((uri, message) -> {});
-  String background = body.attr("bgcolor").trim();
-  String foreground = body.attr("text").trim();
-  var backgroundValue = background.isBlank() ? null : parser.parsePropertyValue(
-      com.openhtmltopdf.css.constants.CSSName.BACKGROUND_COLOR, com.openhtmltopdf.css.sheet.StylesheetInfo.AUTHOR, background);
-  var foregroundValue = foreground.isBlank() ? null : parser.parsePropertyValue(
-      com.openhtmltopdf.css.constants.CSSName.COLOR, com.openhtmltopdf.css.sheet.StylesheetInfo.AUTHOR, foreground);
-  StringBuilder declarations = new StringBuilder();
-  if (backgroundValue != null) declarations.append("background-color:").append(backgroundValue.getCssText()).append(';');
-  if (foregroundValue != null) declarations.append("color:").append(foregroundValue.getCssText()).append(';');
-  // The low-priority class rule lets scoped author styles and inline CSS win.
-  StringBuilder css = new StringBuilder();
-  if (declarations.length() > 0) css.append(".ea-email-body {").append(declarations).append("}\n");
-  String[] attributes = {"link", "vlink", "alink"};
-  String[] states = {"link", "visited", "active"};
-  for (int index = 0; index < attributes.length; index++) {
-    String raw = body.attr(attributes[index]).trim();
-    var value = raw.isBlank() ? null : parser.parsePropertyValue(
-        com.openhtmltopdf.css.constants.CSSName.COLOR, com.openhtmltopdf.css.sheet.StylesheetInfo.AUTHOR, raw);
-    if (value != null) css.append(".ea-email-body a:").append(states[index])
-        .append(" {color:").append(value.getCssText()).append(";}\n");
-  }
-  return new BodyColors(css.toString(), backgroundValue != null);
+
+static MailHtmlRenderer.BodyColors legacyBodyColorStyles(Element body) {
+  return HTML.legacyBodyColorStyles(body);
 }
 
 static void trimTrailingEmptyContent(Element root) {
-  String style = root.attr("style").toLowerCase(Locale.ROOT);
-  if (style.matches("(?s).*(background|border|height|padding|margin|position)\\s*[:;-].*")) return;
-  while (root.childNodeSize() > 0) {
-    org.jsoup.nodes.Node node = root.childNode(root.childNodeSize() - 1);
-    if (node instanceof org.jsoup.nodes.TextNode text && text.isBlank()) {
-      node.remove();
-      continue;
-    }
-    if (!(node instanceof Element last)) return;
-    String tag = last.normalName();
-    if ("br".equals(tag) && last.attributes().size() == 0) {
-      last.remove();
-      continue;
-    }
-    if (!Set.of("div", "p", "span", "font", "blockquote").contains(tag)) return;
-    trimTrailingEmptyContent(last);
-    if (last.childNodeSize() == 0 && last.attributes().size() == 0) {
-      last.remove();
-      continue;
-    }
-    return;
-  }
+  HTML.trimTrailingEmptyContent(root);
 }
 
 static void linkifyBodyText(Element root) {
-  List<org.jsoup.nodes.TextNode> nodes = new ArrayList<>();
-  for (Element element : root.getAllElements()) {
-    // jsoup shares an empty child list across elements; another independent
-    // render can clear it while textNodes() streams it. Empty elements have
-    // no text to linkify, so avoid traversing that shared list.
-    if (element.childNodeSize() > 0 && element.closest("a,style,script") == null)
-      nodes.addAll(element.textNodes());
-  }
-  var pattern = java.util.regex.Pattern.compile("(?i)\\b(?:https?://|mailto:|www\\.)[^\\s<>()\\[\\]{}]+");
-  for (var node : nodes) {
-    String text = node.getWholeText();
-    var matches = pattern.matcher(text);
-    int previous = 0;
-    boolean replaced = false;
-    while (matches.find()) {
-      String url = matches.group().replaceFirst("[.,;:!?\\]}>\\\"']+$", "");
-      if (url.isBlank()) continue;
-      if (matches.start() > previous) node.before(new org.jsoup.nodes.TextNode(text.substring(previous, matches.start())));
-      String target = url.regionMatches(true, 0, "www.", 0, 4) ? "http://" + url : url;
-      node.before(new Element("a").attr("href", target).attr("style", "color:inherit;text-decoration:none").text(url));
-      previous = matches.start() + url.length();
-      replaced = true;
-    }
-    if (replaced) {
-      if (previous < text.length()) node.before(new org.jsoup.nodes.TextNode(text.substring(previous)));
-      node.remove();
-    }
-  }
+  HTML.linkifyBodyText(root);
 }
 
 static String normalizeRemoteAssetUrl(String raw) {
-  return Common.stripInvalidXml(Common.nz(raw).trim());
+  return MailRenderPolicy.normalizeRemoteAssetUrl(raw);
 }
 
 static String remoteAssetKey(String raw) {
-  String value = normalizeRemoteAssetUrl(raw);
-  if (value.isBlank()) return null;
-  if (!(value.regionMatches(true, 0, "https://", 0, 8) || value.regionMatches(true, 0, "http://", 0, 7))) return null;
-  try {
-    return new URI(value).normalize().toString();
-  } catch (URISyntaxException ignored) {
-    try {
-      return new URI(value.replace("[", "%5B").replace("]", "%5D")).normalize().toString();
-    } catch (URISyntaxException ignoredAgain) {
-      return value;
-    }
-  }
+  return MailRenderPolicy.remoteAssetKey(raw);
 }
 
 static byte[] readAllBytes(Reader reader) throws IOException {
@@ -1186,154 +379,55 @@ static byte[] readAllBytes(Reader reader) throws IOException {
 
 // This affects rendered links only. The original source and its headers/body stay intact.
 static String safeRenderedHref(String original, EmailRecord record) {
-  String value = Common.nz(original).trim();
-  if (value.isEmpty() || value.chars().anyMatch(c -> c < 32 || c == 127)) return null;
-  try {
-    URI uri = new URI(value);
-    if (value.startsWith("#")) return value;
-    if (uri.isAbsolute()) {
-      if (Set.of("http", "https", "mailto").contains(uri.getScheme().toLowerCase(Locale.ROOT))) return value;
-      if ("cid".equalsIgnoreCase(uri.getScheme()) && record != null
-          && findCidAsset(value, record.associatedFiles) != null) return value;
-      return null;
-    }
-    if (record != null && findLocationAsset(value, record) != null) return value;
-    if (record == null || Common.nz(record.renderBaseUri).isBlank()) return null;
-    URI resolved = new URI(record.renderBaseUri).resolve(uri);
-    return resolved.isAbsolute() && Set.of("http", "https").contains(resolved.getScheme().toLowerCase(Locale.ROOT))
-        ? resolved.toString() : null;
-  } catch (URISyntaxException invalid) { return null; }
+  return MailRenderPolicy.safeRenderedHref(original, record);
 }
 
 static boolean shouldBlacklistRemoteAssetResponse(String key, byte[] bytes) {
-  return describeRemoteAssetResponse(key, bytes) != null;
+  return MailRenderPolicy.shouldBlacklistRemoteAssetResponse(key, bytes);
 }
 
 static String describeRemoteAssetResponse(String key, byte[] bytes) {
-  if (key == null) return "Remote asset URL was invalid";
-  if (bytes == null || bytes.length == 0) return "Remote asset returned no data";
-  if (looksLikeHtmlResponse(bytes)) return "Remote asset returned HTML instead of binary content";
-  if (!isLikelyRemoteImageUrl(key)) return null;
-  if (looksLikeSupportedImage(bytes) || looksLikeSvg(bytes)) return null;
-  return "Remote asset response was not a supported image format";
+  return MailRenderPolicy.describeRemoteAssetResponse(key, bytes);
 }
 
 static boolean looksLikeHtmlResponse(byte[] bytes) {
-  if (bytes == null || bytes.length == 0) return false;
-  String prefix = new String(bytes, 0, Math.min(bytes.length, 512), StandardCharsets.UTF_8)
-      .trim()
-      .toLowerCase(Locale.ROOT);
-  return prefix.startsWith("<!doctype html")
-      || prefix.startsWith("<html")
-      || prefix.startsWith("<head")
-      || prefix.startsWith("<body")
-      || prefix.contains("<html");
+  return MailRenderPolicy.looksLikeHtmlResponse(bytes);
 }
 
 static boolean isLikelyRemoteImageUrl(String key) {
-  String value = Common.nz(key).toLowerCase(Locale.ROOT);
-  return value.contains(".png")
-      || value.contains(".jpg")
-      || value.contains(".jpeg")
-      || value.contains(".gif")
-      || value.contains(".bmp")
-      || value.contains(".webp")
-      || value.contains(".svg")
-      || value.contains(".ico")
-      || value.contains(".tif")
-      || value.contains(".tiff");
+  return MailRenderPolicy.isLikelyRemoteImageUrl(key);
 }
 
 static boolean looksLikeSvg(byte[] bytes) {
-  if (bytes == null || bytes.length == 0) return false;
-  String prefix = new String(bytes, 0, Math.min(bytes.length, 512), StandardCharsets.UTF_8)
-      .trim()
-      .toLowerCase(Locale.ROOT);
-  return prefix.startsWith("<svg")
-      || (prefix.startsWith("<?xml") && prefix.contains("<svg"));
+  return MailRenderPolicy.looksLikeSvg(bytes);
 }
 
 static boolean looksLikeSupportedImage(byte[] bytes) {
-  if (bytes == null || bytes.length < 4) return false;
-  if ((bytes[0] & 0xFF) == 0x89 && bytes[1] == 'P' && bytes[2] == 'N' && bytes[3] == 'G') return true;
-  if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8 && (bytes[2] & 0xFF) == 0xFF) return true;
-  if (bytes.length >= 6) {
-    String header6 = new String(bytes, 0, 6, StandardCharsets.US_ASCII);
-    if ("GIF87a".equals(header6) || "GIF89a".equals(header6)) return true;
-  }
-  if (bytes[0] == 'B' && bytes[1] == 'M') return true;
-  if (bytes[0] == 0x00 && bytes[1] == 0x00 && bytes[2] == 0x01 && bytes[3] == 0x00) return true;
-  if (bytes.length >= 12) {
-    String riff = new String(bytes, 0, 4, StandardCharsets.US_ASCII);
-    String webp = new String(bytes, 8, 4, StandardCharsets.US_ASCII);
-    if ("RIFF".equals(riff) && "WEBP".equals(webp)) return true;
-  }
-  return ((bytes[0] == 'I' && bytes[1] == 'I' && bytes[2] == 42 && bytes[3] == 0)
-      || (bytes[0] == 'M' && bytes[1] == 'M' && bytes[2] == 0 && bytes[3] == 42));
+  return MailRenderPolicy.looksLikeSupportedImage(bytes);
 }
 
 static boolean shouldBlacklistRemoteAssetFailure(Throwable error) {
-  return describeRemoteAssetFailure(error) != null;
+  return MailRenderPolicy.shouldBlacklistRemoteAssetFailure(error);
 }
 
 static String describeRemoteAssetFailure(Throwable error) {
-  Throwable current = error;
-  while (current != null) {
-    if (current instanceof UnknownHostException) return "Unknown host";
-    if (current instanceof ConnectException) return "Connection refused";
-    if (current instanceof SocketTimeoutException) return "Connection timed out";
-    if (current instanceof SSLException) return "SSL handshake failed";
-    if (current instanceof EOFException) return "Remote host closed the connection unexpectedly";
-    if (current instanceof IOException) {
-      String message = Common.nz(current.getMessage()).toLowerCase(Locale.ROOT);
-      if (message.contains("connection refused")) return "Connection refused";
-      if (message.contains("timed out")) return "Connection timed out";
-      if (message.contains("unrecognized image format")) return "Remote asset response was not a supported image format";
-    }
-    current = current.getCause();
-  }
-  return null;
+  return MailRenderPolicy.describeRemoteAssetFailure(error);
 }
 
 static void configureRendererLogging() {
-  XRLog.setLevel(XRLog.CSS_PARSE, Level.SEVERE);
-  var delegate = XRLog.getLoggerImpl();
-  XRLog.setLoggerImpl(new com.openhtmltopdf.util.XRLogger() {
-    @Override public void log(String where, Level level, String message) { delegate.log(where, level, message); }
-    @Override public void log(String where, Level level, String message, Throwable error) { delegate.log(where, level, message, error); }
-    @Override public void setLevel(String logger, Level level) { delegate.setLevel(logger, level); }
-    @Override public void log(com.openhtmltopdf.util.Diagnostic diagnostic) { delegate.log(diagnostic); }
-    @Override public boolean isLogLevelEnabled(com.openhtmltopdf.util.Diagnostic diagnostic) {
-      var id = diagnostic.getLogMessageId();
-      // The renderer produces an intermediate PDF. Final title/description metadata
-      // is supplied by this creator after rendering; these two warnings are premature.
-      if (diagnostic.getLevel() == Level.WARNING && !diagnostic.hasError()
-          && (id == com.openhtmltopdf.util.LogMessageId.LogMessageId0Param.GENERAL_PDF_ACCESSIBILITY_NO_DOCUMENT_TITLE_PROVIDED
-              || id == com.openhtmltopdf.util.LogMessageId.LogMessageId0Param.GENERAL_PDF_ACCESSIBILITY_NO_DOCUMENT_DESCRIPTION_PROVIDED)) return false;
-      return delegate.isLogLevelEnabled(diagnostic);
-    }
-  });
+  MailRenderPolicy.configureRendererLogging();
 }
 
 static void blacklistRemoteAsset(String key, String reason) {
-  if (key == null) return;
-  String normalizedReason = Common.nz(reason).trim();
-  FAILED_REMOTE_ASSET_URLS.merge(key, normalizedReason, PdfMailWriter::preferRemoteAssetReason);
-  Common.recordBlacklistedRemoteAsset(key, FAILED_REMOTE_ASSET_URLS.get(key), ACTIVE_RENDER_RECORD.get());
+  MailRenderPolicy.blacklistRemoteAsset(key, reason);
 }
 
 static void recordBlacklistedRemoteAssetEncounter(String key) {
-  if (key == null) return;
-  Common.recordBlacklistedRemoteAsset(key, FAILED_REMOTE_ASSET_URLS.get(key), ACTIVE_RENDER_RECORD.get());
+  MailRenderPolicy.recordBlacklistedRemoteAssetEncounter(key);
 }
 
 static String preferRemoteAssetReason(String existing, String replacement) {
-  String current = Common.nz(existing).trim();
-  String candidate = Common.nz(replacement).trim();
-  if (candidate.isBlank()) return current;
-  if (current.isBlank()) return candidate;
-  if ("previously blacklisted".equalsIgnoreCase(current)) return candidate;
-  return current;
+  return MailRenderPolicy.preferRemoteAssetReason(existing, replacement);
 }
 
 static void writeEaPdfA3(Path out, EmailRecord r, String fontPath, String iccPath, boolean debug, Path debugDir, int idx) throws Exception {
@@ -1726,22 +820,15 @@ static void drawInlineImageFallback(PDDocument doc, EmailRecord r, boolean debug
 }
 
 static boolean pdfUaFeaturesEnabled() {
-  return CONFIG.accessibility != null && CONFIG.accessibility.addPdfUaFeatures;
+  return METADATA.pdfUaFeaturesEnabled();
 }
 
 static void appendSourceProblems(StringBuilder x, List<EmailRecord> records) {
-  if (records.stream().noneMatch(r -> !r.sourceProblems.isEmpty())) return;
-  x.append("<rdf:Description rdf:about=\"\" xmlns:conversion=\"https://thinkbox.digital/ns/eapdf/conversion/1.0/\">")
-      .append("<conversion:status>INCOMPLETE</conversion:status><conversion:problems><rdf:Seq>");
-  for (EmailRecord record : records) for (String problem : record.sourceProblems)
-    x.append("<rdf:li>").append(Common.xml(record.mailGuid + " | " + record.subject + " | " + problem)).append("</rdf:li>");
-  x.append("</rdf:Seq></conversion:problems></rdf:Description>");
+  METADATA.appendSourceProblems(x, records);
 }
 
 static String pdfUaIdentification() {
-  if (!pdfUaFeaturesEnabled()) return "";
-  return "<rdf:Description rdf:about=\"\" xmlns:pdfuaid=\"http://www.aiim.org/pdfua/ns/id/\">"
-      + "<pdfuaid:part>2</pdfuaid:part><pdfuaid:rev>2024</pdfuaid:rev></rdf:Description>";
+  return METADATA.pdfUaIdentification();
 }
 
 static void drawPageContext(PDDocument document, String fontPath) throws Exception {
@@ -1990,13 +1077,11 @@ static boolean sourceEmailHasAttachments(EmailRecord r) {
 }
 
 static String chooseEaPdfConformance(EmailRecord r) {
-  return chooseEaPdfConformance(r, null);
+  return METADATA.chooseEaPdfConformance(r);
 }
 
 static String chooseEaPdfConformance(EmailRecord r, String profileOverride) {
-  if (!Common.nz(profileOverride).isBlank()) return profileOverride;
-  if (r != null && !r.embedSourceMessage) return "si";
-  return "s";
+  return METADATA.chooseEaPdfConformance(r, profileOverride);
 }
 
 static String chooseArchivePageMode(String conformance) {
@@ -2068,362 +1153,53 @@ static void setPdfA3Metadata(PDDocument doc, String iccPath, List<EmailRecord> r
 }
 
 static String buildXmpMetadata(EmailRecord r) throws Exception {
-  return buildXmpMetadata(r, null);
+  return METADATA.buildXmpMetadata(r);
 }
 
 static String buildXmpMetadata(EmailRecord r, String profileOverride) throws Exception {
-  Common.finalizeRecordMetadata(r);
-  Common.requireCreationDate(r);
-  String now = Common.xmpDateNowUtc();
-  String claimDate = LocalDate.now(ZoneOffset.UTC).toString();
-  String title = Common.stripInvalidXml(Common.nz(r.subject).isBlank() ? "Email" : Common.nz(r.subject));
-  String description = buildDescription(r);
-  String producer = Common.productLabel() + " via OpenHTMLtoPDF + Apache PDFBox";
-  String creatorTool = Common.productLabel();
-  String conformance = chooseEaPdfConformance(r, profileOverride);
-  String mailGuid = Common.nz(r.mailGuid).isBlank() ? buildMailGuid(r) : Common.nz(r.mailGuid);
-  StringBuilder x = new StringBuilder();
-
-  x.append("<?xpacket begin=\"\uFEFF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>");
-  x.append("<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">");
-  x.append("<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
-  x.append(" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"");
-  x.append(" xmlns:pdf=\"http://ns.adobe.com/pdf/1.3/\"");
-  x.append(" xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\"");
-  x.append(" xmlns:pdfaid=\"http://www.aiim.org/pdfa/ns/id/\"");
-  x.append(" xmlns:pdfd=\"http://pdfa.org/declarations/\"");
-  x.append(" xmlns:foaf=\"http://xmlns.com/foaf/0.1/\"");
-  x.append(" xmlns:pdfmail=\"http://www.pdfa.org/eapdf/\"");
-  x.append(" xmlns:pdfmailid=\"http://www.pdfa.org/eapdf/ns/id/\"");
-  x.append(" xmlns:pdfmailmeta=\"http://www.pdfa.org/eapdf/ns/meta/\">");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<dc:creator><rdf:Seq><rdf:li>").append(Common.xml(CONFIG.requireCreator())).append("</rdf:li></rdf:Seq></dc:creator>");
-  x.append("<dc:format>application/pdf</dc:format>");
-  x.append("<dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">").append(Common.xml(title)).append("</rdf:li></rdf:Alt></dc:title>");
-  x.append("<dc:description><rdf:Alt><rdf:li xml:lang=\"x-default\">").append(Common.xml(description)).append("</rdf:li></rdf:Alt></dc:description>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdf:Producer>").append(Common.xml(producer)).append("</pdf:Producer>");
-  x.append("<pdf:Keywords>EA-PDF</pdf:Keywords>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<xmp:CreateDate>").append(Common.xml(now)).append("</xmp:CreateDate>");
-  x.append("<xmp:ModifyDate>").append(Common.xml(now)).append("</xmp:ModifyDate>");
-  x.append("<xmp:MetadataDate>").append(Common.xml(now)).append("</xmp:MetadataDate>");
-  x.append("<xmp:CreatorTool>").append(Common.xml(creatorTool)).append("</xmp:CreatorTool>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfaid:part>4</pdfaid:part>");
-  x.append("<pdfaid:rev>2020</pdfaid:rev>");
-  x.append("<pdfaid:conformance>F</pdfaid:conformance>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfmailid:version>1</pdfmailid:version>");
-  x.append("<pdfmailid:rev>2024</pdfmailid:rev>");
-  x.append("<pdfmailid:conformance>").append(Common.xml(conformance)).append("</pdfmailid:conformance>");
-  x.append("</rdf:Description>");
-
-  appendSourceProblems(x, List.of(r));
-  x.append(pdfUaIdentification());
-  appendIsoTs32005Declaration(x, creatorTool, claimDate);
-  appendConversionHistory(x, creatorTool, now, conformance, 1);
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfmailmeta:email><rdf:Bag><rdf:li rdf:parseType=\"Resource\">");
-  appendStringProp(x, "Subject", r.subject);
-  appendStringProp(x, "Raw-From", r.rawFrom);
-  appendStringProp(x, "Raw-To", r.rawTo);
-  appendStringProp(x, "Raw-Cc", r.rawCc);
-  appendStringProp(x, "Raw-Bcc", r.rawBcc);
-  if (!Common.nz(r.sentXmp).isBlank()) appendStringProp(x, "Sent", r.sentXmp);
-  if (shouldEmitRawSent(r)) appendStringProp(x, "Raw-Sent", !Common.nz(r.rawDateHeader).isBlank() ? r.rawDateHeader : r.date);
-  appendStringProp(x, "SizeInBytes", Integer.toString(messageMetadataSize(r)));
-  appendStringProp(x, "NumberAttachments", Integer.toString(Math.max(r.attachmentCount, 0)));
-  appendStringProp(x, "Mail_GUID", mailGuid);
-  appendStringProp(x, "messageid", r.messageId);
-  appendReplyMetadata(x, r);
-  appendFoafSeq(x, "From", r.fromAgents);
-  appendFoafSeq(x, "To", r.toAgents);
-  appendFoafSeq(x, "Cc", r.ccAgents);
-  appendFoafSeq(x, "Bcc", r.bccAgents);
-  x.append("</rdf:li></rdf:Bag></pdfmailmeta:email>");
-
-  x.append("<pdfmailmeta:assets><rdf:Bag>");
-  for (AssociatedFile af : r.associatedFiles) {
-    if (!includeAssociatedFile(r, af)) continue;
-    x.append("<rdf:li rdf:parseType=\"Resource\">");
-    appendStringProp(x, "Filename", Common.nz(af.filename));
-    appendStringProp(x, "SizeInBytes", Integer.toString(storedAttachmentSize(r, af)));
-    appendStringProp(x, "ContentType", embeddedAssetContentType(af, af.filename));
-    appendStringProp(x, "Checksum", Common.nz(af.checksumMd5));
-    x.append("</rdf:li>");
-  }
-  x.append("</rdf:Bag></pdfmailmeta:assets>");
-
-  x.append("<pdfmailmeta:attachments><rdf:Bag>");
-  for (AssociatedFile af : r.associatedFiles) {
-    if (!af.emailAttachment) continue;
-    x.append("<rdf:li rdf:parseType=\"Resource\">");
-    appendStringProp(x, "Filename", Common.nz(af.filename));
-    appendStringProp(x, "SizeInBytes", Integer.toString(storedAttachmentSize(r, af)));
-    appendStringProp(x, "Content-Type", Common.sourceContentType(af));
-    if (r.embedSourceMessage && !Common.nz(af.checksumMd5).isBlank()) appendStringProp(x, "CheckSum", Common.nz(af.checksumMd5));
-    appendStringProp(x, "Mail_GUID", mailGuid);
-    appendStringProp(x, "Description", attachmentDescription(r, af));
-    x.append("</rdf:li>");
-  }
-  x.append("</rdf:Bag></pdfmailmeta:attachments>");
-
-  x.append("</rdf:Description>");
-  x.append("</rdf:RDF></x:xmpmeta><?xpacket end=\"w\"?>");
-  return x.toString();
+  return METADATA.buildXmpMetadata(r, profileOverride);
 }
 
 
 
 static String buildXmpMetadata(List<EmailRecord> records, String archiveProfile) throws Exception {
-  for (EmailRecord r : records) {
-    Common.finalizeRecordMetadata(r);
-    Common.requireCreationDate(r);
-  }
-  String now = Common.xmpDateNowUtc();
-  String claimDate = LocalDate.now(ZoneOffset.UTC).toString();
-  String title = Common.stripInvalidXml(buildArchiveTitle(records));
-  String description = buildArchiveDescription(records, archiveProfile);
-  String producer = Common.productLabel() + " via OpenHTMLtoPDF + Apache PDFBox";
-  String creatorTool = Common.productLabel();
-  StringBuilder x = new StringBuilder();
-
-  x.append("<?xpacket begin=\"\uFEFF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>");
-  x.append("<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">");
-  x.append("<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
-  x.append(" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"");
-  x.append(" xmlns:pdf=\"http://ns.adobe.com/pdf/1.3/\"");
-  x.append(" xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\"");
-  x.append(" xmlns:pdfaid=\"http://www.aiim.org/pdfa/ns/id/\"");
-  x.append(" xmlns:pdfd=\"http://pdfa.org/declarations/\"");
-  x.append(" xmlns:foaf=\"http://xmlns.com/foaf/0.1/\"");
-  x.append(" xmlns:pdfmail=\"http://www.pdfa.org/eapdf/\"");
-  x.append(" xmlns:pdfmailid=\"http://www.pdfa.org/eapdf/ns/id/\"");
-  x.append(" xmlns:pdfmailmeta=\"http://www.pdfa.org/eapdf/ns/meta/\">");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<dc:creator><rdf:Seq><rdf:li>").append(Common.xml(CONFIG.requireCreator())).append("</rdf:li></rdf:Seq></dc:creator>");
-  x.append("<dc:format>application/pdf</dc:format>");
-  x.append("<dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">").append(Common.xml(title)).append("</rdf:li></rdf:Alt></dc:title>");
-  x.append("<dc:description><rdf:Alt><rdf:li xml:lang=\"x-default\">").append(Common.xml(description)).append("</rdf:li></rdf:Alt></dc:description>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdf:Producer>").append(Common.xml(producer)).append("</pdf:Producer>");
-  x.append("<pdf:Keywords>EA-PDF</pdf:Keywords>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<xmp:CreateDate>").append(Common.xml(now)).append("</xmp:CreateDate>");
-  x.append("<xmp:ModifyDate>").append(Common.xml(now)).append("</xmp:ModifyDate>");
-  x.append("<xmp:MetadataDate>").append(Common.xml(now)).append("</xmp:MetadataDate>");
-  x.append("<xmp:CreatorTool>").append(Common.xml(creatorTool)).append("</xmp:CreatorTool>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfaid:part>4</pdfaid:part>");
-  x.append("<pdfaid:rev>2020</pdfaid:rev>");
-  x.append("<pdfaid:conformance>F</pdfaid:conformance>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfmailid:version>1</pdfmailid:version>");
-  x.append("<pdfmailid:rev>2024</pdfmailid:rev>");
-  x.append("<pdfmailid:conformance>").append(Common.xml(archiveProfile)).append("</pdfmailid:conformance>");
-  x.append("</rdf:Description>");
-
-  appendSourceProblems(x, records);
-  x.append(pdfUaIdentification());
-  appendIsoTs32005Declaration(x, creatorTool, claimDate);
-  appendConversionHistory(x, creatorTool, now, archiveProfile, records.size());
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfmailmeta:Mail_GUID><rdf:Seq>");
-  for (EmailRecord r : records) {
-    if (!Common.nz(r.mailGuid).isBlank()) {
-      x.append("<rdf:li>").append(Common.xml(r.mailGuid)).append("</rdf:li>");
-    }
-  }
-  x.append("</rdf:Seq></pdfmailmeta:Mail_GUID>");
-  x.append("<pdfmailmeta:messageid><rdf:Seq>");
-  for (EmailRecord r : records) {
-    if (!Common.nz(r.messageId).isBlank()) {
-      x.append("<rdf:li>").append(Common.xml(r.messageId)).append("</rdf:li>");
-    }
-  }
-  x.append("</rdf:Seq></pdfmailmeta:messageid>");
-
-  x.append("<pdfmailmeta:email><rdf:Bag>");
-  for (EmailRecord r : records) {
-    x.append("<rdf:li rdf:parseType=\"Resource\">");
-    appendStringProp(x, "Subject", r.subject);
-    appendStringProp(x, "Raw-From", r.rawFrom);
-    appendStringProp(x, "Raw-To", r.rawTo);
-    appendStringProp(x, "Raw-Cc", r.rawCc);
-    appendStringProp(x, "Raw-Bcc", r.rawBcc);
-    if (!Common.nz(r.sentXmp).isBlank()) appendStringProp(x, "Sent", r.sentXmp);
-    if (shouldEmitRawSent(r)) appendStringProp(x, "Raw-Sent", !Common.nz(r.rawDateHeader).isBlank() ? r.rawDateHeader : r.date);
-    appendStringProp(x, "SizeInBytes", Integer.toString(messageMetadataSize(r)));
-    appendStringProp(x, "NumberAttachments", Integer.toString(Math.max(r.attachmentCount, 0)));
-    appendStringProp(x, "Mail_GUID", r.mailGuid);
-    appendStringProp(x, "messageid", r.messageId);
-    appendReplyMetadata(x, r);
-    appendFoafSeq(x, "From", r.fromAgents);
-    appendFoafSeq(x, "To", r.toAgents);
-    appendFoafSeq(x, "Cc", r.ccAgents);
-    appendFoafSeq(x, "Bcc", r.bccAgents);
-    x.append("</rdf:li>");
-  }
-  x.append("</rdf:Bag></pdfmailmeta:email>");
-
-  x.append("<pdfmailmeta:assets><rdf:Bag>");
-  if (!"ci".equals(archiveProfile)) {
-    for (ArchiveEmbeddedFilePlan plan : buildArchiveEmbeddedFilePlans(records)) {
-      if (!"Source".equals(plan.relationship) && !plan.file.sourceSetMember) continue;
-      x.append("<rdf:li rdf:parseType=\"Resource\">");
-      appendStringProp(x, "Filename", plan.filename);
-      appendStringProp(x, "SizeInBytes", Integer.toString(plan.file.size()));
-      appendStringProp(x, "ContentType", plan.mime);
-      appendStringProp(x, "Checksum", plan.checksumMd5);
-      if ("Source".equals(plan.relationship)) appendStringProp(x, "NumberMessages", "1");
-      x.append("</rdf:li>");
-    }
-  }
-  x.append("</rdf:Bag></pdfmailmeta:assets>");
-
-  x.append("<pdfmailmeta:attachments><rdf:Bag>");
-  for (EmailRecord r : records) {
-    for (AssociatedFile af : r.associatedFiles) {
-      if (!af.emailAttachment) continue;
-      x.append("<rdf:li rdf:parseType=\"Resource\">");
-      appendStringProp(x, "Filename", Common.nz(af.filename));
-      appendStringProp(x, "SizeInBytes", Integer.toString(storedAttachmentSize(r, af)));
-      appendStringProp(x, "Content-Type", Common.sourceContentType(af));
-      if (r.embedSourceMessage && !Common.nz(af.checksumMd5).isBlank()) appendStringProp(x, "CheckSum", Common.nz(af.checksumMd5));
-      appendStringProp(x, "Mail_GUID", Common.nz(r.mailGuid));
-      appendStringProp(x, "Description", attachmentDescription(r, af));
-      x.append("</rdf:li>");
-    }
-  }
-  x.append("</rdf:Bag></pdfmailmeta:attachments>");
-
-  x.append("</rdf:Description>");
-  x.append("</rdf:RDF></x:xmpmeta><?xpacket end=\"w\"?>");
-  return x.toString();
+  return METADATA.buildXmpMetadata(records, archiveProfile);
 }
 
 static String buildDescription(EmailRecord r) {
-  StringBuilder d = new StringBuilder("EA-PDF email archive");
-  if (!Common.nz(r.archiveGlobalId).isBlank()) d.append("; archiveGlobalId=").append(Common.nz(r.archiveGlobalId));
-  if (!Common.nz(r.messageId).isBlank()) d.append("; messageId=").append(Common.nz(r.messageId));
-  if (!Common.nz(r.mailGuid).isBlank()) d.append("; mailGuid=").append(Common.nz(r.mailGuid));
-  if (!r.archiveEmails.isEmpty()) d.append("; archiveEmails=").append(String.join(", ", r.archiveEmails));
-  if (!Common.sourceDerivation(r).isBlank()) d.append("; ").append(Common.sourceDerivation(r));
-  return d.toString();
+  return METADATA.buildDescription(r);
 }
 
 static void appendReplyMetadata(StringBuilder metadata, EmailRecord record) {
-  if (record.inReplyTo.isEmpty()) return;
-  metadata.append("<pdfmailmeta:In-Reply-To><rdf:Bag>");
-  for (String identifier : record.inReplyTo) metadata.append("<rdf:li>").append(Common.xml(identifier)).append("</rdf:li>");
-  metadata.append("</rdf:Bag></pdfmailmeta:In-Reply-To>");
+  METADATA.appendReplyMetadata(metadata, record);
 }
 
 static String buildArchiveDescription(List<EmailRecord> records, String archiveProfile) {
-  StringBuilder d = new StringBuilder("EA-PDF email archive");
-  d.append("; messages=").append(records.size());
-  d.append("; folders=").append(PdfCollectionSupport.buildFolderSections(records).size());
-  d.append("; attachments=").append(records.stream().mapToLong(r -> Math.max(r.attachmentCount, 0)).sum());
-  d.append("; conformance=").append(archiveProfile);
-  String archiveGlobalId = "";
-  List<String> archiveEmails = new ArrayList<>();
-  for (EmailRecord r : records) {
-    if (archiveGlobalId.isBlank() && !Common.nz(r.archiveGlobalId).isBlank()) archiveGlobalId = Common.nz(r.archiveGlobalId);
-    for (String email : r.archiveEmails) {
-      if (!archiveEmails.contains(email)) archiveEmails.add(email);
-    }
-  }
-  if (!archiveGlobalId.isBlank()) d.append("; archiveGlobalId=").append(archiveGlobalId);
-  if (!archiveEmails.isEmpty()) d.append("; archiveEmails=").append(String.join(", ", archiveEmails));
-  for (EmailRecord record : records) {
-    if (!Common.sourceDerivation(record).isBlank()) d.append("; Mail_GUID=").append(record.mailGuid).append(": ").append(Common.sourceDerivation(record));
-  }
-  return d.toString();
+  return METADATA.buildArchiveDescription(records, archiveProfile);
 }
 
 static String buildArchiveTitle(List<EmailRecord> records) {
-  if (records.size() == 1) {
-    String subject = Common.nz(records.get(0).subject);
-    return subject.isBlank() ? "Email Archive" : subject;
-  }
-  return "Email Archive (" + records.size() + " messages)";
+  return METADATA.buildArchiveTitle(records);
 }
 
 static String buildMailGuid(EmailRecord r) throws Exception {
-  Common.finalizeRecordMetadata(r);
-  return Common.nz(r.mailGuid);
+  return METADATA.buildMailGuid(r);
 }
 
 static void appendStringProp(StringBuilder x, String prop, String value) {
-  if (Common.nz(value).isBlank()) return;
-  x.append("<pdfmailmeta:").append(prop).append(">")
-   .append(Common.xml(value))
-   .append("</pdfmailmeta:").append(prop).append(">");
+  METADATA.appendStringProp(x, prop, value);
 }
 
 static void appendFoafSeq(StringBuilder x, String prop, List<MailAgent> agents) {
-  if (agents == null || agents.isEmpty()) return;
-  agents = agents.stream().filter(agent -> Common.smtpMailbox(agent.email)).toList();
-  if (agents.isEmpty()) return;
-  x.append("<pdfmailmeta:").append(prop).append("><rdf:Seq>");
-  for (MailAgent a : agents) {
-    String email = Common.nz(a.email);
-    if (email.isBlank()) continue;
-    x.append("<rdf:li><rdf:Description");
-    x.append(" foaf:mbox=\"").append(Common.xmlAttr(Common.mailto(email))).append("\"");
-    if (!Common.nz(a.name).isBlank()) x.append(" foaf:name=\"").append(Common.xmlAttr(a.name)).append("\"");
-    x.append("/></rdf:li>");
-  }
-  x.append("</rdf:Seq></pdfmailmeta:").append(prop).append(">");
+  METADATA.appendFoafSeq(x, prop, agents);
 }
 
 static boolean shouldEmitRawSent(EmailRecord r) {
-  String raw = Common.nz(r.rawDateHeader).trim();
-  if (raw.isBlank()) return false;
-  return Common.sourceDateNeedsRaw(raw);
+  return METADATA.shouldEmitRawSent(r);
 }
 
 static int messageMetadataSize(EmailRecord r) {
-  if (r == null) return 0;
-  for (AssociatedFile af : r.associatedFiles) {
-    if (!"Source".equals(Common.nz(af.afRelationship))) continue;
-    if ("message/rfc822".equalsIgnoreCase(Common.nz(af.mime)) || Common.nz(af.filename).toLowerCase(Locale.ROOT).endsWith(".eml")) {
-      if (af.hasData() && af.size() > 0) return af.size();
-    }
-  }
-  if (r.sourceBytes != null && r.sourceBytes.length > 0) return r.sourceBytes.length;
-  if (r.payloadStaged) {
-    for (AssociatedFile file : r.associatedFiles) {
-      if ("Source".equals(file.afRelationship)) return file.size();
-    }
-  }
-  try {
-    byte[] synthesized = Common.synthesizeEml(r);
-    return synthesized == null ? 0 : synthesized.length;
-  } catch (Exception ignored) {
-    return 0;
-  }
+  return METADATA.messageMetadataSize(r);
 }
 
 static void addOutlines(PDDocument doc, EmailRecord r) {
@@ -2776,31 +1552,11 @@ static void addMessageUserProperties(COSDictionary elem, EmailRecord r) {
 }
 
 static void appendIsoTs32005Declaration(StringBuilder x, String claimBy, String claimDate) {
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfd:declarations><rdf:Bag><rdf:li rdf:parseType=\"Resource\">");
-  x.append("<pdfd:conformsTo>https://pdfa.org/declarations#iso32005</pdfd:conformsTo>");
-  x.append("<pdfd:claimData><rdf:Bag><rdf:li rdf:parseType=\"Resource\">");
-  x.append("<pdfd:claimBy>").append(Common.xml(claimBy)).append("</pdfd:claimBy>");
-  x.append("<pdfd:claimDate>").append(Common.xml(claimDate)).append("</pdfd:claimDate>");
-  x.append("</rdf:li></rdf:Bag></pdfd:claimData>");
-  x.append("</rdf:li></rdf:Bag></pdfd:declarations>");
-  x.append("</rdf:Description>");
+  METADATA.appendIsoTs32005Declaration(x, claimBy, claimDate);
 }
 
 static void appendConversionHistory(StringBuilder x, String tool, String timestamp, String profile, int messages) {
-  String documentId = "uuid:" + UUID.randomUUID();
-  String instanceId = "uuid:" + UUID.randomUUID();
-  x.append("<rdf:Description rdf:about=\"\" xmlns:xmpMM=\"http://ns.adobe.com/xap/1.0/mm/\"");
-  x.append(" xmlns:stEvt=\"http://ns.adobe.com/xap/1.0/sType/ResourceEvent#\">");
-  x.append("<xmpMM:DocumentID>").append(documentId).append("</xmpMM:DocumentID>");
-  x.append("<xmpMM:InstanceID>").append(instanceId).append("</xmpMM:InstanceID>");
-  x.append("<xmpMM:History><rdf:Seq><rdf:li rdf:parseType=\"Resource\">");
-  x.append("<stEvt:action>converted</stEvt:action>");
-  x.append("<stEvt:softwareAgent>").append(Common.xml(tool)).append("</stEvt:softwareAgent>");
-  x.append("<stEvt:when>").append(Common.xml(timestamp)).append("</stEvt:when>");
-  x.append("<stEvt:parameters>Converted ").append(messages).append(messages == 1 ? " email" : " emails");
-  x.append(" to PDF/mail-1").append(Common.xml(profile)).append(".</stEvt:parameters>");
-  x.append("</rdf:li></rdf:Seq></xmpMM:History></rdf:Description>");
+  METADATA.appendConversionHistory(x, tool, timestamp, profile, messages);
 }
 
 static void addLogicalStructure(PDDocument doc, EmailRecord r) throws IOException {
@@ -3125,16 +1881,11 @@ static EmbeddedFileBindings embedAssociatedFiles(PDDocument doc, List<EmailRecor
 // Preserve declared parameter spelling and case; sniffing is only a fallback
 // when the conversion source supplies no media type.
 static String embeddedAssetContentType(AssociatedFile file, String filename) throws IOException {
-  String declared = Common.sourceContentType(file);
-  return declared.isBlank() ? Common.detectMimeType(filename, file.mime, file.head()) : declared;
+  return PdfAttachmentSupport.embeddedAssetContentType(file, filename);
 }
 
 static void setEmbeddedMediaType(PDEmbeddedFile file, String contentType) {
-  file.setSubtype(Common.baseMimeType(contentType));
-  COSName parameters = COSName.getPDFName("Mail_MediaTypeParameters");
-  int separator = contentType.indexOf(';');
-  if (separator >= 0) file.getCOSObject().setString(parameters, contentType.substring(separator + 1).trim());
-  else file.getCOSObject().removeItem(parameters);
+  PdfAttachmentSupport.setEmbeddedMediaType(file, contentType);
 }
 
 static int storedAttachmentSize(EmailRecord record, AssociatedFile file) {
@@ -3142,17 +1893,7 @@ static int storedAttachmentSize(EmailRecord record, AssociatedFile file) {
 }
 
 static void setEmbeddedChecksum(PDEmbeddedFile file, String hexadecimal) {
-  if (Common.nz(hexadecimal).isBlank()) return;
-  byte[] checksum = HexFormat.of().parseHex(hexadecimal);
-  if (checksum.length != 16) throw new IllegalArgumentException("Embedded file MD5 must contain 16 bytes");
-  COSDictionary parameters = (COSDictionary) file.getCOSObject().getDictionaryObject(COSName.PARAMS);
-  if (parameters == null) {
-    parameters = new COSDictionary();
-    file.getCOSObject().setItem(COSName.PARAMS, parameters);
-  }
-  COSString value = new COSString(checksum);
-  value.setForceHexForm(true);
-  parameters.setItem(COSName.getPDFName("CheckSum"), value);
+  PdfAttachmentSupport.setEmbeddedChecksum(file, hexadecimal);
 }
 
 static String attachmentDescription(EmailRecord record, AssociatedFile file) {
@@ -3268,64 +2009,11 @@ static List<String> wrapAttachmentLabel(PDType0Font font, String filename, float
 static PDAnnotationFileAttachment inlineAttachmentBadgeAnnotation(PDDocument doc, PDRectangle rect,
                                                                   PDComplexFileSpecification fileSpec,
                                                                   String contents) throws Exception {
-  PDAnnotationFileAttachment annotation = new PDAnnotationFileAttachment();
-  annotation.setFile(fileSpec);
-  annotation.setAttachmentName(PDAnnotationFileAttachment.ATTACHMENT_NAME_TAG);
-  annotation.setPrinted(true);
-  annotation.setRectangle(rect);
-  annotation.setAppearance(buildAttachmentBadgeAppearance(doc, rect.getWidth(), rect.getHeight()));
-  annotation.setContents(contents);
-  return annotation;
+  return PdfAttachmentSupport.inlineAttachmentBadgeAnnotation(doc, rect, fileSpec, contents);
 }
 
 static PDAppearanceDictionary buildAttachmentBadgeAppearance(PDDocument doc, float width, float height) throws Exception {
-  float w = Math.max(8f, Math.min(13f, width));
-  float h = Math.max(6f, Math.min(10f, height));
-  PDAppearanceStream appearance = new PDAppearanceStream(doc);
-  appearance.setResources(new PDResources());
-  appearance.setBBox(new PDRectangle(width, height));
-  try (PDPageContentStream cs = new PDPageContentStream(doc, appearance)) {
-    cs.transform(org.apache.pdfbox.util.Matrix.getTranslateInstance(0, Math.max(0f, height - h)));
-    float left = 0.75f;
-    float right = w - 0.75f;
-    float top = h - 0.75f;
-    float bottom = 0.75f;
-    float notch = Math.min(Math.max(2.6f, h * 0.32f), Math.max(2.6f, w * 0.22f));
-    float holeRadius = Math.max(0.8f, Math.min(1.4f, h * 0.16f));
-    float holeCenterX = left + notch + holeRadius + 0.9f;
-    float holeCenterY = bottom + (h / 2f);
-
-    cs.setNonStrokingColor(new java.awt.Color(237, 244, 250));
-    cs.moveTo(left + notch, top);
-    cs.lineTo(right, top);
-    cs.lineTo(right, bottom);
-    cs.lineTo(left + notch, bottom);
-    cs.lineTo(left, bottom + (h / 2f));
-    cs.closePath();
-    cs.fill();
-
-    cs.setStrokingColor(new java.awt.Color(109, 130, 151));
-    cs.setLineWidth(0.9f);
-    cs.moveTo(left + notch, top);
-    cs.lineTo(right, top);
-    cs.lineTo(right, bottom);
-    cs.lineTo(left + notch, bottom);
-    cs.lineTo(left, bottom + (h / 2f));
-    cs.closePath();
-    cs.stroke();
-
-    float c = 0.5522847498f * holeRadius;
-    cs.setNonStrokingColor(new java.awt.Color(109, 130, 151));
-    cs.moveTo(holeCenterX + holeRadius, holeCenterY);
-    cs.curveTo(holeCenterX + holeRadius, holeCenterY + c, holeCenterX + c, holeCenterY + holeRadius, holeCenterX, holeCenterY + holeRadius);
-    cs.curveTo(holeCenterX - c, holeCenterY + holeRadius, holeCenterX - holeRadius, holeCenterY + c, holeCenterX - holeRadius, holeCenterY);
-    cs.curveTo(holeCenterX - holeRadius, holeCenterY - c, holeCenterX - c, holeCenterY - holeRadius, holeCenterX, holeCenterY - holeRadius);
-    cs.curveTo(holeCenterX + c, holeCenterY - holeRadius, holeCenterX + holeRadius, holeCenterY - c, holeCenterX + holeRadius, holeCenterY);
-    cs.fill();
-  }
-  PDAppearanceDictionary dict = new PDAppearanceDictionary();
-  dict.setNormalAppearance(appearance);
-  return dict;
+  return PdfAttachmentSupport.buildAttachmentBadgeAppearance(doc, width, height);
 }
 
 static void normalizePageContentStreams(PDDocument doc) throws Exception {
@@ -3346,70 +2034,7 @@ static void normalizePageContentStreams(PDDocument doc) throws Exception {
 }
 
 static List<ArchiveEmbeddedFilePlan> buildArchiveEmbeddedFilePlans(List<EmailRecord> records) throws Exception {
-  List<ArchivePendingFile> pending = new ArrayList<>();
-  int syntheticCounter = 0;
-
-  for (EmailRecord r : records) {
-    for (AssociatedFile af : pdfEmbeddedFiles(r)) {
-      if (af == null || !af.hasData() || af.size() == 0) continue;
-      String requestedName = Common.nz(af.filename).isBlank()
-          ? ("attachment_" + String.format("%03d", ++syntheticCounter) + Common.extensionForMime(af.mime, af.filename))
-          : Common.nz(af.filename);
-      pending.add(new ArchivePendingFile(r, af, requestedName));
-    }
-
-    boolean hasSource = false;
-    for (AssociatedFile af : r.associatedFiles) {
-      if ("Source".equals(Common.nz(af.afRelationship))) {
-        hasSource = true;
-        break;
-      }
-    }
-    if (!hasSource && r.embedSourceMessage) {
-      AssociatedFile af = new AssociatedFile();
-      af.filename = Common.nz(r.sourceFilename).isBlank() ? "message.eml" : r.sourceFilename;
-      af.mime = Common.nz(r.sourceMime).isBlank() ? "message/rfc822" : r.sourceMime;
-      af.afRelationship = Common.nz(r.afRelationship).isBlank() ? "Source" : r.afRelationship;
-      af.bytes = r.sourceBytes == null ? Common.synthesizeEml(r) : r.sourceBytes;
-      af.description = Common.sourceDescription(r);
-      af.ensureChecksums();
-      pending.add(new ArchivePendingFile(r, af, af.filename));
-    }
-  }
-
-  Map<String, Integer> requestedTotals = new LinkedHashMap<>();
-  for (ArchivePendingFile item : pending) {
-    requestedTotals.put(item.requestedName, requestedTotals.getOrDefault(item.requestedName, 0) + 1);
-  }
-  Map<String, Integer> requestedSeen = new LinkedHashMap<>();
-  Map<String, Boolean> usedNames = new LinkedHashMap<>();
-  Set<String> usedCaseNames = new HashSet<>();
-  Map<String, ArchiveEmbeddedFilePlan> embeddedContentKeys = new LinkedHashMap<>();
-  List<ArchiveEmbeddedFilePlan> out = new ArrayList<>();
-  for (ArchivePendingFile item : pending) {
-    int total = requestedTotals.getOrDefault(item.requestedName, 1);
-    int seq = requestedSeen.getOrDefault(item.requestedName, 0) + 1;
-    requestedSeen.put(item.requestedName, seq);
-    String uniqueName = total > 1
-        ? numberedAttachmentKey(usedNames, item.requestedName, seq, total)
-        : reserveAttachmentKey(usedCaseNames, item.requestedName);
-    usedNames.put(uniqueName, Boolean.TRUE);
-    usedCaseNames.add(Common.filenameCaseKey(uniqueName));
-    String mime = embeddedAssetContentType(item.file, uniqueName);
-    String rel = normalizeAfRelationship(item.file.afRelationship);
-    item.file.ensureChecksums();
-    String checksumMd5 = item.file.checksumMd5;
-    String checksumSha256 = item.file.checksumSha256;
-    if (!"Source".equals(rel)) {
-      String contentKey = rel + "|" + mime + "|" + checksumSha256;
-      ArchiveEmbeddedFilePlan existing = embeddedContentKeys.get(contentKey);
-      if (existing != null) { existing.owners.add(item.record); continue; }
-    }
-    ArchiveEmbeddedFilePlan plan = new ArchiveEmbeddedFilePlan(item.record, item.file, item.requestedName, uniqueName, mime, rel, checksumMd5);
-    out.add(plan);
-    if (!"Source".equals(rel)) embeddedContentKeys.put(rel + "|" + mime + "|" + checksumSha256, plan);
-  }
-  return out;
+  return PdfAttachmentSupport.buildArchiveEmbeddedFilePlans(records, PdfMailWriter::pdfEmbeddedFiles);
 }
 
 static List<CollectionFolder> buildCollectionFolders(List<FolderSection> sections) {
@@ -3766,192 +2391,51 @@ static COSDictionary messageCollectionItemDictionary(CollectionMember member) {
 }
 
 static String reserveAttachmentKey(Set<String> normalizedNames, String name) {
-  name = Common.portablePdfFilename(name);
-  if (normalizedNames.add(Common.filenameCaseKey(name))) return name;
-  int dot = name.lastIndexOf('.');
-  String base = dot > 0 ? name.substring(0, dot) : name;
-  String extension = dot > 0 ? name.substring(dot) : "";
-  for (int suffix = 2; ; suffix++) {
-    String candidate = base + "_" + suffix + extension;
-    if (normalizedNames.add(Common.filenameCaseKey(candidate))) return candidate;
-  }
+  return PdfAttachmentSupport.reserveAttachmentKey(normalizedNames, name);
 }
 
 static String uniqueAttachmentKey(Map<String, ?> names, String name) {
-  name = Common.portablePdfFilename(name);
-  String normalizedName = name;
-  if (names.keySet().stream().noneMatch(key -> Common.filenameCaseKey(key).equals(Common.filenameCaseKey(normalizedName)))) return name;
-  String base = name, ext = "";
-  int dot = name.lastIndexOf('.');
-  if (dot > 0) {
-    base = name.substring(0, dot);
-    ext = name.substring(dot);
-  }
-  int n = 2;
-  while (true) {
-    String candidate = base + "_" + n + ext;
-    if (names.keySet().stream().noneMatch(key -> Common.filenameCaseKey(key).equals(Common.filenameCaseKey(candidate)))) return candidate;
-    n++;
-  }
+  return PdfAttachmentSupport.uniqueAttachmentKey(names, name);
 }
 
 static String numberedAttachmentKey(Map<String, ?> names, String name, int seq, int total) {
-  name = Common.portablePdfFilename(name);
-  String base = name, ext = "";
-  int dot = name.lastIndexOf('.');
-  if (dot > 0) {
-    base = name.substring(0, dot);
-    ext = name.substring(dot);
-  }
-  int width = Math.max(2, Integer.toString(total).length());
-  String candidate = base + "_" + String.format("%0" + width + "d", seq) + ext;
-  if (!names.containsKey(candidate)) return candidate;
-  int n = seq;
-  while (true) {
-    n++;
-    candidate = base + "_" + String.format("%0" + width + "d", n) + ext;
-    if (!names.containsKey(candidate)) return candidate;
-  }
+  return PdfAttachmentSupport.numberedAttachmentKey(names, name, seq, total);
 }
 
 static String normalizeAfRelationship(String s) {
-  String t = Common.nz(s).trim();
-  if (t.equals("Source") || t.equals("Data") || t.equals("Alternative") || t.equals("Supplement") || t.equals("EncryptedPayload") || t.equals("FormData") || t.equals("Schema") || t.equals("Unspecified")) return t;
-  return "Data";
+  return PdfAttachmentSupport.normalizeAfRelationship(s);
 }
 
 static AssociatedFile findLocationAsset(String uri, EmailRecord record) {
-  for (Map.Entry<String, AssociatedFile> resource : record.nativeLocationResources.entrySet()) {
-    if (sameEmbeddedLocation(uri, resource.getKey(), record.renderBaseUri)) return resource.getValue();
-  }
-  List<String> scopes = record.bodyLocationScopes.isEmpty() ? Collections.singletonList(null) : record.bodyLocationScopes;
-  for (String scope : scopes) {
-    for (AssociatedFile file : record.associatedFiles) {
-      if (scope != null && !scope.equals(file.locationScope)) continue;
-      String location = Common.nz(file.resolvedContentLocation).isBlank() ? file.contentLocation : file.resolvedContentLocation;
-      if (sameEmbeddedLocation(uri, location, record.renderBaseUri)) return file;
-    }
-  }
-  return null;
+  return MailRenderPolicy.findLocationAsset(uri, record);
 }
 
 static boolean sameEmbeddedLocation(String value, String location, String base) {
-  String target = Common.nz(location).trim();
-  if (target.isBlank()) return false;
-  try {
-    URI fallback = new URI("thismessage:/");
-    URI root = Common.nz(base).isBlank() ? fallback : new URI(base.trim());
-    URI reference = root.resolve(new URI(value));
-    if (!reference.isAbsolute()) reference = fallback.resolve(reference);
-    return reference.toString().equals(fallback.resolve(new URI(target)).toString());
-  } catch (URISyntaxException invalidLocation) {
-    return false;
-  }
+  return MailRenderPolicy.sameEmbeddedLocation(value, location, base);
 }
 
 static AssociatedFile findCidAsset(String value, List<AssociatedFile> files) {
-  String key = Common.cidUrlKey(value);
-  if (key.isBlank()) return null;
-  for (AssociatedFile file : files) {
-    String cid = Common.normalizeCidKey(file.contentId);
-    if (!cid.isBlank() && cid.equalsIgnoreCase(key)) return file;
-  }
-  for (AssociatedFile file : files) {
-    String filename = Common.normalizeCidKey(file.filename);
-    if (!filename.isBlank() && filename.equalsIgnoreCase(key)) return file;
-  }
-  return null;
+  return MailRenderPolicy.findCidAsset(value, files);
 }
 
 static String rewriteCidToFileUris(String html, List<AssociatedFile> files, EmailRecord r, boolean debug, Path assetDir) throws Exception {
-  Document d = Jsoup.parse("<html><body>" + Common.stripInvalidXml(html) + "</body></html>", "", Parser.xmlParser());
-  d.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
-  d.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
-  d.outputSettings().charset(StandardCharsets.UTF_8);
-  d.outputSettings().prettyPrint(false);
-
-  Map<AssociatedFile, byte[]> loaded = new IdentityHashMap<>();
-  for (Element e : d.select("[src],[href]")) {
-    String attr = e.hasAttr("src") ? "src" : "href";
-    String val = Common.nz(e.attr(attr)).trim();
-    if (val.isBlank()) continue;
-
-    String cidKey = "";
-    if (val.regionMatches(true, 0, "cid:", 0, 4)) cidKey = val.substring(4).trim();
-    if (cidKey.isBlank()) continue;
-
-    String normCidKey = Common.cidUrlKey(cidKey);
-    AssociatedFile hit = findCidAsset(cidKey, files);
-    if (hit == null || !hit.hasData() || hit.size() == 0) continue;
-
-    byte[] data = loaded.computeIfAbsent(hit, AssociatedFile::data);
-    String mime = Common.detectMimeType(hit.filename, hit.mime, data);
-    String outName = "cid-" + Common.sha256Hex((normCidKey + "|" + Common.sha256Hex(data)).getBytes(StandardCharsets.UTF_8))
-        + Common.extensionForMime(mime, hit.filename);
-    Path img = assetDir.resolve(outName);
-    Files.write(img, data);
-    String uri = img.toUri().toString();
-    r.renderAssets.put(uri, data);
-    e.attr(attr, uri);
-    // Preserve authored display styles and dimensions; the renderer supplies
-    // the natural image aspect ratio when no explicit height is provided.
-    if (debug) {
-      Common.dbg(r, "rewrote inline CID " + cidKey + " using file=" + Common.nz(hit.filename) + " mime=" + mime + " uri=" + uri);
-      Common.dbg(r, "asset exists=" + Files.exists(img) + " size=" + Files.size(img) + " path=" + img);
-    }
-  }
-
-  return d.body().html();
+  return HTML.rewriteCidToFileUris(html, files, r, debug, assetDir);
 }
 
 static int[] sniffImageSize(byte[] bytes) {
-  try (var input = new javax.imageio.stream.MemoryCacheImageInputStream(new ByteArrayInputStream(bytes))) {
-    var readers = javax.imageio.ImageIO.getImageReaders(input);
-    if (!readers.hasNext()) return new int[]{0, 0};
-    var reader = readers.next();
-    try {
-      reader.setInput(input, true, true);
-      int width = reader.getWidth(0);
-      int height = reader.getHeight(0);
-      ProcessingLimits.checkImage(width, height);
-      return new int[]{width, height};
-    } finally {
-      reader.dispose();
-    }
-  } catch (IOException error) {
-  }
-  return new int[]{0, 0};
+  return MailRenderPolicy.sniffImageSize(bytes);
 }
 
 static boolean looksEmpty(String html) {
-  Document document = Jsoup.parse(Common.nz(html));
-  return document.text().isBlank() && document.select("img,svg,object,video,audio,canvas,[background],[style*=background]").isEmpty();
+  return HTML.looksEmpty(html);
 }
 
 static boolean shouldBoldHeaderLabel(String label) {
-  String normalized = Common.nz(label).trim();
-  return "From".equals(normalized)
-      || "To".equals(normalized)
-      || "Reply-To".equals(normalized)
-      || "Cc".equals(normalized)
-      || "Bcc".equals(normalized)
-      || "Subject".equals(normalized)
-      || "Date".equals(normalized)
-      || "Message-ID".equals(normalized)
-      || "MessageID".equals(normalized);
+  return HTML.shouldBoldHeaderLabel(label);
 }
 
 static void appendHeaderRow(StringBuilder s, String label, String value) {
-  String headerTag = pdfUaFeaturesEnabled() ? "th" : "td";
-  s.append("<tr><").append(headerTag);
-  if (pdfUaFeaturesEnabled()) s.append(" scope=\"row\"");
-  s.append(" class=\"label");
-  if (shouldBoldHeaderLabel(label)) s.append(" label-strong");
-  s.append("\">")
-   .append(Common.escapeHtml(label))
-   .append(":</").append(headerTag).append("><td class=\"value\">")
-   .append(Common.escapeHtml(Common.nz(value)))
-   .append("</td></tr>");
+  HTML.appendHeaderRow(s, label, value);
 }
 
 static String appendStyle(String existing, String add) {

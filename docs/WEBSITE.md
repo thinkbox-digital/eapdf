@@ -9,13 +9,16 @@ Releases and Packages. Pages serves documentation only, not the web validator.
 - Edit `docs/manual/user-manual.html` for user-guide chapters; the site converts
   each chapter to Markdown during the build and reuses the screenshots. Follow
   `docs/manual/BUILD.txt` when updating the separate PDF/A manual.
+- Edit docs/PROJECT_STATUS.md for current release/unreleased status and
+  docs/ARCHITECTURE.md for architectural decisions. docs/README.md maps ownership.
 - Edit the original Markdown files for reference and developer guides.
   `SOURCES` in `scripts/build_documentation.py` is the explicit publication list.
 - Edit `docs/site/` for the website home, downloads and stylesheet.
 - Edit `mkdocs.yml` for navigation and theme settings. Change
   `--eapdf-content-width` in `docs/site/stylesheets/extra.css` to adjust width.
 
-Only these selected sources and manual screenshots enter the site. Audit trees,
+Only these selected sources and manual screenshots enter the site.
+The ignored local development log and docs/private archive never enter this list. Audit trees,
 email fixtures, local build output and credentials are not copied. Links to other
 repository documents lead to GitHub. Downloadable applications stay in Releases.
 Fonts, search and theme assets are served locally; no analytics are configured.

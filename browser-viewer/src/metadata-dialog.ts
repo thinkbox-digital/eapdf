@@ -11,7 +11,7 @@ export class MetadataDialog{
   private el<T extends HTMLElement=HTMLElement>(id:string):T{return document.getElementById(id) as T;}
   constructor(){
     const fields=this.el('metadata-fields');
-    for(const field of CSV_FIELDS){const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.value=field;input.checked=true;label.append(input,document.createTextNode(field));fields.append(label);}
+    for(const field of CSV_FIELDS){const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.value=field;input.checked=true;label.append(input,document.createTextNode(field==='PDF'?'PDF filename / path':field));fields.append(label);}
     this.el('metadata-close').onclick=()=>this.close();this.dialog.addEventListener('cancel',event=>{event.preventDefault();this.close();});
     this.el('metadata-format').onchange=()=>this.changed();this.el('metadata-scope').onchange=()=>this.changed();
     this.el('metadata-load').onclick=()=>void this.load();this.el('metadata-save').onclick=()=>void this.save();
@@ -32,7 +32,7 @@ export class MetadataDialog{
     this.generation++;this.session?.close();this.session=undefined;this.result=undefined;
     const xml=this.format()==='xmp';this.el('metadata-fields').hidden=xml;this.el('metadata-xml').hidden=!xml;
     this.el('metadata-packets').replaceChildren();this.el<HTMLTextAreaElement>('metadata-preview').value='';
-    this.el('metadata-note').textContent=xml?'Original XMP streams are exported without rewriting them. Current message scope includes its containing PDF; shared XML may also describe other messages.':'Choose the columns to include in the CSV. The original PDF is unchanged.';
+    this.el('metadata-note').textContent=xml?'Original XMP streams are exported without rewriting them. Current message scope includes its containing PDF; shared XML may also describe other messages.':'Choose the columns to include in the CSV. PDF filename / path identifies the PDF containing the email, including its path inside a collection. The original PDF is unchanged.';
     this.el('metadata-state').textContent='';this.el<HTMLButtonElement>('metadata-load').disabled=false;
     this.el<HTMLButtonElement>('metadata-save').disabled=xml;this.el('metadata-save').textContent=xml?'Download selected XMP (.zip)':'Export CSV';this.el<HTMLButtonElement>('metadata-save-one').disabled=true;
   }

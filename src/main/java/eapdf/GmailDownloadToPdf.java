@@ -34,7 +34,7 @@ public class GmailDownloadToPdf {
       String credentialsPath = Common.resolveCredentialsPath((String)opt.get("credentials"));
       String tokenDir = (String)opt.getOrDefault("token-dir", Paths.get(System.getProperty("user.home"), ".gmail_token_store").toString());
 
-      if (credentialsPath == null || credentialsPath.isBlank()) throw Common.fail("missing --credentials /path/to/credentials.json");
+      if (credentialsPath.isBlank()) throw Common.fail("missing --credentials /path/to/credentials.json");
 
       String folderName = (String)opt.getOrDefault("folder", "ALL_MAIL");
       String outPdfDir = (String)opt.getOrDefault("out-pdf", "out");
@@ -52,10 +52,8 @@ public class GmailDownloadToPdf {
       Files.createDirectories(Paths.get(tokenDir));
       if (debug) Files.createDirectories(Paths.get(debugDir));
 
-      Gmail service = null;
-
       System.out.println("connecting: Gmail API");
-      service = buildService(credentialsPath, tokenDir);
+      Gmail service = buildService(credentialsPath, tokenDir);
 
       String query = buildMessageQuery(unreadOnly);
       Map<String,String> labelNames = loadLabelNames(service, user);
@@ -104,6 +102,9 @@ public class GmailDownloadToPdf {
 
         EmailRecord r = EmlReader.readRfc822Bytes(raw, sourcePath, sourceFilename, globalId, archiveEmails, debug);
         r.sourceType = "gmail";
+        for (AssociatedFile file : r.associatedFiles) {
+          if ("Source".equals(file.afRelationship)) file.description = Common.sourceDescription(r);
+        }
         r.embedSourceMessage = !omitSource;
         if (r.folderPath == null || r.folderPath.isBlank()) {
           r.folderPath = describeMessageLabels(full.getLabelIds(), labelNames, folderName);
@@ -182,6 +183,7 @@ public class GmailDownloadToPdf {
       } catch (IOException exception) {
         if (attempt >= 2 || !retryableDownload(exception)) throw exception;
         System.err.println("warning: retrying Gmail message " + messageId + " after " + exception.getMessage());
+        // Network retry backoff, not polling for work; interruption cancels it.
         try {
           Thread.sleep(250L << attempt);
         } catch (InterruptedException interrupted) {

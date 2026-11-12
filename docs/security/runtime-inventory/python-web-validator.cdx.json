@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "EA-PDF Python and web validator",
-      "version": "1.6.0-beta.7"
+      "version": "2.1.0-beta.1"
     },
     "properties": [
       {
@@ -32,16 +32,16 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "120ec4f992a9123a6e063f430208b31e97b7d3bd11474c0a9c4b19f6bc531058"
+          "value": "dc0b69245a137909ddba03386fd52b918ba4c8464187d89128958d97c8f2e693"
         }
       ]
     },
     {
       "type": "library",
       "name": "click",
-      "version": "8.5.0",
-      "purl": "pkg:pypi/click@8.5.0",
-      "bom-ref": "pkg:pypi/click@8.5.0",
+      "version": "8.5.1",
+      "purl": "pkg:pypi/click@8.5.1",
+      "bom-ref": "pkg:pypi/click@8.5.1",
       "licenses": [
         {
           "expression": "BSD-3-Clause"
@@ -50,7 +50,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "43d8bb1ce44dea5d9423b7eae1d6ba911974425b96acc170b036e1655a901e10"
+          "value": "60a698b6fffcfbeae93090aaf32390e808939105fa79eee7de6d872a5c5abab7"
         }
       ]
     },
@@ -68,7 +68,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "18cb1eaaf28dba79e3eee1e612292fc809b011ecddda5f65bca0288a7e7080a1"
+          "value": "f18f8f19be6fb64623b8cad5b393b7bba091e979adbe57529b66ea88d2dcf21f"
         }
       ]
     },
@@ -86,7 +86,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "7ba0f0d9a0a413cb6df3d10a4625a3a1e460f73a4eb5b70902473713822d304f"
+          "value": "61f8bc896061284aabe6acb29b649ae3e5503c18c8d7dfd82e4b5d2c3eaf33cf"
         }
       ]
     },
@@ -106,7 +106,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "b303bcd128d85b48cefd16f82f5c7c48a95e8dd186422c220a4c79bf176cb1aa"
+          "value": "1de3d6addd63d152b37e5c26a15b5bf20b67880ab5032d38bfc5467001eb08c2"
         }
       ]
     },
@@ -126,7 +126,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "1bb3b46d00f55f63d24c3a34a7f955ef6692d4691217a53b15261769607f9f7c"
+          "value": "da15deb8d05491bab5298a2eefddb92f0672127b29eb017f771010798716639f"
         }
       ]
     },
@@ -146,7 +146,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "0314346711778d77f4d5438755bbf84228258fa85e9dcb52f2d886ec7a267098"
+          "value": "cc8580f4659bfbb48100afdd765b9134b9c65cace8de9a2f0a0492fa2216ae49"
         }
       ]
     },
@@ -164,7 +164,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "f1c1ebcc3629b6371b96ab97205f93935cd971b2cceb082f1dd7a9a20fe6f22d"
+          "value": "9b9b3e4e05905909655900db8ade37a91ea1ba939e5707490b24c8389703175e"
         }
       ]
     },
@@ -202,16 +202,16 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "a2cd431afc6ca596c9bf35faf2b902709cad9c48a55d264a71c71e70c6cb2e7a"
+          "value": "fd59b791119d91d0602060c81541e41118992995c6a0070e411a5ea3c6b1ebb2"
         }
       ]
     },
     {
       "type": "library",
       "name": "pikepdf",
-      "version": "10.17.0",
-      "purl": "pkg:pypi/pikepdf@10.17.0",
-      "bom-ref": "pkg:pypi/pikepdf@10.17.0",
+      "version": "10.18.0",
+      "purl": "pkg:pypi/pikepdf@10.18.0",
+      "bom-ref": "pkg:pypi/pikepdf@10.18.0",
       "licenses": [
         {
           "expression": "MPL-2.0"
@@ -220,7 +220,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "06dfc531fff7fb56a702f354935037df71e1b03888d0252a27adbc09f16577ce"
+          "value": "b853405cfff0cca61e6302b23c6dc70243ac0bc805d4c62819835beef756a264"
         }
       ]
     },
@@ -245,9 +245,9 @@
     {
       "type": "library",
       "name": "pypdf",
-      "version": "6.21.4",
-      "purl": "pkg:pypi/pypdf@6.21.4",
-      "bom-ref": "pkg:pypi/pypdf@6.21.4",
+      "version": "7.0.1",
+      "purl": "pkg:pypi/pypdf@7.0.1",
+      "bom-ref": "pkg:pypi/pypdf@7.0.1",
       "licenses": [
         {
           "expression": "BSD-3-Clause"
@@ -256,7 +256,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "cdc2d34411457eb49c91c47fdd2814a96572461c918380e8d33234e86d5f77f7"
+          "value": "504f92921ce8075af58eaa958408c28e934f119e0ef1b559c351a04267e5a1d6"
         }
       ]
     },
