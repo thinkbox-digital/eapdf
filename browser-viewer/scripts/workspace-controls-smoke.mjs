@@ -7,7 +7,7 @@ const context=await chromium.launchPersistentContext('',{headless:true,viewport:
 try{
  const worker=context.serviceWorkers()[0]??await context.waitForEvent('serviceworker'),page=await context.newPage();
  await page.goto(`chrome-extension://${new URL(worker.url()).host}/viewer.html`);
- const ready=async()=>{await page.waitForFunction(()=>!document.querySelector('#file').disabled);await page.waitForTimeout(250);await page.waitForFunction(()=>!document.querySelector('#file').disabled);};
+ const ready=async()=>{await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');await page.waitForTimeout(250);await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');};
  await page.locator('#file').setInputFiles(resolve('../out/eml/eml_group_002_1c.pdf'));await ready();
  assert.equal(await page.locator('#canvas').isVisible(),true);
  assert.equal(await page.locator('#page-surface').isVisible(),true);
