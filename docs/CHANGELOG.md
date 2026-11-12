@@ -7,7 +7,7 @@ a fresh acceptance run.
 
 ## 2026-11-12 — 2.1.0-beta.1 / viewer 1.1.0-beta.1
 
-- **Bug fixes:** readable sender/recipient names, stable bookmark navigation, Portfolio active-file downloads and Parent navigation, expandable file descriptions and clearer source descriptions.
+- **Bug fixes:** readable sender/recipient names, stable bookmark and conversation wheel navigation, Portfolio active-file downloads and Parent navigation, expandable file descriptions and clearer source descriptions.
 - **UI improvements:** wider Chromium scrollbars, corrected folder alignment, collapsed bookmark sections with a caret, narrow-screen Fit width defaults and retained reader zoom.
 - **Code improvement:** separate rendering, GUI processes, viewer controllers, validation rule families and web services; preserve public interfaces and validation behavior. No measured performance claim.
 - **Bug fixes:** update Python/web parser dependencies and Java runtime dependencies; reinstall the web lock and restart deployed workers.

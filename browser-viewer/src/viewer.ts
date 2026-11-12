@@ -56,7 +56,12 @@ const threadPreview=new ThreadPreview(()=>{
  return {selection:{doc:current,message:selectedMessage(current)},root,session:active,check:()=>check(ticket),open:async (item,edge)=>{if(busy)throw Error('Please wait for the current message to finish opening.');await operation(async token=>{
   let doc=root;for(const step of item.path){const file=doc.inspection.files.find(f=>f.id===step.fileId),stream=file?.streams.find(s=>s.locator.path===step.streamPath);if(!file||!stream)throw Error('Conversation destination unavailable.');doc=await active.child(doc,file,stream,false);check(token);}
   const matches=doc.inspection.messages.filter(m=>item.mailGuid?m.mailGuid.value===item.mailGuid:m.id===item.messageId);if(matches.length!==1)throw Error('Conversation destination is ambiguous.');await showDocument(doc,token,matches[0]);
-  if(edge===-1){const range=messagePages(doc.inspection,matches[0]!);pageNumber=range.at(-1)??doc.pdf.numPages;await render(token,false);viewport.scrollTop=viewport.scrollHeight-viewport.clientHeight;}else if(edge===1)viewport.scrollTop=0;
+  // showDocument positions forward navigation at this message, not the PDF start.
+  if(edge===-1){
+   const range=messagePages(doc.inspection,matches[0]!);pageNumber=range.at(-1)??doc.pdf.numPages;await render(token,false);
+   const last=surface.querySelector<HTMLElement>(`.pdf-page[data-page="${pageNumber}"]`);
+   if(last)viewport.scrollTop+=last.getBoundingClientRect().bottom-viewport.getBoundingClientRect().top-viewport.clientTop-viewport.clientHeight+parseFloat(getComputedStyle(viewport).paddingBottom);
+  }
  });}};
 });
 
