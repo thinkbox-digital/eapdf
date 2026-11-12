@@ -10,7 +10,7 @@ export async function checkAdditionalPortfolios(browser){
  for(const name of names){
   console.log('Additional Portfolio:',name);const path=resolve(root,name),before=hash(await readFile(path));
   const expected=JSON.parse(execFileSync(process.env.M1_PYTHON??'python3',['-B','scripts/portfolio-sample-inventory.py',path],{encoding:'utf8'}));
-  await ready();if(await browser.evaluate(()=>document.querySelector('#attachment-viewer').open))await browser.click('#attachment-close');await browser.open(path);await until(async()=>await browser.evaluate(n=>document.querySelector('#header-filename').textContent===n&&!document.querySelector('#file').disabled,name));
+  await ready();if(await browser.evaluate(()=>document.querySelector('#attachment-viewer').open))await browser.click('#attachment-close');await browser.open(path);await until(async()=>await browser.evaluate(n=>document.querySelector('#header-filename').textContent===n&&document.querySelector('#viewport').getAttribute('aria-busy')==='false',name));
   assert.equal(await browser.evaluate(()=>document.body.dataset.documentKind),'portfolio');assert.equal(await browser.evaluate(()=>document.body.dataset.portfolio),expected.view);
   if(expected.split)assert.equal(await browser.evaluate(()=>document.body.dataset.portfolioSplit),expected.split);
   if(expected.position!==null&&expected.split!=='V')assert.equal(await browser.evaluate(()=>document.querySelector('#workspace').style.getPropertyValue('--portfolio-size')),expected.position+'%');

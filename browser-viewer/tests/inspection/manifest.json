@@ -32,7 +32,7 @@
   },
   "evidenceHashes": {
     "docs/reference/EA-PDF-v1.pdf": "b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae",
-    "validate_eapdf.py": "e7c1abd48bda057ac0e4f3cda7d55f53a1f8c6dd039ca6063e1d6096d69953d2",
+    "validate_eapdf.py": "2d249873fc036887d5f504f9f9ec0090a7a7dc26f53b446984f6929e09c2344b",
     "browser-viewer/tests/inspection/source-examples/eml/manifest.json": "f0c9189ea0eae987f9d31ea06c345a8f14d661058c36884f4e69e5cca1e93f9c",
     "browser-viewer/docs/inspection-schema.md": "c71b8bc8d4f7b42b4c50c516034b223f0a5a60d611b1132cef59fcf37ab358f6",
     "browser-viewer/reference/test_inspection.py": "07c173d2eb728b8d4f8dc7dd3e04fb4cef0d441352e75896f127cf410f50d090"

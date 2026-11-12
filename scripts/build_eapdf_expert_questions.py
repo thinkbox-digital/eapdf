@@ -10,7 +10,7 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 import fitz
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/'docs/improvement/specification-questions-2026-11-02'
-DEST=ROOT/'EA_PDF_Specification_Questions_for_Experts.docx'
+DEST=ROOT/'docs/specification-review/EA_PDF_Specification_Questions_for_Experts.docx'
 def link(p,text,url):
  h=OxmlElement('w:hyperlink');h.set(qn('r:id'),p.part.relate_to(url,RT.HYPERLINK,is_external=True));r=OxmlElement('w:r');pr=OxmlElement('w:rPr');c=OxmlElement('w:color');c.set(qn('w:val'),'175A87');pr.append(c);r.append(pr);t=OxmlElement('w:t');t.text=text;r.append(t);h.append(r);p._p.append(h)
 def label(doc,name,text):
@@ -61,7 +61,7 @@ def main():
  for url in ['https://github.com/pdf-association/report-an-issue/issues','https://github.com/thinkbox-digital/eapdf/issues']:
   link(doc.add_paragraph(),url,url)
  doc.add_paragraph('Project issue #2 was closed on 2 November 2026: its final comment says most implementation issues are addressed in recent builds, while remaining matters need adjudication by the PDF Association and others. Closure does not adopt a specification amendment.')
- doc.add_paragraph('Supporting local review: docs/improvement/specification-audit/specification-reexamination-2026-10-31.txt; docs/improvement/rule-refinement-2026-10-31/project-issues-review.txt; EA_PDF_Rule_Review_for_Specification_Authors.docx. This decision brief is self-contained; those files provide the fuller extraction history and rule-by-rule exhibits.')
+ doc.add_paragraph('Supporting local review: docs/improvement/specification-audit/specification-reexamination-2026-10-31.txt; docs/improvement/rule-refinement-2026-10-31/project-issues-review.txt; docs/specification-review/EA_PDF_Rule_Review_for_Specification_Authors.docx. This decision brief is self-contained; those files provide the fuller extraction history and rule-by-rule exhibits.')
  footer=sec.footer.paragraphs[0];footer.add_run('Thinkbox.DIGITAL • EA-PDF specification questions • ');field=OxmlElement('w:fldSimple');field.set(qn('w:instr'),'PAGE');footer._p.append(field)
  doc.core_properties.author='Thinkbox.DIGITAL';doc.core_properties.title='EA-PDF specification: decisions needed from experts'
  doc.save(DEST)

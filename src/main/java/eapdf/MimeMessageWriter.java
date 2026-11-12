@@ -85,7 +85,7 @@ final class MimeMessageWriter {
       appendRelatedParts(sb, r, relatedBoundary, altBoundary, hasHtml, inlineFiles);
     } else {
       sb.append("Content-Type: multipart/alternative; boundary=\"").append(altBoundary).append("\"\r\n\r\n");
-      appendTextAndHtml(sb, r, altBoundary, hasHtml);
+      appendTextAndHtml(sb, r, altBoundary, true);
       sb.append("--").append(altBoundary).append("--\r\n");
     }
     return sb.toByteArray();

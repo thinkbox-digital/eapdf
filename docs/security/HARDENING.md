@@ -109,8 +109,8 @@ Build into separate `/tmp` directories, then run:
 python scripts/security_inventory.py \
   --creator-dependencies /tmp/creator-dependencies.txt \
   --validator-dependencies /tmp/validator-dependencies.txt \
-  --creator-jar /tmp/creator-build/emailtopdfa-2.0.0-beta.2.jar \
-  --validator-jar /tmp/validator-build/eapdf-validator-2.0.0-beta.2.jar \
+  --creator-jar /tmp/creator-build/emailtopdfa-2.1.0-beta.1.jar \
+  --validator-jar /tmp/validator-build/eapdf-validator-2.1.0-beta.1.jar \
   --output docs/security/runtime-inventory
 ```
 

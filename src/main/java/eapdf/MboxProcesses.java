@@ -31,7 +31,7 @@ public final class MboxProcesses {
 
   static long childHeap(int count, long coordinatorHeap, long available) {
     long heap = coordinatorHeap / (count + 1);
-    if (available >= 0) heap = Math.min(heap, available / (2 * count) - 256 * ConversionMemory.MIB);
+    if (available >= 0) heap = Math.min(heap, available / (2L * count) - 256 * ConversionMemory.MIB);
     return Math.max(256 * ConversionMemory.MIB, heap / ConversionMemory.MIB * ConversionMemory.MIB);
   }
 
@@ -113,6 +113,7 @@ public final class MboxProcesses {
         ConversionProgress.importReceipts(directory.resolve("progress.json"));
         Report report;
         try (var reader = Files.newBufferedReader(directory.resolve("report.json"))) { report = JSON.fromJson(reader, Report.class); }
+        // Shared with JobReport.stage/release and diagnostic accumulation.
         synchronized (job) {
           long size = JSON.toJson(report.warnings()).length() * 2L + JSON.toJson(report.diagnostics()).length() * 2L;
           if (size > ProcessingLimits.metadataBytes() - job.metadataSize - job.warningSize)
@@ -143,6 +144,7 @@ public final class MboxProcesses {
     var parent = ProcessHandle.current().parent().orElseThrow();
     if (request.owner() != parent.pid() || !ConversionSupervisor.sameProcess(request.owner(), request.ownerStart()))
       throw Common.fail("Invalid MBOX worker ownership");
+    // Independent of rendering progress so an orphaned worker cannot keep running.
     Thread watchdog = new Thread(() -> {
       while (parent.isAlive()) {
         try { Thread.sleep(100); } catch (InterruptedException error) { return; }

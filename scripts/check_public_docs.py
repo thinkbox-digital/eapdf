@@ -20,7 +20,7 @@ for name in sorted(set(filter(None,paths))):
     if (p.suffix.lower() in ['.md','.txt'] and ('/' not in name or name.startswith(('docs/', 'browser-viewer/docs/')) or name.endswith('/README.md'))) or (name.startswith('browser-viewer/docs/') and p.suffix=='.json') or (name.startswith('docs/') and p.suffix.lower()=='.html'):
         for number,line in enumerate(p.read_text(errors='replace').splitlines(),1):
             if pattern.search(line):failures.append(f'{name}:{number}: private contributor reference; anonymize it')
-    elif p.suffix.lower()=='.docx' and '/' not in name:
+    elif p.suffix.lower()=='.docx' and ('/' not in name or name.startswith('docs/')):
         with zipfile.ZipFile(p) as archive:
             if any(pattern.search(archive.read(n).decode(errors='replace')) for n in archive.namelist() if n.endswith('.xml')):
                 failures.append(f'{name}: private contributor reference in document text')

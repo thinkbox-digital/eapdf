@@ -13,7 +13,7 @@ const checks=[];
 try {
  const worker=context.serviceWorkers()[0]??await context.waitForEvent('serviceworker');
  const page=await context.newPage(),url=`chrome-extension://${new URL(worker.url()).host}/viewer.html`;
- await page.goto(url);await page.waitForFunction(()=>!document.querySelector('#file').disabled);
+ await page.goto(url);await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
  const cdp=await context.newCDPSession(page);
  for(const [name,selector] of [['left-empty','#navigation-panel'],['left-filter','#message-filter'],['left-message','#tree button'],['left-consuming-control','#message-filter'],['center','#viewport'],['right','#files'],['toolbar','.app-header']]){
   if(name==='left-consuming-control')await page.locator(selector).evaluate(node=>{for(const type of ['dragenter','dragover','drop'])node.addEventListener(type,event=>event.stopPropagation());});
@@ -23,7 +23,7 @@ try {
   const x=rect.x+Math.min(rect.width/2,40),y=rect.y+Math.min(rect.height/2,30);
   const data={items:[],files:[path],dragOperationsMask:1};
   for(const type of ['dragEnter','dragOver','drop'])await cdp.send('Input.dispatchDragEvent',{type,x,y,data});
-  await page.waitForFunction(name=>document.querySelector('#header-filename')?.textContent===name&&!document.querySelector('#file').disabled,name+'.pdf',{timeout:30000});
+  await page.waitForFunction(name=>document.querySelector('#header-filename')?.textContent===name&&document.querySelector('#viewport').getAttribute('aria-busy')==='false',name+'.pdf',{timeout:30000});
   assert.equal(page.url(),url,'Drop must not navigate to the built-in PDF viewer');
   checks.push({target:name,status:'PASS'});console.log('PASS drop:',name);
  }

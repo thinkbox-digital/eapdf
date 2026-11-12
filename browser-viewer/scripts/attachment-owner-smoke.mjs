@@ -4,7 +4,7 @@ const extension=resolve('dist/chromium'),context=await chromium.launchPersistent
 const results=[],hash=b=>createHash('sha256').update(b).digest('hex');
 try{
  const worker=context.serviceWorkers()[0]??await context.waitForEvent('serviceworker'),page=await context.newPage();await page.goto(`chrome-extension://${new URL(worker.url()).host}/viewer.html`);
- const ready=async()=>{await page.waitForFunction(()=>!document.querySelector('#file').disabled);await page.waitForTimeout(300);await page.waitForFunction(()=>!document.querySelector('#file').disabled);};
+ const ready=async()=>{await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');await page.waitForTimeout(300);await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');};
  for(const fixture of ['../examples/eml/eml_Agenda_and_timeline_slides_1s.pdf','../examples/msg/msg_TxtSampleEmailWithAttachment_1s.pdf','../examples/mbox/mbox_enron-sample_1s.pdf','../examples/pst/pst_quality-attached-message_1s.pdf','../examples/msg/msg_TxtSampleEmailWithAttachment_archive_1c.pdf']){
   const path=resolve(fixture),before=hash(await readFile(path));await ready();await page.locator('#file').setInputFiles(path);await ready();
   assert.equal(await page.locator('#files a, #files [role="link"], #files .file-message-link, #files .file-name-link').count(),0);

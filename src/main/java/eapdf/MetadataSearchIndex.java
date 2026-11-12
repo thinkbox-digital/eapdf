@@ -14,7 +14,7 @@ final class MetadataSearchIndex {
   static final int MAX_BYTES = 8 * 1024 * 1024, MAX_MESSAGES = 100_000, MAX_ROW_BYTES = 128 * 1024;
   private MetadataSearchIndex() {}
 
-  static void embed(PDDocument doc, List<PdfMailWriter.CollectionMember> members,
+  static void embed(PDDocument doc, List<PdfCollectionSupport.CollectionMember> members,
       Map<EmailRecord, PDComplexFileSpecification> files, Map<String, PDComplexFileSpecification> names) throws Exception {
     if (!PdfMailWriter.CONFIG.searchIndex.enabled) return;
     try {
@@ -37,7 +37,7 @@ final class MetadataSearchIndex {
     }
   }
 
-  static byte[] encode(PDDocument doc, List<PdfMailWriter.CollectionMember> members,
+  static byte[] encode(PDDocument doc, List<PdfCollectionSupport.CollectionMember> members,
       Map<EmailRecord, PDComplexFileSpecification> files, Map<String, PDComplexFileSpecification> names) throws IOException {
     if (files.size() > MAX_MESSAGES) throw new IOException("message limit exceeded");
     var bySpec = new IdentityHashMap<COSDictionary, EmailRecord>();
@@ -63,13 +63,11 @@ final class MetadataSearchIndex {
       var params = (COSDictionary)ef.getCOSObject().getDictionaryObject(COSName.PARAMS);
       var checksum = (COSString)params.getDictionaryObject(COSName.getPDFName("CheckSum"));
       if (keys.get(spec).size() > 256) throw new IOException("folder membership limit exceeded");
-      var paths = new TreeSet<String>();
       for (String key : keys.get(spec)) {
         var match = java.util.regex.Pattern.compile("^<(\\d+)>").matcher(key);
         int folder = match.find() ? Integer.parseInt(match.group(1)) : 0;
         String path = folderPaths.get(folder);
         if (path == null) throw new IOException("unresolved collection folder");
-        paths.add(path);
       }
       var row = new LimitedBytes(MAX_ROW_BYTES);
       try (var json = new JsonWriter(new OutputStreamWriter(row, StandardCharsets.UTF_8))) {

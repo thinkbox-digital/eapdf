@@ -63,7 +63,7 @@ try{
    assert.ok(legacy.notices.some(n=>n.includes('unsupported full-text format/engine')));
   }
  }
- // Filename navigation always starts at page one and recalculates Fit Page.
+ // Filename navigation starts at page one and preserves the reader-selected zoom.
  for(const profile of ['1m','1mi','1c','1ci']){
   const name=`mbox_sample_${profile}.pdf`;await page.locator('#file').setInputFiles(resolve(fixtureDirectory,name));
   await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
@@ -74,11 +74,20 @@ try{
   await page.locator('#zoom').selectOption('1.5');await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
   await page.locator('#tree > li > button.root-document').click();
   await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
-  assert.equal(await page.locator('#page').inputValue(),'1');assert.equal(await page.locator('#zoom').inputValue(),'fit-page');
+  assert.equal(await page.locator('#page').inputValue(),'1');assert.equal(await page.locator('#zoom').inputValue(),'1.5');
   assert.equal(await page.locator('#header-filename').innerText(),name);
   assert.ok(await page.locator('#viewport').evaluate(v=>v.scrollTop<=1));
   if(profile==='1c'||profile==='1ci')assert.equal(await page.locator('#canvas').isVisible(),true);
-  else assert.ok(await page.evaluate(()=>{const v=document.querySelector('#viewport'),p=document.querySelector('.pdf-page[data-page="1"]'),s=getComputedStyle(v);const r=p.getBoundingClientRect(),w=v.clientWidth-parseFloat(s.paddingLeft)-parseFloat(s.paddingRight),h=v.clientHeight-parseFloat(s.paddingTop)-parseFloat(s.paddingBottom);return r.width<=w+2&&r.height<=h+2&&(Math.abs(r.width-w)<4||Math.abs(r.height-h)<4);}));
+  else {
+   await page.locator('#probe').setInputFiles(resolve(fixtureDirectory,name));
+   const expectedWidth=await page.evaluate(async()=>{
+    const {BrowserSession}=await import('./browser-session.js'),session=new BrowserSession({},{reuseWorker:true});
+    try{const doc=await session.open(document.querySelector('#probe').files[0],'scale-check.pdf'),first=await doc.pdf.getPage(1);
+     return Math.ceil(first.getViewport({scale:1.5*96/72}).width*Math.min(devicePixelRatio||1,2));
+    }finally{session.close();}
+   });
+   assert.equal(await page.locator('#canvas').evaluate(c=>c.width),expectedWidth,'root navigation renders page one at 150%');
+  }
  }
  // Exercise the existing UI, selected-page confirmation and actual text-layer highlights.
  await page.locator('#file').setInputFiles(resolve(fixtureDirectory,'mbox_sample_1ci.pdf'));

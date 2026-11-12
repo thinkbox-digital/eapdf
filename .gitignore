@@ -116,3 +116,6 @@ in/email/test3_old.eml
 /browser-viewer/docs/private/
 /browser-viewer/docs/m6-verification.json
 /browser-viewer/docs/navigation-verification.json
+
+# Local development history, correspondence and unpublished plans.
+/docs/private/

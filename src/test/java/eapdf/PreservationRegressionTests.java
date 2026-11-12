@@ -252,8 +252,8 @@ class PreservationRegressionTests {
         if (profile.startsWith("m")) {
           EmailRecord second = new EmailRecord();
           second.sourceType = "eml";
-          PdfMailWriter.addArchiveDPartStructure(document, List.of(new PdfMailWriter.MessageSegment(first, 2, 3),
-              new PdfMailWriter.MessageSegment(second, 4, 4)), 1);
+          PdfMailWriter.addArchiveDPartStructure(document, List.of(new PdfCollectionSupport.MessageSegment(first, 2, 3),
+              new PdfCollectionSupport.MessageSegment(second, 4, 4)), 1);
         } else if (profile.startsWith("c")) {
           if (profile.equals("c")) PdfCollectionSupport.addCollectionDPartStructure(document, List.of(first), profile);
           else PdfMailWriter.addCollectionDPartStructure(document, List.of(first), profile);

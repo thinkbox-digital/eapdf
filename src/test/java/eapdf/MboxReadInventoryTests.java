@@ -105,8 +105,9 @@ class MboxReadInventoryTests {
           Assertions.assertEquals(item.get("containerSha256").getAsString(), record.mboxProvenance.containerSha256());
           Assertions.assertEquals(index + 1, record.mboxProvenance.entry().ordinal());
           AssociatedFile source = record.associatedFiles.stream().filter(file -> "Source".equals(file.afRelationship)).findFirst().orElseThrow();
-          Assertions.assertTrue(source.description.contains("container SHA-256=" + record.mboxProvenance.containerSha256()));
-          Assertions.assertTrue(source.description.contains("entry=" + (index + 1) + "/" + records.size()));
+          Assertions.assertEquals("Email source extracted from MBOX", source.description);
+          Assertions.assertTrue(Common.sourceDerivation(record).contains("container SHA-256=" + record.mboxProvenance.containerSha256()));
+          Assertions.assertTrue(Common.sourceDerivation(record).contains("entry=" + (index + 1) + "/" + records.size()));
         }
       }
     }

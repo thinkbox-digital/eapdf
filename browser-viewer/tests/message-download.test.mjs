@@ -6,3 +6,10 @@ test('aggregate downloads use every proven body page and do not export the whole
 test('ambiguous or unavailable body mappings cannot produce a partial message download',()=>{for(const mutate of [d=>d.inspection.parts[0].messageIds=present(['one','two']),d=>d.inspection.parts[0].pageRange={state:'unavailable',value:null},d=>{d.inspection.messages[0].partIds.value.push('bad');d.inspection.parts.push({...d.inspection.parts[0],id:'bad',pageRange:present({start:6,end:8})});}]){const doc=document();mutate(doc);assert.equal(messageDownload(doc,doc.inspection.messages[0]),undefined);}});
 test('complete single-message PDFs preserve original bytes and collection wrappers are unavailable',async()=>{const doc=document();doc.inspection.messages.length=1;const source=new Blob(['original bytes']);const plan=messageDownload(doc);assert.equal(plan.pages,null);assert.equal(await messagePdf({sourceBlob:async()=>source},doc,plan,()=>{}),source);doc.inspection.collection.value={};assert.equal(messageDownload(doc),undefined);});
 test('extraction explicitly uses the current document and refuses empty output',async()=>{const doc=document(),plan=messageDownload(doc,doc.inspection.messages[0]);doc.pdf.extractPages=async args=>{assert.deepEqual(args,[{document:null,includePages:[1,2,3]}]);return null;};await assert.rejects(messagePdf({ensure:async()=>{}},doc,plan,()=>{}),/could not be exported/);});
+
+test('Portfolio mode downloads the complete active PDF regardless of email metadata',async()=>{
+ const doc=document();doc.inspection.messages=[];doc.inspection.collection.value={};
+ const plan=messageDownload(doc,undefined,true);assert.deepEqual(plan,{name:doc.name,pages:null});
+ const source=new Blob(['active PDF bytes']);assert.equal(await messagePdf({sourceBlob:async active=>{assert.equal(active,doc);return source;}},doc,plan,()=>{}),source);
+ assert.equal(messageDownload(doc),undefined);
+});

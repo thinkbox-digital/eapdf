@@ -513,10 +513,9 @@ final class SemanticStructure {
     }
     List<COSDictionary> level = new ArrayList<>();
     COSArray numbers = null;
-    COSDictionary leaf = null;
     for (var entry : entries.entrySet()) {
       if (numbers == null || numbers.size() == 128) {
-        leaf = new COSDictionary(); numbers = new COSArray(); leaf.setItem(COSName.NUMS, numbers); level.add(leaf);
+        COSDictionary leaf = new COSDictionary(); numbers = new COSArray(); leaf.setItem(COSName.NUMS, numbers); level.add(leaf);
       }
       numbers.add(COSInteger.get(entry.getKey())); numbers.add(entry.getValue());
     }
@@ -616,6 +615,7 @@ final class SemanticStructure {
     List<Object> operands = new ArrayList<>();
     Deque<Boolean> marked = new ArrayDeque<>();
     Deque<COSDictionary> groups = new ArrayDeque<>();
+    // Only a matching group marker can pop this stack; its root stays present.
     groups.push(contentSet);
     boolean text = false;
     boolean wrapping = false;
@@ -628,7 +628,7 @@ final class SemanticStructure {
       }
       String name = operator.getName();
       if (name.equals("BMC") && operands.size() == 1 && operands.get(0) instanceof COSName role && GROUPS.contains(role.getName())) {
-        COSDictionary parent = groups.peek();
+        COSDictionary parent = groups.getFirst();
         COSArray target = parent == contentSet ? children : (COSArray)parent.getDictionaryObject(COSName.K);
         COSDictionary group = element(document, parent, target, page, role.getName());
         children(group);
@@ -657,7 +657,7 @@ final class SemanticStructure {
           // ParentTree owners. Retain their text and bind those existing MCIDs.
           if (mcid < contentParents.size()
               && (contentParents.getObject(mcid) == null || contentParents.getObject(mcid) instanceof org.apache.pdfbox.cos.COSNull)) {
-            COSDictionary parent = groups.peek();
+            COSDictionary parent = groups.getFirst();
             COSArray target = parent == contentSet ? children : (COSArray)parent.getDictionaryObject(COSName.K);
             COSDictionary paragraph = element(document, parent, target, page, "P");
             COSDictionary span = element(document, paragraph, children(paragraph), page, "Span");
@@ -678,7 +678,7 @@ final class SemanticStructure {
           && page.getResources().isImageXObject(resource);
       if ((name.equals("BT") || image) && marked.stream().noneMatch(Boolean::booleanValue)) {
         String role = image ? "Figure" : textRole(input, index);
-        COSDictionary parent = groups.peek();
+        COSDictionary parent = groups.getFirst();
         COSArray target = parent == contentSet ? children : (COSArray)parent.getDictionaryObject(COSName.K);
         COSDictionary element = element(document, parent, target, page, role);
         if (image) element.setString(COSName.ALT, "Inline image from the email");

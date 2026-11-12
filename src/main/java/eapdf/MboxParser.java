@@ -72,8 +72,9 @@ final class MboxParser {
           message.write(buffer, 0, read);
           remaining -= read;
         }
-        envelope = input.line();
-        while (envelope != null && text(envelope).isEmpty()) envelope = input.line();
+        do {
+          envelope = input.line();
+        } while (envelope != null && text(envelope).isEmpty());
         if (envelope != null && !isEnvelope(envelope)) throw Common.fail("mailbox Content-Length does not end at a message boundary");
         nextEnvelopeOffset = input.lastLineOffset;
       } else {

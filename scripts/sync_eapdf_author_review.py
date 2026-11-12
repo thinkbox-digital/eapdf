@@ -16,7 +16,7 @@ from lxml import etree
 ROOT = Path(__file__).resolve().parents[1]
 AUDIT = ROOT / 'docs/improvement/specification-audit'
 REFINEMENT = ROOT / 'docs/improvement/rule-refinement-2026-10-31'
-PATH = ROOT / 'EA_PDF_Rule_Review_for_Specification_Authors.docx'
+PATH = ROOT / 'docs/specification-review/EA_PDF_Rule_Review_for_Specification_Authors.docx'
 RULE = re.compile(r'Rule (\d+) — (\w+)')
 DATE = '2026-10-31'
 

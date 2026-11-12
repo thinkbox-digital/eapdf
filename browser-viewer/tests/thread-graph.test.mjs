@@ -72,3 +72,38 @@ test('subject groups retain missing ancestor provenance and put undated componen
  assert.equal(g.missing,1);assert.deepEqual(g.nodes[1].missingAncestors,['missing']);assert.equal(g.roots.length,2);
  assert.equal(g.nodes.find(n=>n.mid==='other').parent,null);
 });
+
+const permutations=items=>items.length?items.flatMap((item,i)=>permutations(items.filter((_,j)=>j!==i)).map(rest=>[item,...rest])):[[]];
+const parentOf=(g,mid)=>{const n=g.nodes.find(n=>n.mid===mid);return n.parent===null?null:g.nodes[n.parent].mid;};
+const membership=g=>g.roots.map(root=>{const members=[],pending=[root];while(pending.length){const n=g.nodes[pending.pop()];if(n.message!==null)members.push(n.mid);pending.push(...n.children);}return members.sort();}).sort((a,b)=>a.join(',').localeCompare(b.join(',')));
+
+test('all permutations preserve explicit roots over another message ancestry hints',()=>{
+ const messages=[m('a'),m('b'),m('c','<a> <b>')],before=JSON.stringify(messages);
+ for(const input of permutations(messages))for(const infer of [false,true]){
+  const g=threadGraph(input,infer),order=input.map(m=>m.messageId).join(',');
+  assert.equal(parentOf(g,'a'),null,order);assert.equal(parentOf(g,'b'),null,order);assert.equal(parentOf(g,'c'),'b',order);
+  assert.deepEqual(membership(g),[['a'],['b','c']],order);assert.equal(g.linked,1);assert.equal(g.cycles,0);
+ }
+ assert.equal(JSON.stringify(messages),before);
+});
+
+test('all permutations retain own References or In-Reply-To rather than conflicting ancestry hints',()=>{
+ for(const own of [['<d>','<wrong>'],['','<d>'],['<invalid id>','<d>']]){
+  const messages=[m('a'),m('b',...own),m('c','<a> <b>'),m('d')];
+  for(const input of permutations(messages)){
+   const g=threadGraph(input),order=input.map(m=>m.messageId).join(',');
+   assert.equal(parentOf(g,'b'),'d',order);assert.equal(parentOf(g,'c'),'b',order);
+   assert.deepEqual(membership(g),[['a'],['b','c','d']],order);assert.equal(g.linked,2);
+   assert.equal(g.nodes.find(n=>n.mid==='b').evidence,'Confirmed');
+  }
+ }
+});
+
+test('ancestry hints cannot create a cycle that defeats a message own missing-parent decision',()=>{
+ for(const input of permutations([m('b','<missing>'),m('c','<b> <missing>')])){
+  const g=threadGraph(input),order=input.map(m=>m.messageId).join(',');
+  assert.equal(parentOf(g,'b'),'missing',order);assert.equal(parentOf(g,'c'),'missing',order);
+  assert.equal(g.nodes[g.roots[0]].mid,'missing');assert.equal(g.nodes[g.roots[0]].message,null);
+  assert.deepEqual(membership(g),[['b','c']],order);assert.equal(g.linked,2);assert.equal(g.cycles,1);
+ }
+});

@@ -1,7 +1,9 @@
 EA-PDF user manual: editing, building and screenshots
 
 The deliverable is ../EA-PDF_User_Manual.pdf (ordinary PDF/A-2b, not EA-PDF).
-user-manual.html is the editable, offline-readable source.
+user-manual.html is the editable, offline-readable source. Its edition paragraph
+declares data-edition; the build receipt reads that value rather than a fixed date.
+The website is generated from this HTML. Rebuild the PDF separately after edits.
 
 Build from the repository root with Java 21 and requirements-docs.txt installed:
 
@@ -15,7 +17,8 @@ ICC, PDFBox/XMPBox, and the validator JAR's veraPDF engine. All intermediate
 layout/classes are private temporary files removed on success or failure.
 The same checked source/assets produced a byte-identical second PDF.
 
-To refresh screenshots, first build the application JARs and browser viewer.
+Existing screenshots retain their recorded earlier-beta provenance; the manual
+labels that scope. To refresh screenshots, first build the application JARs and browser viewer.
 Do not substitute mocked UI or change a validation result for a screenshot.
 Use only the fictional inputs prepared below; Gmail is shown before login.
 CaptureScreenshots prints actual rendered Swing windows. capture-browser.mjs

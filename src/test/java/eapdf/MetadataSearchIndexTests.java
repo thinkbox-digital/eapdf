@@ -48,7 +48,7 @@ class MetadataSearchIndexTests {
       assertArrayEquals(original,Files.readAllBytes(Path.of("in/sample.eml")));
     }
   }
-  static record Fixture(PDDocument doc,EmailRecord record,List<PdfMailWriter.CollectionMember> members,
+  static record Fixture(PDDocument doc,EmailRecord record,List<PdfCollectionSupport.CollectionMember> members,
       Map<EmailRecord,PDComplexFileSpecification> files,Map<String,PDComplexFileSpecification> names) implements AutoCloseable {
     public void close() throws IOException{doc.close();}
     byte[] encode() throws IOException{return MetadataSearchIndex.encode(doc,members,files,names);}
@@ -60,7 +60,7 @@ class MetadataSearchIndexTests {
     var file=new PDComplexFileSpecification();file.setFile("child.pdf");file.setFileUnicode("child.pdf");
     byte[] child="fixture bytes".getBytes(StandardCharsets.UTF_8);
     var stream=new PDEmbeddedFile(doc,new ByteArrayInputStream(child));stream.setSize(child.length);PdfMailWriter.setEmbeddedChecksum(stream,Common.md5Hex(child));file.setEmbeddedFile(stream);
-    var member=new PdfMailWriter.CollectionMember("",record.subject,"s",List.of(record),0,1,"child.pdf",child,0,record.sentXmp);
+    var member=new PdfCollectionSupport.CollectionMember("",record.subject,"s",List.of(record),0,1,"child.pdf",child,0,record.sentXmp);
     return new Fixture(doc,record,List.of(member),Map.of(record,file),Map.of("child.pdf",file));
   }
   @Test void encodingIsDeterministicAndPreservesUnicodeAndAllRecipients() throws Exception {
@@ -90,7 +90,7 @@ class MetadataSearchIndexTests {
       var duplicate=new EmailRecord();duplicate.mailGuid=f.record.mailGuid;
       var file=new PDComplexFileSpecification(new COSDictionary(f.files.get(f.record).getCOSObject()));
       assertThrows(IOException.class,()->MetadataSearchIndex.encode(f.doc,f.members,Map.of(f.record,f.files.get(f.record),duplicate,file),Map.of("child.pdf",f.files.get(f.record),"other.pdf",file)));
-      var nested=new PdfMailWriter.CollectionMember("","Nested","c",List.of(f.record),0,1,"child.pdf",new byte[0],0,"");
+      var nested=new PdfCollectionSupport.CollectionMember("","Nested","c",List.of(f.record),0,1,"child.pdf",new byte[0],0,"");
       assertThrows(IOException.class,()->MetadataSearchIndex.encode(f.doc,List.of(nested),f.files,f.names));
     }
   }

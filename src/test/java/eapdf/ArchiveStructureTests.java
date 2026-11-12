@@ -1,7 +1,7 @@
 package eapdf;
 
 import java.util.List;
-import eapdf.PdfMailWriter.MessageSegment;
+import eapdf.PdfCollectionSupport.MessageSegment;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;

@@ -23,7 +23,7 @@ try{
  await call('/moz/context',{context:'chrome'});
  const uuid=await execute(id=>JSON.parse(Services.prefs.getCharPref('extensions.webextensions.uuids'))[id],[addon]);
  await call('/moz/context',{context:'content'});const url=`moz-extension://${uuid}/viewer.html`;await call('/url',{url});
- await until(()=>execute(()=>!!document.querySelector('#file')&&!document.querySelector('#file').disabled));
+ await until(()=>execute(()=>!!document.querySelector('#file')&&document.querySelector('#viewport').getAttribute('aria-busy')==='false'));
  const source=resolve('../examples/eml/eml_Agenda_and_timeline_slides_1s.pdf'),bytes=await readFile(source),sha256=createHash('sha256').update(bytes).digest('hex');const checks=[];
  for(const [name,selector] of [['left-empty','#navigation-panel'],['left-filter','#message-filter'],['left-message','#tree button'],['left-consuming-control','#message-filter'],['center','#viewport'],['right','#files'],['toolbar','.app-header']]){
   const cancelled=await execute((selector,name,encoded)=>{
@@ -33,7 +33,7 @@ try{
    return ['dragenter','dragover','drop'].map(type=>{const event=new DragEvent(type,{bubbles:true,cancelable:true,dataTransfer});target.dispatchEvent(event);return event.defaultPrevented;});
   },[selector,name,bytes.toString('base64')]);
   assert.deepEqual(cancelled,[true,true,true]);
-  await until(()=>execute(name=>document.querySelector('#header-filename').textContent===name+'.pdf'&&!document.querySelector('#file').disabled,[name]));
+  await until(()=>execute(name=>document.querySelector('#header-filename').textContent===name+'.pdf'&&document.querySelector('#viewport').getAttribute('aria-busy')==='false',[name]));
   assert.equal(await call('/url',undefined,'GET'),url);checks.push({target:name,status:'PASS'});console.log('PASS Firefox drop:',name);
  }
  assert.equal(createHash('sha256').update(await readFile(source)).digest('hex'),sha256);

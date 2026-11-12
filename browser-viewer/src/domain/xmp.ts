@@ -78,12 +78,35 @@ export function parseXmp(text: string | null, loc: ObjectLocator, parse: (source
       }
       if(['From','To','Cc','Bcc'].includes(key)) {
         const foaf='http://xmlns.com/foaf/0.1/';
-        display[key]=nodes.flatMap(n=>typeof n==='string'?[]:[...n.getElementsByTagNameNS(NS.rdf,'li')].map(li=>{
-          const name=li.getElementsByTagNameNS(foaf,'name')[0]?.textContent??'';
-          const address=li.getElementsByTagNameNS(foaf,'mbox')[0];
-          const mailbox=(address?.getAttributeNS(NS.rdf,'resource')??address?.textContent??'').replace(/^mailto:/i,'');
-          return mailbox?`${name} <${mailbox}>`:name;
-        })).filter(Boolean).join(', ');
+        const where=at(loc,`${container}[${index}]/${key}`);
+        let invalid=false;
+        const value=(resource:Element,field:string):string=>{
+          const values:string[]=[];
+          if(resource.hasAttributeNS(foaf,field))values.push(resource.getAttributeNS(foaf,field)!);
+          for(const node of children(resource,foaf,field)){
+            if(node.children.length||node.hasAttributeNS(NS.rdf,'parseType')||field==='name'&&node.hasAttributeNS(NS.rdf,'resource')){invalid=true;continue;}
+            values.push(node.getAttributeNS(NS.rdf,'resource')??node.textContent??'');
+          }
+          const unique=[...new Set(values)];
+          if(unique.length>1){invalid=true;diagnostic('XMP_DISPLAY_VALUE_AMBIGUOUS','ambiguous',`Conflicting ${key} ${field} values were found.`,where);}
+          return unique[0]??'';
+        };
+        const variants=nodes.map(node=>{
+          if(typeof node==='string'){invalid=true;return '';}
+          const arrays=[...children(node,NS.rdf,'Seq'),...children(node,NS.rdf,'Bag')];
+          if(arrays.length!==1||node.children.length!==1){invalid=true;return '';}
+          return children(arrays[0]!,NS.rdf,'li').map(li=>{
+            const descriptions=children(li,NS.rdf,'Description');
+            if(descriptions.length>1){invalid=true;return '';}
+            const resource=descriptions[0]??li;
+            const name=value(resource,'name'),mailbox=value(resource,'mbox').replace(/^mailto:/i,'');
+            return mailbox?(name?`${name} <${mailbox}>`:mailbox):name;
+          }).filter(Boolean).join(', ');
+        });
+        const unique=[...new Set(variants)];
+        if(invalid)diagnostic('XMP_DISPLAY_VALUE_UNAVAILABLE','unavailable',`${key} could not be read unambiguously. No value was selected.`,where);
+        else if(unique.length!==1)diagnostic('XMP_DISPLAY_VALUE_AMBIGUOUS','ambiguous',`Conflicting ${key} lists were found. No value was selected.`,where);
+        else display[key]=unique[0]!;
       }
     }
     records.push({id,kind,locator:where,fields,uninspectedFields:[...groups.keys()].filter(k=>!selected.has(k)).sort(),owners:observation<readonly string[]>(null,{state:'not-evaluated'}),files:observation<readonly string[]>(null,{state:'not-evaluated'})});

@@ -23,14 +23,18 @@ export function threadGraph(messages:readonly IndexedMessage[],infer=false):Thre
   while(cursor!==null){if(++operations>2_000_000)throw Error('Thread reconstruction complexity limit reached.');if(cursor===child){cycles++;return;}cursor=nodes[cursor]!.parent;}
   nodes[child]!.parent=parent;nodes[child]!.evidence=evidence;
  };
+ const chains:number[][]=[];
+ // Resolve every real message's own parent (including no parent) before hints.
  messages.forEach((m,i)=>{
   let refs=messageIds(m.references);if(!refs.length)refs=messageIds(m.inReplyTo).slice(0,1);
   tokens+=refs.length;if(tokens>200000)throw Error('Too many reference identifiers for this preview.');
   refs=refs.filter((id,index)=>index===0||id!==refs[index-1]);
   const chain=refs.map(mid=>{let id=ids.get(mid);if(id===undefined){id=node(mid,null,'Missing parent <'+mid+'>');ids.set(mid,id);}return id;});
-  for(let j=1;j<chain.length;j++)link(chain[j-1]!,chain[j]!,'Confirmed');
+  if(chain.length>1)chains.push(chain);
   if(chain.length)link(chain.at(-1)!,actual[i]!,'Confirmed',true);else {nodes[actual[i]!]!.parent=null;nodes[actual[i]!]!.evidence=null;}
  });
+ // Ancestry hints may fill missing containers, never override real messages.
+ for(const chain of chains)for(let j=1;j<chain.length;j++)if(nodes[chain[j]!]!.message===null)link(chain[j-1]!,chain[j]!,'Confirmed');
  // Prune empty/single-child missing containers bottom-up. Preserve their IDs
  // as provenance on promoted children; shared missing roots retain their context.
  const adjacency=nodes.map(()=>[] as number[]);

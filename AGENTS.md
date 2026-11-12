@@ -4,20 +4,20 @@ Build:
 mvn package
 
 Main entry point:
-src/main/java/EmailToPDFA.java
+src/main/java/eapdf/EmailToPDFA.java
 
 Email source readers:
-src/main/java/EmlReader.java
-src/main/java/MsgReader.java
-src/main/java/PstReader.java
-src/main/java/GmailDownloadToPdf.java
+src/main/java/eapdf/EmlReader.java
+src/main/java/eapdf/MsgReader.java
+src/main/java/eapdf/PstReader.java
+src/main/java/eapdf/GmailDownloadToPdf.java
 
 PDF generation:
-src/main/java/PdfMailWriter.java
+src/main/java/eapdf/PdfMailWriter.java
 
 Shared helpers:
-src/main/java/Common.java
-src/main/java/Models.java
+src/main/java/eapdf/Common.java
+src/main/java/eapdf/Models.java
 
 Goal:
 Convert email sources (EML, MSG, PST, Gmail) into EA-PDF compliant files using PDFBox and XMPBox.
@@ -61,3 +61,5 @@ Rules:
 - For eapdf-regenerate, both sample and everything must keep each PST/MBOX as whole-source 1m/1mi/1c/1ci archives; never schedule individual-email 1s/1si extraction from those containers. Random EML/MSG archive groups must be bounded (currently 20 sources), cover every selected source and record their membership in run evidence.
 
 - Keep private correspondence and sample contributors anonymous in first-party documentation and release notes. Use generic interoperability labels; do not publish contributor names, company names or private sample filenames. Preserve required legal attribution and original input bytes. Run `python3 scripts/check_public_docs.py` before publication.
+
+- Maintain current handover status in docs/PROJECT_STATUS.md and separation decisions in docs/ARCHITECTURE.md. Keep docs/DEVELOPMENT_STATUS.md and docs/private local and ignored. Update the authoritative user/reference guide when behaviour changes; historical audit counts remain dated evidence.

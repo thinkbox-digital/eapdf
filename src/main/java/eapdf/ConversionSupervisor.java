@@ -305,6 +305,7 @@ public final class ConversionSupervisor {
     if (owner == null || owner.supervisor() != parent.pid() || !sameProcess(owner.supervisor(), owner.supervisorStart())) {
       throw Common.fail("Invalid supervised-worker ownership");
     }
+    // Intentional bounded polling: notice parent death even if conversion hangs.
     Thread watchdog = new Thread(() -> {
       while (parent.isAlive()) {
         try { Thread.sleep(100); } catch (InterruptedException error) { return; }

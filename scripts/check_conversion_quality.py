@@ -147,6 +147,13 @@ def main():
             require(receipt['messages'] == len(quality_formats.messages(case)), 'Receipt message count differs from independent source expectations')
             require(receipt['creation_checks'] == receipt['preservation_comparison'] == 'PASS', 'Creation checks incomplete')
             require(receipt['pdfa_validation'] == receipt['eapdf_validation'] == 'NOT_RUN', 'Creator claimed independent validation')
+            # Publish the regression artifact with its export profile; receipts
+            # above still verify the creator's original publication transaction.
+            profile_suffix = '_1' + case.get('archive_profile', 's')
+            if not pdf.stem.endswith(profile_suffix):
+                named = pdf.with_name(pdf.stem + profile_suffix + pdf.suffix)
+                require(not named.exists(), 'Profile-named output already exists')
+                pdf = pdf.rename(named)
             report = destination / 'validation.json'
             before = digest(pdf.read_bytes())
             run(['java', '-Xmx768m', '-cp', args.validator.resolve(), 'eapdf.JavaValidation', pdf, report], destination / 'validation.log')

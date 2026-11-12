@@ -11,7 +11,7 @@ try {
  const requests=[],errors=[];context.on('request',r=>{if(/^https?:/.test(r.url()))requests.push(r.url());});await context.setOffline(true);
  const service=context.serviceWorkers()[0]??await context.waitForEvent('serviceworker');const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`chrome-extension://${new URL(service.url()).host}/viewer.html`);
- await page.waitForFunction(()=>!document.querySelector('#file').disabled);
+ await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
  const ordinary=(await readFile('tests/fixtures/ordinary.pdf')).toString('base64');
  const nested=(await readFile('tests/inspection/controls/c-nested-mixed.pdf')).toString('base64');
  const attachments=(await readFile('tests/attachments/viewing.pdf')).toString('base64');
@@ -102,7 +102,7 @@ try {
  // A link only presents a button; navigating to the extension never fetches it.
  const viewerUrl=page.url().split('#')[0];
  for(const source of ['https://example.invalid/file.pdf','file:///tmp/example.pdf']){
-  await page.goto('about:blank');await page.goto(viewerUrl+'#source='+encodeURIComponent(source));await page.waitForFunction(()=>!document.querySelector('#file').disabled);
+  await page.goto('about:blank');await page.goto(viewerUrl+'#source='+encodeURIComponent(source));await page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
   assert.equal(await page.locator('#linked-file').isVisible(),true);
   assert.equal(await page.locator('#open-linked').isVisible(),source.startsWith('https:'));
  }

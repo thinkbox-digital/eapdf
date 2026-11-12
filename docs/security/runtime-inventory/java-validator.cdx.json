@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "EA-PDF Java validator",
-      "version": "1.6.0-beta.7"
+      "version": "2.1.0-beta.1"
     },
     "properties": [
       {
@@ -600,13 +600,13 @@
       "type": "library",
       "group": "org.apache.logging.log4j",
       "name": "log4j-api",
-      "version": "2.24.3",
-      "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.24.3",
-      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-api@2.24.3",
+      "version": "2.25.5",
+      "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.25.5",
+      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-api@2.25.5",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "5b4a0a0cd0e751ded431c162442bdbdd53328d1f8bb2bae5fc1bbeee0f66d80f"
+          "content": "64777f73ea0b3104c04eb82befbdccc30a425a19e83ad06cb2f93aa303511863"
         }
       ],
       "properties": [
@@ -1122,12 +1122,12 @@
     },
     {
       "type": "file",
-      "name": "eapdf-validator.jar",
-      "bom-ref": "artifact:eapdf-validator.jar",
+      "name": "eapdf-validator-2.1.0-beta.1.jar",
+      "bom-ref": "artifact:eapdf-validator-2.1.0-beta.1.jar",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "7775823252bae7d435dd2f030af8c45328d757ca3d370b7dd75c30239db61ad4"
+          "content": "76586ad2bc242bd76041a90077b21016f7d80d5d2349cbebea5a205807ffdb33"
         }
       ]
     }

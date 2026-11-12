@@ -9,6 +9,55 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MarkedContentRepairTests {
   @Test
+  void nestedGroupsAndSurplusClosuresRetainTheRootAndTextOwnership() throws Exception {
+    try (PDDocument document = new PDDocument()) {
+      PDPage page = new PDPage();
+      document.addPage(page);
+      page.setResources(new PDResources());
+      var font = PdfMailWriter.loadUiFont(document, TestSupport.fontPath());
+      String fontName = page.getResources().add(font).getName();
+      String content = "EMC /Table BMC /TR BMC /TD BMC /Artifact BMC EMC "
+          + "BT /" + fontName + " 12 Tf 50 700 Td (Inside group) Tj ET "
+          + "EMC EMC EMC EMC "
+          + "BT /" + fontName + " 12 Tf 50 650 Td (After group) Tj ET";
+      var stream = new org.apache.pdfbox.pdmodel.common.PDStream(document);
+      try (var output = stream.createOutputStream()) {
+        output.write(content.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+      }
+      page.setContents(stream);
+      String visible = new PDFTextStripper().getText(document);
+      COSDictionary tree = new COSDictionary();
+      COSDictionary contentSet = PdfMailWriter.structElem("Mail_ContentSet", tree, page);
+      SemanticStructure.attach(document, tree, contentSet, null, 0, 0);
+
+      COSArray rootChildren = assertInstanceOf(COSArray.class, contentSet.getDictionaryObject(COSName.K));
+      assertEquals(2, rootChildren.size());
+      COSDictionary table = assertInstanceOf(COSDictionary.class, rootChildren.getObject(0));
+      assertEquals("Table", table.getNameAsString(COSName.S));
+      COSDictionary row = firstChild(table), cell = firstChild(row), inside = firstChild(cell);
+      assertEquals("TR", row.getNameAsString(COSName.S));
+      assertEquals("TD", cell.getNameAsString(COSName.S));
+      assertSame(cell, inside.getDictionaryObject(COSName.P));
+      COSDictionary after = assertInstanceOf(COSDictionary.class, rootChildren.getObject(1));
+      assertSame(contentSet, after.getDictionaryObject(COSName.P));
+
+      COSDictionary parents = assertInstanceOf(COSDictionary.class, tree.getDictionaryObject(COSName.getPDFName("ParentTree")));
+      COSArray numbers = assertInstanceOf(COSArray.class, parents.getDictionaryObject(COSName.NUMS));
+      COSArray owners = assertInstanceOf(COSArray.class, numbers.getObject(1));
+      assertEquals(2, owners.size());
+      assertSame(inside, owners.getObject(0));
+      assertSame(after, owners.getObject(1));
+      assertEquals(visible, new PDFTextStripper().getText(document));
+    }
+  }
+
+  private static COSDictionary firstChild(COSDictionary parent) {
+    COSArray children = assertInstanceOf(COSArray.class, parent.getDictionaryObject(COSName.K));
+    assertEquals(1, children.size());
+    return assertInstanceOf(COSDictionary.class, children.getObject(0));
+  }
+
+  @Test
   void laterPageTextWithANullRendererOwnerGetsAReachableStructureReference() throws Exception {
     try (PDDocument document = new PDDocument()) {
       var font = PdfMailWriter.loadUiFont(document, TestSupport.fontPath());

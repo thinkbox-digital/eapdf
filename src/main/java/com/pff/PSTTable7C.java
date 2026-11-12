@@ -55,11 +55,11 @@ class PSTTable7C extends PSTTable {
     private final int BLOCK_SIZE;
 
     private List<HashMap<Integer, PSTTable7CItem>> items = null;
-    private int numberOfDataSets = 0;
-    private int cCols = 0;
-    private int TCI_bm = 0;
-    private NodeInfo rowNodeInfo = null;
-    private int TCI_1b = 0;
+    private int numberOfDataSets;
+    private int cCols;
+    private int TCI_bm;
+    private NodeInfo rowNodeInfo;
+    private int TCI_1b;
     private int overrideCol = -1;
 
     protected PSTTable7C(final PSTNodeInputStream in, final HashMap<Integer, PSTDescriptorItem> subNodeDescriptorItems)
@@ -199,23 +199,17 @@ class PSTTable7C extends PSTTable {
             startAtRecord = 0;
         }
 
-        // repeat the reading process for every dataset
-        int currentValueArrayStart = ((startAtRecord / numberOfRowsPerBlock) * this.BLOCK_SIZE)
-            + ((startAtRecord % numberOfRowsPerBlock) * this.TCI_bm);
-
         if (numberOfRecordsToReturn > this.getRowCount() - startAtRecord) {
             numberOfRecordsToReturn = this.getRowCount() - startAtRecord;
         }
 
         int dataSetNumber = 0;
-        // while ( currentValueArrayStart + ((cCols+7)/8) + TCI_1b <=
-        // rowNodeInfo.length())
         for (int rowCounter = 0; rowCounter < numberOfRecordsToReturn; rowCounter++) {
             final HashMap<Integer, PSTTable7CItem> currentItem = new HashMap<>();
             // Each block starts at a fresh row; padding is skipped once per
             // block, not repeatedly for every row beyond the first ANSI block.
             int row = startAtRecord + rowCounter;
-            currentValueArrayStart = (row / numberOfRowsPerBlock) * this.BLOCK_SIZE
+            int currentValueArrayStart = (row / numberOfRowsPerBlock) * this.BLOCK_SIZE
                 + (row % numberOfRowsPerBlock) * this.TCI_bm;
             if (currentValueArrayStart + this.TCI_bm > this.rowNodeInfo.length()) {
                 throw new PSTException("Truncated table row " + row);
@@ -402,7 +396,6 @@ class PSTTable7C extends PSTTable {
             }
             itemList.add(dataSetNumber, currentItem);
             dataSetNumber++;
-            currentValueArrayStart += this.TCI_bm;
         }
 
         // System.out.println(description);
@@ -464,5 +457,5 @@ class PSTTable7C extends PSTTable {
     }
 
     ColumnDescriptor[] columnDescriptors = null;
-    HashMap<Integer, Integer> keyMap = null;
+    HashMap<Integer, Integer> keyMap;
 }

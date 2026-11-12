@@ -199,7 +199,7 @@ final class PdfSigning {
       cms = signature.getContents();
     }
     long length = Files.size(pdf);
-    if (range == null || range.length != 4 || range[0] != 0 || range[1] <= 0
+    if (range[0] != 0 || range[1] <= 0
         || range[2] <= range[1] || range[3] < 0 || range[2] > length || range[3] != length - range[2])
       throw new GeneralSecurityException("The signature does not cover the entire output PDF.");
     try (InputStream bytes = new ByteRanges(pdf, range)) {

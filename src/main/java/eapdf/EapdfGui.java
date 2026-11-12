@@ -1,7 +1,6 @@
 package eapdf;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -13,10 +12,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,8 +57,9 @@ public class EapdfGui {
   private final JLabel outputLabel = new JLabel(" ");
   private Path lastOutputDirectory;
   private final List<JButton> runButtons = new ArrayList<>();
-  private volatile Process activeProcess;
-  private volatile boolean stopRequested;
+  private GuiConversionProcess conversionProcess;
+
+  private boolean stopRequested() { return conversionProcess != null && conversionProcess.stopRequested(); }
   private boolean running;
   private boolean closeRequested;
   private String lastRunError;
@@ -480,7 +477,9 @@ public class EapdfGui {
     logArea.setToolTipText("Recent output only. Complete conversion log: "+runLog);
     appendLogLines(logHeader);
     lastOutputDirectory = null;
-    stopRequested = false;
+    final GuiConversionProcess run = new GuiConversionProcess(command,
+        Paths.get(System.getProperty("user.dir")), tempConfigPath, signingPassword, runLog, logHeader);
+    conversionProcess = run;
     lastRunError = null;
     incompleteSource = false;
     outputLabel.setText(" ");
@@ -491,33 +490,7 @@ public class EapdfGui {
     SwingWorker<Integer, Void> worker = new SwingWorker<>() {
       @Override
       protected Integer doInBackground() throws Exception {
-        ProcessBuilder builder = new ProcessBuilder(command);
-        builder.directory(new File(System.getProperty("user.dir")));
-        builder.redirectErrorStream(true);
-        builder.environment().put("EAPDF_CONFIG", tempConfigPath.toString());
-        Process process;
-        try {
-          if (signingPassword != null) builder.environment().put(PdfSigning.PASSWORD_ENV, new String(signingPassword));
-          process = builder.start();
-        } finally {
-          builder.environment().remove(PdfSigning.PASSWORD_ENV);
-          if (signingPassword != null) java.util.Arrays.fill(signingPassword, '\0');
-        }
-        activeProcess = process;
-        if (stopRequested) ConversionSupervisor.requestStop(process);
-        try (BufferedReader reader = new BufferedReader(
-            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-             var saved=Files.newBufferedWriter(runLog,StandardCharsets.UTF_8)) {
-          for(String line:logHeader){saved.write(line);saved.newLine();}
-          GuiLog.copy(reader,saved,lines->SwingUtilities.invokeAndWait(()->appendLogLines(lines)));
-          int exitCode=process.waitFor();saved.write("Exit code: "+exitCode);saved.newLine();return exitCode;
-        } catch (Exception error) {
-          if (!stopRequested) {
-            ConversionSupervisor.requestStop(process);
-            throw error;
-          }
-        }
-        return process.waitFor();
+        return run.execute(lines -> SwingUtilities.invokeAndWait(() -> appendLogLines(lines)));
       }
 
       @Override
@@ -526,7 +499,7 @@ public class EapdfGui {
           int exitCode = get();
           appendLog("Exit code: " + exitCode);
           appendSummary("Full conversion log: "+runLog);
-          boolean stopped = stopRequested && exitCode != 0;
+          boolean stopped = stopRequested() && exitCode != 0;
           if (exitCode == 0 && Files.isDirectory(outputDirectory)) {
             lastOutputDirectory = outputDirectory;
             outputLabel.setText("Saved to: " + outputDirectory);
@@ -544,13 +517,12 @@ public class EapdfGui {
         } catch (Exception ex) {
           appendLog("Error: " + ex.getMessage());
           appendSummary("Full conversion log: "+runLog);
-          setRunning(false, stopRequested ? "Stopped" : "Failed");
-          appendSummary(stopRequested ? "Stopped." : "The conversion did not finish. See Details for the error.");
-          if (!stopRequested) showError(Objects.toString(ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage(), "Conversion failed."));
+          setRunning(false, stopRequested() ? "Stopped" : "Failed");
+          appendSummary(stopRequested() ? "Stopped." : "The conversion did not finish. See Details for the error.");
+          if (!stopRequested()) showError(Objects.toString(ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage(), "Conversion failed."));
         } finally {
-          if (signingPassword != null) java.util.Arrays.fill(signingPassword, '\0');
-          try { Files.deleteIfExists(tempConfigPath); } catch (Exception ignored) {}
-          activeProcess = null;
+          run.close();
+          conversionProcess = null;
           if (closeRequested) {
             frame.dispose();
             System.exit(0);
@@ -562,16 +534,11 @@ public class EapdfGui {
   }
 
   private void stopActiveProcess() {
-    if (!running || stopRequested) return;
-    stopRequested = true;
-    Process process = activeProcess;
+    if (!running || stopRequested()) return;
+    conversionProcess.requestStop();
     appendLog("Stopping active process...");
     statusLabel.setText("Stopping...");
     stopButton.setEnabled(false);
-    if (process == null) return;
-    Thread stop = new Thread(() -> ConversionSupervisor.requestStop(process), "eapdf-gui-stop");
-    stop.setDaemon(true);
-    stop.start();
   }
 
   private void setRunning(boolean running, String status) {
@@ -603,14 +570,14 @@ public class EapdfGui {
     for(String line:lines){
       GuiLog.tail(detail,line+System.lineSeparator(),GuiLog.DISPLAY_CHARACTERS);
       if (line.contains("INCOMPLETE SOURCE:")) incompleteSource = true;
-      if (line.startsWith("[progress] ") && running && !stopRequested)
+      if (line.startsWith("[progress] ") && running && !stopRequested())
         statusLabel.setText(line.substring("[progress] ".length()));
       String error = conversionError(line),message=null;
       if (line.startsWith("wrote: ") || line.startsWith("wrote archive: ") || line.startsWith("wrote pdf: ")) {
         try {message="Converted: " + Paths.get(line.substring(line.indexOf(':') + 1).trim()).getFileName();}
         catch (java.nio.file.InvalidPathException ex) {message=line;}
       } else if (error != null && (!line.startsWith("Caused by: ") || lastRunError == null)) {
-        lastRunError = error;if (!stopRequested) message="Error: " + lastRunError;
+        lastRunError = error;if (!stopRequested()) message="Error: " + lastRunError;
       } else if (line.startsWith("warning: ")) message=line;
       if(message!=null)GuiLog.tail(summary,message+System.lineSeparator(),GuiLog.SUMMARY_CHARACTERS);
     }
@@ -681,18 +648,8 @@ public class EapdfGui {
   }
 
   static Path writeGuiConfig(RunConfigOverrides overrides) throws Exception {
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    EapdfConfig cfg = gson.fromJson(gson.toJson(EapdfConfig.get()), EapdfConfig.class);
-    cfg = EapdfConfig.normalize(cfg == null ? new EapdfConfig() : cfg);
-    cfg.requireCreator();
-    cfg.searchIndex.enabled = overrides.searchIndexEnabled;
-    cfg.searchIndex.fullTextEnabled = overrides.searchIndexEnabled;
-    cfg.accessibility.addPdfUaFeatures = overrides.pdfUaEnabled;
-    cfg.signing = overrides.signing;
-    Path tempConfig = Files.createTempFile("eapdf-gui-config-", ".json");
-    Files.writeString(tempConfig, gson.toJson(cfg), StandardCharsets.UTF_8);
-    tempConfig.toFile().deleteOnExit();
-    return tempConfig;
+    return GuiRunConfiguration.write(EapdfConfig.get(), overrides.pdfUaEnabled,
+        overrides.searchIndexEnabled, overrides.signing);
   }
 
   private String describeConfigOverrides(RunConfigOverrides overrides) {
@@ -832,7 +789,7 @@ public class EapdfGui {
   private void putFlag(List<String> args, String flag, String value, String defaultValue) {
     String normalized = value == null ? "" : value.trim();
     if (normalized.isBlank()) return;
-    if (defaultValue != null && normalized.equals(defaultValue)) return;
+    if (normalized.equals(defaultValue)) return;
     args.add(flag);
     args.add(normalized);
   }

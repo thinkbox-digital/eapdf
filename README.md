@@ -2,22 +2,22 @@
 
 **[Read the documentation](https://thinkbox-digital.github.io/eapdf/)** — installation, conversion, validation and viewing guides.
 
-[Conversion quality](https://github.com/thinkbox-digital/eapdf/actions/workflows/quality.yml) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [Library packages](docs/PACKAGES.md)
+[Conversion quality](https://github.com/thinkbox-digital/eapdf/actions/workflows/quality.yml) · [Contributing](CONTRIBUTING.md) · [Current status](docs/PROJECT_STATUS.md) · [Architecture](docs/ARCHITECTURE.md) · [Security reporting](SECURITY.md) · [Library packages](docs/PACKAGES.md)
 
 [User manual (PDF/A)](docs/EA-PDF_User_Manual.pdf) — beginner instructions for the creator, both validators and viewer, with screenshots.
 
 Convert email into EA-PDF files using Java, PDFBox, and XMP metadata.
 
-Current beta version: `2.0.0-beta.2`
+Current beta version: `2.1.0-beta.1`
 
 The separate [browser viewer beta](browser-viewer/docs/beta-release.md) opens local
 EA-PDF files and embedded PDFs recursively in Firefox and Chromium. It also
 shows metadata, image and text attachments, with normal downloads for Office files.
-Viewer version `1.0.0-beta.2` includes collection-wide email search, CSV finding
-aids with folder and attachment details, and paced file downloads. Installation and tested limits
+Viewer version `1.1.0-beta.1` includes collection-wide email search, CSV metadata
+export with folder and attachment details, and paced file downloads. Installation and tested limits
 are documented in that guide.
 
-Latest release: [v2.0.0-beta.2](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.0.0-beta.2). Java 21 or later is required.
+Latest release: [v2.1.0-beta.1](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.1.0-beta.1). Java 21 or later is required.
 
 The current source tree adds optional [embedded metadata and full-text indexes](docs/EMBEDDED_SEARCH_INDEX.md).
 Full-text generation uses built-in PDFBox extraction and shared text normalization.
@@ -156,13 +156,12 @@ Without `--archive-profile`, a mailbox or multiple inputs produce separate messa
 
 For EML/MSG inputs, non-isolated output retains the original message asset. For PST, MBOX and Gmail, it retains the individual RFC 822 message exported/reconstructed by the reader, **not the original PST/MBOX container or a complete Gmail mailbox**. Keep those originals separately when their full storage format and properties matter. These source policies are separate from whether the rendered PDF faithfully reproduces every source layout.
 
-### Finding aids and conformance
+### Collection covers, metadata export and conformance
 
-For `1m`/`1mi`, an enabled PDF index appears before the message pages and `embedExcel` embeds the XLSX in the archive. `excelEnabled` can also write an external XLSX.
-
-Oversized spreadsheet fields are preserved in numbered chunks on `Continuation` sheets. The main index links to the first chunk; each chunk identifies the email, field and part number. No text is truncated.
-
-Branding, finding-aid generation and PREMIS output have been removed from the creator GUI and command line. Collections retain their required cover page.
+The creator no longer generates branding, finding-aid PDFs/XLSX or PREMIS output.
+Profiles 1c/1ci retain their required statistics/instructions cover; 1m/1mi begin
+with message content. The viewer independently exports selected metadata fields
+as CSV and original XMP packets; this does not require creator finding aids.
 
 See [configuration](config/README.md) for the supported settings.
 
@@ -174,12 +173,12 @@ All six profiles currently use PDF 2.0 / PDF/A-4f output in this generator. Sele
 
 | Download | Purpose |
 | --- | --- |
-| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/emailtopdfa-2.0.0-beta.2-gui.jar) | Convert local email sources through the desktop app. |
-| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/emailtopdfa-2.0.0-beta.2.jar) | Run local email and Gmail workflows from the command line. |
-| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/eapdf-validator-2.0.0-beta.2.jar) | Validate a PDF using the bundled Java engines and current rules. |
-| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/eapdf-viewer-1.0.0-beta.2-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
-| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/eapdf-viewer-1.0.0-beta.2-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
-| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v2.0.0-beta.2/ea-pdf-examples-2.0.0-beta.2.zip) | Regenerated examples with source hashes and recorded validation results. |
+| [Creator GUI](https://github.com/thinkbox-digital/eapdf/releases/download/v2.1.0-beta.1/emailtopdfa-2.1.0-beta.1-gui.jar) | Convert local email sources through the desktop app. |
+| [Creator CLI](https://github.com/thinkbox-digital/eapdf/releases/download/v2.1.0-beta.1/emailtopdfa-2.1.0-beta.1.jar) | Run local email and Gmail workflows from the command line. |
+| [Standalone validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.1.0-beta.1/eapdf-validator-2.1.0-beta.1.jar) | Validate a PDF using the bundled Java engines and current rules. |
+| [Chromium viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.1.0-beta.1/eapdf-viewer-1.1.0-beta.1-chromium.zip) | Browse EA-PDF messages and embedded files locally. |
+| [Firefox viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.1.0-beta.1/eapdf-viewer-1.1.0-beta.1-firefox.zip) | The same viewer, packaged for temporary Firefox installation. |
+| [EML, MSG, PST and MBOX examples](https://github.com/thinkbox-digital/eapdf/releases/download/v2.1.0-beta.1/ea-pdf-examples-2.1.0-beta.1.zip) | Regenerated examples with source hashes and recorded validation results. |
 
 Each JAR includes its runtime libraries. The release also includes the updated specification-author review document, license notices and `SHA256SUMS.txt`. Run a desktop app with `java -jar downloaded-file.jar`.
 
@@ -204,36 +203,36 @@ mvn package
 
 Artifacts:
 
-- CLI fat jar: `target/emailtopdfa-2.0.0-beta.2.jar`
-- GUI fat jar: `target/emailtopdfa-2.0.0-beta.2-gui.jar`
+- CLI fat jar: `target/emailtopdfa-2.1.0-beta.1.jar`
+- GUI fat jar: `target/emailtopdfa-2.1.0-beta.1-gui.jar`
 
 The current creator build is also available in `dist/`:
 
 ```bash
-java -Xmx2g -jar dist/emailtopdfa-2.0.0-beta.2.jar --jobs 2 --out out file.eml
-java -jar dist/emailtopdfa-2.0.0-beta.2-gui.jar
+java -Xmx2g -jar dist/emailtopdfa-2.1.0-beta.1.jar --jobs 2 --out out file.eml
+java -jar dist/emailtopdfa-2.1.0-beta.1-gui.jar
 ```
 
-The web creator uses the newer of `dist/emailtopdfa-2.0.0-beta.2.jar` and the current-version
+The web creator uses the newer of `dist/emailtopdfa-2.1.0-beta.1.jar` and the current-version
 CLI JAR in `target/`. Restart an already
 running web process to load a changed application or creator JAR selection.
 
 Convert a local email source:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.2.jar eapdf.EmailToPDFA --jobs 2 file.eml
+java -Xmx2g -cp target/emailtopdfa-2.1.0-beta.1.jar eapdf.EmailToPDFA --jobs 2 file.eml
 ```
 
 Write output to a custom directory:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.2.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
+java -Xmx2g -cp target/emailtopdfa-2.1.0-beta.1.jar eapdf.EmailToPDFA --jobs 2 --out out file.pst
 ```
 
 Generate an archive profile:
 
 ```bash
-java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.2.jar eapdf.EmailToPDFA \
+java -Xmx2g -cp target/emailtopdfa-2.1.0-beta.1.jar eapdf.EmailToPDFA \
   --jobs 2 --archive-profile m \
   --archive-output archive_1m.pdf \
   file.mbox
@@ -242,7 +241,7 @@ java -Xmx2g -cp target/emailtopdfa-2.0.0-beta.2.jar eapdf.EmailToPDFA \
 Validate a PDF with the standalone Java engine:
 
 ```bash
-java -Xmx4g -cp dist/eapdf-validator-2.0.0-beta.2.jar eapdf.JavaValidation archive_1m.pdf validation.json
+java -Xmx4g -cp dist/eapdf-validator-2.1.0-beta.1.jar eapdf.JavaValidation archive_1m.pdf validation.json
 ```
 
 The CLI example gives the JVM 4 GiB; choose a heap suited to the file and available
@@ -281,7 +280,7 @@ python validator_web.py
 Launch the desktop GUI:
 
 ```bash
-java -jar target/emailtopdfa-2.0.0-beta.2-gui.jar
+java -jar target/emailtopdfa-2.1.0-beta.1-gui.jar
 ```
 
 Tracked examples are grouped by source format under [`examples/`](examples/):
@@ -321,8 +320,8 @@ python3 -B scripts/regenerate_email_samples.py
 To use the local verified build and retain detailed validation reports:
 
 ```bash
-EAPDF_GENERATOR_CLASSPATH="$PWD/dist/emailtopdfa-2.0.0-beta.2.jar" \
-EAPDF_VALIDATOR_JAR="$PWD/dist/eapdf-validator-2.0.0-beta.2.jar" \
+EAPDF_GENERATOR_CLASSPATH="$PWD/dist/emailtopdfa-2.1.0-beta.1.jar" \
+EAPDF_VALIDATOR_JAR="$PWD/dist/eapdf-validator-2.1.0-beta.1.jar" \
 EAPDF_SAMPLE_REPORT_DIR="/tmp/eapdf-example-reports" \
 python3 -B scripts/regenerate_email_samples.py
 ```
@@ -438,32 +437,34 @@ Last checked: **2026-10-16**. "Used" means the version declared in
 every direct dependency (including runtime providers and tests), plus selected
 transitive libraries imported by the source or used by the PDF renderer. They
 are not a complete transitive-dependency inventory or vulnerability scan.
-Latest versions exclude snapshots and prereleases; release numbers link to
-Maven Central metadata. License names describe the versions used, based on
+Upstream references below are recorded review snapshots, not an automatic
+latest-version assessment. Resolved source dependencies and the deployment lock
+remain authoritative; [current status](docs/PROJECT_STATUS.md) separates released
+and unpublished updates. License names describe the versions used, based on
 their published POMs (including inherited declarations) and distribution notices.
 
 ### Java Libraries
 
-| Library / Maven artifact | Used | Declared license(s) | Latest stable / status |
+| Library / Maven artifact | Used | Declared license(s) | Recorded upstream reference |
 | --- | --- | --- | --- |
-| PST reader — `com.pff:java-libpst` | 0.9.3 | [Apache-2.0][dependency-apache] | [0.9.3](https://repo.maven.apache.org/maven2/com/pff/java-libpst/maven-metadata.xml) — current |
-| MSG reader — `org.simplejavamail:outlook-message-parser` | 1.16.2 | [Apache-2.0][dependency-apache] | [1.16.2](https://repo.maven.apache.org/maven2/org/simplejavamail/outlook-message-parser/maven-metadata.xml) — current |
-| Mail API — `jakarta.mail:jakarta.mail-api` | 2.1.5 | [EPL-2.0; GPL-2.0 + Classpath exception; EDL-1.0](https://repo.maven.apache.org/maven2/jakarta/mail/jakarta.mail-api/2.1.5/jakarta.mail-api-2.1.5.pom) (see note below) | [2.1.5](https://repo.maven.apache.org/maven2/jakarta/mail/jakarta.mail-api/maven-metadata.xml) — current |
-| Mail runtime — `org.eclipse.angus:angus-mail` | 2.0.5 | [EPL-2.0; GPL-2.0 + Classpath exception; EDL-1.0](https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-mail/2.0.5/angus-mail-2.0.5.pom) (see note below) | [2.0.5](https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-mail/maven-metadata.xml) — current |
-| Activation API — `jakarta.activation:jakarta.activation-api` | 2.1.4 | [EDL-1.0][dependency-edl] | [2.1.4](https://repo.maven.apache.org/maven2/jakarta/activation/jakarta.activation-api/maven-metadata.xml) — current |
-| Activation runtime — `org.eclipse.angus:angus-activation` | 2.0.3 | [EDL-1.0 (BSD-3-Clause)][dependency-edl] | [2.0.3](https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-activation/maven-metadata.xml) — current |
-| Excel / OLE — `org.apache.poi:poi`, `org.apache.poi:poi-ooxml` | 5.5.1 each | [Apache-2.0][dependency-apache] | [POI 5.5.1](https://repo.maven.apache.org/maven2/org/apache/poi/poi/maven-metadata.xml), [OOXML 5.5.1](https://repo.maven.apache.org/maven2/org/apache/poi/poi-ooxml/maven-metadata.xml) — current |
-| HTML parser — `org.jsoup:jsoup` | 1.23.2 | [MIT](https://jsoup.org/license) | [1.23.2](https://repo.maven.apache.org/maven2/org/jsoup/jsoup/maven-metadata.xml) — current |
-| HTML → PDF — `io.github.openhtmltopdf:openhtmltopdf-pdfbox` | 1.1.97 | [LGPL-2.1-or-later](https://github.com/openhtmltopdf/openhtmltopdf#license) | [1.1.97](https://repo.maven.apache.org/maven2/io/github/openhtmltopdf/openhtmltopdf-pdfbox/maven-metadata.xml) — current |
-| RTF → HTML — `com.github.bbottema:rtf-to-html` | 2.0.3 | [Apache-2.0][dependency-apache] | [2.0.3](https://repo.maven.apache.org/maven2/com/github/bbottema/rtf-to-html/maven-metadata.xml) — current |
-| PDF / XMP — `org.apache.pdfbox:pdfbox`, `org.apache.pdfbox:xmpbox` | 3.0.8 each | [Apache-2.0][dependency-apache] | [PDFBox 3.0.8](https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox/maven-metadata.xml), [XMPBox 3.0.8](https://repo.maven.apache.org/maven2/org/apache/pdfbox/xmpbox/maven-metadata.xml) — current |
-| Google API client — `com.google.api-client:google-api-client` | 2.9.1 | [Apache-2.0][dependency-apache] | [2.9.1](https://repo.maven.apache.org/maven2/com/google/api-client/google-api-client/maven-metadata.xml) — current |
-| OAuth — `com.google.oauth-client:google-oauth-client`, `google-oauth-client-jetty`, `google-oauth-client-java6` | 1.39.0 each | [Apache-2.0][dependency-apache] | [Core 1.39.0](https://repo.maven.apache.org/maven2/com/google/oauth-client/google-oauth-client/maven-metadata.xml), [Jetty 1.39.0](https://repo.maven.apache.org/maven2/com/google/oauth-client/google-oauth-client-jetty/maven-metadata.xml), [Java6 1.39.0](https://repo.maven.apache.org/maven2/com/google/oauth-client/google-oauth-client-java6/maven-metadata.xml) — current |
-| Google HTTP Gson adapter — `com.google.http-client:google-http-client-gson` | 2.2.0 | [Apache-2.0][dependency-apache] | [2.2.0](https://repo.maven.apache.org/maven2/com/google/http-client/google-http-client-gson/maven-metadata.xml) — current |
+| PST reader — `com.pff:java-libpst` | 0.9.3 | [Apache-2.0][dependency-apache] | [0.9.3](https://repo.maven.apache.org/maven2/com/pff/java-libpst/maven-metadata.xml) — recorded snapshot |
+| MSG reader — `org.simplejavamail:outlook-message-parser` | 1.16.2 | [Apache-2.0][dependency-apache] | [1.16.2](https://repo.maven.apache.org/maven2/org/simplejavamail/outlook-message-parser/maven-metadata.xml) — recorded snapshot |
+| Mail API — `jakarta.mail:jakarta.mail-api` | 2.1.5 | [EPL-2.0; GPL-2.0 + Classpath exception; EDL-1.0](https://repo.maven.apache.org/maven2/jakarta/mail/jakarta.mail-api/2.1.5/jakarta.mail-api-2.1.5.pom) (see note below) | [2.1.5](https://repo.maven.apache.org/maven2/jakarta/mail/jakarta.mail-api/maven-metadata.xml) — recorded snapshot |
+| Mail runtime — `org.eclipse.angus:angus-mail` | 2.0.5 | [EPL-2.0; GPL-2.0 + Classpath exception; EDL-1.0](https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-mail/2.0.5/angus-mail-2.0.5.pom) (see note below) | [2.0.5](https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-mail/maven-metadata.xml) — recorded snapshot |
+| Activation API — `jakarta.activation:jakarta.activation-api` | 2.1.4 | [EDL-1.0][dependency-edl] | [2.1.4](https://repo.maven.apache.org/maven2/jakarta/activation/jakarta.activation-api/maven-metadata.xml) — recorded snapshot |
+| Activation runtime — `org.eclipse.angus:angus-activation` | 2.0.3 | [EDL-1.0 (BSD-3-Clause)][dependency-edl] | [2.0.3](https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-activation/maven-metadata.xml) — recorded snapshot |
+| Excel / OLE — `org.apache.poi:poi`, `org.apache.poi:poi-ooxml` | 5.5.1 each | [Apache-2.0][dependency-apache] | [POI 5.5.1](https://repo.maven.apache.org/maven2/org/apache/poi/poi/maven-metadata.xml), [OOXML 5.5.1](https://repo.maven.apache.org/maven2/org/apache/poi/poi-ooxml/maven-metadata.xml) — recorded snapshot |
+| HTML parser — `org.jsoup:jsoup` | 1.23.2 | [MIT](https://jsoup.org/license) | [1.23.2](https://repo.maven.apache.org/maven2/org/jsoup/jsoup/maven-metadata.xml) — recorded snapshot |
+| HTML → PDF — `io.github.openhtmltopdf:openhtmltopdf-pdfbox` | 1.1.105-eapdf.1 | [LGPL-2.1-or-later](https://github.com/openhtmltopdf/openhtmltopdf#license) | [Patched-source provenance](docs/RENDERER.md) |
+| RTF → HTML — `com.github.bbottema:rtf-to-html` | 2.0.3 | [Apache-2.0][dependency-apache] | [2.0.3](https://repo.maven.apache.org/maven2/com/github/bbottema/rtf-to-html/maven-metadata.xml) — recorded snapshot |
+| PDF / XMP — `org.apache.pdfbox:pdfbox`, `org.apache.pdfbox:xmpbox` | 3.0.8 each | [Apache-2.0][dependency-apache] | [PDFBox 3.0.8](https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox/maven-metadata.xml), [XMPBox 3.0.8](https://repo.maven.apache.org/maven2/org/apache/pdfbox/xmpbox/maven-metadata.xml) — recorded snapshot |
+| Google API client — `com.google.api-client:google-api-client` | 2.9.1 | [Apache-2.0][dependency-apache] | [2.9.1](https://repo.maven.apache.org/maven2/com/google/api-client/google-api-client/maven-metadata.xml) — recorded snapshot |
+| OAuth — `com.google.oauth-client:google-oauth-client`, `google-oauth-client-jetty`, `google-oauth-client-java6` | 1.39.0 each | [Apache-2.0][dependency-apache] | [Core 1.39.0](https://repo.maven.apache.org/maven2/com/google/oauth-client/google-oauth-client/maven-metadata.xml), [Jetty 1.39.0](https://repo.maven.apache.org/maven2/com/google/oauth-client/google-oauth-client-jetty/maven-metadata.xml), [Java6 1.39.0](https://repo.maven.apache.org/maven2/com/google/oauth-client/google-oauth-client-java6/maven-metadata.xml) — recorded snapshot |
+| Google HTTP Gson adapter — `com.google.http-client:google-http-client-gson` | 2.2.0 | [Apache-2.0][dependency-apache] | [2.2.0](https://repo.maven.apache.org/maven2/com/google/http-client/google-http-client-gson/maven-metadata.xml) — recorded snapshot |
 | HTTP transport — `com.google.http-client:google-http-client` | 2.2.0 | [Apache-2.0][dependency-apache] | [2.2.0](https://repo.maven.apache.org/maven2/com/google/http-client/google-http-client/maven-metadata.xml) |
 | JSON — `com.google.code.gson:gson` | 2.14.0 | [Apache-2.0][dependency-apache] | [2.14.0](https://repo.maven.apache.org/maven2/com/google/code/gson/gson/maven-metadata.xml) |
-| Gmail API bindings — `com.google.apis:google-api-services-gmail` | v1-rev20261005-2.0.0 | [Apache-2.0][dependency-apache] | [v1-rev20261005-2.0.0](https://repo.maven.apache.org/maven2/com/google/apis/google-api-services-gmail/maven-metadata.xml) — current |
-| Tests only — `org.junit.jupiter:junit-jupiter` | 6.1.3 | [EPL-2.0][dependency-epl] | [6.1.3](https://repo.maven.apache.org/maven2/org/junit/jupiter/junit-jupiter/maven-metadata.xml) — current |
+| Gmail API bindings — `com.google.apis:google-api-services-gmail` | v1-rev20261005-2.0.0 | [Apache-2.0][dependency-apache] | [v1-rev20261005-2.0.0](https://repo.maven.apache.org/maven2/com/google/apis/google-api-services-gmail/maven-metadata.xml) — recorded snapshot |
+| Tests only — `org.junit.jupiter:junit-jupiter` | 6.1.3 | [EPL-2.0][dependency-epl] | [6.1.3](https://repo.maven.apache.org/maven2/org/junit/jupiter/junit-jupiter/maven-metadata.xml) — recorded snapshot |
 
 The Jakarta Mail and Angus Mail POMs list multiple licenses. Their distribution
 notices describe EPL-2.0 and a conditional GPL-2.0 secondary license with the
@@ -476,17 +477,17 @@ they are not separately pinned direct dependencies. The POI scratchpad module is
 managed at 5.5.1 to match POI/OOXML, and the Google HTTP client BOM keeps its
 transport modules aligned at 2.2.0:
 
-| Library / Maven artifact | Resolved version | License | Latest stable |
+| Library / Maven artifact | Resolved version | License | Recorded upstream reference |
 | --- | --- | --- | --- |
 | PDF font support — `org.apache.pdfbox:fontbox` | 3.0.8 | [Apache-2.0][dependency-apache] | [3.0.8](https://repo.maven.apache.org/maven2/org/apache/pdfbox/fontbox/maven-metadata.xml) |
-| HTML renderer core — `io.github.openhtmltopdf:openhtmltopdf-core` | 1.1.97 | [LGPL-2.1-or-later](https://github.com/openhtmltopdf/openhtmltopdf#license) | [1.1.97](https://repo.maven.apache.org/maven2/io/github/openhtmltopdf/openhtmltopdf-core/maven-metadata.xml) |
+| HTML renderer core — `io.github.openhtmltopdf:openhtmltopdf-core` | 1.1.105-eapdf.1 | [LGPL-2.1-or-later](https://github.com/openhtmltopdf/openhtmltopdf#license) | [Patched-source provenance](docs/RENDERER.md) |
 
 ### Python Libraries
 
 Python dependencies use audited minimum versions with upper bounds on the next
 major release. The ranges come from [`requirements-web.txt`](requirements-web.txt)
 and [`requirements-docs.txt`](requirements-docs.txt); actual installed versions
-vary by environment. All ranges admit the latest stable versions checked below.
+vary by environment. Review requirement ranges and the hash lock separately; these recorded upstream references are not a live update check.
 Upgrade an activated virtual environment with `python -m pip --isolated install --upgrade -r requirements-web.txt -r requirements-docs.txt`.
 PyPI links provide upstream release and license metadata.
 
@@ -494,8 +495,8 @@ PyPI links provide upstream release and license metadata.
 | --- | --- | --- | --- |
 | Flask — validator web application | `>=3.1.3,<4` | [3.1.3](https://pypi.org/project/Flask/3.1.3/) | BSD-3-Clause |
 | Gunicorn — production web server | `>=26.2.0,<27` | [26.2.0](https://pypi.org/project/gunicorn/26.2.0/) | MIT |
-| pikepdf — PDF validation / sample processing | `>=10.17.0,<11` | [10.17.0](https://pypi.org/project/pikepdf/10.17.0/) | MPL-2.0 |
-| pypdf — PDF inspection | `>=7.0.0,<8` | [7.0.0](https://pypi.org/project/pypdf/7.0.0/) | BSD-3-Clause |
+| pikepdf — PDF validation / sample processing | `>=10.18.0,<11` | [10.18.0](https://pypi.org/project/pikepdf/10.18.0/) | MPL-2.0 |
+| pypdf — PDF inspection | `>=7.0.1,<8` | [7.0.1](https://pypi.org/project/pypdf/7.0.1/) | BSD-3-Clause |
 | ReportLab — documentation PDF generation | `>=5.0.1,<6` | [5.0.1](https://pypi.org/project/reportlab/5.0.1/) | BSD-3-Clause |
 | Werkzeug — directly imported web helpers | `>=3.1.9,<4` | [3.1.9](https://pypi.org/project/Werkzeug/3.1.9/) | BSD-3-Clause |
 
@@ -503,7 +504,7 @@ PyPI links provide upstream release and license metadata.
 
 These are build tools, not application libraries. All three are Apache-2.0 licensed.
 
-| Maven plugin (`org.apache.maven.plugins`) | Used | Latest stable |
+| Maven plugin (`org.apache.maven.plugins`) | Used | Recorded upstream reference |
 | --- | --- | --- |
 | `maven-compiler-plugin` | 3.16.0 | [3.16.0](https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/maven-metadata.xml) |
 | `maven-surefire-plugin` | 3.6.0 | [3.6.0](https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-surefire-plugin/maven-metadata.xml) |

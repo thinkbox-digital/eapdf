@@ -122,8 +122,7 @@ class EmlReader {
       src.mime = r.sourceMime;
       src.afRelationship = "Source";
       src.bytes = raw;
-      src.description = r.sourceMime.equals("message/global")
-          ? "Original international email source" : "Original RFC 822 source";
+      src.description = Common.sourceDescription(r);
       src.checksumMd5 = Common.md5Hex(src.bytes);
       src.checksumSha256 = Common.sha256Hex(src.bytes);
       src.emailAttachment = false;
@@ -659,8 +658,6 @@ class EmlReader {
     else try (InputStream in = reads==null?p.getInputStream():reads.open(p,p.getInputStream())) {
       bytes = ProcessingLimits.read(in, r.sourcePath);
     }
-
-    if (bytes == null) return;
 
     AssociatedFile af = new AssociatedFile();
     af.filename = hasFileName ? fn : ("part_" + String.format("%03d", ++seq[0]) + Common.extensionForMime(ct, fn));
