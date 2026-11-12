@@ -417,4 +417,4 @@ footer #status{flex:0 1 auto}footer .privacy-note{margin-left:auto}
 #files .file-description-block{grid-column:1;min-width:0}
 #files .file-description-block:has(.file-description-disclosure[open])>.file-description{display:none}
 #files .file-description-disclosure[hidden]{display:none}
-#files .file-description-disclosure>summary{display:block;min-height:0;padding:0;border:0;font-weight:400}
+#files .file-description-disclosure>summary{display:flex;align-items:center;min-height:44px;padding:0;border:0;font-weight:400}
