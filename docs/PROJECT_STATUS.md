@@ -38,6 +38,13 @@ the user owns Qodana reruns.
 
 Local fixture deletions and private samples are excluded from this release.
 Clean-checkout acceptance retains the original tracked PST regression fixtures.
+Local release acceptance on 12 November: creator 427 passes and one opt-in UI
+skip; Java validator 288 passes and two documented optional skips. The standalone
+JARs match clean repeat builds byte for byte. The 59 public Python regressions,
+15 frozen inspection-oracle tests, real EML/MSG/whole-MBOX fidelity/visual checks,
+Java conformance checks and signed-index checks pass. The manual passes PDF/A-2b.
+Browser workflow and capacity checks retain their documented scopes; these checks
+are not independent accessibility certification or a general capacity guarantee.
 Historical refactor acceptance on 11 November recorded 403 creator passes,
 287 Java-validator unit passes and two executable-JAR integration passes,
 183 viewer unit passes and 59 public Python passes. Current release checks are
