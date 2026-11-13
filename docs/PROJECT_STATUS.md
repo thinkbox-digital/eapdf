@@ -1,7 +1,7 @@
 # Project status
 
-Updated 13 November 2026 for **creator/validator 2.2.0-beta.1** and
-**full/Lite readers 1.2.0-beta.1**.
+Updated 13 November 2026 for **creator/validator 2.2.0-beta.2** and
+**full/Lite readers 1.2.0-beta.2**.
 
 ## This release
 
@@ -16,8 +16,8 @@ Updated 13 November 2026 for **creator/validator 2.2.0-beta.1** and
 - **Documentation:** shorter starting pages and simpler instructions. Regeneration
   instructions are near the end of the README.
 
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.1) ·
-[Release notes](releases/2.2.0-beta.1.md) · [Code layout](ARCHITECTURE.md)
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.2) ·
+[Release notes](releases/2.2.0-beta.2.md) · [Code layout](ARCHITECTURE.md)
 
 ## What is supported
 
@@ -29,10 +29,16 @@ Keep the original mailboxes. Isolated output omits sources; it does not remove
 private information from the visible email. The creator no longer makes PREMIS
 or finding-aid files. The reader's CSV export remains available.
 
+## Latest update
+
+Both readers use the supplied PNG and SVG artwork. A short [privacy policy](site/privacy.md)
+explains local files, optional connections and saved data. The release includes
+1280×800 screenshots of the Creator, Validator and both readers with fictional data.
+
 ## Checks and limits
 
 Release checks and library versions are recorded in the
-[verification record](releases/2.2.0-beta.1-validation.md).
+[verification record](releases/2.2.0-beta.2-validation.md).
 Earlier counts remain dated evidence in the changelog and release records.
 
 The tested desktop environment is mainly Linux with Java 21. Reader extensions

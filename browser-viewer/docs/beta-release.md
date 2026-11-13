@@ -1,8 +1,8 @@
 # Reader beta
 
-Full and Lite readers **1.2.0-beta.1** are included with **EA-PDF 2.2.0-beta.1**.
+Full and Lite readers **1.2.0-beta.2** are included with **EA-PDF 2.2.0-beta.2**.
 
-Get the ZIP for your browser from the [release page](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.1),
+Get the ZIP for your browser from the [release page](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.2),
 then follow the [installation guide](../README.md#install).
 
 ## Choose full or Lite
@@ -16,7 +16,7 @@ attachments, filtering and CSV/XMP export. Lite accepts PDFs up to 32 MiB and
 
 Chromium and Firefox checks cover all six EA-PDF formats, rendering, navigation,
 search and attachments. Lite also checks navigation while scanning a real
-56-message collection. See the [release checks](../../docs/releases/2.2.0-beta.1-validation.md).
+56-message collection. See the [release checks](../../docs/releases/2.2.0-beta.2-validation.md).
 
 These are unsigned beta extensions. Firefox installation is temporary. Browser
 store installation, every possible Portfolio layout and human accessibility

@@ -25,12 +25,12 @@ Isolated profiles deliberately omit source assets; they do not anonymize the ema
 
 ## About this documentation
 
-Published versions are **EA-PDF 2.2.0-beta.1** and **full/Lite readers 1.2.0-beta.1**.
+Published versions are **EA-PDF 2.2.0-beta.2** and **full/Lite readers 1.2.0-beta.2**.
 Screenshots illustrate earlier editions; current controls may differ. This is
 beta software. Read conversion warnings and validation reports before accepting
 a PDF.
 
-[Download the PDF/A manual](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.1/EA-PDF_User_Manual-2.2.0-beta.1.pdf)
+[Download the PDF/A manual](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.2/EA-PDF_User_Manual-2.2.0-beta.2.pdf)
 for an offline copy. Advanced setup is in **Reference**. Source code,
 [issues](https://github.com/thinkbox-digital/eapdf/issues) and
 [releases](https://github.com/thinkbox-digital/eapdf/releases) remain on GitHub.
