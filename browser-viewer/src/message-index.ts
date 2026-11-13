@@ -1,4 +1,5 @@
-import {readEmbeddedIndex,metadataSearchText} from './embedded-index.js';
+import {readEmbeddedIndex} from './embedded-index.js';
+import {metadataSearchText} from './metadata-search.js';
 import type {BrowserDocument,BrowserSession} from './browser-session.js';
 import {fileLabel} from './navigation.js';
 import type {SearchStep} from './collection-search.js';

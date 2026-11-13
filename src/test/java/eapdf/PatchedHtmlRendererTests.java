@@ -71,4 +71,46 @@ class PatchedHtmlRendererTests {
       }
     } finally { PdfMailWriter.CONFIG.accessibility.addPdfUaFeatures = previous; }
   }
+  @Test void opacityGroupsRetainMcidParentsAndPdf2Namespaces() throws Exception {
+    boolean previous = PdfMailWriter.CONFIG.accessibility.addPdfUaFeatures;
+    try {
+      PdfMailWriter.CONFIG.accessibility.addPdfUaFeatures = true;
+      byte[] bytes = PdfMailWriter.renderXhtmlPdf("""
+          <html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><title>Groups</title></head>
+          <body><p>Outside group</p><div style="opacity:0.6"><p>Grouped text</p>
+          <div style="opacity:0.5"><p>Nested group text</p></div></div><p>After group</p></body></html>
+          """, "", TestSupport.fontPath());
+      try (var document = Loader.loadPDF(bytes)) {
+        var tree = document.getDocumentCatalog().getCOSObject().getCOSDictionary(COSName.STRUCT_TREE_ROOT);
+        var numberTree = tree.getCOSDictionary(COSName.PARENT_TREE).getCOSArray(COSName.NUMS);
+        assertNotNull(numberTree);
+        assertTrue(numberTree.size() >= 6, "Page and two group streams need parent-tree entries");
+        int groups = 0;
+        var resources = document.getPage(0).getResources();
+        for (var name : resources.getXObjectNames()) {
+          var object = resources.getXObject(name);
+          if (object instanceof org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject form) {
+            assertTrue(form.getCOSObject().getInt(COSName.STRUCT_PARENTS, -1) >= 0);
+            groups++;
+          }
+        }
+        assertTrue(groups > 0, "Opacity must exercise upstream form-group handling");
+        assertPdf2Namespaces(tree.getDictionaryObject(COSName.K));
+        String text = new PDFTextStripper().getText(document);
+        for (String expected : java.util.List.of("Outside group", "Grouped text", "Nested group text", "After group"))
+          assertTrue(text.contains(expected), text);
+      }
+    } finally { PdfMailWriter.CONFIG.accessibility.addPdfUaFeatures = previous; }
+  }
+
+  private static void assertPdf2Namespaces(COSBase value) {
+    if (value instanceof COSObject object) value = object.getObject();
+    if (value instanceof COSArray array) for (COSBase child : array) assertPdf2Namespaces(child);
+    else if (value instanceof COSDictionary element && element.containsKey(COSName.S)) {
+      var namespace = element.getCOSDictionary(COSName.getPDFName("NS"));
+      assertNotNull(namespace);
+      assertEquals("http://iso.org/pdf2/ssn", namespace.getString(COSName.getPDFName("NS")));
+      assertPdf2Namespaces(element.getDictionaryObject(COSName.K));
+    }
+  }
 }

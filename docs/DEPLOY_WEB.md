@@ -13,7 +13,7 @@ pip install --require-hashes -r requirements-web.lock
 
 `requirements-web.txt` records supported version ranges; `requirements-web.lock` pins the reviewed dependency closure and artifact hashes for deployment. Regenerate the lock in an isolated environment with `pip-compile --generate-hashes --output-file requirements-web.lock requirements-web.txt`, then rerun the public regressions before adopting updates.
 
-Existing deployments must install the updated lock and restart their Python web workers to load pikepdf 10.18.0 and pypdf 7.0.1. The pikepdf minimum includes the fix for the [cyclic JBIG2 native crash](https://github.com/pikepdf/pikepdf/issues/753). pypdf 7.0.1 includes an image-buffer sizing security fix and text-decoding fixes. Updating the checkout alone does not update an existing virtual environment:
+Existing deployments must install the updated lock and restart their Python web workers to load pikepdf 10.18.1 and pypdf 7.1.0. The pikepdf minimum includes the fix for the [cyclic JBIG2 native crash](https://github.com/pikepdf/pikepdf/issues/753). pypdf 7.1.0 includes an image-buffer sizing security fix and text-decoding fixes. Updating the checkout alone does not update an existing virtual environment:
 
 ```bash
 cd /opt/eapdf
@@ -30,7 +30,7 @@ and `eapdf_web/` packages alongside the root Python entry points. Copying only
 `validate_eapdf.py` or `validator_web.py` is insufficient. CLI commands and the
 `validator_web:app` WSGI entry point are unchanged.
 
-Generation also needs Java 21 and a current generator JAR built with `mvn package`. Validation needs Docker and the configured veraPDF image (default `ghcr.io/verapdf/cli:v1.31.18`). Pre-pull the image before starting the service. The service account needs read access to application files and write access to `.validator_web_tmp`, `.generator_web_tmp`, and `out`.
+Generation also needs Java 21 and a current generator JAR built with `mvn package`. Validation needs Docker and the configured veraPDF image (default `ghcr.io/verapdf/cli:v1.31.224`). Pre-pull the image before starting the service. The default daemon name is `verapdf-daemon-1.31.224`, so an older default daemon cannot silently supply the previous engine. If `VERAPDF_CONTAINER_NAME` is overridden, recreate that managed container with the new image. The service account needs read access to application files and write access to `.validator_web_tmp`, `.generator_web_tmp`, and `out`.
 
 Docker access must work for the service account without an interactive shell. Docker socket access is effectively host administrator access; review that deployment decision rather than granting it blindly. Without usable Docker, validation cannot establish a passing PDF/A result. Web checks use private, named containers with read-only input mounts, no networking, a finite memory limit, and a Java heap sized from the job allowance.
 

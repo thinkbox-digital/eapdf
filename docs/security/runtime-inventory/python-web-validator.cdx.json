@@ -50,7 +50,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "60a698b6fffcfbeae93090aaf32390e808939105fa79eee7de6d872a5c5abab7"
+          "value": "89049fea3f534646f0f232cbd9e188f7e96e937cf80ec5b9fb420cbe04bd1725"
         }
       ]
     },
@@ -68,16 +68,16 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "f18f8f19be6fb64623b8cad5b393b7bba091e979adbe57529b66ea88d2dcf21f"
+          "value": "27c20325111cfa871b2b15147eb4c0a2a77b386c2916fddc76887c90fed47758"
         }
       ]
     },
     {
       "type": "library",
       "name": "gunicorn",
-      "version": "26.2.0",
-      "purl": "pkg:pypi/gunicorn@26.2.0",
-      "bom-ref": "pkg:pypi/gunicorn@26.2.0",
+      "version": "27.0.1",
+      "purl": "pkg:pypi/gunicorn@27.0.1",
+      "bom-ref": "pkg:pypi/gunicorn@27.0.1",
       "licenses": [
         {
           "expression": "MIT"
@@ -86,7 +86,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "61f8bc896061284aabe6acb29b649ae3e5503c18c8d7dfd82e4b5d2c3eaf33cf"
+          "value": "d40d99a7dfd3bf2e8e8be95e8857992247fd305994981a1c749a63048dab888a"
         }
       ]
     },
@@ -171,9 +171,9 @@
     {
       "type": "library",
       "name": "olefile",
-      "version": "0.46",
-      "purl": "pkg:pypi/olefile@0.46",
-      "bom-ref": "pkg:pypi/olefile@0.46",
+      "version": "0.47",
+      "purl": "pkg:pypi/olefile@0.47",
+      "bom-ref": "pkg:pypi/olefile@0.47",
       "licenses": [
         {
           "license": {
@@ -184,7 +184,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "8ac399664394aca9bcd09073cb8d0c6bdc9f2113ba4dda39dabe58164b2ada19"
+          "value": "8c7566eb863697d8d097a695f335d0545a6d927bb4c37fb710b7ffacad49f1f8"
         }
       ]
     },
@@ -209,9 +209,9 @@
     {
       "type": "library",
       "name": "pikepdf",
-      "version": "10.18.0",
-      "purl": "pkg:pypi/pikepdf@10.18.0",
-      "bom-ref": "pkg:pypi/pikepdf@10.18.0",
+      "version": "10.18.1",
+      "purl": "pkg:pypi/pikepdf@10.18.1",
+      "bom-ref": "pkg:pypi/pikepdf@10.18.1",
       "licenses": [
         {
           "expression": "MPL-2.0"
@@ -220,16 +220,16 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "b853405cfff0cca61e6302b23c6dc70243ac0bc805d4c62819835beef756a264"
+          "value": "7b977370d4e5e799fa5b17bce8e7ad7a8c79f8b8ee013a9ab2d46ad2ef84c770"
         }
       ]
     },
     {
       "type": "library",
       "name": "pillow",
-      "version": "12.3.0",
-      "purl": "pkg:pypi/pillow@12.3.0",
-      "bom-ref": "pkg:pypi/pillow@12.3.0",
+      "version": "13.0.0",
+      "purl": "pkg:pypi/pillow@13.0.0",
+      "bom-ref": "pkg:pypi/pillow@13.0.0",
       "licenses": [
         {
           "expression": "MIT-CMU"
@@ -238,16 +238,16 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "3c8c81345169b66224a19d036e57e2ce59ff232e914c7e366f313d40e9312310"
+          "value": "8a825a0cc300e145dedf519a1506c3e13fdd8848024da884357e5494e9386353"
         }
       ]
     },
     {
       "type": "library",
       "name": "pypdf",
-      "version": "7.0.1",
-      "purl": "pkg:pypi/pypdf@7.0.1",
-      "bom-ref": "pkg:pypi/pypdf@7.0.1",
+      "version": "7.1.0",
+      "purl": "pkg:pypi/pypdf@7.1.0",
+      "bom-ref": "pkg:pypi/pypdf@7.1.0",
       "licenses": [
         {
           "expression": "BSD-3-Clause"
@@ -256,7 +256,7 @@
       "properties": [
         {
           "name": "eapdf:installed-record-sha256",
-          "value": "504f92921ce8075af58eaa958408c28e934f119e0ef1b559c351a04267e5a1d6"
+          "value": "feb6a673f5679df1d22c30fceb22e0d8999db6af05cfc984cce552176889fbbf"
         }
       ]
     },

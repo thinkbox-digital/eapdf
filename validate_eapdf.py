@@ -60,9 +60,9 @@ ALLOWED_PDFA={(3,"A"),(3,"U"),(4,None),(4,"F"),(4,"E")}
 GENERIC_BAD_MIME={"application/octet-stream","application/zip","text/plain","application/octetstream"}
 MAIL_STRUCTURE_TYPES={"Mail_Message","Mail_ContentGroup","Mail_ContentSet",
                       "Mail_Field","Mail_FieldName","Mail_FieldValue"}
-VERAPDF_DOCKER_IMAGE=os.environ.get("VERAPDF_DOCKER_IMAGE","ghcr.io/verapdf/cli:v1.31.18")
+VERAPDF_DOCKER_IMAGE=os.environ.get("VERAPDF_DOCKER_IMAGE","ghcr.io/verapdf/cli:v1.31.224")
 VERAPDF_TIMEOUT=int(os.environ.get("VERAPDF_TIMEOUT","0"))
-VERAPDF_CONTAINER_NAME=os.environ.get("VERAPDF_CONTAINER_NAME","verapdf-daemon")
+VERAPDF_CONTAINER_NAME=os.environ.get("VERAPDF_CONTAINER_NAME","verapdf-daemon-1.31.224")
 VERAPDF_MOUNT_ROOT=Path(os.environ.get("VERAPDF_MOUNT_ROOT", str(Path(__file__).resolve().parent))).resolve()
 ALLOWED_VERAPDF_PROFILES={
     "PDF/A-3A validation profile",

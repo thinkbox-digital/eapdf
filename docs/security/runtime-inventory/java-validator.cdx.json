@@ -48,13 +48,13 @@
       "type": "library",
       "group": "com.fasterxml.jackson.core",
       "name": "jackson-annotations",
-      "version": "2.15.0",
-      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.15.0",
-      "bom-ref": "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.15.0",
+      "version": "2.22",
+      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.22",
+      "bom-ref": "pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.22",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "91adcd3dcf5fd9a16499934e7536a23d456692a0093e3d4fd52f138c3936348c"
+          "content": "21ddb598807d3a51a876704eb979d9296e1c6a6f47ab1826ff88c6d6a127a2d0"
         }
       ],
       "properties": [
@@ -76,13 +76,13 @@
       "type": "library",
       "group": "com.fasterxml.jackson.core",
       "name": "jackson-core",
-      "version": "2.15.0",
-      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.15.0",
-      "bom-ref": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.15.0",
+      "version": "2.22.3",
+      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.22.3",
+      "bom-ref": "pkg:maven/com.fasterxml.jackson.core/jackson-core@2.22.3",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "5b483f68fa9dd6aa37da37d1f79dd5c4b9464238f4f0660a242cb6b5c724950c"
+          "content": "8a501126a385b25841915d839508f8a66e2a0dbc8a6709d055ef3b3e852b094c"
         }
       ],
       "properties": [
@@ -104,13 +104,13 @@
       "type": "library",
       "group": "com.fasterxml.jackson.core",
       "name": "jackson-databind",
-      "version": "2.15.0",
-      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.15.0",
-      "bom-ref": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.15.0",
+      "version": "2.22.3",
+      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.22.3",
+      "bom-ref": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.22.3",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "00c5a5d5ae71ac8e8d5b8da606841e2251c806355939cb5d51c4cdc6b644a0dc"
+          "content": "556db5439e206114346043f68d200497dc96a0bca62a360a81784092ebd0e0a9"
         }
       ],
       "properties": [
@@ -132,13 +132,13 @@
       "type": "library",
       "group": "com.google.code.gson",
       "name": "gson",
-      "version": "2.14.0",
-      "purl": "pkg:maven/com.google.code.gson/gson@2.14.0",
-      "bom-ref": "pkg:maven/com.google.code.gson/gson@2.14.0",
+      "version": "2.15.0",
+      "purl": "pkg:maven/com.google.code.gson/gson@2.15.0",
+      "bom-ref": "pkg:maven/com.google.code.gson/gson@2.15.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "2cbd119bf1961c28788310963dc80ba65f58cdeec1dd139c8bdb1240faa2c36f"
+          "content": "96d3dd843dc2911de01cdabcd50064cb9e860353102a0a78c96fd833d396fc7d"
         }
       ],
       "properties": [
@@ -160,13 +160,13 @@
       "type": "library",
       "group": "com.google.errorprone",
       "name": "error_prone_annotations",
-      "version": "2.48.0",
-      "purl": "pkg:maven/com.google.errorprone/error_prone_annotations@2.48.0",
-      "bom-ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.48.0",
+      "version": "2.50.0",
+      "purl": "pkg:maven/com.google.errorprone/error_prone_annotations@2.50.0",
+      "bom-ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.50.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "b49c5c958316ed67a09c699dda9aa749caf434d51d863dea599ef36a49b9c855"
+          "content": "4667724877f1d37a689202da191e23efa7657c62eef93ccdac406eccfe5cdd0a"
         }
       ],
       "properties": [
@@ -278,13 +278,13 @@
       "type": "library",
       "group": "commons-codec",
       "name": "commons-codec",
-      "version": "1.20.0",
-      "purl": "pkg:maven/commons-codec/commons-codec@1.20.0",
-      "bom-ref": "pkg:maven/commons-codec/commons-codec@1.20.0",
+      "version": "1.23.0",
+      "purl": "pkg:maven/commons-codec/commons-codec@1.23.0",
+      "bom-ref": "pkg:maven/commons-codec/commons-codec@1.23.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "6af66595f9f6a7bb58ce66518d6888d40b547c366d2262f06676eee19528ff66"
+          "content": "47504a3ce71d73a1b0af07675546b8d8c5af87f82ef12b6381f9eb3c17dd5a5b"
         }
       ],
       "properties": [
@@ -306,13 +306,13 @@
       "type": "library",
       "group": "commons-io",
       "name": "commons-io",
-      "version": "2.21.0",
-      "purl": "pkg:maven/commons-io/commons-io@2.21.0",
-      "bom-ref": "pkg:maven/commons-io/commons-io@2.21.0",
+      "version": "2.22.0",
+      "purl": "pkg:maven/commons-io/commons-io@2.22.0",
+      "bom-ref": "pkg:maven/commons-io/commons-io@2.22.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "7d643a2afea8b058b762aa6fb90e5b256f6c729739f8b3784c3370ddc609e88d"
+          "content": "2b9a7b1f726fb86216dbd2c8321eabe0221dbd5b1be81c18e1cb53811b104758"
         }
       ],
       "properties": [
@@ -544,13 +544,13 @@
       "type": "library",
       "group": "org.apache.commons",
       "name": "commons-collections4",
-      "version": "4.5.0",
-      "purl": "pkg:maven/org.apache.commons/commons-collections4@4.5.0",
-      "bom-ref": "pkg:maven/org.apache.commons/commons-collections4@4.5.0",
+      "version": "4.6.0",
+      "purl": "pkg:maven/org.apache.commons/commons-collections4@4.6.0",
+      "bom-ref": "pkg:maven/org.apache.commons/commons-collections4@4.6.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "00f93263c267be201b8ae521b44a7137271b16688435340bf629db1bac0a5845"
+          "content": "4e0d0896bac5356cead277bac0283f09813e14417e3e84e0c86b573b54d218a3"
         }
       ],
       "properties": [
@@ -600,13 +600,13 @@
       "type": "library",
       "group": "org.apache.logging.log4j",
       "name": "log4j-api",
-      "version": "2.25.5",
-      "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.25.5",
-      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-api@2.25.5",
+      "version": "2.26.1",
+      "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.26.1",
+      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-api@2.26.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "64777f73ea0b3104c04eb82befbdccc30a425a19e83ad06cb2f93aa303511863"
+          "content": "f1810a4704ccce019d02bba029dc02a4f2ac0c997f647b465e7d409c1927f822"
         }
       ],
       "properties": [
@@ -712,13 +712,13 @@
       "type": "library",
       "group": "org.apache.poi",
       "name": "poi",
-      "version": "5.5.1",
-      "purl": "pkg:maven/org.apache.poi/poi@5.5.1",
-      "bom-ref": "pkg:maven/org.apache.poi/poi@5.5.1",
+      "version": "6.0.0",
+      "purl": "pkg:maven/org.apache.poi/poi@6.0.0",
+      "bom-ref": "pkg:maven/org.apache.poi/poi@6.0.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "6c52e876ca75775a11b56e4b36a7541f682827f56406725fcd87560b792ee3d8"
+          "content": "4977f1ae04e1c77e42c81dd94cca008e0d81ff8d0daa8b85e2a0740c3c1da3cc"
         }
       ],
       "properties": [
@@ -808,13 +808,13 @@
       "type": "library",
       "group": "org.mozilla",
       "name": "rhino",
-      "version": "1.7.14.1",
-      "purl": "pkg:maven/org.mozilla/rhino@1.7.14.1",
-      "bom-ref": "pkg:maven/org.mozilla/rhino@1.7.14.1",
+      "version": "1.7.15.1",
+      "purl": "pkg:maven/org.mozilla/rhino@1.7.15.1",
+      "bom-ref": "pkg:maven/org.mozilla/rhino@1.7.15.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "407d4af6521494061d86b208e99804e0bf5c2fa38449c48f24b2f5a7154b4d8d"
+          "content": "f3520a0e2e22d550f1216a456be233eb5385bf08e3219407dece7a16369eb38f"
         }
       ],
       "properties": [
@@ -836,13 +836,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "core",
-      "version": "1.31.1",
-      "purl": "pkg:maven/org.verapdf/core@1.31.1",
-      "bom-ref": "pkg:maven/org.verapdf/core@1.31.1",
+      "version": "1.31.56",
+      "purl": "pkg:maven/org.verapdf/core@1.31.56",
+      "bom-ref": "pkg:maven/org.verapdf/core@1.31.56",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "15bbd3fa93efac194c5df4055f1f0e38ef61c1f8c275077eb54601256985f5e1"
+          "content": "b2a5745d0dfc62ac43a29eb8c85d0c164f4b603b6937a85b9faba85c357eca31"
         }
       ],
       "properties": [
@@ -870,13 +870,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "feature-reporting",
-      "version": "1.31.17",
-      "purl": "pkg:maven/org.verapdf/feature-reporting@1.31.17",
-      "bom-ref": "pkg:maven/org.verapdf/feature-reporting@1.31.17",
+      "version": "1.31.221",
+      "purl": "pkg:maven/org.verapdf/feature-reporting@1.31.221",
+      "bom-ref": "pkg:maven/org.verapdf/feature-reporting@1.31.221",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "01553ecc2758356ca400a0ade2136b55bacaaf3e4d7f98ee2c7a2edbc24e5298"
+          "content": "9c72913a41be4c01f5e38668a120a975d93b26e34dc39b4a3850a7e8e2b261a3"
         }
       ],
       "properties": [
@@ -904,13 +904,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "metadata-fixer",
-      "version": "1.31.17",
-      "purl": "pkg:maven/org.verapdf/metadata-fixer@1.31.17",
-      "bom-ref": "pkg:maven/org.verapdf/metadata-fixer@1.31.17",
+      "version": "1.31.221",
+      "purl": "pkg:maven/org.verapdf/metadata-fixer@1.31.221",
+      "bom-ref": "pkg:maven/org.verapdf/metadata-fixer@1.31.221",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "5f2206826e03937f1810baa09b0fb817a87140175600a4f84afe902ae20d9b07"
+          "content": "1248ca13b21fe91235e43ef0e30cfb6c7ae47956ca311821204ddf21595e86e8"
         }
       ],
       "properties": [
@@ -938,13 +938,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "parser",
-      "version": "1.31.7",
-      "purl": "pkg:maven/org.verapdf/parser@1.31.7",
-      "bom-ref": "pkg:maven/org.verapdf/parser@1.31.7",
+      "version": "1.31.71",
+      "purl": "pkg:maven/org.verapdf/parser@1.31.71",
+      "bom-ref": "pkg:maven/org.verapdf/parser@1.31.71",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "a6a1357a5973509ec2a8b50e2ba549bca51135c7846b0b29bf74c14c34134e27"
+          "content": "6eb15db1345c346c0ae0384408e92924fa4f881ebbc01bdfaa8936c70aa55cc2"
         }
       ],
       "properties": [
@@ -972,13 +972,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "pdf-model",
-      "version": "1.31.1",
-      "purl": "pkg:maven/org.verapdf/pdf-model@1.31.1",
-      "bom-ref": "pkg:maven/org.verapdf/pdf-model@1.31.1",
+      "version": "1.31.14",
+      "purl": "pkg:maven/org.verapdf/pdf-model@1.31.14",
+      "bom-ref": "pkg:maven/org.verapdf/pdf-model@1.31.14",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "55271ece32bd120024a82c4d6d2dd1b80762cad389e7705e77f21c64ee56fd6b"
+          "content": "471ad932a1ed8ea772d3f91236dca7e8644ae0dd567f60578e6c050fb84d7164"
         }
       ],
       "properties": [
@@ -1006,13 +1006,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "validation-model",
-      "version": "1.31.17",
-      "purl": "pkg:maven/org.verapdf/validation-model@1.31.17",
-      "bom-ref": "pkg:maven/org.verapdf/validation-model@1.31.17",
+      "version": "1.31.221",
+      "purl": "pkg:maven/org.verapdf/validation-model@1.31.221",
+      "bom-ref": "pkg:maven/org.verapdf/validation-model@1.31.221",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "f57c2e5fc53ba730b37986a146b2dd250fc8566bba51e39b4d661c15c426162b"
+          "content": "ee342682354137957113413317ebbddcf9990a5b28989e2053429264dc7cddf6"
         }
       ],
       "properties": [
@@ -1040,13 +1040,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "verapdf-xmp-core",
-      "version": "1.31.1",
-      "purl": "pkg:maven/org.verapdf/verapdf-xmp-core@1.31.1",
-      "bom-ref": "pkg:maven/org.verapdf/verapdf-xmp-core@1.31.1",
+      "version": "1.31.56",
+      "purl": "pkg:maven/org.verapdf/verapdf-xmp-core@1.31.56",
+      "bom-ref": "pkg:maven/org.verapdf/verapdf-xmp-core@1.31.56",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "e220d5e9d4a5cc6b98967ee1fd532dc751a3c62b79bf5551945ea5ff08e4c604"
+          "content": "9221e8ab93f6faa9d570c1b96cd57a51ffa2d793a64ca3b1bfc29900a94169f2"
         }
       ],
       "properties": [
@@ -1127,7 +1127,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "76586ad2bc242bd76041a90077b21016f7d80d5d2349cbebea5a205807ffdb33"
+          "content": "14b07e75824491c8e884602e35a5b9445462ea70f80c694c500e5aa593b00d22"
         }
       ]
     }

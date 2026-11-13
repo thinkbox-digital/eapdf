@@ -1,4 +1,5 @@
-import type {PortfolioData} from './portfolio.js';
+import {ViewerFeature} from './viewer-profile.js';
+import type {PortfolioData} from './collection-data.js';
 import {retainedSize} from './retained-size.js';
 import {forgetFullTextIndex} from './fulltext-index.js';
 import {forgetEmbeddedIndex} from './embedded-index.js';
@@ -25,18 +26,17 @@ export class BrowserSession {
   readonly limits:InspectionLimits;
   readonly extractionLimit:number;
   private decoded=0;
-  private childCount=0;
   private readonly extracted=new Map<string,Uint8Array>();
   private cachedBytes=0;
   private readonly cacheLimit=32*1024**2;
   private readonly exportReads=new WeakMap<BrowserDocument,number>();
   private readonly exportWorkers=new Map<number,{worker:ReturnType<typeof createManagedWorker>;used:number}>();
   constructor(overrides:Partial<InspectionLimits>={},private readonly options:{reuseWorker?:boolean;metadataCacheBytes?:number;onEvict?:(doc:BrowserDocument)=>void;keepDocuments?:()=>readonly BrowserDocument[]}={}) {
-    const ceilings={...DEFAULT_LIMITS,maxObjects:1_000_000,maxParts:16384,maxFileBytes:4*1024**3,maxStreamBytes:32*1024**2,maxDecodedBytes:512*1024**2,maxMetadataBytes:128*1024**2,maxChildDepth:8,maxChildren:128};
+    const ceilings=ViewerFeature.LargeArchives?{...DEFAULT_LIMITS,maxObjects:1_000_000,maxParts:16384,maxFileBytes:4*1024**3,maxStreamBytes:32*1024**2,maxDecodedBytes:512*1024**2,maxMetadataBytes:128*1024**2,maxChildDepth:8,maxChildren:128}:{...DEFAULT_LIMITS};
     const limits={...ceilings};
     for(const key of Object.keys(overrides) as (keyof InspectionLimits)[]){
       // Retired content-count settings are accepted for compatibility, but ignored.
-      if(['maxObjects','maxParts','maxTreeDepth','maxChildDepth','maxChildren'].includes(key))continue;
+      if(ViewerFeature.LargeArchives&&['maxObjects','maxParts','maxTreeDepth','maxChildDepth','maxChildren'].includes(key))continue;
       const value=overrides[key]!;
       if(!Number.isSafeInteger(value)||value<0||value>ceilings[key])throw new Error(`Invalid inspection limit: ${key}`);
       limits[key]=value;
@@ -51,7 +51,7 @@ export class BrowserSession {
   private readonly interpretationCancels=new Set<()=>void>();
   private async interpretAsync(input:InterpretationInput):Promise<ReturnType<typeof interpret>>{
     this.check();
-    if(input.assets.metadata.reduce((n,m)=>n+(m.text?.length??0),0)<1024*1024)return interpret(input);
+    if(ViewerFeature.LargeArchives&&input.assets.metadata.reduce((n,m)=>n+(m.text?.length??0),0)>=1024*1024){
     const {parseXml:_,...data}=input;
     const worker=new Worker(new URL('./interpret-worker.js',import.meta.url),{type:'module'});
     return await new Promise((resolve,reject)=>{
@@ -71,6 +71,8 @@ export class BrowserSession {
       worker.onerror=event=>{finish();reject(new Error(event.message||'Email metadata worker failed.'));};
       try{worker.postMessage({input:data,chunked:true});}catch(error){finish();reject(error);}
     });
+    }
+    return interpret(input);
   }
   private closed=false;
   private clock=0;
@@ -78,17 +80,18 @@ export class BrowserSession {
   close():void {this.closed=true;for(const cancel of this.interpretationCancels)cancel();for(const {worker} of this.exportWorkers.values())worker.close();this.exportWorkers.clear();for(const worker of this.associationWorkers)worker.close();this.associationWorkers.clear();for(const managed of this.pending)managed.close();for(const [doc,entry]of this.entries){entry.managed?.close();doc.payloads.clear();forgetEmbeddedIndex(doc);forgetFullTextIndex(doc);doc.fullTextIndex=undefined;doc.indexFileDigest=undefined;doc.embeddedIndex=undefined;doc.active=false;}this.entries.clear();this.pending.clear();this.extracted.clear();this.cachedBytes=0;}
   async open(blob:Blob,name:string,progress?:(fraction:number)=>void,parent:BrowserDocument|null=null,fileId?:string,streamPath?:string,preview?:(doc:Pick<BrowserDocument,'pdf'|'run'>)=>Promise<void>,stage?:(message:string)=>void):Promise<BrowserDocument>{
     this.check();
-    if(blob.size>this.limits.maxFileBytes)throw new Error('PDF exceeds the configured input byte limit.');
+    if(blob.size>this.limits.maxFileBytes)throw new Error(ViewerFeature.LargeArchives?'PDF exceeds the configured input byte limit.':`PDF exceeds the configured input byte limit (${this.limits.maxFileBytes/1024**2} MiB).`);
+    if(!ViewerFeature.LargeArchives&&parent&&(parent.ancestorIds.length+1>this.limits.maxChildDepth||[...this.entries.keys()].filter(doc=>doc.parent).length+this.pending.size>=this.limits.maxChildren))throw new Error('Lite retained-document limit reached. Close some embedded PDFs or reopen the file.');
     // Inventory traverses the entire archive. Range gaps restart that traversal.
     // Transfer large files once; the range transport also allocates a full-size
     // worker buffer, so this avoids repeated parsing without raising byte limits.
-    const input=blob.size>=16*1024**2?new Uint8Array(await blob.arrayBuffer()):blob;
+    const input=ViewerFeature.LargeArchives&&blob.size>=16*1024**2?new Uint8Array(await blob.arrayBuffer()):blob;
     this.check();
     if(this.pending.size>=3)throw new Error('Too many PDF operations are already pending.');
     // Reuse child workers in small batches; their allocation accounting is cumulative.
     // Separate depths keep an active collection parent alive while visiting its children.
     let shared:ReturnType<typeof createManagedWorker>|undefined;
-    if(this.options.reuseWorker&&parent){
+    if(ViewerFeature.LargeArchives&&this.options.reuseWorker&&parent){
       const depth=parent.ancestorIds.length+1;let batch=this.exportWorkers.get(depth);
       if(!batch||batch.used===16){batch?.worker.close();batch={worker:createManagedWorker(),used:0};this.exportWorkers.set(depth,batch);}
       batch.used++;shared=batch.worker;
@@ -97,14 +100,14 @@ export class BrowserSession {
     const hashing=sha256Blob(blob,()=>{this.check();if(managed.closed)throw new Error('Document is closed.');},progress);void hashing.catch(()=>{});
     try{
       const pdf=await managed.run(managed.task.promise,60000);this.check();
-      const initialPageTimeout=pdf.numPages>=10000?120000:30000;
+      if(!ViewerFeature.LargeArchives&&pdf.numPages>2048)throw new Error('Lite supports up to 2048 pages per PDF.');
+      const initialPageTimeout=ViewerFeature.LargeArchives&&pdf.numPages>=10000?120000:30000;
       if(preview)await preview({pdf,run:operation=>managed.run(operation,initialPageTimeout)});this.check();
       const hash=await hashing;this.check();
       const id='sha256:'+hash,ancestors=parent?[...parent.ancestorIds,parent.inspection.documentId]:[];
       if(ancestors.includes(id))throw new Error('This embedded PDF points back to a parent document.');
-      if(parent)this.childCount++;
       // Large flat archives require a complete page and associated-file inventory.
-      const inspectionTimeout=pdf.numPages>=10000?900000:60000;
+      const inspectionTimeout=ViewerFeature.LargeArchives&&pdf.numPages>=10000?900000:60000;
       const [parts,assets]=await managed.run((async()=>{
         // Sequential scans avoid evicting each other's compressed-object working sets.
         stage?.("Reading email structure…");
@@ -123,9 +126,12 @@ export class BrowserSession {
     }catch(error){managed.close();this.pending.delete(managed);throw error;}
   }
   async portfolio(doc:BrowserDocument):Promise<PortfolioData>{
+    if(ViewerFeature.CollectionView){
     this.check();await this.ensure(doc);this.check();
     if(!doc.portfolio){const result=await doc.run(doc.pdf.getDocumentAssets({presentationOnly:true}));this.check();doc.portfolio=result.presentation;const entry=this.entries.get(doc);if(entry)this.accountMetadata(doc,entry);}
     return doc.portfolio;
+    }
+    throw new Error('Collection presentation is unavailable.');
   }
   cachedMessageIndex(doc:BrowserDocument):MessageIndex|undefined{return this.entries.get(doc)?.messageIndex;}
   rememberMessageIndex(doc:BrowserDocument,index:MessageIndex|undefined):void{const entry=this.entries.get(doc);if(entry){entry.messageIndex=index;this.accountMetadata(doc,entry);}}
@@ -292,10 +298,10 @@ export class BrowserSession {
       blob=new Blob([new Uint8Array(await this.readBytes(doc.parent,file,stream,false))]);
     }
     if(!blob)throw new Error('Original file is no longer available.');
-    const input=blob.size>=16*1024**2?new Uint8Array(await blob.arrayBuffer()):blob;this.check();
+    const input=ViewerFeature.LargeArchives&&blob.size>=16*1024**2?new Uint8Array(await blob.arrayBuffer()):blob;this.check();
     const managed=loadManagedPdf(input);this.pending.add(managed);
     try{
-      const pdf=await managed.run(managed.task.promise,60000),assets=await managed.run(pdf.getDocumentAssets({maxObjects:Math.max(1,this.limits.maxObjects),maxMetadataBytes:Math.max(1,this.limits.maxMetadataBytes)}),pdf.numPages>=10000?900000:60000);this.check();
+      const pdf=await managed.run(managed.task.promise,60000),assets=await managed.run(pdf.getDocumentAssets({maxObjects:Math.max(1,this.limits.maxObjects),maxMetadataBytes:Math.max(1,this.limits.maxMetadataBytes)}),ViewerFeature.LargeArchives&&pdf.numPages>=10000?900000:60000);this.check();
       entry.assets=assets;entry.managed=managed;entry.lastUse=++this.clock;this.accountMetadata(doc,entry);doc.pdf=pdf;doc.run=managed.run;doc.active=true;this.trim(doc);
     }catch(error){managed.close();throw error;}finally{this.pending.delete(managed);}
   }
@@ -366,7 +372,7 @@ export class BrowserSession {
     const key=file.id+'|'+stream.locator.path,previous=parent.children.get(key) as BrowserDocument|undefined;
     if(previous){await this.ensure(previous);return previous;}
     const bytes=await this.readBytes(parent,file,stream,refreshParent);
-    if(this.options.reuseWorker){
+    if(ViewerFeature.LargeArchives&&this.options.reuseWorker){
       const reads=(this.exportReads.get(parent)??0)+1;this.exportReads.set(parent,reads%256);
       if(reads===256){
         // Extraction also charges the parent worker's cumulative allocation budget.

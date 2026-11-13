@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.github.openhtmltopdf</groupId>
+  <artifactId>openhtmltopdf-pdfbox</artifactId>
+  <version>1.1.113-eapdf.1</version>
+  <name>Openhtmltopdf PDF Rendering (Apache PDF-BOX 3)</name>
+  <description>Openhtmltopdf is a CSS 2.1 renderer written in Java. This artifact supports PDF output with Apache
+        PDF-BOX 3.</description>
+  <url>https://github.com/openhtmltopdf/openhtmltopdf/openhtmltopdf-pdfbox</url>
+  <licenses>
+    <license>
+      <name>GNU Lesser General Public License (LGPL), version 2.1 or later</name>
+      <url>http://www.gnu.org/licenses/lgpl.html</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>danfickle</id>
+      <name>Daniel Fickling</name>
+      <email>newtab@gmail.com</email>
+    </developer>
+    <developer>
+      <id>pdoubleya</id>
+      <name>Patrick Wright</name>
+      <email>pdoubleya@gmail.com</email>
+    </developer>
+    <developer>
+      <id>peter.brant</id>
+      <name>Peter Brant</name>
+      <email>peter.brant@gmail.com</email>
+    </developer>
+    <developer>
+      <id>imario42</id>
+      <name>Mario Ivankovits</name>
+      <email>mario@datenwort.at</email>
+    </developer>
+    <developer>
+      <id>madsop-nav</id>
+      <name>Mads Opheim</name>
+      <email>mads.opheim@gmail.com</email>
+    </developer>
+    <developer>
+      <id>siegelzc</id>
+      <name>Zachary Siegel</name>
+      <email>siegelzc@gmail.com</email>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git://github.com/openhtmltopdf/openhtmltopdf.git/openhtmltopdf-pdfbox</connection>
+    <developerConnection>scm:git:https://github.com/openhtmltopdf/openhtmltopdf.git/openhtmltopdf-pdfbox</developerConnection>
+    <tag>openhtmltopdf-parent-1.1.113-eapdf.1</tag>
+    <url>git://github.com/openhtmltopdf/openhtmltopdf.git/openhtmltopdf-pdfbox</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.pdfbox</groupId>
+      <artifactId>pdfbox</artifactId>
+      <version>3.0.8</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pdfbox</groupId>
+      <artifactId>xmpbox</artifactId>
+      <version>3.0.8</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.openhtmltopdf</groupId>
+      <artifactId>openhtmltopdf-core</artifactId>
+      <version>1.1.113-eapdf.1</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.rototor.pdfbox</groupId>
+      <artifactId>graphics2d</artifactId>
+      <version>3.0.1</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.pdfbox</groupId>
+          <artifactId>pdfbox</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+</project>

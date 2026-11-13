@@ -1,19 +1,8 @@
 import type {InspectionResult,AssociatedFile} from './domain/inspection.js';
 import {fileLabel} from './navigation.js';
-export type Scalar=string|number|boolean|null;
-export type Values=readonly (readonly [string,Scalar,Scalar])[];
-export type PortfolioField={key:string;label:string;subtype:string;order:number|null;visible:boolean};
-export type PortfolioEntry={key:string;keyHex:string;filePath:string;name:Scalar;description:Scalar;created:Scalar;modified:Scalar;size:Scalar;compressedSize:Scalar;values:Values};
-export type PortfolioFolder={thumbnail?:boolean;path:string;parent:string|null;number:Scalar;name:Scalar;description:Scalar;created:Scalar;modified:Scalar;values:Values};
-export type PortfolioData={initial:string|null;initialHex:string|null;view:string;layouts:Scalar[];fields:PortfolioField[];sort:Scalar[];ascending:Scalar[];ascendingAll?:boolean;folders:PortfolioFolder[];entries:PortfolioEntry[];split:{direction:Scalar;position:Scalar}|null;colors:[string,Scalar[]][];notices:string[]};
-export type Detection={kind:'eapdf'|'portfolio'|'pdf';collection:boolean;notice:string};
-export function detectDocument(inspection:InspectionResult):Detection {
-  const id=inspection.identification;
-  const recognized=id.eapdfVersion.state==='present'&&id.eapdfVersion.value==='1'&&id.declaredProfile.state==='present'&&['s','si','m','mi','c','ci'].includes(id.declaredProfile.value??'');
-  const collection=inspection.collection.state==='present';
-  const declared=[id.eapdfVersion,id.eapdfRevision,id.declaredProfile].some(v=>v.state!=='missing'&&v.state!=='unavailable');
-  return {kind:recognized?'eapdf':collection?'portfolio':'pdf',collection,notice:recognized?'':declared?'EA-PDF identification is incomplete or unsupported; showing the available PDF content.':inspection.collection.state==='invalid'?'The Collection dictionary is invalid; showing the available PDF content.':''};
-}
+import type {Scalar,PortfolioField,PortfolioEntry,PortfolioFolder,PortfolioData} from './collection-data.js';
+export type {Scalar,Values,PortfolioField,PortfolioEntry,PortfolioFolder,PortfolioData} from './collection-data.js';
+export {detectDocument} from './document-kind.js';
 export type PortfolioRow={id:string;folder:string|null;kind:'file'|'folder';name:string;file?:AssociatedFile;entry?:PortfolioEntry;directory?:PortfolioFolder};
 const defaults:PortfolioField[]=[{key:'F',label:'Name',subtype:'F',order:0,visible:true},{key:'Desc',label:'Description',subtype:'Desc',order:1,visible:true},{key:'Size',label:'Size',subtype:'Size',order:2,visible:true},{key:'ModDate',label:'Modified',subtype:'ModDate',order:3,visible:true}];
 export function pdfDate(value:Scalar):number|null {

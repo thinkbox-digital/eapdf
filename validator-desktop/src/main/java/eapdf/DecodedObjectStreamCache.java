@@ -30,7 +30,7 @@ final class DecodedObjectStreamCache extends LinkedHashMap<Long,DecodedObjectStr
       cacheField.set(reader,cache);
       return cache;
     } catch(ReflectiveOperationException error) {
-      throw new IOException("Cannot install bounded cache for pinned veraPDF Parser 1.31.7",error);
+      throw new IOException("Cannot install bounded cache for pinned veraPDF Parser 1.31.71",error);
     }
   }
   @Override protected boolean removeEldestEntry(Map.Entry<Long,DecodedObjectStreamParser> entry) {

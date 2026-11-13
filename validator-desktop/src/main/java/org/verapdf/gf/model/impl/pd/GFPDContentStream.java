@@ -30,7 +30,7 @@ import org.verapdf.cos.COSStream;
 import org.verapdf.gf.model.factory.operators.GraphicState;
 import org.verapdf.gf.model.factory.operators.OperatorFactory;
 import org.verapdf.gf.model.impl.containers.StaticContainers;
-import org.verapdf.gf.model.impl.pd.util.PDResourcesHandler;
+import org.verapdf.pd.PDResourcesHandler;
 import org.verapdf.model.operator.Operator;
 import org.verapdf.model.pdlayer.PDContentStream;
 import org.verapdf.model.pdlayer.PDResources;
@@ -172,7 +172,7 @@ public class GFPDContentStream extends GFPDObject implements PDContentStream {
 					this.operators = Collections.emptyList();
 				}
 			} catch (IOException e) {
-				LOGGER.log(Level.FINE, "Error while parsing content stream. " + e.getMessage(), e);
+				LOGGER.log(Level.WARNING, "Error while parsing content stream. " + e.getMessage());
 				this.operators = Collections.emptyList();
 			}
 		}

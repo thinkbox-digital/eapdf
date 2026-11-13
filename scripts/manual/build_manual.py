@@ -78,7 +78,7 @@ def build(source,destination,bold_font):
     def decorate(canvas,document):
         canvas.saveState();canvas.setStrokeColor(colors.HexColor('#d2dce4'));canvas.line(left,35,width-left,35)
         canvas.setFont('ManualSans',8);canvas.setFillColor(colors.HexColor('#435867'))
-        canvas.drawString(left,23,'EA-PDF User Manual | 9 November 2026')
+        canvas.drawString(left,23,'EA-PDF User Manual | '+ET.parse(source).find(".//p[@class='edition']").get('data-edition'))
         canvas.drawRightString(width-left,23,str(document.page));canvas.restoreState()
     doc.addPageTemplates(PageTemplate(id='manual',frames=[Frame(left,49,usable,height-97,leftPadding=0,rightPadding=0,topPadding=0,bottomPadding=0)],onPage=decorate))
     root=ET.parse(source).getroot();story=[];figures=[]

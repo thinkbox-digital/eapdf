@@ -1,7 +1,7 @@
-From 98572627de49af5e978acbb50aa1ee5c8625a284 Mon Sep 17 00:00:00 2001
+From db12d54682e897ee7bd6a19692ae483969fc927a Mon Sep 17 00:00:00 2001
 From: Jia Liang <hojialiang@protonmail.com>
 Date: Tue, 23 Jun 2026 03:13:55 +0800
-Subject: [PATCH 4/4] Disable GSUB ligature substitution so all glyphs map to
+Subject: [PATCH] Disable GSUB ligature substitution so all glyphs map to 
  Unicode for PDF/UA and PDF/A
 
 ---
@@ -74,5 +74,5 @@ index 380beea9..3ea34557 100644
                          return loadMetrics();
                      }
 -- 
-2.56.0.windows.4
+2.43.0
 

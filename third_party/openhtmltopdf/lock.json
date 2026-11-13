@@ -1,63 +1,63 @@
 {
-  "version": "1.1.105-eapdf.1",
+  "version": "1.1.113-eapdf.1",
   "upstream_url": "https://github.com/openhtmltopdf/openhtmltopdf.git",
-  "upstream_commit": "54b31598f14ea77139ec435106810ba67bd68656",
+  "upstream_commit": "57f765415446e0ebd855232c37d10a83e18f1689",
   "patch_repository": "https://github.com/jialiang/HTML-to-PDF-UA",
   "patch_repository_commit": "7fff0e4ad793a521659ad19d46f4d9ddb39941a2",
   "applied_commits": [
-    "80db81df12a07f3d682147287279ed7b430e8442",
-    "c96b09db7b5696b6873583d7c6630cd3336636bd",
-    "0799dfa86362b46a6b4e39645c66596d09ef8674",
-    "391485cd9dcd4b53ed9dc57e87b4b2d27329ccb1"
+    "a293f39ee8e931b69420212058fe7d6d8b21762d",
+    "19e39585fa8db191e7e4b8e8b15df4e34bb243f5",
+    "04409da32d59c3836a6f6f71fdbfef7e9c8b19f8",
+    "7287bbe0b3344c4830ae47cfd100689a1f8adaf2"
   ],
   "patches": [
     {
       "path": "third_party/openhtmltopdf/patches/0001-Add-PDF-A-4-conformance-support.patch",
       "original_commit": "225219232e0e87d89683a0ac2b31472f91dbf491",
-      "sha256": "ff4d65706079c5ba43240f26959ec5c7391668ffd8ca41d51775b721b6a5c505"
+      "sha256": "1b9083e34f517e4995e39b8a78671ff354ac18c97a26fff05eabc266e2ef264f"
     },
     {
       "path": "third_party/openhtmltopdf/patches/0002-Keep-inter-word-gaps-extractable-under-negative-lett.patch",
       "original_commit": "54b4513f20c1d55bc212b9ab11b83740239979d3",
-      "sha256": "4bf85ac7daef53158c3a58bf3f03d6ab70ba08dd85d8905fcabd0f4193c067d8"
+      "sha256": "6ce32bf4b98edccd2fc37a06e2fa4f2eebe94f30eb206554ecbe0c806fca574a"
     },
     {
       "path": "third_party/openhtmltopdf/patches/0003-Add-PDF-UA-2-conformance-support.patch",
       "original_commit": "9648fff9aba215891af47fc51890e498ace91074",
-      "sha256": "1f64d72f557c364130fc558b3340e868081a2a7ba00f0a56dbe754ecf2db9fc5"
+      "sha256": "2aa702802ad9ab3b14dbc41a9bf746795f43b6b3b1d2387f168c44d12055378b"
     },
     {
       "path": "third_party/openhtmltopdf/patches/0004-Disable-GSUB-ligature-substitution-so-all-glyphs-map.patch",
       "original_commit": "98572627de49af5e978acbb50aa1ee5c8625a284",
-      "sha256": "b48b6accbacd2577b8c2b760fec7c1aad08f4b3043372074f5fd7a9ccf8bf5fb"
+      "sha256": "df305a7a600b4df242419609536f94eca0e4065b821847d8bcee2794a85b98bc"
     }
   ],
   "artifacts": [
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.105-eapdf.1/openhtmltopdf-core-1.1.105-eapdf.1-sources.jar",
-      "sha256": "8af48fe2002a56c71b953d52cb2f31f4c83036971304540b7dbb786a0f5433b4"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.113-eapdf.1/openhtmltopdf-core-1.1.113-eapdf.1-sources.jar",
+      "sha256": "f6f090fafbcc0847a0490be51a138e4ac227b4c6a805507ec7d791f9d757cc50"
     },
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.105-eapdf.1/openhtmltopdf-core-1.1.105-eapdf.1.jar",
-      "sha256": "0397f32c488e13ea9cd360d45a295fec96f5b23ebdd27310ccef68d6c60a04d2"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.113-eapdf.1/openhtmltopdf-core-1.1.113-eapdf.1.jar",
+      "sha256": "54df67dc394982ca80d518d492552e0f445290d264455a388801a0972a8dcfb1"
     },
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.105-eapdf.1/openhtmltopdf-core-1.1.105-eapdf.1.pom",
-      "sha256": "e1bc9aaee2125abc4946c90a1326e848530020ed1a8440b35a74bdfc6323be43"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.113-eapdf.1/openhtmltopdf-core-1.1.113-eapdf.1.pom",
+      "sha256": "e681acaf168d7ca3dc845fe01ecc68dc27c090301bbe302038c8b69986c13904"
     },
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.105-eapdf.1/openhtmltopdf-pdfbox-1.1.105-eapdf.1-sources.jar",
-      "sha256": "12bcab9d5555d90c94d73789ac07919858ce6d3076b3e505340a61b865ba2763"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.113-eapdf.1/openhtmltopdf-pdfbox-1.1.113-eapdf.1-sources.jar",
+      "sha256": "aff6824bda4eed280f79470c05c316e5014dc146dc368092c1fa6a5208cbe3a8"
     },
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.105-eapdf.1/openhtmltopdf-pdfbox-1.1.105-eapdf.1.jar",
-      "sha256": "22a275c7106a19e1561c0dd724a9d67041a22a70ebc52e0ed7b55bbabba8a768"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.113-eapdf.1/openhtmltopdf-pdfbox-1.1.113-eapdf.1.jar",
+      "sha256": "02e7624c246428a1050ad9354da846f3d40ea76151c23644ae704961b578360f"
     },
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.105-eapdf.1/openhtmltopdf-pdfbox-1.1.105-eapdf.1.pom",
-      "sha256": "fc67d41dd9e08bd621748b6e613e43757f49506f45670f1410c237badfd5233a"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.113-eapdf.1/openhtmltopdf-pdfbox-1.1.113-eapdf.1.pom",
+      "sha256": "3f5c0a842f5ac1f6802c23ec27ee30d69b7e04612e817245c03e83fffcf63f98"
     }
   ],
-  "output_timestamp": "2026-10-30T00:00:00Z",
+  "output_timestamp": "2026-11-13T00:00:00Z",
   "packaging": "normalize-jar-v1: fixed ZIP order/time/mode, deterministic Bnd-LastModified/Built-By, omit Build-Jdk patch version; class/resource/source bytes unchanged"
 }

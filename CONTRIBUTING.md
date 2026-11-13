@@ -1,21 +1,13 @@
-# Contributing
+# Contribute
 
-This is beta demonstration software. Keep changes focused and describe the user
-problem, validation performed and remaining limitations.
+Keep each change focused. Explain the problem, the fix and how you tested it.
 
-- Read [AGENTS.md](AGENTS.md), [current status](docs/PROJECT_STATUS.md), and
-  [architecture/separation decisions](docs/ARCHITECTURE.md).
-- Use Java 21 or later. Build with `mvn -Deapdf.build.directory=/tmp/eapdf-build package`.
-- Viewer instructions and checks are in [browser-viewer/README.md](browser-viewer/README.md).
-- Preserve original test inputs and their provenance. Do not weaken assertions,
-  change visual thresholds or accept new baselines without explaining the difference.
-- Do not commit credentials, tokens, private email, comparison documents or scraped
-  debug captures. Use redacted logs and the smallest appropriate reproduction.
-- Do not attach private PDFs to public issues. See [SECURITY.md](SECURITY.md).
+- Read [AGENTS.md](AGENTS.md) and the [code layout](docs/ARCHITECTURE.md).
+- Use Java 21. Run `mvn -Deapdf.build.directory=/tmp/eapdf-build verify`.
+- For reader changes, follow the [reader build and tests](browser-viewer/README.md#build).
+- Keep original test files unchanged. Explain any change to expected results.
+- Update the user guide when behaviour changes.
+- Keep private email, passwords, tokens and debug captures out of commits and issues.
+- Share only code and samples you have permission to publish. Keep license notices.
 
-Contributions must be yours to share under the project license. Keep third-party
-license notices and identify the origin and redistribution terms of new fixtures.
-
-Documentation ownership and publication are described in [the documentation map](docs/README.md).
-Update the authoritative guide when behaviour changes; label historical evidence
-and keep private work logs/correspondence out of commits and the website.
+Report security problems [privately](SECURITY.md).

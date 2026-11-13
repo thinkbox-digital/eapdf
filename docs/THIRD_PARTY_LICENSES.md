@@ -21,7 +21,7 @@ unreleased dependency changes.
 
 ## Renderer and patched dependencies
 
-The creator uses **openhtmltopdf 1.1.105-eapdf.1** under LGPL-2.1-or-later, not
+The creator uses **openhtmltopdf 1.1.113-eapdf.1** under LGPL-2.1-or-later, not
 the earlier 1.1.97 dependency. [Renderer provenance](RENDERER.md) records pinned
 upstream/patch commits, builds and replacement instructions; [library packages](PACKAGES.md)
 describes distribution of maintained patched libraries. Keep the applicable
@@ -56,7 +56,7 @@ release bytes; do not carry forward an old packaging result as a new audit.
 
 ## Python and ancillary tools
 
-The working-tree requirements currently select pikepdf 10.18.0 and pypdf 7.0.1;
+The working-tree requirements currently select pikepdf 10.18.1 and pypdf 7.1.0;
 these dependency refreshes must be reconciled with the intended release and
 installed service environment. See the lock and runtime inventory for exact
 versions and declared licenses. Installing/rebuilding a release is distinct from
@@ -67,7 +67,7 @@ MIT, and pikepdf records MPL-2.0. Confirm transitive dependencies and bundled/na
 components against the specific environment. Test-only dependencies do not
 necessarily ship, but their fixture/data redistribution still needs review.
 
-metadata-extractor 2.19.0 records Apache-2.0. Its xmpcore dependency records
+metadata-extractor 2.22.0 records Apache-2.0. Its xmpcore dependency records
 BSD-3-Clause; the Adobe notice is retained in
 third_party_licenses/Adobe-XMP-Core-BSD-3-Clause.txt because the dependency JAR
 has no standalone notice file.

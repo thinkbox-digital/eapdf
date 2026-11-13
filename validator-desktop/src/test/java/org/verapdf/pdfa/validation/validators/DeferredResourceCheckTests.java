@@ -6,7 +6,7 @@ import org.verapdf.as.ASAtom;
 import org.verapdf.cos.COSDictionary;
 import org.verapdf.cos.COSObject;
 import org.verapdf.gf.model.impl.pd.GFPDContentStream;
-import org.verapdf.gf.model.impl.pd.util.PDResourcesHandler;
+import org.verapdf.pd.PDResourcesHandler;
 import org.verapdf.pdfa.flavours.PDFAFlavour;
 import org.verapdf.pdfa.validation.profiles.*;
 import static org.junit.jupiter.api.Assertions.*;

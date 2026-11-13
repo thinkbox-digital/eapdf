@@ -50,7 +50,7 @@ From the repository root, using Java 21 and Maven:
 mvn -f validator-desktop/pom.xml verify
 ```
 
-On Linux, the JAR is written to `/tmp/eapdf-validator-build/eapdf-validator-2.1.0-beta.1.jar`.
+On Linux, the JAR is written to `/tmp/eapdf-validator-build/eapdf-validator-2.2.0-beta.1.jar`.
 Override the build directory with `-Deapdf.build.directory=/tmp/your-build`.
 No build files are written to the creator's `target/` directory.
 `verify` checks the final shaded JAR's manifest, ZIP CRCs, bundled runtime classes,
@@ -61,16 +61,16 @@ To build, verify and atomically replace the distributable:
 
 ```sh
 python3 scripts/package_validator.py
-(cd dist && sha256sum -c eapdf-validator-2.1.0-beta.1.jar.sha256)
+(cd dist && sha256sum -c eapdf-validator-2.2.0-beta.1.jar.sha256)
 ```
 
-Publish the executable `eapdf-validator-2.1.0-beta.1.jar`, not the unshaded `original-` JAR.
+Publish the executable `eapdf-validator-2.2.0-beta.1.jar`, not the unshaded `original-` JAR.
 The packaging command verifies the build before replacing the distributable.
 
 ## Run
 
 ```sh
-java -jar /path/to/eapdf-validator-2.1.0-beta.1.jar
+java -jar /path/to/eapdf-validator-2.2.0-beta.1.jar
 ```
 
 The JAR includes its runtime libraries, rules and specification references; only
@@ -139,6 +139,6 @@ mvn -f validator-desktop/pom.xml -Deapdf.validator.uiTest=true test
 ```
 
 The app bundles the same veraPDF component versions used by the pinned
-1.31.18 CLI: core/pdf-model 1.31.1, parser 1.31.7, validation-model 1.31.17.
+1.31.224 CLI: core 1.31.56, pdf-model 1.31.14, parser 1.31.71, validation-model 1.31.221.
 Versions and the unchanged rule/profile hashes are checked before use. The
 PDF/A library runs directly in Java; no CLI installation is needed.

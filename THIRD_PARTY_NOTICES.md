@@ -17,28 +17,28 @@ twice. Redistribution/source/relinking review remains release-specific.
 
 ### Apache License 2.0
 
-- `com.drewnoakes:metadata-extractor:2.19.0` (JPEG Exif orientation metadata)
+- `com.drewnoakes:metadata-extractor:2.22.0` (JPEG Exif orientation metadata)
 
 - `com.pff:java-libpst:0.9.3`
 - `org.simplejavamail:outlook-message-parser:1.16.2`
 - `com.github.bbottema:rtf-to-html:2.0.3`
-- `org.apache.poi:poi:5.5.1`
-- `org.apache.poi:poi-ooxml:5.5.1`
+- `org.apache.poi:poi:6.0.0`
+- `org.apache.poi:poi-ooxml:6.0.0`
 - `org.apache.pdfbox:pdfbox:3.0.8`
 - `org.apache.pdfbox:xmpbox:3.0.8`
-- `com.google.api-client:google-api-client:2.9.1`
+- `com.google.api-client:google-api-client:2.9.2`
 - `com.google.oauth-client:google-oauth-client:1.39.0`
 - `com.google.oauth-client:google-oauth-client-jetty:1.39.0`
 - `com.google.oauth-client:google-oauth-client-java6:1.39.0`
 - `com.google.http-client:google-http-client-gson:2.2.0`
 - `com.google.http-client:google-http-client:2.2.0`
-- `com.google.code.gson:gson:2.14.0`
-- `com.google.apis:google-api-services-gmail:v1-rev20261005-2.0.0`
+- `com.google.code.gson:gson:2.15.0`
+- `com.google.apis:google-api-services-gmail:v1-rev20261106-2.9.2`
 
 ### Bouncy Castle License (MIT-style)
 
-- `org.bouncycastle:bcpkix-jdk18on:1.86`, `bcprov-jdk18on:1.86`, and
-  `bcutil-jdk18on:1.86` provide CMS digital signatures. Their upstream license
+- `org.bouncycastle:bcpkix-jdk18on:1.87`, `bcprov-jdk18on:1.87`, and
+  `bcutil-jdk18on:1.87` provide CMS digital signatures. Their upstream license
   is bundled under `META-INF/LICENSE` in the runnable JARs.
   See https://www.bouncycastle.org/licence.html.
 
@@ -48,7 +48,7 @@ twice. Redistribution/source/relinking review remains release-specific.
 
 ### MIT
 
-- `org.jsoup:jsoup:1.23.2`
+- `org.jsoup:jsoup:1.24.1`
 - `com.beetstra.jutf7:jutf7:1.0.0` supplies legacy UTF-7 email decoding.
   Its copyright and permission notice are bundled in
   `third_party_licenses/jutf7-MIT.txt`. Source: https://jutf7.sourceforge.net/.
@@ -68,7 +68,7 @@ twice. Redistribution/source/relinking review remains release-specific.
 
 ### LGPL 2.1 or later
 
-- `io.github.openhtmltopdf:openhtmltopdf-pdfbox:1.1.105-eapdf.1`
+- `io.github.openhtmltopdf:openhtmltopdf-pdfbox:1.1.113-eapdf.1`
 
 This is the one runtime dependency that makes commercial redistribution more
 complex than a pure Apache/MIT/EPL stack. The project itself can still be
@@ -77,9 +77,9 @@ licensed under Apache-2.0, but redistributed fat jars that include
 
 ## Python And Test Dependencies
 
-- Flask 3.1.3, Werkzeug 3.1.9, pypdf 7.0.1 and ReportLab 5.0.1: BSD-3-Clause
-- Gunicorn 26.2.0: MIT
-- pikepdf 10.18.0: MPL-2.0
+- Flask 3.1.3, Werkzeug 3.1.9, pypdf 7.1.0 and ReportLab 5.0.1: BSD-3-Clause
+- Gunicorn 27.0.1: MIT
+- pikepdf 10.18.1: MPL-2.0
 - JUnit Jupiter 6.1.3 (Java tests only): EPL-2.0
 
 These Python versions are the minimums required by the requirement files, not a
@@ -177,7 +177,7 @@ The creator's `IndexedPdfLoader` adapts Apache PDFBox 3.0.8 object-stream loadin
 under the Apache License 2.0, retaining the source license header. It shares the
 outer parser's object-key index; PDFBox parsing and leniency remain in use.
 
-The local `StructureElementAccessObject` adaptation of veraPDF parser 1.31.7
+The local `StructureElementAccessObject` adaptation of veraPDF parser 1.31.71
 reuses the same parent-number-tree lookup wrapper within an immutable document.
 It preserves number-tree lookup and malformed-tree behavior, and clears the
 thread-local reference after each upstream check. The adapted MPL 2.0 source is
@@ -185,9 +185,9 @@ bundled under META-INF/eapdf/modified-verapdf-sources.
 
 ## Patched OpenHTMLtoPDF build
 
-The core and PDFBox modules use community OpenHTMLtoPDF 1.1.105 with four
+The core and PDFBox modules use community OpenHTMLtoPDF 1.1.113 with four
 unmodified patches from Jia Liang's HTML-to-PDF-UA repository. Version
-`1.1.105-eapdf.1` identifies this derivative; it is not an upstream release.
+`1.1.113-eapdf.1` identifies this derivative; it is not an upstream release.
 Patch sources, immutable provenance, checksums and corresponding source JARs
 are supplied under `third_party/openhtmltopdf/` and `third_party/maven/`.
 The upstream LGPL-2.1-or-later license continues to apply. Rebuilding and

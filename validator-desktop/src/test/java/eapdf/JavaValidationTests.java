@@ -160,7 +160,7 @@ class JavaValidationTests {
     assertArrayEquals(rules, JavaValidation.resource("validator_rule_text.json",
         HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(rules))));
     assertEquals(229, JavaValidation.RULES.size());
-    byte[] profile = JavaValidation.resource("config/verapdf/ISO-32005.xml", "a2181a59dcaef27d20cc3078aa8b63e63fe528908a69f985a0b56b714c62d7a1");
+    byte[] profile = JavaValidation.resource("config/verapdf/ISO-32005.xml", "9e49c6f93e2d62c150f6ac1c842e90f1e5bf6a7a336420db0f94eda384c58624");
     assertArrayEquals(Files.readAllBytes(Path.of("..", "config", "verapdf", "ISO-32005.xml")), profile);
   }
 

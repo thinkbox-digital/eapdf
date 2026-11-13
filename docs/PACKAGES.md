@@ -1,36 +1,24 @@
-# Patched libraries
+# Library packages
 
-Runnable creator/validator JARs, viewer ZIPs, examples and the manual are release
-assets. The Packages area publishes the project-maintained OpenHTMLtoPDF builds:
+Looking for an application? Use [Releases](https://github.com/thinkbox-digital/eapdf/releases).
+GitHub Packages contains our modified HTML-to-PDF libraries for developers.
 
-| Maven coordinate | Purpose |
+| Library | Version |
 | --- | --- |
-| `io.github.openhtmltopdf:openhtmltopdf-core:1.1.105-eapdf.1` | Patched HTML layout |
-| `io.github.openhtmltopdf:openhtmltopdf-pdfbox:1.1.105-eapdf.1` | Patched PDFBox output |
+| `io.github.openhtmltopdf:openhtmltopdf-core` | `1.1.113-eapdf.1` |
+| `io.github.openhtmltopdf:openhtmltopdf-pdfbox` | `1.1.113-eapdf.1` |
 
-Repository URL: `https://maven.pkg.github.com/thinkbox-digital/eapdf`.
-Each package includes the original license metadata and matching source JAR.
-The pinned upstream source and project patches are recorded in
-`third_party/openhtmltopdf/lock.json`. These are EA-PDF-maintained builds, not
-unmodified upstream releases. Other dependencies come from their upstream registries.
+These builds include our PDF/A and PDF/UA changes. Each has a matching source JAR
+and license information. See [renderer details](RENDERER.md).
 
-Verified build copies remain under `third_party/maven/` so a normal source build
-needs no GitHub token. `python3 scripts/build_patched_openhtmltopdf.py` verifies
-them against the lock. Packages provides a separate distribution channel.
+Normal EA-PDF source builds use the verified copies in `third_party/maven/`.
+**No GitHub token is needed.**
 
-GitHub requires authentication even to download public Maven packages. See
-[GitHub's Maven instructions](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry).
-Use private Maven settings with a token granting `read:packages`; never put a token
-in the project POM or commit it. Add the repository above with server id `github`
-in a consuming project's Maven configuration. Existing EA-PDF builds use their
-verified local copies by default and do not need that configuration.
+Other projects can use `https://maven.pkg.github.com/thinkbox-digital/eapdf`.
+GitHub requires a token with `read:packages`, even for public Maven packages.
+Follow [GitHub's setup guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry).
+Keep tokens in private Maven settings, never in this repository.
 
-Published packages are listed at
-https://github.com/thinkbox-digital/eapdf/packages.
-
-Maintainers publish with the manual **Publish patched libraries** Actions workflow.
-It uses the repository's short-lived `GITHUB_TOKEN`, verifies locked bytes before
-upload and verifies downloaded bytes afterward. Package versions are immutable;
-change the version and lock when changing library bytes.
-
-Use the workflow’s `verify_only` option to recheck existing package versions without republishing.
+Maintainers publish through the **Publish patched libraries** workflow. It checks
+the uploads against `third_party/openhtmltopdf/lock.json`. Use a new package version
+when library contents change; `verify_only` checks an existing publication.

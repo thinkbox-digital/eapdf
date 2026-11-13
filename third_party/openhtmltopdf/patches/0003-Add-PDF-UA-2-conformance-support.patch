@@ -1,7 +1,7 @@
-From 9648fff9aba215891af47fc51890e498ace91074 Mon Sep 17 00:00:00 2001
+From 07c0955849a1575fb6311d90be90d06aa28393bd Mon Sep 17 00:00:00 2001
 From: Jia Liang <hojialiang@protonmail.com>
 Date: Tue, 23 Jun 2026 03:13:55 +0800
-Subject: [PATCH 3/4] Add PDF/UA-2 conformance support
+Subject: [PATCH] Add PDF/UA-2 conformance support
 
 ---
  .../pdfboxout/PdfBoxAccessibilityHelper.java  | 78 ++++++++++++++++++-
@@ -13,10 +13,10 @@ Subject: [PATCH 3/4] Add PDF/UA-2 conformance support
  6 files changed, 175 insertions(+), 20 deletions(-)
 
 diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
-index 9ecea159..8b7e375f 100644
+index 67bf37f0..617dc9bb 100644
 --- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
 +++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxAccessibilityHelper.java
-@@ -53,6 +53,12 @@ public class PdfBoxAccessibilityHelper {
+@@ -60,6 +60,12 @@ public class PdfBoxAccessibilityHelper {
      private final Box _rootBox;
      private final Document _doc;
      private final GenericStructualElement _root;
@@ -29,7 +29,7 @@ index 9ecea159..8b7e375f 100644
  
      private static final Map<String, Supplier<AbstractStructualElement>> _tagSuppliers = createTagSuppliers();
  
-@@ -110,9 +116,14 @@ public class PdfBoxAccessibilityHelper {
+@@ -117,9 +123,14 @@ public class PdfBoxAccessibilityHelper {
      }
  
      public PdfBoxAccessibilityHelper(PdfBoxFastOutputDevice od, Box root, Document doc) {
@@ -44,7 +44,7 @@ index 9ecea159..8b7e375f 100644
          this._root = new GenericStructualElement();
          this._root.box = root;
          root.setAccessiblityObject(this._root);
-@@ -1038,11 +1049,25 @@ public class PdfBoxAccessibilityHelper {
+@@ -1260,11 +1271,25 @@ public class PdfBoxAccessibilityHelper {
       * Given a box, gets its structual element.
       */
      public static PDStructureElement getStructualElementForBox(Box targetBox) {
@@ -74,7 +74,7 @@ index 9ecea159..8b7e375f 100644
          }
  
          return null;
-@@ -1070,6 +1095,9 @@ public class PdfBoxAccessibilityHelper {
+@@ -1292,6 +1317,9 @@ public class PdfBoxAccessibilityHelper {
              roleMap.put("Underline", "Span");
              root.setRoleMap(roleMap);
  
@@ -84,7 +84,7 @@ index 9ecea159..8b7e375f 100644
              PDStructureElement rootElem = new PDStructureElement(StandardStructureTypes.DOCUMENT, null);
  
              String lang = _doc.getDocumentElement().getAttribute("lang");
-@@ -1081,10 +1109,52 @@ public class PdfBoxAccessibilityHelper {
+@@ -1303,6 +1331,11 @@ public class PdfBoxAccessibilityHelper {
              sortChildrenByDomOrder(_root);
              finishTreeItems(_root.children, _root);
  
@@ -95,6 +95,9 @@ index 9ecea159..8b7e375f 100644
 +
              _od.getWriter().getDocumentCatalog().setStructureTreeRoot(root);
          }
+     }
+@@ -1330,6 +1363,43 @@ public class PdfBoxAccessibilityHelper {
+         _streamItems = outer.items;
      }
  
 +    /**
@@ -215,10 +218,10 @@ index b19804b6..c1d35bc7 100644
       * Creates a <code>PDPageXYZDestination</code> with the Y set to the min Y of the border box and 
       * the X and Z set to null. Takes into account any transforms set for the box as well as inserted overflow pages.
 diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFastOutputDevice.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFastOutputDevice.java
-index d6cd1676..ac9673dd 100644
+index fb427962..20a9c215 100644
 --- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFastOutputDevice.java
 +++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxFastOutputDevice.java
-@@ -208,7 +208,8 @@ public class PdfBoxFastOutputDevice extends AbstractOutputDevice implements Outp
+@@ -217,7 +217,8 @@ public class PdfBoxFastOutputDevice extends AbstractOutputDevice implements Outp
      // If we are attempting to be PDF/UA compliant (ie tagged pdf), a helper, otherwise null.
      private PdfBoxAccessibilityHelper _pdfUa;
      private final boolean _pdfUaConform;
@@ -228,7 +231,7 @@ index d6cd1676..ac9673dd 100644
      private final boolean _pdfAConform;
  
      private final PdfRendererBuilder.PdfAConformance _pdfAConformance;
-@@ -231,18 +232,24 @@ public class PdfBoxFastOutputDevice extends AbstractOutputDevice implements Outp
+@@ -260,18 +261,24 @@ public class PdfBoxFastOutputDevice extends AbstractOutputDevice implements Outp
      public PdfBoxFastOutputDevice(float dotsPerPoint, boolean testMode, boolean pdfUaConform, boolean pdfAConform) {
          // Without knowing the PDF/A part, conservatively assume PDF/A-1 which
          // does not allow transparency.
@@ -255,7 +258,7 @@ index d6cd1676..ac9673dd 100644
      /**
       * A left-to-right run in a kerned font is drawn with the runs
       * {@link PdfBoxTextRenderer} measured it with; all other text as before.
-@@ -1083,7 +1090,7 @@ public class PdfBoxFastOutputDevice extends AbstractOutputDevice implements Outp
+@@ -1112,7 +1119,7 @@ public class PdfBoxFastOutputDevice extends AbstractOutputDevice implements Outp
          loadMetadata(doc);
          
          if (_pdfUaConform) {
@@ -265,10 +268,10 @@ index d6cd1676..ac9673dd 100644
      }
  
 diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
-index d12c7197..28e48cc8 100644
+index 4e668949..88f982df 100644
 --- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
 +++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
-@@ -120,6 +120,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -121,6 +121,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
  
      private PdfAConformance _pdfAConformance;
      private boolean _pdfUaConformance;
@@ -276,7 +279,7 @@ index d12c7197..28e48cc8 100644
  
      private byte[] _colorProfile;
  
-@@ -172,6 +173,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -173,6 +174,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
  
              _pdfAConformance = state._pdfAConformance;
              _pdfUaConformance = state._pdfUaConform;
@@ -284,7 +287,7 @@ index d12c7197..28e48cc8 100644
              _colorProfile = state._colorProfile;
  
              _hyphenator = state._hyphenator;
-@@ -181,6 +183,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -182,6 +184,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
              _outputDevice =
                      new PdfBoxFastOutputDevice(DEFAULT_DOTS_PER_POINT, _testMode,
                              state._pdfUaConform || state._pdfAConformance.getConformanceValue().equals("A"),
@@ -292,7 +295,7 @@ index d12c7197..28e48cc8 100644
                              state._pdfAConformance);
              _outputDevice.setWriter(_pdfDoc);
              _outputDevice.setStartPageNo(_pdfDoc.getNumberOfPages());
-@@ -596,7 +599,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -597,7 +600,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
                      PDDocumentInformation info = setDidValues(doc); // set PDF header fields from meta data
  
                      if (_pdfUaConformance || _pdfAConformance != PdfAConformance.NONE) {
@@ -301,7 +304,7 @@ index d12c7197..28e48cc8 100644
                      }
  
                      if (_colorProfile != null) {
-@@ -685,7 +688,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -686,7 +689,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
  
      // Kindly provided by GurpusMaximus at:
      // https://stackoverflow.com/questions/49682339/how-can-i-create-an-accessible-pdf-with-java-pdfbox-2-0-8-library-that-is-also-v
@@ -310,7 +313,7 @@ index d12c7197..28e48cc8 100644
          XMPMetadata metadata = XMPMetadata.createXMPMetadata();
  
          try {
-@@ -788,14 +791,28 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -789,14 +792,28 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
  
              if (isPdfUa) {
                  // Description of PDF/UA
@@ -386,5 +389,5 @@ index 6d67d332..5a4927ac 100644
  	public byte[] _colorProfile;
  	public PageSupplier _pageSupplier;
 -- 
-2.56.0.windows.4
+2.43.0
 
