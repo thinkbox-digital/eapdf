@@ -31,7 +31,7 @@ or finding-aid files. The reader's CSV export remains available.
 
 ## Latest update
 
-Both readers use the supplied PNG and SVG artwork. A short [privacy policy](PRIVACY.md)
+Both readers use the supplied PNG and SVG artwork. A short [privacy policy](site/privacy.md)
 explains local files, optional connections and saved data. The release includes
 1280×800 screenshots of the Creator, Validator and both readers with fictional data.
 

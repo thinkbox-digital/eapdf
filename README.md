@@ -83,7 +83,7 @@ Reader builds need Node.js; see the [reader guide](browser-viewer/README.md#buil
 [Tests](https://github.com/thinkbox-digital/eapdf/actions/workflows/quality.yml) ·
 [Contribute](CONTRIBUTING.md) · [Project status](docs/PROJECT_STATUS.md) ·
 [Code layout](docs/ARCHITECTURE.md) · [Architecture diagram (PDF)](docs/EA-PDF_Software_Architecture.pdf) · [Report a security problem](SECURITY.md) ·
-[Library packages](docs/PACKAGES.md) · [Privacy](docs/PRIVACY.md)
+[Library packages](docs/PACKAGES.md) · [Privacy](docs/site/privacy.md)
 
 ## Regenerate local outputs
 

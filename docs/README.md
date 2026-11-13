@@ -12,7 +12,7 @@ Start with the [user guide](manual/user-manual.html) or [PDF manual](EA-PDF_User
 | Validation results | [Coverage](VALIDATOR_COVERAGE.md), [Java validator](../validator-desktop/README.md) |
 | Settings | [Configuration](../config/README.md) |
 | Signing and search indexes | [Signatures](DIGITAL_SIGNATURES.md), [indexes](EMBEDDED_SEARCH_INDEX.md) |
-| Privacy | [Privacy policy](PRIVACY.md) |
+| Privacy | [Privacy policy](site/privacy.md) |
 | Security and licensing | [Security](security/HARDENING.md), [licenses](THIRD_PARTY_LICENSES.md) |
 | Developer libraries | [Packages](PACKAGES.md), [renderer patches](RENDERER.md) |
 | Changes and checks | [Release notes](releases/2.2.0-beta.2.md), [release checks](releases/2.2.0-beta.2-validation.md), [history](CHANGELOG.md) |

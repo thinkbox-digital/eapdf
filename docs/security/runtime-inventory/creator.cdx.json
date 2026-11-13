@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "EA-PDF creator",
-      "version": "2.2.0-beta.1"
+      "version": "2.2.0-beta.2"
     },
     "properties": [
       {
@@ -1782,12 +1782,12 @@
     },
     {
       "type": "file",
-      "name": "emailtopdfa-2.2.0-beta.1.jar",
-      "bom-ref": "artifact:emailtopdfa-2.2.0-beta.1.jar",
+      "name": "emailtopdfa-2.2.0-beta.2.jar",
+      "bom-ref": "artifact:emailtopdfa-2.2.0-beta.2.jar",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "7bdd0877091e2a96ba8c2ae57a3d11f1d51a1393738b0e3507a6d6f1c50adddf"
+          "content": "ef0f7d5382ce4a345aa13d65d06fcd82dbb79097d61253fab60ecc0671166459"
         }
       ]
     }

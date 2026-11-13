@@ -57,7 +57,7 @@ try {
       await rm(join(directory,'vendor/pdfjs/wasm',name),{force:true});
     await cp('node_modules/@xmldom/xmldom/LICENSE',join(directory,'xmldom-LICENSE'));
     await cp('LICENSE', join(directory, 'LICENSE'));
-    await cp('../docs/PRIVACY.md', join(directory, 'PRIVACY.md'));
+    await cp('../docs/site/privacy.md', join(directory, 'PRIVACY.md'));
     await cp('THIRD_PARTY_NOTICES.md', join(directory, 'THIRD_PARTY_NOTICES.md'));
     await cp('vendor/sources', join(directory, 'license-sources'), { recursive: true });
     const manifest = structuredClone(base);

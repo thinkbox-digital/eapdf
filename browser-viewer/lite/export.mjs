@@ -56,7 +56,7 @@ try {
  await copy('tests/fixtures/ordinary.pdf');
  for(const name of ['tsconfig.json','LICENSE','vendor/pdfjs-pin.json'])await copy(name);
  let notices=await readFile(join(root,'THIRD_PARTY_NOTICES.md'),'utf8');notices=notices.split('\n## XML interpretation worker')[0]+'\n\nLite omits the XML interpretation worker and does not bundle xmldom. The source lock retains the shared development dependency set.\n';await put('THIRD_PARTY_NOTICES.md',notices,'THIRD_PARTY_NOTICES.md');
- await put('PRIVACY.md',await readFile(join(root,'../docs/PRIVACY.md')),'../docs/PRIVACY.md');
+ await put('PRIVACY.md',await readFile(join(root,'../docs/site/privacy.md')),'../docs/site/privacy.md');
  const mapping={'lite/prepare-hooks.mjs':'scripts/prepare-hooks.mjs','lite/rebuild-hooks.mjs':'scripts/rebuild-pdfjs.mjs','lite/verify-hooks.mjs':'scripts/verify-hooks.mjs','lite/build.mjs':'scripts/build.mjs','lite/package.mjs':'scripts/package.mjs','lite/core.test.mjs':'tests/core-hooks.test.mjs','lite/assets.test.mjs':'tests/assets-hooks.test.mjs','lite/metadata-hooks.test.mjs':'tests/metadata-hooks.test.mjs','lite/lite.test.mjs':'tests/lite.test.mjs','lite/browser-smoke.mjs':'scripts/browser-smoke.mjs','lite/indexing-checks.mjs':'scripts/indexing-checks.mjs','lite/README.md':'README.md','lite/check.yml':'.github/workflows/check.yml','lite/INSTALL.txt':'INSTALL.txt','scripts/sbom.mjs':'scripts/sbom.mjs','scripts/licenses.mjs':'scripts/licenses.mjs'};
  for(const [from,to]of Object.entries(mapping))await copy(from,to);
  const exportedHooks=structuredClone(hooks);exportedHooks.localInputs={};exportedHooks.outputs={};
