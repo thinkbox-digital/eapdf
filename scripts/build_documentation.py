@@ -18,6 +18,7 @@ from mkdocs.config import load_config
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = 'https://github.com/thinkbox-digital/eapdf'
 SOURCES = {
+    'docs/PRIVACY.md': 'privacy.md',
     'docs/PROJECT_STATUS.md': 'developers/project-status.md',
     'docs/ARCHITECTURE.md': 'developers/architecture.md',
     'docs/PDFJS_LARGE_ARCHIVE_COMPARISON.md': 'developers/pdfjs-comparison.md',

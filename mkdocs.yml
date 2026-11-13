@@ -75,5 +75,6 @@ nav:
       - Patched libraries: developers/packages.md
       - Maintain this website: developers/website.md
       - Report a vulnerability: developers/security.md
+  - Privacy: privacy.md
   - Downloads: downloads.md
   - Source code: https://github.com/thinkbox-digital/eapdf

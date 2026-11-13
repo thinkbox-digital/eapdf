@@ -1,11 +1,11 @@
 # EA-PDF readers
 
-**Full and Lite readers 1.2.0-beta.1**, with creator/validator 2.2.0-beta.1.
+**Full and Lite readers 1.2.0-beta.2**, with creator/validator 2.2.0-beta.2.
 Read local PDFs, browse email folders and save attachments. Files stay on your
 computer. No Java, server or internet connection is needed by the extensions.
 
-[Download](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.1) ·
-[User guide](../docs/manual/user-manual.html#viewer)
+[Download](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.2) ·
+[User guide](../docs/manual/user-manual.html#viewer) · [Privacy](../docs/PRIVACY.md)
 
 ## Choose a reader
 

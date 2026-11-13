@@ -35,7 +35,7 @@ try {
   for(const name of ['cmaps','standard_fonts','wasm','iccs','LICENSE'])await cp(join('node_modules/pdfjs-dist',name),join(directory,'vendor/pdfjs',name),{recursive:true});
   await cp('node_modules/pdfjs-dist/web/pdf_viewer.mjs',join(directory,'vendor/pdfjs/pdf_viewer.mjs'));
   for(const name of ['quickjs-eval.js','quickjs-eval.wasm','LICENSE_QUICKJS','LICENSE_PDFJS_QUICKJS'])await rm(join(directory,'vendor/pdfjs/wasm',name),{force:true});
-  for(const name of ['LICENSE','THIRD_PARTY_NOTICES.md','INSTALL.txt'])await cp(name,join(directory,name));
+  for(const name of ['LICENSE','THIRD_PARTY_NOTICES.md','INSTALL.txt','PRIVACY.md'])await cp(name,join(directory,name));
   await cp('vendor/sources',join(directory,'license-sources'),{recursive:true});
   await cp('src/icons',join(directory,'icons'),{recursive:true});await cp('assets',join(directory,'assets'),{recursive:true});
   await cp('src/viewer.css',join(directory,'viewer.css'));

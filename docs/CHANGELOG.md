@@ -5,6 +5,11 @@ Use [current project status](PROJECT_STATUS.md) and [architecture decisions](ARC
 for the current handover; do not treat historical counts or then-open findings as
 a fresh acceptance run.
 
+## 2026-11-13 — 2.2.0-beta.2 / readers 1.2.0-beta.2
+
+- **UI improvement:** supplied PNG/SVG icons in both readers.
+- **Documentation:** short privacy policy and exact-size sample screenshots.
+
 ## 2026-11-13 — 2.2.0-beta.1 / readers 1.2.0-beta.1
 
 - **Code removal:** remove the web workbench and its server dependencies; keep standalone Java validation and Python regression tools.
