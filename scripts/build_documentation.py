@@ -28,7 +28,6 @@ SOURCES = {
     'docs/CONVERSION_OPERATIONS.md': 'reference/operations.md',
     'docs/VALIDATOR_COVERAGE.md': 'reference/validation.md',
     'validator-desktop/README.md': 'reference/java-validator.md',
-    'docs/DEPLOY_WEB.md': 'reference/web.md',
     'docs/security/HARDENING.md': 'reference/security.md',
     'CONTRIBUTING.md': 'developers/contributing.md',
     'docs/PACKAGES.md': 'developers/packages.md',

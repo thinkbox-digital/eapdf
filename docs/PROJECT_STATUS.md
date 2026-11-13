@@ -10,8 +10,9 @@ Updated 13 November 2026 for **creator/validator 2.2.0-beta.1** and
   and large-archive support.
 - **Bug fix:** Lite can keep scanning collection messages while the user opens one.
   Released documents no longer use up its allowance for open documents.
-- **Code improvement:** updated rendering, validation, email, signing and web libraries.
+- **Code improvement:** updated rendering, validation, email and signing libraries.
   Our required PDF/A, PDF/UA and validator patches remain.
+- **Code removal:** removed the web workbench and its server dependencies.
 - **Documentation:** shorter starting pages and simpler instructions. Regeneration
   instructions are near the end of the README.
 
@@ -22,8 +23,7 @@ Updated 13 November 2026 for **creator/validator 2.2.0-beta.1** and
 
 The creator accepts EML, MSG, PST, MBOX and Gmail. It produces the six EA-PDF
 formats described in the [user guide](manual/user-manual.html#basics).
-Use the standalone Java validator for normal conversion checks. The Python/web
-validator remains available.
+Use the standalone Java validator for normal conversion checks. Python CLI validation remains for regression tests and diagnostics.
 
 Keep the original mailboxes. Isolated output omits sources; it does not remove
 private information from the visible email. The creator no longer makes PREMIS
@@ -42,10 +42,9 @@ still need separate checks. PDF/UA machine checks are not a human review.
 
 A file opening successfully does not prove preservation or conformance.
 Large-file limits are not a promise that every allowed file will fit in memory.
-The hosted workbench is for a trusted team; it has no separate file ownership
-for individual customers. No speed or memory improvement is claimed for the
+No speed or memory improvement is claimed for the
 library update.
 
 See [validation limits](VALIDATOR_COVERAGE.md), [security](security/HARDENING.md)
-and [web setup](DEPLOY_WEB.md). Private development logs and email samples stay
+and [configuration](../config/README.md). Private development logs and email samples stay
 outside GitHub and the website.

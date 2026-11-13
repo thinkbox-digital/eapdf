@@ -77,8 +77,7 @@ licensed under Apache-2.0, but redistributed fat jars that include
 
 ## Python And Test Dependencies
 
-- Flask 3.1.3, Werkzeug 3.1.9, pypdf 7.1.0 and ReportLab 5.0.1: BSD-3-Clause
-- Gunicorn 27.0.1: MIT
+- pypdf 7.1.0 and ReportLab: BSD-3-Clause
 - pikepdf 10.18.1: MPL-2.0
 - JUnit Jupiter 6.1.3 (Java tests only): EPL-2.0
 

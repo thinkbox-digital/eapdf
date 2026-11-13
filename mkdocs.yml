@@ -53,7 +53,7 @@ nav:
       - Convert local email: manual/creator.md
       - Download from Gmail: manual/gmail.md
       - Standalone Java validator: manual/java-validator.md
-      - Python and web validator: manual/python-validator.md
+      - Python CLI validator: manual/python-validator.md
       - Read with the viewer: manual/viewer.md
       - Settings: manual/settings.md
       - Command line: manual/command-line.md
@@ -65,7 +65,6 @@ nav:
       - Conversion operations: reference/operations.md
       - Validation coverage: reference/validation.md
       - Java validator details: reference/java-validator.md
-      - Web deployment: reference/web.md
       - Security boundaries: reference/security.md
   - Developers:
       - Current project status: developers/project-status.md

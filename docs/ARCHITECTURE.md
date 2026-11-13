@@ -18,7 +18,6 @@ The browser reader runs without Java or a server.
 | Validator window and reports | `ValidatorGui`, `ValidationReportReader`, `ReportFindings` |
 | Python validation | `validate_eapdf.py`, `eapdf_validation/` |
 | Validation workers | `validation_worker.py`, `pdf_stream_limits.py` |
-| Web workbench | `validator_web.py`, `eapdf_web/` |
 | Browser reader | `browser-viewer/src/`: `viewer.ts`, `browser-session.ts`, `domain/` |
 | Reader panels | `message-tree.ts`, `files-panel.ts`, `search-controller.ts` |
 | Full-reader extras | `collection-view.ts`, `portfolio.ts`, `conversations.ts`, `thread-preview.ts` |
@@ -35,8 +34,6 @@ The browser reader runs without Java or a server.
   Keep parsing behind the documented PDF.js APIs.
 - Python's root modules keep the command-line and public import interfaces.
   Separate modules hold report formatting, engine adapters and rule families.
-- The web app keeps authentication, proxy trust and request limits together.
-  Job storage and page templates have their own modules.
 
 ## Maintained Lite viewer export
 
@@ -80,3 +77,6 @@ Keep public interfaces, original inputs and useful debug output intact.
 
 See [project status](PROJECT_STATUS.md), [contribution rules](../CONTRIBUTING.md)
 and the [documentation map](README.md).
+
+The former web workbench and its deployment files are removed. The Java validator
+is the normal checking tool; Python CLI code remains for regressions and diagnostics.

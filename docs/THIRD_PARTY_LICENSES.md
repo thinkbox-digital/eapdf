@@ -12,7 +12,7 @@ unreleased dependency changes.
   resolved component licenses/hashes: the runtime inventory and CycloneDX files.
 - Browser dependency/patch inventory and notices: browser-viewer/package-lock.json,
   its vendor maintenance records, and the SBOM/notices in each extension package.
-- Python runtime: requirements-web.txt and its hash lock. Website, manual, quality
+- Python runtime: requirements-validator.txt and its hash lock. Website, manual, quality
   checks and the frozen browser inspection oracle have separate dependency sets.
   Their versions must not be represented as one deployment environment.
 - Application LICENSE/NOTICE, third_party_licenses, and notices retained inside
@@ -58,12 +58,11 @@ release bytes; do not carry forward an old packaging result as a new audit.
 
 The working-tree requirements currently select pikepdf 10.18.1 and pypdf 7.1.0;
 these dependency refreshes must be reconciled with the intended release and
-installed service environment. See the lock and runtime inventory for exact
+installed Python environment. See the lock and runtime inventory for exact
 versions and declared licenses. Installing/rebuilding a release is distinct from
 editing its requirement files.
 
-Flask/Werkzeug, pypdf and ReportLab record BSD-family licenses; Gunicorn records
-MIT, and pikepdf records MPL-2.0. Confirm transitive dependencies and bundled/native
+pypdf and ReportLab record BSD-family licenses; pikepdf records MPL-2.0. Confirm transitive dependencies and bundled/native
 components against the specific environment. Test-only dependencies do not
 necessarily ship, but their fixture/data redistribution still needs review.
 
@@ -74,7 +73,7 @@ has no standalone notice file.
 
 ## Release checklist
 
-1. Inventory the actual JARs, extension ZIPs, installers and hosted environment,
+1. Inventory the actual JARs, extension ZIPs, installers and Python environment,
    distinguishing runtime, development and test-only material.
 2. Check license texts, modification notices, corresponding-source and
    replacement instructions against the exact bundled versions and build mode.

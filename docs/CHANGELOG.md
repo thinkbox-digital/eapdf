@@ -7,6 +7,8 @@ a fresh acceptance run.
 
 ## 2026-11-13 — 2.2.0-beta.1 / readers 1.2.0-beta.1
 
+- **Code removal:** remove the web workbench and its server dependencies; keep standalone Java validation and Python regression tools.
+
 - **New code:** Lite reader with the same reading layout and fewer optional features.
 - **Bug fix:** keep message selection working while Lite scans a collection.
 - **Code improvement:** updated libraries and shorter public documentation.

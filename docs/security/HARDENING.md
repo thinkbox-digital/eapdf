@@ -4,7 +4,7 @@ Current source security baseline (reviewed November 7, 2026). Historical
 checkpoint results below are evidence for their recorded versions, not a claim
 that every acceptance check was rerun for the latest release. See the
 [browser security boundaries](../../browser-viewer/docs/security.md) for current
-viewer controls and [deployment configuration](../DEPLOY_WEB.md) for web limits.
+reader controls. The former web service has been removed.
 
 ## Changes
 
@@ -20,16 +20,11 @@ viewer controls and [deployment configuration](../DEPLOY_WEB.md) for web limits.
   Python uses bounded incremental generalized decoders. Resource/unsupported-codec
   limits leave an incomplete assessment, including when a lower check catches the
   decoding error. A completed, independent violation can still produce FAIL.
-- Direct CLI validation uses disposable worker processes. The Java GUI and web
-  jobs also supervise workers. Native memory/file/descriptor limits, wall time and
+- Direct CLI validation uses disposable worker processes. The Java GUI also supervises workers. Native memory/file/descriptor limits, wall time and
   aggregate scratch/report budgets limit parser damage; abnormal completion
   replaces stale success reports with INCOMPLETE. Workers and private scratch are
   removed on normal completion, cancellation and failure. The Java storage monitor
   tolerates files/directories removed while the worker is running.
-- The web service ignores spoofed forwarding headers. Only configured immediate
-  proxy addresses may supply them. Direct non-loopback access requires HTTPS and
-  authentication; default host names are loopback-only. The nginx/systemd setup
-  remains a shared trusted-team service, without per-user job ownership.
 - Production browser sessions enforce input, aggregate decoded-byte and concurrency bounds;
   ancestor cycles are rejected before work. Normal PDF.js rendering now shares
   the allocation guard used for attachment extraction. Linked-file fetches count
@@ -58,7 +53,6 @@ viewer controls and [deployment configuration](../DEPLOY_WEB.md) for web limits.
 | PDF.js ordinary decoded buffer / cumulative buffer growth per worker | 64 MiB / 256 MiB |
 | Browser image decode / PDF.js canvas bytes | 16 million pixels / 64 MiB |
 | Explicit linked PDF | 64 MiB streamed bytes, 30 s, no cookies or redirects |
-| Web upload request | At most 64 MiB by default, also bounded by available disk |
 
 Validator settings use `VALIDATOR_MAX_STREAM_BYTES`, `VALIDATOR_MAX_METADATA_BYTES`,
 `VALIDATOR_MAX_WORK_FILE_BYTES`, `VALIDATOR_MAX_SCRATCH_BYTES`,
@@ -68,7 +62,7 @@ stream/storage settings. Python additionally supports explicit lifetime quotas
 `VALIDATOR_MAX_DECODED_BYTES` and `VALIDATOR_MAX_EMBEDDED_FILES`. Python CLI memory uses `VALIDATOR_JOB_MEMORY_MB`;
 `VALIDATOR_MAX_CONCURRENT_JOBS` caps directory workers. Existing CLI arguments are
 unchanged. Browser input/decoding ceilings can only be lowered by application session options. The 4 GiB input ceiling is an acceptance ceiling, not a guarantee that a browser has enough memory to open that input.
-Python web and regeneration disk budgets divide half available disk among concurrent jobs.
+Python CLI and regeneration disk budgets divide half available disk among concurrent jobs.
 Headroom shares are admission budgets, not reservations or promises that another process
 will leave those resources free. Exhaustion remains an explicit incomplete outcome.
 Raising limits cannot recover missing source data.
@@ -91,7 +85,7 @@ resource controls use util-linux `prlimit`; other platforms have different contr
 ## Dependencies, updates and packaging
 
 [Runtime inventories](runtime-inventory/DEPENDENCY_LICENSES.md) include CycloneDX
-SBOMs for the resolved creator/Java validator runtimes and the tested Python web
+SBOMs for the resolved creator/Java validator runtimes and the tested Python CLI
 runtime, with an exact Python version snapshot. They identify pre-shading JAR
 hashes separately from application artifact hashes. `packaging` is needed to run
 the inventory utility. Browser SBOMs, notices, license source material and hashes
@@ -114,7 +108,7 @@ python scripts/security_inventory.py \
   --output docs/security/runtime-inventory
 ```
 
-Use an isolated Python environment satisfying `requirements-web.txt`. The version
+Use an isolated Python environment satisfying `requirements-validator.txt`. The version
 snapshot records this platform's installed runtime closure, not a portable wheel
 hash lock. Do not inherit unrelated user-site packages via `PYTHONPATH`.
 

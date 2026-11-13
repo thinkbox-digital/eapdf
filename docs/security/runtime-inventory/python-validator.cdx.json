@@ -1,0 +1,132 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "EA-PDF Python CLI validator",
+      "version": "2.2.0-beta.1"
+    },
+    "properties": [
+      {
+        "name": "eapdf:scope",
+        "value": "Resolved runtime dependency inventory; licensing/advisory review is separate. Local patches are recorded by source and artifact hashes."
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "lxml",
+      "version": "6.1.3",
+      "purl": "pkg:pypi/lxml@6.1.3",
+      "bom-ref": "pkg:pypi/lxml@6.1.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "cc8580f4659bfbb48100afdd765b9134b9c65cace8de9a2f0a0492fa2216ae49"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "olefile",
+      "version": "0.47",
+      "purl": "pkg:pypi/olefile@0.47",
+      "bom-ref": "pkg:pypi/olefile@0.47",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD License"
+          }
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "8c7566eb863697d8d097a695f335d0545a6d927bb4c37fb710b7ffacad49f1f8"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "packaging",
+      "version": "26.3",
+      "purl": "pkg:pypi/packaging@26.3",
+      "bom-ref": "pkg:pypi/packaging@26.3",
+      "licenses": [
+        {
+          "expression": "Apache-2.0 OR BSD-2-Clause"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "fd59b791119d91d0602060c81541e41118992995c6a0070e411a5ea3c6b1ebb2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pikepdf",
+      "version": "10.18.1",
+      "purl": "pkg:pypi/pikepdf@10.18.1",
+      "bom-ref": "pkg:pypi/pikepdf@10.18.1",
+      "licenses": [
+        {
+          "expression": "MPL-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "7b977370d4e5e799fa5b17bce8e7ad7a8c79f8b8ee013a9ab2d46ad2ef84c770"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pillow",
+      "version": "13.0.0",
+      "purl": "pkg:pypi/pillow@13.0.0",
+      "bom-ref": "pkg:pypi/pillow@13.0.0",
+      "licenses": [
+        {
+          "expression": "MIT-CMU"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "8a825a0cc300e145dedf519a1506c3e13fdd8848024da884357e5494e9386353"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pypdf",
+      "version": "7.1.0",
+      "purl": "pkg:pypi/pypdf@7.1.0",
+      "bom-ref": "pkg:pypi/pypdf@7.1.0",
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:installed-record-sha256",
+          "value": "feb6a673f5679df1d22c30fceb22e0d8999db6af05cfc984cce552176889fbbf"
+        }
+      ]
+    }
+  ]
+}

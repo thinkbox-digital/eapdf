@@ -1,0 +1,4 @@
+# Optional Python CLI validator and regression tests; desktop JARs need no Python.
+pikepdf>=10.18.1,<11
+pypdf>=7.1.0,<8
+olefile>=0.46,<1

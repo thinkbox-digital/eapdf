@@ -2,7 +2,7 @@
 
 Public site: <https://thinkbox-digital.github.io/eapdf/>.
 The site uses Material for MkDocs. GitHub continues to host source, issues,
-Releases and Packages. Pages serves documentation only, not the web validator.
+Releases and Packages. Pages serves documentation only, not an email-processing service.
 
 ## Edit the source
 

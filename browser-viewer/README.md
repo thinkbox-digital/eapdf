@@ -90,3 +90,6 @@ Browser tests need the corresponding browser and driver installed. Use
 `CHROMIUM_PATH`, `FIREFOX_PATH` and `GECKODRIVER_PATH` when they are outside the default locations.
 
 For PDF.js API and fixture details, see the [inspection contract](docs/inspection-schema.md).
+
+Build uses TypeScript and PDF.js **6.5.438**.
+PDF.js upstream commit: `0a4153349dc473ba950fc17941c5ca7eda43c1de`.

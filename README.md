@@ -1,6 +1,8 @@
 # Email to EA-PDF
 
-Turn saved emails and mailboxes into PDFs you can read, search and keep.
+**Your email—complete, authentic, accessible, structured.**
+
+Turn saved emails and mailboxes into PDFs you can read, search and archive.
 Supports **EML, MSG, PST, MBOX and Gmail**.
 
 [User guide](https://thinkbox-digital.github.io/eapdf/) · [PDF manual](docs/EA-PDF_User_Manual.pdf) · [Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.1)

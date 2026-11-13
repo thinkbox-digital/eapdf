@@ -10,7 +10,7 @@ Start with the [user guide](manual/user-manual.html) or [PDF manual](EA-PDF_User
 | Conversion and recovery | [Operations](CONVERSION_OPERATIONS.md) |
 | Gmail | [Gmail setup](GMAIL.md) |
 | Validation results | [Coverage](VALIDATOR_COVERAGE.md), [Java validator](../validator-desktop/README.md) |
-| Settings and hosting | [Configuration](../config/README.md), [web setup](DEPLOY_WEB.md) |
+| Settings | [Configuration](../config/README.md) |
 | Signing and search indexes | [Signatures](DIGITAL_SIGNATURES.md), [indexes](EMBEDDED_SEARCH_INDEX.md) |
 | Security and licensing | [Security](security/HARDENING.md), [licenses](THIRD_PARTY_LICENSES.md) |
 | Developer libraries | [Packages](PACKAGES.md), [renderer patches](RENDERER.md) |

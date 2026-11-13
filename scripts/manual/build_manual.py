@@ -74,7 +74,7 @@ def build(source,destination,bold_font):
         'note':ParagraphStyle('Note',parent=body,backColor=colors.HexColor('#eef3f7'),borderPadding=9,spaceBefore=8,spaceAfter=16),
         'toc':ParagraphStyle('ContentsEntry',parent=body,fontSize=11,leading=17,spaceBefore=8)}
     width,height=A4;left=48;usable=width-left*2
-    doc=ManualDocument(str(destination),pagesize=A4,leftMargin=left,rightMargin=left,topMargin=48,bottomMargin=49,title='EA-PDF User Manual',author='Thinkbox.DIGITAL',subject='Beginner guide to the creator, Java validator, Python/web validator and browser viewer',creator='EA-PDF manual builder',keywords='email, EA-PDF, PDF/A, creator, validator, viewer, user manual',pageCompression=1)
+    doc=ManualDocument(str(destination),pagesize=A4,leftMargin=left,rightMargin=left,topMargin=48,bottomMargin=49,title='EA-PDF User Manual',author='Thinkbox.DIGITAL',subject='Beginner guide to the creator, Java validator, optional Python validator and browser viewer',creator='EA-PDF manual builder',keywords='email, EA-PDF, PDF/A, creator, validator, viewer, user manual',pageCompression=1)
     def decorate(canvas,document):
         canvas.saveState();canvas.setStrokeColor(colors.HexColor('#d2dce4'));canvas.line(left,35,width-left,35)
         canvas.setFont('ManualSans',8);canvas.setFillColor(colors.HexColor('#435867'))

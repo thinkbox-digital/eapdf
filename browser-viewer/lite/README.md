@@ -22,7 +22,7 @@ No conformance validation is performed.
 
 ## Test the viewer
 
-See INSTALL.txt. Packages are local, unsigned beta builds.
+See INSTALL.txt. Packages are unsigned beta builds.
 
 ## Build independently
 

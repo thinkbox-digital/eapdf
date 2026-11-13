@@ -103,17 +103,9 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Java validator | org.verapdf:verapdf-xmp-core | 1.31.56 | BSD 3-Clause License |
 | Java validator | org.xmlresolver:xmlresolver | 5.3.3 | Apache License version 2.0 |
 | Java validator | org.xmlresolver:xmlresolver | 5.3.3 | Apache License version 2.0 |
-| Python/web | blinker | 1.9.0 | MIT License |
-| Python/web | click | 8.5.1 | BSD-3-Clause |
-| Python/web | flask | 3.1.3 | BSD-3-Clause |
-| Python/web | gunicorn | 27.0.1 | MIT |
-| Python/web | itsdangerous | 2.2.0 | BSD License |
-| Python/web | jinja2 | 3.1.6 | BSD License |
-| Python/web | lxml | 6.1.3 | BSD-3-Clause |
-| Python/web | markupsafe | 3.0.4 | BSD-3-Clause |
-| Python/web | olefile | 0.47 | BSD License |
-| Python/web | packaging | 26.3 | Apache-2.0 OR BSD-2-Clause |
-| Python/web | pikepdf | 10.18.1 | MPL-2.0 |
-| Python/web | pillow | 13.0.0 | MIT-CMU |
-| Python/web | pypdf | 7.1.0 | BSD-3-Clause |
-| Python/web | werkzeug | 3.1.9 | BSD-3-Clause |
+| Python CLI | lxml | 6.1.3 | BSD-3-Clause |
+| Python CLI | olefile | 0.47 | BSD License |
+| Python CLI | packaging | 26.3 | Apache-2.0 OR BSD-2-Clause |
+| Python CLI | pikepdf | 10.18.1 | MPL-2.0 |
+| Python CLI | pillow | 13.0.0 | MIT-CMU |
+| Python CLI | pypdf | 7.1.0 | BSD-3-Clause |

@@ -103,7 +103,7 @@ against these expectations using the current inspection-contract and browser tes
 
 The oracle dependency pins above describe its frozen development environment, not
 web production dependencies. The web lock now pins pypdf 7.0.0; use
-`requirements-web.lock` for installation. Viewer tool versions are defined in
+`requirements-validator.lock` for installation. Viewer tool versions are defined in
 `package.json` (Node 24.19.0, npm 11.17.0, PDF.js 6.5.438).
 
 Run `npm run check`, `npm run build`, `node --test tests/*.test.mjs`,
