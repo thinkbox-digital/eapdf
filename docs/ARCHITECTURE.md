@@ -3,6 +3,8 @@
 The project has three parts: create PDFs, check PDFs, and read PDFs.
 The browser reader runs without Java or a server.
 
+[Architecture diagram (PDF)](EA-PDF_Software_Architecture.pdf)
+
 ## Where to work
 
 | Part | Main files |
@@ -80,3 +82,6 @@ and the [documentation map](README.md).
 
 The former web workbench and its deployment files are removed. The Java validator
 is the normal checking tool; Python CLI code remains for regressions and diagnostics.
+
+Rebuild the diagram with `scripts/build_architecture_diagram.py`, passing the
+current creator and validator JARs. It reads versions and rule counts from source.

@@ -17,6 +17,7 @@ Download **EA-PDF 2.2.0-beta.1** and **viewer 1.2.0-beta.1** from the
 | `eapdf-viewer-lite-1.2.0-beta.1-source.zip` | Standalone Lite source code |
 | `ea-pdf-examples-2.2.0-beta.1.zip` | Example outputs and validation records |
 | `EA-PDF_User_Manual-2.2.0-beta.1.pdf` | Offline PDF/A user manual |
+| `EA-PDF_Software_Architecture-2.2.0-beta.1.pdf` | One-page product and library diagram |
 | `SHA256SUMS.txt` | Checksums for verifying the downloaded files |
 
 Java applications require **Java 21 or later**. Extract the configuration bundle
