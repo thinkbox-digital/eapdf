@@ -1,0 +1,23 @@
+EA-PDF Viewer Lite — local unsigned beta
+
+Chromium: Extract the chromium ZIP. Open chrome://extensions, enable Developer
+mode, choose Load unpacked and select the extracted directory containing
+manifest.json. Click the extension icon, then Open PDF or drop a local EA-PDF.
+Lite has a separate display name and can be installed alongside the full viewer.
+
+Firefox: Extract the firefox ZIP. Open about:debugging#/runtime/this-firefox,
+choose Load Temporary Add-on and select manifest.json. Installation is temporary.
+
+Web: Extract the web ZIP into /tmp/eapdf-viewer-lite-web. Run:
+python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/eapdf-viewer-lite-web
+Open http://127.0.0.1:8765/viewer.html in a current browser. Use Open PDF or drop a
+file. Local browser modules need HTTP serving; double-clicking viewer.html is not
+supported. An extension is not required for this build.
+
+The three-pane layout, metadata, attachments, ordinary search, collection browsing
+and CSV export are retained. Conversations, Portfolio view and embedded search indexes are absent.
+Limits: 32 MiB input, 2048 pages/PDF, 2 MiB metadata, 16 MiB decoded attachment,
+32 retained child documents/session and four child levels. Use the full viewer for large files.
+These are application limits, not a total browser-memory guarantee.
+No conformance validation. Selected local files stay on your device; linked URLs
+are fetched only after an explicit opening action. No analytics or upload service.

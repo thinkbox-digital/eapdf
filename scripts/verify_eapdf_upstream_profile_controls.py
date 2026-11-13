@@ -26,12 +26,12 @@ def main():
         (OUT / (path.stem + '.json')).write_text(json.dumps(report, indent=2, default=str) + '\n')
         failures = [r for r in report.get('rule_summaries', []) if r.get('status') == 'failed']
         row = dict(case, actual=report['status'], actual_profile=report.get('profile_name'),
-                   ran=report.get('ran'), engine_version=v.verapdf_reported_version(report), failed_rules=failures)
+                   ran=report.get('ran'), engine_version=next((entry['version'] for entry in report.get('raw_json', {}).get('report', {}).get('buildInformation', {}).get('releaseDetails', []) if entry.get('id') == 'apps'), None), failed_rules=failures)
         results.append(row)
         (OUT / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
         print(path.name, row['actual_profile'], row['actual'], flush=True)
         if not (row['actual'] == case['expected_pdfa'] and row['actual_profile'] == case['profile']
-                and row['ran'] and row['engine_version'] == '1.31.18'):
+                and row['ran'] and row['engine_version'] == v.ISO32005_PROFILE['reported_versions']['apps']):
             errors.append(row)
         if case['expected_pdfa'] == 'FAIL' and not any(
                 r.get('clause') == case['expected_failure_clause'] and r.get('testNumber') == 1

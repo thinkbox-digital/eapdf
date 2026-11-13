@@ -249,6 +249,12 @@ def run_verapdf(path, profile_path=None, expected_profile=None, *, allowed_profi
             "raw_json": payload,
             "stderr_severity": stderr_severity,
         })
+        if not expected_profile:
+            # veraPDF 1.31.224 lowercases conformance letters in its built-in labels.
+            # Retain our public canonical names; custom pinned profiles still match exactly.
+            reported = result["profile_name"]
+            result["profile_name"] = next((name for name in allowed_profiles
+                                            if name.casefold() == reported.casefold()), reported)
         result["profile_allowed"]=(result["profile_name"] == expected_profile if expected_profile else
                                    result["profile_name"] in allowed_profiles) if result["profile_name"] else False
         if not result["profile_allowed"]:

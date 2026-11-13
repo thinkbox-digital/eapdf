@@ -4,8 +4,8 @@ import {fileLabel} from './navigation.js';
 import {sha256} from './domain/hashes.js';
 
 export const INDEX_LIMITS=Object.freeze({compressed:4*1024*1024,decoded:8*1024*1024,messages:100_000,row:128*1024,characters:32_000_000});
-export const SEARCH_FIELDS=['Subject','From','Raw-From','To','Raw-To','Cc','Raw-Cc','Bcc','Raw-Bcc','Sent'] as const;
-export const metadataSearchText=(data:Record<string,string>)=>SEARCH_FIELDS.map(k=>data[k]??'').join(' ').toLowerCase();
+import {metadataSearchText} from './metadata-search.js';
+export {SEARCH_FIELDS,metadataSearchText} from './metadata-search.js';
 export type EmbeddedIndexResult={messages?:IndexedMessage[];diagnostic?:string};
 const cache=new WeakMap<BrowserDocument,Promise<EmbeddedIndexResult>>();
 export function forgetEmbeddedIndex(doc:BrowserDocument):void{cache.delete(doc);}

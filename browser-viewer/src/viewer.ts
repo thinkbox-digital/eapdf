@@ -3,16 +3,16 @@ import {MessageTree,type PdfPlacement} from './message-tree.js';
 import {FilesPanel} from './files-panel.js';
 import {element,text,button,visiblePaneControls} from './viewer-elements.js';
 import {isPdf,canView,sizeLabel} from './attachment-types.js';
-import {ThreadPreview} from './thread-preview.js';
+import {ThreadPreview} from './conversations.js';
 import {openingDestination,type OpeningDestination} from './opening-destination.js';
 import {checkCollectionNames} from './collection-names.js';
 import {messageDownload,messagePdf} from './message-download.js';
 import {archiveStats} from './archive-stats.js';
 import {setupPaneResizers} from './pane-resizer.js';
 import {treeIcon} from './viewer-icons.js';
-import {detectDocument,PortfolioModel,type PortfolioRow} from './portfolio.js';
+import {detectDocument} from './document-kind.js';
 import {resolveEmbeddedLink,type EmbeddedAction} from './embedded-navigation.js';
-import {PortfolioView} from './portfolio-view.js';
+import {CollectionView} from './collection-view.js';
 import {readEmbeddedIndex} from './embedded-index.js';
 import {saveBlob} from './downloads.js';
 import {indexMessages,type IndexedMessage} from './message-index.js';
@@ -30,12 +30,9 @@ const status=element('status'),tree=element('tree'),files=element('files');
 const surface=element('page-surface'),viewport=element('viewport'),empty=element('empty-state');
 const search=element<HTMLInputElement>('search'),searchStatus=element('search-status');
 const attachmentViewer=new AttachmentViewer();
-let portfolioView:PortfolioView|undefined,portfolioDocument:BrowserDocument|undefined;
 const initializedViews=new WeakSet<BrowserDocument>();
 const openingWarnings=new WeakMap<BrowserDocument,string>();
 const openingPlans=new WeakMap<BrowserDocument,OpeningDestination>();
-const portfolioModels=new WeakMap<BrowserDocument,PortfolioModel>();
-let portfolioReturn:{doc:BrowserDocument;page:number;message?:string}|undefined;
 const failedPages=new Set<number>();
 const pages=new ScrollingPages(viewport,surface,number=>{
   pageNumber=number;syncMessageToPage();if(current){savedPages.set(current,number);status.textContent=`${current.name} · Page ${number} of ${current.pdf.numPages}`;}controls();
@@ -72,7 +69,7 @@ function displayedMessageDownload(doc:BrowserDocument) {
     const owners=new Set(doc.inspection.parts.filter(part=>part.dpm.Mail_ContentSetType?.value==='BodyRendering'&&part.pageRange.state==='present'&&part.pageRange.value.start<pageNumber&&part.pageRange.value.end>=pageNumber-1).flatMap(part=>part.messageIds.value??[]));
     if(owners.size===1)message=doc.inspection.messages.find(m=>owners.has(m.id));
   }
-  return messageDownload(doc,message,!!portfolioView);
+  return messageDownload(doc,message,!!collectionView.active);
 }
 let exportSession:BrowserSession|undefined;
 let cancelExport:(()=>void)|undefined;
@@ -100,14 +97,17 @@ const searchController=new SearchController({
 },{search,searchStatus,status,tree,viewport,pages});
 const {filter,filterResults}=searchController;
 const pageOwners=new WeakMap<BrowserDocument,Map<number,MailMessage|null>>();
+const collectionView=new CollectionView({
+ get session(){return session;},get current(){return current;},get page(){return pageNumber;},set page(value){pageNumber=value;},
+ savedMessages,pages,surface,empty,status,attachmentViewer,openingPlans,check,operation,showDocument,render,showInformation,showOutline,openChild,returnToParent,prepareBrowseSubjects,stopBrowseIndex
+});
 // PDF points use 72 units/inch; browser CSS uses 96.
 const PDF_TO_CSS=96/72;
 
-function collectionOverview(doc:BrowserDocument|undefined):boolean{return !!doc?.inspection.collection.value&&['c','ci'].includes(doc.inspection.identification.declaredProfile.value??'')&&!portfolioView;}
+function collectionOverview(doc:BrowserDocument|undefined):boolean{return !!doc?.inspection.collection.value&&['c','ci'].includes(doc.inspection.identification.declaredProfile.value??'')&&!collectionView.active;}
 function controls():void {
   fileInput.disabled=false;const available=!!current;
-  portfolioView?.setBusy(busy);
-  element<HTMLButtonElement>('portfolio-toggle').disabled=element<HTMLButtonElement>('portfolio-show').disabled=busy;
+  collectionView.controls(busy);
   const scope=element<HTMLSelectElement>('search-scope');scope.disabled=busy||!available;scope.options[0]!.disabled=collectionOverview(current);if(collectionOverview(current))scope.value='collection';
   pageInput.disabled=zoom.disabled=search.disabled=element<HTMLButtonElement>('find').disabled=busy||!available;
   element<HTMLButtonElement>('previous').disabled=busy||!available||pageNumber<=1;
@@ -121,8 +121,8 @@ function controls():void {
   element<HTMLButtonElement>('close').disabled=!session;
   const download=element<HTMLButtonElement>('download-message'),plan=current?displayedMessageDownload(current):undefined;
   download.disabled=busy||!plan;
-  for(const node of download.childNodes)if(node.nodeType===Node.TEXT_NODE)node.textContent=portfolioView?'Download active file':'Download this message';
-  download.title=portfolioView&&plan?`Download ${plan.name} as its original PDF`:plan?(plan.pages?'Download this message’s pages as a PDF':'Download this message as its original PDF'):'Select a message to download as a PDF';
+  for(const node of download.childNodes)if(node.nodeType===Node.TEXT_NODE)node.textContent=collectionView.active?'Download active file':'Download this message';
+  download.title=collectionView.active&&plan?`Download ${plan.name} as its original PDF`:plan?(plan.pages?'Download this message’s pages as a PDF':'Download this message as its original PDF'):'Select a message to download as a PDF';
   for(const b of document.querySelectorAll<HTMLButtonElement>('#tree button,#files button,#breadcrumbs button'))b.disabled=busy||b.dataset.unavailable==='true';
   if(!editingPage||document.activeElement!==pageInput){pageInput.value=String(pageNumber);pageInput.removeAttribute('aria-invalid');editingPage=false;}
   for(const id of ['previous','next','back','zoom-in','zoom-out']){const control=element<HTMLButtonElement>(id);control.setAttribute('aria-disabled',String(control.disabled));}
@@ -141,7 +141,7 @@ async function operation(action:(ticket:number)=>Promise<void>):Promise<void>{
   const focused=document.activeElement;
   if(!keyboardSelection&&focused instanceof HTMLElement&&tree.contains(focused))
     keyboardSelection=()=>tree.querySelector<HTMLElement>('button[aria-current]')??(focused.isConnected?focused:undefined);
-  if(!keyboardSelection&&focused instanceof HTMLElement&&focused.matches('#portfolio-panel [data-portfolio-row]'))keyboardSelection=()=>element('portfolio-panel').querySelector<HTMLElement>('button[aria-current]');
+  keyboardSelection??=collectionView.keyboardSelection(focused);
   busy=true;controls();
   try{await action(ticket);}catch(error){if(ticket===generation){element('restart').hidden=!current;status.textContent=`Unable to display PDF: ${error instanceof Error?error.message:String(error)}`;}}
   finally{if(ticket===generation){busy=false;controls();const focus=keyboardSelection;keyboardSelection=undefined;focus?.()?.focus({preventScroll:true});if(pendingOpen)queueMicrotask(()=>{if(!busy&&pendingOpen){const next=pendingOpen;pendingOpen=undefined;void openFile(next.file,next.name);}});}}
@@ -157,8 +157,7 @@ loadingDialog.addEventListener('cancel',event=>{event.preventDefault();close();}
 function close():void {
   pendingOpen=undefined;
   threadPreview.reset();finishLoading();metadataDialog.close();cancelExport?.();
-  portfolioView?.close();portfolioView=undefined;portfolioDocument=undefined;portfolioReturn=undefined;
-  element('portfolio-toggle').hidden=element('portfolio-show').hidden=true;delete document.body.dataset.documentKind;
+  collectionView.reset();delete document.body.dataset.documentKind;
   searchController.reset();keyboardSelection=undefined;
   messageTree.closeLists();filesPanel.close();
   cancelLinked();stopBrowseIndex();element('subject-index-progress').hidden=true;exportSession?.close();exportSession=undefined;
@@ -229,10 +228,10 @@ function breadcrumbs(doc:BrowserDocument):void {
   const bar=element('breadcrumbs');bar.replaceChildren();const path:BrowserDocument[]=[];
   for(let d:BrowserDocument|null=doc;d;d=d.parent)path.unshift(d);
   path.forEach((d,i)=>{
-    if(d.parent&&d.parentFileId)for(const folder of portfolioModels.get(d.parent)?.folderPath(d.parentFileId)??[]){
+    for(const folder of collectionView.folderPath(d)){
       bar.append(text('span','›'));const segment=text('span',folder);segment.className='breadcrumb-folder';bar.append(segment);
     }
-    if(i)bar.append(text('span','›'));const b=button(d.name,()=>void operation(async ticket=>{await showDocument(d,ticket);if(portfolioView)portfolioReturn=undefined;if(portfolioView&&d.inspection.collection.state==='present'&&d!==portfolioDocument)await activatePortfolio(d,ticket);}));b.title=d.name;bar.append(b);});
+    if(i)bar.append(text('span','›'));const b=button(d.name,()=>void operation(async ticket=>{await showDocument(d,ticket);await collectionView.crumb(d,ticket);}));b.title=d.name;bar.append(b);});
 }
 function showInformation(doc:BrowserDocument):void {
   const id=doc.inspection.identification,profile=element('declared-profile');
@@ -240,16 +239,14 @@ function showInformation(doc:BrowserDocument):void {
   for(const diagnostic of doc.inspection.diagnostics)console.debug('[EA-PDF inspection]',doc.name,diagnostic);
   breadcrumbs(doc);
   let root=doc;while(root.parent)root=root.parent;
-  const rootDetection=detectDocument(root.inspection),detection=rootDetection.kind==='eapdf'||portfolioView?rootDetection:detectDocument(doc.inspection);document.body.dataset.documentKind=detection.kind;
+  const rootDetection=detectDocument(root.inspection),detection=rootDetection.kind==='eapdf'||collectionView.active?rootDetection:detectDocument(doc.inspection);document.body.dataset.documentKind=detection.kind;
   element('navigation-title').textContent=detection.kind==='eapdf'?'Messages':'Contents';
   element('navigation-panel').setAttribute('aria-label',detection.kind==='eapdf'?'Messages and collections':'Document contents');
   element('export-csv').hidden=detection.kind!=='eapdf';
-  element('portfolio-toggle').hidden=!rootDetection.collection&&!detection.collection;
-  element('portfolio-toggle').textContent=portfolioView?(detectDocument((portfolioReturn?.doc??doc).inspection).kind==='eapdf'?'Email view':'PDF view'):'Portfolio view';
-  element('portfolio-show').hidden=!portfolioView?.hidden;
+  collectionView.information(rootDetection,detection,doc);
   const notice=detectDocument(doc.inspection).notice||detection.notice||openingWarnings.get(doc)||'';
   element('document-notice').textContent=notice;element('document-notice').hidden=!notice;
-  if(detection.kind!=='eapdf')profile.textContent=detection.kind==='portfolio'?'PDF Portfolio':'PDF';
+  if(detection.kind!=='eapdf')profile.textContent=detection.kind==='portfolio'?collectionView.documentLabel():'PDF';
   element('header-filename').textContent=root.name;element('header-filename').title=root.name;
   element('message-count').textContent=String(browseMessageCounts.get(root)??root.inspection.messages.length);
   element('archive-stats').hidden=true;
@@ -290,13 +287,11 @@ async function showDocument(doc:BrowserDocument,ticket:number,message?:MailMessa
     if(mode==='UseAttachments')setPaneHidden('details',false,false);
     else if(mode==='UseOutlines')setPaneHidden('navigation',false,false);
   }
-  if(doc.parent?.inspection.collection.state==='present'&&!portfolioModels.has(doc.parent)){
-    const data=await session!.portfolio(doc.parent);check(ticket);portfolioModels.set(doc.parent,new PortfolioModel(data,doc.parent.inspection));
-  }
+  await collectionView.prepare(doc,ticket);
   await session!.ensure(doc);if(!doc.inspection.collection.value)await session!.associateFiles(doc);check(ticket);message=message?doc.inspection.messages.find(m=>m.id===message!.id):undefined;if(current!==doc)searchController.documentChanged();if(current)savedPages.set(current,pageNumber);current=doc;editingPage=false;savedMessages.set(doc,message?.id);
   const destinations=message?messagePages(doc.inspection,message):[];pageNumber=fromTop||edge===1?1:edge===-1?doc.pdf.numPages:destinations[0]??savedPages.get(doc)??1;
   markSelection(node??messageTree.node(doc)?.querySelector<HTMLButtonElement>(':scope > button')??undefined);showInformation(doc);showFiles(doc,singleMessage(doc)?undefined:message);searchStatus.textContent='';
-  portfolioView?.syncDocument(doc.parent===portfolioDocument?doc.parentFileId:undefined);
+  collectionView.sync(doc);
   if(opening){openingPlans.set(doc,opening);savedMessages.delete(doc);pageNumber=opening.page;if(![...zoom.options].some(o=>o.value===opening!.zoom)){const option=document.createElement('option');option.value=opening.zoom;option.textContent=`${Math.round(Number(opening.zoom)*100)}%`;zoom.append(option);}zoom.value=opening.zoom;}
   await render(ticket,false);
   if(opening&&(opening.left!==null||opening.top!==null)){
@@ -323,8 +318,7 @@ async function openChild(parent:BrowserDocument,file:AssociatedFile,stream:Embed
   const row=messageTree.attachChild(parent,file,stream,child,placement);
   const single=!child.inspection.collection.value&&child.inspection.messages.length===1?child.inspection.messages[0]:undefined;
   await showDocument(child,ticket,single,row.querySelector('button')??undefined,edge);
-  if(portfolioView&&detectDocument(child.inspection).kind==='portfolio')await activatePortfolio(child,ticket,true);
-  else if(!portfolioView)prepareBrowseSubjects(child,ticket);
+  if(!await collectionView.opened(child,ticket)&&!collectionView.active)prepareBrowseSubjects(child,ticket);
 }
 // An edge gesture changes files only inside the immediate containing folder.
 function scrollFile(direction:-1|1):boolean {
@@ -391,6 +385,7 @@ function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
   const updateSubjects=messageTree.subjectUpdater(doc);
   const update=(messages:readonly IndexedMessage[])=>{checkIndex();updateSubjects(messages);};
   element('subject-index-progress').hidden=false;element('subject-index-progress').dataset.complete='false';element('subject-index-cancel').hidden=false;
+  element('subject-index-status').title='';
   element('subject-index-status').textContent='Reading subjects in the background… You can browse now.';
   const work=(async()=>{
     try{
@@ -411,7 +406,8 @@ function prepareBrowseSubjects(doc:BrowserDocument,ticket:number):void {
       checkIndex();main.rememberMessageIndex(doc,indexed);browseCompleted.add(doc);browseMessageCounts.set(doc,indexed.messages.length);
       if(current===doc)showFiles(doc,singleMessage(doc)?undefined:selectedMessage(doc));
       messageTree.updateFolderCounts(doc,indexed.messages);
-      element('subject-index-status').textContent=indexed.incomplete.length?`Subjects partially indexed: ${indexed.incomplete.join(' ')}`:`Subjects ready · ${indexed.messages.length} emails. ${(indexed.notices??[]).join(' ')}`;
+      element('subject-index-status').title=indexed.incomplete.slice(0,3).join('\n').slice(0,2048);
+      element('subject-index-status').textContent=indexed.incomplete.length?`Subjects partially indexed · ${indexed.messages.length} emails read · ${indexed.incomplete.length} unreadable files.`:`Subjects ready · ${indexed.messages.length} emails. ${(indexed.notices??[]).join(' ')}`;
       element('subject-index-cancel').hidden=true;element('subject-index-progress').dataset.complete=String(!indexed.incomplete.length);element('message-count').textContent=String(indexed.messages.length);return indexed;
     }finally{isolated.close();if(browseSession===isolated)browseSession=undefined;}
   })();
@@ -443,8 +439,8 @@ async function openFile(file:Blob,name:string):Promise<void>{
     try {
     const doc=await active.open(file,name,fraction=>{if(ticket===generation)status.textContent=`Inspecting ${name} · ${Math.round(fraction*100)}%`;},null,undefined,undefined,async preview=>{check(ticket);const meta=await preview.run(preview.pdf.getMetadata());check(ticket);if(['c','ci'].includes(String(meta.metadata?.get('pdfmailid:conformance')??'')))return;empty.hidden=true;await pages.show(preview,await pageScale(preview,1),1,'',false);check(ticket);status.textContent='First page ready. Email and file inspection continues…';},message=>{check(ticket);status.textContent=message;element('loading-message').textContent=message;});check(ticket);
     tree.append(documentTree(doc));await showDocument(doc,ticket);
-    if(detectDocument(doc.inspection).kind==='portfolio')await activatePortfolio(doc,ticket,true);
-    if(ticket===generation){finishLoading();if(!portfolioView)prepareBrowseSubjects(doc,ticket);}
+    await collectionView.opened(doc,ticket,true);
+    if(ticket===generation){finishLoading();if(!collectionView.active)prepareBrowseSubjects(doc,ticket);}
     } catch(error) {
       if(ticket===generation){
         clearTimeout(loadingTimer);loadingTimer=undefined;
@@ -457,37 +453,6 @@ async function openFile(file:Blob,name:string):Promise<void>{
     }
   });
 }
-async function openPortfolioRow(row:PortfolioRow,ticket:number,reveal=true):Promise<void>{
-  const parent=portfolioDocument,file=row.file;if(!parent||!file)throw new Error('This collection member is unavailable.');
-  const stream=file.streams.find(s=>s.efKeys.includes('/UF'))??file.streams[0];if(!stream)throw new Error('This file has no readable embedded content.');
-  portfolioView?.show(row,reveal&&isPdf(file,stream));
-  if(isPdf(file,stream)){await openChild(parent,file,stream,ticket);if(reveal)portfolioReturn=undefined;return;}
-  const data=await session!.bytes(parent,file,stream);check(ticket);
-  await attachmentViewer.open(data,row.name,stream.mimeType.value??'',()=>element('portfolio-panel').querySelector<HTMLButtonElement>('button[aria-current]')?.focus({preventScroll:true}));check(ticket);
-  status.textContent=`Viewing ${row.name}`;
-}
-async function activatePortfolio(doc:BrowserDocument,ticket:number,initial=false):Promise<void>{
-  const data=await session!.portfolio(doc);check(ticket);
-  stopBrowseIndex();portfolioView?.close();portfolioDocument=doc;
-  const model=new PortfolioModel(data,doc.inspection);portfolioModels.set(doc,model);
-  portfolioView=new PortfolioView(element('portfolio-panel'),model,{
-    open:row=>void operation(active=>openPortfolioRow(row,active)),
-    cover:()=>void operation(async active=>{portfolioView?.revealPreview();await showDocument(doc,active);portfolioReturn=undefined;}),
-    thumbnail:async row=>{if(row.directory){await session!.ensure(doc);const result=await doc.run(doc.pdf.getDocumentAssets({folderThumbnail:row.directory.path}));check(ticket);return result.thumbnail;}const file=row.file,stream=file?.streams[0];if(!file||!stream)throw new Error('No preview available.');const bytes=await session!.bytes(doc,file,stream);check(ticket);return bytes;},
-    download:row=>void operation(async active=>{const file=row.file,stream=file?.streams.find(s=>s.efKeys.includes('/UF'))??file?.streams[0];if(!file||!stream)throw new Error('This collection member is unavailable.');const bytes=await session!.bytes(doc,file,stream);check(active);await saveBlob(new Blob([new Uint8Array(bytes)],{type:'application/octet-stream'}),row.name,()=>check(active));check(active);}),
-    parent:doc.parent?()=>void operation(active=>returnToParent(doc.parent!,active)):undefined,
-  });
-  portfolioView.syncDocument(current?.parent===doc?current.parentFileId:undefined);
-  showInformation(current??doc);
-  await showOutline(current??doc,ticket);
-  if(initial){const target=model.initial();if(target==='invalid'){element('document-notice').textContent='The Portfolio initial document is missing or ambiguous. Showing the collection cover.';element('document-notice').hidden=false;}else if(target==='empty'){pages.clear();surface.hidden=true;empty.hidden=true;status.textContent='The portfolio has no files to preview.';}else if(target!=='container')await openPortfolioRow(target,ticket,false);else {const plan=openingPlans.get(doc);if(plan){pageNumber=plan.page;await render(ticket,false);}}}
-}
-element('portfolio-show').addEventListener('click',()=>portfolioView?.reveal());
-element('portfolio-toggle').addEventListener('click',()=>void operation(async ticket=>{
-  if(!current)return;
-  if(portfolioView){const saved=portfolioReturn,doc=saved?.doc??current;portfolioView.close();portfolioView=undefined;portfolioDocument=undefined;portfolioReturn=undefined;await showDocument(doc,ticket,doc.inspection.messages.find(m=>m.id===saved?.message));if(saved){pageNumber=saved.page;await render(ticket,false);}showInformation(doc);prepareBrowseSubjects(doc,ticket);}
-  else{portfolioReturn={doc:current,page:pageNumber,message:savedMessages.get(current)};let doc=current;while(doc.parent&&!doc.inspection.collection.value)doc=doc.parent;if(!doc.inspection.collection.value){while(doc.parent)doc=doc.parent;}await activatePortfolio(doc,ticket);}
-}));
 fileInput.addEventListener('change',()=>{const file=fileInput.files?.[0];fileInput.value='';if(file)void openFile(file,file.name);});
 // Capture file drags before controls in the navigation pane handle them or the
 // browser performs its default file navigation. Every viewer pane is a drop target.
@@ -543,11 +508,7 @@ async function exportCsv(doc:BrowserDocument,options:CsvOptions,ticket:number){
 element('close').addEventListener('click',close);window.addEventListener('pagehide',close);
 async function returnToParent(parent:BrowserDocument,ticket:number):Promise<void>{
   await showDocument(parent,ticket,undefined,undefined,undefined,true);
-  if(portfolioView){
-    portfolioReturn=undefined;
-    if(parent.inspection.collection.state==='present'&&parent!==portfolioDocument)await activatePortfolio(parent,ticket);
-    portfolioView.resetToTop();
-  }else{
+  if(!await collectionView.parent(parent,ticket)){
     element('navigation-panel').scrollTop=0;
     element('navigation-panel').scrollLeft=0;
   }
@@ -584,21 +545,17 @@ search.addEventListener('input',()=>{if(!search.value.trim())searchController.cl
 search.addEventListener('keydown',event=>{if(event.key==='Escape'){if(!event.defaultPrevented){event.preventDefault();closeSearch();}}else if(event.key==='Enter'){event.preventDefault();void (element<HTMLSelectElement>('search-scope').value==='collection'?searchController.findInCollection(event.shiftKey?-1:1):searchController.findMatch(event.shiftKey?-1:1));}});
 async function followEmbeddedLink(source:BrowserDocument,action:EmbeddedAction,ticket:number):Promise<void>{
   const target=await resolveEmbeddedLink(session!,source,action,()=>check(ticket));check(ticket);
-  portfolioReturn=undefined;
   searchController.clearMessageFilterForSearch();
   const path:BrowserDocument[]=[];for(let d:BrowserDocument|null=target.doc;d;d=d.parent)path.unshift(d);
   for(const doc of path)if(!messageTree.node(doc)){const row=documentTree(doc);const parent=doc.parent&&messageTree.node(doc.parent);(parent?.querySelector(':scope > ul')??tree).append(row);}
-  if(portfolioView){let container:BrowserDocument|null=target.doc.inspection.collection.state==='present'?target.doc:target.doc.parent;while(container&&container.inspection.collection.state!=='present')container=container.parent;
-    if(container&&container!==portfolioDocument)await activatePortfolio(container,ticket);
-    const row=portfolioView?.model.rows.find(r=>r.file?.id===target.doc.parentFileId);if(row)portfolioView?.show(row);portfolioView?.revealPreview();
-  }
+  await collectionView.embeddedTarget(target.doc,ticket);
   await showDocument(target.doc,ticket);pageNumber=target.page;await render(ticket,false);
 }
 const displayedOutlines=new WeakMap<HTMLElement,BrowserDocument>();
 async function showOutline(doc:BrowserDocument,ticket:number):Promise<void>{
-  const panel=element(portfolioView?'portfolio-outline-panel':'outline-panel');
+  const panel=element(collectionView.outlinePanel);
   if(displayedOutlines.get(panel)===doc)return;
-  const list=element(portfolioView?'portfolio-outline':'outline');list.replaceChildren();panel.hidden=true;if(panel instanceof HTMLDetailsElement)panel.open=false;
+  const list=element(collectionView.outlineList);list.replaceChildren();panel.hidden=true;if(panel instanceof HTMLDetailsElement)panel.open=false;
   try{const entries=await doc.run(doc.pdf.getOutline());check(ticket);if(current!==doc||!entries)return;let count=0;
     const pending=entries.slice().reverse().map(item=>({item,parent:list})),seen=new Set<typeof entries[number]>();
     while(pending.length){
@@ -627,7 +584,7 @@ element('cancel-search').addEventListener('click',()=>{searchController.cancelSe
 element('download-message').addEventListener('click',()=>void operation(async ticket=>{
   const doc=current,active=session;if(!doc||!active)return;
   const plan=displayedMessageDownload(doc);if(!plan)return;
-  status.textContent=portfolioView?'Preparing active PDF…':'Preparing message PDF…';
+  status.textContent=collectionView.active?'Preparing active PDF…':'Preparing message PDF…';
   const blob=await messagePdf(active,doc,plan,()=>check(ticket));
   await saveBlob(blob,plan.name,()=>check(ticket));check(ticket);
   status.textContent=`Download requested: ${plan.name}${plan.pages?' · Message pages exported as PDF.':''}`;

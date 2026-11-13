@@ -1,11 +1,24 @@
 {
-  "profile": "config/verapdf/ISO-32005.xml",
-  "profile_sha256": "a2181a59dcaef27d20cc3078aa8b63e63fe528908a69f985a0b56b714c62d7a1",
-  "profile_name": "EA-PDF ISO 32005 upstream rules (veraPDF 1.31.18)",
+  "source": "config/verapdf/upstream/PDFUA-2-ISO32005.xml",
+  "source_sha256": "7f7bb7be37c7f89026ce4e5733341d339a92d8cb004349055aac685d1765655b",
+  "upstream_profile": "PDFUA-2-ISO32005",
+  "upstream_version": "1.31.224",
+  "source_rules_by_specification": {
+    "ISO_14289_2": 92,
+    "ISO_32005": 1636
+  },
+  "selected_specification": "ISO_32005",
   "selected_rules": 1636,
+  "excluded_pdfua_rules": 92,
+  "unchanged_rule_payload_sha256": "56518c8ae5055f2b2c73a657a735696d70b24ed0f8fbc7dc784b1606c60678ed",
+  "profile": "config/verapdf/ISO-32005.xml",
+  "profile_sha256": "9e49c6f93e2d62c150f6ac1c842e90f1e5bf6a7a336420db0f94eda384c58624",
+  "profile_name": "EA-PDF ISO 32005 upstream rules (veraPDF 1.31.224)",
+  "model_selector": "PDFUA_2",
+  "status": "Local selection of unchanged upstream rules; not an officially published standalone profile",
   "reported_versions": {
-    "apps": "1.31.18",
-    "core": "1.31.1",
-    "validation-model": "1.31.17"
+    "apps": "1.31.224",
+    "core": "1.31.56",
+    "validation-model": "1.31.221"
   }
 }

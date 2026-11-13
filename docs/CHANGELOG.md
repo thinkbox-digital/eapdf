@@ -5,6 +5,14 @@ Use [current project status](PROJECT_STATUS.md) and [architecture decisions](ARC
 for the current handover; do not treat historical counts or then-open findings as
 a fresh acceptance run.
 
+## 2026-11-13 — 2.2.0-beta.1 / readers 1.2.0-beta.1
+
+- **Code removal:** remove the web workbench and its server dependencies; keep standalone Java validation and Python regression tools.
+
+- **New code:** Lite reader with the same reading layout and fewer optional features.
+- **Bug fix:** keep message selection working while Lite scans a collection.
+- **Code improvement:** updated libraries and shorter public documentation.
+
 ## 2026-11-12 — 2.1.0-beta.1 / viewer 1.1.0-beta.1
 
 - **Bug fixes:** readable sender/recipient names, stable bookmark and conversation wheel navigation, Portfolio active-file downloads and Parent navigation, expandable file descriptions and clearer source descriptions.

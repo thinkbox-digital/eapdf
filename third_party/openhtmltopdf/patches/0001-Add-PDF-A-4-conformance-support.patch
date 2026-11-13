@@ -1,7 +1,7 @@
-From 225219232e0e87d89683a0ac2b31472f91dbf491 Mon Sep 17 00:00:00 2001
+From a293f39ee8e931b69420212058fe7d6d8b21762d Mon Sep 17 00:00:00 2001
 From: Jia Liang <hojialiang@protonmail.com>
 Date: Mon, 22 Jun 2026 01:04:07 +0800
-Subject: [PATCH 1/4] Add PDF/A-4 conformance support
+Subject: [PATCH] Add PDF/A-4 conformance support
 
 ---
  .../pdfboxout/PdfBoxRenderer.java             | 33 +++++++++++++++----
@@ -9,7 +9,7 @@ Subject: [PATCH 1/4] Add PDF/A-4 conformance support
  2 files changed, 28 insertions(+), 8 deletions(-)
 
 diff --git a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
-index 7cc65dc3..d12c7197 100644
+index 75147cc4..4e668949 100644
 --- a/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
 +++ b/openhtmltopdf-pdfbox/src/main/java/com/openhtmltopdf/pdfboxout/PdfBoxRenderer.java
 @@ -81,6 +81,7 @@ import java.awt.*;
@@ -20,7 +20,7 @@ index 7cc65dc3..d12c7197 100644
  import java.util.ArrayList;
  import java.util.Arrays;
  import java.util.Calendar;
-@@ -592,16 +593,20 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -593,16 +594,20 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
              try (PDPageContentStream cs = initPage(doc, nextW, nextH, i, -1)) {
                  if (i == 0) {
                      firePreWrite(pageCount); // opportunity to adjust meta data
@@ -43,7 +43,7 @@ index 7cc65dc3..d12c7197 100644
                      DisplayListCollector dlCollector = new DisplayListCollector(_root.getLayer().getPages());
                      dlPages = dlCollector.collectRoot(c, _root.getLayer());
                      if (_outputDevice instanceof PdfBoxFastOutputDevice) {
-@@ -680,8 +685,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -681,8 +686,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
  
      // Kindly provided by GurpusMaximus at:
      // https://stackoverflow.com/questions/49682339/how-can-i-create-an-accessible-pdf-with-java-pdfbox-2-0-8-library-that-is-also-v
@@ -53,7 +53,7 @@ index 7cc65dc3..d12c7197 100644
          XMPMetadata metadata = XMPMetadata.createXMPMetadata();
  
          try {
-@@ -702,9 +706,18 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -703,9 +707,18 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
  
              if (pdfAConformance != PdfAConformance.NONE) {
                  PDFAIdentificationSchema pdfaid = metadata.createAndAddPDFAIdentificationSchema();
@@ -73,7 +73,7 @@ index 7cc65dc3..d12c7197 100644
                  AdobePDFSchema pdfSchema = metadata.createAndAddAdobePDFSchema();
                  pdfSchema.setPDFVersion(String.valueOf(pdfAConformance.getPdfVersion()));
                  if (keywords != null) {
-@@ -767,6 +780,8 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -768,6 +781,8 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
                          createPdfaProperty("internal", "Part of PDF/A standard", "part", "Integer"));
                  pdfaidProperties.add(
                          createPdfaProperty("internal", "Conformance level of PDF/A standard", "conformance", "Text"));
@@ -82,7 +82,7 @@ index 7cc65dc3..d12c7197 100644
                  pdfAExt.addBagValue("schemas",
                          createPdfaSchema("PDF/A ID Schema", "http://www.aiim.org/pdfa/ns/id/", "pdfaid", pdfaidProperties));
              }
-@@ -861,7 +876,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+@@ -862,7 +877,7 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
      /**
       * Sets the document information dictionary values from html metadata
       */
@@ -90,8 +90,8 @@ index 7cc65dc3..d12c7197 100644
 +    private PDDocumentInformation setDidValues(PDDocument doc) {
          PDDocumentInformation info = new PDDocumentInformation();
  
-         info.setCreationDate(Calendar.getInstance());
-@@ -891,7 +906,11 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
+         info.setCreationDate(new GregorianCalendar());
+@@ -892,7 +907,11 @@ public class PdfBoxRenderer implements Closeable, PageSupplier {
                  info.setCustomMetadataValue(name,content);
          }
  
@@ -119,5 +119,5 @@ index 071f4a70..2bae89c4 100644
          PdfAConformance(int part, String value, float pdfVersion) {
              this.part = part;
 -- 
-2.56.0.windows.4
+2.43.0
 

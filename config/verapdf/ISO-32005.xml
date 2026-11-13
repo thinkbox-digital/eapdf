@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <profile xmlns="http://www.verapdf.org/ValidationProfile" flavour="PDFUA_2">
     <details creator="veraPDF Consortium" created="2023-11-08T07:56:03.539Z">
-        <name>EA-PDF ISO 32005 upstream rules (veraPDF 1.31.18)</name>
-        <description>Local selection of all 1636 unchanged ISO_32005 predicates from the pinned veraPDF PDFUA-2-ISO32005 profile; all 91 ISO_14289_2 predicates excluded. PDFUA_2 is a model selector, not a requirement to conform to PDF/UA.</description>
+        <name>EA-PDF ISO 32005 upstream rules (veraPDF 1.31.224)</name>
+        <description>Local selection of all 1636 unchanged ISO_32005 predicates from the pinned veraPDF PDFUA-2-ISO32005 profile; all 92 ISO_14289_2 predicates excluded. PDFUA_2 is a model selector, not a requirement to conform to PDF/UA.</description>
     </details>
     <hash />
     <rules>

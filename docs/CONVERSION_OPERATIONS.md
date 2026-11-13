@@ -211,3 +211,69 @@ under `~/.eapdf/logs/`; the current path appears in the GUI and final summary.
 Display updates are batched without discarding the saved output. Existing logs
 are retained rather than automatically deleted. The display limits bound retained
 history, not the temporary allocation for an individual exceptionally long line.
+
+
+## Regenerating local outputs
+
+
+The installed `eapdf-regenerate` launcher prints basic instructions without arguments:
+
+```bash
+eapdf-regenerate sample
+eapdf-regenerate everything
+eapdf-regenerate everything --dry-run
+eapdf-regenerate everything --workers 4 --jobs 2
+```
+
+Running either generation mode clears this checkout’s `out/` directory. `--dry-run`
+only prints the plan. The default creator is `Thinkbox.DIGITAL`; no creator argument
+is needed. Concurrent Java processes are bounded automatically by available CPU
+and memory, with two creator threads per process by default. `sample` selects the
+two smallest eligible sources of each type. `everything` covers every eligible
+supported source in appropriate profiles. Both modes skip PSTs larger than
+250 MB (250,000,000 bytes), printing each skip and recording its size and reason
+in the run’s `sources.json`. Each PST/MBOX source produces whole-source `1m`, `1mi`,
+`1c` and `1ci` archives only; neither mode extracts individual emails into standalone
+PDFs. EML/MSG inputs retain standalone `1s`/`1si` outputs and are also randomly
+grouped by type into archives of up to 20 messages, using all four archive profiles.
+Jobs stay together by type: EML groups and standalone PDFs, then MSG groups and
+standalone PDFs, then MBOX/PST archives. Every selected source is covered; groups
+are balanced to avoid singleton remainders.
+A one-message source cannot produce 1m/1mi and is reported as not applicable.
+The run’s `plan.json` records the exact random group membership; a dry run makes
+an independent preview plan.
+
+Each creator job publishes its completed PDFs immediately and prints their paths,
+before validation starts. Validation results follow separately; a single archive
+PDF must finish converting before it can appear. Other jobs continue concurrently.
+
+Final PDFs go directly into `out/eml/`, `out/msg/`, `out/mbox/`, and `out/pst/`.
+Each run snapshots its versioned creator and validator JARs so later upgrades
+do not interrupt it. Source hashes, logs, progress and standalone Java validation reports go into the
+run’s evidence directory under `output/`. Each process has isolated temporary
+staging. Accessibility and both indexes are enabled; signing is disabled. Original
+inputs are preserved. Failed or incomplete conversions are reported with a nonzero
+exit status. Existing conversions using `out/` must finish before regeneration.
+Conversion staging and Java scratch use private directories under
+`.generator_web_tmp/` on the project disk, including when `/tmp` is memory-backed.
+Each job remains isolated; temporary files are removed after success or failure.
+
+Regeneration divides half the currently available output-disk space among its
+concurrent jobs for scratch, with half each job's share available to one work
+file or report. There is no fixed MiB/GiB report ceiling. Explicit
+`VALIDATOR_MAX_WORK_FILE_BYTES` and `VALIDATOR_MAX_SCRATCH_BYTES` settings take
+precedence; each document's result records its budgets.
+
+If validation returns FAIL or INCOMPLETE, or is unavailable, regeneration retains the initial
+reports under `initial-validation/`, regenerates once with a visible
+**WARNING — Validation requires review** banner, then validates the replacement.
+The banner discloses failed or unfinished checks; it does not turn the result into PASS.
+Source-data warnings remain separate. A failed replacement keeps the original PDF
+and reports the failure. This requires the updated creator JAR.
+
+At completion, the terminal lists FAIL and INCOMPLETE jobs, affected output files
+(or sources that produced no PDF), and their conversion logs and validation reports.
+Counts distinguish passed, failed, incomplete and not-applicable jobs. The same
+report is saved as `summary.txt` beside the detailed `summary.json` in the run
+evidence directory.
+The maintained sources are `scripts/eapdf-regenerate` and `scripts/regenerate_out.py`.

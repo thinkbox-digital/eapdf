@@ -1,18 +1,18 @@
 # Upstream ISO 32005 profile selection
 
 `ISO-32005.xml` is a local selection from the veraPDF Consortium's bundled
-`PDFUA-2-ISO32005.xml` in veraPDF 1.31.18. It retains all 1,636 `ISO_32005` rules
-unchanged and excludes all 91 `ISO_14289_2` rules. `PDFUA_2` selects the engine's
+`PDFUA-2-ISO32005.xml` in veraPDF 1.31.224. It retains all 1,636 `ISO_32005` rules
+unchanged and excludes all 92 `ISO_14289_2` rules. `PDFUA_2` selects the engine's
 model; the selected predicates do not require PDF/UA conformance.
 
 This is not an officially published standalone profile. The retained upstream
-source, hashes and selection evidence are in
+source is in `upstream/PDFUA-2-ISO32005.xml`; hashes and selection evidence are in
 [profile provenance](ISO-32005.json).
 Upstream source project: [veraPDF validation profiles](https://github.com/veraPDF/veraPDF-validation-profiles).
 The upstream creator attribution is retained in both XML files.
 
 Reproduce with `python3 scripts/build_eapdf_iso32005_profile.py`, then verify with
-`python3 scripts/build_eapdf_requirements_audit.py`. The audit compares every
+the assertions in the selection script. The script compares every
 selected rule's canonical XML with its pinned upstream counterpart.
 
 Ship this directory with `validate_eapdf.py` and `validator_rule_text.json`.

@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "EA-PDF creator",
-      "version": "2.1.0-beta.1"
+      "version": "2.2.0-beta.1"
     },
     "properties": [
       {
@@ -76,13 +76,13 @@
       "type": "library",
       "group": "com.drewnoakes",
       "name": "metadata-extractor",
-      "version": "2.19.0",
-      "purl": "pkg:maven/com.drewnoakes/metadata-extractor@2.19.0",
-      "bom-ref": "pkg:maven/com.drewnoakes/metadata-extractor@2.19.0",
+      "version": "2.22.0",
+      "purl": "pkg:maven/com.drewnoakes/metadata-extractor@2.22.0",
+      "bom-ref": "pkg:maven/com.drewnoakes/metadata-extractor@2.22.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "e51bb454ed08ea2bfcc3ad147d088ad1aa73a999e0072563f8ae50021a2fcadb"
+          "content": "af451be6b366b581d8deacccd1866a5264e6c7781fd2f46941811a1a2f7777f9"
         }
       ],
       "properties": [
@@ -160,13 +160,13 @@
       "type": "library",
       "group": "com.google.api-client",
       "name": "google-api-client",
-      "version": "2.9.1",
-      "purl": "pkg:maven/com.google.api-client/google-api-client@2.9.1",
-      "bom-ref": "pkg:maven/com.google.api-client/google-api-client@2.9.1",
+      "version": "2.9.2",
+      "purl": "pkg:maven/com.google.api-client/google-api-client@2.9.2",
+      "bom-ref": "pkg:maven/com.google.api-client/google-api-client@2.9.2",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "5c2b0f9bb64e16cb6c9708a782f78b2e303c85aacf96f7169229f138c20caf94"
+          "content": "04b6b433367e770541c1912a5a9820d00e0697b71490e56beccbd120e5949e07"
         }
       ],
       "properties": [
@@ -188,13 +188,13 @@
       "type": "library",
       "group": "com.google.apis",
       "name": "google-api-services-gmail",
-      "version": "v1-rev20261005-2.0.0",
-      "purl": "pkg:maven/com.google.apis/google-api-services-gmail@v1-rev20261005-2.0.0",
-      "bom-ref": "pkg:maven/com.google.apis/google-api-services-gmail@v1-rev20261005-2.0.0",
+      "version": "v1-rev20261106-2.9.2",
+      "purl": "pkg:maven/com.google.apis/google-api-services-gmail@v1-rev20261106-2.9.2",
+      "bom-ref": "pkg:maven/com.google.apis/google-api-services-gmail@v1-rev20261106-2.9.2",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "8ee91aa643b9e03e6f297434a7f534c899dfc207ac978f5e093709c60d1a5c8a"
+          "content": "a6d8062d79136f0ddcf2dc1744eeb6533ce32a28ae54ce39d06257d838732b5e"
         }
       ],
       "properties": [
@@ -328,13 +328,13 @@
       "type": "library",
       "group": "com.google.code.gson",
       "name": "gson",
-      "version": "2.14.0",
-      "purl": "pkg:maven/com.google.code.gson/gson@2.14.0",
-      "bom-ref": "pkg:maven/com.google.code.gson/gson@2.14.0",
+      "version": "2.15.0",
+      "purl": "pkg:maven/com.google.code.gson/gson@2.15.0",
+      "bom-ref": "pkg:maven/com.google.code.gson/gson@2.15.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "2cbd119bf1961c28788310963dc80ba65f58cdeec1dd139c8bdb1240faa2c36f"
+          "content": "96d3dd843dc2911de01cdabcd50064cb9e860353102a0a78c96fd833d396fc7d"
         }
       ],
       "properties": [
@@ -720,13 +720,13 @@
       "type": "library",
       "group": "commons-codec",
       "name": "commons-codec",
-      "version": "1.20.0",
-      "purl": "pkg:maven/commons-codec/commons-codec@1.20.0",
-      "bom-ref": "pkg:maven/commons-codec/commons-codec@1.20.0",
+      "version": "1.23.0",
+      "purl": "pkg:maven/commons-codec/commons-codec@1.23.0",
+      "bom-ref": "pkg:maven/commons-codec/commons-codec@1.23.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "6af66595f9f6a7bb58ce66518d6888d40b547c366d2262f06676eee19528ff66"
+          "content": "47504a3ce71d73a1b0af07675546b8d8c5af87f82ef12b6381f9eb3c17dd5a5b"
         }
       ],
       "properties": [
@@ -748,13 +748,13 @@
       "type": "library",
       "group": "commons-io",
       "name": "commons-io",
-      "version": "2.21.0",
-      "purl": "pkg:maven/commons-io/commons-io@2.21.0",
-      "bom-ref": "pkg:maven/commons-io/commons-io@2.21.0",
+      "version": "2.22.0",
+      "purl": "pkg:maven/commons-io/commons-io@2.22.0",
+      "bom-ref": "pkg:maven/commons-io/commons-io@2.22.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "7d643a2afea8b058b762aa6fb90e5b256f6c729739f8b3784c3370ddc609e88d"
+          "content": "2b9a7b1f726fb86216dbd2c8321eabe0221dbd5b1be81c18e1cb53811b104758"
         }
       ],
       "properties": [
@@ -832,13 +832,13 @@
       "type": "library",
       "group": "io.github.openhtmltopdf",
       "name": "openhtmltopdf-core",
-      "version": "1.1.105-eapdf.1",
-      "purl": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-core@1.1.105-eapdf.1",
-      "bom-ref": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-core@1.1.105-eapdf.1",
+      "version": "1.1.113-eapdf.1",
+      "purl": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-core@1.1.113-eapdf.1",
+      "bom-ref": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-core@1.1.113-eapdf.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "0397f32c488e13ea9cd360d45a295fec96f5b23ebdd27310ccef68d6c60a04d2"
+          "content": "54df67dc394982ca80d518d492552e0f445290d264455a388801a0972a8dcfb1"
         }
       ],
       "properties": [
@@ -860,13 +860,13 @@
       "type": "library",
       "group": "io.github.openhtmltopdf",
       "name": "openhtmltopdf-pdfbox",
-      "version": "1.1.105-eapdf.1",
-      "purl": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-pdfbox@1.1.105-eapdf.1",
-      "bom-ref": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-pdfbox@1.1.105-eapdf.1",
+      "version": "1.1.113-eapdf.1",
+      "purl": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-pdfbox@1.1.113-eapdf.1",
+      "bom-ref": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-pdfbox@1.1.113-eapdf.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "22a275c7106a19e1561c0dd724a9d67041a22a70ebc52e0ed7b55bbabba8a768"
+          "content": "02e7624c246428a1050ad9354da846f3d40ea76151c23644ae704961b578360f"
         }
       ],
       "properties": [
@@ -1068,13 +1068,13 @@
       "type": "library",
       "group": "org.apache.commons",
       "name": "commons-collections4",
-      "version": "4.5.0",
-      "purl": "pkg:maven/org.apache.commons/commons-collections4@4.5.0",
-      "bom-ref": "pkg:maven/org.apache.commons/commons-collections4@4.5.0",
+      "version": "4.6.0",
+      "purl": "pkg:maven/org.apache.commons/commons-collections4@4.6.0",
+      "bom-ref": "pkg:maven/org.apache.commons/commons-collections4@4.6.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "00f93263c267be201b8ae521b44a7137271b16688435340bf629db1bac0a5845"
+          "content": "4e0d0896bac5356cead277bac0283f09813e14417e3e84e0c86b573b54d218a3"
         }
       ],
       "properties": [
@@ -1236,13 +1236,13 @@
       "type": "library",
       "group": "org.apache.logging.log4j",
       "name": "log4j-api",
-      "version": "2.25.5",
-      "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.25.5",
-      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-api@2.25.5",
+      "version": "2.26.1",
+      "purl": "pkg:maven/org.apache.logging.log4j/log4j-api@2.26.1",
+      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-api@2.26.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "64777f73ea0b3104c04eb82befbdccc30a425a19e83ad06cb2f93aa303511863"
+          "content": "f1810a4704ccce019d02bba029dc02a4f2ac0c997f647b465e7d409c1927f822"
         }
       ],
       "properties": [
@@ -1376,13 +1376,13 @@
       "type": "library",
       "group": "org.apache.poi",
       "name": "poi-ooxml-lite",
-      "version": "5.5.1",
-      "purl": "pkg:maven/org.apache.poi/poi-ooxml-lite@5.5.1",
-      "bom-ref": "pkg:maven/org.apache.poi/poi-ooxml-lite@5.5.1",
+      "version": "6.0.0",
+      "purl": "pkg:maven/org.apache.poi/poi-ooxml-lite@6.0.0",
+      "bom-ref": "pkg:maven/org.apache.poi/poi-ooxml-lite@6.0.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "e6e37adeb6d6ee8b40ec491ad955d934d8f99827ab050f105b18286e59b1d9e7"
+          "content": "d722039d325de73562ec79758253e6a659750a53d2e8e998bb3da54c0ad157fc"
         }
       ],
       "properties": [
@@ -1404,13 +1404,13 @@
       "type": "library",
       "group": "org.apache.poi",
       "name": "poi-ooxml",
-      "version": "5.5.1",
-      "purl": "pkg:maven/org.apache.poi/poi-ooxml@5.5.1",
-      "bom-ref": "pkg:maven/org.apache.poi/poi-ooxml@5.5.1",
+      "version": "6.0.0",
+      "purl": "pkg:maven/org.apache.poi/poi-ooxml@6.0.0",
+      "bom-ref": "pkg:maven/org.apache.poi/poi-ooxml@6.0.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "bd7be2fdfe3fd2c1684fa813351c2798fd636b44f6236e0674500d4f8ff1c2f9"
+          "content": "759d97d608ef03b8aa701f56fef0cf9c67fac49f7fa0de4be43c01ca97542c9c"
         }
       ],
       "properties": [
@@ -1432,13 +1432,13 @@
       "type": "library",
       "group": "org.apache.poi",
       "name": "poi-scratchpad",
-      "version": "5.5.1",
-      "purl": "pkg:maven/org.apache.poi/poi-scratchpad@5.5.1",
-      "bom-ref": "pkg:maven/org.apache.poi/poi-scratchpad@5.5.1",
+      "version": "6.0.0",
+      "purl": "pkg:maven/org.apache.poi/poi-scratchpad@6.0.0",
+      "bom-ref": "pkg:maven/org.apache.poi/poi-scratchpad@6.0.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "24c3f407eff517432d5cfd5628b6b8a091f94c1dbb7481384599b5a0fbeedeb9"
+          "content": "0fb2b1db4ae69f750ea97f3c4d103e35f544bc3a6ec4be2753281ec65ef4f8b5"
         }
       ],
       "properties": [
@@ -1460,13 +1460,13 @@
       "type": "library",
       "group": "org.apache.poi",
       "name": "poi",
-      "version": "5.5.1",
-      "purl": "pkg:maven/org.apache.poi/poi@5.5.1",
-      "bom-ref": "pkg:maven/org.apache.poi/poi@5.5.1",
+      "version": "6.0.0",
+      "purl": "pkg:maven/org.apache.poi/poi@6.0.0",
+      "bom-ref": "pkg:maven/org.apache.poi/poi@6.0.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "6c52e876ca75775a11b56e4b36a7541f682827f56406725fcd87560b792ee3d8"
+          "content": "4977f1ae04e1c77e42c81dd94cca008e0d81ff8d0daa8b85e2a0740c3c1da3cc"
         }
       ],
       "properties": [
@@ -1488,13 +1488,13 @@
       "type": "library",
       "group": "org.apache.xmlbeans",
       "name": "xmlbeans",
-      "version": "5.3.0",
-      "purl": "pkg:maven/org.apache.xmlbeans/xmlbeans@5.3.0",
-      "bom-ref": "pkg:maven/org.apache.xmlbeans/xmlbeans@5.3.0",
+      "version": "5.4.1",
+      "purl": "pkg:maven/org.apache.xmlbeans/xmlbeans@5.4.1",
+      "bom-ref": "pkg:maven/org.apache.xmlbeans/xmlbeans@5.4.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "6cc69da3b4d35b83c5e477cd4daba204e44109833e34af2b9a8a2c8788289917"
+          "content": "b8fe946b41983e86496a7a68508af82a41daafd0e2a2cc8c9302c53fcbd9802c"
         }
       ],
       "properties": [
@@ -1504,7 +1504,7 @@
         },
         {
           "name": "eapdf:license-evidence",
-          "value": "xmlbeans-5.3.0.jar!/META-INF/LICENSE.txt"
+          "value": "xmlbeans-5.4.1.jar!/META-INF/LICENSE.txt"
         }
       ],
       "licenses": [
@@ -1517,13 +1517,13 @@
       "type": "library",
       "group": "org.bouncycastle",
       "name": "bcpkix-jdk18on",
-      "version": "1.86",
-      "purl": "pkg:maven/org.bouncycastle/bcpkix-jdk18on@1.86",
-      "bom-ref": "pkg:maven/org.bouncycastle/bcpkix-jdk18on@1.86",
+      "version": "1.87",
+      "purl": "pkg:maven/org.bouncycastle/bcpkix-jdk18on@1.87",
+      "bom-ref": "pkg:maven/org.bouncycastle/bcpkix-jdk18on@1.87",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "8d8b41a4b149bdae8d331f059a578870954d1e3ff29f8269a9eb3ee19a7e4ef7"
+          "content": "a44be2660d72ed88673372b8cc2d53a25a5aaf27122fb803ed93f07147536aa1"
         }
       ],
       "properties": [
@@ -1533,7 +1533,7 @@
         },
         {
           "name": "eapdf:license-evidence",
-          "value": "bcpkix-jdk18on-1.86.jar!/META-INF/LICENSE.md"
+          "value": "bcpkix-jdk18on-1.87.jar!/META-INF/LICENSE.md"
         }
       ],
       "licenses": [
@@ -1546,13 +1546,13 @@
       "type": "library",
       "group": "org.bouncycastle",
       "name": "bcprov-jdk18on",
-      "version": "1.86",
-      "purl": "pkg:maven/org.bouncycastle/bcprov-jdk18on@1.86",
-      "bom-ref": "pkg:maven/org.bouncycastle/bcprov-jdk18on@1.86",
+      "version": "1.87",
+      "purl": "pkg:maven/org.bouncycastle/bcprov-jdk18on@1.87",
+      "bom-ref": "pkg:maven/org.bouncycastle/bcprov-jdk18on@1.87",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "2af190b300cbb0b35e248ccf5f4a06b6072030aeb3da7a98ec73abe5b4cb371f"
+          "content": "12d2d3dd82a9ec15e92ec7c7943ee64f6097c6dc12c07e984f1693b77565b9aa"
         }
       ],
       "properties": [
@@ -1562,7 +1562,7 @@
         },
         {
           "name": "eapdf:license-evidence",
-          "value": "bcprov-jdk18on-1.86.jar!/META-INF/LICENSE.md"
+          "value": "bcprov-jdk18on-1.87.jar!/META-INF/LICENSE.md"
         }
       ],
       "licenses": [
@@ -1575,13 +1575,13 @@
       "type": "library",
       "group": "org.bouncycastle",
       "name": "bcutil-jdk18on",
-      "version": "1.86",
-      "purl": "pkg:maven/org.bouncycastle/bcutil-jdk18on@1.86",
-      "bom-ref": "pkg:maven/org.bouncycastle/bcutil-jdk18on@1.86",
+      "version": "1.87",
+      "purl": "pkg:maven/org.bouncycastle/bcutil-jdk18on@1.87",
+      "bom-ref": "pkg:maven/org.bouncycastle/bcutil-jdk18on@1.87",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "1c268e15f785aafb1e4670d8d6e5f856f69475e96c162dadcd1ff9b350e9139f"
+          "content": "af46dd381553fdc466cd0c18f8bf2144c7dbcb7337eee3e16cab15e96613ddf0"
         }
       ],
       "properties": [
@@ -1591,7 +1591,7 @@
         },
         {
           "name": "eapdf:license-evidence",
-          "value": "bcutil-jdk18on-1.86.jar!/META-INF/LICENSE.md"
+          "value": "bcutil-jdk18on-1.87.jar!/META-INF/LICENSE.md"
         }
       ],
       "licenses": [
@@ -1700,13 +1700,13 @@
       "type": "library",
       "group": "org.jsoup",
       "name": "jsoup",
-      "version": "1.23.2",
-      "purl": "pkg:maven/org.jsoup/jsoup@1.23.2",
-      "bom-ref": "pkg:maven/org.jsoup/jsoup@1.23.2",
+      "version": "1.24.1",
+      "purl": "pkg:maven/org.jsoup/jsoup@1.24.1",
+      "bom-ref": "pkg:maven/org.jsoup/jsoup@1.24.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "e9d8c856856680427f096d156f02a414289985c930998fcb519ce5be39b42003"
+          "content": "fabbb4aaf7fb5340aed0613826ecd110427999d765d8e0367cedde2950d7097c"
         }
       ],
       "properties": [
@@ -1782,12 +1782,12 @@
     },
     {
       "type": "file",
-      "name": "emailtopdfa-2.1.0-beta.1.jar",
-      "bom-ref": "artifact:emailtopdfa-2.1.0-beta.1.jar",
+      "name": "emailtopdfa-2.2.0-beta.1.jar",
+      "bom-ref": "artifact:emailtopdfa-2.2.0-beta.1.jar",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "e0906260b41475bbfe56c2f33f2b2041ee7a4359bab9dd65e9c6fd3b2b4caf4b"
+          "content": "7bdd0877091e2a96ba8c2ae57a3d11f1d51a1393738b0e3507a6d6f1c50adddf"
         }
       ]
     }

@@ -79,7 +79,7 @@ def maven_components(path):
 
 
 def python_components():
-    pending = [Requirement(line) for line in (ROOT/'requirements-web.txt').read_text().splitlines() if line.strip() and not line.startswith('#')]
+    pending = [Requirement(line) for line in (ROOT/'requirements-validator.txt').read_text().splitlines() if line.strip() and not line.startswith('#')]
     components = {}
     while pending:
         req = pending.pop()
@@ -128,15 +128,15 @@ def main():
     creator = maven_components(args.creator_dependencies); validator = maven_components(args.validator_dependencies); python = python_components()
     write_bom(args.output/'creator.cdx.json','EA-PDF creator',creator,[args.creator_jar])
     write_bom(args.output/'java-validator.cdx.json','EA-PDF Java validator',validator,[args.validator_jar])
-    write_bom(args.output/'python-web-validator.cdx.json','EA-PDF Python and web validator',python)
+    write_bom(args.output/'python-validator.cdx.json','EA-PDF Python CLI validator',python)
     (args.output/'python-runtime-versions.txt').write_text('# Installed runtime closure; platform-specific snapshot, no artifact-hash lock.\n'+''.join(c['name']+'=='+c['version']+'\n' for c in python))
     rows = ['# Runtime dependency licenses','', 'Generated from resolved Maven POMs and installed Python distribution metadata. Review packaged notices, local patches and corresponding-source obligations before distribution.','', '| Runtime | Component | Version | Declared license |','| --- | --- | --- | --- |']
-    for name,components in [('Creator',creator),('Java validator',validator),('Python/web',python)]:
+    for name,components in [('Creator',creator),('Java validator',validator),('Python CLI',python)]:
         for c in components:
             declared='; '.join(item.get('expression') or item['license'].get('name','') for item in c.get('licenses',[])) or 'REVIEW REQUIRED'
             rows.append('| '+name+' | '+c.get('group','')+(':' if c.get('group') else '')+c['name']+' | '+c['version']+' | '+declared.replace('|','/').replace('\n',' ')+' |')
     (args.output/'DEPENDENCY_LICENSES.md').write_text('\n'.join(rows)+'\n')
-    print(json.dumps({'creator':len(creator),'java_validator':len(validator),'python_web':len(python)}))
+    print(json.dumps({'creator':len(creator),'java_validator':len(validator),'python_validator':len(python)}))
 
 
 if __name__=='__main__': main()

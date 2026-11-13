@@ -47,9 +47,7 @@ and [browser security](../browser-viewer/docs/security.md).
 ## Validation and limits
 
 The standalone Java validator combines EA-PDF checks with veraPDF checks and
-recursive member assessment. The Python/web workbench supplies its documented
-validation/reporting workflows. PASS, FAIL and INCOMPLETE remain separate; no
-resource exhaustion or unavailable evidence becomes a successful full assessment.
+recursive member assessment. The optional Python CLI remains for regression tests and diagnostics.
 
 Accessibility structures are not proof of PDF/UA conformance. Document/profile
 identification, preservation fidelity, human accessibility, signature trust and

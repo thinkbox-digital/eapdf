@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: maven
+    directories: ["/", "/validator-desktop"]
+    schedule:
+      interval: weekly
+    groups:
+      verapdf:
+        patterns: ["org.verapdf:*"]
+      poi:
+        patterns: ["org.apache.poi:*"]
+  - package-ecosystem: pip
+    directories: ["/", "/browser-viewer/reference", "/regression/quality"]
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /browser-viewer
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

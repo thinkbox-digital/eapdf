@@ -1,9 +1,0 @@
-[Unit]
-Description=Clean expired EA-PDF web results hourly
-
-[Timer]
-OnCalendar=hourly
-Persistent=true
-
-[Install]
-WantedBy=timers.target

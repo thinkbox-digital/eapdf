@@ -4,14 +4,14 @@
   "reference": {
     "engine": "qpdf via pikepdf; independent of PDF.js and validator verdicts",
     "python": "3.12",
-    "pikepdf": "10.2.0",
+    "pikepdf": "10.18.1",
     "jsonschema": "4.24.0",
-    "qpdf": "12.2.0",
+    "qpdf": "12.4.2",
     "dependencies": {
-      "pikepdf": "10.2.0",
+      "pikepdf": "10.18.1",
       "jsonschema": "4.24.0",
-      "Pillow": "12.0.0",
-      "lxml": "5.2.1",
+      "Pillow": "13.0.0",
+      "lxml": "6.1.3",
       "packaging": "24.2",
       "Deprecated": "1.3.1",
       "wrapt": "1.17.2",
@@ -25,14 +25,14 @@
       "browser-viewer/reference/fixtures.py": "6158df8eb3547b0c61343125444d2725f2fefd6a7991866270a3ae4783c8f4fc",
       "browser-viewer/reference/inspect_pdf.py": "f44d890f832f9d63a6e1f4c89a38ac1faf2194d8e820a84f570f6f35f20cb1c7",
       "browser-viewer/reference/make_controls.py": "469c7f7a42da19b0ee45c67c03f7eca682b86e181f6226171cda845f27a90415",
-      "browser-viewer/reference/requirements.txt": "682cd3729db4e08ebb080951fb2ca7f6c1fad7ecb4ceeae6965406fc0df1ecf4",
+      "browser-viewer/reference/requirements.txt": "05ef368667d9ac09a0b1eb84adadae6ef9c1c55c1d51508b4a27433a639879ea",
       "browser-viewer/scripts/inspection-contract.mjs": "331a0ad0bab761a509d7f2613806704293a7b3c035a7ea57e64c7e2a5da5c9d4",
       "browser-viewer/schema/inspection-v1.schema.json": "d7e7d86bbeb51e412d460cab646baf8d3fd9bf560c3a1389b3b2346927fad7de"
     }
   },
   "evidenceHashes": {
     "docs/reference/EA-PDF-v1.pdf": "b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae",
-    "validate_eapdf.py": "2d249873fc036887d5f504f9f9ec0090a7a7dc26f53b446984f6929e09c2344b",
+    "validate_eapdf.py": "86644abcc942fcdf961b140791fd0e384578997f3f8bc61adf32603e8b578d79",
     "browser-viewer/tests/inspection/source-examples/eml/manifest.json": "f0c9189ea0eae987f9d31ea06c345a8f14d661058c36884f4e69e5cca1e93f9c",
     "browser-viewer/docs/inspection-schema.md": "c71b8bc8d4f7b42b4c50c516034b223f0a5a60d611b1132cef59fcf37ab358f6",
     "browser-viewer/reference/test_inspection.py": "07c173d2eb728b8d4f8dc7dd3e04fb4cef0d441352e75896f127cf410f50d090"

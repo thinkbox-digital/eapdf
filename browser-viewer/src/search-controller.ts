@@ -2,7 +2,7 @@ import {element,text,button} from './viewer-elements.js';
 import {messageLabel} from './message-tree.js';
 import {treeIcon} from './viewer-icons.js';
 import {resolveStep,invalidateFullTextIndex,fullTextPageOwners} from './fulltext-index.js';
-import {metadataSearchText} from './embedded-index.js';
+import {metadataSearchText} from './metadata-search.js';
 import {indexMessages,type MessageIndex,type IndexedMessage} from './message-index.js';
 import {searchCollection,searchIndexedCollection,type CollectionMatch} from './collection-search.js';
 import {DocumentSearch,textMatches,pdfSearchText} from './document-search.js';

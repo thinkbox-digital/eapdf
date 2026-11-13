@@ -1,4 +1,6 @@
 import os
+import json
+import subprocess
 from pathlib import Path
 import tempfile
 import unittest
@@ -32,6 +34,31 @@ class EngineCompatibilityTests(unittest.TestCase):
                 patch.object(validator, "_verapdf_default_result", return_value={"sentinel": True}) as result:
             self.assertEqual({"sentinel": True}, validator.run_verapdf("message.pdf"))
         result.assert_called_once()
+
+    def engine_report(self, profile, expected_profile=None):
+        payload = {"report": {"jobs": [{"validationResult": [{"profileName": profile,
+            "compliant": True, "jobEndStatus": "normal", "details": {}}]}]}}
+        process = subprocess.CompletedProcess([], 0, json.dumps(payload), "")
+        with patch.object(validator.shutil, "which", return_value="/usr/bin/docker"), \
+                patch.object(validator, "_verapdf_command", return_value=["docker", "exec", "test-daemon"]), \
+                patch.object(validator.subprocess, "run", return_value=process):
+            return validator.run_verapdf("message.pdf", expected_profile=expected_profile)
+
+    def test_upstream_label_case_retains_the_exact_allowed_flavours(self):
+        for canonical in validator.ALLOWED_VERAPDF_PROFILES:
+            for label in (canonical, canonical.replace("3A", "3a").replace("3U", "3u").replace("4F", "4f").replace("4E", "4e")):
+                with self.subTest(label=label):
+                    result = self.engine_report(label)
+                    self.assertEqual("PASS", result["status"])
+                    self.assertEqual(canonical, result["profile_name"])
+                    self.assertEqual(label, result["raw_json"]["report"]["jobs"][0]["validationResult"][0]["profileName"])
+        for label in ("PDF/A-3b validation profile", "PDF/A-4f validation profile extra", "unknown"):
+            with self.subTest(label=label):
+                self.assertEqual("FAIL", self.engine_report(label)["status"])
+
+    def test_pinned_custom_profile_still_requires_exact_name(self):
+        self.assertEqual("PASS", self.engine_report("Pinned profile", "Pinned profile")["status"])
+        self.assertEqual("FAIL", self.engine_report("pinned profile", "Pinned profile")["status"])
 
     def test_iso_profile_keeps_public_engine_callback_and_rejects_unverified_results(self):
         with patch.object(validator, "run_verapdf", return_value={"status": "SKIP"}) as run:

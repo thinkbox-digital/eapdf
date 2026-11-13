@@ -68,4 +68,25 @@ class CompactDictionaryTests {
         assertThrows(ConcurrentModificationException.class, stale::next);
         actual.getValues().clear(); assertEquals(0, actual.size());
     }
+    @Test void equivalenceHandlesCyclesAndNullKeysBeforeAndAfterPromotion() {
+        var leftObject = COSDictionary.construct();
+        var rightObject = COSDictionary.construct();
+        var left = (COSDictionary) leftObject.getDirectBase();
+        var right = (COSDictionary) rightObject.getDirectBase();
+        var next = ASAtom.getASAtom("Next");
+        left.setKey(next, leftObject);
+        right.setKey(next, rightObject);
+        left.setIntegerKey(ASAtom.TYPE, 7);
+        right.setIntegerKey(ASAtom.TYPE, 7);
+        left.setKey(ASAtom.getASAtom("Absent"), COSNull.construct());
+        assertTrue(left.isEquivalentTo(right));
+        for (int i = 0; i < 5; i++) {
+            var key = ASAtom.getASAtom("key" + i);
+            left.setIntegerKey(key, i);
+            right.setIntegerKey(key, i);
+        }
+        assertTrue(left.isEquivalentTo(right));
+        right.setIntegerKey(ASAtom.TYPE, 8);
+        assertFalse(left.isEquivalentTo(right));
+    }
 }

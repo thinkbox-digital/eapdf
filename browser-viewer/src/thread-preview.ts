@@ -4,7 +4,7 @@ import type {ThreadGraph} from './thread-graph.js';
 import type {MailMessage} from './domain/inspection.js';
 import {VirtualList} from './virtual-list.js';
 import {wholeWordAt} from './document-search.js';
-type Context={selection?:{doc:BrowserDocument;message?:MailMessage};root:BrowserDocument;session:BrowserSession;check:()=>void;open:(message:IndexedMessage,edge?:-1|1)=>Promise<void>};
+import type {ConversationContext as Context} from './conversation-contract.js';
 type CachedConversation={messages:IndexedMessage[];graphs:Map<boolean,ThreadGraph>;coverage:string;notices:string;expanded:Set<number>;query:string;infer:boolean};
 export class ThreadPreview{
  private cache=new WeakMap<BrowserDocument,CachedConversation>();

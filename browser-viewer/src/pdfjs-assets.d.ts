@@ -1,5 +1,5 @@
 import 'pdfjs-dist/types/src/display/api.js';
-import type {PortfolioData} from './portfolio.js';
+import type {PortfolioData} from './collection-data.js';
 import type { PartLocator } from './pdfjs-document-parts.js';
 export type AssetValue = Readonly<{ kind: string; value?: string | number | boolean; bytesHex?: string }>;
 export type AssetOrigin = Readonly<{ kind: 'name-tree' | 'catalog-af' | 'object-af' | 'annotation'; locator: PartLocator; pageIndex: number | null; nameTreeKey: AssetValue }>;
