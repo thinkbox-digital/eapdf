@@ -136,7 +136,7 @@ def main():
             declared='; '.join(item.get('expression') or item['license'].get('name','') for item in c.get('licenses',[])) or 'REVIEW REQUIRED'
             rows.append('| '+name+' | '+c.get('group','')+(':' if c.get('group') else '')+c['name']+' | '+c['version']+' | '+declared.replace('|','/').replace('\n',' ')+' |')
     (args.output/'DEPENDENCY_LICENSES.md').write_text('\n'.join(rows)+'\n')
-    print(json.dumps({'creator':len(creator),'java_validator':len(validator),'python_web':len(python)}))
+    print(json.dumps({'creator':len(creator),'java_validator':len(validator),'python_validator':len(python)}))
 
 
 if __name__=='__main__': main()

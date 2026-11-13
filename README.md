@@ -2,6 +2,8 @@
 
 **Your email—complete, authentic, accessible, structured.**
 
+[EA-PDF](docs/reference/EA-PDF-v1.pdf) is a specification for archiving email in PDF/A. It supports individual messages, combined archives and collections, with attachments, email metadata and optional original source messages.
+
 Turn saved emails and mailboxes into PDFs you can read, search and archive.
 Supports **EML, MSG, PST, MBOX and Gmail**.
 
