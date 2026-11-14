@@ -70,7 +70,7 @@
           </configuration>
         </execution></executions>
       </plugin>
-      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.5.0</version>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.5.1</version>
         <configuration><forceCreation>true</forceCreation>
           <archive><manifest><mainClass>${validator.main.class}</mainClass></manifest></archive>
         </configuration>
