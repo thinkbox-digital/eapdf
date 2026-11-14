@@ -20,7 +20,7 @@ twice. Redistribution/source/relinking review remains release-specific.
 - `com.drewnoakes:metadata-extractor:2.22.0` (JPEG Exif orientation metadata)
 
 - `com.pff:java-libpst:0.9.3`
-- `org.simplejavamail:outlook-message-parser:1.16.2`
+- `org.simplejavamail:outlook-message-parser:1.16.3`
 - `com.github.bbottema:rtf-to-html:2.0.3`
 - `org.apache.poi:poi:6.0.0`
 - `org.apache.poi:poi-ooxml:6.0.0`

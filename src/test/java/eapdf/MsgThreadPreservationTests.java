@@ -19,7 +19,12 @@ class MsgThreadPreservationTests {
     assertArrayEquals(Files.readAllBytes(SOURCE), record.sourceBytes);
     for (String metadata : List.of(PdfMailWriter.buildXmpMetadata(record),
         PdfMailWriter.buildXmpMetadata(List.of(record), "m"))) {
-      assertTrue(metadata.contains("<pdfmailmeta:In-Reply-To><rdf:Bag><rdf:li>" + Common.xml(PARENT) + "</rdf:li>"));
+      var xml = TestSupport.parseMetadata(metadata);
+      var replies = (org.w3c.dom.Element) xml.getElementsByTagNameNS("http://www.pdfa.org/eapdf/ns/meta/", "In-Reply-To").item(0);
+      var bag = (org.w3c.dom.Element) replies.getElementsByTagNameNS("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "Bag").item(0);
+      var identifiers = bag.getElementsByTagNameNS("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "li");
+      assertEquals(1, identifiers.getLength());
+      assertEquals(PARENT, identifiers.item(0).getTextContent());
     }
     EmailRecord reconstructed = EmlReader.readRfc822Bytes(Common.synthesizeEml(record),
         "reply.eml", "reply.eml", "", List.of(), false);

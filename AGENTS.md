@@ -26,6 +26,7 @@ Rules:
 - Work on EA-PDF creation, validation, and reader development; the user authorized reader development on 2026-11-03
 - Do not add new features without the user's express permission
 - Keep output text plain and succinct
+- Whenever the user says "push" or "push to GitHub", check open pull requests and address outstanding fixes before pushing.
 - Whenever the user requests a push to GitHub, also publish the corresponding GitHub Release with versioned distributable assets and checksums; use prerelease status for beta versions. Retain only the current release and its immediate predecessor; verify the new release assets before deleting older releases.
 - Keep GitHub release notes brief: versions, a few user-visible changes, essential setup information, and beta status. Put implementation details, benchmarks, test counts, and audit evidence in project documentation.
 - Do not modify CLI arguments unless asked
@@ -63,3 +64,4 @@ Rules:
 - Keep private correspondence and sample contributors anonymous in first-party documentation and release notes. Use generic interoperability labels; do not publish contributor names, company names or private sample filenames. Preserve required legal attribution and original input bytes. Run `python3 scripts/check_public_docs.py` before publication.
 
 - Maintain current handover status in docs/PROJECT_STATUS.md and separation decisions in docs/ARCHITECTURE.md. Keep docs/DEVELOPMENT_STATUS.md and docs/private local and ignored. Update the authoritative user/reference guide when behaviour changes; historical audit counts remain dated evidence.
+- Before every push, regenerate the software architecture PDF. Draw arrows downward from each Tool to the Libraries it uses to show their connections.

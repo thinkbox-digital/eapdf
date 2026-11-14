@@ -36,6 +36,59 @@ class AttachedMessageEncodingTests {
     assertArrayEquals(child, parts.getBodyPart(parts.getCount() - 1).getInputStream().readAllBytes());
   }
 
+  @Test void arbitraryAttachedMessageBytesSurviveEveryMultipartArrangement() throws Exception {
+    for (boolean inline : List.of(false, true)) for (boolean html : List.of(false, true)) {
+      for (byte[] payload : List.of(new byte[]{0, (byte) 255, '\r', '\n', (byte) 128},
+          "Malformed header\n\nUnterminated body".getBytes(StandardCharsets.US_ASCII),
+          "Subject: Child\r\n\r\nBody\r\n".getBytes(StandardCharsets.US_ASCII))) {
+        var record = new EmailRecord(); record.textBody = "Parent";
+        if (html) record.htmlBody = "<p>Parent</p>";
+        var file = new AssociatedFile(); file.filename = "child.eml"; file.mime = "message/rfc822";
+        file.inline = inline; file.bytes = payload; record.associatedFiles.add(file);
+        byte[] encoded = Common.synthesizeEml(record);
+        assertArrayEquals(encoded, Common.synthesizeEml(record));
+        var message = parse(encoded);
+        assertEquals("binary", message.getEncoding());
+        var parts = (Multipart) message.getContent();
+        var body = parts.getBodyPart(0);
+        if (html) body = ((Multipart) body.getContent()).getBodyPart(0);
+        assertEquals(record.textBody, body.getContent(), "Multipart framing must not add a body line");
+        var attachment = parts.getBodyPart(parts.getCount() - 1);
+        assertArrayEquals(new String[]{"binary"}, attachment.getHeader("Content-Transfer-Encoding"));
+        assertArrayEquals(payload, attachment.getInputStream().readAllBytes());
+      }
+    }
+  }
+
+  @Test void reconstructionDoesNotInventMissingDatesOrIdentifiers() throws Exception {
+    var record = new EmailRecord(); record.textBody = "Body";
+    byte[] encoded = Common.synthesizeEml(record);
+    assertArrayEquals(encoded, Common.synthesizeEml(record));
+    var message = parse(encoded);
+    assertNull(message.getHeader("Date"));
+    assertNull(message.getHeader("Message-ID"));
+    record.messageId = "<preserved@example.org>";
+    assertEquals(record.messageId, parse(Common.synthesizeEml(record)).getMessageID());
+  }
+
+  @Test void compositeAttachmentsKeepTheirDeclaredTypeAndOpaquePayload() throws Exception {
+    for (String type : List.of("message/delivery-status", "multipart/mixed; boundary=unavailable")) {
+      var record = new EmailRecord(); record.textBody = "Parent";
+      var file = new AssociatedFile(); file.filename = "original.bin"; file.mime = type;
+      file.bytes = new byte[]{0, (byte) 255, '\r', '\n', 'x'};
+      record.associatedFiles.add(file);
+      var parts = (Multipart) parse(Common.synthesizeEml(record)).getContent();
+      var attachment = parts.getBodyPart(1);
+      assertTrue(attachment.isMimeType(type.split(";", 2)[0]));
+      assertArrayEquals(new String[]{"base64"}, attachment.getHeader("Content-Transfer-Encoding"));
+      // Mail's default reader ignores transfer encodings on composite types.
+      try (var decoded = jakarta.mail.internet.MimeUtility.decode(
+          ((jakarta.mail.internet.MimeBodyPart) attachment).getRawInputStream(), "base64")) {
+        assertArrayEquals(file.bytes, decoded.readAllBytes());
+      }
+    }
+  }
+
   private static MimeMessage parse(byte[] data) throws Exception {
     return new MimeMessage(Session.getInstance(new Properties()), new ByteArrayInputStream(data));
   }

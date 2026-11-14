@@ -71,6 +71,13 @@ final class TestSupport {
     return new String(metadata.toByteArray(), StandardCharsets.UTF_8);
   }
 
+  static org.w3c.dom.Document parseMetadata(String xml) throws Exception {
+    var factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    return factory.newDocumentBuilder().parse(new java.io.ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+  }
+
   static Set<String> embeddedFileNames(PDDocument doc) throws IOException {
     Set<String> names = new LinkedHashSet<>();
     PDDocumentNameDictionary dict = doc.getDocumentCatalog().getNames();

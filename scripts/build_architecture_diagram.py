@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build the one-page architecture PDF from current project versions and pins."""
 import argparse
+from datetime import date
 import json
 import os
 from pathlib import Path
@@ -58,7 +59,7 @@ def build(path):
         assert cursor >= y + 3, (heading, 'Text exceeds card height', cursor, y)
 
     text(40, 707, 'EA-PDF SOFTWARE ARCHITECTURE', 24, True, blue)
-    text(40, 683, 'Thinkbox.DIGITAL  |  Product and dependency overview  |  13 November 2026', 11)
+    text(40, 683, 'Thinkbox.DIGITAL  |  Product and dependency overview  |  ' + date.today().strftime('%d %B %Y'), 11)
     width = (1120 - 32) / 3
     xs = [40, 40 + width + 16, 40 + 2 * (width + 16)]
     card(xs[0], 418, width, 244, 'EA-PDF CREATOR', [
@@ -86,6 +87,14 @@ def build(path):
         ('PDF engine and shared hooks', f"PDF.js {reader['dependencies']['pdfjs-dist']}. Generic hooks expose document parts / DPM, associated files, metadata and collection membership."),
         ('Application layer', f"TypeScript {reader['devDependencies']['typescript']}; browser extensions. Full and Lite share maintained source; Lite is a reproducible standalone export."),
         ('Build tools only', f"Node {reader['engines']['node']}; npm {reader['engines']['npm']}; Playwright {reader['devDependencies']['playwright']}. No Java or Python needed by the extensions.")])
+
+    pdf.setStrokeColor(blue); pdf.setFillColor(blue); pdf.setLineWidth(1.5)
+    for x in xs:
+        center = x + width / 2
+        pdf.line(center, 416, center, 403)
+        arrow = pdf.beginPath()
+        arrow.moveTo(center, 398); arrow.lineTo(center - 4, 404); arrow.lineTo(center + 4, 404); arrow.close()
+        pdf.drawPath(arrow, fill=1, stroke=0)
 
     text(40, 91, 'High-level overview: transitive libraries and some helpers are omitted. Rule counts are project definitions, not a claim of complete specification coverage.', 9)
     text(40, 73, 'Preserve original mailboxes separately. Validation has defined limits; PDF/UA machine checks do not replace human accessibility review.', 9)

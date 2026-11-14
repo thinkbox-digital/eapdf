@@ -44,6 +44,20 @@ explains local files, optional connections and saved data. The release includes
 
 ## Checks and limits
 
+Unreleased code improvement, 14 November: the creator now uses Jakarta Mail for
+MIME assembly and XMPBox for metadata serialization. Outlook Message Parser is
+1.16.3; its missing-date fix replaces our workaround. No dependency was added.
+Production Java code fell from 15,720 to 15,539 lines, excluding comments and blank
+lines. All input formats and six output profiles remain supported.
+
+Creator checks: 434 passed and 23 optional checks were skipped. A real-input
+comparison produced 48 baseline/candidate PDFs across EML, MSG, PST and MBOX.
+All passed standalone Java validation; page images and preserved content matched.
+The comparison allows fresh message identifiers and changed MIME framing;
+the validator checks the resulting sizes and checksums. Original inputs were unchanged.
+The custom archive storage remains: replacing it with stock PDFBox increased
+retained heap in the storage probes. This is not a general speed or memory claim.
+
 Release checks and library versions are recorded in the
 [verification record](releases/2.2.0-beta.3-validation.md).
 Earlier counts remain dated evidence in the changelog and release records.

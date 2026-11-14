@@ -70,6 +70,18 @@ it does not establish normal-viewer speed gains or upstream acceptance.
 
 ## Library patches
 
+The creator delegates MIME assembly to Jakarta Mail / Angus Mail and XMP
+serialization to XMPBox. Our code still maps email fields, EA-PDF profiles,
+source files and document parts. Reconstructed messages keep stable boundaries,
+original attachment bytes and supplied identifiers; missing dates and identifiers
+are not invented. Opaque message and multipart attachments bypass automatic
+parsing. XMP serialization retains the required namespaces and FOAF layout.
+
+Outlook Message Parser 1.16.3 supplies the missing-date fix. Native timestamp
+precision and other preservation repairs remain local until equivalent upstream
+behavior is verified. Keep the custom archive storage: stock PDFBox was more
+memory-intensive in the measured stream-cache and large-archive loading probes.
+
 The renderer keeps four patches, recorded in `third_party/openhtmltopdf/lock.json`.
 A clean rebuild must reproduce their commit and artifact hashes.
 
@@ -94,4 +106,6 @@ The former web workbench and its deployment files are removed. The Java validato
 is the normal checking tool; Python CLI code remains for regressions and diagnostics.
 
 Rebuild the diagram with `scripts/build_architecture_diagram.py`, passing the
-current creator and validator JARs. It reads versions and rule counts from source.
+current creator and validator JARs. It reads versions and rule counts from source
+and draws arrows downward from each tool to its libraries. Regenerate it before
+every push.
