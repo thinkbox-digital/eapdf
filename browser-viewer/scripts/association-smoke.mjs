@@ -12,7 +12,9 @@ try{
   await page.goto(`chrome-extension://${new URL(worker.url()).host}/viewer.html`);
   await page.evaluate(()=>{const input=document.createElement('input');input.type='file';input.id='test-source';document.body.append(input);});
   await page.locator('#test-source').setInputFiles(resolve('../examples/mbox/mbox_enron_1m.pdf'));
+  // Compare complete records by digest; avoid returning four archive inventories over CDP.
   const results=await page.evaluate(async()=>{
+    const fingerprint=async value=>{const bytes=new TextEncoder().encode(JSON.stringify(value));return {sha256:[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(v=>v.toString(16).padStart(2,'0')).join(''),bytes:bytes.length};};
     const {BrowserSession}=await import('./browser-session.js');
     const file=document.querySelector('#test-source').files[0],results=[];
     for(const fail of [false,true]){
@@ -32,7 +34,7 @@ try{
           const read=session.readBytes.bind(session);
           session.readBytes=async(...args)=>{reads++;if(fail&&reads===1)throw new Error('Injected extraction failure');if(eager)args[3]=true;return read(...args);};
           await session.associateFiles(doc);
-          variants.push({reads,parses,inspection:doc.inspection,details:[...doc.details]});
+          variants.push({reads,parses,inspection:await fingerprint(doc.inspection),details:await fingerprint([...doc.details]),unavailable:doc.inspection.files.some(f=>f.streams.some(s=>s.sha256.state==='unavailable'))});
         }finally{session.close();}
       }
       results.push({fail,variants});
@@ -44,7 +46,7 @@ try{
     assert.deepEqual(batched.inspection,eager.inspection,'identical associations, hashes and diagnostics');
     assert.deepEqual(batched.details,eager.details,'identical metadata details');
     assert.ok(batched.parses<eager.parses,'batch avoids repeated XML parsing');
-    if(fail)assert.ok(batched.inspection.files.some(f=>f.streams.some(s=>s.sha256.state==='unavailable')),'failed extraction remains unavailable');
-    console.log(`PASS: ${fail?'failed extraction':'successful extraction'}; ${batched.reads} reads, XML interpretations ${eager.parses} -> ${batched.parses}; identical inspection and details.`);
+    if(fail)assert.ok(batched.unavailable,'failed extraction remains unavailable');
+    console.log(`PASS: ${fail?'failed extraction':'successful extraction'}; ${batched.reads} reads, XML interpretations ${eager.parses} -> ${batched.parses}; identical inspection (${batched.inspection.bytes} bytes) and details (${batched.details.bytes} bytes).`);
   }
 }finally{await context.close();}

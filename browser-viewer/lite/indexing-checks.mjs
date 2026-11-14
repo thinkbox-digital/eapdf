@@ -24,8 +24,15 @@ export async function checkIndexingNavigation(browser,path,until) {
  assert.equal(await browser.evaluate(()=>Number(document.querySelector('#message-count').textContent)),expected,'Every source message remains indexed');
  assert.doesNotMatch(await browser.evaluate(()=>document.querySelector('#status').textContent),/^Unable/);
  await browser.evaluate(()=>document.querySelector('#back').click());await until(()=>browser.evaluate(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false'&&document.querySelector('#back').disabled));
- await browser.evaluate(()=>{const input=document.querySelector('#message-filter');input.value='approval';input.dispatchEvent(new Event('input',{bubbles:true}));});
- await until(()=>browser.evaluate(()=>/matching|matches|emails|No /.test(document.querySelector('#filter-status').textContent)&&!document.querySelector('#filter-status').textContent.startsWith('Reading')));
+ const query=await browser.evaluate(()=>{
+  const label=[...document.querySelectorAll('#tree button[data-embedded-file-id] .message-subject')]
+   .find(node=>node.textContent.trim()&&node.textContent!==node.closest('button').title);
+  const word=label?.textContent.match(/[\p{L}\p{N}]{3,}/u)?.[0];
+  if(word){const input=document.querySelector('#message-filter');input.value=word;input.dispatchEvent(new Event('input',{bubbles:true}));}
+  return word;
+ });
+ assert.ok(query,'The fixture supplies an indexed subject for metadata filtering');
+ await until(()=>browser.evaluate(()=>document.querySelectorAll('#filter-results button').length>0&&!document.querySelector('#filter-status').textContent.startsWith('Reading')));
  assert.ok(await browser.evaluate(()=>document.querySelectorAll('#filter-results button').length)>0,'Metadata filtering still returns real message results');
  return [`${expected} messages indexed; clicks before/after 32 scans and completion retain selection; metadata filtering passes`];
 }

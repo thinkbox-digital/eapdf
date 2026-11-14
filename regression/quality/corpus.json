@@ -145,6 +145,6 @@
       "provenance": "Python mailbox and email parsers; two messages cross-checked against in/enron.mbox."
     }
   ],
-  "renderer_version": "1.25.5",
+  "renderer_version": "2.1",
   "timezone": "America/New_York"
 }

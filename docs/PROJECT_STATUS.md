@@ -44,6 +44,32 @@ explains local files, optional connections and saved data. The release includes
 
 ## Checks and limits
 
+Unreleased dependency integration, 14 November: all 19 dependency PRs are
+included together. TypeScript 7 builds both readers; the Lite exporter and type
+checks use its command-line interface. Acorn selects the shared JavaScript tests.
+PyMuPDF 2.1 matched every pixel on the same six baseline pages, so the reference
+images and comparison threshold are unchanged. The PDF manual and website also build.
+
+Browser checks now wait for completed indexing, current virtual rows and the
+requested Portfolio view. The association check compares complete records by
+SHA-256 inside the browser, avoiding a roughly 116 MB test-protocol response.
+These changes preserve the existing checks and reader layout. Dependency notices,
+runtime inventories and the architecture PDF are refreshed.
+
+Unreleased code improvement, 14 November: the creator now uses Jakarta Mail for
+MIME assembly and XMPBox for metadata serialization. Outlook Message Parser is
+1.16.3; its missing-date fix replaces our workaround. No dependency was added.
+Production Java code fell from 15,720 to 15,539 lines, excluding comments and blank
+lines. All input formats and six output profiles remain supported.
+
+Creator checks: 434 passed and 23 optional checks were skipped. A real-input
+comparison produced 48 baseline/candidate PDFs across EML, MSG, PST and MBOX.
+All passed standalone Java validation; page images and preserved content matched.
+The comparison allows fresh message identifiers and changed MIME framing;
+the validator checks the resulting sizes and checksums. Original inputs were unchanged.
+The custom archive storage remains: replacing it with stock PDFBox increased
+retained heap in the storage probes. This is not a general speed or memory claim.
+
 Release checks and library versions are recorded in the
 [verification record](releases/2.2.0-beta.3-validation.md).
 Earlier counts remain dated evidence in the changelog and release records.

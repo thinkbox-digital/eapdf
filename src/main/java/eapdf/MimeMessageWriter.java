@@ -1,8 +1,10 @@
 package eapdf;
 
 import static eapdf.Common.*;
+import jakarta.activation.DataHandler;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
+import jakarta.mail.util.ByteArrayDataSource;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -10,85 +12,66 @@ import java.util.*;
 /** Reconstructs portable MIME messages, preserving attachment payload bytes. */
 final class MimeMessageWriter {
   private MimeMessageWriter() {}
-  /** UTF-8 generated MIME text with byte-exact encapsulated messages. */
-  private static final class MimeBytes extends ByteArrayOutputStream {
-    MimeBytes append(Object text) {
-      writeBytes(String.valueOf(text).getBytes(StandardCharsets.UTF_8));
-      return this;
-    }
-  }
 
-  static byte[] synthesizeEml(EmailRecord r) throws Exception {
-    MimeBytes sb = new MimeBytes();
-    String rawFrom = !nz(r.rawFrom).isBlank() ? nz(r.rawFrom) : nz(r.from);
-    String rawTo = !nz(r.rawTo).isBlank() ? nz(r.rawTo) : nz(r.to);
-    String rawCc = !nz(r.rawCc).isBlank() ? nz(r.rawCc) : nz(r.cc);
-    String rawBcc = !nz(r.rawBcc).isBlank() ? nz(r.rawBcc) : nz(r.bcc);
-    if (!rawFrom.isBlank()) sb.append("From: ").append(encodeAddressHeader(rawFrom)).append("\r\n");
-    if (!rawTo.isBlank()) sb.append("To: ").append(encodeAddressHeader(rawTo)).append("\r\n");
-    if (!rawCc.isBlank()) sb.append("Cc: ").append(encodeAddressHeader(rawCc)).append("\r\n");
-    if (!rawBcc.isBlank()) sb.append("Bcc: ").append(encodeAddressHeader(rawBcc)).append("\r\n");
-    if (!nz(r.rawReplyTo).isBlank()) sb.append("Reply-To: ").append(encodeAddressHeader(r.rawReplyTo)).append("\r\n");
-    if (!nz(r.subject).isBlank()) sb.append("Subject: ").append(MimeUtility.encodeText(r.subject, "UTF-8", null)).append("\r\n");
-    if (!nz(r.rawDateHeader).isBlank()) sb.append("Date: ").append(nz(r.rawDateHeader)).append("\r\n");
-    else if (!nz(r.date).isBlank()) sb.append("Date: ").append(nz(r.date)).append("\r\n");
-    if (!nz(r.messageId).isBlank()) sb.append("Message-ID: ").append(nz(r.messageId)).append("\r\n");
-    for (String value : r.inReplyTo) sb.append("In-Reply-To: ").append(value).append("\r\n");
-    for (String value : r.references) sb.append("References: ").append(value).append("\r\n");
-    sb.append("MIME-Version: 1.0\r\n");
-    List<AssociatedFile> attachments = new ArrayList<>();
-    List<AssociatedFile> inlineFiles = new ArrayList<>();
-    for (AssociatedFile af : r.associatedFiles) {
-      if (af == null || !af.hasData()) continue;
-      if ("Source".equals(nz(af.afRelationship)) || af.sourceSetMember) continue;
-      if (af.inline) inlineFiles.add(af);
-      else attachments.add(af);
+  static byte[] synthesizeEml(EmailRecord record) throws Exception {
+    // A reconstruction must retain the source identifier, including its absence.
+    MimeMessage message = new MimeMessage(Session.getInstance(new Properties())) {
+      @Override protected void updateMessageID() {}
+    };
+    for (String[] header : new String[][] {
+        {"From", !nz(record.rawFrom).isBlank() ? record.rawFrom : record.from},
+        {"To", !nz(record.rawTo).isBlank() ? record.rawTo : record.to},
+        {"Cc", !nz(record.rawCc).isBlank() ? record.rawCc : record.cc},
+        {"Bcc", !nz(record.rawBcc).isBlank() ? record.rawBcc : record.bcc},
+        {"Reply-To", record.rawReplyTo}}) {
+      if (!nz(header[1]).isBlank()) message.setHeader(header[0], encodeAddressHeader(header[1]));
     }
-    // Encapsulated messages retain arbitrary original bytes. Label the enclosing
-    // multipart accordingly rather than claiming a narrower transport encoding.
-    if (r.associatedFiles.stream().anyMatch(af -> af != null && af.hasData()
-        && !"Source".equals(nz(af.afRelationship)) && !af.sourceSetMember
-        && "message/rfc822".equals(baseMimeType(sourceContentType(af))))) {
-      sb.append("Content-Transfer-Encoding: binary\r\n");
-    }
-    boolean hasHtml = !htmlBody(r).isBlank();
-    boolean hasAttachments = !attachments.isEmpty();
-    if (!hasHtml && !hasAttachments && inlineFiles.isEmpty()) {
-      sb.append("Content-Type: text/plain; charset=UTF-8\r\n");
-      sb.append("Content-Transfer-Encoding: 8bit\r\n");
-      sb.append("\r\n");
-      sb.append(textBody(r).replace("\r\n","\n").replace("\r","\n").replace("\n","\r\n"));
-      sb.append("\r\n");
-      return sb.toByteArray();
-    }
+    if (!nz(record.subject).isBlank()) message.setSubject(record.subject, "UTF-8");
+    String date = !nz(record.rawDateHeader).isBlank() ? record.rawDateHeader : nz(record.date);
+    if (!date.isBlank()) message.setHeader("Date", date);
+    if (!nz(record.messageId).isBlank()) message.setHeader("Message-ID", record.messageId);
+    for (String value : record.inReplyTo) message.addHeader("In-Reply-To", value);
+    for (String value : record.references) message.addHeader("References", value);
 
-    String mixedBoundary = stableMimeBoundary("Mixed", r);
-    String altBoundary = stableMimeBoundary("Alt", r);
-    String relatedBoundary = stableMimeBoundary("Related", r);
-    if (hasAttachments) {
-      sb.append("Content-Type: multipart/mixed; boundary=\"").append(mixedBoundary).append("\"\r\n\r\n");
-      if (inlineFiles.isEmpty()) {
-        appendTextOrAltPart(sb, r, mixedBoundary, altBoundary, hasHtml);
-      } else {
-        sb.append("--").append(mixedBoundary).append("\r\n");
-        sb.append("Content-Type: multipart/related; boundary=\"").append(relatedBoundary).append("\"\r\n");
-        if (inlineFiles.stream().anyMatch(af -> "message/rfc822".equals(baseMimeType(sourceContentType(af))))) {
-          sb.append("Content-Transfer-Encoding: binary\r\n");
-        }
-        sb.append("\r\n");
-        appendRelatedParts(sb, r, relatedBoundary, altBoundary, hasHtml, inlineFiles);
+    MimeBodyPart body = textPart(textBody(record), "plain");
+    if (!htmlBody(record).isBlank()) {
+      List<MimeBodyPart> alternatives = new ArrayList<>();
+      alternatives.add(body);
+      if (!rtfBody(record).isBlank()) {
+        MimeBodyPart rtf = new MimeBodyPart();
+        rtf.setDataHandler(new DataHandler(new ByteArrayDataSource(rtfBody(record).getBytes(StandardCharsets.UTF_8),
+            "text/rtf; charset=UTF-8")));
+        rtf.setHeader("Content-Transfer-Encoding", "base64");
+        alternatives.add(rtf);
       }
-      for (AssociatedFile af : attachments) appendAttachmentPart(sb, mixedBoundary, af);
-      sb.append("--").append(mixedBoundary).append("--\r\n");
-    } else if (!inlineFiles.isEmpty()) {
-      sb.append("Content-Type: multipart/related; boundary=\"").append(relatedBoundary).append("\"\r\n\r\n");
-      appendRelatedParts(sb, r, relatedBoundary, altBoundary, hasHtml, inlineFiles);
-    } else {
-      sb.append("Content-Type: multipart/alternative; boundary=\"").append(altBoundary).append("\"\r\n\r\n");
-      appendTextAndHtml(sb, r, altBoundary, true);
-      sb.append("--").append(altBoundary).append("--\r\n");
+      alternatives.add(textPart(htmlBody(record), "html"));
+      body = multipartPart("alternative", "Alt", record, alternatives);
     }
-    return sb.toByteArray();
+    List<MimeBodyPart> inline = new ArrayList<>(), attachments = new ArrayList<>();
+    for (AssociatedFile file : record.associatedFiles) {
+      if (file == null || !file.hasData() || "Source".equals(nz(file.afRelationship)) || file.sourceSetMember) continue;
+      (file.inline ? inline : attachments).add(attachmentPart(file));
+    }
+    if (!inline.isEmpty()) {
+      inline.add(0, body);
+      body = multipartPart("related", "Related", record, inline);
+    }
+    if (!attachments.isEmpty()) {
+      attachments.add(0, body);
+      body = multipartPart("mixed", "Mixed", record, attachments);
+    }
+    message.setDataHandler(body.getDataHandler());
+    for (Enumeration<Header> headers = body.getAllHeaders(); headers.hasMoreElements();) {
+      Header header = headers.nextElement();
+      message.setHeader(header.getName(), header.getValue());
+    }
+    message.saveChanges();
+    // Jakarta Mail normally supplies today's date for an undated new message.
+    if (date.isBlank()) message.removeHeader("Date");
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    message.writeTo(output);
+    if (!body.isMimeType("multipart/*")) output.writeBytes("\r\n".getBytes(StandardCharsets.US_ASCII));
+    return output.toByteArray();
   }
 
   static String encodeAddressHeader(String rawHeader) throws Exception {
@@ -100,11 +83,28 @@ final class MimeMessageWriter {
     return InternetAddress.toString(addresses);
   }
 
-  static void appendRelatedParts(MimeBytes builder, EmailRecord record, String relatedBoundary, String altBoundary,
-                                 boolean hasHtml, List<AssociatedFile> inlineFiles) throws Exception {
-    appendTextOrAltPart(builder, record, relatedBoundary, altBoundary, hasHtml);
-    for (AssociatedFile inlineFile : inlineFiles) appendAttachmentPart(builder, relatedBoundary, inlineFile);
-    builder.append("--").append(relatedBoundary).append("--\r\n");
+  private static MimeBodyPart textPart(String value, String subtype) throws MessagingException {
+    MimeBodyPart part = new MimeBodyPart();
+    part.setText(value.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\r\n"), "UTF-8", subtype);
+    part.setHeader("Content-Transfer-Encoding", "8bit");
+    return part;
+  }
+
+  private static MimeBodyPart multipartPart(String subtype, String prefix, EmailRecord record,
+                                           List<MimeBodyPart> parts) throws MessagingException {
+    MimeMultipart multipart = new MimeMultipart(subtype) {
+      { ContentType type = new ContentType(contentType);
+        type.setParameter("boundary", stableMimeBoundary(prefix, record)); contentType = type.toString(); }
+    };
+    boolean binary = false;
+    for (MimeBodyPart part : parts) {
+      multipart.addBodyPart(part);
+      binary |= "binary".equalsIgnoreCase(part.getEncoding());
+    }
+    MimeBodyPart result = new MimeBodyPart();
+    result.setContent(multipart);
+    if (binary) result.setHeader("Content-Transfer-Encoding", "binary");
+    return result;
   }
 
   static String stableMimeBoundary(String prefix, EmailRecord r) {
@@ -128,67 +128,29 @@ final class MimeMessageWriter {
     return "=_" + prefix + "_" + Integer.toUnsignedString(hash, 16);
   }
 
-  static void appendTextOrAltPart(MimeBytes sb, EmailRecord r, String mixedBoundary, String altBoundary, boolean hasHtml) {
-    sb.append("--").append(mixedBoundary).append("\r\n");
-    if (hasHtml) {
-      sb.append("Content-Type: multipart/alternative; boundary=\"").append(altBoundary).append("\"\r\n\r\n");
-      appendTextAndHtml(sb, r, altBoundary, true);
-      sb.append("--").append(altBoundary).append("--\r\n");
-    } else {
-      sb.append("Content-Type: text/plain; charset=UTF-8\r\n");
-      sb.append("Content-Transfer-Encoding: 8bit\r\n\r\n");
-      sb.append(textBody(r).replace("\r\n","\n").replace("\r","\n").replace("\n","\r\n"));
-      sb.append("\r\n");
-    }
-  }
-
-  static void appendTextAndHtml(MimeBytes sb, EmailRecord r, String altBoundary, boolean hasHtml) {
-    sb.append("--").append(altBoundary).append("\r\n");
-    sb.append("Content-Type: text/plain; charset=UTF-8\r\n");
-    sb.append("Content-Transfer-Encoding: 8bit\r\n\r\n");
-    sb.append(textBody(r).replace("\r\n","\n").replace("\r","\n").replace("\n","\r\n"));
-    sb.append("\r\n");
-    if (hasHtml) {
-      sb.append("--").append(altBoundary).append("\r\n");
-      String rtf = rtfBody(r);
-      if (!rtf.isBlank()) {
-        sb.append("Content-Type: text/rtf; charset=UTF-8\r\n");
-        sb.append("Content-Transfer-Encoding: base64\r\n\r\n");
-        sb.append(Base64.getMimeEncoder(76, "\r\n".getBytes(StandardCharsets.US_ASCII))
-            .encodeToString(rtf.getBytes(StandardCharsets.UTF_8))).append("\r\n");
-        sb.append("--").append(altBoundary).append("\r\n");
-      }
-      sb.append("Content-Type: text/html; charset=UTF-8\r\n");
-      sb.append("Content-Transfer-Encoding: 8bit\r\n\r\n");
-      sb.append(htmlBody(r).replace("\r\n","\n").replace("\r","\n").replace("\n","\r\n"));
-      sb.append("\r\n");
-    }
-  }
-
-  static void appendAttachmentPart(MimeBytes sb, String mixedBoundary, AssociatedFile af) throws Exception {
-    sb.append("--").append(mixedBoundary).append("\r\n");
-    String originalContentType = sourceContentType(af);
-    ContentType contentType = new ContentType(originalContentType.isBlank() ? "application/octet-stream" : originalContentType);
-    if (contentType.getParameterList() == null) contentType.setParameterList(new ParameterList());
-    ParameterList dispositionParameters = new ParameterList();
-    if (!nz(af.filename).isBlank()) {
-      dispositionParameters.set("filename", af.filename, "UTF-8");
-    }
-    sb.append("Content-Type: ").append(contentType).append("\r\n");
+  private static MimeBodyPart attachmentPart(AssociatedFile file) throws Exception {
+    String originalContentType = sourceContentType(file);
+    ContentType type = new ContentType(originalContentType.isBlank() ? "application/octet-stream" : originalContentType);
+    String encoding = type.match("message/rfc822") ? "binary" : "base64";
+    // Treat attachments as opaque, including malformed message/multipart data.
+    // PreencodedMimeBodyPart also avoids Mail dropping composite base64 encoding.
+    MimeBodyPart part = new PreencodedMimeBodyPart(encoding) {
+      @Override protected void updateHeaders() {}
+    };
+    byte[] payload = file.data();
+    if (encoding.equals("base64")) payload = Base64.getMimeEncoder(76,
+        "\r\n".getBytes(StandardCharsets.US_ASCII)).encode(payload);
+    part.setDataHandler(new DataHandler(new ByteArrayDataSource(payload, type.toString())));
+    part.setHeader("Content-Type", type.toString());
     // RFC 2046 section 5.2.1 forbids base64 on message/rfc822 itself.
-    boolean encapsulated = "message/rfc822".equalsIgnoreCase(contentType.getBaseType());
-    sb.append("Content-Transfer-Encoding: ").append(encapsulated ? "binary" : "base64").append("\r\n");
-    // A native Outlook text attachment can carry a Content-ID assigned by a
-    // mail filter. Keep it explicitly attached, rather than making it a body.
-    boolean inlineBodyType = af.emailAttachment && Set.of("text/plain", "text/html").contains(baseMimeType(originalContentType));
-    sb.append("Content-Disposition: ").append(new ContentDisposition(af.inline && !inlineBodyType ? Part.INLINE : Part.ATTACHMENT, dispositionParameters)).append("\r\n");
-    if (!nz(af.contentId).isBlank()) sb.append("Content-ID: <").append(normalizeCidKey(af.contentId)).append(">\r\n");
-    if (!nz(af.contentLocation).isBlank()) sb.append("Content-Location: ").append(af.contentLocation).append("\r\n");
-    sb.append("\r\n");
-    byte[] payload = af.data();
-    if (encapsulated) sb.writeBytes(payload);
-    else sb.append(Base64.getMimeEncoder(76, "\r\n".getBytes(StandardCharsets.US_ASCII)).encodeToString(payload));
-    sb.append("\r\n");
+    part.setHeader("Content-Transfer-Encoding", encoding);
+    ParameterList parameters = new ParameterList();
+    if (!nz(file.filename).isBlank()) parameters.set("filename", file.filename, "UTF-8");
+    // A native Outlook text attachment with a Content-ID is still an attachment.
+    boolean bodyType = file.emailAttachment && Set.of("text/plain", "text/html").contains(baseMimeType(originalContentType));
+    part.setHeader("Content-Disposition", new ContentDisposition(file.inline && !bodyType ? Part.INLINE : Part.ATTACHMENT, parameters).toString());
+    if (!nz(file.contentId).isBlank()) part.setContentID("<" + normalizeCidKey(file.contentId) + ">");
+    if (!nz(file.contentLocation).isBlank()) part.setHeader("Content-Location", file.contentLocation);
+    return part;
   }
-
 }

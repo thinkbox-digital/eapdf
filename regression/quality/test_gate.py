@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 import pikepdf
 import unittest
-import fitz
+import pymupdf as fitz
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location('quality', ROOT / 'scripts/check_conversion_quality.py')

@@ -823,14 +823,6 @@ static boolean pdfUaFeaturesEnabled() {
   return METADATA.pdfUaFeaturesEnabled();
 }
 
-static void appendSourceProblems(StringBuilder x, List<EmailRecord> records) {
-  METADATA.appendSourceProblems(x, records);
-}
-
-static String pdfUaIdentification() {
-  return METADATA.pdfUaIdentification();
-}
-
 static void drawPageContext(PDDocument document, String fontPath) throws Exception {
   if (document.getNumberOfPages() < 2 || !CONFIG.accessibility.pageLabels.enabled) return;
   PDType0Font font = loadUiFont(document, fontPath);
@@ -1170,28 +1162,12 @@ static String buildDescription(EmailRecord r) {
   return METADATA.buildDescription(r);
 }
 
-static void appendReplyMetadata(StringBuilder metadata, EmailRecord record) {
-  METADATA.appendReplyMetadata(metadata, record);
-}
-
 static String buildArchiveDescription(List<EmailRecord> records, String archiveProfile) {
   return METADATA.buildArchiveDescription(records, archiveProfile);
 }
 
 static String buildArchiveTitle(List<EmailRecord> records) {
   return METADATA.buildArchiveTitle(records);
-}
-
-static String buildMailGuid(EmailRecord r) throws Exception {
-  return METADATA.buildMailGuid(r);
-}
-
-static void appendStringProp(StringBuilder x, String prop, String value) {
-  METADATA.appendStringProp(x, prop, value);
-}
-
-static void appendFoafSeq(StringBuilder x, String prop, List<MailAgent> agents) {
-  METADATA.appendFoafSeq(x, prop, agents);
 }
 
 static boolean shouldEmitRawSent(EmailRecord r) {
@@ -1549,14 +1525,6 @@ static void addMessageUserProperties(COSDictionary elem, EmailRecord r) {
   if (elem == null || r == null) return;
   addStringUserProperty(elem, "Mail_GUID", Common.nz(r.mailGuid));
   if (!Common.nz(r.messageId).isBlank()) addStringUserProperty(elem, "Mail_MessageID", Common.nz(r.messageId));
-}
-
-static void appendIsoTs32005Declaration(StringBuilder x, String claimBy, String claimDate) {
-  METADATA.appendIsoTs32005Declaration(x, claimBy, claimDate);
-}
-
-static void appendConversionHistory(StringBuilder x, String tool, String timestamp, String profile, int messages) {
-  METADATA.appendConversionHistory(x, tool, timestamp, profile, messages);
 }
 
 static void addLogicalStructure(PDDocument doc, EmailRecord r) throws IOException {

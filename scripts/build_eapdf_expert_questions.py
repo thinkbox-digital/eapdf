@@ -7,7 +7,7 @@ from docx.shared import Inches,Pt,RGBColor
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
-import fitz
+import pymupdf as fitz
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/'docs/improvement/specification-questions-2026-11-02'
 DEST=ROOT/'docs/specification-review/EA_PDF_Specification_Questions_for_Experts.docx'

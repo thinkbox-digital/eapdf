@@ -1,11 +1,10 @@
 // Export a standalone repository from shared sources; never fork implementation edits.
-import {readFile,writeFile,mkdir,mkdtemp,cp,access,rename,rm,readdir} from 'node:fs/promises';
+import {readFile,writeFile,mkdir,mkdtemp,cp,access,rename,rm,readdir,symlink} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {resolve,join,dirname,relative} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
-import ts from 'typescript';
 import {selectHookTests} from './select-hook-tests.mjs';
 import {liteStyles} from './styles.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
@@ -23,19 +22,26 @@ const inputs={},files={};
 const put=async(name,data,origin)=>{await mkdir(dirname(join(stage,name)),{recursive:true});await writeFile(join(stage,name),data);files[name]=sha(data);if(origin)inputs[origin]=sha(await readFile(join(root,origin)));};
 const copy=async(from,to=from)=>put(to,await readFile(join(root,from)),from);
 try {
- const pending=['src/viewer.ts','src/extension/background.ts'],seen=new Set();
- while(pending.length) {
-  const name=pending.pop();if(seen.has(name))continue;seen.add(name);
+ // Let the compiler resolve the module graph, including type-only imports.
+ // Apply Lite overrides before discovery so omitted implementations stay omitted.
+ await cp(join(root,'src'),join(stage,'src'),{recursive:true});
+ await cp(join(root,'lite/overrides'),join(stage,'src'),{recursive:true});
+ await symlink(join(root,'node_modules'),join(stage,'node_modules'),'dir');
+ const config=JSON.parse(await readFile(join(root,'tsconfig.json'),'utf8'));
+ delete config.include;
+ config.files=['src/viewer.ts','src/extension/background.ts','src/pdfjs-assets.d.ts','src/pdfjs-document-parts.d.ts'];
+ await writeFile(join(stage,'tsconfig.json'),JSON.stringify(config));
+ const discovered=execFileSync(process.execPath,[join(root,'node_modules/typescript/bin/tsc'),'--project',join(stage,'tsconfig.json'),'--listFilesOnly','--pretty','false'],{encoding:'utf8'});
+ const seen=new Set(discovered.split(/\r?\n/).map(name=>relative(stage,name)).filter(name=>name.startsWith('src/')));
+ assert.ok(seen.has('src/viewer.ts'),'Compiler did not identify the Lite entry point');
+ await rm(join(stage,'src'),{recursive:true});
+ await rm(join(stage,'node_modules'));
+ await rm(join(stage,'tsconfig.json'));
+ for(const name of seen) {
   const override='lite/overrides/'+relative('src',name);let origin=name;
   try{await access(join(root,override));origin=override;}catch{}
-  const text=await readFile(join(root,origin),'utf8');await put(name,text,origin);
+  await put(name,await readFile(join(root,origin)),origin);
   if(origin!==name)inputs[name]=sha(await readFile(join(root,name)));
-  const imports=ts.preProcessFile(text,true,true).importedFiles;
-  for(const entry of imports)if(entry.fileName.startsWith('.')) {
-   const resolved=resolve(root,dirname(name),entry.fileName),base=relative(root,resolved).replace(/\.js$/,'.ts');
-   let dependency=base;try{await access(join(root,dependency));}catch{dependency=base.replace(/\.ts$/,'.d.ts');try{await access(join(root,dependency));}catch{continue;}}
-   if(dependency.startsWith('src/'))pending.push(dependency);
-  }
  }
  for(const name of ['src/pdfjs-assets.d.ts','src/pdfjs-document-parts.d.ts'])if(!seen.has(name))await copy(name);
  const html=(await readFile(join(root,'src/viewer.html'),'utf8')).replaceAll('EA-PDF viewer','EA-PDF Viewer Lite').replace('viewer __VIEWER_VERSION__','Lite __VIEWER_VERSION__')

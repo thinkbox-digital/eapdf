@@ -4,7 +4,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import ts from 'typescript';
+import {checkTypes} from '../scripts/check-types.mjs';
 import { verifyPatchedPdfjs } from '../scripts/pdfjs-patch.mjs';
 
 test('patched distribution matches the pinned source patch and generated outputs', async () => {
@@ -31,11 +31,6 @@ result.xref.fetch(1);
 result.validationStatus;
 `;
     const path = join(temp, 'public-api.ts'); await writeFile(path, source);
-    const program = ts.createProgram([path], { noEmit: true, strict: true, skipLibCheck: true, types: [],
-      target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, moduleResolution: ts.ModuleResolutionKind.Bundler });
-    const diagnostics = ts.getPreEmitDiagnostics(program);
-    assert.equal(diagnostics.length, 0, ts.formatDiagnosticsWithColorAndContext(diagnostics, {
-      getCurrentDirectory: () => root, getCanonicalFileName: p => p, getNewLine: () => '\n',
-    }));
+    await checkTypes(root, path);
   } finally { await rm(temp, { recursive: true, force: true }); }
 });

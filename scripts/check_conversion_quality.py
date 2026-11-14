@@ -13,7 +13,7 @@ from pathlib import Path
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
-import fitz
+import pymupdf as fitz
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))

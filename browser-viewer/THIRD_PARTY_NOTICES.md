@@ -26,8 +26,8 @@ PDF.js confirms these are unmodified 1.07.4 fonts in its
 [pinned source README](https://github.com/mozilla/pdf.js/blob/0a4153349dc473ba950fc17941c5ca7eda43c1de/external/standard_fonts/README.md).
 Retain the separate notices and source archive when redistributing the extension.
 
-Development tools are not copied into the extension: TypeScript 5.9.3,
-Playwright and playwright-core 1.64.1 are Apache-2.0. PDF.js's optional Node canvas
+Development tools are not copied into the extension: TypeScript 7.0.2,
+Playwright and playwright-core 1.65.0 are Apache-2.0. Acorn 8.19.0 is MIT and is used only to select development tests. PDF.js's optional Node canvas
 packages are MIT according to their npm manifests; they are not used or shipped
 by this browser application. Platform-specific optional dependencies remain
 recorded in package-lock.json. Playwright's bundled NOTICE files and third-party

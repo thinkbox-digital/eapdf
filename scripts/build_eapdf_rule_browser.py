@@ -16,7 +16,7 @@ from pathlib import Path
 from eapdf_rule_review import REVIEW_PATH, load_review_rules
 import re
 
-import fitz
+import pymupdf as fitz
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]

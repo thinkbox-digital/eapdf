@@ -19,6 +19,15 @@ class MsgSentDateTests {
   static final Instant SENT = Instant.parse("2026-10-23T12:34:56Z");
   @TempDir Path directory;
 
+  @Test
+  void upstreamParserReturnsNullForAbsentDates() {
+    var message = new org.simplejavamail.outlookmessageparser.model.OutlookMessage();
+    assertNull(message.getDate());
+    assertNull(message.getCreationDate());
+    assertNull(message.getLastModificationDate());
+    assertNull(MsgReader.sentDate(message));
+  }
+
   static void fixture(Path source, boolean transport) throws Exception {
     MsgBodySelectionTests.writeMsg(source, 1, false);
     try (var storage = new POIFSFileSystem(new ByteArrayInputStream(Files.readAllBytes(source)))) {

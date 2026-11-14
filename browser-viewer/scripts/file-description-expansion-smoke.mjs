@@ -59,8 +59,8 @@ try{
     window.descriptionPanel.show(doc);
     document.querySelector('#details-panel').scrollTop=document.querySelector('#details-panel').scrollHeight;
   });
-  await page.waitForFunction(()=>[...document.querySelectorAll('.file-description-disclosure')].some(el=>!el.hidden));
-  await page.waitForFunction(()=>[...document.querySelectorAll('.file-card')].some(el=>Number(el.dataset.associatedFileId)>100));
+  await page.waitForFunction(()=>[...document.querySelectorAll('.file-card')].some(row=>
+    Number(row.dataset.associatedFileId)>100&&row.querySelector('.file-description-disclosure:not([hidden])')));
   assert.ok(await page.locator('.file-description-disclosure:not([hidden])').count()>0);
   console.log('PASS: full stored descriptions, simplified previews, Unicode, inert text, keyboard expansion and collapse.');
 }finally{await context.close();}

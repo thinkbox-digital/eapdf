@@ -1728,13 +1728,13 @@
       "type": "library",
       "group": "org.simplejavamail",
       "name": "outlook-message-parser",
-      "version": "1.16.2",
-      "purl": "pkg:maven/org.simplejavamail/outlook-message-parser@1.16.2",
-      "bom-ref": "pkg:maven/org.simplejavamail/outlook-message-parser@1.16.2",
+      "version": "1.16.3",
+      "purl": "pkg:maven/org.simplejavamail/outlook-message-parser@1.16.3",
+      "bom-ref": "pkg:maven/org.simplejavamail/outlook-message-parser@1.16.3",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "9806f725975bce9b2e436839e318d7bb32b1449cc615c42d26ffa2bdb2b75114"
+          "content": "cf7b53f3514deacf54e6862ce38888d5415a76e0677d6e84583fde748905f0de"
         }
       ],
       "properties": [
@@ -1787,7 +1787,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "d218dc00740ae49fdfb7565b363c1b032674ee5ab58b6a60168b1b032d74d196"
+          "content": "2cb90e720a1aa08deed3d5416846bc396494fd2111d7abf9f8aeaf1665df05ad"
         }
       ]
     }

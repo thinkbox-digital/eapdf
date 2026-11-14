@@ -53,6 +53,11 @@ The full reader is the source for shared fixes. `npm run build:lite` selects its
 shared modules and substitutes small adapters for features Lite omits. Do not edit
 generated exports by hand.
 
+The exporter asks the TypeScript compiler's command-line interface for the module
+graph after applying Lite overrides, including type-only imports. Acorn selects
+the shared JavaScript tests. Type-contract tests also use the compiler interface.
+These tools are used during development and are not bundled into either reader.
+
 Lite keeps the reading layout, message/folder navigation, attachments, CSV/XMP
 export and normal PDF text search. It omits Conversations, Portfolio presentation,
 embedded search indexes and large-archive optimizations. Its collection metadata
@@ -69,6 +74,18 @@ The [archive comparison](PDFJS_LARGE_ARCHIVE_COMPARISON.md) records earlier test
 it does not establish normal-viewer speed gains or upstream acceptance.
 
 ## Library patches
+
+The creator delegates MIME assembly to Jakarta Mail / Angus Mail and XMP
+serialization to XMPBox. Our code still maps email fields, EA-PDF profiles,
+source files and document parts. Reconstructed messages keep stable boundaries,
+original attachment bytes and supplied identifiers; missing dates and identifiers
+are not invented. Opaque message and multipart attachments bypass automatic
+parsing. XMP serialization retains the required namespaces and FOAF layout.
+
+Outlook Message Parser 1.16.3 supplies the missing-date fix. Native timestamp
+precision and other preservation repairs remain local until equivalent upstream
+behavior is verified. Keep the custom archive storage: stock PDFBox was more
+memory-intensive in the measured stream-cache and large-archive loading probes.
 
 The renderer keeps four patches, recorded in `third_party/openhtmltopdf/lock.json`.
 A clean rebuild must reproduce their commit and artifact hashes.
@@ -94,4 +111,6 @@ The former web workbench and its deployment files are removed. The Java validato
 is the normal checking tool; Python CLI code remains for regressions and diagnostics.
 
 Rebuild the diagram with `scripts/build_architecture_diagram.py`, passing the
-current creator and validator JARs. It reads versions and rule counts from source.
+current creator and validator JARs. It reads versions and rule counts from source
+and draws arrows downward from each tool to its libraries. Regenerate it before
+every push.

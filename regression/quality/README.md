@@ -27,3 +27,7 @@ normal conversion defaults remain disabled. No visual threshold was relaxed.
 This subset does not restore private corpus or PST visual acceptance. Synthetic
 security regressions live separately in `regression/`. Conversion uses accessibility
 features, disables optional PREMIS, and bounds processing to two jobs.
+
+On November 14, PyMuPDF 2.1 was checked against 1.25.5 using the same six
+baseline PDF pages. Every pixel matched, so the existing reference images and
+comparison threshold are unchanged. The renderer pin and supported import were updated.

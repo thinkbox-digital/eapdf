@@ -153,7 +153,14 @@ class RemainingPreservationTests {
     Assertions.assertEquals(original.references, decoded.references);
     Assertions.assertEquals("<reply@example.org>", decoded.messageId);
     for (String metadata : List.of(PdfMailWriter.buildXmpMetadata(original), PdfMailWriter.buildXmpMetadata(List.of(original), "m"))) {
-      Assertions.assertTrue(metadata.contains("<pdfmailmeta:In-Reply-To><rdf:Bag><rdf:li>&lt;parent@example.org&gt; &lt;other@example.org&gt;</rdf:li>"));
+      var xml = TestSupport.parseMetadata(metadata);
+      var replies = xml.getElementsByTagNameNS("http://www.pdfa.org/eapdf/ns/meta/", "In-Reply-To");
+      Assertions.assertEquals(1, replies.getLength());
+      var bags = ((org.w3c.dom.Element) replies.item(0)).getElementsByTagNameNS("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "Bag");
+      Assertions.assertEquals(1, bags.getLength());
+      var items = ((org.w3c.dom.Element) bags.item(0)).getElementsByTagNameNS("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "li");
+      Assertions.assertEquals(1, items.getLength());
+      Assertions.assertEquals("<parent@example.org> <other@example.org>", items.item(0).getTextContent());
     }
   }
 

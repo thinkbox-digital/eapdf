@@ -1,7 +1,7 @@
 """Independent MuPDF filespec inventory; includes files absent from the name tree."""
 import hashlib, json, sys
 from pathlib import Path
-import fitz
+import pymupdf as fitz
 report = json.loads(Path(sys.argv[1]).read_text())
 results = []
 for item in report['files']:

@@ -1,10 +1,21 @@
 package eapdf;
 
-import java.util.*;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.*;
+import java.util.*;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.schema.XMPSchema;
+import org.apache.xmpbox.type.*;
+import org.apache.xmpbox.xml.XmpSerializer;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-/** Builds metadata from records; PDF publication remains with PdfMailWriter. */
+/** Maps EA-PDF records to XMPBox; PDF publication remains with PdfMailWriter. */
 final class PdfMetadataWriter {
+  private static final String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+  private static final String MAIL = "http://www.pdfa.org/eapdf/ns/meta/";
+  private static final String FOAF = "http://xmlns.com/foaf/0.1/";
   record Asset(String filename, int size, String mime, String checksumMd5, String relationship, boolean sourceSetMember) {}
   interface Assets {
     boolean include(EmailRecord record, AssociatedFile file);
@@ -18,288 +29,193 @@ final class PdfMetadataWriter {
   private final Assets assets;
   PdfMetadataWriter(EapdfConfig config, Assets assets) { this.CONFIG=config; this.assets=assets; }
 
-boolean pdfUaFeaturesEnabled() {
-  return CONFIG.accessibility != null && CONFIG.accessibility.addPdfUaFeatures;
-}
-
-void appendSourceProblems(StringBuilder x, List<EmailRecord> records) {
-  if (records.stream().noneMatch(r -> !r.sourceProblems.isEmpty())) return;
-  x.append("<rdf:Description rdf:about=\"\" xmlns:conversion=\"https://thinkbox.digital/ns/eapdf/conversion/1.0/\">")
-      .append("<conversion:status>INCOMPLETE</conversion:status><conversion:problems><rdf:Seq>");
-  for (EmailRecord record : records) for (String problem : record.sourceProblems)
-    x.append("<rdf:li>").append(Common.xml(record.mailGuid + " | " + record.subject + " | " + problem)).append("</rdf:li>");
-  x.append("</rdf:Seq></conversion:problems></rdf:Description>");
-}
-
-String pdfUaIdentification() {
-  if (!pdfUaFeaturesEnabled()) return "";
-  return "<rdf:Description rdf:about=\"\" xmlns:pdfuaid=\"http://www.aiim.org/pdfua/ns/id/\">"
-      + "<pdfuaid:part>2</pdfuaid:part><pdfuaid:rev>2024</pdfuaid:rev></rdf:Description>";
-}
-
-String chooseEaPdfConformance(EmailRecord r) {
-  return chooseEaPdfConformance(r, null);
-}
-
-String chooseEaPdfConformance(EmailRecord r, String profileOverride) {
-  if (!Common.nz(profileOverride).isBlank()) return profileOverride;
-  if (r != null && !r.embedSourceMessage) return "si";
-  return "s";
-}
-
-String buildXmpMetadata(EmailRecord r) throws Exception {
-  return buildXmpMetadata(r, null);
-}
-
-String buildXmpMetadata(EmailRecord r, String profileOverride) throws Exception {
-  Common.finalizeRecordMetadata(r);
-  Common.requireCreationDate(r);
-  String now = Common.xmpDateNowUtc();
-  String claimDate = LocalDate.now(ZoneOffset.UTC).toString();
-  String title = Common.stripInvalidXml(Common.nz(r.subject).isBlank() ? "Email" : Common.nz(r.subject));
-  String description = buildDescription(r);
-  String producer = Common.productLabel() + " via OpenHTMLtoPDF + Apache PDFBox";
-  String creatorTool = Common.productLabel();
-  String conformance = chooseEaPdfConformance(r, profileOverride);
-  String mailGuid = Common.nz(r.mailGuid).isBlank() ? buildMailGuid(r) : Common.nz(r.mailGuid);
-  StringBuilder x = new StringBuilder();
-
-  x.append("<?xpacket begin=\"\uFEFF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>");
-  x.append("<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">");
-  x.append("<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
-  x.append(" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"");
-  x.append(" xmlns:pdf=\"http://ns.adobe.com/pdf/1.3/\"");
-  x.append(" xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\"");
-  x.append(" xmlns:pdfaid=\"http://www.aiim.org/pdfa/ns/id/\"");
-  x.append(" xmlns:pdfd=\"http://pdfa.org/declarations/\"");
-  x.append(" xmlns:foaf=\"http://xmlns.com/foaf/0.1/\"");
-  x.append(" xmlns:pdfmail=\"http://www.pdfa.org/eapdf/\"");
-  x.append(" xmlns:pdfmailid=\"http://www.pdfa.org/eapdf/ns/id/\"");
-  x.append(" xmlns:pdfmailmeta=\"http://www.pdfa.org/eapdf/ns/meta/\">");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<dc:creator><rdf:Seq><rdf:li>").append(Common.xml(CONFIG.requireCreator())).append("</rdf:li></rdf:Seq></dc:creator>");
-  x.append("<dc:format>application/pdf</dc:format>");
-  x.append("<dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">").append(Common.xml(title)).append("</rdf:li></rdf:Alt></dc:title>");
-  x.append("<dc:description><rdf:Alt><rdf:li xml:lang=\"x-default\">").append(Common.xml(description)).append("</rdf:li></rdf:Alt></dc:description>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdf:Producer>").append(Common.xml(producer)).append("</pdf:Producer>");
-  x.append("<pdf:Keywords>EA-PDF</pdf:Keywords>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<xmp:CreateDate>").append(Common.xml(now)).append("</xmp:CreateDate>");
-  x.append("<xmp:ModifyDate>").append(Common.xml(now)).append("</xmp:ModifyDate>");
-  x.append("<xmp:MetadataDate>").append(Common.xml(now)).append("</xmp:MetadataDate>");
-  x.append("<xmp:CreatorTool>").append(Common.xml(creatorTool)).append("</xmp:CreatorTool>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfaid:part>4</pdfaid:part>");
-  x.append("<pdfaid:rev>2020</pdfaid:rev>");
-  x.append("<pdfaid:conformance>F</pdfaid:conformance>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfmailid:version>1</pdfmailid:version>");
-  x.append("<pdfmailid:rev>2024</pdfmailid:rev>");
-  x.append("<pdfmailid:conformance>").append(Common.xml(conformance)).append("</pdfmailid:conformance>");
-  x.append("</rdf:Description>");
-
-  appendSourceProblems(x, List.of(r));
-  x.append(pdfUaIdentification());
-  appendIsoTs32005Declaration(x, creatorTool, claimDate);
-  appendConversionHistory(x, creatorTool, now, conformance, 1);
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfmailmeta:email><rdf:Bag><rdf:li rdf:parseType=\"Resource\">");
-  appendStringProp(x, "Subject", r.subject);
-  appendStringProp(x, "Raw-From", r.rawFrom);
-  appendStringProp(x, "Raw-To", r.rawTo);
-  appendStringProp(x, "Raw-Cc", r.rawCc);
-  appendStringProp(x, "Raw-Bcc", r.rawBcc);
-  if (!Common.nz(r.sentXmp).isBlank()) appendStringProp(x, "Sent", r.sentXmp);
-  if (shouldEmitRawSent(r)) appendStringProp(x, "Raw-Sent", !Common.nz(r.rawDateHeader).isBlank() ? r.rawDateHeader : r.date);
-  appendStringProp(x, "SizeInBytes", Integer.toString(messageMetadataSize(r)));
-  appendStringProp(x, "NumberAttachments", Integer.toString(Math.max(r.attachmentCount, 0)));
-  appendStringProp(x, "Mail_GUID", mailGuid);
-  appendStringProp(x, "messageid", r.messageId);
-  appendReplyMetadata(x, r);
-  appendFoafSeq(x, "From", r.fromAgents);
-  appendFoafSeq(x, "To", r.toAgents);
-  appendFoafSeq(x, "Cc", r.ccAgents);
-  appendFoafSeq(x, "Bcc", r.bccAgents);
-  x.append("</rdf:li></rdf:Bag></pdfmailmeta:email>");
-
-  x.append("<pdfmailmeta:assets><rdf:Bag>");
-  for (AssociatedFile af : r.associatedFiles) {
-    if (!assets.include(r, af)) continue;
-    x.append("<rdf:li rdf:parseType=\"Resource\">");
-    appendStringProp(x, "Filename", Common.nz(af.filename));
-    appendStringProp(x, "SizeInBytes", Integer.toString(assets.size(r, af)));
-    appendStringProp(x, "ContentType", assets.mime(af, af.filename));
-    appendStringProp(x, "Checksum", Common.nz(af.checksumMd5));
-    x.append("</rdf:li>");
+  boolean pdfUaFeaturesEnabled() {
+    return CONFIG.accessibility != null && CONFIG.accessibility.addPdfUaFeatures;
   }
-  x.append("</rdf:Bag></pdfmailmeta:assets>");
 
-  x.append("<pdfmailmeta:attachments><rdf:Bag>");
-  for (AssociatedFile af : r.associatedFiles) {
-    if (!af.emailAttachment) continue;
-    x.append("<rdf:li rdf:parseType=\"Resource\">");
-    appendStringProp(x, "Filename", Common.nz(af.filename));
-    appendStringProp(x, "SizeInBytes", Integer.toString(assets.size(r, af)));
-    appendStringProp(x, "Content-Type", Common.sourceContentType(af));
-    if (r.embedSourceMessage && !Common.nz(af.checksumMd5).isBlank()) appendStringProp(x, "CheckSum", Common.nz(af.checksumMd5));
-    appendStringProp(x, "Mail_GUID", mailGuid);
-    appendStringProp(x, "Description", assets.description(r, af));
-    x.append("</rdf:li>");
+  String chooseEaPdfConformance(EmailRecord record) { return chooseEaPdfConformance(record, null); }
+  String chooseEaPdfConformance(EmailRecord record, String override) {
+    return !Common.nz(override).isBlank() ? override : record != null && !record.embedSourceMessage ? "si" : "s";
   }
-  x.append("</rdf:Bag></pdfmailmeta:attachments>");
 
-  x.append("</rdf:Description>");
-  x.append("</rdf:RDF></x:xmpmeta><?xpacket end=\"w\"?>");
-  return x.toString();
-}
-
-String buildXmpMetadata(List<EmailRecord> records, String archiveProfile) throws Exception {
-  for (EmailRecord r : records) {
-    Common.finalizeRecordMetadata(r);
-    Common.requireCreationDate(r);
+  String buildXmpMetadata(EmailRecord record) throws Exception { return buildXmpMetadata(record, null); }
+  String buildXmpMetadata(EmailRecord record, String override) throws Exception {
+    return buildMetadata(List.of(record), chooseEaPdfConformance(record, override), false);
   }
-  String now = Common.xmpDateNowUtc();
-  String claimDate = LocalDate.now(ZoneOffset.UTC).toString();
-  String title = Common.stripInvalidXml(buildArchiveTitle(records));
-  String description = buildArchiveDescription(records, archiveProfile);
-  String producer = Common.productLabel() + " via OpenHTMLtoPDF + Apache PDFBox";
-  String creatorTool = Common.productLabel();
-  StringBuilder x = new StringBuilder();
+  String buildXmpMetadata(List<EmailRecord> records, String profile) throws Exception {
+    return buildMetadata(records, profile, true);
+  }
 
-  x.append("<?xpacket begin=\"\uFEFF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>");
-  x.append("<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">");
-  x.append("<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
-  x.append(" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"");
-  x.append(" xmlns:pdf=\"http://ns.adobe.com/pdf/1.3/\"");
-  x.append(" xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\"");
-  x.append(" xmlns:pdfaid=\"http://www.aiim.org/pdfa/ns/id/\"");
-  x.append(" xmlns:pdfd=\"http://pdfa.org/declarations/\"");
-  x.append(" xmlns:foaf=\"http://xmlns.com/foaf/0.1/\"");
-  x.append(" xmlns:pdfmail=\"http://www.pdfa.org/eapdf/\"");
-  x.append(" xmlns:pdfmailid=\"http://www.pdfa.org/eapdf/ns/id/\"");
-  x.append(" xmlns:pdfmailmeta=\"http://www.pdfa.org/eapdf/ns/meta/\">");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<dc:creator><rdf:Seq><rdf:li>").append(Common.xml(CONFIG.requireCreator())).append("</rdf:li></rdf:Seq></dc:creator>");
-  x.append("<dc:format>application/pdf</dc:format>");
-  x.append("<dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">").append(Common.xml(title)).append("</rdf:li></rdf:Alt></dc:title>");
-  x.append("<dc:description><rdf:Alt><rdf:li xml:lang=\"x-default\">").append(Common.xml(description)).append("</rdf:li></rdf:Alt></dc:description>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdf:Producer>").append(Common.xml(producer)).append("</pdf:Producer>");
-  x.append("<pdf:Keywords>EA-PDF</pdf:Keywords>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<xmp:CreateDate>").append(Common.xml(now)).append("</xmp:CreateDate>");
-  x.append("<xmp:ModifyDate>").append(Common.xml(now)).append("</xmp:ModifyDate>");
-  x.append("<xmp:MetadataDate>").append(Common.xml(now)).append("</xmp:MetadataDate>");
-  x.append("<xmp:CreatorTool>").append(Common.xml(creatorTool)).append("</xmp:CreatorTool>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfaid:part>4</pdfaid:part>");
-  x.append("<pdfaid:rev>2020</pdfaid:rev>");
-  x.append("<pdfaid:conformance>F</pdfaid:conformance>");
-  x.append("</rdf:Description>");
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfmailid:version>1</pdfmailid:version>");
-  x.append("<pdfmailid:rev>2024</pdfmailid:rev>");
-  x.append("<pdfmailid:conformance>").append(Common.xml(archiveProfile)).append("</pdfmailid:conformance>");
-  x.append("</rdf:Description>");
-
-  appendSourceProblems(x, records);
-  x.append(pdfUaIdentification());
-  appendIsoTs32005Declaration(x, creatorTool, claimDate);
-  appendConversionHistory(x, creatorTool, now, archiveProfile, records.size());
-
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfmailmeta:Mail_GUID><rdf:Seq>");
-  for (EmailRecord r : records) {
-    if (!Common.nz(r.mailGuid).isBlank()) {
-      x.append("<rdf:li>").append(Common.xml(r.mailGuid)).append("</rdf:li>");
+  private String buildMetadata(List<EmailRecord> records, String profile, boolean archive) throws Exception {
+    for (EmailRecord record : records) {
+      Common.finalizeRecordMetadata(record);
+      Common.requireCreationDate(record);
     }
-  }
-  x.append("</rdf:Seq></pdfmailmeta:Mail_GUID>");
-  x.append("<pdfmailmeta:messageid><rdf:Seq>");
-  for (EmailRecord r : records) {
-    if (!Common.nz(r.messageId).isBlank()) {
-      x.append("<rdf:li>").append(Common.xml(r.messageId)).append("</rdf:li>");
+    EmailRecord first = records.isEmpty() ? null : records.getFirst();
+    String title = archive ? buildArchiveTitle(records) : Common.nz(first.subject).isBlank() ? "Email" : first.subject;
+    String description = archive ? buildArchiveDescription(records, profile) : buildDescription(first);
+    XMPMetadata metadata = standardMetadata(records, profile, title, description);
+    XMPSchema mail = metadata.createAndAddDefaultSchema("pdfmailmeta", MAIL);
+    if (archive) {
+      ArrayProperty guids = array(mail, "Mail_GUID", Cardinality.Seq);
+      ArrayProperty identifiers = array(mail, "messageid", Cardinality.Seq);
+      for (EmailRecord record : records) {
+        item(guids, record.mailGuid);
+        item(identifiers, record.messageId);
+      }
     }
-  }
-  x.append("</rdf:Seq></pdfmailmeta:messageid>");
-
-  x.append("<pdfmailmeta:email><rdf:Bag>");
-  for (EmailRecord r : records) {
-    x.append("<rdf:li rdf:parseType=\"Resource\">");
-    appendStringProp(x, "Subject", r.subject);
-    appendStringProp(x, "Raw-From", r.rawFrom);
-    appendStringProp(x, "Raw-To", r.rawTo);
-    appendStringProp(x, "Raw-Cc", r.rawCc);
-    appendStringProp(x, "Raw-Bcc", r.rawBcc);
-    if (!Common.nz(r.sentXmp).isBlank()) appendStringProp(x, "Sent", r.sentXmp);
-    if (shouldEmitRawSent(r)) appendStringProp(x, "Raw-Sent", !Common.nz(r.rawDateHeader).isBlank() ? r.rawDateHeader : r.date);
-    appendStringProp(x, "SizeInBytes", Integer.toString(messageMetadataSize(r)));
-    appendStringProp(x, "NumberAttachments", Integer.toString(Math.max(r.attachmentCount, 0)));
-    appendStringProp(x, "Mail_GUID", r.mailGuid);
-    appendStringProp(x, "messageid", r.messageId);
-    appendReplyMetadata(x, r);
-    appendFoafSeq(x, "From", r.fromAgents);
-    appendFoafSeq(x, "To", r.toAgents);
-    appendFoafSeq(x, "Cc", r.ccAgents);
-    appendFoafSeq(x, "Bcc", r.bccAgents);
-    x.append("</rdf:li>");
-  }
-  x.append("</rdf:Bag></pdfmailmeta:email>");
-
-  x.append("<pdfmailmeta:assets><rdf:Bag>");
-  if (!"ci".equals(archiveProfile)) {
-    for (Asset plan : assets.archive(records)) {
-      if (!"Source".equals(plan.relationship) && !plan.sourceSetMember) continue;
-      x.append("<rdf:li rdf:parseType=\"Resource\">");
-      appendStringProp(x, "Filename", plan.filename);
-      appendStringProp(x, "SizeInBytes", Integer.toString(plan.size));
-      appendStringProp(x, "ContentType", plan.mime);
-      appendStringProp(x, "Checksum", plan.checksumMd5);
-      if ("Source".equals(plan.relationship)) appendStringProp(x, "NumberMessages", "1");
-      x.append("</rdf:li>");
+    ArrayProperty emails = array(mail, "email", Cardinality.Bag);
+    for (EmailRecord record : records) {
+      AbstractStructuredType email = resource(emails);
+      text(email, "Subject", record.subject);
+      text(email, "Raw-From", record.rawFrom);
+      text(email, "Raw-To", record.rawTo);
+      text(email, "Raw-Cc", record.rawCc);
+      text(email, "Raw-Bcc", record.rawBcc);
+      text(email, "Sent", record.sentXmp);
+      if (shouldEmitRawSent(record)) text(email, "Raw-Sent", !Common.nz(record.rawDateHeader).isBlank() ? record.rawDateHeader : record.date);
+      text(email, "SizeInBytes", Integer.toString(messageMetadataSize(record)));
+      text(email, "NumberAttachments", Integer.toString(Math.max(record.attachmentCount, 0)));
+      text(email, "Mail_GUID", record.mailGuid);
+      text(email, "messageid", record.messageId);
+      if (!record.inReplyTo.isEmpty()) {
+        ArrayProperty replies = array(email, "In-Reply-To", Cardinality.Bag);
+        for (String identifier : record.inReplyTo) item(replies, identifier);
+      }
+      agents(email, "From", record.fromAgents);
+      agents(email, "To", record.toAgents);
+      agents(email, "Cc", record.ccAgents);
+      agents(email, "Bcc", record.bccAgents);
     }
-  }
-  x.append("</rdf:Bag></pdfmailmeta:assets>");
-
-  x.append("<pdfmailmeta:attachments><rdf:Bag>");
-  for (EmailRecord r : records) {
-    for (AssociatedFile af : r.associatedFiles) {
-      if (!af.emailAttachment) continue;
-      x.append("<rdf:li rdf:parseType=\"Resource\">");
-      appendStringProp(x, "Filename", Common.nz(af.filename));
-      appendStringProp(x, "SizeInBytes", Integer.toString(assets.size(r, af)));
-      appendStringProp(x, "Content-Type", Common.sourceContentType(af));
-      if (r.embedSourceMessage && !Common.nz(af.checksumMd5).isBlank()) appendStringProp(x, "CheckSum", Common.nz(af.checksumMd5));
-      appendStringProp(x, "Mail_GUID", Common.nz(r.mailGuid));
-      appendStringProp(x, "Description", assets.description(r, af));
-      x.append("</rdf:li>");
+    ArrayProperty sources = array(mail, "assets", Cardinality.Bag);
+    if (archive) {
+      if (!"ci".equals(profile)) for (Asset asset : assets.archive(records)) {
+        if (!"Source".equals(asset.relationship) && !asset.sourceSetMember) continue;
+        AbstractStructuredType source = resource(sources);
+        text(source, "Filename", asset.filename);
+        text(source, "SizeInBytes", Integer.toString(asset.size));
+        text(source, "ContentType", asset.mime);
+        text(source, "Checksum", asset.checksumMd5);
+        if ("Source".equals(asset.relationship)) text(source, "NumberMessages", "1");
+      }
+    } else for (AssociatedFile file : first.associatedFiles) {
+      if (!assets.include(first, file)) continue;
+      AbstractStructuredType source = resource(sources);
+      text(source, "Filename", file.filename);
+      text(source, "SizeInBytes", Integer.toString(assets.size(first, file)));
+      text(source, "ContentType", assets.mime(file, file.filename));
+      text(source, "Checksum", file.checksumMd5);
     }
+    ArrayProperty attachments = array(mail, "attachments", Cardinality.Bag);
+    for (EmailRecord record : records) for (AssociatedFile file : record.associatedFiles) {
+      if (!file.emailAttachment) continue;
+      AbstractStructuredType attachment = resource(attachments);
+      text(attachment, "Filename", file.filename);
+      text(attachment, "SizeInBytes", Integer.toString(assets.size(record, file)));
+      text(attachment, "Content-Type", Common.sourceContentType(file));
+      if (record.embedSourceMessage) text(attachment, "CheckSum", file.checksumMd5);
+      text(attachment, "Mail_GUID", record.mailGuid);
+      text(attachment, "Description", assets.description(record, file));
+    }
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    new XmpSerializer() {
+      @Override public void serializeFields(Document document, Element parent, List<AbstractField> fields,
+                                            String namespace, String prefix, boolean wrap) {
+        if (fields.stream().noneMatch(field -> field instanceof FoafAgent)) {
+          super.serializeFields(document, parent, fields, namespace, prefix, wrap);
+          return;
+        }
+        // Retain EA-PDF's existing rdf:Description/FOAF attribute representation.
+        for (AbstractField field : fields) {
+          MailAgent agent = ((FoafAgent) field).agent;
+          Element item = document.createElementNS(RDF, "rdf:li");
+          Element person = document.createElementNS(RDF, "rdf:Description");
+          person.setAttributeNS(FOAF, "foaf:mbox", Common.mailto(agent.email));
+          if (!Common.nz(agent.name).isBlank()) person.setAttributeNS(FOAF, "foaf:name", Common.normalizeBody(agent.name).replace('\n', ' ').replace('\t', ' '));
+          item.appendChild(person);
+          parent.appendChild(item);
+        }
+      }
+    }.serialize(metadata, output, true);
+    return output.toString(StandardCharsets.UTF_8);
   }
-  x.append("</rdf:Bag></pdfmailmeta:attachments>");
 
-  x.append("</rdf:Description>");
-  x.append("</rdf:RDF></x:xmpmeta><?xpacket end=\"w\"?>");
-  return x.toString();
-}
+  private XMPMetadata standardMetadata(List<EmailRecord> records, String profile, String title, String description) {
+    XMPMetadata metadata = XMPMetadata.createXMPMetadata();
+    metadata.setEndXPacket("w");
+    var dc = metadata.createAndAddDublinCoreSchema();
+    dc.addCreator(Common.normalizeBody(CONFIG.requireCreator()));
+    dc.setFormat("application/pdf");
+    dc.setTitle(Common.normalizeBody(title));
+    dc.setDescription(Common.normalizeBody(description));
+    String tool = Common.productLabel(), now = Common.xmpDateNowUtc();
+    var pdf = metadata.createAndAddAdobePDFSchema();
+    pdf.setProducer(tool + " via OpenHTMLtoPDF + Apache PDFBox");
+    pdf.setKeywords("EA-PDF");
+    var basic = metadata.createAndAddXMPBasicSchema();
+    text(basic, "CreateDate", now);
+    text(basic, "ModifyDate", now);
+    text(basic, "MetadataDate", now);
+    basic.setCreatorTool(tool);
+    XMPSchema pdfa = metadata.createAndAddDefaultSchema("pdfaid", "http://www.aiim.org/pdfa/ns/id/");
+    text(pdfa, "part", "4"); text(pdfa, "rev", "2020"); text(pdfa, "conformance", "F");
+    XMPSchema identification = metadata.createAndAddDefaultSchema("pdfmailid", "http://www.pdfa.org/eapdf/ns/id/");
+    identification.addNamespace("http://www.pdfa.org/eapdf/", "pdfmail");
+    text(identification, "version", "1"); text(identification, "rev", "2024"); text(identification, "conformance", profile);
+    if (records.stream().anyMatch(record -> !record.sourceProblems.isEmpty())) {
+      XMPSchema conversion = metadata.createAndAddDefaultSchema("conversion", "https://thinkbox.digital/ns/eapdf/conversion/1.0/");
+      text(conversion, "status", "INCOMPLETE");
+      ArrayProperty problems = array(conversion, "problems", Cardinality.Seq);
+      for (EmailRecord record : records) for (String problem : record.sourceProblems)
+        item(problems, record.mailGuid + " | " + record.subject + " | " + problem);
+    }
+    if (pdfUaFeaturesEnabled()) {
+      XMPSchema ua = metadata.createAndAddDefaultSchema("pdfuaid", "http://www.aiim.org/pdfua/ns/id/");
+      text(ua, "part", "2"); text(ua, "rev", "2024");
+    }
+    XMPSchema declarations = metadata.createAndAddDefaultSchema("pdfd", "http://pdfa.org/declarations/");
+    AbstractStructuredType declaration = resource(array(declarations, "declarations", Cardinality.Bag));
+    text(declaration, "conformsTo", "https://pdfa.org/declarations#iso32005");
+    AbstractStructuredType claim = resource(array(declaration, "claimData", Cardinality.Bag));
+    text(claim, "claimBy", tool); text(claim, "claimDate", LocalDate.now(ZoneOffset.UTC).toString());
+    var management = metadata.createAndAddXMPMediaManagementSchema();
+    management.setDocumentID("uuid:" + UUID.randomUUID());
+    management.setInstanceID("uuid:" + UUID.randomUUID());
+    ResourceEventType event = new ResourceEventType(metadata);
+    event.setAction("converted"); event.setSoftwareAgent(tool);
+    text(event, "when", now);
+    event.setParameters("Converted " + records.size() + (records.size() == 1 ? " email" : " emails") + " to PDF/mail-1" + profile + ".");
+    array(management, "History", Cardinality.Seq).addProperty(event);
+    return metadata;
+  }
+
+  private static void text(AbstractStructuredType parent, String name, String value) {
+    if (!Common.nz(value).isBlank()) parent.addProperty(parent.createTextType(name, Common.normalizeBody(value)));
+  }
+  private static ArrayProperty array(AbstractStructuredType parent, String name, Cardinality kind) {
+    ArrayProperty result = parent.createArrayProperty(name, kind);
+    parent.addProperty(result);
+    return result;
+  }
+  private static AbstractStructuredType resource(ArrayProperty parent) {
+    var result = new DefinedStructuredType(parent.getMetadata(), parent.getNamespace(), parent.getPrefix(), "li");
+    parent.addProperty(result);
+    return result;
+  }
+  private static void item(ArrayProperty parent, String value) {
+    if (!Common.nz(value).isBlank()) parent.addProperty(new TextType(parent.getMetadata(), RDF, "rdf", "li", Common.normalizeBody(value)));
+  }
+  private static final class FoafAgent extends DefinedStructuredType {
+    final MailAgent agent;
+    FoafAgent(XMPMetadata metadata, MailAgent agent) { super(metadata, FOAF, "foaf", "li"); this.agent = agent; }
+  }
+  private static void agents(AbstractStructuredType parent, String property, List<MailAgent> agents) {
+    if (agents == null) return;
+    List<MailAgent> selected = agents.stream().filter(agent -> Common.smtpMailbox(agent.email)).toList();
+    if (selected.isEmpty()) return;
+    ArrayProperty sequence = array(parent, property, Cardinality.Seq);
+    for (MailAgent agent : selected) sequence.addProperty(new FoafAgent(parent.getMetadata(), agent));
+  }
 
 String buildDescription(EmailRecord r) {
   StringBuilder d = new StringBuilder("EA-PDF email archive");
@@ -309,13 +225,6 @@ String buildDescription(EmailRecord r) {
   if (!r.archiveEmails.isEmpty()) d.append("; archiveEmails=").append(String.join(", ", r.archiveEmails));
   if (!Common.sourceDerivation(r).isBlank()) d.append("; ").append(Common.sourceDerivation(r));
   return d.toString();
-}
-
-void appendReplyMetadata(StringBuilder metadata, EmailRecord record) {
-  if (record.inReplyTo.isEmpty()) return;
-  metadata.append("<pdfmailmeta:In-Reply-To><rdf:Bag>");
-  for (String identifier : record.inReplyTo) metadata.append("<rdf:li>").append(Common.xml(identifier)).append("</rdf:li>");
-  metadata.append("</rdf:Bag></pdfmailmeta:In-Reply-To>");
 }
 
 String buildArchiveDescription(List<EmailRecord> records, String archiveProfile) {
@@ -348,34 +257,6 @@ String buildArchiveTitle(List<EmailRecord> records) {
   return "Email Archive (" + records.size() + " messages)";
 }
 
-String buildMailGuid(EmailRecord r) throws Exception {
-  Common.finalizeRecordMetadata(r);
-  return Common.nz(r.mailGuid);
-}
-
-void appendStringProp(StringBuilder x, String prop, String value) {
-  if (Common.nz(value).isBlank()) return;
-  x.append("<pdfmailmeta:").append(prop).append(">")
-   .append(Common.xml(value))
-   .append("</pdfmailmeta:").append(prop).append(">");
-}
-
-void appendFoafSeq(StringBuilder x, String prop, List<MailAgent> agents) {
-  if (agents == null || agents.isEmpty()) return;
-  agents = agents.stream().filter(agent -> Common.smtpMailbox(agent.email)).toList();
-  if (agents.isEmpty()) return;
-  x.append("<pdfmailmeta:").append(prop).append("><rdf:Seq>");
-  for (MailAgent a : agents) {
-    String email = Common.nz(a.email);
-    if (email.isBlank()) continue;
-    x.append("<rdf:li><rdf:Description");
-    x.append(" foaf:mbox=\"").append(Common.xmlAttr(Common.mailto(email))).append("\"");
-    if (!Common.nz(a.name).isBlank()) x.append(" foaf:name=\"").append(Common.xmlAttr(a.name)).append("\"");
-    x.append("/></rdf:li>");
-  }
-  x.append("</rdf:Seq></pdfmailmeta:").append(prop).append(">");
-}
-
 boolean shouldEmitRawSent(EmailRecord r) {
   String raw = Common.nz(r.rawDateHeader).trim();
   if (raw.isBlank()) return false;
@@ -404,31 +285,4 @@ int messageMetadataSize(EmailRecord r) {
   }
 }
 
-void appendIsoTs32005Declaration(StringBuilder x, String claimBy, String claimDate) {
-  x.append("<rdf:Description rdf:about=\"\">");
-  x.append("<pdfd:declarations><rdf:Bag><rdf:li rdf:parseType=\"Resource\">");
-  x.append("<pdfd:conformsTo>https://pdfa.org/declarations#iso32005</pdfd:conformsTo>");
-  x.append("<pdfd:claimData><rdf:Bag><rdf:li rdf:parseType=\"Resource\">");
-  x.append("<pdfd:claimBy>").append(Common.xml(claimBy)).append("</pdfd:claimBy>");
-  x.append("<pdfd:claimDate>").append(Common.xml(claimDate)).append("</pdfd:claimDate>");
-  x.append("</rdf:li></rdf:Bag></pdfd:claimData>");
-  x.append("</rdf:li></rdf:Bag></pdfd:declarations>");
-  x.append("</rdf:Description>");
-}
-
-void appendConversionHistory(StringBuilder x, String tool, String timestamp, String profile, int messages) {
-  String documentId = "uuid:" + UUID.randomUUID();
-  String instanceId = "uuid:" + UUID.randomUUID();
-  x.append("<rdf:Description rdf:about=\"\" xmlns:xmpMM=\"http://ns.adobe.com/xap/1.0/mm/\"");
-  x.append(" xmlns:stEvt=\"http://ns.adobe.com/xap/1.0/sType/ResourceEvent#\">");
-  x.append("<xmpMM:DocumentID>").append(documentId).append("</xmpMM:DocumentID>");
-  x.append("<xmpMM:InstanceID>").append(instanceId).append("</xmpMM:InstanceID>");
-  x.append("<xmpMM:History><rdf:Seq><rdf:li rdf:parseType=\"Resource\">");
-  x.append("<stEvt:action>converted</stEvt:action>");
-  x.append("<stEvt:softwareAgent>").append(Common.xml(tool)).append("</stEvt:softwareAgent>");
-  x.append("<stEvt:when>").append(Common.xml(timestamp)).append("</stEvt:when>");
-  x.append("<stEvt:parameters>Converted ").append(messages).append(messages == 1 ? " email" : " emails");
-  x.append(" to PDF/mail-1").append(Common.xml(profile)).append(".</stEvt:parameters>");
-  x.append("</rdf:li></rdf:Seq></xmpMM:History></rdf:Description>");
-}
 }

@@ -284,14 +284,8 @@ class MsgReader {
   }
 
   static Date sentDate(OutlookMessage message) {
-    try {
-      Date transportDate = message.getDate();
-      if (transportDate != null) return transportDate;
-    } catch (NullPointerException absentTransportDate) {
-      // Parser 1.16.2 clones a null Date when transport headers are absent.
-      // The native submission timestamp remains available independently.
-    }
-    return message.getClientSubmitTime();
+    Date transportDate = message.getDate();
+    return transportDate != null ? transportDate : message.getClientSubmitTime();
   }
 
   static String nativeSentXmp(Path path) throws IOException {
