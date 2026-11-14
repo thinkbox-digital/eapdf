@@ -2,4 +2,4 @@
 PyMuPDF==1.25.5
 # Independent PDF object checks and deliberate-loss tests.
 pikepdf==10.18.1
-olefile==0.46
+olefile==0.47
