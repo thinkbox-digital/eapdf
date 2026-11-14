@@ -1,5 +1,5 @@
 # Website tooling is separate from the PDF manual build.
 mkdocs==1.6.1
-mkdocs-material==9.8.0
+mkdocs-material==9.8.1
 markdownify==1.2.3
 beautifulsoup4==4.15.0
