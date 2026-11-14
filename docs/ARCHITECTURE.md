@@ -39,6 +39,16 @@ The browser reader runs without Java or a server.
 
 ## Maintained Lite viewer export
 
+Both editions share the message-download scope decision. Original-byte message
+downloads require a declared standalone profile, complete relevant inspection,
+one recognized message and ownership of every page. Otherwise only proven body
+pages can be exported. An opt-in page-only PDF.js extraction mode drops inherited
+files, metadata, annotations, structure and DPart back-references. Its distinct
+worker action fails closed against older workers. Default upstream extraction and
+the explicit Portfolio whole-file action retain their behavior.
+Both patch recipes include upstream PDF.js PR #22521 as patch 0010 for RTL glyph
+ordering; this correction does not introduce the Full reader's archive optimizations.
+
 The full reader is the source for shared fixes. `npm run build:lite` selects its
 shared modules and substitutes small adapters for features Lite omits. Do not edit
 generated exports by hand.

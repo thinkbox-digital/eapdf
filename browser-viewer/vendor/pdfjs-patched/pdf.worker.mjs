@@ -25288,6 +25288,9 @@ class fonts_Glyph {
   get category() {
     return shadow(this, "category", getCharUnicodeCategory(this.unicode), true);
   }
+  get normalizedUnicode() {
+    return shadow(this, "normalizedUnicode", normalizeUnicode(this.unicode), true);
+  }
 }
 function int16(b0, b1) {
   return (b0 << 8) + b1;
@@ -32474,14 +32477,13 @@ function isOdd(i) {
 function isEven(i) {
   return (i & 1) === 0;
 }
-function findUnequal(arr, start, value) {
-  let j, jj;
-  for (j = start, jj = arr.length; j < jj; ++j) {
+function findUnequal(arr, start, value, end = arr.length) {
+  for (let j = start; j < end; ++j) {
     if (arr[j] !== value) {
       return j;
     }
   }
-  return j;
+  return end;
 }
 function reverseValues(arr, start, end) {
   for (let i = start, j = end - 1; i < j; ++i, --j) {
@@ -32504,8 +32506,10 @@ function createBidiText(str, isLTR, vertical = false) {
 }
 const chars = [];
 const types = [];
-function bidi(str, startLevel = -1, vertical = false) {
+function bidi(text, startLevel = -1, vertical = false) {
   let isLTR = true;
+  const glyphs = Array.isArray(text) ? text : null;
+  const str = glyphs ? glyphs.join("") : text;
   const strLength = str.length;
   if (strLength === 0 || vertical) {
     return createBidiText(str, isLTR, vertical);
@@ -32677,6 +32681,17 @@ function bidi(str, startLevel = -1, vertical = false) {
       lowestOddLevel = level;
     }
   }
+  if (glyphs) {
+    let pos = 0;
+    for (const glyph of glyphs) {
+      const end = pos + glyph.length;
+      if (glyph.length > 1 && findUnequal(levels, pos + 1, levels[pos], end) === end) {
+        chars[pos] = glyph;
+        chars.fill("", pos + 1, end);
+      }
+      pos = end;
+    }
+  }
   for (level = highestLevel; level >= lowestOddLevel; --level) {
     let start = -1;
     for (i = 0, ii = levels.length; i < ii; ++i) {
@@ -32693,13 +32708,7 @@ function bidi(str, startLevel = -1, vertical = false) {
       reverseValues(chars, start, levels.length);
     }
   }
-  for (i = 0, ii = chars.length; i < ii; ++i) {
-    const ch = chars[i];
-    if (ch === "<" || ch === ">") {
-      chars[i] = "";
-    }
-  }
-  return createBidiText(chars.join(""), isLTR);
+  return createBidiText(chars.join("").replaceAll(/[<>]/g, ""), isLTR);
 }
 
 ;// ./src/core/font_substitutions.js
@@ -36090,11 +36099,7 @@ class PartialEvaluator {
       textContentItem.textAdvanceScale = scaleFactor;
     }
     function runBidiTransform(textChunk) {
-      let text = textChunk.str.join("");
-      if (!disableNormalization) {
-        text = normalizeUnicode(text);
-      }
-      const bidiResult = bidi(text, -1, textChunk.vertical);
+      const bidiResult = bidi(textChunk.str, -1, textChunk.vertical);
       return {
         str: bidiResult.str,
         dir: bidiResult.dir,
@@ -36333,7 +36338,7 @@ class PartialEvaluator {
           intersector?.addExtraChar(" ");
         }
         if (!intersector) {
-          textChunk.str.push(glyphUnicode);
+          textChunk.str.push(disableNormalization ? glyphUnicode : glyph.normalizedUnicode);
         }
         if (charSpacing) {
           if (!font.vertical) {
@@ -63476,8 +63481,10 @@ class PDFEditor {
   constructor({
     useObjectStreams = true,
     title = "",
-    author = ""
+    author = "",
+    pageOnly = false
   } = {}) {
+    this.pageOnly = pageOnly;
     [this.rootRef, this.rootDict] = this.newDict;
     [this.infoRef, this.infoDict] = this.newDict;
     [this.pagesRef, this.pagesDict] = this.newDict;
@@ -63574,6 +63581,14 @@ class PDFEditor {
       dict = obj;
     }
     if (dict) {
+      if (this.pageOnly) {
+        if (dict.has("EF") || isName(dict.get("Type"), "Filespec") || isName(dict.get("Type"), "EmbeddedFile")) {
+          return null;
+        }
+        for (const key of ["AF", "Metadata", "PieceInfo"]) {
+          dict.delete(key);
+        }
+      }
       for (const [key, rawObj] of dict.getRawEntries()) {
         const postponedActions = rawObj instanceof Ref && postponedRefCopies.get(rawObj);
         if (postponedActions) {
@@ -64151,6 +64166,9 @@ class PDFEditor {
     return this.writePDF();
   }
   async #collectDocumentData(documentData) {
+    if (this.pageOnly) {
+      return;
+    }
     const {
       document: {
         pdfManager,
@@ -64183,6 +64201,9 @@ class PDFEditor {
     }
   }
   async #postCollectPageData(pageData) {
+    if (this.pageOnly) {
+      return;
+    }
     const {
       page: {
         xref,
@@ -65200,7 +65221,12 @@ class PDFEditor {
       ref: oldPageRef
     } = page;
     const pageRef = this.newRef;
-    const pageDict = this.xref[pageRef.num] = this.cloneDict(page.pageDict);
+    const pageDict = this.xref[pageRef.num] = this.pageOnly ? new Dict() : this.cloneDict(page.pageDict);
+    if (this.pageOnly) {
+      pageDict.set("Type", Name.get("Page"));
+      pageDict.set("Contents", page.pageDict.getRaw("Contents"));
+      pageDict.setIfDefined("Group", page.pageDict.getRaw("Group"));
+    }
     oldRefMapping.put(oldPageRef, pageRef);
     if (pointingNamedDestinations) {
       for (const pointingDest of pointingNamedDestinations) {
@@ -65707,7 +65733,7 @@ class PDFEditor {
   }
   #makeInfo() {
     const infoMap = new Map();
-    if (this.isSingleFile) {
+    if (this.isSingleFile && !this.pageOnly) {
       const firstRealPage = this.oldPages.find(p => !!p);
       const {
         xref: {
@@ -65740,7 +65766,7 @@ class PDFEditor {
     return infoMap;
   }
   async #makeEncrypt() {
-    if (!this.isSingleFile) {
+    if (!this.isSingleFile || this.pageOnly) {
       return [null, null, null];
     }
     const firstRealPage = this.oldPages.find(p => !!p);
@@ -66426,96 +66452,104 @@ class WorkerMessageHandler {
     handler.on("GetCalculationOrderIds", function () {
       return pdfManager.ensureDoc("calculationOrderIds");
     });
-    handler.on("ExtractPages", async function ({
-      pageInfos,
-      annotationStorage
-    }) {
-      if (!pageInfos) {
-        warn("extractPages: nothing to extract.");
-        return null;
-      }
-      if (!Array.isArray(pageInfos)) {
-        pageInfos = [pageInfos];
-      }
-      let managers = null,
-        newDocumentId = 0;
-      for (const pageInfo of pageInfos) {
-        if (pageInfo.image) {
-          continue;
+    for (const action of ["ExtractPages", "ExtractPageContent"]) {
+      handler.on(action, async function ({
+        pageInfos,
+        annotationStorage
+      }) {
+        const pageOnly = action === "ExtractPageContent";
+        if (pageOnly) {
+          annotationStorage = null;
         }
-        if (pageInfo.document === null) {
-          pageInfo.document = pdfManager.pdfDocument;
-        } else if (ArrayBuffer.isView(pageInfo.document)) {
-          const manager = new LocalPdfManager({
-            source: pageInfo.document,
-            docId: `${docId}_extractPages_${newDocumentId++}`,
-            handler,
-            password: pageInfo.password ?? null,
-            evaluatorOptions: Object.assign({}, pdfManager.evaluatorOptions)
-          });
-          (managers ??= []).push(manager);
-          let recoveryMode = false;
-          let isValid = true;
-          while (true) {
-            try {
-              await manager.requestLoadedStream();
-              await manager.initDocument(recoveryMode);
-              break;
-            } catch (e) {
-              if (e instanceof XRefParseException) {
-                if (recoveryMode === false) {
-                  recoveryMode = true;
-                  continue;
+        if (!pageInfos) {
+          warn("extractPages: nothing to extract.");
+          return null;
+        }
+        if (!Array.isArray(pageInfos)) {
+          pageInfos = [pageInfos];
+        }
+        let managers = null,
+          newDocumentId = 0;
+        for (const pageInfo of pageInfos) {
+          if (pageInfo.image) {
+            continue;
+          }
+          if (pageInfo.document === null) {
+            pageInfo.document = pdfManager.pdfDocument;
+          } else if (ArrayBuffer.isView(pageInfo.document)) {
+            const manager = new LocalPdfManager({
+              source: pageInfo.document,
+              docId: `${docId}_extractPages_${newDocumentId++}`,
+              handler,
+              password: pageInfo.password ?? null,
+              evaluatorOptions: Object.assign({}, pdfManager.evaluatorOptions)
+            });
+            (managers ??= []).push(manager);
+            let recoveryMode = false;
+            let isValid = true;
+            while (true) {
+              try {
+                await manager.requestLoadedStream();
+                await manager.initDocument(recoveryMode);
+                break;
+              } catch (e) {
+                if (e instanceof XRefParseException) {
+                  if (recoveryMode === false) {
+                    recoveryMode = true;
+                    continue;
+                  } else {
+                    isValid = false;
+                    warn("extractPages: XRefParseException.");
+                  }
+                } else if (e instanceof PasswordException) {
+                  try {
+                    const password = await getPassword(e);
+                    manager.updatePassword(password);
+                  } catch {
+                    isValid = false;
+                    warn("extractPages: invalid password.");
+                  }
                 } else {
                   isValid = false;
-                  warn("extractPages: XRefParseException.");
+                  warn("extractPages: invalid document.");
                 }
-              } else if (e instanceof PasswordException) {
-                try {
-                  const password = await getPassword(e);
-                  manager.updatePassword(password);
-                } catch {
-                  isValid = false;
-                  warn("extractPages: invalid password.");
+                if (!isValid) {
+                  break;
                 }
-              } else {
-                isValid = false;
-                warn("extractPages: invalid document.");
-              }
-              if (!isValid) {
-                break;
               }
             }
-          }
-          if (!isValid) {
-            pageInfo.document = null;
-          } else if (await manager.ensureDoc("hasOnlyXfa")) {
-            pageInfo.document = null;
-            warn("extractPages does not support pure XFA documents.");
+            if (!isValid) {
+              pageInfo.document = null;
+            } else if (await manager.ensureDoc("hasOnlyXfa")) {
+              pageInfo.document = null;
+              warn("extractPages does not support pure XFA documents.");
+            } else {
+              pageInfo.document = manager.pdfDocument;
+            }
           } else {
-            pageInfo.document = manager.pdfDocument;
+            pageInfo.document = null;
+            warn("extractPages: invalid document.");
           }
-        } else {
-          pageInfo.document = null;
-          warn("extractPages: invalid document.");
         }
-      }
-      let task;
-      try {
-        const pdfEditor = new PDFEditor();
-        task = new WorkerTask(`ExtractPages: ${pageInfos.length} page(s)`);
-        startWorkerTask(task);
-        return await pdfEditor.extractPages(pageInfos, annotationStorage, pdfManager.pdfDocument, handler, task);
-      } catch (reason) {
-        warn(`extractPages: "${reason}".`);
-        return null;
-      } finally {
-        if (task) {
-          finishWorkerTask(task);
+        let task;
+        try {
+          const pdfEditor = new PDFEditor({
+            pageOnly
+          });
+          task = new WorkerTask(`ExtractPages: ${pageInfos.length} page(s)`);
+          startWorkerTask(task);
+          return await pdfEditor.extractPages(pageInfos, annotationStorage, pdfManager.pdfDocument, handler, task);
+        } catch (reason) {
+          warn(`extractPages: "${reason}".`);
+          return null;
+        } finally {
+          if (task) {
+            finishWorkerTask(task);
+          }
+          managers?.forEach(manager => manager.terminate(new AbortException("ExtractPages was finished.")));
         }
-        managers?.forEach(manager => manager.terminate(new AbortException("ExtractPages was finished.")));
-      }
-    });
+      });
+    }
     handler.on("SaveDocument", async function ({
       isPureXfa,
       numPages,

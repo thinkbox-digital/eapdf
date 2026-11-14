@@ -15,7 +15,7 @@ Start with the [user guide](manual/user-manual.html) or [PDF manual](EA-PDF_User
 | Privacy | [Privacy policy](site/privacy.md) |
 | Security and licensing | [Security](security/HARDENING.md), [licenses](THIRD_PARTY_LICENSES.md) |
 | Developer libraries | [Packages](PACKAGES.md), [renderer patches](RENDERER.md) |
-| Changes and checks | [Release notes](releases/2.2.0-beta.2.md), [release checks](releases/2.2.0-beta.2-validation.md), [history](CHANGELOG.md) |
+| Changes and checks | [Release notes](releases/2.2.0-beta.3.md), [release checks](releases/2.2.0-beta.3-validation.md), [history](CHANGELOG.md) |
 
 Edit the relevant guide when behaviour changes. The website is built from the
 HTML manual and selected Markdown pages; the PDF manual needs a separate rebuild.

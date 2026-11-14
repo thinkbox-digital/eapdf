@@ -1,0 +1,176 @@
+diff --git a/src/core/bidi.js b/src/core/bidi.js
+--- a/src/core/bidi.js
++++ b/src/core/bidi.js
+@@ -84,14 +84,13 @@ function isEven(i) {
+   return (i & 1) === 0;
+ }
+ 
+-function findUnequal(arr, start, value) {
+-  let j, jj;
+-  for (j = start, jj = arr.length; j < jj; ++j) {
++function findUnequal(arr, start, value, end = arr.length) {
++  for (let j = start; j < end; ++j) {
+     if (arr[j] !== value) {
+       return j;
+     }
+   }
+-  return j;
++  return end;
+ }
+ 
+ function reverseValues(arr, start, end) {
+@@ -117,8 +116,15 @@ function createBidiText(str, isLTR, vertical = false) {
+ const chars = [];
+ const types = [];
+ 
+-function bidi(str, startLevel = -1, vertical = false) {
++/**
++ * @param {string|Array<string>} text - Text to reorder, or glyph texts in
++ *   visual order. Each glyph's text is expected to be in logical order and is
++ *   kept intact if all its characters resolve to the same bidi level.
++ */
++function bidi(text, startLevel = -1, vertical = false) {
+   let isLTR = true;
++  const glyphs = Array.isArray(text) ? text : null;
++  const str = glyphs ? glyphs.join("") : text;
+   const strLength = str.length;
+   if (strLength === 0 || vertical) {
+     return createBidiText(str, isLTR, vertical);
+@@ -401,6 +407,23 @@ function bidi(str, startLevel = -1, vertical = false) {
+     }
+   }
+ 
++  if (glyphs) {
++    let pos = 0;
++    for (const glyph of glyphs) {
++      const end = pos + glyph.length;
++      if (
++        glyph.length > 1 &&
++        findUnequal(levels, pos + 1, levels[pos], end) === end
++      ) {
++        // Store the whole glyph in one slot. Empty strings in the remaining
++        // slots preserve the indices used by the character levels.
++        chars[pos] = glyph;
++        chars.fill("", pos + 1, end);
++      }
++      pos = end;
++    }
++  }
++
+   // now reverse between those limits
+   for (level = highestLevel; level >= lowestOddLevel; --level) {
+     // find segments to reverse
+@@ -438,13 +461,7 @@ function bidi(str, startLevel = -1, vertical = false) {
+   // don't mirror as characters are already mirrored in the pdf
+ 
+   // Finally, return string
+-  for (i = 0, ii = chars.length; i < ii; ++i) {
+-    const ch = chars[i];
+-    if (ch === "<" || ch === ">") {
+-      chars[i] = "";
+-    }
+-  }
+-  return createBidiText(chars.join(""), isLTR);
++  return createBidiText(chars.join("").replaceAll(/[<>]/g, ""), isLTR);
+ }
+ 
+ export { bidi };
+diff --git a/src/core/evaluator.js b/src/core/evaluator.js
+--- a/src/core/evaluator.js
++++ b/src/core/evaluator.js
+@@ -26,7 +26,6 @@ import {
+   FormatError,
+   info,
+   isArrayEqual,
+-  normalizeUnicode,
+   OPS,
+   shadow,
+   TextRenderingMode,
+@@ -2680,11 +2679,7 @@ class PartialEvaluator {
+     }
+ 
+     function runBidiTransform(textChunk) {
+-      let text = textChunk.str.join("");
+-      if (!disableNormalization) {
+-        text = normalizeUnicode(text);
+-      }
+-      const bidiResult = bidi(text, -1, textChunk.vertical);
++      const bidiResult = bidi(textChunk.str, -1, textChunk.vertical);
+       return {
+         str: bidiResult.str,
+         dir: bidiResult.dir,
+@@ -3205,7 +3200,9 @@ class PartialEvaluator {
+         }
+ 
+         if (!intersector) {
+-          textChunk.str.push(glyphUnicode);
++          textChunk.str.push(
++            disableNormalization ? glyphUnicode : glyph.normalizedUnicode
++          );
+         }
+ 
+         if (charSpacing) {
+diff --git a/src/core/fonts.js b/src/core/fonts.js
+--- a/src/core/fonts.js
++++ b/src/core/fonts.js
+@@ -19,6 +19,7 @@ import {
+   FONT_IDENTITY_MATRIX,
+   FormatError,
+   info,
++  normalizeUnicode,
+   shadow,
+   stringToBytes,
+   warn,
+@@ -276,6 +277,19 @@ class Glyph {
+       /* nonSerializable = */ true
+     );
+   }
++
++  /**
++   * Cached for `PartialEvaluator.getTextContent` as a non-enumerable property.
++   * @type {string}
++   */
++  get normalizedUnicode() {
++    return shadow(
++      this,
++      "normalizedUnicode",
++      normalizeUnicode(this.unicode),
++      /* nonSerializable = */ true
++    );
++  }
+ }
+ 
+ function int16(b0, b1) {
+diff --git a/test/unit/bidi_spec.js b/test/unit/bidi_spec.js
+--- a/test/unit/bidi_spec.js
++++ b/test/unit/bidi_spec.js
+@@ -133,6 +133,29 @@ describe("bidi", function () {
+     }
+   );
+ 
++  it("should reorder glyphs using their resolved levels (issue 16880)", function () {
++    for (const [glyphs, expected] of [
++      [["م", "لا", "س"], "سلام"],
++      [["١٢", "م"], "م١٢"],
++      [["fi", "م", "س"], "سمfi"],
++      [["<>", "م"], "م"],
++      // A glyph with mixed levels is reordered char by char.
++      [["لa", "م"], "مaل"],
++    ]) {
++      expect(bidi(glyphs).str)
++        .withContext(JSON.stringify(glyphs))
++        .toEqual(expected);
++    }
++  });
++
++  it("should preserve a combining mark within a single glyph", function () {
++    for (const previous of ["a", "1", "١", " "]) {
++      expect(bidi([previous, "لَ"]).str)
++        .withContext(previous)
++        .toEqual(`لَ${previous}`);
++    }
++  });
++
+   it("should reorder characters correctly per BidiCharacterTest.txt", async function () {
+     const content = await readTestFile("BidiCharacterTest.txt");
+ 

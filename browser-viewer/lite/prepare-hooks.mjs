@@ -63,5 +63,7 @@ export async function prepareHooks(root,source,patches) {
  const cleanup='      try { return boundedBytes(stream, maxBytes); }\n      finally { if (raw instanceof Ref) discardStructuralStream(stream); }';
  assert.ok(block.includes(cleanup));block=block.replace(cleanup,'      return boundedBytes(stream, maxBytes);');
  await replace('src/core/document_assets.js','    const registered = this.registered.get(fileId + "|" + streamId);',block+'\n    const registered = this.registered.get(fileId + "|" + streamId);');
- const {name}=await patch('0009-');execFileSync('git',['apply','--check',join(root,name)],{cwd:source});execFileSync('git',['apply',join(root,name)],{cwd:source});
+ for(const prefix of ['0009-','0010-','0011-']) {
+  const {name}=await patch(prefix);execFileSync('git',['apply','--check',join(root,name)],{cwd:source});execFileSync('git',['apply',join(root,name)],{cwd:source});
+ }
 }

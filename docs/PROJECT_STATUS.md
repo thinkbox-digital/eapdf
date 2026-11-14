@@ -1,7 +1,7 @@
 # Project status
 
-Updated 13 November 2026 for **creator/validator 2.2.0-beta.2** and
-**full/Lite readers 1.2.0-beta.2**.
+Updated 14 November 2026 for **creator/validator 2.2.0-beta.3** and
+**full/Lite readers 1.2.0-beta.3**.
 
 ## This release
 
@@ -16,8 +16,8 @@ Updated 13 November 2026 for **creator/validator 2.2.0-beta.2** and
 - **Documentation:** shorter starting pages and simpler instructions. Regeneration
   instructions are near the end of the README.
 
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.2) ·
-[Release notes](releases/2.2.0-beta.2.md) · [Code layout](ARCHITECTURE.md)
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.3) ·
+[Release notes](releases/2.2.0-beta.3.md) · [Code layout](ARCHITECTURE.md)
 
 ## What is supported
 
@@ -31,6 +31,13 @@ or finding-aid files. The reader's CSV export remains available.
 
 ## Latest update
 
+Bug fixes, 14 November: both readers restrict message downloads to
+proven body pages unless a complete inspection establishes standalone scope.
+Message page exports omit inherited archive files, metadata, annotations and
+document-part links. The explicit Portfolio whole-file download remains available. Both PDF.js workers
+include Mozilla's RTL ligature correction. Chromium and Firefox checks cover
+partial archives, original bytes, Arabic/Latin text, search, highlights and copying.
+
 Both readers use the supplied PNG and SVG artwork. A short [privacy policy](site/privacy.md)
 explains local files, optional connections and saved data. The release includes
 1280×800 screenshots of the Creator, Validator and both readers with fictional data.
@@ -38,7 +45,7 @@ explains local files, optional connections and saved data. The release includes
 ## Checks and limits
 
 Release checks and library versions are recorded in the
-[verification record](releases/2.2.0-beta.2-validation.md).
+[verification record](releases/2.2.0-beta.3-validation.md).
 Earlier counts remain dated evidence in the changelog and release records.
 
 The tested desktop environment is mainly Linux with Java 21. Reader extensions

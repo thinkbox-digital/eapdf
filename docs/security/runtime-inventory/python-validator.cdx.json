@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "EA-PDF Python CLI validator",
-      "version": "2.2.0-beta.2"
+      "version": "2.2.0-beta.3"
     },
     "properties": [
       {
