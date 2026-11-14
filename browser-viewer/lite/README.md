@@ -50,7 +50,7 @@ npm run build:pdfjs
 
 This verifies existing output hashes. Intentional hook updates use --write, review
 all source/input/output hashes, then repeat without --write from a clean build.
-The recipe retains shared patches 0001, 0002 and the navigation/metadata subset of 0007–0009, with explicit checked
+The recipe retains shared patches 0001, 0002 and the navigation/metadata subset of 0007–0009, plus the upstream RTL ligature correction in 0010, with explicit checked
 adaptations for their original archive-dependent context. Portfolio schema/layout
 inspection and folder-thumbnail decoding are excluded; collection membership,
 folders, associated files and GoToE navigation remain available. Patch 0003 is excluded;

@@ -52,7 +52,7 @@ try {
 import 'core-js/actual/map/get-or-insert-computed.js';
 import Jasmine from 'jasmine';
 const runner = new Jasmine();
-runner.loadConfig({ spec_dir: '.', spec_files: ['test/unit/catalog_spec.js', 'test/unit/primitives_spec.js', 'test/unit/message_handler_spec.js', 'test/unit/stream_spec.js', 'test/unit/parser_spec.js', 'test/unit/evaluator_spec.js', 'test/unit/xml_parser_spec.js'], helpers: ['test/unit/clitests_helper.js'] });
+runner.loadConfig({ spec_dir: '.', spec_files: ['test/unit/bidi_spec.js', 'test/unit/catalog_spec.js', 'test/unit/primitives_spec.js', 'test/unit/message_handler_spec.js', 'test/unit/stream_spec.js', 'test/unit/parser_spec.js', 'test/unit/evaluator_spec.js', 'test/unit/xml_parser_spec.js'], helpers: ['test/unit/clitests_helper.js'] });
 runner.env.configure({ random: false });
 await runner.execute();
 `);

@@ -12,6 +12,13 @@ method is built from upstream source, not injected into compiled JavaScript.
 upstream lockfile hash, local build/test input hashes and both generated outputs.
 `vendor/pdfjs-patched/` contains the generated display/worker bundles.
 
+Patch `0010-rtl-ligatures.patch` backports [Mozilla PR #22521](https://github.com/mozilla/pdf.js/pull/22521),
+merged as `5f2d7186f72c87e40150314c5cf856133f0b2466`. It keeps the characters
+within a glyph in logical order during bidirectional text extraction and normalizes
+per glyph. Full and Lite select the same upstream correction. The PDF.js base
+version remains 6.5.438. The unchanged upstream fixture and provenance are in
+`tests/fixtures/issue16880.pdf` and `tests/fixtures/RTL-LIGATURES.md`.
+
 Normal `npm run build` verifies the source/build-input/output hashes and copies
 those generated bundles. It does not need GitHub, Python, Java, a backend, or the
 upstream 931-package development toolchain. The extension is entirely local.

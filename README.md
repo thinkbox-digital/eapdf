@@ -7,22 +7,22 @@
 Turn saved emails and mailboxes into PDFs you can read, search and archive.
 Supports **EML, MSG, PST, MBOX and Gmail**.
 
-[User guide](https://thinkbox-digital.github.io/eapdf/) · [PDF manual](docs/EA-PDF_User_Manual.pdf) · [Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.2)
+[User guide](https://thinkbox-digital.github.io/eapdf/) · [PDF manual](docs/EA-PDF_User_Manual.pdf) · [Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.3)
 
-**Beta:** creator and validator 2.2.0-beta.2; full and Lite readers 1.2.0-beta.2.
+**Beta:** creator and validator 2.2.0-beta.3; full and Lite readers 1.2.0-beta.3.
 Java applications need **Java 21 or later**. The readers run locally in your browser.
 
 ## Download
 
 | Tool | What it does |
 | --- | --- |
-| [Creator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.2/emailtopdfa-2.2.0-beta.2-gui.jar) | Convert email using a desktop window. |
-| [Command-line creator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.2/emailtopdfa-2.2.0-beta.2.jar) | Convert email from a terminal or script. |
-| [Validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.2/eapdf-validator-2.2.0-beta.2.jar) | Check the finished PDFs and save a report. |
-| Full reader: [Chromium](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.2/eapdf-viewer-1.2.0-beta.2-chromium.zip) / [Firefox](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.2/eapdf-viewer-1.2.0-beta.2-firefox.zip) | Read messages, folders and attachments; includes Conversations, Portfolio view and larger-archive support. |
-| Lite reader: [Chromium](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.2/eapdf-viewer-lite-1.2.0-beta.2-chromium.zip) / [Firefox](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.2/eapdf-viewer-lite-1.2.0-beta.2-firefox.zip) | The same reading layout with fewer features. PDFs up to 32 MiB and 2,048 pages. |
+| [Creator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.3/emailtopdfa-2.2.0-beta.3-gui.jar) | Convert email using a desktop window. |
+| [Command-line creator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.3/emailtopdfa-2.2.0-beta.3.jar) | Convert email from a terminal or script. |
+| [Validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.3/eapdf-validator-2.2.0-beta.3.jar) | Check the finished PDFs and save a report. |
+| Full reader: [Chromium](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.3/eapdf-viewer-1.2.0-beta.3-chromium.zip) / [Firefox](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.3/eapdf-viewer-1.2.0-beta.3-firefox.zip) | Read messages, folders and attachments; includes Conversations, Portfolio view and larger-archive support. |
+| Lite reader: [Chromium](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.3/eapdf-viewer-lite-1.2.0-beta.3-chromium.zip) / [Firefox](https://github.com/thinkbox-digital/eapdf/releases/download/v2.2.0-beta.3/eapdf-viewer-lite-1.2.0-beta.3-firefox.zip) | The same reading layout with fewer features. PDFs up to 32 MiB and 2,048 pages. |
 
-The [release page](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.2)
+The [release page](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.3)
 also has configuration, examples, the manual, Lite web/source packages and checksums.
 Browser extensions are unsigned; Firefox installation is temporary.
 
@@ -32,7 +32,7 @@ Browser extensions are unsigned; Firefox installation is temporary.
 2. Start the Creator:
 
    ```sh
-   java -jar emailtopdfa-2.2.0-beta.2-gui.jar
+   java -jar emailtopdfa-2.2.0-beta.3-gui.jar
    ```
 
 3. Choose your email files, output folder and format, then convert.
@@ -62,7 +62,7 @@ for details and [examples](examples/) for sample files.
 ## From the command line
 
 ```sh
-java -Xmx2g -jar emailtopdfa-2.2.0-beta.2.jar --jobs 2 --out /tmp/eapdf-output message.eml
+java -Xmx2g -jar emailtopdfa-2.2.0-beta.3.jar --jobs 2 --out /tmp/eapdf-output message.eml
 ```
 
 For a collection, add `--archive-profile c --archive-output /tmp/eapdf-output/archive_1c.pdf`.

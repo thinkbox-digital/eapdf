@@ -5,6 +5,11 @@ Use [current project status](PROJECT_STATUS.md) and [architecture decisions](ARC
 for the current handover; do not treat historical counts or then-open findings as
 a fresh acceptance run.
 
+## 2026-11-14 — 2.2.0-beta.3 / readers 1.2.0-beta.3
+
+- **Bug fix:** partial archive inspection cannot turn a message download into an original whole-archive download. Explicit Portfolio whole-file downloads remain available.
+- **Bug fix:** backport upstream PDF.js PR #22521 to both readers for RTL ligature extraction, copying, search and highlights.
+
 ## 2026-11-13 — 2.2.0-beta.2 / readers 1.2.0-beta.2
 
 - **UI improvement:** supplied PNG/SVG icons in both readers.
