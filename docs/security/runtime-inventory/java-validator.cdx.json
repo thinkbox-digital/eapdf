@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "EA-PDF Java validator",
-      "version": "2.2.0-beta.2"
+      "version": "2.2.0-beta.3"
     },
     "properties": [
       {
@@ -1122,12 +1122,12 @@
     },
     {
       "type": "file",
-      "name": "eapdf-validator-2.2.0-beta.2.jar",
-      "bom-ref": "artifact:eapdf-validator-2.2.0-beta.2.jar",
+      "name": "eapdf-validator-2.2.0-beta.3.jar",
+      "bom-ref": "artifact:eapdf-validator-2.2.0-beta.3.jar",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "1a30ce4b15d1a1ed2518936906268d3c7cdbdf41462c9f5bbc8f78f6fc456aea"
+          "content": "3944c04f8e4120d12584f573c61a7da1edb2662ad5ec3cddfb03fae0b29faef4"
         }
       ]
     }
