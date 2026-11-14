@@ -28,7 +28,12 @@ try {
   const ready = () => page.waitForFunction(() => document.querySelector('#viewport').getAttribute('aria-busy') === 'false', null, { timeout: 60000 });
   const adapter = {
     evaluate: fn => page.evaluate(fn),
-    workerCount: async () => page.workers().length,
+    workerCount: async (maximum=3) => {
+      const deadline=Date.now()+10000;
+      while(page.workers().length>maximum&&Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,20));
+      return page.workers().length;
+    },
+    waitFor: predicate => page.waitForFunction(predicate,null,{timeout:60000}),
     ready,
     click: async selector => {if(selector.includes('data-file-id')||selector.includes('data-view-file-id'))await page.locator('#files details').evaluateAll(ds=>ds.forEach(d=>d.open=true));await page.locator(selector).first().click();},
     open: async path => { await page.locator('#file').setInputFiles(path); await ready(); assert.equal(await page.locator('#canvas').isVisible(),true,await page.locator('#status').textContent()); },

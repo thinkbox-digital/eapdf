@@ -24,7 +24,7 @@ export async function checkNavigation(browser){
   for(let i=0;i<7;i++){await browser.click('#back');await browser.ready();assert.equal((await state()).visible,true);}
   assert.match((await state()).status,/nested.pdf.*Page 1/);results.push({case:'seven-annotation-only-PDF-levels-and-return',status:'PASS'});
   const collection=resolve('tests/attachments/source/pst_sample_1c.pdf');const before=createHash('sha256').update(await readFile(collection)).digest('hex');
-  await browser.open(collection);assert.equal((await state()).documents,1);assert.equal((await state()).unopened,71);if(browser.workerCount)assert.equal(await browser.workerCount(),1);
+  await browser.open(collection);assert.equal((await state()).documents,1);assert.equal((await state()).unopened,71);if(browser.workerCount){await browser.waitFor(()=>document.querySelector('#subject-index-progress').dataset.complete==='true');assert.equal(await browser.workerCount(1),1);}
   const target=await browser.evaluate(()=>{const b=[...document.querySelectorAll('[data-embedded-file-id]')].find(b=>b.textContent.startsWith('RR expansion contracts.'));return {file:b.dataset.embeddedFileId,stream:b.dataset.embeddedStream};});
   await expandFolders(browser);
  await browser.click(`[data-embedded-file-id=${JSON.stringify(target.file)}][data-embedded-stream=${JSON.stringify(target.stream)}]`);await browser.ready();assert.equal((await state()).visible,true);assert.equal((await state()).pages,'of 2');assert.match((await state()).path,/RR expansion contracts/);

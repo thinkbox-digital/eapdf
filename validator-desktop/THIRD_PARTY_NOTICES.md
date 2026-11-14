@@ -35,13 +35,14 @@ This app bundles these Java components:
   Source: https://github.com/apache/poi.
 - Apache PDFBox / FontBox / pdfbox-io 3.0.8 and Commons Logging 1.4.0:
   Apache License 2.0.
-- Gson 2.15.0, Jackson 2.15.0 and Error Prone annotations 2.48.0:
+- Gson 2.15.0, Jackson 2.22.3 (annotations 2.22) and Error Prone annotations 2.50.0:
   Apache License 2.0.
 - Jakarta Mail API 2.1.5: EPL 2.0 / EDL 1.0 / GPL 2 with Classpath Exception.
 - Eclipse Angus Mail 2.0.5 and Activation 2.0.3: EPL 2.0 / EDL 1.0.
 - Jakarta Activation API 2.1.4 and Javax Activation API 1.2.0: EDL 1.0 / BSD.
-- JAXB API 2.4.0-b180830.0359, JAXB implementation 2.3.2 and Istack runtime
-  3.0.5: upstream CDDL / GPL 2 with Classpath Exception terms.
+- JAXB API 2.4.0-b180830.0359: upstream CDDL / GPL 2 with Classpath Exception terms.
+- JAXB implementation 2.3.2 and Istack runtime 4.2.0: Eclipse Distribution
+  License 1.0 (BSD-3-Clause).
 - Saxon-HE 12.8: MPL 2.0. Sources: https://github.com/Saxonica/Saxon-HE.
 - Rhino 1.7.14.1: MPL 2.0. Sources: https://github.com/mozilla/rhino.
 - XML Resolver 5.3.3 and its data: Apache License 2.0, with retained upstream

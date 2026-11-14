@@ -53,6 +53,11 @@ The full reader is the source for shared fixes. `npm run build:lite` selects its
 shared modules and substitutes small adapters for features Lite omits. Do not edit
 generated exports by hand.
 
+The exporter asks the TypeScript compiler's command-line interface for the module
+graph after applying Lite overrides, including type-only imports. Acorn selects
+the shared JavaScript tests. Type-contract tests also use the compiler interface.
+These tools are used during development and are not bundled into either reader.
+
 Lite keeps the reading layout, message/folder navigation, attachments, CSV/XMP
 export and normal PDF text search. It omits Conversations, Portfolio presentation,
 embedded search indexes and large-archive optimizations. Its collection metadata

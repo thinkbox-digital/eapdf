@@ -9,7 +9,7 @@ import hashlib
 import mailbox
 from pathlib import Path
 import xml.etree.ElementTree as ET
-import fitz
+import pymupdf as fitz
 import olefile
 import pikepdf
 

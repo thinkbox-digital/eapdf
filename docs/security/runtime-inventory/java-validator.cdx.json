@@ -188,13 +188,13 @@
       "type": "library",
       "group": "com.sun.istack",
       "name": "istack-commons-runtime",
-      "version": "3.0.5",
-      "purl": "pkg:maven/com.sun.istack/istack-commons-runtime@3.0.5",
-      "bom-ref": "pkg:maven/com.sun.istack/istack-commons-runtime@3.0.5",
+      "version": "4.2.0",
+      "purl": "pkg:maven/com.sun.istack/istack-commons-runtime@4.2.0",
+      "bom-ref": "pkg:maven/com.sun.istack/istack-commons-runtime@4.2.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "f19ac45cfbbe12fa952be1e691eae80a74c9c7f4ac46ab3f760ca9cfa3bc694b"
+          "content": "21025b7a096ef93f74de659c1be5990fa0c24e59a0f98a706e392e7088725ff6"
         }
       ],
       "properties": [
@@ -206,14 +206,8 @@
       "licenses": [
         {
           "license": {
-            "name": "CDDL 1.1",
-            "url": "https://glassfish.java.net/public/CDDL+GPL_1_1.html"
-          }
-        },
-        {
-          "license": {
-            "name": "GPL2 w/ CPE",
-            "url": "https://glassfish.java.net/public/CDDL+GPL_1_1.html"
+            "name": "Eclipse Distribution License - v 1.0",
+            "url": "http://www.eclipse.org/org/documents/edl-v10.php"
           }
         }
       ]
@@ -1127,7 +1121,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "3944c04f8e4120d12584f573c61a7da1edb2662ad5ec3cddfb03fae0b29faef4"
+          "content": "00da3df27105bc2ab5426f5cce1bee645f7762f98895f63da900f1e4f290f22f"
         }
       ]
     }

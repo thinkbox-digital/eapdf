@@ -64,7 +64,7 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Creator | org.eclipse.angus:angus-activation | 2.0.3 | EDL 1.0 |
 | Creator | org.eclipse.angus:angus-mail | 2.0.5 | EPL 2.0; GPL2 w/ CPE; EDL 1.0 |
 | Creator | org.jsoup:jsoup | 1.24.1 | The MIT License |
-| Creator | org.simplejavamail:outlook-message-parser | 1.16.2 | The Apache Software License, Version 2.0 |
+| Creator | org.simplejavamail:outlook-message-parser | 1.16.3 | The Apache Software License, Version 2.0 |
 | Creator | org.slf4j:slf4j-api | 2.0.7 | MIT License |
 | Java validator | com.beetstra.jutf7:jutf7 | 1.0.0 | MIT license |
 | Java validator | com.fasterxml.jackson.core:jackson-annotations | 2.22 | The Apache Software License, Version 2.0 |
@@ -72,7 +72,7 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Java validator | com.fasterxml.jackson.core:jackson-databind | 2.22.3 | The Apache Software License, Version 2.0 |
 | Java validator | com.google.code.gson:gson | 2.15.0 | Apache-2.0 |
 | Java validator | com.google.errorprone:error_prone_annotations | 2.50.0 | Apache 2.0 |
-| Java validator | com.sun.istack:istack-commons-runtime | 3.0.5 | CDDL 1.1; GPL2 w/ CPE |
+| Java validator | com.sun.istack:istack-commons-runtime | 4.2.0 | Eclipse Distribution License - v 1.0 |
 | Java validator | com.sun.xml.bind:jaxb-impl | 2.3.2 | Eclipse Distribution License - v 1.0 |
 | Java validator | com.zaxxer:SparseBitSet | 1.3 | The Apache Software License, Version 2.0 |
 | Java validator | commons-codec:commons-codec | 1.23.0 | Apache-2.0 |
