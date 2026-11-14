@@ -17,6 +17,7 @@ export type DocumentAssets = Readonly<{ apiVersion: 1; documentId: string; files
 export type FileBytesRequest = Readonly<{ documentId: string; fileId: string; streamId: string; maxBytes: number }>;
 declare module 'pdfjs-dist/types/src/display/api.js' {
   interface PDFDocumentProxy {
+    extractPages(pageInfos: Array<{document?:Uint8Array|null;includePages?:Array<number|number[]>}>, copyLevels: null, options: {pageOnly:true}): Promise<Uint8Array|null>;
     getDocumentAssets(options: {embeddedTarget:{page:number;annotation:number|string}}): Promise<{target:string}>;
     getDocumentAssets(options: {folderThumbnail:string}): Promise<{thumbnail:{width:number;height:number;data:Uint8Array}}>;
     getDocumentAssets(options: {presentationOnly:true}): Promise<{presentation:PortfolioData}>;

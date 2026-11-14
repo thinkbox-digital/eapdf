@@ -16541,8 +16541,8 @@ class PDFDocumentProxy {
   saveDocument(printToPDF) {
     return this._transport.saveDocument(printToPDF);
   }
-  extractPages(pageInfos, copyLevels = null) {
-    return this._transport.extractPages(pageInfos, copyLevels);
+  extractPages(pageInfos, copyLevels = null, options = null) {
+    return this._transport.extractPages(pageInfos, copyLevels, options);
   }
   getDownloadInfo() {
     return this._transport.downloadInfoCapability.promise;
@@ -17553,7 +17553,7 @@ class WorkerTransport {
       this.annotationStorage.resetModified();
     });
   }
-  extractPages(pageInfos, copyLevels = null) {
+  extractPages(pageInfos, copyLevels = null, options = null) {
     const params = {
       pageInfos
     };
@@ -17601,7 +17601,7 @@ class WorkerTransport {
       }
       params.annotationStorage = map;
     }
-    return this.messageHandler.sendWithPromise("ExtractPages", params, transfer).finally(() => {
+    return this.messageHandler.sendWithPromise(options?.pageOnly === true ? "ExtractPageContent" : "ExtractPages", params, transfer).finally(() => {
       this.annotationStorage.resetModified();
     });
   }

@@ -25,7 +25,7 @@ export function messageDownload(doc:BrowserDocument,message?:MailMessage,wholeDo
 export async function messagePdf(session:BrowserSession,doc:BrowserDocument,plan:MessageDownload,check:()=>void):Promise<Blob>{
   if(plan.pages===null){const blob=await session.sourceBlob(doc);check();return blob;}
   await session.ensure(doc);check();
-  const data=await doc.run(doc.pdf.extractPages([{document:null,includePages:plan.pages.map(page=>page-1)}]));check();
+  const data=await doc.run(doc.pdf.extractPages([{document:null,includePages:plan.pages.map(page=>page-1)}],null,{pageOnly:true}));check();
   if(!data?.length)throw new Error('The message pages could not be exported.');
   return new Blob([new Uint8Array(data)],{type:'application/pdf'});
 }

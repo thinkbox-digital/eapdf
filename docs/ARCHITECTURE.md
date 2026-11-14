@@ -42,7 +42,10 @@ The browser reader runs without Java or a server.
 Both editions share the message-download scope decision. Original-byte message
 downloads require a declared standalone profile, complete relevant inspection,
 one recognized message and ownership of every page. Otherwise only proven body
-pages can be exported. The explicit Portfolio whole-file action is separate.
+pages can be exported. An opt-in page-only PDF.js extraction mode drops inherited
+files, metadata, annotations, structure and DPart back-references. Its distinct
+worker action fails closed against older workers. Default upstream extraction and
+the explicit Portfolio whole-file action retain their behavior.
 Both patch recipes include upstream PDF.js PR #22521 as patch 0010 for RTL glyph
 ordering; this correction does not introduce the Full reader's archive optimizations.
 

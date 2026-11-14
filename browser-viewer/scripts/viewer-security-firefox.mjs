@@ -24,7 +24,7 @@ async function keys(key){await call('/actions',{actions:[{type:'key',id:'keys',a
 async function inspect(path){await input('#security-reference',path);return asyncExecute(`
  const {getDocument,GlobalWorkerOptions}=await import('./vendor/pdfjs/pdf.mjs');GlobalWorkerOptions.workerSrc=new URL('./vendor/pdfjs/pdf.worker.mjs',location.href).href;
  const task=getDocument({data:new Uint8Array(await document.querySelector('#security-reference').files[0].arrayBuffer()),isEvalSupported:false});
- try{const pdf=await task.promise,text=[];for(let n=1;n<=pdf.numPages;n++)text.push((await (await pdf.getPage(n)).getTextContent()).items.filter(i=>'str'in i).map(i=>i.str).join(''));return {pages:pdf.numPages,text,parts:await pdf.getDocumentParts()};}finally{await task.destroy();}
+ try{const pdf=await task.promise,text=[];for(let n=1;n<=pdf.numPages;n++)text.push((await (await pdf.getPage(n)).getTextContent()).items.filter(i=>'str'in i).map(i=>i.str).join(''));const first=await pdf.getPage(1),view=first.getViewport({scale:1}),canvas=document.createElement('canvas');canvas.width=Math.ceil(view.width);canvas.height=Math.ceil(view.height);await first.render({canvas,viewport:view,annotationMode:0}).promise;const pixels=[...new Uint8Array(await crypto.subtle.digest('SHA-256',canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data))].join(',');return {pixels,pages:pdf.numPages,text,parts:await pdf.getDocumentParts(),assets:await pdf.getDocumentAssets(),info:(await pdf.getMetadata()).info};}finally{await task.destroy();}
 `);}
 try{
  await until(async()=>{try{return await request('/status',undefined,'GET');}catch{return false;}});
@@ -37,8 +37,8 @@ try{
   for(const profile of ['m','mi','s','si']){
    for(const n of await readdir(downloads))await rm(join(downloads,n),{force:true});
    const standalone=['s','si'].includes(profile),path=join(work,`${edition}_${profile}.pdf`),bytes=downloadScopeFixture(profile,{partial:!standalone,standalone});await writeFile(path,bytes);await input('#file',path);await ready();assert.equal(await execute("return document.querySelector('#download-message').disabled;"),false);
-   await click('download-message');const saved=await until(async()=>{const names=(await readdir(downloads)).filter(n=>n.endsWith('.pdf'));return names.length===1?join(downloads,names[0]):false;});await ready();
-   if(standalone)assert.deepEqual(await readFile(saved),bytes);else{const actual=await inspect(saved);assert.equal(actual.pages,1);assert.deepEqual(actual.text,['SELECTED BODY']);}
+   const original=standalone?null:await inspect(path);await click('download-message');const saved=await until(async()=>{const names=(await readdir(downloads)).filter(n=>n.endsWith('.pdf'));return names.length===1?join(downloads,names[0]):false;});await ready();
+   if(standalone)assert.deepEqual(await readFile(saved),bytes);else{const actual=await inspect(saved);assert.equal(actual.pixels,original.pixels);assert.equal(actual.assets.files.length,0);assert.equal(actual.assets.catalogMetadata,null);assert.equal(actual.parts.status,'missing');assert.equal(actual.info.Title,undefined);assert.equal(actual.pages,1);assert.deepEqual(actual.text,['SELECTED BODY']);}
    reports.push({edition,profile,bodyOnly:!standalone,originalBytes:standalone});
   }
   for(const path of [upstream,mixed]){

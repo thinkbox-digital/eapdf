@@ -33,7 +33,8 @@ or finding-aid files. The reader's CSV export remains available.
 
 Bug fixes, 14 November: both readers restrict message downloads to
 proven body pages unless a complete inspection establishes standalone scope.
-The explicit Portfolio whole-file download remains available. Both PDF.js workers
+Message page exports omit inherited archive files, metadata, annotations and
+document-part links. The explicit Portfolio whole-file download remains available. Both PDF.js workers
 include Mozilla's RTL ligature correction. Chromium and Firefox checks cover
 partial archives, original bytes, Arabic/Latin text, search, highlights and copying.
 

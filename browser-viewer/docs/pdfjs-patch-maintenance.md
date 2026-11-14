@@ -19,6 +19,14 @@ per glyph. Full and Lite select the same upstream correction. The PDF.js base
 version remains 6.5.438. The unchanged upstream fixture and provenance are in
 `tests/fixtures/issue16880.pdf` and `tests/fixtures/RTL-LIGATURES.md`.
 
+Patch `0011-page-only-extraction.patch` adds an opt-in `pageOnly` option to
+`extractPages`, dispatched through the distinct `ExtractPageContent` worker action.
+The default upstream path is unchanged. The opt-in path copies page rendering
+inputs and omits catalog files, metadata, annotations, structure, DParts and source
+Info fields. File-bearing and metadata dependencies are excluded from copied
+resources. Both editions select it. Shared Node and browser regressions check
+hidden embedded mail, page AF/annotations, DPart links, metadata, text and pixels.
+
 Normal `npm run build` verifies the source/build-input/output hashes and copies
 those generated bundles. It does not need GitHub, Python, Java, a backend, or the
 upstream 931-package development toolchain. The extension is entirely local.

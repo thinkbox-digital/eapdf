@@ -17,15 +17,15 @@ try{
   const {getDocument,GlobalWorkerOptions}=await import('./vendor/pdfjs/pdf.mjs');GlobalWorkerOptions.workerSrc=new URL('./vendor/pdfjs/pdf.worker.mjs',location.href).href;
   const task=getDocument({data:new Uint8Array(await document.querySelector('#security-reference').files[0].arrayBuffer()),isEvalSupported:false});
   try{const pdf=await task.promise,text=[];for(let n=1;n<=pdf.numPages;n++)text.push((await (await pdf.getPage(n)).getTextContent()).items.filter(i=>'str'in i).map(i=>i.str).join(''));
-   return {pages:pdf.numPages,text,parts:await pdf.getDocumentParts()};
+   const first=await pdf.getPage(1),view=first.getViewport({scale:1}),canvas=document.createElement('canvas');canvas.width=Math.ceil(view.width);canvas.height=Math.ceil(view.height);await first.render({canvas,viewport:view,annotationMode:0}).promise;const pixels=[...new Uint8Array(await crypto.subtle.digest('SHA-256',canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data))].join(',');return {pixels,pages:pdf.numPages,text,parts:await pdf.getDocumentParts(),assets:await pdf.getDocumentAssets(),info:(await pdf.getMetadata()).info};
   }finally{await task.destroy();}
  });};
  for(const profile of ['m','mi']){
   const input=join(work,`partial_1${profile}.pdf`);await writeFile(input,downloadScopeFixture(profile));await page.locator('#file').setInputFiles(input);await ready();
-  const original=await inspect(input);assert.equal(original.pages,2);assert.equal(original.parts.status,'partial');
+  const original=await inspect(input);assert.equal(original.assets.files.length,1);assert.equal(original.pages,2);assert.equal(original.parts.status,'partial');
   assert.equal(await page.locator('#download-message').isEnabled(),true);
   const pending=page.waitForEvent('download');await page.locator('#download-message').click();const download=await pending;const actual=await inspect(await download.path());
-  assert.equal(actual.pages,1);assert.deepEqual(actual.text,['SELECTED BODY']);reports.push({profile,partialInspection:true,bodyOnly:true});
+  assert.equal(actual.pixels,original.pixels);assert.equal(actual.assets.files.length,0);assert.equal(actual.assets.catalogMetadata,null);assert.equal(actual.parts.status,'missing');assert.equal(actual.info.Title,undefined);assert.equal(actual.pages,1);assert.deepEqual(actual.text,['SELECTED BODY']);reports.push({profile,partialInspection:true,bodyOnly:true});
  }
  for(const profile of ['s','si']){
   const input=join(work,`standalone_1${profile}.pdf`),bytes=downloadScopeFixture(profile,{partial:false,standalone:true});await writeFile(input,bytes);await page.locator('#file').setInputFiles(input);await ready();

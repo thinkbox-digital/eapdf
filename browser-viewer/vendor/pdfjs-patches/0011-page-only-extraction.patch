@@ -1,0 +1,113 @@
+--- a/src/display/api.js
++++ b/src/display/api.js
+@@ -1052,6 +1052,6 @@
+    *   {Uint8Array} containing the full data of the saved document.
+    */
+-  extractPages(pageInfos, copyLevels = null) {
+-    return this._transport.extractPages(pageInfos, copyLevels);
++  extractPages(pageInfos, copyLevels = null, options = null) {
++    return this._transport.extractPages(pageInfos, copyLevels, options);
+   }
+ 
+@@ -2897,5 +2897,5 @@
+   }
+ 
+-  extractPages(pageInfos, copyLevels = null) {
++  extractPages(pageInfos, copyLevels = null, options = null) {
+     const params = {
+       pageInfos,
+@@ -2952,5 +2952,5 @@
+     }
+     return this.messageHandler
+-      .sendWithPromise("ExtractPages", params, transfer)
++      .sendWithPromise(options?.pageOnly === true ? "ExtractPageContent" : "ExtractPages", params, transfer)
+       .finally(() => {
+         this.annotationStorage.resetModified();
+--- a/src/core/worker.js
++++ b/src/core/worker.js
+@@ -575,7 +575,10 @@
+     });
+ 
++    for (const action of ["ExtractPages", "ExtractPageContent"]) {
+     handler.on(
+-      "ExtractPages",
++      action,
+       async function ({ pageInfos, annotationStorage }) {
++        const pageOnly = action === "ExtractPageContent";
++        if (pageOnly) { annotationStorage = null; }
+         if (!pageInfos) {
+           warn("extractPages: nothing to extract.");
+@@ -651,5 +654,5 @@
+         let task;
+         try {
+-          const pdfEditor = new PDFEditor();
++          const pdfEditor = new PDFEditor({ pageOnly });
+           task = new WorkerTask(`ExtractPages: ${pageInfos.length} page(s)`);
+           startWorkerTask(task);
+@@ -675,4 +678,6 @@
+       }
+     );
++
++    }
+ 
+     // Import platform-rendered appearances before saving annotations.
+--- a/src/core/editor/pdf_editor.js
++++ b/src/core/editor/pdf_editor.js
+@@ -209,5 +209,6 @@
+   embeddedFiles = new Map();
+ 
+-  constructor({ useObjectStreams = true, title = "", author = "" } = {}) {
++  constructor({ useObjectStreams = true, title = "", author = "", pageOnly = false } = {}) {
++    this.pageOnly = pageOnly;
+     [this.rootRef, this.rootDict] = this.newDict;
+     [this.infoRef, this.infoDict] = this.newDict;
+@@ -370,4 +371,9 @@
+     }
+     if (dict) {
++      if (this.pageOnly) {
++        if (dict.has("EF") || isName(dict.get("Type"), "Filespec") ||
++            isName(dict.get("Type"), "EmbeddedFile")) { return null; }
++        for (const key of ["AF", "Metadata", "PieceInfo"]) { dict.delete(key); }
++      }
+       for (const [key, rawObj] of dict.getRawEntries()) {
+         const postponedActions =
+@@ -1167,4 +1173,5 @@
+    */
+   async #collectDocumentData(documentData) {
++    if (this.pageOnly) { return; }
+     const {
+       document: { pdfManager, xref },
+@@ -1222,4 +1229,5 @@
+    */
+   async #postCollectPageData(pageData) {
++    if (this.pageOnly) { return; }
+     const {
+       page: { xref, annotations },
+@@ -2446,5 +2454,12 @@
+     const { xref, rotate, mediaBox, resources, ref: oldPageRef } = page;
+     const pageRef = this.newRef;
+-    const pageDict = (this.xref[pageRef.num] = this.cloneDict(page.pageDict));
++    // Keep rendering inputs only; never follow DPart/AF/annotation graphs.
++    const pageDict = (this.xref[pageRef.num] = this.pageOnly
++      ? new Dict() : this.cloneDict(page.pageDict));
++    if (this.pageOnly) {
++      pageDict.set("Type", Name.get("Page"));
++      pageDict.set("Contents", page.pageDict.getRaw("Contents"));
++      pageDict.setIfDefined("Group", page.pageDict.getRaw("Group"));
++    }
+     oldRefMapping.put(oldPageRef, pageRef);
+ 
+@@ -3031,5 +3046,5 @@
+   #makeInfo() {
+     const infoMap = new Map();
+-    if (this.isSingleFile) {
++    if (this.isSingleFile && !this.pageOnly) {
+       const firstRealPage = this.oldPages.find(p => !!p);
+       const {
+@@ -3069,5 +3084,5 @@
+    */
+   async #makeEncrypt() {
+-    if (!this.isSingleFile) {
++    if (!this.isSingleFile || this.pageOnly) {
+       return [null, null, null];
+     }

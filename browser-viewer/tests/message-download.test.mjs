@@ -19,16 +19,21 @@ test('incomplete or contradictory standalone scope never copies the original PDF
 });
 test('partial aggregate body export cannot read the source archive',async()=>{
  const doc=document();doc.inspection.messages.length=1;doc.inspection.coverage.documentParts='unavailable';let extracted=false;
- doc.pdf.extractPages=async args=>{assert.deepEqual(args,[{document:null,includePages:[1,2,3]}]);extracted=true;return new TextEncoder().encode('body pages');};
+ doc.pdf.extractPages=async (args,copyLevels,options)=>{assert.equal(copyLevels,null);assert.deepEqual(options,{pageOnly:true});assert.deepEqual(args,[{document:null,includePages:[1,2,3]}]);extracted=true;return new TextEncoder().encode('body pages');};
  const blob=await messagePdf({ensure:async()=>{},sourceBlob:async()=>{assert.fail('Original archive must not be read');}},doc,messageDownload(doc),()=>{});
  assert.equal(await blob.text(),'body pages');assert.equal(extracted,true);
  doc.inspection.parts[0].pageRange={state:'unavailable',value:null};assert.equal(messageDownload(doc),undefined);
 });
-test('extraction explicitly uses the current document and refuses empty output',async()=>{const doc=document(),plan=messageDownload(doc,doc.inspection.messages[0]);doc.pdf.extractPages=async args=>{assert.deepEqual(args,[{document:null,includePages:[1,2,3]}]);return null;};await assert.rejects(messagePdf({ensure:async()=>{}},doc,plan,()=>{}),/could not be exported/);});
+test('extraction explicitly uses the current document and refuses empty output',async()=>{const doc=document(),plan=messageDownload(doc,doc.inspection.messages[0]);doc.pdf.extractPages=async (args,copyLevels,options)=>{assert.equal(copyLevels,null);assert.deepEqual(options,{pageOnly:true});assert.deepEqual(args,[{document:null,includePages:[1,2,3]}]);return null;};await assert.rejects(messagePdf({ensure:async()=>{}},doc,plan,()=>{}),/could not be exported/);});
 
 test('Portfolio mode downloads the complete active PDF regardless of email metadata',async()=>{
  const doc=document();doc.inspection.messages=[];doc.inspection.collection.value={};
  const plan=messageDownload(doc,undefined,true);assert.deepEqual(plan,{name:doc.name,pages:null});
  const source=new Blob(['active PDF bytes']);assert.equal(await messagePdf({sourceBlob:async active=>{assert.equal(active,doc);return source;}},doc,plan,()=>{}),source);
  assert.equal(messageDownload(doc),undefined);
+});
+
+test('unsupported page-only extraction fails without falling back to archive bytes',async()=>{
+ const doc=document();doc.pdf.extractPages=async()=>{throw Error('Unknown action: ExtractPageContent');};
+ await assert.rejects(messagePdf({ensure:async()=>{},sourceBlob:async()=>assert.fail('Must not copy archive bytes')},doc,messageDownload(doc,doc.inspection.messages[0]),()=>{}),/ExtractPageContent/);
 });
