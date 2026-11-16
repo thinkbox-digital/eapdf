@@ -24,7 +24,7 @@ jobs:
       - run: mvn -B -f validator-desktop/pom.xml -Deapdf.build.directory=/tmp/eapdf-validator-build verify
       - name: Validate signed indexed archives
         run: python3 scripts/check_signed_index.py --fixtures /tmp/eapdf-signed-index-fixtures --validator /tmp/eapdf-validator-build/eapdf-validator-$(cat VERSION).jar
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: signed-index-fixtures
           path: /tmp/eapdf-signed-index-fixtures
@@ -56,7 +56,7 @@ jobs:
         working-directory: browser-viewer
       - run: npm run build:lite
         working-directory: browser-viewer
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: viewer-lite-local-builds
           path: browser-viewer/releases/eapdf-viewer-lite-*
@@ -134,7 +134,7 @@ jobs:
           EAPDF_SIGNED_INDEX_FIXTURES: ${{ runner.temp }}/signed-index-fixtures
         run: npm run test:firefox
         working-directory: browser-viewer
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: viewer-${{ matrix.browser }}-evidence
@@ -162,7 +162,7 @@ jobs:
         run: python scripts/build_architecture_diagram.py --creator-jar /tmp/eapdf-acceptance-creator/emailtopdfa-$(cat VERSION).jar --validator-jar /tmp/eapdf-acceptance-validator/eapdf-validator-$(cat VERSION).jar --output "$RUNNER_TEMP/EA-PDF_Software_Architecture.pdf"
       - name: Public source fidelity, visual and standalone Java validation gate
         run: python scripts/check_conversion_quality.py --creator /tmp/eapdf-acceptance-creator/emailtopdfa-$(cat VERSION).jar --validator /tmp/eapdf-acceptance-validator/eapdf-validator-$(cat VERSION).jar --output "$RUNNER_TEMP/conversion-acceptance"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: conversion-acceptance-evidence
