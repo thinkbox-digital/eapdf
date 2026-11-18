@@ -1,23 +1,28 @@
 # Project status
 
-Updated 14 November 2026 for **creator/validator 2.2.0-beta.3** and
-**full/Lite readers 1.2.0-beta.3**.
+Current release, 18 November 2026: creator/validator **2.3.0-beta.1** and
+**Full/Even More Lite readers 1.3.0-beta.1**. Even More Lite replaces the discontinued
+Lite packages. The creator's empty-metadata guard, worker supervision/report
+synchronization fixes and dependency PRs #26–#33 are included. Full retains its
+independent CSV/XMP export. Both PDF.js hook recipes include the equivalent
+font-name quote character classes in patch 0012.
+
+Even More Lite and its required reader helpers were explicitly selected for
+transfer on 18 November. The C2PA/PAdES experiment, WeasyPrint integration and
+other experimental changes remain separate in `../eapdf` on `experiment/c2pa-pades`.
+Normal development continues in this checkout.
+
+See [release checks](releases/2.3.0-beta.1-validation.md) for verification and limits.
 
 ## This release
 
-- **New reader:** Lite keeps the familiar layout, folders, attachments and CSV/XMP
-  export. It leaves out Conversations, Portfolio view, embedded search indexes
-  and large-archive support.
-- **Bug fix:** Lite can keep scanning collection messages while the user opens one.
-  Released documents no longer use up its allowance for open documents.
-- **Code improvement:** updated rendering, validation, email and signing libraries.
-  Our required PDF/A, PDF/UA and validator patches remain.
-- **Code removal:** removed the web workbench and its server dependencies.
-- **Documentation:** shorter starting pages and simpler instructions. Regeneration
-  instructions are near the end of the README.
+- **New reader:** Even More Lite has message/folder navigation, PDF pages and embedded assets in three adjustable panes; it replaces Lite packages.
+- **Bug fix:** reject empty email metadata input explicitly.
+- **Code improvement:** process-exit notifications replace watchdog sleep polling; JobReport owns report-import synchronization. Intentional Gmail retry backoff remains interruptible.
+- **Code improvement:** dependency PRs #26–#33, inspection provenance and PDF.js source patches are maintained in this checkout.
 
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.3) ·
-[Release notes](releases/2.2.0-beta.3.md) · [Code layout](ARCHITECTURE.md)
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.3.0-beta.1) ·
+[Release notes](releases/2.3.0-beta.1.md) · [Code layout](ARCHITECTURE.md)
 
 ## What is supported
 
@@ -31,7 +36,7 @@ or finding-aid files. The reader's CSV export remains available.
 
 ## Latest update
 
-Bug fixes, 14 November: both readers restrict message downloads to
+Historical checkpoint, 14 November: Full and the then-maintained Lite restricted message downloads to
 proven body pages unless a complete inspection establishes standalone scope.
 Message page exports omit inherited archive files, metadata, annotations and
 document-part links. The explicit Portfolio whole-file download remains available. Both PDF.js workers
@@ -44,7 +49,7 @@ explains local files, optional connections and saved data. The release includes
 
 ## Checks and limits
 
-Unreleased dependency integration, 14 November: all 19 dependency PRs are
+Historical dependency integration, 14 November: all 19 dependency PRs are
 included together. TypeScript 7 builds both readers; the Lite exporter and type
 checks use its command-line interface. Acorn selects the shared JavaScript tests.
 PyMuPDF 2.1 matched every pixel on the same six baseline pages, so the reference
@@ -56,7 +61,7 @@ SHA-256 inside the browser, avoiding a roughly 116 MB test-protocol response.
 These changes preserve the existing checks and reader layout. Dependency notices,
 runtime inventories and the architecture PDF are refreshed.
 
-Unreleased code improvement, 14 November: the creator now uses Jakarta Mail for
+Historical code improvement, 14 November: the creator now uses Jakarta Mail for
 MIME assembly and XMPBox for metadata serialization. Outlook Message Parser is
 1.16.3; its missing-date fix replaces our workaround. No dependency was added.
 Production Java code fell from 15,720 to 15,539 lines, excluding comments and blank
@@ -71,7 +76,7 @@ The custom archive storage remains: replacing it with stock PDFBox increased
 retained heap in the storage probes. This is not a general speed or memory claim.
 
 Release checks and library versions are recorded in the
-[verification record](releases/2.2.0-beta.3-validation.md).
+[verification record](releases/2.3.0-beta.1-validation.md).
 Earlier counts remain dated evidence in the changelog and release records.
 
 The tested desktop environment is mainly Linux with Java 21. Reader extensions

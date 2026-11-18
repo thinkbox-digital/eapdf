@@ -1645,7 +1645,7 @@ function encodeToXmlString(str) {
   return buffer.join("");
 }
 function validateFontName(fontFamily, mustWarn = false) {
-  const m = /^("|').*("|')$/.exec(fontFamily);
+  const m = /^(["']).*(["'])$/.exec(fontFamily);
   if (m && m[1] === m[2]) {
     const re = new RegExp(`[^\\\\]${m[1]}`);
     if (re.test(fontFamily.slice(1, -1))) {

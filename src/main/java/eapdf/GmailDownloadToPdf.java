@@ -185,6 +185,7 @@ public class GmailDownloadToPdf {
         System.err.println("warning: retrying Gmail message " + messageId + " after " + exception.getMessage());
         // Network retry backoff, not polling for work; interruption cancels it.
         try {
+          //noinspection BusyWait
           Thread.sleep(250L << attempt);
         } catch (InterruptedException interrupted) {
           Thread.currentThread().interrupt();

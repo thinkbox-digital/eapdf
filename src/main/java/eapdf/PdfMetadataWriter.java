@@ -47,11 +47,12 @@ final class PdfMetadataWriter {
   }
 
   private String buildMetadata(List<EmailRecord> records, String profile, boolean archive) throws Exception {
+    if (records.isEmpty()) throw Common.fail("Cannot create EA-PDF metadata without email records");
     for (EmailRecord record : records) {
       Common.finalizeRecordMetadata(record);
       Common.requireCreationDate(record);
     }
-    EmailRecord first = records.isEmpty() ? null : records.getFirst();
+    EmailRecord first = records.getFirst();
     String title = archive ? buildArchiveTitle(records) : Common.nz(first.subject).isBlank() ? "Email" : first.subject;
     String description = archive ? buildArchiveDescription(records, profile) : buildDescription(first);
     XMPMetadata metadata = standardMetadata(records, profile, title, description);

@@ -5,6 +5,13 @@ Use [current project status](PROJECT_STATUS.md) and [architecture decisions](ARC
 for the current handover; do not treat historical counts or then-open findings as
 a fresh acceptance run.
 
+## 2026-11-18 — 2.3.0-beta.1 / readers 1.3.0-beta.1
+
+- **New reader:** publish Even More Lite in place of Lite, with adjustable message/page/asset panes and original-byte asset downloads. Full retains search and independent CSV/XMP export.
+- **Bug fix:** reject empty metadata input explicitly.
+- **Code improvement:** use process-exit notifications for worker watchdogs, centralize worker-report synchronization, and apply equivalent font-name quote character classes in both PDF.js hook bundles.
+- **Code improvement:** apply dependency PRs #26–#33 and refresh inspection provenance. C2PA/PAdES remains separate.
+
 ## 2026-11-14 — 2.2.0-beta.3 / readers 1.2.0-beta.3
 
 - **Bug fix:** partial archive inspection cannot turn a message download into an original whole-archive download. Explicit Portfolio whole-file downloads remain available.

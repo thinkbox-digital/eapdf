@@ -174,6 +174,15 @@ class Common {
       return fresh;
     }
 
+    synchronized void importDiagnostics(Map<String, String> importedWarnings,
+                                        Map<String, ConversionDiagnostic> importedDiagnostics, long size) {
+      if (size > ProcessingLimits.metadataBytes() - metadataSize - warningSize)
+        throw fail("Combined process diagnostics exceed the metadata budget");
+      warningSize += size;
+      warnings.putAll(importedWarnings);
+      diagnostics.putAll(importedDiagnostics);
+    }
+
     synchronized void stage(EmailRecord record) throws Exception {
       if (record.payloadStaged) return;
       ProcessingLimits.checkCount(++stagedRecords);

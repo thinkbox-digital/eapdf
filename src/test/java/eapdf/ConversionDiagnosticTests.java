@@ -66,4 +66,25 @@ class ConversionDiagnosticTests {
       assertTrue(job.diagnostics.isEmpty());
     } finally { if (before == null) System.clearProperty("eapdf.maxMetadataBytes"); else System.setProperty("eapdf.maxMetadataBytes", before); }
   }
+
+  @Test void workerDiagnosticsShareTheBudgetAndRejectAnImportWithoutPartialChanges() {
+    try (var job = Common.beginJob()) {
+      var record = new EmailRecord(); record.sourcePath = "input.eml";
+      Common.warn(record, ConversionDiagnostic.Code.REVIEW_REQUIRED, "Review needed");
+      long originalSize = job.warningSize;
+      var imported = java.util.Map.of("worker warning", "Recovered text");
+      var diagnostic = new ConversionDiagnostic(ConversionDiagnostic.Code.TEXT_RECOVERED,
+          "worker.eml", "", "", "", "Recovered text");
+      var diagnostics = java.util.Map.of("worker diagnostic", diagnostic);
+      job.metadataSize = ProcessingLimits.metadataBytes() - originalSize - 128;
+      assertThrows(Common.UserFacingException.class, () -> job.importDiagnostics(imported, diagnostics, 129));
+      assertEquals(originalSize, job.warningSize);
+      assertFalse(job.warnings.containsKey("worker warning"));
+      assertFalse(job.diagnostics.containsKey("worker diagnostic"));
+      job.importDiagnostics(imported, diagnostics, 128);
+      assertEquals(originalSize + 128, job.warningSize);
+      assertEquals("Recovered text", job.warnings.get("worker warning"));
+      assertEquals(diagnostic, job.diagnostics.get("worker diagnostic"));
+    }
+  }
 }

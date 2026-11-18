@@ -1,5 +1,11 @@
 Project: Email → EA-PDF generator
 
+Workspace separation, 18 November 2026:
+- This is the normal development checkout, based on GitHub main.
+- The retained C2PA/PAdES experiment is in ../eapdf on experiment/c2pa-pades. Do not merge or copy experimental features here without an explicit user request.
+- PR fixes #26–#33 were selected for this checkout; other local experimental changes remain separate.
+- On 18 November 2026 the user selected Even More Lite for transfer and publication in place of Lite. Build and publish Full and Even More Lite; retain the Lite exporter as shared infrastructure. C2PA/PAdES remains separate.
+
 Build:
 mvn package
 
@@ -46,7 +52,7 @@ Rules:
 
 - Public documentation must not cite or link to unpublished generated documents or evidence under the local output directories. Summarize verified results in tracked documentation; use published examples or release assets for downloadable files. Use explicit temporary destinations in command examples.
 
-- Whenever the user requests a new version or a version bump, also bump the browser viewer version and rebuild both viewer packages.
+- Whenever the user requests a new version or a version bump, also bump the browser viewer version and rebuild Full and Even More Lite packages.
 - Representative bulk samples must be balanced by output count: retain only a handful of standalone 1s/1si PDFs per input type, group EML/MSG sources into 1m/1mi archives, and use predominantly 1c/1ci/1m/1mi for PSTs. Preserve every source in the grouped/archive coverage.
 
 - Signature-compatible embedded full-text indexing was authorized on 2026-11-07; see docs/EMBEDDED_SEARCH_INDEX.md for its supported signing workflow and limits.

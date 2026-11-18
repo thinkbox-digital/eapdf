@@ -25,7 +25,7 @@ portProbe.listen(0, '127.0.0.1');
 await once(portProbe, 'listening');
 const port = portProbe.address().port;
 await new Promise(done => portProbe.close(done));
-const driver = spawn(process.env.GECKODRIVER_PATH ?? 'geckodriver', ['--allow-system-access', '--host', '127.0.0.1', '--port', String(port), '--log', 'error'], { stdio: ['ignore', 'ignore', 'inherit'] });
+const driver = spawn(process.env.GECKODRIVER_PATH ?? 'geckodriver', ['--allow-system-access', '--host', '127.0.0.1', '--port', String(port), '--log', 'error'], { stdio: ['ignore', 'ignore', 'inherit'], env: { ...process.env, MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: '1' } });
 let launchError;
 driver.on('error', error => { launchError = error; });
 let session;

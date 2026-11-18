@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EA-PDF Even More Lite</title>
+  <link rel="icon" href="icons/icon-32.png"><link rel="stylesheet" href="viewer.css">
+  <script type="module" src="viewer.js"></script>
+</head>
+<body>
+  <header>
+    <label class="open">Open PDF<input id="file" type="file" accept=".pdf,application/pdf" aria-label="Open PDF" disabled></label>
+    <button id="back" hidden disabled>Parent</button>
+    <button id="previous" aria-label="Previous page" disabled>‹</button>
+    <label>Page <input id="page" inputmode="numeric" aria-label="Page number" value="1" disabled></label><span id="pages">of 0</span>
+    <button id="next" aria-label="Next page" disabled>›</button>
+    <select id="zoom" aria-label="Zoom" disabled><option value="fit-page">Fit page</option><option value="fit-width">Fit width</option><option value="1">100%</option><option value="1.5">150%</option><option value="2">200%</option></select>
+    <button id="close" disabled>Close</button>
+    <button id="toggle-navigation" aria-expanded="true" aria-controls="navigation-panel" disabled>Messages</button>
+    <button id="toggle-details" aria-expanded="true" aria-controls="details-panel" disabled>Files</button>
+  </header>
+  <nav id="breadcrumbs" aria-label="Document path" hidden></nav>
+  <div id="workspace" class="hide-navigation hide-details">
+    <aside id="navigation-panel" aria-label="Messages and collections"><h1 id="filename"></h1><div id="tree"></div></aside>
+    <div id="resize-navigation" class="pane-divider" role="separator" tabindex="0" aria-label="Resize messages pane" aria-controls="navigation-panel" aria-orientation="vertical"></div>
+    <main id="viewport" tabindex="0" aria-label="PDF pages; scroll to read more" aria-busy="false">
+      <p id="empty-state">Open or drop a PDF. Files stay on this device.</p><div id="page-surface" hidden></div>
+    </main>
+    <div id="resize-details" class="pane-divider" role="separator" tabindex="0" aria-label="Resize assets pane" aria-controls="details-panel" aria-orientation="vertical"></div>
+    <aside id="details-panel" aria-label="Files and document information"><div class="details-heading"><h2 id="assets-title">Files in this PDF</h2><button id="all-files" hidden>All files</button></div><div id="assets"></div></aside>
+  </div>
+  <footer><span id="status" role="status" aria-live="polite">Loading viewer…</span><span>Even More Lite __VIEWER_VERSION__</span></footer>
+</body>
+</html>

@@ -1,25 +1,25 @@
 # Downloads
 
-Download **EA-PDF 2.2.0-beta.3** and **viewer 1.2.0-beta.3** from the
-[current release](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.3).
+Download **EA-PDF 2.3.0-beta.1** and **viewer 1.3.0-beta.1** from the
+[current release](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.3.0-beta.1).
 
 | File | Use it for |
 | --- | --- |
-| `emailtopdfa-2.2.0-beta.3-gui.jar` | Desktop email conversion |
-| `emailtopdfa-2.2.0-beta.3.jar` | Command-line conversion |
-| `eapdf-validator-2.2.0-beta.3.jar` | Standalone Java validation |
-| `configuration-2.2.0-beta.3.zip` | Public application configuration |
-| `eapdf-viewer-1.2.0-beta.3-chromium.zip` | Chromium viewer extension |
-| `eapdf-viewer-1.2.0-beta.3-firefox.zip` | Firefox viewer extension |
-| `eapdf-viewer-lite-1.2.0-beta.3-chromium.zip` | Lite Chromium reader |
-| `eapdf-viewer-lite-1.2.0-beta.3-firefox.zip` | Lite Firefox reader |
-| `eapdf-viewer-lite-1.2.0-beta.3-web.zip` | Lite reader served as a local web page |
-| `eapdf-viewer-lite-1.2.0-beta.3-source.zip` | Standalone Lite source code |
-| `ea-pdf-examples-2.2.0-beta.3.zip` | Example outputs and validation records |
-| `EA-PDF_User_Manual-2.2.0-beta.3.pdf` | Offline PDF/A user manual |
-| `EA-PDF_Software_Architecture-2.2.0-beta.3.pdf` | One-page product and library diagram |
-| `ea-pdf-screenshots-2.2.0-beta.3.zip` | Four 1280×800 sample screenshots |
-| `PRIVACY-2.2.0-beta.3.md` | Short privacy policy |
+| `emailtopdfa-2.3.0-beta.1-gui.jar` | Desktop email conversion |
+| `emailtopdfa-2.3.0-beta.1.jar` | Command-line conversion |
+| `eapdf-validator-2.3.0-beta.1.jar` | Standalone Java validation |
+| `configuration-2.3.0-beta.1.zip` | Public application configuration |
+| `eapdf-viewer-1.3.0-beta.1-chromium.zip` | Chromium viewer extension |
+| `eapdf-viewer-1.3.0-beta.1-firefox.zip` | Firefox viewer extension |
+| `eapdf-viewer-even-more-lite-1.3.0-beta.1-chromium.zip` | Even More Lite Chromium reader |
+| `eapdf-viewer-even-more-lite-1.3.0-beta.1-firefox.zip` | Even More Lite Firefox reader |
+| `eapdf-viewer-even-more-lite-1.3.0-beta.1-web.zip` | Even More Lite reader served as a local web page |
+| `eapdf-viewer-even-more-lite-1.3.0-beta.1-source.zip` | Standalone Even More Lite source code |
+| `ea-pdf-examples-2.3.0-beta.1.zip` | Example outputs and validation records |
+| `EA-PDF_User_Manual-2.3.0-beta.1.pdf` | Offline PDF/A user manual |
+| `EA-PDF_Software_Architecture-2.3.0-beta.1.pdf` | One-page product and library diagram |
+| `ea-pdf-screenshots-2.3.0-beta.1.zip` | Four 1280×800 sample screenshots |
+| `PRIVACY-2.3.0-beta.1.md` | Short privacy policy |
 | `SHA256SUMS.txt` | Checksums for verifying the downloaded files |
 
 Java applications require **Java 21 or later**. Extract the configuration bundle
