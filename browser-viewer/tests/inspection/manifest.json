@@ -12,20 +12,20 @@
       "jsonschema": "4.24.0",
       "Pillow": "13.0.0",
       "lxml": "6.1.3",
-      "packaging": "24.2",
-      "Deprecated": "1.3.1",
-      "wrapt": "1.17.2",
+      "packaging": "26.3",
+      "Deprecated": "3.0.1",
+      "wrapt": "2.5.2",
       "attrs": "25.1.0",
-      "jsonschema-specifications": "2025.4.1",
+      "jsonschema-specifications": "2025.9.1",
       "referencing": "0.36.2",
       "rpds-py": "0.25.1",
-      "typing_extensions": "4.12.2"
+      "typing_extensions": "4.16.0"
     },
     "sources": {
       "browser-viewer/reference/fixtures.py": "6158df8eb3547b0c61343125444d2725f2fefd6a7991866270a3ae4783c8f4fc",
       "browser-viewer/reference/inspect_pdf.py": "f44d890f832f9d63a6e1f4c89a38ac1faf2194d8e820a84f570f6f35f20cb1c7",
       "browser-viewer/reference/make_controls.py": "469c7f7a42da19b0ee45c67c03f7eca682b86e181f6226171cda845f27a90415",
-      "browser-viewer/reference/requirements.txt": "05ef368667d9ac09a0b1eb84adadae6ef9c1c55c1d51508b4a27433a639879ea",
+      "browser-viewer/reference/requirements.txt": "af6159477d174287b073ef0471636e788c4cb6af956de0c3a7825af89cbbb861",
       "browser-viewer/scripts/inspection-contract.mjs": "331a0ad0bab761a509d7f2613806704293a7b3c035a7ea57e64c7e2a5da5c9d4",
       "browser-viewer/schema/inspection-v1.schema.json": "d7e7d86bbeb51e412d460cab646baf8d3fd9bf560c3a1389b3b2346927fad7de"
     }

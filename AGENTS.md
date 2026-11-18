@@ -1,5 +1,10 @@
 Project: Email → EA-PDF generator
 
+Workspace separation, 18 November 2026:
+- This is the normal development checkout, based on GitHub main.
+- The retained C2PA/PAdES experiment is in ../eapdf on experiment/c2pa-pades. Do not merge or copy experimental features here without an explicit user request.
+- PR fixes #26–#33 were selected for this checkout; other local experimental changes remain separate.
+
 Build:
 mvn package
 

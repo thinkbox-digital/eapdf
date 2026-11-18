@@ -1,5 +1,25 @@
 # Project status
 
+Bug fix and code improvement, 18 November 2026 (local, unpublished): this checkout
+continues from GitHub main with PR fixes #26–#33 applied. CI pins checkout 7.0.1,
+upload-artifact 7.0.2 and setup-python 7.1.0 by commit, including the new AI review
+workflow. The independent Python inspection environment updates packaging,
+Deprecated, wrapt, jsonschema-specifications and typing_extensions. Refreshed
+provenance changes only dependency versions and the requirements hash; extracted
+records and input evidence hashes are unchanged. Portfolio acceptance actions
+check readiness and activate in one browser task to avoid lost clicks during a
+delayed page refit. Application versions are unchanged; no publication is included.
+Verification: 15 Python inspection tests, two inspection contract tests, frozen
+fixture checks and source/type checks pass. Workflow lint and all 19 updated action
+input checks pass. The revised Firefox acceptance script passes against the
+checksum-verified published regular viewer; no regular viewer rebuild was needed.
+
+The C2PA/PAdES experiment is retained separately on `experiment/c2pa-pades`. Its
+Full Chromium reader is named EA-PDF Viewer Experimental and has its own identity.
+These experimental source changes, WeasyPrint integration and Even More Lite are
+not included in this normal-development checkout. Earlier local dependency
+backports also remain separate until selected for transfer.
+
 Updated 14 November 2026 for **creator/validator 2.2.0-beta.3** and
 **full/Lite readers 1.2.0-beta.3**.
 

@@ -3,6 +3,15 @@
 The project has three parts: create PDFs, check PDFs, and read PDFs.
 The browser reader runs without Java or a server.
 
+Normal development continues in this GitHub-main checkout. The retained
+`experiment/c2pa-pades` checkout is separate; its C2PA/PAdES coordinator, export
+verification, experimental viewer identity and other local additions are not
+automatically merged here. Selected maintenance fixes are transferred independently.
+
+The Python inspection oracle remains a development tool. Its frozen manifest
+records exact package versions and source hashes. Dependency updates require an
+explicit provenance refresh and review; tests do not rewrite expected records.
+
 [Architecture diagram (PDF)](EA-PDF_Software_Architecture.pdf)
 
 ## Where to work

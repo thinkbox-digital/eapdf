@@ -86,6 +86,12 @@ exported copy. See [Lite maintenance](lite/README.md) and [code layout](../docs/
 `npm test` runs the full unit and Chromium suites. `npm run test:firefox` covers
 Firefox. The independent PDF inspection checks use Python and
 `reference/requirements.txt`; run them with `npm run test:m1`.
+The inspection provenance records exact package versions and source hashes. After
+changing those requirements, install the complete pins in an isolated CPython 3.12
+environment and run `python -B reference/fixtures.py --write`. Review the manifest
+and extracted-record differences, then run `npm run test:m1` and
+`npm run fixtures:check` with that environment on `PATH`. Tests never refresh
+their expected records automatically.
 Browser tests need the corresponding browser and driver installed. Use
 `CHROMIUM_PATH`, `FIREFOX_PATH` and `GECKODRIVER_PATH` when they are outside the default locations.
 
