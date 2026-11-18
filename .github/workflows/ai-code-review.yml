@@ -1,0 +1,53 @@
+name: EA-PDF AI Code Review
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.java'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: eapdf-ai-review-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run Java verification
+        shell: bash
+        run: |
+          set +e
+          mvn -B -ntp -Deapdf.build.directory="$RUNNER_TEMP/eapdf-build" verify > ai-review-maven.log 2>&1
+          code=$?
+          printf '%s\n' "$code" > ai-review-maven-status.txt
+          tail -n 80 ai-review-maven.log
+          exit 0
+      - name: Analyze Java changes and test results
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-5-mini
+          REVIEW_BASE: ${{ github.event.before }}
+        run: python3 scripts/ai_code_review.py
+      - name: Upload review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eapdf-ai-review-${{ github.run_id }}
+          path: |
+            ai-review.md
+            ai-review-maven-status.txt
+          retention-days: 14
