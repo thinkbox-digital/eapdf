@@ -1,4 +1,11 @@
-# EA-PDF Viewer Lite
+# Retained Lite build infrastructure
+
+Viewer Lite is discontinued as of 18 November 2026. Release builds produce Full
+and Even More Lite. The exporter, generic PDF.js hooks and packaging helpers in
+this directory remain shared infrastructure for [Even More Lite](../even-more-lite/README.md).
+The last published Lite packages are in [2.2.0-beta.3](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.2.0-beta.3).
+
+# Historical Lite reference
 
 A standalone export of the EA-PDF browser viewer. It retains the existing layout,
 message and folder navigation, attachments, metadata,
@@ -50,7 +57,7 @@ npm run build:pdfjs
 
 This verifies existing output hashes. Intentional hook updates use --write, review
 all source/input/output hashes, then repeat without --write from a clean build.
-The recipe retains shared patches 0001, 0002 and the navigation/metadata subset of 0007–0009, plus the upstream RTL ligature correction in 0010 and opt-in page-only extraction in 0011, with explicit checked
+The recipe retains shared patches 0001, 0002 and the navigation/metadata subset of 0007–0009, plus the upstream RTL ligature correction in 0010, opt-in page-only extraction in 0011 and equivalent font-name quote character classes in 0012, with explicit checked
 adaptations for their original archive-dependent context. Portfolio schema/layout
 inspection and folder-thumbnail decoding are excluded; collection membership,
 folders, associated files and GoToE navigation remain available. Patch 0003 is excluded;

@@ -2,6 +2,12 @@ package eapdf;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class CreatorIdentityTests {
+  @Test void emptyArchivesCannotProduceMetadata() {
+    var error = assertThrows(Common.UserFacingException.class,
+        () -> PdfMailWriter.buildXmpMetadata(java.util.List.of(), "m"));
+    assertEquals("Cannot create EA-PDF metadata without email records", error.getMessage());
+  }
+
   @Test void creatorIdentityIsExplicitAndSeparateFromTheSoftware() throws Exception {
     String previous = PdfMailWriter.CONFIG.creator;
     try {

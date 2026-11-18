@@ -6,14 +6,15 @@ import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 const root=fileURLToPath(new URL('../',import.meta.url));
+const profile='even-more-lite';
 const temporary=await mkdtemp(join(tmpdir(),'eapdf-lite-release-')),source=join(temporary,'source');
 const run=(cmd,args,cwd=source)=>execFileSync(cmd,args,{cwd,stdio:'inherit'});
 try {
- run(process.execPath,['lite/export.mjs','--output',source],root);
+ run(process.execPath,['lite/export.mjs','--output',source,'--profile',profile],root);
  run('npm',['ci','--ignore-scripts','--no-audit','--no-fund']);
  for(const script of ['check','build','test','package'])run('npm',['run',script]);
  const {version}=JSON.parse(await readFile(join(source,'package.json'),'utf8'));
- const name=`eapdf-viewer-lite-${version}-source.zip`;
+ const name=`eapdf-viewer-${profile}-${version}-source.zip`;
  run('python3',['-c',`
 from pathlib import Path
 import json,zipfile
@@ -32,7 +33,7 @@ with zipfile.ZipFile(path) as archive:
   const data=await readFile(join(source,'releases',name));await writeFile(join(release,name),data);
   sums.push(`${createHash('sha256').update(data).digest('hex')}  ${name}`);
  }
- await writeFile(join(release,`eapdf-viewer-lite-${version}-SHA256SUMS`),sums.join('\n')+'\n');
- await cp(join(source,'export-manifest.json'),join(release,`eapdf-viewer-lite-${version}-provenance.json`));
- console.log(`EA-PDF Viewer Lite packages and checksums: ${release}`);
+ await writeFile(join(release,`eapdf-viewer-${profile}-${version}-SHA256SUMS`),sums.join('\n')+'\n');
+ await cp(join(source,'export-manifest.json'),join(release,`eapdf-viewer-${profile}-${version}-provenance.json`));
+ console.log(`Reader packages and checksums: ${release}`);
 } finally {await rm(temporary,{recursive:true,force:true});}

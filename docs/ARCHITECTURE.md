@@ -6,7 +6,8 @@ The browser reader runs without Java or a server.
 Normal development continues in this GitHub-main checkout. The retained
 `experiment/c2pa-pades` checkout is separate; its C2PA/PAdES coordinator, export
 verification, experimental viewer identity and other local additions are not
-automatically merged here. Selected maintenance fixes are transferred independently.
+automatically merged here. Even More Lite and its required reader helpers were
+explicitly selected on 18 November 2026; C2PA/PAdES remains separate. Selected maintenance fixes are transferred independently.
 
 The Python inspection oracle remains a development tool. Its frozen manifest
 records exact package versions and source hashes. Dependency updates require an
@@ -46,9 +47,9 @@ explicit provenance refresh and review; tests do not rewrite expected records.
 - Python's root modules keep the command-line and public import interfaces.
   Separate modules hold report formatting, engine adapters and rule families.
 
-## Maintained Lite viewer export
+## Maintained reader exports
 
-Both editions share the message-download scope decision. Original-byte message
+Full retains the message-download scope decision. Original-byte message
 downloads require a declared standalone profile, complete relevant inspection,
 one recognized message and ownership of every page. Otherwise only proven body
 pages can be exported. An opt-in page-only PDF.js extraction mode drops inherited
@@ -57,9 +58,12 @@ worker action fails closed against older workers. Default upstream extraction an
 the explicit Portfolio whole-file action retain their behavior.
 Both patch recipes include upstream PDF.js PR #22521 as patch 0010 for RTL glyph
 ordering; this correction does not introduce the Full reader's archive optimizations.
+Shared patch 0012 uses equivalent quote character classes in font-name validation.
 
-The full reader is the source for shared fixes. `npm run build:lite` selects its
-shared modules and substitutes small adapters for features Lite omits. Do not edit
+Full and Even More Lite are the published editions. Viewer Lite is discontinued;
+its exporter and generic hooks remain shared build infrastructure.
+The full reader is the source for shared fixes. `npm run build:even-more-lite` selects its
+shared modules and adds the overrides in `even-more-lite/overrides`. Do not edit
 generated exports by hand.
 
 The exporter asks the TypeScript compiler's command-line interface for the module
@@ -67,13 +71,15 @@ graph after applying Lite overrides, including type-only imports. Acorn selects
 the shared JavaScript tests. Type-contract tests also use the compiler interface.
 These tools are used during development and are not bundled into either reader.
 
-Lite keeps the reading layout, message/folder navigation, attachments, CSV/XMP
-export and normal PDF text search. It omits Conversations, Portfolio presentation,
-embedded search indexes and large-archive optimizations. Its collection metadata
-scan still supports filtering.
+Even More Lite keeps message/folder navigation, PDF pages and embedded asset
+access in three adjustable panes. It omits search, filtering, CSV/XMP export,
+Conversations, Portfolio presentation, embedded indexes and large-archive
+optimizations. Full retains those features, including independent CSV export.
+Five reader-specific helper overrides supply navigation, page scrolling, file
+categories, message labels and pane resizing without changing Full's shared code.
 
 The generic PDF.js hooks expose document parts, metadata, associated files and
-collection membership. They do not depend on the EA-PDF user interface. Lite keeps
+collection membership. They do not depend on the EA-PDF user interface. Even More Lite keeps
 upstream cross-reference storage and parsed-object caching. Its limits are in the
 [reader guide](../browser-viewer/README.md).
 

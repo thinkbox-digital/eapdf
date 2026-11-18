@@ -113,15 +113,8 @@ public final class MboxProcesses {
         ConversionProgress.importReceipts(directory.resolve("progress.json"));
         Report report;
         try (var reader = Files.newBufferedReader(directory.resolve("report.json"))) { report = JSON.fromJson(reader, Report.class); }
-        // Shared with JobReport.stage/release and diagnostic accumulation.
-        synchronized (job) {
-          long size = JSON.toJson(report.warnings()).length() * 2L + JSON.toJson(report.diagnostics()).length() * 2L;
-          if (size > ProcessingLimits.metadataBytes() - job.metadataSize - job.warningSize)
-            throw Common.fail("Combined process diagnostics exceed the metadata budget");
-          job.warningSize += size;
-          job.warnings.putAll(report.warnings());
-          job.diagnostics.putAll(report.diagnostics());
-        }
+        long size = JSON.toJson(report.warnings()).length() * 2L + JSON.toJson(report.diagnostics()).length() * 2L;
+        job.importDiagnostics(report.warnings(), report.diagnostics(), size);
         job.renderedPages.addAndGet(report.pages());
         job.imagePixels.addAndGet(report.pixels());
   }
@@ -145,13 +138,7 @@ public final class MboxProcesses {
     if (request.owner() != parent.pid() || !ConversionSupervisor.sameProcess(request.owner(), request.ownerStart()))
       throw Common.fail("Invalid MBOX worker ownership");
     // Independent of rendering progress so an orphaned worker cannot keep running.
-    Thread watchdog = new Thread(() -> {
-      while (parent.isAlive()) {
-        try { Thread.sleep(100); } catch (InterruptedException error) { return; }
-      }
-      Runtime.getRuntime().halt(2);
-    }, "eapdf-mbox-parent-watchdog");
-    watchdog.setDaemon(true); watchdog.start();
+    ConversionSupervisor.watchParent(parent, "eapdf-mbox-parent-watchdog");
     ConversionProgress.start("eapdf.EmailToPDFA", new String[]{"--out", directory.toString(), request.input()}, directory);
     ConversionProgress.attach(directory);
     try (OutputTransaction transaction = new OutputTransaction(directory.resolve("outputs"), directory)) {

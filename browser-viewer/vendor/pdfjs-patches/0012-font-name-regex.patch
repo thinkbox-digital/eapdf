@@ -1,0 +1,11 @@
+diff --git a/src/core/core_utils.js b/src/core/core_utils.js
+--- a/src/core/core_utils.js
++++ b/src/core/core_utils.js
+@@ -547,6 +547,6 @@
+ function validateFontName(fontFamily, mustWarn = false) {
+   // See https://developer.mozilla.org/en-US/docs/Web/CSS/string.
+-  const m = /^("|').*("|')$/.exec(fontFamily);
++  const m = /^(["']).*(["'])$/.exec(fontFamily);
+   if (m && m[1] === m[2]) {
+     const re = new RegExp(`[^\\\\]${m[1]}`);
+     if (re.test(fontFamily.slice(1, -1))) {

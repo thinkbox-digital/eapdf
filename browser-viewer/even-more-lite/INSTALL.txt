@@ -1,0 +1,33 @@
+EA-PDF Even More Lite — local unsigned beta
+
+Chromium: extract the chromium ZIP, open chrome://extensions, enable Developer
+mode and Load unpacked. Select the directory containing manifest.json.
+Firefox: extract the firefox ZIP, open about:debugging#/runtime/this-firefox,
+choose Load Temporary Add-on and select manifest.json. Installation is temporary.
+This edition can be installed alongside Full.
+
+Build from this checkout with:
+npm --prefix browser-viewer run build:even-more-lite
+Packages and an independent source ZIP appear in browser-viewer/releases.
+
+Web: extract the web ZIP into /tmp/eapdf-viewer-even-more-lite-web, then run:
+python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/eapdf-viewer-even-more-lite-web
+Open http://127.0.0.1:8765/viewer.html. Double-clicking the HTML is not supported.
+
+Open or drop a local PDF. Use the page number, arrows and zoom to read. Click
+messages or collection PDFs on the left; Parent returns. Close also cancels loading.
+The right pane lists files in categories, matching the Full viewer. The download
+arrow saves original bytes; the eye opens a PDF or previews supported images/text.
+Attachment links open/preview supported files; other file types download.
+The known owning subject appears under the filename. Scrolling keeps the left
+pane selection in step with the message being read. At the end/beginning of an
+email PDF, another scroll gesture moves within the same folder. Go to page jumps
+to a known attachment page. Drag pane dividers
+or focus them and use arrow keys; Messages and Files toggle the side panes.
+Select All files to restore the full asset inventory after selecting a message.
+A collection cover may have only one page. Open child PDFs in the folder tree to
+read its emails; the file count includes sources and supporting files as well.
+No search, filter controls or CSV/XMP export.
+No conformance validation. All reading remains local; nothing is uploaded.
+Limits: 32 MiB input, 2048 pages/PDF, 2 MiB metadata, 16 MiB decoded asset and four
+embedded levels. Use Full when more controls or capabilities are needed.

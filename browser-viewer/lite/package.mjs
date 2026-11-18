@@ -9,13 +9,13 @@ const {version}=JSON.parse(await readFile('package.json','utf8'));await mkdir('r
 execFileSync('python3',['-c',`
 from pathlib import Path
 import hashlib,json,zipfile
-root=Path.cwd();version=json.loads((root/'package.json').read_text())['version'];release=root/'releases'
+root=Path.cwd();package=json.loads((root/'package.json').read_text());version=package['version'];release=root/'releases'
 for browser in ['chromium','firefox','web']:
  build=root/'dist'/browser;info=json.loads((build/'build-info.json').read_text());assert info['project']==version
  files={p.relative_to(build).as_posix():p.read_bytes() for p in build.rglob('*') if p.is_file()}
  assert set(files)==set(info['files'])|{'build-info.json'}
  for name,digest in info['files'].items():assert hashlib.sha256(files[name]).hexdigest()==digest,name
- destination=release/f'eapdf-viewer-lite-{version}-{browser}.zip'
+ destination=release/f'{package["name"]}-{version}-{browser}.zip'
  with zipfile.ZipFile(destination,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
   for name,data in sorted(files.items()):
    entry=zipfile.ZipInfo(name,date_time=(2026,11,13,0,0,0));entry.create_system=3;entry.external_attr=0o100644<<16

@@ -296,6 +296,22 @@ public final class ConversionSupervisor {
     }
   }
 
+  static void watchParent(ProcessHandle parent, String name) {
+    Thread watchdog = new Thread(() -> {
+      try {
+        parent.onExit().get();
+      } catch (InterruptedException error) {
+        Thread.currentThread().interrupt();
+        return;
+      } catch (java.util.concurrent.ExecutionException error) {
+        throw new IllegalStateException("Could not monitor conversion supervisor", error);
+      }
+      Runtime.getRuntime().halt(2);
+    }, name);
+    watchdog.setDaemon(true);
+    watchdog.start();
+  }
+
   public static void main(String[] arguments) throws Exception {
     if (arguments.length < 2 || !ENTRIES.contains(arguments[0])) throw Common.fail("Invalid conversion worker invocation");
     worker = true;
@@ -305,15 +321,8 @@ public final class ConversionSupervisor {
     if (owner == null || owner.supervisor() != parent.pid() || !sameProcess(owner.supervisor(), owner.supervisorStart())) {
       throw Common.fail("Invalid supervised-worker ownership");
     }
-    // Intentional bounded polling: notice parent death even if conversion hangs.
-    Thread watchdog = new Thread(() -> {
-      while (parent.isAlive()) {
-        try { Thread.sleep(100); } catch (InterruptedException error) { return; }
-      }
-      Runtime.getRuntime().halt(2);
-    }, "eapdf-parent-watchdog");
-    watchdog.setDaemon(true);
-    watchdog.start();
+    // Independent of conversion progress so a hung worker still notices parent exit.
+    watchParent(parent, "eapdf-parent-watchdog");
     ConversionProgress.attach(directory);
     try (OutputTransaction transaction = new OutputTransaction(directory.resolve("outputs"), directory)) {
       String[] forwarded = Arrays.copyOfRange(arguments, 2, arguments.length);

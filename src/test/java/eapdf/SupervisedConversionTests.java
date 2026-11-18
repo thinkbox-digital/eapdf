@@ -49,6 +49,37 @@ class SupervisedConversionTests {
     }
   }
 
+  public static class ParentWatchdogProbe {
+    public static void main(String[] arguments) throws Exception {
+      ConversionSupervisor.watchParent(ProcessHandle.of(Long.parseLong(arguments[0])).orElseThrow(),
+          "eapdf-test-parent-watchdog");
+      System.out.write('R');
+      System.out.flush();
+      new java.util.concurrent.CountDownLatch(1).await();
+    }
+  }
+
+  @Test void parentExitHaltsAWorkerEvenWhenItsMainThreadIsBlocked() throws Exception {
+    Process parent = sleeper();
+    Process worker = null;
+    try {
+      worker = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+          "-cp", System.getProperty("java.class.path"), ParentWatchdogProbe.class.getName(), Long.toString(parent.pid()))
+          .redirectError(directory.resolve("watchdog.log").toFile()).start();
+      Process probe = worker;
+      var ready = new java.util.concurrent.FutureTask<>(() -> probe.getInputStream().read());
+      Thread.ofVirtual().start(ready);
+      Assertions.assertEquals((int) 'R', ready.get(10, TimeUnit.SECONDS).intValue());
+      Assertions.assertTrue(worker.isAlive());
+      ConversionSupervisor.stopTree(parent);
+      Assertions.assertTrue(worker.waitFor(10, TimeUnit.SECONDS));
+      Assertions.assertEquals(2, worker.exitValue());
+    } finally {
+      ConversionSupervisor.stopTree(parent);
+      if (worker != null) ConversionSupervisor.stopTree(worker);
+    }
+  }
+
   @Test void wholeJobDeadlineReapsEvenUncooperativeWorkerProcesses() throws Exception {
     Process process = sleeper();
     try {

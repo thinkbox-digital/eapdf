@@ -27,6 +27,10 @@ Info fields. File-bearing and metadata dependencies are excluded from copied
 resources. Both editions select it. Shared Node and browser regressions check
 hidden embedded mail, page AF/annotations, DPart links, metadata, text and pixels.
 
+Patch `0012-font-name-regex.patch` replaces single-character alternatives with
+equivalent character classes in CSS font-name validation. Both editions retain
+the quote captures and existing matching-quote checks.
+
 Normal `npm run build` verifies the source/build-input/output hashes and copies
 those generated bundles. It does not need GitHub, Python, Java, a backend, or the
 upstream 931-package development toolchain. The extension is entirely local.
@@ -68,8 +72,8 @@ builds remain identical without rewriting output JavaScript. This is an existing
 build constant, not a generated runtime credential.
 
 Each reproduction runs the focused patch tests against the actual patched core and
-133 upstream specs covering catalog, primitives, message handlers, streams, parsing,
-evaluation and XML. Of these, 132 pass and one requires OffscreenCanvas unavailable
+142 upstream specs covering bidirectional text, catalog, primitives, message handlers,
+streams, parsing, evaluation and XML. Of these, 141 pass and one requires OffscreenCanvas unavailable
 in Node (recorded pending). Patch 0002 also sets ordinary DecodeStream allocation
 ceilings: 64 MiB for ordinary buffers and a 256 MiB worker allocation allowance.
 The large-archive patches size cross-reference decoding from its validated layout,
