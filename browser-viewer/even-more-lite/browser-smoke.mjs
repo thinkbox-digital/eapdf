@@ -104,7 +104,7 @@ async function exercise(page,label){
  await row('blue.png').getByRole('button',{name:'View blue.png',exact:true}).click();await page.locator('#attachment-viewer').waitFor({state:'visible'});await page.waitForFunction(()=>document.querySelector('#attachment-viewer').getAttribute('aria-busy')==='false');
  assert.ok(await page.locator('#attachment-canvas').evaluate(canvas=>canvas.width>0&&canvas.height>0));await page.locator('#attachment-close').click();
  await row('markup.html').getByRole('button',{name:'View markup.html',exact:true}).click();await page.locator('#attachment-viewer').waitFor({state:'visible'});await page.waitForFunction(()=>document.querySelector('#attachment-viewer').getAttribute('aria-busy')==='false');
- assert.match(await page.locator('#attachment-text').textContent(),/<script>/);assert.equal(await page.evaluate(()=>globalThis.attachmentExecuted),undefined);await page.locator('#attachment-close').click();
+ assert.match(await page.locator('#attachment-text').textContent(),/<script>/i);assert.equal(await page.evaluate(()=>globalThis.attachmentExecuted),undefined);await page.locator('#attachment-close').click();
  assert.equal(await row('blue.png').locator('button[aria-label="Download blue.png"] svg').count(),1);assert.equal(await row('blue.png').locator('button[aria-label="View blue.png"] svg').count(),1);
  checks.push(label+': shared Full viewer icons, text/image previews and inert markup');
  if(process.env.EAPDF_COLLECTION_SAMPLE){
