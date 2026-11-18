@@ -41,8 +41,8 @@ jobs:
         working-directory: browser-viewer
       - run: node --test tests/pdfjs-pin.test.mjs
         working-directory: browser-viewer
-  viewer-lite:
-    name: Standalone viewer Lite export
+  viewer-even-more-lite:
+    name: Standalone Even More Lite export
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -54,12 +54,12 @@ jobs:
           cache-dependency-path: browser-viewer/package-lock.json
       - run: npm ci --ignore-scripts
         working-directory: browser-viewer
-      - run: npm run build:lite
+      - run: npm run build:even-more-lite
         working-directory: browser-viewer
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: viewer-lite-local-builds
-          path: browser-viewer/releases/eapdf-viewer-lite-*
+          name: viewer-even-more-lite-local-builds
+          path: browser-viewer/releases/eapdf-viewer-even-more-lite-*
           if-no-files-found: error
   python-regressions:
     runs-on: ubuntu-24.04
