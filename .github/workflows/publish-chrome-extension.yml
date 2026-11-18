@@ -1,0 +1,108 @@
+name: Publish to Chrome Web Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: GitHub release tag
+        required: true
+        type: string
+      publish_on_approval:
+        description: Publish automatically when Google approves
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrome-web-store-${{ vars.CWS_EXTENSION_ID }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download and check the extension ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          ZIP_PATTERN: ${{ vars.CWS_ZIP_PATTERN }}
+        run: |
+          set -euo pipefail
+          : "${ZIP_PATTERN:?Set the CWS_ZIP_PATTERN repository variable}"
+          mkdir package
+          gh release download --repo "$GITHUB_REPOSITORY" --pattern "$ZIP_PATTERN" --dir package -- "$RELEASE_TAG"
+          mapfile -d '' packages < <(find package -maxdepth 1 -type f -name '*.zip' -print0)
+          if [[ ${#packages[@]} -ne 1 ]]; then
+            echo "Expected exactly one extension ZIP."
+            exit 1
+          fi
+          mv -- "${packages[0]}" extension.zip
+          unzip -p extension.zip manifest.json | jq -er '.version | strings | select(length > 0)'
+
+      - name: Install Google authentication library
+        run: python3 -m pip install 'google-auth[requests]'
+
+      - name: Upload and submit for review
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.CWS_SERVICE_ACCOUNT_JSON }}
+          PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
+          PUBLISH_ON_APPROVAL: ${{ inputs.publish_on_approval }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import time
+
+          from google.auth.transport.requests import AuthorizedSession
+          from google.oauth2 import service_account
+
+          credentials = service_account.Credentials.from_service_account_info(
+              json.loads(os.environ["SERVICE_ACCOUNT_JSON"]),
+              scopes=["https://www.googleapis.com/auth/chromewebstore"],
+          )
+          publisher = os.environ["PUBLISHER_ID"]
+          extension = os.environ["EXTENSION_ID"]
+          if not publisher or not extension:
+              raise SystemExit("Set CWS_PUBLISHER_ID and CWS_EXTENSION_ID.")
+
+          base = "https://chromewebstore.googleapis.com"
+          item = f"v2/publishers/{publisher}/items/{extension}"
+          session = AuthorizedSession(credentials)
+
+          def call(method, url, **kwargs):
+              response = session.request(method, url, timeout=120, **kwargs)
+              if not response.ok:
+                  raise SystemExit(f"Chrome Web Store API returned {response.status_code}: {response.text}")
+              return response.json()
+
+          with open("extension.zip", "rb") as package:
+              upload = call(
+                  "POST", f"{base}/upload/{item}:upload", data=package,
+                  headers={"Content-Type": "application/zip"},
+              )
+
+          state = upload.get("uploadState")
+          for _ in range(30):
+              if state != "IN_PROGRESS":
+                  break
+              time.sleep(5)
+              status = call("GET", f"{base}/{item}:fetchStatus")
+              state = status.get("lastAsyncUploadState", "IN_PROGRESS")
+
+          if state != "SUCCEEDED":
+              raise SystemExit(f"Upload did not succeed. State: {state}. Check the Developer Dashboard.")
+
+          publish_type = (
+              "DEFAULT_PUBLISH" if os.environ["PUBLISH_ON_APPROVAL"] == "true"
+              else "STAGED_PUBLISH"
+          )
+          result = call(
+              "POST", f"{base}/{item}:publish",
+              json={"publishType": publish_type, "blockOnWarnings": True},
+          )
+          print(json.dumps(result, indent=2))
+          PY
