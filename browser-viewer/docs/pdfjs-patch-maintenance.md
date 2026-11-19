@@ -240,3 +240,33 @@ folder thumbnail. Neither changes the default inspection schema. Thumbnail dimen
 mask depth and encoded sizes are checked before decoding; the existing worker allocation
 and time bounds remain active. Source tests cover exact nested target serialization,
 cycles, external-root rejection, lazy RGBA decoding, unknown locators and pixel limits.
+
+## Tricky TrueType family names, 19 November 2026
+
+Patch `0013-tricky-fonts.patch` backports the complete runtime fix from
+[Mozilla PR 22552](https://github.com/mozilla/pdf.js/pull/22552), merged as
+`1b510d78eebd866077e09ea67a632c97108a8f7c`. It identifies known tricky fonts
+from their names or the lengths and checksums of their original `cvt `, `fpgm`
+and `prep` tables before sanitization, then restores a Macintosh family name
+recognized by the browser font sanitizer. The shared OpenType checksum helper
+zero-pads partial words. The import context preserves our existing glyph-cycle
+guard. Full and the shared Lite hooks apply the same fix; PDF.js stays at 6.5.438.
+
+Shared source regressions cover subset names, ordinary fonts, missing/mismatched
+hint tables and checksum padding/overflow. The differential browser check uses
+Mozilla's public issue fixture in temporary storage, with its SHA-256 checked
+before opening. Preserve copies of both worker directories before rebuilding:
+
+```sh
+EAPDF_TRICKY_FONT_FIXTURE=/tmp/eapdf-font-check/fixture.pdf \
+EAPDF_TRICKY_FONT_BASELINE=/tmp/eapdf-font-check/baseline \
+npm run test:tricky-fonts
+```
+
+The baseline directory must contain `pdfjs-patched/` and `pdfjs-lite/`, each with
+its previous `pdf.mjs` and `pdf.worker.mjs`. The fixture is linked in upstream's
+`test/pdfs/issue22550.pdf.link`. The check verifies restored `DFKai-SB` naming,
+unchanged extracted text/geometry and search offsets, and records pixel hashes
+for both variants. On Linux Chromium 156, the 130 extracted text items and page
+pixels match the baseline. macOS Firefox title/body rendering remains a separate
+platform check; Linux results do not establish that platform's rendering.

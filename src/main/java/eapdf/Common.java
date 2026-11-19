@@ -155,6 +155,7 @@ class Common {
     final java.util.concurrent.atomic.AtomicLong imagePixels = new java.util.concurrent.atomic.AtomicLong();
     final java.util.concurrent.atomic.AtomicLong renderedPages = new java.util.concurrent.atomic.AtomicLong();
     int workerLimit = Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors()));
+    long largestSourceMessageBytes;
 
     JobReport() {
       ACTIVE_JOB.set(this);
@@ -283,9 +284,10 @@ class Common {
     Path output = destination.toAbsolutePath();
     Files.createDirectories(output.getParent());
     Path temporary = Files.createTempFile(output.getParent(), "." + output.getFileName() + ".", ".tmp");
-    try {
+    try (AutoCloseable cleanup = () -> Files.deleteIfExists(temporary)) {
       writer.write(temporary);
       try (var channel = java.nio.channels.FileChannel.open(temporary, StandardOpenOption.WRITE)) {
+        preserveOutputPermissions(output, temporary);
         channel.force(true);
       }
       try {
@@ -293,9 +295,23 @@ class Common {
       } catch (AtomicMoveNotSupportedException unsupported) {
         Files.move(temporary, output, StandardCopyOption.REPLACE_EXISTING);
       }
-    } finally {
-      Files.deleteIfExists(temporary);
     }
+  }
+
+  static void preserveOutputPermissions(Path destination, Path temporary) throws IOException {
+    if (Files.isRegularFile(destination, LinkOption.NOFOLLOW_LINKS)
+        && Files.getFileStore(destination).supportsFileAttributeView("posix")) {
+      Files.setPosixFilePermissions(temporary, Files.getPosixFilePermissions(destination, LinkOption.NOFOLLOW_LINKS));
+    } else if (!Files.exists(destination, LinkOption.NOFOLLOW_LINKS)
+        && Files.getFileStore(temporary).supportsFileAttributeView("posix")) {
+      // A writer can replace the temporary file and change its initial mode.
+      Files.setPosixFilePermissions(temporary, java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
+    }
+  }
+
+  static int checkedPayloadSize(long size) {
+    if (size < 0 || size > Integer.MAX_VALUE) throw fail("Embedded PDF exceeds the supported size of " + Integer.MAX_VALUE + " bytes");
+    return (int) size;
   }
 
   static void writeAtomically(Path destination, byte[] bytes) throws Exception {
@@ -684,7 +700,7 @@ class Common {
   t = t.replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]+","_");
   t = t.replaceAll("\\s+"," ").trim();
   if(t.isEmpty()) t="message";
-  if(t.length()>120) t=t.substring(0,120);
+  t = truncateUtf16(t, 120);
   return t;
 }
 
@@ -706,10 +722,10 @@ static String sourceContentType(AssociatedFile file) {
 
 static String sourceDerivation(EmailRecord record) {
   if ("pst".equals(record.sourceType)) return "PST preprocessing: exported the selected message to RFC 822 from "
-      + nz(record.sourcePath) + "; the original PST container and unexported storage properties are not embedded.";
+      + "the PST source; the original PST container and unexported storage properties are not embedded.";
   if ("mbox".equals(record.sourceType)) {
     String description = "MBOX preprocessing: extracted an RFC 822 message and reversed mailbox quoting from "
-        + nz(record.sourcePath) + "; the original mailbox container and envelope are not embedded.";
+        + "the MBOX source; the original mailbox container and envelope are not embedded.";
     if (record.mboxProvenance != null) {
       var provenance = record.mboxProvenance;
       var entry = provenance.entry();
@@ -1020,7 +1036,7 @@ static String stripInvalidXml(String s) {
 
   static String fmtDate(Date d) {
     if (d == null) return "";
-    return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").format(d);
+    return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.ROOT).format(d);
   }
 
   static String rfc822Date(Date d) {
@@ -1031,7 +1047,7 @@ static String stripInvalidXml(String s) {
 
   static String xmpDate(Date d) {
     if (d == null) return "";
-    SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+    SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.ROOT);
     return f.format(d);
   }
 
@@ -1257,9 +1273,9 @@ static String stripInvalidXml(String s) {
   static String nz(String s) { return s == null ? "" : s; }
 
   static String safeFileStem(String s) {
-    String t = nz(s).trim();
+    String t = stripInvalidXml(nz(s)).trim();
     if (t.isEmpty()) t = "message";
-    t = t.replaceAll("[\\\\/:*?\"<>|]+", "_");
+    t = t.replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]+", "_");
     t = t.replaceAll("\\s+", " ").trim();
     // Bulk names combine two stems and a sequence suffix. Bound UTF-8 bytes
     // as well as characters so ordinary international names fit a filesystem
@@ -1279,22 +1295,28 @@ static String stripInvalidXml(String s) {
     return t;
   }
 
+  static String truncateUtf16(String value, int limit) {
+    if (value.length() <= limit) return value;
+    int end = limit;
+    if (end > 0 && Character.isHighSurrogate(value.charAt(end - 1)) && Character.isLowSurrogate(value.charAt(end))) end--;
+    return value.substring(0, end);
+  }
+
   static String safeCollectionLabel(String s, String fallback) {
-    String label = nz(s).trim();
-    if (label.isEmpty()) label = nz(fallback).trim();
+    String label = stripInvalidXml(nz(s)).trim();
+    if (label.isEmpty()) label = stripInvalidXml(nz(fallback)).trim();
     if (label.isEmpty()) label = "Collection";
     label = label.replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]+", "_");
     label = label.replaceAll("\\s+", " ").trim();
     while (label.endsWith(".")) label = label.substring(0, label.length() - 1).trim();
-    if (label.length() > 120) label = label.substring(0, 120).trim();
+    label = truncateUtf16(label, 120).trim();
     while (label.endsWith(".")) label = label.substring(0, label.length() - 1).trim();
-    if (label.isEmpty()) label = nz(fallback).trim();
     if (label.isEmpty()) label = "Collection";
     return label;
   }
 
   static String xmpDateNowUtc() {
-    SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ROOT);
     f.setTimeZone(TimeZone.getTimeZone("UTC"));
     return f.format(new Date());
   }

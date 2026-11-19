@@ -2,14 +2,73 @@ package eapdf;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Report contract tests shared by the desktop and Java validation worker. */
 class ValidatorGuiTests {
+  @org.junit.jupiter.api.io.TempDir Path temporary;
+
+  private static JsonObject childFinding(String level) {
+    return JsonParser.parseString("""
+        {"level":"%s","code":"COLLECTION_CHILD_VALIDATION","message":"Contained email result: %s",
+         "details":{"file":"email_1s.pdf","sha256":"child-hash","result":{
+          "summary":{"file":"/temporary/child.pdf","status":"%s","verification_spec":"1s","pdfa_status":"PASS","fail":1,"warn":1},
+          "items":[{"level":"PASS","code":"OPEN","message":"Unrelated successful check"},
+                   {"level":"N/A","code":"COLLECTION_REQUIRED","message":"Unrelated inapplicable check"},
+                   {"level":"WARN","code":"VALIDATION_INCOMPLETE","message":"Comparison unavailable"},
+                   {"level":"FAIL","code":"ISO32005_UPSTREAM","message":"Selected structure checks",
+                    "details":{"findings":[{"clause":"Table 5. Link-P","error":"Link contains P","context":"structure/path"}]}}]}}}
+        """.formatted(level, level, "WARN".equals(level) ? "INCOMPLETE" : level)).getAsJsonObject();
+  }
+
+  @Test void collectionDetailsShowTheChildFailureAndKeepFullSavedReports() throws Exception {
+    var root = JsonParser.parseString(REPORT).getAsJsonObject();
+    root.getAsJsonObject("summary").addProperty("status", "FAIL");
+    root.getAsJsonArray("items").add(childFinding("FAIL"));
+    String json = root.toString();
+    Path original = Files.writeString(temporary.resolve("original.json"), json);
+    for (var result : List.of(ValidatorGui.Result.parse(json), ValidatorGui.Result.parse(original))) {
+      try {
+        var group = ValidatorGui.groupFindings(result.findings()).stream()
+            .filter(g -> "COLLECTION_CHILD_VALIDATION".equals(g.code())).findFirst().orElseThrow();
+        String text = group.detailText();
+        for (String expected : List.of("email_1s.pdf", "child-hash", "ISO32005_UPSTREAM", "Table 5. Link-P", "Link contains P", "structure/path"))
+          assertTrue(text.contains(expected), expected);
+        for (String unrelated : List.of("Unrelated successful check", "Unrelated inapplicable check", "Comparison unavailable", "/temporary/child.pdf"))
+          assertFalse(text.contains(unrelated), unrelated);
+        Path saved = temporary.resolve("saved.json");
+        result.save(saved); assertEquals(json, Files.readString(saved));
+      } finally { result.close(); }
+    }
+  }
+
+  @Test void nestedCollectionDetailsKeepLeafFailuresAndIncompleteReasons() {
+    JsonObject child = childFinding("WARN"), parent = childFinding("WARN");
+    parent.getAsJsonObject("details").getAsJsonObject("result").getAsJsonArray("items").add(child);
+    String before = parent.toString();
+    String text = ValidatorGui.Result.finding(parent).details();
+    assertEquals(before, parent.toString(), "Display formatting must not mutate report evidence");
+    assertTrue(text.contains("Comparison unavailable"));
+    assertTrue(text.contains("Link contains P"));
+    assertFalse(text.contains("Unrelated successful check"));
+    assertFalse(text.contains("Unrelated inapplicable check"));
+    assertEquals(2, text.split("Link contains P", -1).length - 1);
+    JsonObject pass = childFinding("PASS");
+    pass.getAsJsonObject("details").getAsJsonObject("result").add("items", new com.google.gson.JsonArray());
+    assertTrue(ValidatorGui.Result.finding(pass).details().contains("\"status\": \"PASS\""));
+    var diagnostic = JsonParser.parseString("""
+        {"level":"FAIL","code":"COLLECTION_CHILD_VALIDATION","message":"Recursive child","details":{"file":"cycle.pdf"}}
+        """).getAsJsonObject();
+    assertTrue(ValidatorGui.Result.finding(diagnostic).details().contains("cycle.pdf"));
+  }
+
   @Test void groupsRepeatedFileResultsWithoutHidingFailuresOrFileDetails() {
     List<ValidatorGui.Finding> findings = new ArrayList<>();
     for (int i = 0; i < 500; i++) findings.add(new ValidatorGui.Finding("PASS", "EMBEDDED_STREAM", "Embedded stream.", "file-" + i));

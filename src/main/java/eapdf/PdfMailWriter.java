@@ -574,9 +574,15 @@ static byte[] buildArchiveMessagePdfBytes(EmailRecord r, String fontPath, boolea
 static int renderParallelism(int workItems) {
   if (workItems <= 1) return 1;
   int cpu = Math.max(1, Runtime.getRuntime().availableProcessors());
-  int memoryWorkers = (int)Math.max(1, Math.min(Integer.MAX_VALUE, Runtime.getRuntime().maxMemory() / (ProcessingLimits.messageBytes() * 16)));
   Common.JobReport report = Common.ACTIVE_JOB.get();
-  return Math.max(1, Math.min(memoryWorkers, Math.min(workItems, Math.min(cpu, report == null ? 4 : report.workerLimit))));
+  long perWorker = report != null && report.largestSourceMessageBytes > 0
+      ? Math.max(128L * 1024 * 1024, report.largestSourceMessageBytes * 16)
+      : ProcessingLimits.messageBytes() * 16;
+  int memoryWorkers = (int)Math.max(1, Math.min(Integer.MAX_VALUE, Runtime.getRuntime().maxMemory() / perWorker));
+  int workers = Math.max(1, Math.min(memoryWorkers, Math.min(workItems, Math.min(cpu, report == null ? 4 : report.workerLimit))));
+  if (report != null && report.largestSourceMessageBytes > 0)
+    System.out.println("Gmail archive rendering workers: " + workers);
+  return workers;
 }
 
 interface RenderedPartConsumer {

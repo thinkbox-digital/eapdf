@@ -264,7 +264,7 @@ final class PdfCollectionSupport {
     var member = new PdfCollectionSupport.CollectionMember(folder.name, subject, childProfile, List.of(record),
         folder.id, order, filename, built.pdfBytes, Math.max(record.attachmentCount, 0), Common.nz(record.date));
     member.pdfPath = childPath;
-    member.storedPdfSize = childPath == null ? built.pdfBytes.length : Math.toIntExact(Files.size(childPath));
+    member.storedPdfSize = childPath == null ? built.pdfBytes.length : Common.checkedPayloadSize(Files.size(childPath));
     member.stage(memberStore);
     return member;
   }

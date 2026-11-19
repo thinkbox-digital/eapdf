@@ -75,6 +75,8 @@ Even More Lite keeps message/folder navigation, PDF pages and embedded asset
 access in three adjustable panes. It omits search, filtering, CSV/XMP export,
 Conversations, Portfolio presentation, embedded indexes and large-archive
 optimizations. Full retains those features, including independent CSV export.
+Full exposes Portfolio view only for documents classified as PDF Portfolios;
+EA-PDF collections retain email navigation even though they have a Collection dictionary.
 Five reader-specific helper overrides supply navigation, page scrolling, file
 categories, message labels and pane resizing without changing Full's shared code.
 
@@ -82,6 +84,10 @@ The generic PDF.js hooks expose document parts, metadata, associated files and
 collection membership. They do not depend on the EA-PDF user interface. Even More Lite keeps
 upstream cross-reference storage and parsed-object caching. Its limits are in the
 [reader guide](../browser-viewer/README.md).
+
+Both worker recipes include Mozilla's tricky TrueType font-identification and
+checksum fix in patch 0013. Identification uses original hint tables before
+sanitization and restores a recognized family name without changing text mapping.
 
 Each export records source and file hashes. Changed hook inputs require reviewed
 adaptations and a reproduced bundle. This is a local extension, not PDF.js approval.

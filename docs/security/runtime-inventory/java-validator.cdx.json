@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "EA-PDF Java validator",
-      "version": "2.3.0-beta.1"
+      "version": "2.4.0-beta.1"
     },
     "properties": [
       {
@@ -622,13 +622,13 @@
       "type": "library",
       "group": "org.apache.pdfbox",
       "name": "fontbox",
-      "version": "3.0.8",
-      "purl": "pkg:maven/org.apache.pdfbox/fontbox@3.0.8",
-      "bom-ref": "pkg:maven/org.apache.pdfbox/fontbox@3.0.8",
+      "version": "3.0.8-eapdf.1",
+      "purl": "pkg:maven/org.apache.pdfbox/fontbox@3.0.8-eapdf.1",
+      "bom-ref": "pkg:maven/org.apache.pdfbox/fontbox@3.0.8-eapdf.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "a1915c24e3edbe0ecec93896dfbf6d41427810b663ade97bd4e8bae86ec3fdab"
+          "content": "68a6beb903f4c4e1c88d767b316e0a5ed3620c34192f2a2e8168dc8db5f5e239"
         }
       ],
       "properties": [
@@ -864,13 +864,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "feature-reporting",
-      "version": "1.31.221",
-      "purl": "pkg:maven/org.verapdf/feature-reporting@1.31.221",
-      "bom-ref": "pkg:maven/org.verapdf/feature-reporting@1.31.221",
+      "version": "1.31.225",
+      "purl": "pkg:maven/org.verapdf/feature-reporting@1.31.225",
+      "bom-ref": "pkg:maven/org.verapdf/feature-reporting@1.31.225",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "9c72913a41be4c01f5e38668a120a975d93b26e34dc39b4a3850a7e8e2b261a3"
+          "content": "29310c51789112411d65986d1289f7df5dc691a87176972090d293583223e62d"
         }
       ],
       "properties": [
@@ -898,13 +898,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "metadata-fixer",
-      "version": "1.31.221",
-      "purl": "pkg:maven/org.verapdf/metadata-fixer@1.31.221",
-      "bom-ref": "pkg:maven/org.verapdf/metadata-fixer@1.31.221",
+      "version": "1.31.225",
+      "purl": "pkg:maven/org.verapdf/metadata-fixer@1.31.225",
+      "bom-ref": "pkg:maven/org.verapdf/metadata-fixer@1.31.225",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "1248ca13b21fe91235e43ef0e30cfb6c7ae47956ca311821204ddf21595e86e8"
+          "content": "cb4c132573d16a27f6f4f3891a24265cfe3d25bb682acc055638cfd71986fe37"
         }
       ],
       "properties": [
@@ -932,13 +932,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "parser",
-      "version": "1.31.71",
-      "purl": "pkg:maven/org.verapdf/parser@1.31.71",
-      "bom-ref": "pkg:maven/org.verapdf/parser@1.31.71",
+      "version": "1.31.72",
+      "purl": "pkg:maven/org.verapdf/parser@1.31.72",
+      "bom-ref": "pkg:maven/org.verapdf/parser@1.31.72",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "6eb15db1345c346c0ae0384408e92924fa4f881ebbc01bdfaa8936c70aa55cc2"
+          "content": "3a1c7b1804af660d645eca3802e2e9562a01f0f1b63ea821ae1d3c2d2761e870"
         }
       ],
       "properties": [
@@ -1000,13 +1000,13 @@
       "type": "library",
       "group": "org.verapdf",
       "name": "validation-model",
-      "version": "1.31.221",
-      "purl": "pkg:maven/org.verapdf/validation-model@1.31.221",
-      "bom-ref": "pkg:maven/org.verapdf/validation-model@1.31.221",
+      "version": "1.31.225",
+      "purl": "pkg:maven/org.verapdf/validation-model@1.31.225",
+      "bom-ref": "pkg:maven/org.verapdf/validation-model@1.31.225",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "ee342682354137957113413317ebbddcf9990a5b28989e2053429264dc7cddf6"
+          "content": "257d742bc5e98a97350bed952c45713ac7e4e0d79367dcf0ea34a91941776dd7"
         }
       ],
       "properties": [
@@ -1116,12 +1116,12 @@
     },
     {
       "type": "file",
-      "name": "eapdf-validator-2.3.0-beta.1.jar",
-      "bom-ref": "artifact:eapdf-validator-2.3.0-beta.1.jar",
+      "name": "eapdf-validator-2.4.0-beta.1.jar",
+      "bom-ref": "artifact:eapdf-validator-2.4.0-beta.1.jar",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "96978b93fd19cfe9b106148100f3203f8b2e3623598007e846545ec398dfdb87"
+          "content": "1badc92c1ab0902f66c0af3f26c32bc8d3317732b9e9e358846975c4269dcaf5"
         }
       ]
     }

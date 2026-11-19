@@ -235,7 +235,7 @@ final class ConversionProgress {
     if (checkOwner && (!stage.equals(loggedStage) || lastWrite - lastLog >= 10_000_000_000L
         || count != null && done == count && done != loggedCompleted)) {
       String work = unit == null ? "" : " — " + done + (count == null ? "" : "/" + count) + " " + unit;
-      System.out.println("[progress] " + stage.replace('_', ' ') + work + " — " + stageElapsed + "s in stage; " + elapsed + "s total; CPU " + snapshot.get("process_cpu_seconds") + "s");
+      System.out.println("[progress] " + stage.replace('_', ' ') + work + " — " + stageElapsed + "s in stage; " + elapsed + "s total; CPU " + snapshot.get("process_cpu_seconds") + "s; emails completed " + completed + "/" + (total == null ? "?" : total));
       loggedStage = stage; loggedCompleted = done; lastLog = lastWrite;
     }
   }

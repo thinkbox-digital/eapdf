@@ -54,8 +54,38 @@ final class ValidationReportReader {
       String level = required(item, "level");
       if (!Set.of("PASS", "FAIL", "WARN", "N/A").contains(level)) throw new IllegalArgumentException("Unknown finding level: " + level);
       JsonElement details = item.get("details");
-      return new Finding(level, required(item, "code"), required(item, "message"),
-          details == null || details.isJsonNull() ? "" : JavaValidation.JSON.toJson(details));
+      String code = required(item, "code");
+      return new Finding(level, code, required(item, "message"),
+          details == null || details.isJsonNull() ? "" : JavaValidation.JSON.toJson(displayDetails(code, level, details)));
+    }
+
+    private static JsonElement displayDetails(String code, String level, JsonElement details) {
+      if (!"COLLECTION_CHILD_VALIDATION".equals(code) || !details.isJsonObject()) return details;
+      JsonObject source = details.getAsJsonObject();
+      if (!(source.get("result") instanceof JsonObject result)) return details;
+      JsonObject compact = new JsonObject(), child = new JsonObject();
+      source.entrySet().forEach(entry -> {
+        if (!"result".equals(entry.getKey())) compact.add(entry.getKey(), entry.getValue());
+      });
+      if (result.get("summary") instanceof JsonObject summary) {
+        JsonObject selected = new JsonObject();
+        for (String key : List.of("status", "verification_spec", "pdfa_status", "fail", "warn"))
+          if (summary.has(key)) selected.add(key, summary.get(key));
+        child.add("summary", selected);
+      }
+      JsonArray relevant = new JsonArray();
+      if (result.get("items") instanceof JsonArray items) for (JsonElement value : items) {
+        if (!(value instanceof JsonObject item)) continue;
+        String itemLevel = optional(item, "level");
+        if (!("FAIL".equals(itemLevel) || "WARN".equals(level) && "WARN".equals(itemLevel))) continue;
+        JsonObject selected = new JsonObject();
+        item.entrySet().forEach(entry -> selected.add(entry.getKey(), entry.getValue()));
+        if (item.has("details")) selected.add("details", displayDetails(optional(item, "code"), itemLevel, item.get("details")));
+        relevant.add(selected);
+      }
+      child.add("items", relevant);
+      compact.add("result", child);
+      return compact;
     }
 
     private static Result checked(JsonObject summary, JsonObject pdfa, List<Finding> findings, String json) {

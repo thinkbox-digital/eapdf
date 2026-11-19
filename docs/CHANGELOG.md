@@ -5,6 +5,34 @@ Use [current project status](PROJECT_STATUS.md) and [architecture decisions](ARC
 for the current handover; do not treat historical counts or then-open findings as
 a fresh acceptance run.
 
+## 2026-11-19 — 2.4.0-beta.1 / readers 1.6.0-beta.1
+
+- **Bug fixes.** Recover mislabeled Windows-1252 text with a warning, keep HTML when malformed inline images are skipped, use Gregorian dates across locales, and fix rowspans that cross page breaks.
+- **Bug fixes.** Update veraPDF to reject trailing data correctly, recognize core fields nested under tagged spans and links, and summarize collection child findings while retaining complete reports.
+- **Speed improvement.** Overlap sequential Gmail downloads with bounded individual PDF conversion, and use input sizes to bound archive rendering. Show completed and total message counts.
+- **Reader improvements.** Backport Mozilla's embedded TrueType font-identification fix, show Portfolio view for PDF Portfolios, and improve Even More Lite pane controls.
+
+## 2026-11-19 — Local reader checkpoints
+
+Local 1.5.0-beta.1 reader checkpoint, 19 November:
+
+- **Bug fix:** both worker recipes include the complete Mozilla PR 22552 tricky TrueType font-name/checksum backport in patch 0013, preserving the existing glyph-cycle guard. PDF.js remains 6.5.438.
+- **Code improvement:** Portfolio folder-history checks activate enabled controls atomically and await the expected folder contents. The first Chromium suite stopped at this timing-sensitive assertion; the focused recheck and all remaining original test stages then passed. No application change was needed for that assertion.
+- Worker checks: 47 Full and 20 shared Lite source tests pass. The 142 selected upstream specs have no failures and one expected Node OffscreenCanvas pending spec. Independent clean builds reproduce both workers byte-for-byte.
+- Browser checks: Full's 192 unit tests and all Chromium test stages pass; Linux Firefox 160.0.1 extension/file-drop checks pass. Even More Lite passes five unit checks, 26 Chromium/web groups and eight Firefox groups covering all six EA-PDF profiles. Optional private Portfolio and Gmail fixtures were unavailable and explicitly skipped.
+- The upstream font fixture restores `DFKai-SB` in both variants. Its 130 extracted text items, text geometry, search offsets and rendered pixels match the baseline on Linux Chromium 156. macOS Firefox title/body rendering remains unverified.
+- Six ZIPs and versioned SHA-256 lists are verified: Full Chromium/Firefox and Even More Lite Chromium/Firefox/web/source. Both permanent Chromium folders retain their existing paths and now have manifest version 1.5.0.1. These packages were local builds.
+
+Local reader changes, 18 November: **1.4.0-beta.1**, after the published 1.3.0-beta.1 packages:
+
+- **Bug fix:** Full offers Portfolio view only for actual PDF Portfolios. EA-PDF collections retain email navigation; returning from a collection member selects its actual Portfolio ancestor.
+- **Code improvement:** Even More Lite matches Full's pane-heading chevrons, restore buttons, Messages heading, upper-left reader title and page controls above the PDF. Keyboard focus follows pane hide/restore actions.
+- The navigation UI adds 32 production lines and removes 27. Each feature stays below 50 added lines. The complete Even More Lite application remains at 1,978 physical / 1,931 nonblank lines, including shared modules, declarations, markup, styles and manifests.
+- Checks: both readers type-check and build. Full's 192 unit checks pass; Chromium and Firefox Portfolio checks cover real Portfolio samples with unchanged source hashes, and Chromium covers all six EA-PDF profiles. Even More Lite passes five unit checks, 30 Chromium/web check groups across all six profiles, and two Firefox check groups. Its final standalone runtime bytes match the browser-tested build.
+- Both permanent Chromium folders under `browser-viewer/local-install/` are refreshed from hash-verified local builds. Reload the extensions and reopen viewer tabs. These packages were local builds.
+- Extension regeneration now requires a reader minor-version bump and rebuilding Full and Even More Lite together. One regeneration batch shares one version, including its verification rebuilds. The creator and validator were at 2.3.0-beta.1.
+- The 1.4.0-beta.1 regeneration verifies six ZIPs and versioned checksums: Full Chromium/Firefox and Even More Lite Chromium/Firefox/web/source. Both local Chromium manifests are 1.4.0.1. Full's two version checks, Even More Lite's five unit checks and Chromium/web/Firefox smoke checks pass. These packages remain local and unpublished.
+
 ## 2026-11-18 — 2.3.0-beta.1 / readers 1.3.0-beta.1
 
 - **New reader:** publish Even More Lite in place of Lite, with adjustable message/page/asset panes and original-byte asset downloads. Full retains search and independent CSV/XMP export.

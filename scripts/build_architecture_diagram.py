@@ -76,12 +76,12 @@ def build(path):
         ('Even More Lite', 'Messages, pages and embedded assets in three adjustable panes. No search, metadata exports or Portfolio view. 32 MiB / 2,048 pages.')])
 
     card(xs[0], 122, width, 274, 'CREATOR LIBRARIES', [
-        ('PDF creation and metadata', f"PDFBox / XMPBox {java['pdfbox']}. OpenHTMLtoPDF {java['openhtmltopdf-pdfbox']} with four maintained patches."),
+        ('PDF creation and metadata', f"PDFBox / XMPBox {java['pdfbox']}; FontBox {java['fontbox']}. OpenHTMLtoPDF {java['openhtmltopdf-pdfbox']} with four maintained patches."),
         ('Email and content', f"Jakarta Mail / Angus Mail, java-libpst, Outlook Message Parser, POI {java['poi']}, jsoup {java['jsoup']}, RTF-to-HTML and jutf7."),
         ('Other integrations', f"Bouncy Castle {java['bcpkix-jdk18on']}; Google Gmail / OAuth clients; Gson {java['gson']}; metadata-extractor {java['metadata-extractor']}.")])
     card(xs[1], 122, width, 274, 'VALIDATION LIBRARIES', [
         ('veraPDF engines and project checks', f"Core / XMP {vera['core']}; parser {vera['parser']}; PDF model {vera['pdf-model']}; validation model {vera['validation-model']}. Local storage/resource patches remain."),
-        ('PDF and email inspection', f"PDFBox {vera['pdfbox']}; POI {vera['poi']}; Gson {vera['gson']}; Jakarta Mail / Angus Mail; project EA-PDF checks."),
+        ('PDF and email inspection', f"PDFBox {vera['pdfbox']}; FontBox {vera['fontbox']}; POI {vera['poi']}; Gson {vera['gson']}; Jakarta Mail / Angus Mail; project EA-PDF checks."),
         ('Optional development tool', 'Python CLI for regression tests and diagnostics. The web workbench and its deployment code are removed.')])
     card(xs[2], 122, width, 274, 'READER FOUNDATION', [
         ('PDF engine and shared hooks', f"PDF.js {reader['dependencies']['pdfjs-dist']}. Generic hooks expose document parts / DPM, associated files, metadata and collection membership."),

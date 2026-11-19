@@ -73,7 +73,10 @@ try{
  await evaluate("document.querySelectorAll('.pdf-page[data-page=\"1\"] a[aria-label=\"Open linked attachment\"]')[1].click()");await idle();assert.equal(await evaluate("return document.querySelector('#back').disabled"),false);
  await evaluate("document.querySelector('#back').click()");await idle();
  const widths=await evaluate("return ['navigation-panel','viewport','details-panel'].map(id=>document.getElementById(id).getBoundingClientRect().width)");assert.ok(widths.every(width=>width>150));
- await evaluate("document.querySelector('#toggle-details').click()");assert.equal(await evaluate("return getComputedStyle(document.querySelector('#details-panel')).display"),'none');await evaluate("document.querySelector('#toggle-details').click()");
+ for(const name of ['navigation','details']){
+  await evaluate(`document.querySelector('#toggle-${name}').click()`);assert.equal(await evaluate(`return getComputedStyle(document.querySelector('#${name}-panel')).display`),'none');
+  await evaluate(`document.querySelector('#show-${name}').click()`);assert.equal(await evaluate('return document.activeElement.id'),'toggle-'+name);
+ }
  checks.push('asset downloads preserve bytes, page locations, attachment/GoToE links, Parent and three-pane layout');
  await evaluate("document.querySelector('#close').click()");assert.equal(await evaluate("return document.querySelector('#empty-state').hidden"),false);
  await mkdir(evidence,{recursive:true});await writeFile(join(evidence,'firefox-checks.json'),JSON.stringify({status:'PASS',browser:result.capabilities.browserVersion,checks},null,2)+'\n');console.log(JSON.stringify({status:'PASS',checks}));

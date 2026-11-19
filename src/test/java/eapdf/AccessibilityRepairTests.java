@@ -37,6 +37,46 @@ class AccessibilityRepairTests {
     }
   }
 
+  @Test
+  void linkedInlineImageKeepsItsFigureAndLinkWithoutAParagraphInsideTheLink() throws Exception {
+    boolean previous = PdfMailWriter.CONFIG.accessibility.addPdfUaFeatures;
+    try {
+      PdfMailWriter.CONFIG.accessibility.addPdfUaFeatures = true;
+      String image = java.util.Base64.getEncoder().encodeToString(CidUrlTests.image());
+      var record = EmlReader.readRfc822Bytes(("From: a@example.org\r\nTo: b@example.org\r\n"
+          + "Date: Fri, 16 Oct 2026 12:00:00 +0000\r\nSubject: Linked image\r\n"
+          + "Content-Type: text/html; charset=UTF-8\r\n\r\n"
+          + "<p>Before <a href='https://example.org/image'><span><img alt='Four colors' "
+          + "width='24' height='24' src='data:image/png;base64," + image + "'></span></a> after</p>")
+          .getBytes(StandardCharsets.UTF_8), "linked.eml", "linked.eml", "", List.of(), false);
+      byte[] bytes = PdfMailWriter.buildSingleMessagePdf(temp.resolve("eml_linked_1s.pdf"), record,
+          TestSupport.fontPath(), TestSupport.iccPath(), false, temp, 1, "s").pdfBytes;
+      try (var pdf = Loader.loadPDF(bytes)) {
+        var root = pdf.getDocumentCatalog().getStructureTreeRoot().getCOSObject();
+        int[] counts = new int[2];
+        checkLinkedFigure(root.getDictionaryObject(COSName.K), false, counts);
+        assertArrayEquals(new int[] {1, 1}, counts);
+        assertTrue(pdf.getPage(0).getAnnotations().stream().anyMatch(annotation ->
+            annotation instanceof PDAnnotationLink link
+                && link.getAction() instanceof org.apache.pdfbox.pdmodel.interactive.action.PDActionURI action
+                && "https://example.org/image".equals(action.getURI())));
+      }
+    } finally { PdfMailWriter.CONFIG.accessibility.addPdfUaFeatures = previous; }
+  }
+
+  private void checkLinkedFigure(COSBase value, boolean inLink, int[] counts) {
+    if (value instanceof COSObject ref) value = ref.getObject();
+    if (value instanceof COSArray array) {
+      for (COSBase child : array) checkLinkedFigure(child, inLink, counts);
+    } else if (value instanceof COSDictionary element && element.containsKey(COSName.S)) {
+      String role = element.getNameAsString(COSName.S);
+      if ("Link".equals(role)) counts[0]++;
+      if ("Figure".equals(role) && "Four colors".equals(element.getString(COSName.ALT))) counts[1]++;
+      if (inLink) assertNotEquals("P", role);
+      checkLinkedFigure(element.getDictionaryObject(COSName.K), inLink || "Link".equals(role), counts);
+    }
+  }
+
   private void checkHeadingLists(COSBase value, String parent, int[] counts) {
     if (value instanceof COSObject ref) value = ref.getObject();
     if (value instanceof COSArray array) {

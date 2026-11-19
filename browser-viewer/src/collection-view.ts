@@ -1,6 +1,6 @@
 import {PortfolioModel,type PortfolioRow} from './portfolio.js';
 import {PortfolioView} from './portfolio-view.js';
-import {detectDocument,type Detection} from './document-kind.js';
+import {detectDocument} from './document-kind.js';
 import type {BrowserDocument} from './browser-session.js';
 import type {CollectionViewHost} from './collection-view-contract.js';
 import {element} from './viewer-elements.js';
@@ -17,7 +17,11 @@ element('portfolio-show').addEventListener('click',()=>this.view?.reveal());
 element('portfolio-toggle').addEventListener('click',()=>void this.host.operation(async ticket=>{
   if(!this.host.current)return;
   if(this.view){const saved=this.returning,doc=saved?.doc??this.host.current;this.view.close();this.view=undefined;this.document=undefined;this.returning=undefined;await this.host.showDocument(doc,ticket,doc.inspection.messages.find(m=>m.id===saved?.message));if(saved){this.host.page=saved.page;await this.host.render(ticket,false);}this.host.showInformation(doc);this.host.prepareBrowseSubjects(doc,ticket);}
-  else{this.returning={doc:this.host.current,page:this.host.page,message:this.host.savedMessages.get(this.host.current)};let doc=this.host.current;while(doc.parent&&!doc.inspection.collection.value)doc=doc.parent;if(!doc.inspection.collection.value){while(doc.parent)doc=doc.parent;}await this.activate(doc,ticket);}
+  else{
+   const doc=this.portfolioDocument(this.host.current);if(!doc)return;
+   this.returning={doc:this.host.current,page:this.host.page,message:this.host.savedMessages.get(this.host.current)};
+   await this.activate(doc,ticket);
+  }
 }));
 
  }
@@ -31,8 +35,12 @@ element('portfolio-toggle').addEventListener('click',()=>void this.host.operatio
  }
  reset():void{this.view?.close();this.view=undefined;this.document=undefined;this.returning=undefined;element('portfolio-toggle').hidden=element('portfolio-show').hidden=true;}
  folderPath(doc:BrowserDocument):readonly string[]{return doc.parent&&doc.parentFileId?this.models.get(doc.parent)?.folderPath(doc.parentFileId)??[]:[];}
- information(root:Detection,detection:Detection,doc:BrowserDocument):void{
-  element('portfolio-toggle').hidden=!root.collection&&!detection.collection;
+ private portfolioDocument(doc:BrowserDocument):BrowserDocument|undefined{
+  for(let candidate:BrowserDocument|null=doc;candidate;candidate=candidate.parent)if(detectDocument(candidate.inspection).kind==='portfolio')return candidate;
+  return undefined;
+ }
+ information(doc:BrowserDocument):void{
+  element('portfolio-toggle').hidden=!this.portfolioDocument(doc);
   element('portfolio-toggle').textContent=this.view?(detectDocument((this.returning?.doc??doc).inspection).kind==='eapdf'?'Email view':'PDF view'):'Portfolio view';
   element('portfolio-show').hidden=!this.view?.hidden;
  }
@@ -43,14 +51,14 @@ element('portfolio-toggle').addEventListener('click',()=>void this.host.operatio
   }
  }
  sync(doc:BrowserDocument):void{this.view?.syncDocument(doc.parent===this.document?doc.parentFileId:undefined);}
- async crumb(doc:BrowserDocument,ticket:number):Promise<void>{if(this.view)this.returning=undefined;if(this.view&&doc.inspection.collection.state==='present'&&doc!==this.document)await this.activate(doc,ticket);}
+ async crumb(doc:BrowserDocument,ticket:number):Promise<void>{if(this.view)this.returning=undefined;if(this.view&&detectDocument(doc.inspection).kind==='portfolio'&&doc!==this.document)await this.activate(doc,ticket);}
  async opened(doc:BrowserDocument,ticket:number,initial=false):Promise<boolean>{
   if((initial||this.view)&&detectDocument(doc.inspection).kind==='portfolio'){await this.activate(doc,ticket,true);return true;}return false;
  }
- async parent(doc:BrowserDocument,ticket:number):Promise<boolean>{if(!this.view)return false;this.returning=undefined;if(doc.inspection.collection.state==='present'&&doc!==this.document)await this.activate(doc,ticket);this.view.resetToTop();return true;}
+ async parent(doc:BrowserDocument,ticket:number):Promise<boolean>{if(!this.view)return false;this.returning=undefined;if(detectDocument(doc.inspection).kind==='portfolio'&&doc!==this.document)await this.activate(doc,ticket);this.view.resetToTop();return true;}
  async embeddedTarget(doc:BrowserDocument,ticket:number):Promise<void>{
   this.returning=undefined;if(!this.view)return;
-  let container:BrowserDocument|null=doc.inspection.collection.state==='present'?doc:doc.parent;while(container&&container.inspection.collection.state!=='present')container=container.parent;
+  const container=this.portfolioDocument(doc);
   if(container&&container!==this.document)await this.activate(container,ticket);
   const row=this.view?.model.rows.find(r=>r.file?.id===doc.parentFileId);if(row)this.view?.show(row);this.view?.revealPreview();
  }

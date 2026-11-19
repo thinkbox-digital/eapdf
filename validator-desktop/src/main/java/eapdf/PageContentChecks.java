@@ -51,6 +51,8 @@ final class PageContentChecks {
   private final Map<COSDictionary, Set<COSDictionary>> objectLocations = new IdentityHashMap<>();
   private final Map<COSStream, COSDictionary> pageStreams = new IdentityHashMap<>();
   private final Set<COSDictionary> structureSeen = identitySet();
+  // Actual K-tree parents, recorded only when the child's P agrees with traversal.
+  private final Map<COSDictionary, COSDictionary> verifiedStructureParents = new IdentityHashMap<>();
   private final Set<COSDictionary> uncertainStructure = identitySet();
   private final Set<COSDictionary> formActive = identitySet();
   private final List<String> errors = new ArrayList<>();
@@ -286,8 +288,7 @@ final class PageContentChecks {
     List<Sequence> fields = new ArrayList<>();
     for (Page page : pages.values()) for (Sequence sequence : page.sequences)
       if (Set.of("Mail_FieldName", "Mail_FieldValue").contains(sequence.tag)
-          || sequence.key != null && owners.getOrDefault(sequence.key, List.of()).stream()
-              .anyMatch(owner -> Set.of("Mail_FieldName", "Mail_FieldValue").contains(name(get(owner, "S"))))) fields.add(sequence);
+          || hasVerifiedCoreFieldAncestor(sequence)) fields.add(sequence);
     if (!fields.isEmpty()) {
       report.check("CORE_FIELDS_TEXT_OBJECTS", fields.stream().allMatch(sequence -> sequence.text),
           "Rendered Core Field names and values must use PDF text objects.", Map.of("sequences", fields.size())); return;
@@ -332,6 +333,29 @@ final class PageContentChecks {
     }
     if (verified > 0 && unresolved.isEmpty()) report.check("CORE_FIELDS_TEXT_OBJECTS", true, "Recognized rendered Core Fields match XMP values in extracted PDF text.", Map.of("content_sets", verified));
     else report.unavailable("CORE_FIELDS_TEXT_OBJECTS", "Core Field text encoding needs review: " + unresolved);
+  }
+
+  /** Header text may be owned by Span/Link descendants of a custom table cell. */
+  private boolean hasVerifiedCoreFieldAncestor(Sequence sequence) {
+    if (sequence.key == null) return false;
+    List<COSDictionary> matches = owners.getOrDefault(sequence.key, List.of());
+    if (matches.size() != 1) return false;
+    COSDictionary owner = matches.getFirst();
+    COSBase index = get(sequence.key.scope(), "StructParents");
+    if (!(index instanceof COSInteger integer) || integer.longValue() < 0 || integer.longValue() > Integer.MAX_VALUE) return false;
+    COSBase parent = parentTree.get(integer.intValue());
+    if (!(parent instanceof COSArray array) || sequence.key.mcid() >= array.size()
+        || array.getObject(sequence.key.mcid()) != owner) return false;
+    COSDictionary root = dict(document.getDocumentCatalog().getCOSObject(), "StructTreeRoot");
+    Set<COSDictionary> visited = identitySet();
+    boolean field = false;
+    for (COSDictionary node = owner; node != null && node != root; node = verifiedStructureParents.get(node)) {
+      if (!structureSeen.contains(node) || !visited.add(node)) return false;
+      field |= Set.of("Mail_FieldName", "Mail_FieldValue").contains(name(get(node, "S")));
+      // A matching role is insufficient until the entire validated chain reaches root.
+      if (verifiedStructureParents.get(node) == root && root != null) return field;
+    }
+    return false;
   }
 
   private static String comparable(String text) {
@@ -665,6 +689,7 @@ final class PageContentChecks {
       if (!(get(dictionary, "S") instanceof COSName)) errors.add("Structure element has no structure type name");
       if (!structureSeen.add(dictionary)) throw new IOException("Structure contains a repeated element");
       if (get(dictionary, "P") != parent) errors.add("Structure element Parent reference is incorrect");
+      else verifiedStructureParents.put(dictionary, parent);
       // ISO 32000-2, Table 355: K is optional, including for an empty table cell.
       // Any actual content must still reconcile with the ParentTree below.
       structure(dictionary.getItem(COSName.K), dictionary, dict(dictionary, "Pg") == null ? page : dict(dictionary, "Pg"), depth + 1);

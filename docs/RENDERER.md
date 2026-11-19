@@ -18,7 +18,7 @@ identifiers reproducible. The rebase retains upstream transparency-group MCID ha
 | 0003 | `9648fff9aba215891af47fc51890e498ace91074` | `04409da32d59c3836a6f6f71fdbfef7e9c8b19f8` |
 | 0004 | `98572627de49af5e978acbb50aa1ee5c8625a284` | `7287bbe0b3344c4830ae47cfd100689a1f8adaf2` |
 
-The patched version is **1.1.113-eapdf.1**, covering both active modules:
+The patched version is **1.1.114-eapdf.1**, covering both active modules:
 `openhtmltopdf-core` and `openhtmltopdf-pdfbox`. The application POM resolves them
 from the version-controlled `third_party/maven` file repository. Production
 builds do not require patched artifacts preinstalled in a developer's Maven
@@ -83,7 +83,7 @@ python3 scripts/build_patched_openhtmltopdf.py --rebuild
 
 This command creates temporary source/cache directories, checks out the pinned
 upstream commit, verifies patch hashes, applies all four with `git am`, builds with
-`-Drevision=1.1.113-eapdf.1`, runs upstream tests, normalizes packaging and compares
+`-Drevision=1.1.114-eapdf.1`, runs upstream tests, normalizes packaging and compares
 SHA-256 hashes against `third_party/openhtmltopdf/lock.json`.
 
 For explicit PDF/UA-2 machine checking using an existing standalone validator JAR:

@@ -33,8 +33,8 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Creator | commons-io:commons-io | 2.22.0 | Apache-2.0 |
 | Creator | commons-logging:commons-logging | 1.4.0 | Apache-2.0 |
 | Creator | de.rototor.pdfbox:graphics2d | 3.0.1 | Apache License, Version 2.0 |
-| Creator | io.github.openhtmltopdf:openhtmltopdf-core | 1.1.113-eapdf.1 | GNU Lesser General Public License (LGPL), version 2.1 or later |
-| Creator | io.github.openhtmltopdf:openhtmltopdf-pdfbox | 1.1.113-eapdf.1 | GNU Lesser General Public License (LGPL), version 2.1 or later |
+| Creator | io.github.openhtmltopdf:openhtmltopdf-core | 1.1.114-eapdf.1 | GNU Lesser General Public License (LGPL), version 2.1 or later |
+| Creator | io.github.openhtmltopdf:openhtmltopdf-pdfbox | 1.1.114-eapdf.1 | GNU Lesser General Public License (LGPL), version 2.1 or later |
 | Creator | io.grpc:grpc-api | 1.70.0 | Apache 2.0 |
 | Creator | io.grpc:grpc-context | 1.70.0 | Apache 2.0 |
 | Creator | io.opencensus:opencensus-api | 0.31.1 | The Apache License, Version 2.0 |
@@ -48,7 +48,7 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Creator | org.apache.httpcomponents:httpclient | 4.5.14 | Apache License, Version 2.0 |
 | Creator | org.apache.httpcomponents:httpcore | 4.4.16 | Apache License, Version 2.0 |
 | Creator | org.apache.logging.log4j:log4j-api | 2.26.1 | Apache-2.0 |
-| Creator | org.apache.pdfbox:fontbox | 3.0.8 | Apache-2.0 |
+| Creator | org.apache.pdfbox:fontbox | 3.0.8-eapdf.1 | Apache-2.0 |
 | Creator | org.apache.pdfbox:pdfbox-io | 3.0.8 | Apache-2.0 |
 | Creator | org.apache.pdfbox:pdfbox | 3.0.8 | Apache-2.0 |
 | Creator | org.apache.pdfbox:xmpbox | 3.0.8 | Apache-2.0 |
@@ -87,7 +87,7 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Java validator | org.apache.commons:commons-collections4 | 4.6.0 | Apache-2.0 |
 | Java validator | org.apache.commons:commons-math3 | 3.6.1 | Apache License, Version 2.0 |
 | Java validator | org.apache.logging.log4j:log4j-api | 2.26.1 | Apache-2.0 |
-| Java validator | org.apache.pdfbox:fontbox | 3.0.8 | Apache-2.0 |
+| Java validator | org.apache.pdfbox:fontbox | 3.0.8-eapdf.1 | Apache-2.0 |
 | Java validator | org.apache.pdfbox:pdfbox-io | 3.0.8 | Apache-2.0 |
 | Java validator | org.apache.pdfbox:pdfbox | 3.0.8 | Apache-2.0 |
 | Java validator | org.apache.poi:poi | 6.0.0 | Apache License, Version 2.0 |
@@ -95,11 +95,11 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Java validator | org.eclipse.angus:angus-mail | 2.0.5 | EPL 2.0; GPL2 w/ CPE; EDL 1.0 |
 | Java validator | org.mozilla:rhino | 1.7.15.1 | Mozilla Public License, Version 2.0 |
 | Java validator | org.verapdf:core | 1.31.56 | GNU General Public License, version 3 (GPL-3.0); Mozilla Public License 2.0 (MPL-2.0) |
-| Java validator | org.verapdf:feature-reporting | 1.31.221 | GNU General Public License, version 3 (GPL-3.0); Mozilla Public License 2.0 (MPL-2.0) |
-| Java validator | org.verapdf:metadata-fixer | 1.31.221 | GNU General Public License, version 3 (GPL-3.0); Mozilla Public License 2.0 (MPL-2.0) |
-| Java validator | org.verapdf:parser | 1.31.71 | GNU General Public License, version 3 (GPL-3.0); Mozilla Public License 2.0 (MPL-2.0) |
+| Java validator | org.verapdf:feature-reporting | 1.31.225 | GNU General Public License, version 3 (GPL-3.0); Mozilla Public License 2.0 (MPL-2.0) |
+| Java validator | org.verapdf:metadata-fixer | 1.31.225 | GNU General Public License, version 3 (GPL-3.0); Mozilla Public License 2.0 (MPL-2.0) |
+| Java validator | org.verapdf:parser | 1.31.72 | GNU General Public License, version 3 (GPL-3.0); Mozilla Public License 2.0 (MPL-2.0) |
 | Java validator | org.verapdf:pdf-model | 1.31.14 | GNU General Public License, version 3 (GPL-3.0); Mozilla Public License 2.0 (MPL-2.0) |
-| Java validator | org.verapdf:validation-model | 1.31.221 | GNU General Public License, version 3 (GPL-3.0); Mozilla Public License 2.0 (MPL-2.0) |
+| Java validator | org.verapdf:validation-model | 1.31.225 | GNU General Public License, version 3 (GPL-3.0); Mozilla Public License 2.0 (MPL-2.0) |
 | Java validator | org.verapdf:verapdf-xmp-core | 1.31.56 | BSD 3-Clause License |
 | Java validator | org.xmlresolver:xmlresolver | 5.3.3 | Apache License version 2.0 |
 | Java validator | org.xmlresolver:xmlresolver | 5.3.3 | Apache License version 2.0 |

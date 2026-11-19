@@ -21,7 +21,7 @@ unreleased dependency changes.
 
 ## Renderer and patched dependencies
 
-The creator uses **openhtmltopdf 1.1.113-eapdf.1** under LGPL-2.1-or-later, not
+The creator uses **openhtmltopdf 1.1.114-eapdf.1** under LGPL-2.1-or-later, not
 the earlier 1.1.97 dependency. [Renderer provenance](RENDERER.md) records pinned
 upstream/patch commits, builds and replacement instructions; [library packages](PACKAGES.md)
 describes distribution of maintained patched libraries. Keep the applicable

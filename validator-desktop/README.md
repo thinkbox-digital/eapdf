@@ -50,7 +50,7 @@ From the repository root, using Java 21 and Maven:
 mvn -f validator-desktop/pom.xml verify
 ```
 
-On Linux, the JAR is written to `/tmp/eapdf-validator-build/eapdf-validator-2.3.0-beta.1.jar`.
+On Linux, the JAR is written to `/tmp/eapdf-validator-build/eapdf-validator-2.4.0-beta.1.jar`.
 Override the build directory with `-Deapdf.build.directory=/tmp/your-build`.
 No build files are written to the creator's `target/` directory.
 `verify` checks the final shaded JAR's manifest, ZIP CRCs, bundled runtime classes,
@@ -61,16 +61,16 @@ To build, verify and atomically replace the distributable:
 
 ```sh
 python3 scripts/package_validator.py
-(cd dist && sha256sum -c eapdf-validator-2.3.0-beta.1.jar.sha256)
+(cd dist && sha256sum -c eapdf-validator-2.4.0-beta.1.jar.sha256)
 ```
 
-Publish the executable `eapdf-validator-2.3.0-beta.1.jar`, not the unshaded `original-` JAR.
+Publish the executable `eapdf-validator-2.4.0-beta.1.jar`, not the unshaded `original-` JAR.
 The packaging command verifies the build before replacing the distributable.
 
 ## Run
 
 ```sh
-java -jar /path/to/eapdf-validator-2.3.0-beta.1.jar
+java -jar /path/to/eapdf-validator-2.4.0-beta.1.jar
 ```
 
 The JAR includes its runtime libraries, rules and specification references; only
@@ -91,8 +91,9 @@ source PDF is not needed at runtime. Summaries are labeled as paraphrases, and
 operational checks do not receive invented specification pages.
 The initial list follows specification order. Identical rule/result/message rows
 are grouped. Select a group to see its occurrence count and details;
-different results or messages remain separate. **Save report** preserves the full,
-ungrouped JSON report. **Stop** cancels a run.
+different results or messages remain separate. Collection details show each
+child result and relevant failed or incomplete checks. **Save report** preserves
+the full, ungrouped JSON report. **Stop** cancels a run.
 
 The input PDF is read only. A separate Java worker lets Stop end checking without
 closing the window. Private scratch prefers disk storage when the system temp

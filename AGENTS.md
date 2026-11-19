@@ -53,6 +53,7 @@ Rules:
 - Public documentation must not cite or link to unpublished generated documents or evidence under the local output directories. Summarize verified results in tracked documentation; use published examples or release assets for downloadable files. Use explicit temporary destinations in command examples.
 
 - Whenever the user requests a new version or a version bump, also bump the browser viewer version and rebuild Full and Even More Lite packages.
+- Whenever extension distributables are regenerated, bump the browser viewer minor version first, preserve beta status and rebuild Full and Even More Lite together. Record the version in browser-viewer/package.json and package-lock.json. Apply one bump per regeneration batch; verification rebuilds within that batch use the same version. Refresh permanent local installations without changing their paths. Publication still requires user authorization.
 - Representative bulk samples must be balanced by output count: retain only a handful of standalone 1s/1si PDFs per input type, group EML/MSG sources into 1m/1mi archives, and use predominantly 1c/1ci/1m/1mi for PSTs. Preserve every source in the grouped/archive coverage.
 
 - Signature-compatible embedded full-text indexing was authorized on 2026-11-07; see docs/EMBEDDED_SEARCH_INDEX.md for its supported signing workflow and limits.
