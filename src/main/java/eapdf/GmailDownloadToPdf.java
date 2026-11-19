@@ -17,6 +17,8 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.Base64;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 public class GmailDownloadToPdf {
   static final GsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
@@ -39,10 +41,7 @@ public class GmailDownloadToPdf {
       String folderName = (String)opt.getOrDefault("folder", "ALL_MAIL");
       String outPdfDir = (String)opt.getOrDefault("out-pdf", "out");
       String debugDir = (String)opt.getOrDefault("debug-dir", Paths.get(outPdfDir, "_debug").toString());
-      String globalId = (String)opt.get("global-id");
-      List<String> archiveEmails = castStringList(opt.get("email"));
       boolean debug = Boolean.TRUE.equals(opt.get("debug"));
-      boolean omitSource = Boolean.TRUE.equals(opt.get("omit-source"));
       String archiveProfile = (String)opt.get("archive-profile");
       String archiveOutput = (String)opt.get("archive-output");
       boolean unreadOnly = Boolean.TRUE.equals(opt.get("unread-only"));
@@ -76,52 +75,9 @@ public class GmailDownloadToPdf {
       if (messages.isEmpty()) throw Common.fail("no Gmail messages matched the selection");
       for (var message : messages) Common.inputState("gmail://" + message.getId(), "accepted");
 
-      List<EmailRecord> records = new ArrayList<>();
-      int written = 0;
-
-      for (int i = 0; i < messages.size(); i++) {
-        com.google.api.services.gmail.model.Message meta = messages.get(i);
-        String sourcePath = "gmail://" + Common.nz(meta.getId());
-        Common.inputState(sourcePath, "started");
-        if (archiveProfile == null && resume.completed(meta.getId(), Paths.get(outPdfDir))) {
-          Common.inputState(sourcePath, "completed");
-          System.out.println("resumed completed Gmail message: " + meta.getId());
-          ConversionProgress.completed();
-          written++;
-          continue;
-        }
-        com.google.api.services.gmail.model.Message full = downloadMessage(service, user, meta.getId(), resume);
-        ProcessingLimits.checkMessage((long)full.getRaw().length() * 3 / 4, sourcePath);
-        byte[] raw = Base64.getUrlDecoder().decode(full.getRaw());
-
-        MimeMessage mm = new MimeMessage(EmlReader.mimeSession(raw), new ByteArrayInputStream(raw));
-        int seq = i + 1;
-        String subject = EmlReader.decodedSubject(mm);
-        String stem = messageFileStem(subject, meta.getId());
-        String sourceFilename = stem + ".eml";
-
-        EmailRecord r = EmlReader.readRfc822Bytes(raw, sourcePath, sourceFilename, globalId, archiveEmails, debug);
-        r.sourceType = "gmail";
-        for (AssociatedFile file : r.associatedFiles) {
-          if ("Source".equals(file.afRelationship)) file.description = Common.sourceDescription(r);
-        }
-        r.embedSourceMessage = !omitSource;
-        if (r.folderPath == null || r.folderPath.isBlank()) {
-          r.folderPath = describeMessageLabels(full.getLabelIds(), labelNames, folderName);
-        }
-        r.folderMemberships.addAll(messageLabelNames(full.getLabelIds(), labelNames, folderName));
-        if (archiveProfile != null) {
-          records.add(Common.stageRecord(r));
-        } else {
-          Path pdfPath = Paths.get(outPdfDir).resolve(stem + ".pdf");
-          PdfMailWriter.writeEaPdfA3(pdfPath, r, fontPath, iccPath, debug, Paths.get(debugDir), seq);
-          List<Path> completedOutputs = new ArrayList<>(List.of(pdfPath));
-          resume.rememberCompleted(meta.getId(), completedOutputs);
-          System.out.println("wrote pdf: " + pdfPath);
-          Common.inputState(sourcePath, "completed");
-          written++;
-        }
-      }
+      List<EmailRecord> records = convertMessages(service, user, messages, labelNames, resume, opt,
+          (path, record, sequence) -> PdfMailWriter.writeEaPdfA3(path, record, fontPath, iccPath,
+              debug, Paths.get(debugDir), sequence));
 
       if (archiveProfile != null) {
         if (!"m".equals(archiveProfile) && !"mi".equals(archiveProfile)
@@ -150,11 +106,113 @@ public class GmailDownloadToPdf {
         return;
       }
 
-      System.out.println("done. converted: " + written);
+      System.out.println("done. converted: " + messages.size());
       }
     } catch (Common.UserFacingException e) {
       Common.exitWithError(e.getMessage());
     }
+  }
+
+  @FunctionalInterface
+  interface MessageWriter {
+    void write(Path path, EmailRecord record, int sequence) throws Exception;
+  }
+
+  private record PendingMessage(String id, String sourcePath, Path output, long memoryBytes, Future<?> conversion) {}
+
+  static int conversionWorkers(int messages) {
+    Common.JobReport job = Common.ACTIVE_JOB.get();
+    long memoryWorkers = Math.max(1, Runtime.getRuntime().maxMemory() / (128L * 1024 * 1024));
+    return (int) Math.max(1, Math.min(memoryWorkers, Math.min(messages,
+        Math.min(Runtime.getRuntime().availableProcessors(), job == null ? 4 : job.workerLimit))));
+  }
+
+  /** Keep Gmail access and checkpoint writes on the caller, overlapping bounded PDF workers. */
+  static List<EmailRecord> convertMessages(Gmail service, String user,
+      List<com.google.api.services.gmail.model.Message> messages, Map<String, String> labelNames, GmailResumeStore resume,
+      Map<String, Object> opt, MessageWriter writer) throws Exception {
+    String outPdfDir = (String) opt.getOrDefault("out-pdf", "out");
+    String archiveProfile = (String) opt.get("archive-profile");
+    String globalId = (String) opt.get("global-id");
+    List<String> archiveEmails = castStringList(opt.get("email"));
+    boolean debug = Boolean.TRUE.equals(opt.get("debug"));
+    boolean omitSource = Boolean.TRUE.equals(opt.get("omit-source"));
+    String folderName = (String) opt.getOrDefault("folder", "ALL_MAIL");
+    List<EmailRecord> records = new ArrayList<>();
+    int workers = conversionWorkers(messages.size());
+    long reserved = 0, memoryBudget = Runtime.getRuntime().maxMemory();
+    ExecutorService pool = archiveProfile == null ? Common.newWorkers(workers) : null;
+    Deque<PendingMessage> pending = new ArrayDeque<>();
+    if (pool != null) System.out.println("Gmail conversion workers: " + workers);
+    try {
+      for (int i = 0; i < messages.size(); i++) {
+        if (pending.size() >= workers) {
+          PendingMessage completed = pending.removeFirst();
+          completeMessage(completed, resume);
+          reserved -= completed.memoryBytes();
+        }
+        ProcessingLimits.checkCancelled();
+        com.google.api.services.gmail.model.Message meta = messages.get(i);
+        String sourcePath = "gmail://" + Common.nz(meta.getId());
+        Common.inputState(sourcePath, "started");
+        if (archiveProfile == null && resume.completed(meta.getId(), Paths.get(outPdfDir))) {
+          Common.inputState(sourcePath, "completed");
+          System.out.println("resumed completed Gmail message: " + meta.getId());
+          ConversionProgress.completed();
+          continue;
+        }
+        com.google.api.services.gmail.model.Message full = downloadMessage(service, user, meta.getId(), resume);
+        ProcessingLimits.checkMessage((long)full.getRaw().length() * 3 / 4, sourcePath);
+        byte[] raw = Base64.getUrlDecoder().decode(full.getRaw());
+        Common.JobReport job = Common.ACTIVE_JOB.get();
+        if (job != null) job.largestSourceMessageBytes = Math.max(job.largestSourceMessageBytes, raw.length);
+        // Reserve by actual source size, rather than the maximum permitted message
+        // size (which otherwise consumes the entire heap allowance for one task).
+        long memory = Math.max(128L * 1024 * 1024, raw.length * 16L);
+        while (!pending.isEmpty() && memory > memoryBudget - reserved) {
+          PendingMessage completed = pending.removeFirst();
+          completeMessage(completed, resume);
+          reserved -= completed.memoryBytes();
+        }
+
+        MimeMessage mm = new MimeMessage(EmlReader.mimeSession(raw), new ByteArrayInputStream(raw));
+        int seq = i + 1;
+        String subject = EmlReader.decodedSubject(mm);
+        String stem = messageFileStem(subject, meta.getId());
+        String sourceFilename = stem + ".eml";
+
+        EmailRecord r = EmlReader.readRfc822Bytes(raw, sourcePath, sourceFilename, globalId, archiveEmails, debug);
+        r.sourceType = "gmail";
+        for (AssociatedFile file : r.associatedFiles) {
+          if ("Source".equals(file.afRelationship)) file.description = Common.sourceDescription(r);
+        }
+        r.embedSourceMessage = !omitSource;
+        if (r.folderPath == null || r.folderPath.isBlank()) {
+          r.folderPath = describeMessageLabels(full.getLabelIds(), labelNames, folderName);
+        }
+        r.folderMemberships.addAll(messageLabelNames(full.getLabelIds(), labelNames, folderName));
+        if (archiveProfile != null) {
+          records.add(Common.stageRecord(r));
+        } else {
+          Path pdfPath = Paths.get(outPdfDir).resolve(stem + ".pdf");
+          Future<?> conversion = pool.submit(() -> { writer.write(pdfPath, r, seq); return null; });
+          pending.addLast(new PendingMessage(meta.getId(), sourcePath, pdfPath, memory, conversion));
+          reserved += memory;
+        }
+      }
+
+      while (!pending.isEmpty()) completeMessage(pending.removeFirst(), resume);
+      return records;
+    } finally {
+      if (pool != null) Common.stopWorkers(pool);
+    }
+  }
+
+  private static void completeMessage(PendingMessage pending, GmailResumeStore resume) throws Exception {
+    EmailToPDFA.awaitConversion(pending.conversion());
+    resume.rememberCompleted(pending.id(), List.of(pending.output()));
+    System.out.println("wrote pdf: " + pending.output());
+    Common.inputState(pending.sourcePath(), "completed");
   }
 
   static String resumeScope(String account, Map<String, Object> options, String outputDirectory, String archiveOutput,

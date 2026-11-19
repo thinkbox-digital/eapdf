@@ -18,7 +18,8 @@
     "src/core/fonts.js": "ac097fbf0b046f8a5d743ce56f34e1df3e14b4f8a88efed65e185647f7ccca65",
     "test/unit/bidi_spec.js": "6c4ad185a1980aa5ad26a659234715b6709b690b964fbab133037c1dbc476dcb",
     "src/core/editor/pdf_editor.js": "a8c7493e2ea47bc93ecbaa38114d1f52cf2ec7d38d4daefad5b91baff55dccde",
-    "src/core/core_utils.js": "2965027a2f5d5e4a4b510efcadd4babb369e89ab4ab9a61761e3a0a6770bcf46"
+    "src/core/core_utils.js": "2965027a2f5d5e4a4b510efcadd4babb369e89ab4ab9a61761e3a0a6770bcf46",
+    "src/core/opentype_file_builder.js": "d601967a47658d2ae4a673d2502799ec11bf5583c1087c26235a614694987a7b"
   },
   "patches": [
     "vendor/pdfjs-patches/0001-document-parts.patch",
@@ -28,7 +29,8 @@
     "vendor/pdfjs-patches/0009-named-opening.patch",
     "vendor/pdfjs-patches/0010-rtl-ligatures.patch",
     "vendor/pdfjs-patches/0011-page-only-extraction.patch",
-    "vendor/pdfjs-patches/0012-font-name-regex.patch"
+    "vendor/pdfjs-patches/0012-font-name-regex.patch",
+    "vendor/pdfjs-patches/0013-tricky-fonts.patch"
   ],
   "buildTask": "vendor/pdfjs-patches/build-task.mjs",
   "tests": [
@@ -45,15 +47,16 @@
     "vendor/pdfjs-patches/0010-rtl-ligatures.patch": "ce85a51ec7456d0cfa2465935d3c9ec28f681da3a269010b76d9c9d746a11527",
     "vendor/pdfjs-patches/0011-page-only-extraction.patch": "5c5147380076d0a4c0817d6d85538809446ad659872c33fa54e790a1997d99f1",
     "vendor/pdfjs-patches/build-task.mjs": "4aab30eba5ff01eaab59b3d31644e540fa5c6b7f3b3da7c25d0dcc329c735a28",
-    "lite/prepare-hooks.mjs": "87a64e981f631c3ee7ddbe48cd417b0c2038091b882001f2a45a8d98c1cbf0b5",
+    "lite/prepare-hooks.mjs": "4f9284d7f9083ddc658efa3677b3ffe07cec4af9ddd9ad176c194f1adff89114",
     "lite/rebuild-hooks.mjs": "e2529a7d91765cc00a439b71ba051f60d278c84340dec43cba4ee3eade7173e6",
-    "lite/core.test.mjs": "b2c359f75c91fdc4d136410f8611b887ae4c515d0914ddc42ab298c2d56d753e",
+    "lite/core.test.mjs": "4ec2d251249de4092d3954604467b80e36aaade4de03c2a009d45599f62c02f4",
     "lite/assets.test.mjs": "85188fda34c444fe757a8507800b34d064d5e016a18b44b09809a2efb7f5d2bf",
     "lite/metadata-hooks.test.mjs": "60431aa91ab03c31a6072dbf6ad5bce59ca0f594240dc129ccf6b09f57241773",
-    "vendor/pdfjs-patches/0012-font-name-regex.patch": "6ad2738bfd4b646374d8daf2783e05cbc08f0031025a221d346375969ea64700"
+    "vendor/pdfjs-patches/0012-font-name-regex.patch": "6ad2738bfd4b646374d8daf2783e05cbc08f0031025a221d346375969ea64700",
+    "vendor/pdfjs-patches/0013-tricky-fonts.patch": "e3ecb8843c31f6975bab1ef12517d46109373d4429ee1fff0e4c635d3e437acf"
   },
   "outputs": {
     "vendor/pdfjs-lite/pdf.mjs": "8b40947296f939f61f1b042fd805a73fd0e6f5f3b056bffed6d9ec0e07a2a095",
-    "vendor/pdfjs-lite/pdf.worker.mjs": "ef18ca52c00a56a3205a44f09baa97c7a80bdf65e5e86226261b698259be87c4"
+    "vendor/pdfjs-lite/pdf.worker.mjs": "1dd99ee882aa80e28c7c7a2142d14d8c9f1fc8dac406a4ae42c4c92dc227d3ff"
   }
 }

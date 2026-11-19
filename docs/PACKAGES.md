@@ -11,7 +11,9 @@ GitHub Packages contains our modified HTML-to-PDF libraries for developers.
 These builds include our PDF/A and PDF/UA changes. Each has a matching source JAR
 and license information. See [renderer details](RENDERER.md).
 
-Normal EA-PDF source builds use the verified copies in `third_party/maven/`.
+Current source builds use OpenHTMLtoPDF 1.1.114-eapdf.1 and the FontBox
+3.0.8-eapdf.1 backport from `third_party/maven/`. The FontBox recipe and input
+hashes are in [the backport lock](../third_party/fontbox/lock.json).
 **No GitHub token is needed.**
 
 Other projects can use `https://maven.pkg.github.com/thinkbox-digital/eapdf`.

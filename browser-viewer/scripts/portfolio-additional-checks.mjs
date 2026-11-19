@@ -30,9 +30,7 @@ export async function checkAdditionalPortfolios(browser){
    if(profile!=='ordinary'){
     await browser.click('#portfolio-toggle');await ready();assert.equal(await browser.evaluate(()=>document.body.dataset.documentKind),'eapdf');assert.equal(await browser.evaluate(()=>document.querySelector('#breadcrumbs button:last-child').textContent),file.name,'mode switch preserves newly selected member');assert.equal(await browser.evaluate(()=>document.querySelector('#export-csv').hidden),false);
     await browser.click('#portfolio-toggle');await ready();
-    // Collection-profile members offer their own Portfolio; return to the outer
-    // collection before selecting the next independent sample member.
-    if(['1c','1ci'].includes(profile)){await browser.click('button[aria-label="Parent portfolio"]');await ready();}
+    assert.equal(await browser.evaluate(n=>[...document.querySelectorAll('[data-portfolio-row]')].some(row=>row.textContent===n),file.name),true,'return to the actual Portfolio, including collection-profile members');
    }
    checks.push('open '+profile+' PDF member');
   }

@@ -1,0 +1,74 @@
+--- a/org/apache/fontbox/ttf/CmapSubtable.java
++++ b/org/apache/fontbox/ttf/CmapSubtable.java
+@@ -150,7 +150,7 @@
+             return;
+         }
+         // -- Read all sub header
+-        long lastEndCode = 0;
++        long lastEndCode = -1;
+         for (long i = 0; i < nbGroups; ++i)
+         {
+             long firstCode = data.readUnsignedInt();
+@@ -162,7 +162,7 @@
+             {
+                 throw new IOException("Range invalid");
+             }
+-            if (endCode <= lastEndCode)
++            if (firstCode <= lastEndCode)
+             {
+                 LOG.warn("Format 8 cmap unsorted mapping group was skipped");
+                 continue;
+@@ -263,7 +263,7 @@
+             LOG.warn("subtable has no glyphs");
+             return;
+         }
+-        long lastEndCode = 0;
++        long lastEndCode = -1;
+         for (long i = 0; i < nbGroups; ++i)
+         {
+             long firstCode = data.readUnsignedInt();
+@@ -283,7 +283,7 @@
+                 throw new IOException("Invalid character code " + String.format("0x%X", endCode));
+             }
+ 
+-            if (endCode <= lastEndCode)
++            if (firstCode <= lastEndCode)
+             {
+                 LOG.warn("Format 12 cmap unsorted mapping group was skipped");
+                 continue;
+@@ -334,7 +334,7 @@
+             LOG.warn("subtable has no glyphs");
+             return;
+         }
+-        long lastEndCode = 0;
++        long lastEndCode = -1;
+         for (long i = 0; i < nbGroups; ++i)
+         {
+             long firstCode = data.readUnsignedInt();
+@@ -359,7 +359,7 @@
+                 throw new IOException("Invalid character code " + String.format("0x%X", endCode));
+             }
+ 
+-            if (endCode <= lastEndCode)
++            if (firstCode <= lastEndCode)
+             {
+                 LOG.warn("Format 13 cmap unsorted mapping group was skipped");
+                 continue;
+--- a/org/apache/fontbox/cff/Type2CharStringParser.java
++++ b/org/apache/fontbox/cff/Type2CharStringParser.java
+@@ -150,7 +150,14 @@
+                     + " levels deep in font " + fontName);
+         }
+         glyphData.subrNesting++;
+-        parseSequence(subrBytes, globalSubrIndex, localSubrIndex, glyphData);
++        try
++        {
++            parseSequence(subrBytes, globalSubrIndex, localSubrIndex, glyphData);
++        }
++        finally
++        {
++            glyphData.subrNesting--;
++        }
+         Object lastItem = glyphData.sequence.get(glyphData.sequence.size() - 1);
+         if (lastItem instanceof CharStringCommand
+                 && Type2KeyWord.RET == ((CharStringCommand) lastItem).getType2KeyWord())

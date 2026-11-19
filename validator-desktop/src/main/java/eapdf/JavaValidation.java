@@ -78,7 +78,7 @@ public final class JavaValidation {
 
   static synchronized void initialise() {
     if (!initialised) {
-      Map<String, String> pins = Map.of("core", "1.31.56", "validation-model", "1.31.221", "parser", "1.31.71", "pdf-model", "1.31.14");
+      Map<String, String> pins = Map.of("core", "1.31.56", "validation-model", "1.31.225", "parser", "1.31.72", "pdf-model", "1.31.14");
       pins.forEach((artifact, expected) -> {
         try (InputStream input = JavaValidation.class.getResourceAsStream("/META-INF/maven/org.verapdf/" + artifact + "/pom.properties")) {
           if (input == null) throw new IOException("Missing bundled version information for " + artifact);

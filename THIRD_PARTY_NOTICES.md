@@ -68,7 +68,7 @@ twice. Redistribution/source/relinking review remains release-specific.
 
 ### LGPL 2.1 or later
 
-- `io.github.openhtmltopdf:openhtmltopdf-pdfbox:1.1.113-eapdf.1`
+- `io.github.openhtmltopdf:openhtmltopdf-pdfbox:1.1.114-eapdf.1`
 
 This is the one runtime dependency that makes commercial redistribution more
 complex than a pure Apache/MIT/EPL stack. The project itself can still be
@@ -182,11 +182,17 @@ It preserves number-tree lookup and malformed-tree behavior, and clears the
 thread-local reference after each upstream check. The adapted MPL 2.0 source is
 bundled under META-INF/eapdf/modified-verapdf-sources.
 
+## Patched FontBox build
+
+The creator and Java validator bundle FontBox 3.0.8-eapdf.1 under Apache License
+2.0. The upstream inputs, patches, hashes and matching source JAR are recorded in
+`third_party/fontbox/lock.json`.
+
 ## Patched OpenHTMLtoPDF build
 
 The core and PDFBox modules use community OpenHTMLtoPDF 1.1.113 with four
 unmodified patches from Jia Liang's HTML-to-PDF-UA repository. Version
-`1.1.113-eapdf.1` identifies this derivative; it is not an upstream release.
+`1.1.114-eapdf.1` identifies this derivative; it is not an upstream release.
 Patch sources, immutable provenance, checksums and corresponding source JARs
 are supplied under `third_party/openhtmltopdf/` and `third_party/maven/`.
 The upstream LGPL-2.1-or-later license continues to apply. Rebuilding and

@@ -46,6 +46,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class EapdfGui {
   private static final java.util.regex.Pattern JAVA_FAILURE = java.util.regex.Pattern.compile(
       "^(?:Exception in thread \"[^\"]+\" |Caused by: )([\\w.$]+)(?::\\s*(.*))?$");
+  private static final java.util.regex.Pattern PROGRESS_COUNTS =
+      java.util.regex.Pattern.compile("; emails completed (\\d{1,10})/(\\d{1,10}|\\?)$");
   private final JFrame frame = new JFrame("ThinkBox EMailToPDF GUI");
   private final JTextArea logArea = new JTextArea();
   private final JTextArea summaryArea = new JTextArea();
@@ -177,6 +179,8 @@ public class EapdfGui {
     openOutputButton.addActionListener(e -> openOutputFolder());
     actions.add(openOutputButton);
     progressBar.setPreferredSize(new Dimension(120, 18));
+    progressBar.setStringPainted(true);
+    progressBar.setString("0/?");
     actions.add(progressBar);
     controls.add(actions, BorderLayout.WEST);
     controls.add(statusLabel, BorderLayout.CENTER);
@@ -321,7 +325,7 @@ public class EapdfGui {
     userField.setToolTipText("Gmail account email address, or leave blank to use the account you authorize in the browser.");
     credentialsField.setToolTipText("Select the Google OAuth client credentials JSON file for this application.");
     tokenDirField.setToolTipText("Folder used to store and reuse Gmail authorization tokens. Leave blank to use .gmail_token_store in your home directory.");
-    folderField.setToolTipText("Gmail folder or label to download. Leave blank for all mail.");
+    folderField.setToolTipText("Gmail folder or label to download (case sensitive). Leave blank for all mail.");
     outDirField.setToolTipText("Required destination folder for the downloaded emails and generated EA-PDF files.");
     unreadOnlyBox.setToolTipText("Download only messages marked unread in Gmail; their read status is not changed.");
     limitSpinner.setToolTipText("Maximum number of messages to download. Set 0 to download all matching messages.");
@@ -547,6 +551,7 @@ public class EapdfGui {
     stopButton.setEnabled(running);
     progressBar.setIndeterminate(running);
     progressBar.setValue(running ? 0 : lastOutputDirectory == null ? 0 : 100);
+    if (running) progressBar.setString("0/?");
     openOutputButton.setEnabled(!running && lastOutputDirectory != null);
     for (JButton button : runButtons) button.setEnabled(!running);
   }
@@ -568,6 +573,7 @@ public class EapdfGui {
   private void appendLogLines(List<String> lines) {
     var detail=new StringBuilder();var summary=new StringBuilder();
     for(String line:lines){
+      if (line.startsWith("[progress] ")) line = displayProgress(line);
       GuiLog.tail(detail,line+System.lineSeparator(),GuiLog.DISPLAY_CHARACTERS);
       if (line.contains("INCOMPLETE SOURCE:")) incompleteSource = true;
       if (line.startsWith("[progress] ") && running && !stopRequested())
@@ -583,6 +589,20 @@ public class EapdfGui {
     }
     GuiLog.append(logArea,detail.toString(),GuiLog.DISPLAY_CHARACTERS);
     if(!summary.isEmpty())GuiLog.append(summaryArea,summary.toString(),GuiLog.SUMMARY_CHARACTERS);
+  }
+
+  private String displayProgress(String line) {
+    var counts = PROGRESS_COUNTS.matcher(line);
+    if (counts.find()) {
+      progressBar.setString(counts.group(1) + "/" + counts.group(2));
+      if (!counts.group(2).equals("?") && Long.parseLong(counts.group(2)) > 0) {
+        progressBar.setIndeterminate(false);
+        progressBar.setValue((int) Math.min(100, Long.parseLong(counts.group(1)) * 100 / Long.parseLong(counts.group(2))));
+      }
+      line = line.substring(0, counts.start());
+    }
+    // The durable process log retains CPU diagnostics; the GUI shows wall time.
+    return line.replaceFirst("; CPU (?:\\d+|null)s(?=;|$)", "");
   }
 
   static String conversionError(String line) {

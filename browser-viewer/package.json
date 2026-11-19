@@ -1,6 +1,6 @@
 {
   "name": "eapdf-browser-viewer",
-  "version": "1.3.0-beta.1",
+  "version": "1.6.0-beta.1",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
@@ -43,6 +43,7 @@
     "test:responsive": "node scripts/responsive-smoke.mjs",
     "test:redesign": "node scripts/redesign-smoke.mjs",
     "test:pdfjs-compat": "node scripts/pdfjs-compat-smoke.mjs",
+    "test:tricky-fonts": "node scripts/tricky-fonts-smoke.mjs",
     "test:archive-memory": "node scripts/archive-memory-smoke.mjs",
     "test:metadata-index": "node scripts/metadata-index-smoke.mjs && node scripts/metadata-addresses-smoke.mjs",
     "benchmark:metadata-index": "node scripts/metadata-index-benchmark.mjs",

@@ -2,7 +2,7 @@
 import {parse} from 'acorn';
 export function selectHookTests(text,kind) {
  const source=parse(text,{ecmaVersion:'latest',sourceType:'module'});
- const selected=kind==='core'? /^(preserves nonzero|ordinary\/missing|missing parents|nested indirect|broken child|non-page|complex DPM|MissingDataException)/ : /^(discovers catalog|decompression limit|zero-byte|object and collection cycles|normal decoder|ordinary asset|embedded actions)/;
+ const selected=kind==='core'? /^(tricky font|preserves nonzero|ordinary\/missing|missing parents|nested indirect|broken child|non-page|complex DPM|MissingDataException)/ : /^(discovers catalog|decompression limit|zero-byte|object and collection cycles|normal decoder|ordinary asset|embedded actions)/;
  let previous=0;const result=[];
  for(const statement of source.body) {
   const expression=statement.type==='ExpressionStatement'?statement.expression:null;

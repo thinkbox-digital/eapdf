@@ -9,9 +9,9 @@ This app bundles these Java components:
 - jutf7 1.0.0: MIT, legacy UTF-7 source email decoding. Copyright and permission
   notice: META-INF/eapdf/third-party/jutf7-MIT.txt.
   Source: https://jutf7.sourceforge.net/.
-- veraPDF core 1.31.56, pdf-model 1.31.14, parser 1.31.71,
-  verapdf-xmp-core 1.31.56, validation-model 1.31.221, feature-reporting 1.31.221
-  and metadata-fixer 1.31.221: MPL 2.0 / GPL 3 dual licensing. This integration
+- veraPDF core 1.31.56, pdf-model 1.31.14, parser 1.31.72,
+  verapdf-xmp-core 1.31.56, validation-model 1.31.225, feature-reporting 1.31.225
+  and metadata-fixer 1.31.225: MPL 2.0 / GPL 3 dual licensing. This integration
   uses the MPL option. The local BaseValidator adaptation replaces the
   visited-object identity set with exact disk-backed storage after 100,000 IDs,
   and closes that storage. It also builds diagnostic paths only for objects
@@ -33,8 +33,10 @@ This app bundles these Java components:
   config/verapdf/ISO-32005.json.
 - Apache POI 6.0.0 and its Commons/Log4j API dependencies: Apache License 2.0.
   Source: https://github.com/apache/poi.
-- Apache PDFBox / FontBox / pdfbox-io 3.0.8 and Commons Logging 1.4.0:
-  Apache License 2.0.
+- Apache PDFBox and pdfbox-io 3.0.8, FontBox 3.0.8-eapdf.1 and Commons
+  Logging 1.4.0 use Apache License 2.0. FontBox includes the backports and local
+  follow-up documented in `third_party/fontbox/lock.json`. The matching source
+  JAR is in `third_party/maven/`.
 - Gson 2.15.0, Jackson 2.22.3 (annotations 2.22) and Error Prone annotations 2.50.0:
   Apache License 2.0.
 - Jakarta Mail API 2.1.5: EPL 2.0 / EDL 1.0 / GPL 2 with Classpath Exception.
@@ -59,8 +61,8 @@ dependency and font notices in the repository's THIRD_PARTY_NOTICES.md.
 the Apache License 2.0. The source retains its license header and shares one
 object-key index per file, using the same loader as the creator checks.
 
-The local `StructureElementAccessObject` adaptation of veraPDF parser 1.31.71
-reuses the same parent-number-tree lookup wrapper within an immutable document.
+The local `StructureElementAccessObject` adaptation was based on veraPDF parser
+1.31.71 and rechecked with 1.31.72. It reuses the same parent-number-tree lookup wrapper within an immutable document.
 It preserves number-tree lookup and malformed-tree behavior, and clears the
 thread-local reference after each upstream check. The adapted MPL 2.0 source is
 bundled under META-INF/eapdf/modified-verapdf-sources.
@@ -71,8 +73,8 @@ parsed drawing operators. Tests, error arguments, evaluation timing and traversa
 are unchanged. Rules using any other expression keep the original model. The
 modified MPL 2.0 sources are bundled in the JAR.
 
-The bundled veraPDF Parser 1.31.71 `org.verapdf.parser.XrefStreamParser` is
-modified locally to shift xref field bytes as `long`, preserving unsigned four-byte
+The bundled `org.verapdf.parser.XrefStreamParser` adaptation was based on veraPDF
+parser 1.31.71 and rechecked with 1.31.72. It shifts xref field bytes as `long`, preserving unsigned four-byte
 offsets above 2 GiB and wider fields. The original file's MPLv2+/GPLv3+ notice
 is retained, and modified source is embedded in the JAR under
 `META-INF/eapdf/modified-verapdf-sources/`. Validation rules are unchanged.

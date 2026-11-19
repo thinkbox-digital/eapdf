@@ -11,6 +11,40 @@ const { Dict, Name, Ref } = await upstream('src/core/primitives.js');
 const { MissingDataException } = await upstream('src/core/core_utils.js');
 const { getDocumentParts } = await upstream('src/core/document_parts.js');
 
+test('tricky fonts identify subset family names without renaming ordinary fonts', async () => {
+  const { getTrickyFontName } = await upstream('src/core/tricky_fonts.js');
+  assert.equal(getTrickyFontName('ABCDEF+DFKaiShu-SB-Estd-BF'), 'DFKaiShu-SB-Estd-BF');
+  assert.equal(getTrickyFontName('DFHei Café'), 'DFHei');
+  for (const name of ['Arial', 'ABCDEF+___', undefined]) assert.equal(getTrickyFontName(name), null);
+});
+
+test('tricky fonts require matching hint table lengths and checksums', async () => {
+  const { getTrickyFontNameFromTables } = await upstream('src/core/tricky_fonts.js');
+  const table = (length, word) => {
+    const view = new DataView(new ArrayBuffer(length)); view.setUint32(0, word);
+    return { length, view };
+  };
+  const tables = { 'cvt ': table(0x350, 0x11e5ead4), fpgm: table(0x9063, 0x5a30c93b), prep: table(0x7e, 0x13a42602) };
+  tables.fpgm.view.setUint8(0x9062, 1);
+  assert.equal(getTrickyFontNameFromTables(tables), 'DFKai-SB');
+  assert.equal(getTrickyFontNameFromTables({ ...tables, prep: null }), null);
+  assert.equal(getTrickyFontNameFromTables({ ...tables, prep: table(0x7f, 0x13a42602) }), null);
+  tables.fpgm.view.setUint8(0x9062, 2);
+  assert.equal(getTrickyFontNameFromTables(tables), null);
+});
+
+test('tricky font checksums zero-pad partial words and wrap at 32 bits', async () => {
+  const { computeOpenTypeChecksum } = await upstream('src/core/opentype_file_builder.js');
+  const checksum = values => computeOpenTypeChecksum(new DataView(Uint8Array.from(values).buffer));
+  assert.equal(checksum([]), 0);
+  assert.equal(checksum([1]), 0x01000000);
+  assert.equal(checksum([1, 2]), 0x01020000);
+  assert.equal(checksum([1, 2, 3]), 0x01020300);
+  assert.equal(checksum([255, 255, 255, 255, 0, 0, 0, 2]), 1);
+  const view = new DataView(Uint8Array.from([9, 1, 2, 3, 4, 9]).buffer);
+  assert.equal(computeOpenTypeChecksum(view, 1, 5), 0x01020304);
+});
+
 function fixture() {
   const objects = new Map();
   const rootRef = Ref.get(10, 2), partRef = Ref.get(11, 3), pageRef = Ref.get(20, 1);

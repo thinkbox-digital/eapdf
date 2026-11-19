@@ -61,6 +61,29 @@ class TextDecodeWarningTests {
     Assertions.assertTrue(record.conversionWarnings.isEmpty());
   }
 
+  @Test
+  void latin1WindowsPunctuationIsRecoveredWithWarningAndOriginalBytes() throws Exception {
+    byte[] body = new byte[]{(byte) 0x93, 'q', (byte) 0x94, ' ', 'i', 't', (byte) 0x92, 's'};
+    EmailRecord record = parse("text/plain; charset=ISO-8859-1", body);
+    Assertions.assertEquals("\u201cq\u201d it\u2019s", record.textBody);
+    Assertions.assertEquals(1, record.conversionWarnings.size());
+    Assertions.assertTrue(record.conversionWarnings.get(0).contains("windows-1252"));
+  }
+
+  @Test
+  void latin1UndefinedWindowsBytesDoNotTriggerCharsetGuessing() throws Exception {
+    EmailRecord record = parse("text/plain; charset=ISO-8859-1", new byte[]{'a', (byte) 0x81});
+    Assertions.assertEquals("a\u0081", record.textBody);
+    Assertions.assertTrue(record.conversionWarnings.isEmpty());
+  }
+
+  @Test
+  void utf8ControlsDoNotTriggerLatin1CharsetRecovery() throws Exception {
+    EmailRecord record = parse("text/plain; charset=UTF-8", "a\u0092".getBytes(StandardCharsets.UTF_8));
+    Assertions.assertEquals("a\u0092", record.textBody);
+    Assertions.assertTrue(record.conversionWarnings.isEmpty());
+  }
+
   public static void main(String[] args) throws Exception {
     Path directory = Path.of(args[0]);
     Files.createDirectories(directory);

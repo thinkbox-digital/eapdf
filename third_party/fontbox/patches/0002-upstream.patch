@@ -1,0 +1,98 @@
+--- a/org/apache/fontbox/cff/Type1CharStringParser.java
++++ b/org/apache/fontbox/cff/Type1CharStringParser.java
+@@ -45,6 +45,10 @@
+     private static final int TWO_BYTE = 12;
+     private static final int CALLOTHERSUBR = 16;
+     private static final int POP = 17;
++
++    // The format allows 10 nested subroutine calls, but fonts in use exceed that. This is only a
++    // safeguard against endless recursion.
++    protected static final int MAX_SUBR_NESTING = 20;
+ 
+     private final String fontName;
+     private String currentGlyph;
+@@ -71,11 +75,11 @@
+     public List<Object> parse(byte[] bytes, List<byte[]> subrs, String glyphName) throws IOException
+     {
+         currentGlyph = glyphName;
+-        return parse(bytes, subrs, new ArrayList<>());
+-    }
+-
+-    private List<Object> parse(byte[] bytes, List<byte[]> subrs, List<Object> sequence)
+-            throws IOException
++        return parse(bytes, subrs, new ArrayList<>(), 0);
++    }
++
++    private List<Object> parse(byte[] bytes, List<byte[]> subrs, List<Object> sequence,
++            int subrNesting) throws IOException
+     {
+         DataInput input = new DataInputByteArray(bytes);
+         while (input.hasRemaining())
+@@ -83,7 +87,7 @@
+             int b0 = input.readUnsignedByte();
+             if (b0 == CALLSUBR)
+             {
+-                processCallSubr(subrs, sequence);
++                processCallSubr(subrs, sequence, subrNesting);
+             }
+             else if (b0 == TWO_BYTE && input.peekUnsignedByte(0) == CALLOTHERSUBR)
+             {
+@@ -105,7 +109,8 @@
+         return sequence;
+     }
+ 
+-    private void processCallSubr(List<byte[]> subrs, List<Object> sequence) throws IOException
++    private void processCallSubr(List<byte[]> subrs, List<Object> sequence, int subrNesting)
++            throws IOException
+     {
+         // callsubr command
+         Object obj = sequence.remove(sequence.size() - 1);
+@@ -119,8 +124,13 @@
+ 
+         if (operand >= 0 && operand < subrs.size())
+         {
++            if (subrNesting >= MAX_SUBR_NESTING)
++            {
++                throw new IOException("Subroutines are nested more than " + MAX_SUBR_NESTING
++                        + " levels deep in glyph '" + currentGlyph + "' of font " + fontName);
++            }
+             byte[] subrBytes = subrs.get(operand);
+-            parse(subrBytes, subrs, sequence);
++            parse(subrBytes, subrs, sequence, subrNesting + 1);
+             Object lastItem = sequence.get(sequence.size() - 1);
+             if (lastItem instanceof CharStringCommand
+                     && Type1KeyWord.RET == ((CharStringCommand) lastItem).getType1KeyWord())
+--- a/org/apache/fontbox/cff/Type2CharStringParser.java
++++ b/org/apache/fontbox/cff/Type2CharStringParser.java
+@@ -37,6 +37,10 @@
+     private static final int HINTMASK = CharStringCommand.Key.HINTMASK.getHashValue();
+     private static final int CNTRMASK = CharStringCommand.Key.CNTRMASK.getHashValue();
+ 
++    // The format allows 10 nested subroutine calls, but fonts in use exceed that. This is only a
++    // safeguard against endless recursion.
++    protected static final int MAX_SUBR_NESTING = 20;
++
+     private final String fontName;
+ 
+     /**
+@@ -140,6 +144,12 @@
+     private void processSubr(byte[][] globalSubrIndex, byte[][] localSubrIndex, byte[] subrBytes,
+             GlyphData glyphData) throws IOException
+     {
++        if (glyphData.subrNesting >= MAX_SUBR_NESTING)
++        {
++            throw new IOException("Subroutines are nested more than " + MAX_SUBR_NESTING
++                    + " levels deep in font " + fontName);
++        }
++        glyphData.subrNesting++;
+         parseSequence(subrBytes, globalSubrIndex, localSubrIndex, glyphData);
+         Object lastItem = glyphData.sequence.get(glyphData.sequence.size() - 1);
+         if (lastItem instanceof CharStringCommand
+@@ -249,6 +259,7 @@
+         final List<Object> sequence = new ArrayList<>();
+         int hstemCount = 0;
+         int vstemCount = 0;
++        int subrNesting = 0;
+ 
+         private GlyphData()
+         {

@@ -1,10 +1,11 @@
 # EA-PDF readers
 
-**Full and Even More Lite readers 1.3.0-beta.1**, with creator/validator 2.3.0-beta.1.
+**Full and Even More Lite readers 1.6.0-beta.1**, with creator/validator 2.4.0-beta.1.
+Both readers restore recognized family names for affected embedded CJK fonts.
 Read local PDFs, browse email folders and save attachments. Files stay on your
 computer. No Java, server or internet connection is needed by the extensions.
 
-[Download](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.3.0-beta.1) ·
+[Download](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.1) ·
 [User guide](../docs/manual/user-manual.html#viewer) · [Privacy](../docs/site/privacy.md)
 
 ## Choose a reader
@@ -19,6 +20,9 @@ computer. No Java, server or internet connection is needed by the extensions.
 | PDF size/page limit | See [full-reader limits](docs/security.md) | 32 MiB / 2,048 pages per PDF |
 
 Even More Lite uses three adjustable panes for messages, pages and assets.
+Pane-heading chevrons hide the side panes; Show messages and Show files restore
+them above the document. Page controls sit above the PDF. Full offers Portfolio
+view for actual PDF Portfolios; EA-PDF collections retain email navigation.
 The two extensions can be installed together. Viewer Lite is discontinued;
 its last packages remain in the previous release. See the
 [Even More Lite guide](even-more-lite/README.md) for controls and limits.
@@ -54,6 +58,12 @@ Incomplete scans and unsupported files show a warning. A readable PDF has not
 necessarily passed validation. Original files are unchanged. Embedded scripts do not run.
 
 ## Build
+
+Before regenerating extension distributables, bump the reader minor version in
+`package.json` and `package-lock.json`, preserving beta status. Rebuild Full and
+Even More Lite together, using one version per regeneration batch. Verification
+rebuilds in that batch retain the chosen version. Keep local installation paths
+stable; reload the extensions and reopen viewer tabs after updating their files.
 
 Use the Node.js/npm versions listed in `package.json`, then run from this folder:
 

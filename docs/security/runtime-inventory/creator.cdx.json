@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "EA-PDF creator",
-      "version": "2.3.0-beta.1"
+      "version": "2.4.0-beta.1"
     },
     "properties": [
       {
@@ -832,13 +832,13 @@
       "type": "library",
       "group": "io.github.openhtmltopdf",
       "name": "openhtmltopdf-core",
-      "version": "1.1.113-eapdf.1",
-      "purl": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-core@1.1.113-eapdf.1",
-      "bom-ref": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-core@1.1.113-eapdf.1",
+      "version": "1.1.114-eapdf.1",
+      "purl": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-core@1.1.114-eapdf.1",
+      "bom-ref": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-core@1.1.114-eapdf.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "54df67dc394982ca80d518d492552e0f445290d264455a388801a0972a8dcfb1"
+          "content": "8ea6c5b90ce7ca51a1c05169a22bfe48bf1dc0a55c4b043dc197d296c35118c2"
         }
       ],
       "properties": [
@@ -860,13 +860,13 @@
       "type": "library",
       "group": "io.github.openhtmltopdf",
       "name": "openhtmltopdf-pdfbox",
-      "version": "1.1.113-eapdf.1",
-      "purl": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-pdfbox@1.1.113-eapdf.1",
-      "bom-ref": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-pdfbox@1.1.113-eapdf.1",
+      "version": "1.1.114-eapdf.1",
+      "purl": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-pdfbox@1.1.114-eapdf.1",
+      "bom-ref": "pkg:maven/io.github.openhtmltopdf/openhtmltopdf-pdfbox@1.1.114-eapdf.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "02e7624c246428a1050ad9354da846f3d40ea76151c23644ae704961b578360f"
+          "content": "025227d6065e873877cdc2a3d4684b031f54539d3901fc2ba8611f08ae474d81"
         }
       ],
       "properties": [
@@ -1264,13 +1264,13 @@
       "type": "library",
       "group": "org.apache.pdfbox",
       "name": "fontbox",
-      "version": "3.0.8",
-      "purl": "pkg:maven/org.apache.pdfbox/fontbox@3.0.8",
-      "bom-ref": "pkg:maven/org.apache.pdfbox/fontbox@3.0.8",
+      "version": "3.0.8-eapdf.1",
+      "purl": "pkg:maven/org.apache.pdfbox/fontbox@3.0.8-eapdf.1",
+      "bom-ref": "pkg:maven/org.apache.pdfbox/fontbox@3.0.8-eapdf.1",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "a1915c24e3edbe0ecec93896dfbf6d41427810b663ade97bd4e8bae86ec3fdab"
+          "content": "68a6beb903f4c4e1c88d767b316e0a5ed3620c34192f2a2e8168dc8db5f5e239"
         }
       ],
       "properties": [
@@ -1782,12 +1782,12 @@
     },
     {
       "type": "file",
-      "name": "emailtopdfa-2.3.0-beta.1.jar",
-      "bom-ref": "artifact:emailtopdfa-2.3.0-beta.1.jar",
+      "name": "emailtopdfa-2.4.0-beta.1.jar",
+      "bom-ref": "artifact:emailtopdfa-2.4.0-beta.1.jar",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "8d923944526672c4197c28e00ec255d14ea9a95b8e2c20abe8d16c920b46ec36"
+          "content": "cc9f8ade56f7f97b2a447c7f219551157d7f9222637ddb87f85bc72398a32424"
         }
       ]
     }

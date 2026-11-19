@@ -360,6 +360,18 @@ class EmlReader {
             + "; invalid byte sequences were replaced in recovered text (" + type.getBaseType() + ").";
         Common.warn(record, ConversionDiagnostic.Code.TEXT_RECOVERED, notice);
       }
+      // Legacy mail often labels Windows punctuation as Latin-1. C1 controls
+      // have no printable glyphs; recover only when Windows-1252 decodes fully.
+      if (charset != null && decoderCharset.equals(StandardCharsets.ISO_8859_1)
+          && text.chars().anyMatch(c -> c >= 0x80 && c <= 0x9f)) {
+        try {
+          text = Charset.forName("windows-1252").newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
+          Common.warn(record, ConversionDiagnostic.Code.TEXT_RECOVERED,
+              "MIME charset '" + charset + "' contains C1 control bytes; displayed text recovered using windows-1252. Original source bytes are retained.");
+        } catch (CharacterCodingException undefinedWindowsByte) {
+          // Undefined Windows bytes do not justify changing the declared charset.
+        }
+      }
       ProcessingLimits.checkBody(text, record.sourcePath);
       if (type.match("text/plain") && "flowed".equalsIgnoreCase(type.getParameter("format"))) {
         text = displayFlowedText(text, "yes".equalsIgnoreCase(type.getParameter("delsp")));

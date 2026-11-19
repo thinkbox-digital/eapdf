@@ -1,28 +1,46 @@
 # Project status
 
-Current release, 18 November 2026: creator/validator **2.3.0-beta.1** and
-**Full/Even More Lite readers 1.3.0-beta.1**. Even More Lite replaces the discontinued
-Lite packages. The creator's empty-metadata guard, worker supervision/report
-synchronization fixes and dependency PRs #26–#33 are included. Full retains its
-independent CSV/XMP export. Both PDF.js hook recipes include the equivalent
-font-name quote character classes in patch 0012.
+Current release, 19 November 2026: creator and validator **2.4.0-beta.1**
+with **Full and Even More Lite readers 1.6.0-beta.1**.
 
-Even More Lite and its required reader helpers were explicitly selected for
-transfer on 18 November. The C2PA/PAdES experiment, WeasyPrint integration and
-other experimental changes remain separate in `../eapdf` on `experiment/c2pa-pades`.
-Normal development continues in this checkout.
+C2PA/PAdES, WeasyPrint and other experimental changes remain separate in
+`../eapdf` on `experiment/c2pa-pades`. Normal development continues in this checkout.
 
-See [release checks](releases/2.3.0-beta.1-validation.md) for verification and limits.
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.1) ·
+[Release notes](releases/2.4.0-beta.1.md) ·
+[Release checks](releases/2.4.0-beta.1-validation.md) · [Code layout](ARCHITECTURE.md)
 
 ## This release
 
-- **New reader:** Even More Lite has message/folder navigation, PDF pages and embedded assets in three adjustable panes; it replaces Lite packages.
-- **Bug fix:** reject empty email metadata input explicitly.
-- **Code improvement:** process-exit notifications replace watchdog sleep polling; JobReport owns report-import synchronization. Intentional Gmail retry backoff remains interruptible.
-- **Code improvement:** dependency PRs #26–#33, inspection provenance and PDF.js source patches are maintained in this checkout.
-
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.3.0-beta.1) ·
-[Release notes](releases/2.3.0-beta.1.md) · [Code layout](ARCHITECTURE.md)
+- **Bug fixes.** The paired veraPDF parser 1.31.72 and validation-model
+  1.31.225 update corrects false PDF/A-4f passes with trailing data. The validator
+  also recognizes core-field text nested under verified spans and links. The
+  desktop report shows child summaries and relevant failures or incomplete
+  checks, and saves the complete JSON.
+- **Bug fixes.** The creator recovers mislabeled legacy Windows-1252 text when
+  all bytes decode, warns about the recovery and preserves the original source.
+  It skips malformed inline images without discarding HTML formatting, uses
+  Gregorian dates across locales, keeps derived filenames valid, omits local
+  mailbox paths from provenance and preserves output permissions on replacement.
+  The OpenHTMLtoPDF 1.1.114-eapdf.1 update fixes rowspans at page breaks. The
+  creator and validator use the FontBox 3.0.8-eapdf.1 parsing backport.
+- **Speed improvement.** Gmail downloads stay sequential while bounded workers
+  convert individual PDFs. Archives and collections use source sizes to bound
+  rendering. With four real EML inputs served by a mock Gmail API, the warmed
+  individual-PDF run took 0.56 seconds with one worker and 0.25–0.26 seconds in
+  the two four-worker runs. A collection took 0.48 seconds with one worker and
+  0.34–0.39 seconds with four. These local OpenHTMLtoPDF timings cover a small
+  sample with no Gmail network costs. The creator shows completed and total
+  message counts during and after conversion.
+- **Checks.** The Java creator and validator suites passed with optional checks
+  skipped. The standalone validator passed all 27 Gmail PDFs across the six
+  profiles. The retained source files match their original SHA-256 hashes.
+  An OpenHTMLtoPDF linked-image regression preserves the link and Figure tags.
+  Its generated PDF passed EA-PDF, PDF/A and applicable ISO 32005 checks.
+- **Reader improvements.** Both readers backport Mozilla's embedded TrueType
+  family-name identification fix. Full reserves Portfolio view for PDF Portfolios
+  and preserves email navigation in EA-PDF collections. Even More Lite puts pane
+  controls in the headers and page controls above the document.
 
 ## What is supported
 
@@ -33,8 +51,6 @@ Use the standalone Java validator for normal conversion checks. Python CLI valid
 Keep the original mailboxes. Isolated output omits sources; it does not remove
 private information from the visible email. The creator no longer makes PREMIS
 or finding-aid files. The reader's CSV export remains available.
-
-## Latest update
 
 Historical checkpoint, 14 November: Full and the then-maintained Lite restricted message downloads to
 proven body pages unless a complete inspection establishes standalone scope.
@@ -75,8 +91,6 @@ the validator checks the resulting sizes and checksums. Original inputs were unc
 The custom archive storage remains: replacing it with stock PDFBox increased
 retained heap in the storage probes. This is not a general speed or memory claim.
 
-Release checks and library versions are recorded in the
-[verification record](releases/2.3.0-beta.1-validation.md).
 Earlier counts remain dated evidence in the changelog and release records.
 
 The tested desktop environment is mainly Linux with Java 21. Reader extensions

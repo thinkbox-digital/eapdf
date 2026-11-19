@@ -1,0 +1,62 @@
+{
+  "version": "3.0.8-eapdf.1",
+  "upstream_commits": [
+    "1f6099df314778094cc805b130eea4bc6acb39e9",
+    "4d4e48d106b27fe397fbd9c25cc1555777589bef"
+  ],
+  "inputs": [
+    {
+      "name": "fontbox-3.0.8.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/pdfbox/fontbox/3.0.8/fontbox-3.0.8.jar",
+      "sha256": "a1915c24e3edbe0ecec93896dfbf6d41427810b663ade97bd4e8bae86ec3fdab"
+    },
+    {
+      "name": "fontbox-3.0.8-sources.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/pdfbox/fontbox/3.0.8/fontbox-3.0.8-sources.jar",
+      "sha256": "ccb9a570f102b776974dd3ab5a5dd96972c90e2dd30cd3e9ecc59d854f1dc1b0"
+    },
+    {
+      "name": "fontbox-3.0.8.pom",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/pdfbox/fontbox/3.0.8/fontbox-3.0.8.pom",
+      "sha256": "17805de8dae9e80519661dd1c0a623d699590f212ceccdb1dc9852733f1ae96f"
+    },
+    {
+      "name": "pdfbox-io-3.0.8.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox-io/3.0.8/pdfbox-io-3.0.8.jar",
+      "sha256": "36a0e04001010b4c764857817412b96339930b19755e728959805cc0352061b2"
+    },
+    {
+      "name": "commons-logging-1.4.0.jar",
+      "url": "https://repo.maven.apache.org/maven2/commons-logging/commons-logging/1.4.0/commons-logging-1.4.0.jar",
+      "sha256": "d175dbd751dd782a63bde28c7a039520e971f25e84b79c19b8435edc3603e0dc"
+    }
+  ],
+  "patches": [
+    {
+      "path": "third_party/fontbox/patches/0001-upstream.patch",
+      "sha256": "442f17f0b4896216662c138daa907463578db722dc3ce2c0d9a2efe031d2c97e"
+    },
+    {
+      "path": "third_party/fontbox/patches/0002-upstream.patch",
+      "sha256": "9fed8001354f68c722c9e68e77edc335c89909b505f0ce8789b6a034253ea088"
+    },
+    {
+      "path": "third_party/fontbox/patches/0003-depth-and-overlap.patch",
+      "sha256": "97f6713fd92f5b8d2d12a0eab902ac0d41a4672c636b667cc999ff2d6b5c6d9d"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "third_party/maven/org/apache/pdfbox/fontbox/3.0.8-eapdf.1/fontbox-3.0.8-eapdf.1-sources.jar",
+      "sha256": "356e36be86341d82cf536bb9c8fe28228f010736052a93b9208e6449b7574650"
+    },
+    {
+      "path": "third_party/maven/org/apache/pdfbox/fontbox/3.0.8-eapdf.1/fontbox-3.0.8-eapdf.1.jar",
+      "sha256": "68a6beb903f4c4e1c88d767b316e0a5ed3620c34192f2a2e8168dc8db5f5e239"
+    },
+    {
+      "path": "third_party/maven/org/apache/pdfbox/fontbox/3.0.8-eapdf.1/fontbox-3.0.8-eapdf.1.pom",
+      "sha256": "2fc7fc07a89827d56f0c1dd50746406684337adcc7c6463761062b9708ae3f0b"
+    }
+  ]
+}

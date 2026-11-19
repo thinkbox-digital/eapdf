@@ -35,7 +35,11 @@ export async function checkPortfolio(browser){
    }
    assert.equal(createHash('sha256').update(await readFile(path)).digest('hex'),before);results.push(name+' PASS; original SHA-256 unchanged');
   }
-  await open(resolve('tests/fulltext-index/mbox_sample_1c.pdf'));assert.equal(await browser.evaluate(()=>document.body.dataset.documentKind),'eapdf');assert.equal(await browser.evaluate(()=>document.querySelector('#export-csv').hidden),false);assert.equal(await browser.evaluate(()=>!!document.body.dataset.portfolio),false);results.push('EA-PDF default interface restored after Portfolio files');
+  for(const profile of ['c','ci']){
+   await open(resolve(`tests/fulltext-index/mbox_sample_1${profile}.pdf`));assert.equal(await browser.evaluate(()=>document.body.dataset.documentKind),'eapdf');assert.equal(await browser.evaluate(()=>document.querySelector('#export-csv').hidden),false);assert.equal(await browser.evaluate(()=>!!document.body.dataset.portfolio),false);
+   assert.equal(await browser.evaluate(()=>document.querySelector('#portfolio-toggle').hidden&&document.querySelector('#portfolio-show').hidden),true);
+  }
+  results.push('EA-PDF collections retain email navigation without Portfolio controls');
   return results;
  }finally{await rm(work,{recursive:true,force:true});}
 }

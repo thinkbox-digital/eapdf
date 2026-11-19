@@ -243,7 +243,7 @@ function showInformation(doc:BrowserDocument):void {
   element('navigation-title').textContent=detection.kind==='eapdf'?'Messages':'Contents';
   element('navigation-panel').setAttribute('aria-label',detection.kind==='eapdf'?'Messages and collections':'Document contents');
   element('export-csv').hidden=detection.kind!=='eapdf';
-  collectionView.information(rootDetection,detection,doc);
+  collectionView.information(doc);
   const notice=detectDocument(doc.inspection).notice||detection.notice||openingWarnings.get(doc)||'';
   element('document-notice').textContent=notice;element('document-notice').hidden=!notice;
   if(detection.kind!=='eapdf')profile.textContent=detection.kind==='portfolio'?collectionView.documentLabel():'PDF';

@@ -18,6 +18,7 @@ async function exercise(page,label){
  page.on('pageerror',error=>errors.push(error.message));
  await page.waitForFunction(()=>document.querySelector('#file')&&!document.querySelector('#file').disabled);
  assert.equal(await page.title(),'EA-PDF Even More Lite');
+ assert.equal(await page.locator('header .brand').textContent(),'EA-PDF Even More Lite');
  assert.equal(await page.locator('[type="search"],#export-csv,#download-message,#metadata-dialog').count(),0);
  const idle=()=>page.waitForFunction(()=>document.querySelector('#viewport').getAttribute('aria-busy')==='false');
  const open=async path=>{
@@ -30,6 +31,10 @@ async function exercise(page,label){
   });assert.ok(pixels>100,'page contains rendered marks');
  };
  await open(join(root,'tests/fixtures/ordinary.pdf'));
+ assert.equal(await page.locator('header #filename').textContent(),'ordinary.pdf');
+ assert.equal(await page.locator('#navigation-panel h2').textContent(),'Messages');
+ const toolbar=await page.locator('.reader-pane .page-toolbar').boundingBox(),pdf=await page.locator('#viewport').boundingBox();
+ assert.ok(toolbar.y+toolbar.height<=pdf.y&&Math.abs(toolbar.x+toolbar.width/2-pdf.x-pdf.width/2)<1);
  await page.locator('#next').click();await idle();assert.equal(await page.locator('#page').inputValue(),'2');
  await page.locator('#previous').click();await idle();assert.equal(await page.locator('#page').inputValue(),'1');
  await page.locator('#page').fill('2');await page.locator('#page').press('Enter');await idle();assert.equal(await page.locator('#page').inputValue(),'2');
@@ -70,8 +75,15 @@ async function exercise(page,label){
  const divider=await page.locator('#resize-details').boundingBox(),old=await page.locator('#details-panel').evaluate(el=>el.clientWidth);
  await page.mouse.move(divider.x+divider.width/2,divider.y+30);await page.mouse.down();await page.mouse.move(divider.x-30,divider.y+30);await page.mouse.up();
  assert.ok(await page.locator('#details-panel').evaluate(el=>el.clientWidth)>old+10);
- await page.locator('#toggle-navigation').click();assert.equal(await page.locator('#navigation-panel').isVisible(),false);
- await page.locator('#toggle-navigation').click();await page.locator('#toggle-details').click();assert.equal(await page.locator('#details-panel').isVisible(),false);await page.locator('#toggle-details').click();
+ for(const name of ['navigation','details']){
+  assert.equal(await page.locator('#'+name+'-panel #toggle-'+name+' svg').count(),1);
+  await page.locator('#toggle-'+name).click();assert.equal(await page.locator('#'+name+'-panel').isVisible(),false);
+  assert.equal(await page.locator('#show-'+name).getAttribute('aria-expanded'),'false');assert.equal(await page.locator('#show-'+name).evaluate(el=>el===document.activeElement),true);
+ }
+ for(const name of ['navigation','details']){
+  await page.locator('#show-'+name).click();assert.equal(await page.locator('#'+name+'-panel').isVisible(),true);
+  assert.equal(await page.locator('#toggle-'+name).getAttribute('aria-expanded'),'true');assert.equal(await page.locator('#toggle-'+name).evaluate(el=>el===document.activeElement),true);
+ }
  const save=async(action,expected)=>{const pending=page.waitForEvent('download');await action();const file=await pending;const bytes=await readFile(await file.path());assert.deepEqual(bytes,expected);await idle();return file;};
  const previewSave=async(action,expected)=>{
   await action();await page.locator('#attachment-viewer').waitFor({state:'visible'});await page.waitForFunction(()=>document.querySelector('#attachment-viewer').getAttribute('aria-busy')==='false');
@@ -108,8 +120,9 @@ async function exercise(page,label){
  assert.equal(await row('blue.png').locator('button[aria-label="Download blue.png"] svg').count(),1);assert.equal(await row('blue.png').locator('button[aria-label="View blue.png"] svg').count(),1);
  checks.push(label+': shared Full viewer icons, text/image previews and inert markup');
  if(process.env.EAPDF_COLLECTION_SAMPLE){
-  await open(process.env.EAPDF_COLLECTION_SAMPLE);assert.equal(await page.locator('#tree > button').count(),0);assert.equal(await page.getByText('Email PDFs (7)',{exact:true}).count(),1);
+  await open(process.env.EAPDF_COLLECTION_SAMPLE);assert.equal(await page.locator('#tree > button').count(),0);
   const members=await page.locator('#tree button[data-file-id]').evaluateAll(buttons=>buttons.map(button=>button.dataset.fileId));
+  assert.ok(members.length>1);assert.equal(await page.getByText(`Email PDFs (${members.length})`,{exact:true}).count(),1);
   assert.equal(await page.locator('#assets summary').filter({hasText:/^Location$/}).count(),0);
   await page.screenshot({path:join(evidence,label+'-collection-labels.png')});
   await page.locator('#tree button[data-file-id]').first().click();await idle();assert.equal(await page.locator('#back').isEnabled(),true);
@@ -136,6 +149,7 @@ async function exercise(page,label){
  }
  await page.setViewportSize({width:400,height:700});await idle();
  assert.ok(await page.locator('#viewport').evaluate(el=>el.clientWidth)>100);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  await page.setViewportSize({width:1280,height:800});await idle();
  await page.locator('#file').setInputFiles({name:'oversized.pdf',mimeType:'application/pdf',buffer:Buffer.alloc(32*1024**2+1)});
  await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('32 MiB'));
@@ -152,6 +166,7 @@ async function exercise(page,label){
  await page.waitForFunction(()=>!document.querySelector('#page-surface').hidden&&document.querySelector('#viewport').getAttribute('aria-busy')==='false');
  assert.equal(await page.locator('#status').textContent(),'reopened.pdf');
  await page.locator('#close').click();assert.equal(await page.locator('#empty-state').isVisible(),true);
+ assert.equal(await page.locator('#filename').textContent(),'');assert.equal(await page.locator('#show-navigation,#show-details').filter({visible:true}).count(),0);
  checks.push(label+': narrow layout, input limit, invalid PDF, cancellation and close/reopen recovery');
 }
 const temporary=await mkdtemp(join(tmpdir(),'eapdf-minimal-browser-'));

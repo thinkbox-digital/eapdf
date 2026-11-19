@@ -33,14 +33,16 @@ const assets=new AssetPanel(assetList,element('assets-title'),{
   page:page=>void perform(async()=>{current!.page=page;await render();status(notice(current!));}),
 });
 pages.embeddedLinkLabel='Open linked attachment';
-for(const [id,kind,label]of [['back','up','Return to parent PDF'],['previous','left','Previous page'],['next','right','Next page'],['close','close','Close PDF']] as const){const control=element(id);control.replaceChildren(treeIcon(kind));control.classList.add('icon-button');control.title=label;control.setAttribute('aria-label',label);}
+for(const [id,kind,label]of [['back','up','Return to parent PDF'],['previous','left','Previous page'],['next','right','Next page'],['close','close','Close PDF'],['toggle-navigation','left','Hide messages'],['toggle-details','right','Hide files']] as const){const control=element(id);control.replaceChildren(treeIcon(kind));control.classList.add('icon-button');control.title=label;control.setAttribute('aria-label',label);}
 document.querySelector('.open')!.prepend(treeIcon('folder'));
 setupPaneResizers(workspace,20);
-function pane(name:string,show:boolean):void {
+function pane(name:string,show:boolean,focus=false):void {
   workspace.classList.toggle('hide-'+name,!show);
-  element('toggle-'+name).setAttribute('aria-expanded',String(show));
+  element('show-'+name).hidden=show||!current;
+  for(const prefix of ['toggle-','show-'])element(prefix+name).setAttribute('aria-expanded',String(show));
+  if(focus)element((show?'toggle-':'show-')+name).focus();
 }
-for(const name of ['navigation','details'])element('toggle-'+name).addEventListener('click',()=>pane(name,workspace.classList.contains('hide-'+name)));
+for(const name of ['navigation','details'])for(const show of [false,true])element((show?'show-':'toggle-')+name).addEventListener('click',()=>pane(name,show,true));
 function showAssets():void {
   if(!current)return;assets.show(current);allFiles.hidden=!current.selectedMessage;
 }
@@ -52,7 +54,7 @@ function controls():void {
   back.hidden=!doc?.parent;
   close.disabled=!doc&&!busy;pageInput.value=String(doc?.page??1);element('pages').textContent=`of ${doc?.pdf.numPages??0}`;
   tree.inert=assetList.inert=busy;allFiles.disabled=busy;viewport.setAttribute('aria-busy',String(busy));
-  for(const name of ['navigation','details'])element<HTMLButtonElement>('toggle-'+name).disabled=!doc;
+  for(const name of ['navigation','details'])for(const prefix of ['toggle-','show-'])element<HTMLButtonElement>(prefix+name).disabled=!doc;
 }
 async function perform(operation:(check:()=>void)=>Promise<void>):Promise<void>{
   if(busy)return;
@@ -93,7 +95,7 @@ function notice(doc:BrowserDocument):string {
 }
 async function activate(doc:BrowserDocument,page=doc.page):Promise<void>{
   const token=generation,changed=current!==doc;
-  current=doc;doc.page=page;element('empty-state').hidden=true;element('filename').textContent=doc.name;
+  current=doc;doc.page=page;element('empty-state').hidden=true;element('filename').textContent=element('filename').title=doc.name;
   element('breadcrumbs').textContent=documentPath(doc);element('breadcrumbs').hidden=false;
   navigation(doc);showAssets();if(changed)element('details-panel').scrollTop=0;controls();await render();if(token===generation)status(notice(doc));
 }
@@ -181,7 +183,7 @@ function reset():void {
   attachmentViewer.close();
   ++generation;pages.clear();session.close();session=new BrowserSession();current=undefined;busy=false;
   tree.replaceChildren();assetList.replaceChildren();element('assets-title').textContent='Files in this PDF';allFiles.hidden=true;
-  pane('navigation',false);pane('details',false);element('breadcrumbs').hidden=true;
+  pane('navigation',false);pane('details',false);element('breadcrumbs').hidden=true;element('filename').textContent=element('filename').title='';
   element('empty-state').hidden=false;input.value='';controls();status('Open or drop a PDF.');
 }
 function open(blob:File):void {

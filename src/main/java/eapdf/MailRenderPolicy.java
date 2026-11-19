@@ -93,6 +93,7 @@ static boolean isAllowedRenderResource(String uri) {
     String header = uri.substring(0, comma).toLowerCase(Locale.ROOT);
     if (header.startsWith("data:image/")) {
       byte[] bytes = decodeRenderImageUri(uri);
+      if (bytes == null) return false;
       ProcessingLimits.checkMessage(bytes.length, "inline data image");
       checkRenderImage(bytes);
     }
@@ -105,11 +106,32 @@ static boolean isAllowedRenderResource(String uri) {
 }
 
 static byte[] decodeRenderImageUri(String uri) {
-  int comma = uri.indexOf(',');
-  String header = uri.substring(0, comma).toLowerCase(Locale.ROOT);
-  return header.endsWith(";base64") ? Base64.getMimeDecoder().decode(uri.substring(comma + 1))
-      : java.net.URLDecoder.decode(uri.substring(comma + 1).replace("+", "%2B"), StandardCharsets.ISO_8859_1)
-          .getBytes(StandardCharsets.ISO_8859_1);
+  try {
+    int comma = uri.indexOf(',');
+    if (comma < 0) throw new IllegalArgumentException("Missing data URI separator");
+    boolean base64 = uri.substring(0, comma).toLowerCase(Locale.ROOT).endsWith(";base64");
+    long units = 0;
+    for (int index = comma + 1; index < uri.length(); index++) {
+      char c = uri.charAt(index);
+      if (base64) {
+        if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '+' || c == '/') units++;
+      } else {
+        units++;
+        if (c == '%') {
+          if (index + 2 >= uri.length() || Character.digit(uri.charAt(index + 1), 16) < 0
+              || Character.digit(uri.charAt(index + 2), 16) < 0) throw new IllegalArgumentException("Malformed percent escape");
+          index += 2;
+        }
+      }
+    }
+    ProcessingLimits.checkMessage(base64 ? units * 6 / 8 : units, "inline data image");
+    return base64 ? Base64.getMimeDecoder().decode(uri.substring(comma + 1))
+        : java.net.URLDecoder.decode(uri.substring(comma + 1).replace("+", "%2B"), StandardCharsets.ISO_8859_1)
+            .getBytes(StandardCharsets.ISO_8859_1);
+  } catch (IllegalArgumentException malformed) {
+    Common.warn(ACTIVE_RENDER_RECORD.get(), "Skipped malformed inline data image.");
+    return null;
+  }
 }
 
 static String orientRenderImage(String uri) {
@@ -123,6 +145,7 @@ static String orientRenderImage(String uri) {
         && !uri.regionMatches(true, 0, "data:image/jpg", 0, 14)) return uri;
     bytes = decodeRenderImageUri(uri);
   }
+  if (bytes == null) return null;
   if (bytes.length < 2 || (bytes[0] & 0xff) != 0xff || (bytes[1] & 0xff) != 0xd8) return uri;
   try {
     byte[] display = ImageOrientation.orientedPng(bytes);

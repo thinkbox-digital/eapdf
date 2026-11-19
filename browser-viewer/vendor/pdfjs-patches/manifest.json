@@ -17,12 +17,13 @@
     "src/core/fonts.js": "ac097fbf0b046f8a5d743ce56f34e1df3e14b4f8a88efed65e185647f7ccca65",
     "test/unit/bidi_spec.js": "6c4ad185a1980aa5ad26a659234715b6709b690b964fbab133037c1dbc476dcb",
     "src/core/editor/pdf_editor.js": "a8c7493e2ea47bc93ecbaa38114d1f52cf2ec7d38d4daefad5b91baff55dccde",
-    "src/core/core_utils.js": "2965027a2f5d5e4a4b510efcadd4babb369e89ab4ab9a61761e3a0a6770bcf46"
+    "src/core/core_utils.js": "2965027a2f5d5e4a4b510efcadd4babb369e89ab4ab9a61761e3a0a6770bcf46",
+    "src/core/opentype_file_builder.js": "d601967a47658d2ae4a673d2502799ec11bf5583c1087c26235a614694987a7b"
   },
   "localInputs": {
     "vendor/pdfjs-patches/0001-document-parts.patch": "b3d54b75e5f9dcbe6a25ee925904f7d7994307d409256b3f6cfdf173d6850fc6",
     "vendor/pdfjs-patches/build-task.mjs": "4aab30eba5ff01eaab59b3d31644e540fa5c6b7f3b3da7c25d0dcc329c735a28",
-    "vendor/pdfjs-patches/core.test.mjs": "3803b9b7d8bd3ce46578f4ba82ee7de69c43914d82eeea185e26af0650acee0a",
+    "vendor/pdfjs-patches/core.test.mjs": "2a660274a29e88d955f6aa04b1bac0ea9ec4150299fdf8fd919541026213cab1",
     "scripts/rebuild-pdfjs.mjs": "ecf221832581abf19442a9ff70db96f39d219ec5adb1cb4a8ceb017a79725020",
     "vendor/pdfjs-patches/0002-document-assets.patch": "cd376f863c20e96684f557db40d19e9fd08b0dd1b067f4a11535c650ec2e69c1",
     "vendor/pdfjs-patches/assets.test.mjs": "21e5dffb59b5fe79b4c70942af4a43df1ce9aaa7bae9022b4fcc893a197e0b09",
@@ -35,11 +36,12 @@
     "vendor/pdfjs-patches/0009-named-opening.patch": "9980dabc6a3afc0aff21d65a676f2c5b3d45e969061605e16f57fc1aa3e52c3c",
     "vendor/pdfjs-patches/0010-rtl-ligatures.patch": "ce85a51ec7456d0cfa2465935d3c9ec28f681da3a269010b76d9c9d746a11527",
     "vendor/pdfjs-patches/0011-page-only-extraction.patch": "5c5147380076d0a4c0817d6d85538809446ad659872c33fa54e790a1997d99f1",
-    "vendor/pdfjs-patches/0012-font-name-regex.patch": "6ad2738bfd4b646374d8daf2783e05cbc08f0031025a221d346375969ea64700"
+    "vendor/pdfjs-patches/0012-font-name-regex.patch": "6ad2738bfd4b646374d8daf2783e05cbc08f0031025a221d346375969ea64700",
+    "vendor/pdfjs-patches/0013-tricky-fonts.patch": "e3ecb8843c31f6975bab1ef12517d46109373d4429ee1fff0e4c635d3e437acf"
   },
   "outputs": {
     "vendor/pdfjs-patched/pdf.mjs": "8b40947296f939f61f1b042fd805a73fd0e6f5f3b056bffed6d9ec0e07a2a095",
-    "vendor/pdfjs-patched/pdf.worker.mjs": "59af9b7889627806f83ec0581167d6d3cb51837ea86a1fd94ceece0cdcc92ed6"
+    "vendor/pdfjs-patched/pdf.worker.mjs": "b0152b1acd68b0b548329f3a055720f1e1d99c64ec54a72dee3821284c71b6b9"
   },
   "internalEventBuildDefine": "0a475cb6-573c-46ed-869d-fa7c5839d995",
   "patches": [
@@ -54,6 +56,7 @@
     "vendor/pdfjs-patches/0009-named-opening.patch",
     "vendor/pdfjs-patches/0010-rtl-ligatures.patch",
     "vendor/pdfjs-patches/0011-page-only-extraction.patch",
-    "vendor/pdfjs-patches/0012-font-name-regex.patch"
+    "vendor/pdfjs-patches/0012-font-name-regex.patch",
+    "vendor/pdfjs-patches/0013-tricky-fonts.patch"
   ]
 }
