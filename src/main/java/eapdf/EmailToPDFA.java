@@ -21,8 +21,8 @@ public class EmailToPDFA {
       String in = (String)opt.get("in");
       if (in == null) throw Common.fail("missing input path");
       String outDir = (String)opt.getOrDefault("out", "out");
-      String fontPath = Common.resolveFontPath((String)opt.get("font"));
-      String iccPath = Common.resolveIccPath((String)opt.get("icc"));
+      String fontPath = Common.bundledFontPath();
+      String iccPath = Common.bundledIccPath();
       String globalId = (String)opt.get("global-id");
       List<String> archiveEmails = castStringList(opt.get("email"));
       boolean debug = Boolean.TRUE.equals(opt.get("debug"));
@@ -55,7 +55,7 @@ public class EmailToPDFA {
   }
 
   static Map<String,Object> parseArgs(String[] args) {
-    Common.validateCliArguments(args, Set.of("--out", "--font", "--icc", "--global-id", "-g", "--email", "-e", "--jobs", "-j", "--archive-profile", "--archive-output", "--debug-dir"),
+    Common.validateCliArguments(args, Set.of("--out", "--global-id", "-g", "--email", "-e", "--jobs", "-j", "--archive-profile", "--archive-output", "--debug-dir"),
         Set.of("--omit-source", "--debug"), true);
     Map<String,Object> m = new LinkedHashMap<>();
     List<String> rest = new ArrayList<>();
@@ -63,8 +63,6 @@ public class EmailToPDFA {
     for (int i=0;i<args.length;i++) {
       String a = args[i];
       if (a.equals("--out") && i+1<args.length) { m.put("out", args[++i]); continue; }
-      if (a.equals("--font") && i+1<args.length) { m.put("font", args[++i]); continue; }
-      if (a.equals("--icc") && i+1<args.length) { m.put("icc", args[++i]); continue; }
       if ((a.equals("--global-id") || a.equals("-g")) && i+1<args.length) { m.put("global-id", args[++i]); continue; }
       if ((a.equals("--email") || a.equals("-e")) && i+1<args.length) { emails.add(args[++i]); continue; }
       if ((a.equals("--jobs") || a.equals("-j")) && i+1<args.length) { m.put("jobs", Common.numericOption(a, args[++i], 1)); continue; }

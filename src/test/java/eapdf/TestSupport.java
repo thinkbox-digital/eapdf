@@ -30,11 +30,11 @@ final class TestSupport {
   private TestSupport() {}
 
   static String fontPath() {
-    return Common.resolveFontPath(null);
+    return Common.bundledFontPath();
   }
 
   static String iccPath() {
-    return Common.resolveIccPath(null);
+    return Common.bundledIccPath();
   }
 
   static Path firstInputWithExtension(String extension) throws IOException {

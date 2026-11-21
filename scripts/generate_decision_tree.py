@@ -262,8 +262,8 @@ def build_pdf(path: Path):
         530,
         "CLI Switches",
         [
-            "EmailToPDFA: --out, --font, --icc, --global-id/-g, --email/-e, --jobs/-j, --omit-source, --archive-profile, --archive-output, --debug, --debug-dir.",
-            "GmailDownloadToPdf: --user, --credentials, --token-dir, --folder, --out-pdf, --limit, --unread-only, plus the archive and rendering switches above.",
+            "EmailToPDFA: --out, --global-id/-g, --email/-e, --jobs/-j, --omit-source, --archive-profile, --archive-output, --debug, --debug-dir.",
+            "GmailDownloadToPdf: --user, --credentials, --token-dir, --folder, --out-pdf, --limit, --unread-only, plus the archive, metadata and diagnostic switches above.",
         ],
         PDF_BLUE_BG,
         PDF_BLUE,

@@ -2,7 +2,7 @@ Project: Email → EA-PDF generator
 
 Workspace separation, 18 November 2026:
 - This is the normal development checkout, based on GitHub main.
-- The retained C2PA/PAdES experiment is in ../eapdf on experiment/c2pa-pades. Do not merge or copy experimental features here without an explicit user request.
+- The retained C2PA/PAdES experiment is in ../eapdf-secure on experiment/c2pa-pades. Do not merge or copy experimental features here without an explicit user request.
 - PR fixes #26–#33 were selected for this checkout; other local experimental changes remain separate.
 - On 18 November 2026 the user selected Even More Lite for transfer and publication in place of Lite. Build and publish Full and Even More Lite; retain the Lite exporter as shared infrastructure. C2PA/PAdES remains separate.
 
@@ -38,6 +38,7 @@ Rules:
 - Do not modify CLI arguments unless asked
 - Preserve existing debug output
 - Prefer minimal targeted edits
+- When locating code to edit, start with the **Where to work** map in `docs/ARCHITECTURE.md`. Use IDE symbol search when available for declarations and references. Batch related text searches into one scoped `rg` call with multiple `-e` patterns. Keep any local symbol index scoped to its checkout and current with the working tree.
 - For future file regenerations, enable Accessibility (`accessibility.addPdfUaFeatures: true`), including when using a custom configuration
 - For future conversion and example-regeneration runs, disable optional PREMIS (`premis.enabled: false`), including in custom configurations, unless the user requests it.
 - For conversion runs, use bounded parallel processing wherever supported and use the standalone Java validator. Retain the Python validator for its regression tests and explicitly requested comparisons or diagnostics.
@@ -53,7 +54,7 @@ Rules:
 - Public documentation must not cite or link to unpublished generated documents or evidence under the local output directories. Summarize verified results in tracked documentation; use published examples or release assets for downloadable files. Use explicit temporary destinations in command examples.
 
 - Whenever the user requests a new version or a version bump, also bump the browser viewer version and rebuild Full and Even More Lite packages.
-- Whenever extension distributables are regenerated, bump the browser viewer minor version first, preserve beta status and rebuild Full and Even More Lite together. Record the version in browser-viewer/package.json and package-lock.json. Apply one bump per regeneration batch; verification rebuilds within that batch use the same version. Refresh permanent local installations without changing their paths. Publication still requires user authorization.
+- Whenever extension distributables are regenerated, bump the browser viewer minor version first and rebuild Full and Even More Lite together. Starting with the version after 1.6.0-beta.1, use plain `1.x.0` in browser-viewer/package.json, package-lock.json, browser manifests, distributable filenames, and current reader documentation. The creator and validator version determines the GitHub release's prerelease status. Apply one bump per regeneration batch; verification rebuilds within that batch use the same version. Refresh permanent local installations without changing their paths. Publication still requires user authorization.
 - Representative bulk samples must be balanced by output count: retain only a handful of standalone 1s/1si PDFs per input type, group EML/MSG sources into 1m/1mi archives, and use predominantly 1c/1ci/1m/1mi for PSTs. Preserve every source in the grouped/archive coverage.
 
 - Signature-compatible embedded full-text indexing was authorized on 2026-11-07; see docs/EMBEDDED_SEARCH_INDEX.md for its supported signing workflow and limits.
@@ -72,3 +73,9 @@ Rules:
 
 - Maintain current handover status in docs/PROJECT_STATUS.md and separation decisions in docs/ARCHITECTURE.md. Keep docs/DEVELOPMENT_STATUS.md and docs/private local and ignored. Update the authoritative user/reference guide when behaviour changes; historical audit counts remain dated evidence.
 - Before every push, regenerate the software architecture PDF. Draw arrows downward from each Tool to the Libraries it uses to show their connections.
+
+## Cross-edition improvements
+
+Follow [the shared update workflow](docs/ARCHITECTURE.md#cross-edition-improvements)
+for shared dependencies, EA-PDF rules, and creator or validator fixes. Tell the
+user which editions each improvement affects and the status of propagation.

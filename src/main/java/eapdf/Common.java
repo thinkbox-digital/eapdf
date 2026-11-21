@@ -903,20 +903,16 @@ static String stripInvalidXml(String s) {
     }
   }
 
-  static String resolveFontPath(String fontPath) {
-    if (fontPath != null && !fontPath.isBlank()) return fontPath;
-    Path assetFont = resolveExistingPath("assets/LiberationSans-Regular.ttf");
-    if (assetFont != null) return assetFont.toString();
+  static String bundledFontPath() {
     Path bundled = bundledAssetPath("assets/DejaVuSans.ttf", ".ttf");
     if (bundled != null) return bundled.toString();
-    throw fail("missing --font /path/to/font.ttf and no bundled font found");
+    throw fail("Cannot load bundled font DejaVuSans.ttf");
   }
 
-  static String resolveIccPath(String iccPath) {
-    if (iccPath != null && !iccPath.isBlank()) return iccPath;
+  static String bundledIccPath() {
     Path bundled = bundledAssetPath("assets/sRGB.icc", ".icc");
     if (bundled != null) return bundled.toString();
-    throw fail("missing --icc /path/to/sRGB.icc and no bundled ICC profile found");
+    throw fail("Cannot load bundled ICC profile sRGB.icc");
   }
 
   static String bundledLogoUri() {

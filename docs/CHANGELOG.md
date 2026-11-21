@@ -5,6 +5,11 @@ Use [current project status](PROJECT_STATUS.md) and [architecture decisions](ARC
 for the current handover; do not treat historical counts or then-open findings as
 a fresh acceptance run.
 
+## 2026-11-21 — 2.4.0-beta.2 / readers 1.7.0
+
+- **Creator.** Local, Gmail and monthly conversion use bundled DejaVu Sans and sRGB. Remove custom font and ICC profile arguments from scripts when upgrading.
+- **Even More Lite reader.** The header shows the open filename or embedded PDF path once and uses the same styling as Full.
+
 ## 2026-11-19 — 2.4.0-beta.1 / readers 1.6.0-beta.1
 
 - **Bug fixes.** Recover mislabeled Windows-1252 text with a warning, keep HTML when malformed inline images are skipped, use Gregorian dates across locales, and fix rowspans that cross page breaks.

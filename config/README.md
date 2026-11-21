@@ -19,7 +19,9 @@ Current contents include:
 
 ## Processing And Fonts
 
-All conversion entry points now use supervised subprocesses, including GUI-launched work. Whole-job/native/storage/page/aggregate-image/font limits and recoverable PDF/sidecar publication are described in [conversion operations](../docs/CONVERSION_OPERATIONS.md). Public CLI arguments are unchanged.
+All conversion entry points now use supervised subprocesses, including GUI-launched work. Whole-job/native/storage/page/aggregate-image/font limits and recoverable PDF/sidecar publication are described in [conversion operations](../docs/CONVERSION_OPERATIONS.md).
+
+The creator uses bundled DejaVu Sans as its primary font and embeds the bundled sRGB profile.
 
 These environment variables also have JVM property equivalents:
 
@@ -31,7 +33,7 @@ These environment variables also have JVM property equivalents:
 | `EAPDF_MAX_IMAGE_PIXELS` | `eapdf.maxImagePixels` | Java heap bytes / 32 pixels per raster image |
 | `EAPDF_WORKER_TIMEOUT_SECONDS` | `eapdf.workerTimeoutSeconds` | 300 seconds per awaited parallel worker |
 | `EAPDF_WORKER_SHUTDOWN_SECONDS` | `eapdf.workerShutdownSeconds` | 5 seconds to wait for cancelled workers |
-| `EAPDF_FALLBACK_FONTS` | `eapdf.fallbackFonts` | Bundled DejaVu Sans, Droid Sans Fallback and Nanum Gothic; up to 16 fallback TTF paths in total |
+| `EAPDF_FALLBACK_FONTS` | `eapdf.fallbackFonts` | Bundled Droid Sans Fallback and Nanum Gothic; up to 16 fallback TTF paths in total |
 | `EAPDF_GMAIL_RESUME_DIR` | `eapdf.gmailResumeDir` | Unset: no persistent email staging |
 
 Numeric processing limits must be positive integers. Oversized inputs stop with an explanation; the program does not silently truncate email content. Heap-aware worker limits also apply to local parallel conversion. Limits bound accepted workloads, not total process RSS; font/native runtime memory is additional.

@@ -27,8 +27,8 @@ public class MonthlyFilenameArchiveToPdf {
 
       Path outDir = Paths.get((String) opt.getOrDefault("out", inputDir.resolve("_monthly_1m").toString())).toAbsolutePath().normalize();
       Path debugDir = Paths.get((String) opt.getOrDefault("debug-dir", outDir.resolve("_debug").toString())).toAbsolutePath().normalize();
-      String fontPath = Common.resolveFontPath((String) opt.get("font"));
-      String iccPath = Common.resolveIccPath((String) opt.get("icc"));
+      String fontPath = Common.bundledFontPath();
+      String iccPath = Common.bundledIccPath();
       String globalId = (String) opt.get("global-id");
       List<String> archiveEmails = EmailToPDFA.castStringList(opt.get("email"));
       boolean debug = Boolean.TRUE.equals(opt.get("debug"));
@@ -86,7 +86,7 @@ public class MonthlyFilenameArchiveToPdf {
   }
 
   static Map<String, Object> parseArgs(String[] args) {
-    Common.validateCliArguments(args, java.util.Set.of("--out", "--font", "--icc", "--global-id", "-g", "--email", "-e", "--debug-dir"),
+    Common.validateCliArguments(args, java.util.Set.of("--out", "--global-id", "-g", "--email", "-e", "--debug-dir"),
         java.util.Set.of("--debug"), true);
     Map<String, Object> m = new LinkedHashMap<>();
     List<String> emails = new ArrayList<>();
@@ -94,8 +94,6 @@ public class MonthlyFilenameArchiveToPdf {
     for (int i = 0; i < args.length; i++) {
       String a = args[i];
       if (a.equals("--out") && i + 1 < args.length) { m.put("out", args[++i]); continue; }
-      if (a.equals("--font") && i + 1 < args.length) { m.put("font", args[++i]); continue; }
-      if (a.equals("--icc") && i + 1 < args.length) { m.put("icc", args[++i]); continue; }
       if ((a.equals("--global-id") || a.equals("-g")) && i + 1 < args.length) { m.put("global-id", args[++i]); continue; }
       if ((a.equals("--email") || a.equals("-e")) && i + 1 < args.length) { emails.add(args[++i]); continue; }
       if (a.equals("--debug")) { m.put("debug", true); continue; }
