@@ -31,3 +31,10 @@ features, disables optional PREMIS, and bounds processing to two jobs.
 On November 14, PyMuPDF 2.1 was checked against 1.25.5 using the same six
 baseline PDF pages. Every pixel matched, so the existing reference images and
 comparison threshold are unchanged. The renderer pin and supported import were updated.
+
+On November 21, the bundled DejaVu Sans change was reviewed on all six pages.
+The new font changes text widths and some header wrapping, with 0.889% to
+9.286% of pixels differing at the gate's per-pixel threshold. Page counts,
+source and attachment checks, and Java EA-PDF and PDF/A validation passed.
+The reviewed DejaVu Sans images are the new reference pages. The rasterizer,
+visual threshold, and source expectations stay the same.
