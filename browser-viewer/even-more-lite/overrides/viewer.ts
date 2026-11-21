@@ -14,6 +14,7 @@ import type {AssociatedFile,EmbeddedStream} from './domain/inspection.js';
 const element=<T extends HTMLElement>(id:string)=>document.getElementById(id) as T;
 const input=element<HTMLInputElement>('file'),pageInput=element<HTMLInputElement>('page'),zoom=element<HTMLSelectElement>('zoom');
 const back=element<HTMLButtonElement>('back'),previous=element<HTMLButtonElement>('previous'),next=element<HTMLButtonElement>('next'),close=element<HTMLButtonElement>('close');
+const headerFilename=element('header-filename');
 const viewport=element<HTMLElement>('viewport'),surface=element<HTMLElement>('page-surface'),tree=element<HTMLElement>('tree'),workspace=element('workspace');
 const assetList=element('assets'),allFiles=element<HTMLButtonElement>('all-files');
 let session=new BrowserSession(),current:BrowserDocument|undefined,busy=false,generation=0;
@@ -34,7 +35,7 @@ const assets=new AssetPanel(assetList,element('assets-title'),{
 });
 pages.embeddedLinkLabel='Open linked attachment';
 for(const [id,kind,label]of [['back','up','Return to parent PDF'],['previous','left','Previous page'],['next','right','Next page'],['close','close','Close PDF'],['toggle-navigation','left','Hide messages'],['toggle-details','right','Hide files']] as const){const control=element(id);control.replaceChildren(treeIcon(kind));control.classList.add('icon-button');control.title=label;control.setAttribute('aria-label',label);}
-document.querySelector('.open')!.prepend(treeIcon('folder'));
+document.querySelector('.open-file')!.prepend(treeIcon('folder'));
 setupPaneResizers(workspace,20);
 function pane(name:string,show:boolean,focus=false):void {
   workspace.classList.toggle('hide-'+name,!show);
@@ -95,8 +96,8 @@ function notice(doc:BrowserDocument):string {
 }
 async function activate(doc:BrowserDocument,page=doc.page):Promise<void>{
   const token=generation,changed=current!==doc;
-  current=doc;doc.page=page;element('empty-state').hidden=true;element('filename').textContent=element('filename').title=doc.name;
-  element('breadcrumbs').textContent=documentPath(doc);element('breadcrumbs').hidden=false;
+  current=doc;doc.page=page;element('empty-state').hidden=true;
+  headerFilename.textContent=headerFilename.title=documentPath(doc);
   navigation(doc);showAssets();if(changed)element('details-panel').scrollTop=0;controls();await render();if(token===generation)status(notice(doc));
 }
 function row(label:string,action:(check:()=>void)=>Promise<void>,container:HTMLElement,kind:'message'|'document'='message',details?:Record<string,string>):HTMLButtonElement {
@@ -183,7 +184,7 @@ function reset():void {
   attachmentViewer.close();
   ++generation;pages.clear();session.close();session=new BrowserSession();current=undefined;busy=false;
   tree.replaceChildren();assetList.replaceChildren();element('assets-title').textContent='Files in this PDF';allFiles.hidden=true;
-  pane('navigation',false);pane('details',false);element('breadcrumbs').hidden=true;element('filename').textContent=element('filename').title='';
+  pane('navigation',false);pane('details',false);headerFilename.textContent=headerFilename.title='';
   element('empty-state').hidden=false;input.value='';controls();status('Open or drop a PDF.');
 }
 function open(blob:File):void {

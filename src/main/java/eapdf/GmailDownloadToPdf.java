@@ -31,8 +31,8 @@ public class GmailDownloadToPdf {
       EapdfConfig.get().requireCreator();
       PdfSigning.preflight();
       String user = (String)opt.getOrDefault("user", "me");
-      String fontPath = Common.resolveFontPath((String)opt.get("font"));
-      String iccPath = Common.resolveIccPath((String)opt.get("icc"));
+      String fontPath = Common.bundledFontPath();
+      String iccPath = Common.bundledIccPath();
       String credentialsPath = Common.resolveCredentialsPath((String)opt.get("credentials"));
       String tokenDir = (String)opt.getOrDefault("token-dir", Paths.get(System.getProperty("user.home"), ".gmail_token_store").toString());
 
@@ -397,7 +397,7 @@ public class GmailDownloadToPdf {
   }
 
   static Map<String,Object> parseArgs(String[] args) {
-    Common.validateCliArguments(args, Set.of("--user", "--credentials", "--token-dir", "--folder", "--out-pdf", "--debug-dir", "--font", "--icc", "--global-id", "-g", "--email", "-e", "--limit", "--archive-profile", "--archive-output"),
+    Common.validateCliArguments(args, Set.of("--user", "--credentials", "--token-dir", "--folder", "--out-pdf", "--debug-dir", "--global-id", "-g", "--email", "-e", "--limit", "--archive-profile", "--archive-output"),
         Set.of("--omit-source", "--unread-only", "--debug"), false);
     Map<String,Object> m = new LinkedHashMap<>();
     List<String> emails = new ArrayList<>();
@@ -409,8 +409,6 @@ public class GmailDownloadToPdf {
       if (a.equals("--folder") && i + 1 < args.length) { m.put("folder", args[++i]); continue; }
       if (a.equals("--out-pdf") && i + 1 < args.length) { m.put("out-pdf", args[++i]); continue; }
       if (a.equals("--debug-dir") && i + 1 < args.length) { m.put("debug-dir", args[++i]); continue; }
-      if (a.equals("--font") && i + 1 < args.length) { m.put("font", args[++i]); continue; }
-      if (a.equals("--icc") && i + 1 < args.length) { m.put("icc", args[++i]); continue; }
       if ((a.equals("--global-id") || a.equals("-g")) && i + 1 < args.length) { m.put("global-id", args[++i]); continue; }
       if ((a.equals("--email") || a.equals("-e")) && i + 1 < args.length) { emails.add(args[++i]); continue; }
       if (a.equals("--limit") && i + 1 < args.length) { m.put("limit", Common.numericOption(a, args[++i], 0)); continue; }

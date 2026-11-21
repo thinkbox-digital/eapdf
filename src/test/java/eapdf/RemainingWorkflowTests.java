@@ -39,6 +39,21 @@ class RemainingWorkflowTests {
   }
 
   @Test
+  void creatorCliOptionsRejectRemovedFontAndIccOverrides() {
+    for (String option : List.of("--font", "--icc")) {
+      String message = "unknown option: " + option;
+      String[] localArguments = {option, "asset", "input"};
+      String[] gmailArguments = {option, "asset"};
+      Assertions.assertEquals(message, Assertions.assertThrows(Common.UserFacingException.class,
+          () -> EmailToPDFA.parseArgs(localArguments)).getMessage());
+      Assertions.assertEquals(message, Assertions.assertThrows(Common.UserFacingException.class,
+          () -> GmailDownloadToPdf.parseArgs(gmailArguments)).getMessage());
+      Assertions.assertEquals(message, Assertions.assertThrows(Common.UserFacingException.class,
+          () -> MonthlyFilenameArchiveToPdf.parseArgs(localArguments)).getMessage());
+    }
+  }
+
+  @Test
   void emptyAndUnsupportedFoldersFailWithSkippedFileReasons() throws Exception {
     Assertions.assertThrows(Common.UserFacingException.class, () -> EmailToPDFA.collectInputs(tempDir.toString()));
     Files.writeString(tempDir.resolve("notes.txt"), "not email");

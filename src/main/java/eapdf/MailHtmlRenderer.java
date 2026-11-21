@@ -115,7 +115,7 @@ byte[] renderXhtmlPdf(String xhtml, String baseUri, String fontPath, boolean fit
   // The patched API calls base PDF/A-4 PDFA_4_A; it does not create PDF/A-4f.
   // Final assembly supplies EA-PDF identification, associated files and 4f XMP.
   builder.usePdfAConformance(PdfRendererBuilder.PdfAConformance.PDFA_4_A);
-  builder.useColorProfile(Files.readAllBytes(Path.of(Common.resolveIccPath(null))));
+  builder.useColorProfile(Files.readAllBytes(Path.of(Common.bundledIccPath())));
   FontSupport.register(builder, new File(fontPath), "ArchiveFont");
   EmailRecord renderRecord = ACTIVE_RENDER_RECORD.get();
   builder.usePdfUaAccessibility(pdfUaFeaturesEnabled() || (renderRecord != null && !Common.nz(renderRecord.headerTagMarker).isBlank()), 2);

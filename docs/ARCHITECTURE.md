@@ -4,16 +4,38 @@ The project has three parts: create PDFs, check PDFs, and read PDFs.
 The browser reader runs without Java or a server.
 
 Normal development continues in this GitHub-main checkout. The retained
-`experiment/c2pa-pades` checkout is separate; its C2PA/PAdES coordinator, export
+`experiment/c2pa-pades` checkout is in `../eapdf-secure`; its C2PA/PAdES coordinator, export
 verification, experimental viewer identity and other local additions are not
 automatically merged here. Even More Lite and its required reader helpers were
 explicitly selected on 18 November 2026; C2PA/PAdES remains separate. Selected maintenance fixes are transferred independently.
+
+The `../eapdf-lite` checkout starts from this code with an EML-only CLI, the
+same standalone Java validator, and the Even More Lite source export. Main
+continues to own the shared implementation and produces the local Even More
+Lite extension installation used by both checkouts.
 
 The Python inspection oracle remains a development tool. Its frozen manifest
 records exact package versions and source hashes. Dependency updates require an
 explicit provenance refresh and review; tests do not rewrite expected records.
 
 [Architecture diagram (PDF)](EA-PDF_Software_Architecture.pdf)
+
+## Cross-edition improvements
+
+Main owns shared dependency pins, EA-PDF rules and validator code, and creator
+code used across editions. A shared improvement can start in any checkout. Land
+it as a focused Main change and carry it to each affected edition. Keep Secure's
+WeasyPrint and C2PA/PAdES changes in Secure when their impact is confined there.
+
+While the editions share source snapshots, cherry-pick the focused Main commit
+into affected checkouts and resolve differences with their edition behavior in
+mind. Once the shared Maven modules and BOM are available, propagate changes by
+updating each affected edition's pinned shared release through a dependency
+update PR. Check all six profiles for shared creator and validator changes and
+include signed-output checks when the change affects Secure's signing workflow.
+
+For each improvement you work on or review, tell the user which editions it
+affects, which updates were applied and verified, and which are still pending.
 
 ## Where to work
 

@@ -28,8 +28,7 @@ class MonthlyFilenameArchiveTests {
     Path log = tempDir.resolve("monthly.log");
     Process process = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
         "-Djava.awt.headless=true", "-cp", System.getProperty("java.class.path"),
-        MonthlyFilenameArchiveToPdf.class.getName(), "--out", output.toString(),
-        "--font", TestSupport.fontPath(), "--icc", TestSupport.iccPath(), input.toString())
+        MonthlyFilenameArchiveToPdf.class.getName(), "--out", output.toString(), input.toString())
         .redirectErrorStream(true).redirectOutput(log.toFile()).start();
     try {
       Assertions.assertTrue(process.waitFor(90, TimeUnit.SECONDS), "Monthly conversion timed out");

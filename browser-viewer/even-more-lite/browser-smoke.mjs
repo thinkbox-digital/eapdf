@@ -31,7 +31,9 @@ async function exercise(page,label){
   });assert.ok(pixels>100,'page contains rendered marks');
  };
  await open(join(root,'tests/fixtures/ordinary.pdf'));
- assert.equal(await page.locator('header #filename').textContent(),'ordinary.pdf');
+ const headerFilename=page.locator('header #header-filename');
+ assert.equal(await headerFilename.textContent(),'ordinary.pdf');
+ assert.equal(await page.locator('.reader-pane').getByText('ordinary.pdf',{exact:true}).filter({visible:true}).count(),0);
  assert.equal(await page.locator('#navigation-panel h2').textContent(),'Messages');
  const toolbar=await page.locator('.reader-pane .page-toolbar').boundingBox(),pdf=await page.locator('#viewport').boundingBox();
  assert.ok(toolbar.y+toolbar.height<=pdf.y&&Math.abs(toolbar.x+toolbar.width/2-pdf.x-pdf.width/2)<1);
@@ -101,8 +103,10 @@ async function exercise(page,label){
  await page.locator('#page').fill('1');await page.locator('#page').press('Enter');await idle();
  await previewSave(()=>page.locator('#page-surface a[aria-label="Open linked attachment"]').nth(0).click(),fixture.payloads['notes.txt']);
  await page.locator('#page-surface a[aria-label="Open linked attachment"]').nth(1).click();await idle();assert.equal(await page.locator('#back').isEnabled(),true);
- assert.match(await page.locator('#breadcrumbs').textContent(),/attachment-control\.pdf \/ two-pages\.pdf/);
+ assert.equal(await headerFilename.textContent(),'attachment-control.pdf / two-pages.pdf');
+ assert.equal(await headerFilename.getAttribute('title'),'attachment-control.pdf / two-pages.pdf');
  await page.locator('#back').click();await idle();assert.equal(await page.locator('#page').inputValue(),'1');
+ assert.equal(await headerFilename.textContent(),'attachment-control.pdf');
  await page.locator('#page-surface a[aria-label="Open linked attachment"]').nth(2).click();await idle();assert.match(await page.locator('#status').textContent(),/missing or ambiguous/);
  await row('over-limit.bin').getByRole('button',{name:'Download over-limit.bin',exact:true}).click();await idle();assert.match(await page.locator('#status').textContent(),/16 MiB/);
  await save(()=>row('broken.bin').getByRole('button',{name:'Download broken.bin',exact:true}).click(),fixture.payloads['broken.bin']);assert.match(await page.locator('#status').textContent(),/Warning:.*checksum/);
@@ -166,7 +170,8 @@ async function exercise(page,label){
  await page.waitForFunction(()=>!document.querySelector('#page-surface').hidden&&document.querySelector('#viewport').getAttribute('aria-busy')==='false');
  assert.equal(await page.locator('#status').textContent(),'reopened.pdf');
  await page.locator('#close').click();assert.equal(await page.locator('#empty-state').isVisible(),true);
- assert.equal(await page.locator('#filename').textContent(),'');assert.equal(await page.locator('#show-navigation,#show-details').filter({visible:true}).count(),0);
+ assert.equal(await headerFilename.textContent(),'');assert.equal(await headerFilename.isVisible(),false);
+ assert.equal(await page.locator('#show-navigation,#show-details').filter({visible:true}).count(),0);
  checks.push(label+': narrow layout, input limit, invalid PDF, cancellation and close/reopen recovery');
 }
 const temporary=await mkdtemp(join(tmpdir(),'eapdf-minimal-browser-'));

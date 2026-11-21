@@ -1,16 +1,27 @@
 # Project status
 
-Current release, 19 November 2026: creator and validator **2.4.0-beta.1**
-with **Full and Even More Lite readers 1.6.0-beta.1**.
+Current release, 21 November 2026: creator and validator **2.4.0-beta.2**
+with **Full and Even More Lite readers 1.7.0**.
 
 C2PA/PAdES, WeasyPrint and other experimental changes remain separate in
-`../eapdf` on `experiment/c2pa-pades`. Normal development continues in this checkout.
+`../eapdf-secure` on `experiment/c2pa-pades`. Normal development continues in this
+checkout. `../eapdf-lite` is the first EML-only CLI edition, using the standalone
+Java validator and the Even More Lite reader.
 
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.1) ·
-[Release notes](releases/2.4.0-beta.1.md) ·
-[Release checks](releases/2.4.0-beta.1-validation.md) · [Code layout](ARCHITECTURE.md)
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.2) ·
+[Release notes](releases/2.4.0-beta.2.md) ·
+[Release checks](releases/2.4.0-beta.2-validation.md) · [Code layout](ARCHITECTURE.md)
 
 ## This release
+
+- **Bug fix.** Even More Lite shows the open filename or embedded PDF path once
+  in its header, with styling aligned to Full.
+- **Packaging.** The Full and Even More Lite browser packages use version 1.7.0.
+- **Code improvement.** The Main creator uses bundled DejaVu Sans and sRGB.
+  Local, Gmail and monthly conversion no longer accept font or ICC profile
+  paths. Propagation to the Lite and Secure creator checkouts is pending.
+
+## Previous release, 19 November 2026
 
 - **Bug fixes.** The paired veraPDF parser 1.31.72 and validation-model
   1.31.225 update corrects false PDF/A-4f passes with trailing data. The validator

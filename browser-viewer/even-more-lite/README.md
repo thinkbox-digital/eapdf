@@ -6,9 +6,9 @@ page number and zoom. Close releases the document; it also cancels an opening.
 The left pane shows messages, folders and collection PDFs; the centre displays
 pages and the right pane lists embedded assets. Drag either divider or focus it
 and use the arrow keys to resize. The pane-heading chevrons hide Messages or
-Files; Show messages and Show files restore them above the document. Page, zoom
-and Parent controls sit above the PDF, below its path. The reader title and open
-filename appear in the top bar.
+Files. Show messages and Show files restore them above the document. Page, zoom
+and Parent controls sit above the PDF. The top bar shows the open filename or
+the path to the active embedded PDF.
 Click a message to read its body and known assets; All files restores the complete
 document inventory. Parent returns to the previous page in the containing PDF.
 Scroll normally; text selection and accessible PDF structure remain available.
