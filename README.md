@@ -1,6 +1,8 @@
 # EA-PDF Main
 
-Convert saved email, mailboxes and Gmail messages into PDFs you can keep, search and share with their attachments.
+EA-PDF is a specification for archiving email in PDF/A. It supports individual messages, combined archives and collections, with attachments, email metadata and optional original source messages.
+
+Turn saved emails and mailboxes into PDFs you can read, search and archive. Supports EML, MSG, PST, MBOX and Gmail.
 
 [User manual](docs/manual/user-manual.html) · [PDF manual](docs/EA-PDF_User_Manual.pdf) · [Release downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.3)
 
