@@ -51,6 +51,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb xauth x11-utils
           npm --prefix browser-viewer ci --ignore-scripts
+          node --test browser-viewer/tests/publish-viewer-builds.test.mjs
           cd browser-viewer
           npx playwright install --with-deps chromium
           npx playwright install-deps firefox
@@ -97,7 +98,7 @@ jobs:
           args+=(--creator-gui "$stage/emailtopdfa-$version-gui.jar" --validator-gui)
           desktop=("$stage"/eapdf-desktop-viewer-*.jar)
           test "${#desktop[@]}" -eq 1
-          xvfb-run -a python -B scripts/check_release_packages.py \
+          xvfb-run -a -s '-screen 0 1280x1024x24 -noreset' python -B scripts/check_release_packages.py \
             --creator "$stage/emailtopdfa-$version.jar" --validator "$stage/eapdf-validator-$version.jar" \
             --desktop-viewer "${desktop[0]}" --output "$evidence" "${args[@]}"
           cp -- "$evidence/SHA256SUMS" "$stage/"
