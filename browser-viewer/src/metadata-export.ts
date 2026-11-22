@@ -31,9 +31,14 @@ export async function collectXmp(root:BrowserDocument,session:BrowserSession,che
         if(stream.mimeType.value?.split(';')[0]?.toLowerCase()!=='application/pdf'&&!/\.pdf$/i.test(fileLabel(file)))continue;
         if(visited.has(stream.locator.path))continue;visited.add(stream.locator.path);
         let child:BrowserDocument|undefined;
-        try{child=await session.child(doc,file,stream,false);check();await visit(child,path+' / '+child.name);}
+        try{check();child=await session.child(doc,file,stream,false);check();await visit(child,path+' / '+child.name);}
         catch(error){check();issues.push(`${path} / ${fileLabel(file)}: ${error instanceof Error?error.message:String(error)}`);}
-        finally{if(child)session.release(child);}
+        finally{
+          if(child){
+            try{await session.release(child);}
+            catch(error){issues.push(`Could not release ${path} / ${fileLabel(file)} (${error instanceof Error?error.message:String(error)})`);}
+          }
+        }
       }
     }
   }

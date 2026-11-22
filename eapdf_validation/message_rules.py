@@ -14,6 +14,7 @@ class Dependencies:
     NS_RDF: Any
     XmpArray: Any
     attachment_email_owners: Callable
+    attachment_records_with_nodes: Callable
     check_ambiguous_source_header_values: Callable
     check_native_outlook_core: Callable
     check_single_message_metadata: Callable
@@ -217,9 +218,8 @@ def check_message_metadata(_services, root_xml,afiles,eapdf_conf,report):
         return
     sources=_services.summarize_source_emails(afiles)
     remaining=list(sources)
-    attachment_nodes=_services.xmp_array_members(root_xml,"attachments")
-    attachment_records=_services.flatten_attachments(root_xml)
-    attachment_owners=[_services.attachment_email_owners(attachment,records) for attachment in attachment_records]
+    attachment_entries=list(_services.attachment_records_with_nodes(root_xml))
+    attachment_owners=[_services.attachment_email_owners(attachment,records) for attachment,_ in attachment_entries]
     assigned_attachments=set()
     for index,(record,node) in enumerate(zip(records,email_nodes),start=1):
         scoped=_services.ET.Element(_services.qn(_services.NS_RDF,"RDF"))
@@ -228,9 +228,9 @@ def check_message_metadata(_services, root_xml,afiles,eapdf_conf,report):
         container.append(_services.deepcopy(node))
         attachment_bag=_services.ET.SubElement(_services.ET.SubElement(description,_services.qn(_services.NS_PDFMAILMETA,"attachments")),_services.qn(_services.NS_RDF,"Bag"))
         guid=_services.guid_value(record.get("Mail_GUID",""))
-        for attachment_index,(attachment,attachment_node) in enumerate(zip(attachment_records,attachment_nodes)):
+        for attachment_index,(_,attachment_node) in enumerate(attachment_entries):
             owners=attachment_owners[attachment_index]
-            if len(owners)==1 and owners[0] is record:
+            if attachment_node is not None and len(owners)==1 and owners[0] is record:
                 attachment_bag.append(_services.deepcopy(attachment_node))
                 assigned_attachments.add(attachment_index)
         selected=_services.select_source_email(record,remaining)
@@ -274,14 +274,14 @@ def check_message_metadata(_services, root_xml,afiles,eapdf_conf,report):
             originals=[source for source in afiles if source.get("afrelationship")=="Source"]
             if len(originals)==1:
                 _services.check_native_outlook_core(record,originals[0],report,
-                    [attachment for attachment,owners in zip(attachment_records,attachment_owners)
+                    [attachment for (attachment,_),owners in zip(attachment_entries,attachment_owners)
                      if len(owners)==1 and owners[0] is record])
         for item in report.items[first_item:]:
             item["details"]=dict(item.get("details") or {},email=index,Mail_GUID=guid)
-    unassigned=[attachment for index,attachment in enumerate(attachment_records) if index not in assigned_attachments]
+    unassigned=[attachment for index,(attachment,_) in enumerate(attachment_entries) if index not in assigned_attachments]
     if unassigned:
         _services.validate_attachment_records(unassigned,[],report)
-        report.warn("VALIDATION_INCOMPLETE","Attachment records could not be assigned to one email without relying on duplicate or missing Message-IDs",{"count":len(unassigned)})
+        report.warn("VALIDATION_INCOMPLETE","Attachment records could not be scoped to one email from the supplied XMP structure and identity",{"count":len(unassigned)})
 
 def check_native_outlook_core(_services, record,source,report,attachments=None,native=None):
     """Check definite stored MAPI facts without claiming a header inventory."""

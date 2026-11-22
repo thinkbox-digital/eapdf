@@ -8,6 +8,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -105,6 +106,41 @@ final class PdfAttachmentSupport {
     efs.setNames(nameMap);
     names.setEmbeddedFiles(efs);
     cat.setNames(names);
+    return fs;
+  }
+
+  static PDComplexFileSpecification embedAssociatedFile(PDDocument doc, AssociatedFile af, String filename,
+      String mime, String rel, String md5) throws IOException {
+    PDComplexFileSpecification fs = new PDComplexFileSpecification();
+    fs.setFile(filename);
+    fs.setFileUnicode(filename);
+
+    PDEmbeddedFile ef;
+    try (InputStream data = af.openData()) {
+      ef = new PDEmbeddedFile(doc, data, COSName.FLATE_DECODE);
+    }
+    setEmbeddedMediaType(ef, mime);
+    ef.setSize(af.size());
+    Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+    ef.setCreationDate(now);
+    ef.setModDate(now);
+    setEmbeddedChecksum(ef, md5);
+
+    COSDictionary efd = ef.getCOSObject();
+
+    COSDictionary params = (COSDictionary)efd.getDictionaryObject(COSName.PARAMS);
+    if (params == null) {
+      params = new COSDictionary();
+      efd.setItem(COSName.PARAMS, params);
+    }
+    params.setInt(COSName.SIZE, af.size());
+
+    fs.setEmbeddedFile(ef);
+    fs.setEmbeddedFileUnicode(ef);
+
+    COSDictionary fsd = fs.getCOSObject();
+    fsd.setName(COSName.getPDFName("AFRelationship"), rel);
+    if (!Common.nz(af.description).isBlank()) fsd.setString(COSName.DESC, af.description);
     return fs;
   }
 

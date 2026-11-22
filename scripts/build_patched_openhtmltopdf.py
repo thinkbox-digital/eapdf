@@ -46,14 +46,84 @@ def normalize_jar(path):
 def run(args, cwd=None):
     subprocess.run(args, cwd=cwd, check=True)
 
+
+def build_layout_guard(base_repository, destination):
+    """Compile the layout guard against the verified base artifacts, offline."""
+    guard = LOCK['layout_guard']
+    group = Path('io/github/openhtmltopdf')
+    base = guard['base_version']
+    version = LOCK['version']
+    layer = Path('com/openhtmltopdf/layout/Layer.java')
+
+    def artifact(module, revision, suffix):
+        return group/module/revision/(module+'-'+revision+suffix)
+
+    def version_metadata(name, data):
+        if name.endswith(('/pom.xml', '/pom.properties', '.pom')):
+            return data.replace(base.encode(), version.encode())
+        if name == 'META-INF/MANIFEST.MF':
+            return data.replace(base.replace('-eapdf.', '.eapdf').encode(),
+                                version.replace('-eapdf.', '.eapdf').encode())
+        return data
+
+    with tempfile.TemporaryDirectory(prefix='eapdf-openhtml-layout-') as work:
+        work = Path(work)
+        core = 'openhtmltopdf-core'
+        source = work/layer
+        source.parent.mkdir(parents=True)
+        with zipfile.ZipFile(base_repository/artifact(core, base, '-sources.jar')) as jar:
+            source.write_bytes(jar.read(layer.as_posix()).replace(b'\r\n', b'\n'))
+        run(['git', 'apply', str(ROOT/guard['patch']['path'])], work)
+        classes = work/'classes'
+        run(['javac', '--release', '8', '-Xlint:-options', '-encoding', 'UTF-8', '-g',
+             '-cp', str(base_repository/artifact(core, base, '.jar')), '-d', str(classes), str(source)])
+
+        for module in (core, 'openhtmltopdf-pdfbox'):
+            for suffix in ('.jar', '-sources.jar', '.pom'):
+                original = base_repository/artifact(module, base, suffix)
+                output = destination/artifact(module, version, suffix)
+                output.parent.mkdir(parents=True, exist_ok=True)
+                if suffix == '.pom':
+                    output.write_bytes(version_metadata(output.name, original.read_bytes()))
+                    continue
+                with zipfile.ZipFile(original) as jar:
+                    files = {name: version_metadata(name, jar.read(name)) for name in jar.namelist() if not name.endswith('/')}
+                if module == core and suffix == '.jar':
+                    for item in classes.rglob('*.class'):
+                        files[item.relative_to(classes).as_posix()] = item.read_bytes()
+                elif module == core:
+                    files[layer.as_posix()] = source.read_bytes()
+                with zipfile.ZipFile(output, 'w') as jar:
+                    for name, data in files.items():
+                        jar.writestr(name, data)
+                normalize_jar(output)
+
+
+def verify_layout_guard(base_repository):
+    with tempfile.TemporaryDirectory(prefix='eapdf-openhtml-layout-verify-') as work:
+        destination = Path(work)
+        build_layout_guard(base_repository, destination)
+        for item in LOCK['artifacts']:
+            relative = Path(item['path']).relative_to('third_party/maven')
+            if checksum(destination/relative) != item['sha256']:
+                raise SystemExit('Rebuilt layout guard differs: '+str(relative))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--rebuild', action='store_true')
+    rebuild = parser.add_mutually_exclusive_group()
+    rebuild.add_argument('--rebuild', action='store_true')
+    rebuild.add_argument('--rebuild-layout-guard', action='store_true')
     args = parser.parse_args()
-    for item in LOCK['patches'] + LOCK['artifacts']:
+    guard = LOCK['layout_guard']
+    for item in LOCK['patches'] + guard['base_artifacts'] + [guard['patch']] + LOCK['artifacts']:
         path = ROOT/item['path']
         if checksum(path) != item['sha256']:
             raise SystemExit('Checksum mismatch: '+item['path'])
+    if args.rebuild_layout_guard:
+        verify_layout_guard(ROOT/'third_party/maven')
+        print('Offline OpenHTMLtoPDF layout guard rebuild verified.')
+        return
     if not args.rebuild:
         print('Patched OpenHTMLtoPDF artifacts and patches match lock.json.')
         return
@@ -66,17 +136,18 @@ def main():
         commits = subprocess.check_output(['git', 'rev-list', '--reverse', LOCK['upstream_commit']+'..HEAD'], cwd=source, text=True).splitlines()
         if commits != LOCK['applied_commits']:
             raise SystemExit('Applied patch commit identifiers differ from lock.json')
-        run(['mvn', '-B', '-pl', 'openhtmltopdf-pdfbox', '-am', '-Drevision='+LOCK['version'],
+        run(['mvn', '-B', '-pl', 'openhtmltopdf-pdfbox', '-am', '-Drevision='+guard['base_version'],
              '-Dmaven.repo.local='+str(repository), '-Dproject.build.outputTimestamp='+LOCK['output_timestamp'],
              '-Dmaven.javadoc.skip=true', 'install'], source)
         mismatches = []
-        for item in LOCK['artifacts']:
+        for item in guard['base_artifacts']:
             relative = Path(item['path']).relative_to('third_party/maven')
             if relative.suffix == '.jar': normalize_jar(repository/relative)
             if checksum(repository/relative) != item['sha256']:
                 mismatches.append(str(relative))
         if mismatches:
             raise SystemExit('Rebuilt artifact hashes differ (check the documented JDK/toolchain): '+', '.join(mismatches))
+        verify_layout_guard(repository)
         print('Clean source rebuild, upstream tests, patch commits and artifact hashes verified.')
 
 if __name__ == '__main__':

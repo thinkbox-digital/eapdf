@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import time
 import xml.etree.ElementTree as ET
 import zipfile
@@ -151,6 +152,33 @@ def validate(jar, pdf, directory, expected='PASS'):
     return result
 
 
+def check_validator_parity(pdf, java_result, directory, collection=False):
+    # Python runs its EA-PDF rules here. Collection verdicts also require child PDF/A runs.
+    from validate_eapdf import validate as validate_python
+    result = validate_python(str(pdf))
+    summary = result.summary()
+    evidence = directory / f'{pdf.stem}.python-validation.json'
+    evidence.write_text(json.dumps({'summary': summary, 'items': result.items}, ensure_ascii=False) + '\n')
+    java_status = java_result['summary']['status']
+    if collection and summary['status'] == 'INCOMPLETE':
+        require(any(item['code'] == 'COLLECTION_CHILD_VALIDATION' and item['level'] == 'WARN'
+                    and (item.get('details') or {}).get('pdfa_status') == 'SKIP' for item in result.items),
+                f'{pdf.name}: Python’s incomplete collection result lacks a skipped child PDF/A assessment. See {evidence}')
+    else:
+        require(summary['status'] == java_status,
+                f'{pdf.name}: Java and Python EA-PDF status differ. See {evidence}')
+    codes = {'EAPDF_CONFORMANCE_VALUE', 'AF_IN_NAME_TREE'}
+    if collection:
+        codes.add('COLLECTION_CONTENT_TYPES')
+    rank = ('N/A', 'PASS', 'WARN', 'FAIL')
+    def strongest(items, code):
+        return max((item['level'] for item in items if item['code'] == code), key=rank.index, default=None)
+    for code in sorted(codes):
+        python_level = strongest(result.items, code)
+        require(python_level is not None and python_level == strongest(java_result['items'], code),
+                f'{pdf.name}: Java and Python disagree on {code}. See {evidence}')
+
+
 def check_child_reports(report, expected_hashes, pdf):
     results = [details for row in report['items']
                if row['code'] == 'COLLECTION_CHILD_VALIDATION'
@@ -193,6 +221,7 @@ def check_bad_collections(jar, seed, directory):
                     spec.CI.Size = len(data)
             parent.save(output)
         result = validate(jar, output, directory, 'FAIL')
+        check_validator_parity(output, result, directory, collection=True)
         require(result['pdfa']['status'] == 'PASS', f'{output.name}: mutation broke outer PDF/A')
         require(any(item['level'] == 'FAIL' and item['code'] == 'COLLECTION_CHILD_VALIDATION'
                     for item in result['items']), f'{output.name}: no child validation failure')
@@ -291,7 +320,31 @@ def check_jar_window(jar, title, output, pdf=None):
                         process.wait()
 
 
+def check_swing_gui(jar, source, main_class, arguments, output, label):
+    classes = output / f'{label}-smoke-classes'
+    scratch = output / f'{label}-scratch'
+    scratch.mkdir()
+    run(['javac', '-cp', jar, '-d', classes, ROOT / source], output / f'{label}-compile.log')
+    run(['java', '-Xmx768m', f'-Djava.io.tmpdir={scratch}', f'-Duser.home={scratch}',
+         '-cp', os.pathsep.join(map(str, (jar, classes))), main_class, *arguments],
+        output / f'{label}.log')
+
+
+def check_creator_gui(creator_gui, source, validator, output):
+    with zipfile.ZipFile(creator_gui) as archive:
+        manifest = archive.read('META-INF/MANIFEST.MF').decode('utf-8').splitlines()
+    require('Main-Class: eapdf.EapdfGui' in manifest, f'{creator_gui.name}: wrong GUI entry point')
+    evidence = output / 'creator-gui-conversion'
+    check_swing_gui(creator_gui, 'src/test/java/eapdf/CreatorDesktopSmoke.java', 'eapdf.CreatorDesktopSmoke',
+                    [source, output / 'creator-gui-work', evidence], output, 'creator-gui')
+    pdf = evidence / 'eml_gui_1s.pdf'
+    require(pdf.is_file(), 'Creator GUI did not produce a PDF')
+    check_profile(pdf, '1s', [source.read_bytes()])
+    validate(validator, pdf, evidence)
+
+
 def main():
+    sys.path.insert(0, str(ROOT))
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--creator', required=True, type=Path)
     parser.add_argument('--validator', required=True, type=Path)
@@ -339,6 +392,7 @@ def main():
         pdf = pdfs[0]
         child_hashes = check_profile(pdf, profile, [path.read_bytes() for path in selected])
         report = validate(validator, pdf, directory)
+        check_validator_parity(pdf, report, directory, collection=profile in ('1c', '1ci'))
         check_child_reports(report, child_hashes, pdf)
         documents[profile] = {'path': str(pdf), 'sha256': sha256(pdf)}
     for profile in ('1c', '1ci'):
@@ -359,9 +413,10 @@ def main():
     if args.desktop_viewer:
         check_jar_window(args.desktop_viewer.resolve(), r'EA-PDF Desktop Viewer', output, first_pdf)
     if args.creator_gui:
-        check_jar_window(args.creator_gui.resolve(), r'ThinkBox (Secure )?EMailToPDF GUI', output)
+        check_creator_gui(args.creator_gui.resolve(), sources[0], validator, output)
     if args.validator_gui:
-        check_jar_window(validator, r'EA-PDF Validator', output)
+        check_swing_gui(validator, 'scripts/java/eapdf/ReleaseValidatorGuiSmoke.java', 'eapdf.ReleaseValidatorGuiSmoke',
+                        [validator, first_pdf, output / 'validator-gui-report.json'], output, 'validator-gui')
     if args.security_validator:
         security_jar = args.security_validator.resolve()
         check_jar_window(security_jar, r'EA-PDF Security Validator Experimental', output)

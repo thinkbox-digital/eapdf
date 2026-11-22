@@ -15,7 +15,7 @@ class RealWorldInputTests {
   void realPstInlineTextAndDeliveryStatusRetainTheirAttachmentBytes(long descriptor, int count) throws Exception {
     Path source = Path.of("in/pst_14_05+May+2003+Public+2.pst");
     assumeTrue(Files.isRegularFile(source), "Real-world PST is not installed");
-    var pst = new com.pff.EaPdfPstFile(source.toFile());
+    var pst = com.pff.EaPdfPstFile.open(source);
     try {
       var message = (com.pff.PSTMessage) com.pff.PSTObject.detectAndLoadPSTObject(pst, descriptor);
       var record = PstReader.readMessage(message, "", source.toString(), "", List.of(), false, 0);
@@ -58,7 +58,7 @@ class RealWorldInputTests {
   @Test void realPstEmptyRtfBodyRetainsTheNativeRtf() throws Exception {
     Path source = Path.of("in/pst_02_07+July+2003+Public+2.pst");
     assumeTrue(Files.isRegularFile(source), "Real-world PST is not installed");
-    com.pff.PSTFile pst = new com.pff.EaPdfPstFile(source.toFile());
+    com.pff.PSTFile pst = com.pff.EaPdfPstFile.open(source);
     try {
       var message = (com.pff.PSTMessage) com.pff.PSTObject.detectAndLoadPSTObject(pst, 2137284);
       EmailRecord record = PstReader.readMessage(message, "", source.toString(), "", List.of(), false, 0);
@@ -80,7 +80,7 @@ class RealWorldInputTests {
   void realAnsiPstRecipientTablesCrossBlockBoundaries(String name, long descriptor, int expected) throws Exception {
     Path source = Path.of("in", name);
     assumeTrue(Files.isRegularFile(source), "Real-world PST is not installed: " + source);
-    com.pff.PSTFile pst = new com.pff.EaPdfPstFile(source.toFile());
+    com.pff.PSTFile pst = com.pff.EaPdfPstFile.open(source);
     try {
       var message = (com.pff.PSTMessage) com.pff.PSTObject.detectAndLoadPSTObject(pst, descriptor);
       assertEquals(expected, message.getNumberOfRecipients());
@@ -96,7 +96,7 @@ class RealWorldInputTests {
   @Test void missingRealPstAttachmentIsReportedWithoutNullDereference() throws Exception {
     Path source = Path.of("in/pst_06_1999.pst");
     assumeTrue(Files.isRegularFile(source), "Real-world PST is not installed");
-    com.pff.PSTFile pst = new com.pff.EaPdfPstFile(source.toFile());
+    com.pff.PSTFile pst = com.pff.EaPdfPstFile.open(source);
     try {
       var message = (com.pff.PSTMessage) com.pff.PSTObject.detectAndLoadPSTObject(pst, 5068004);
       var record = PstReader.readMessage(message, "", source.toString(), "", List.of(), false, 0);
@@ -109,7 +109,7 @@ class RealWorldInputTests {
   @Test void realPstSubnodeIndexesRetainAllMessageAndRecipientRows() throws Exception {
     Path source = Path.of("in/pst_22_200401-06JanJun.pst");
     assumeTrue(Files.isRegularFile(source), "Real-world PST is not installed");
-    com.pff.PSTFile pst = new com.pff.EaPdfPstFile(source.toFile());
+    com.pff.PSTFile pst = com.pff.EaPdfPstFile.open(source);
     try {
       long[] counts = new long[2];
       scanRecipients(pst.getRootFolder(), counts);
@@ -165,7 +165,7 @@ class RealWorldInputTests {
   void realPstAttachmentExportsRetainCountAndPayload(long descriptor, String filename, String mime) throws Exception {
     Path source = Path.of("in/pst_02_07+July+2003+Public+2.pst");
     assumeTrue(Files.isRegularFile(source), "Real-world PST is not installed");
-    com.pff.PSTFile pst = new com.pff.EaPdfPstFile(source.toFile());
+    com.pff.PSTFile pst = com.pff.EaPdfPstFile.open(source);
     try {
       var message = (com.pff.PSTMessage) com.pff.PSTObject.detectAndLoadPSTObject(pst, descriptor);
       var record = PstReader.readMessage(message, "", source.toString(), "", List.of(), false, 0);

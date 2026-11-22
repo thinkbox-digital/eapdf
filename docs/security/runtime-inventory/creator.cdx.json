@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "EA-PDF creator",
-      "version": "2.4.0-beta.1"
+      "version": "2.4.0-beta.3"
     },
     "properties": [
       {
@@ -384,13 +384,13 @@
       "type": "library",
       "group": "com.google.guava",
       "name": "failureaccess",
-      "version": "1.0.2",
-      "purl": "pkg:maven/com.google.guava/failureaccess@1.0.2",
-      "bom-ref": "pkg:maven/com.google.guava/failureaccess@1.0.2",
+      "version": "1.0.3",
+      "purl": "pkg:maven/com.google.guava/failureaccess@1.0.3",
+      "bom-ref": "pkg:maven/com.google.guava/failureaccess@1.0.3",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "8a8f81cf9b359e3f6dfa691a1e776985c061ef2f223c9b2c80753e1b458e8064"
+          "content": "cbfc3906b19b8f55dd7cfd6dfe0aa4532e834250d7f080bd8d211a3e246b59cb"
         }
       ],
       "properties": [
@@ -402,7 +402,7 @@
       "licenses": [
         {
           "license": {
-            "name": "The Apache Software License, Version 2.0",
+            "name": "Apache License, Version 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
           }
         }
@@ -412,13 +412,13 @@
       "type": "library",
       "group": "com.google.guava",
       "name": "guava",
-      "version": "33.1.0-jre",
-      "purl": "pkg:maven/com.google.guava/guava@33.1.0-jre",
-      "bom-ref": "pkg:maven/com.google.guava/guava@33.1.0-jre",
+      "version": "33.8.0-jre",
+      "purl": "pkg:maven/com.google.guava/guava@33.8.0-jre",
+      "bom-ref": "pkg:maven/com.google.guava/guava@33.8.0-jre",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "346aec0eb8c8987360c8a264e70ff10c2fba760446eb27e8ab07e78e787a75fe"
+          "content": "97b79ec3f2c0a6313a0c2df51ce1abdf8907e6531803467b81efcaaf99b35161"
         }
       ],
       "properties": [
@@ -1602,34 +1602,6 @@
     },
     {
       "type": "library",
-      "group": "org.checkerframework",
-      "name": "checker-qual",
-      "version": "3.42.0",
-      "purl": "pkg:maven/org.checkerframework/checker-qual@3.42.0",
-      "bom-ref": "pkg:maven/org.checkerframework/checker-qual@3.42.0",
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "ccaedd33af0b7894d9f2f3b644f4d19e43928e32902e61ac4d10777830f5aac7"
-        }
-      ],
-      "properties": [
-        {
-          "name": "eapdf:hash-scope",
-          "value": "resolved dependency JAR before application shading and local class overrides"
-        }
-      ],
-      "licenses": [
-        {
-          "license": {
-            "name": "The MIT License",
-            "url": "http://opensource.org/licenses/MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
       "group": "org.eclipse.angus",
       "name": "angus-activation",
       "version": "2.0.3",
@@ -1726,6 +1698,34 @@
     },
     {
       "type": "library",
+      "group": "org.jspecify",
+      "name": "jspecify",
+      "version": "1.0.1",
+      "purl": "pkg:maven/org.jspecify/jspecify@1.0.1",
+      "bom-ref": "pkg:maven/org.jspecify/jspecify@1.0.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "070d75f261fe4c5b8202508366715f7f2d4660f88c8ef7e6d3575e48c9683b66"
+        }
+      ],
+      "properties": [
+        {
+          "name": "eapdf:hash-scope",
+          "value": "resolved dependency JAR before application shading and local class overrides"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "The Apache License, Version 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
       "group": "org.simplejavamail",
       "name": "outlook-message-parser",
       "version": "1.16.3",
@@ -1782,12 +1782,12 @@
     },
     {
       "type": "file",
-      "name": "emailtopdfa-2.4.0-beta.1.jar",
-      "bom-ref": "artifact:emailtopdfa-2.4.0-beta.1.jar",
+      "name": "emailtopdfa-2.4.0-beta.3.jar",
+      "bom-ref": "artifact:emailtopdfa-2.4.0-beta.3.jar",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "cc9f8ade56f7f97b2a447c7f219551157d7f9222637ddb87f85bc72398a32424"
+          "content": "3da4aaf0a153c0185788c6f78924b66776a59b385013c8a52cb3338602b5740b"
         }
       ]
     }

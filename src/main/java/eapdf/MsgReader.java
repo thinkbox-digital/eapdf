@@ -7,6 +7,8 @@ import org.apache.poi.poifs.filesystem.DirectoryNode;
 import org.apache.poi.poifs.filesystem.Entry;
 import org.apache.poi.poifs.filesystem.EntryUtils;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.poifs.property.DirectoryProperty;
+import org.apache.poi.poifs.property.Property;
 import org.apache.poi.util.CodePageUtil;
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -17,6 +19,8 @@ import java.nio.file.*;
 import java.util.*;
 
 class MsgReader {
+  private static final int MAX_STORAGE_DEPTH = 128;
+
   static String headerValue(OutlookMessage m, String name) {
     Map<String, Collection<String>> headers = m.getHeadersMap();
     if (headers == null) return "";
@@ -71,26 +75,52 @@ class MsgReader {
   }
 
   static EmailRecord readMsg(String path, String globalId, List<String> archiveEmails, boolean debug) throws Exception {
-    ProcessingLimits.checkMessage(Files.size(Paths.get(path)), path);
-    checkCompressedRtf(Paths.get(path));
+    Path source = Path.of(path);
+    ProcessingLimits.checkMessage(Files.size(source), path);
+    Common.JobReport job = Common.ACTIVE_JOB.get();
+    if (job == null) return readMsg(source, path, globalId, archiveEmails, debug, false);
+
+    Path snapshot = job.createSourceSnapshot();
+    try {
+      try (var input = Files.newInputStream(source); var output = Files.newOutputStream(snapshot)) {
+        byte[] buffer = new byte[8192];
+        long size = 0;
+        int count;
+        while ((count = input.read(buffer)) != -1) {
+          size += count;
+          ProcessingLimits.checkMessage(size, path);
+          output.write(buffer, 0, count);
+        }
+      }
+      return readMsg(snapshot, path, globalId, archiveEmails, debug, true);
+    } catch (Exception | Error failure) {
+      try { Files.deleteIfExists(snapshot); }
+      catch (IOException cleanup) { failure.addSuppressed(cleanup); }
+      throw failure;
+    }
+  }
+
+  private static EmailRecord readMsg(Path storage, String path, String globalId, List<String> archiveEmails,
+                                     boolean debug, boolean stagedSource) throws Exception {
+    checkCompressedRtf(storage);
     OutlookMessageParser p = new OutlookMessageParser();
-    OutlookMessage m = p.parseMsg(new File(path));
+    OutlookMessage m = p.parseMsg(storage.toFile());
     EmailRecord r = new EmailRecord();
     r.sourceType = "msg";
     r.sourcePath = path;
     r.folderPath = "";
-    r.subject = decodeMsgSubject(Paths.get(path), m, r).replace("\0", "");
-    String fromEmail = senderAddress(Paths.get(path), m);
-    String fromName = senderName(Paths.get(path), m, r, fromEmail);
-    Map<String, String> recipientNames = decodedRecipientNames(Paths.get(path), m, r);
+    r.subject = decodeMsgSubject(storage, m, r).replace("\0", "");
+    String fromEmail = senderAddress(storage, m);
+    String fromName = senderName(storage, m, r, fromEmail);
+    Map<String, String> recipientNames = decodedRecipientNames(storage, m, r);
     Common.addAgent(r.fromAgents, fromName, fromEmail);
     for (OutlookRecipient rcpt : m.getToRecipients()) Common.addAgent(r.toAgents, recipientName(rcpt, recipientNames), Common.nz(rcpt.getAddress()));
     for (OutlookRecipient rcpt : m.getCcRecipients()) Common.addAgent(r.ccAgents, recipientName(rcpt, recipientNames), Common.nz(rcpt.getAddress()));
     for (OutlookRecipient rcpt : m.getBccRecipients()) Common.addAgent(r.bccAgents, recipientName(rcpt, recipientNames), Common.nz(rcpt.getAddress()));
     r.from = Common.joinAddr(fromName, fromEmail);
-    r.to = displayAddress(r.toAgents, decodeMsgString(Paths.get(path), m, r, 0x0e04, "display To", m.getDisplayTo()));
-    r.cc = displayAddress(r.ccAgents, decodeMsgString(Paths.get(path), m, r, 0x0e03, "display Cc", m.getDisplayCc()));
-    r.bcc = displayAddress(r.bccAgents, decodeMsgString(Paths.get(path), m, r, 0x0e02, "display Bcc", m.getDisplayBcc()));
+    r.to = displayAddress(r.toAgents, decodeMsgString(storage, m, r, 0x0e04, "display To", m.getDisplayTo()));
+    r.cc = displayAddress(r.ccAgents, decodeMsgString(storage, m, r, 0x0e03, "display Cc", m.getDisplayCc()));
+    r.bcc = displayAddress(r.bccAgents, decodeMsgString(storage, m, r, 0x0e02, "display Bcc", m.getDisplayBcc()));
     r.rawFrom = rawAddressHeader(m, "From", r.fromAgents, r.from);
     r.rawTo = rawAddressHeader(m, "To", r.toAgents, r.to);
     r.rawCc = rawAddressHeader(m, "Cc", r.ccAgents, r.cc);
@@ -109,21 +139,20 @@ class MsgReader {
     r.messageId = Common.nz(m.getMessageId());
     if (!headerValue(m, "In-Reply-To").isBlank()) r.inReplyTo.add(headerValue(m, "In-Reply-To"));
     if (!headerValue(m, "References").isBlank()) r.references.add(headerValue(m, "References"));
-    recoverNativeThreadHeaders(Paths.get(path), m, r);
+    recoverNativeThreadHeaders(storage, m, r);
     r.archiveGlobalId = Common.nz(globalId);
     r.archiveEmails.addAll(archiveEmails);
-    String storedSent = headerValue(m, "Date").isBlank() ? nativeSentXmp(Paths.get(path)) : "";
+    String storedSent = headerValue(m, "Date").isBlank() ? nativeSentXmp(storage) : "";
     Date sentDate = storedSent.isBlank() ? sentDate(m) : Date.from(java.time.Instant.parse(storedSent));
     r.date = Common.fmtDate(sentDate);
     r.sentXmp = storedSent.isBlank() ? Common.xmpDate(sentDate) : storedSent;
     r.rawDateHeader = !headerValue(m, "Date").isBlank() ? headerValue(m, "Date") : Common.rfc822Date(sentDate);
     Object nativeValue = m.getPropertyValue(0x1016);
     int nativeBody = nativeValue instanceof Number number ? number.intValue() : 0;
-    Boolean rtfInSync = storageBoolean(Paths.get(path), 0x0e1f000b);
-    String plainText = decodeMsgString(Paths.get(path), m, r, 0x1000, "plain-text body", m.getBodyText());
+    Boolean rtfInSync = storageBoolean(storage, 0x0e1f000b);
+    String plainText = decodeMsgString(storage, m, r, 0x1000, "plain-text body", m.getBodyText());
     populateMsgBody(m, r, nativeBody, rtfInSync, plainText);
 
-    r.sourceBytes = Files.readAllBytes(Paths.get(path));
     r.sourceFilename = Paths.get(path).getFileName().toString();
     r.sourceMime = "application/vnd.ms-outlook";
     r.afRelationship = "Source";
@@ -132,10 +161,16 @@ class MsgReader {
     msgSrc.filename = r.sourceFilename;
     msgSrc.mime = r.sourceMime;
     msgSrc.afRelationship = "Source";
-    msgSrc.bytes = r.sourceBytes;
+    if (stagedSource) {
+      msgSrc.dataPath = storage;
+      msgSrc.dataSlice = true;
+      msgSrc.storedSize = Math.toIntExact(Files.size(storage));
+    } else try (var input = Files.newInputStream(storage)) {
+      r.sourceBytes = ProcessingLimits.read(input, path);
+      msgSrc.bytes = r.sourceBytes;
+    }
     msgSrc.description = Common.sourceDescription(r);
-    msgSrc.checksumMd5 = Common.md5Hex(msgSrc.bytes);
-    msgSrc.checksumSha256 = Common.sha256Hex(msgSrc.bytes);
+    msgSrc.ensureChecksums();
     msgSrc.emailAttachment = false;
     r.associatedFiles.add(msgSrc);
 
@@ -189,7 +224,7 @@ class MsgReader {
       if (af.bytes != null && af.bytes.length > 0) r.associatedFiles.add(af);
     }
 
-    collectAttachedMessages(Paths.get(path), r, debug, m);
+    collectAttachedMessages(storage, r, debug, m);
     EmlReader.preferReadableAlternative(r, "text/plain");
     Common.finalizeRecordMetadata(r);
 
@@ -203,6 +238,7 @@ class MsgReader {
 
   static void checkCompressedRtf(Path path) throws Exception {
     try (var storage = new POIFSFileSystem(path.toFile(), true)) {
+      checkStorageComplexity(storage.getPropertyTable().getRoot());
       var pending = new java.util.ArrayDeque<org.apache.poi.poifs.filesystem.DirectoryEntry>();
       var seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<org.apache.poi.poifs.filesystem.DirectoryEntry, Boolean>());
       pending.add(storage.getRoot());
@@ -222,6 +258,29 @@ class MsgReader {
               com.pff.EaPdfPstProperties.checkRtfHeader(input.readNBytes(16), document.getSize(), ProcessingLimits.bodyCharacters());
             }
           }
+        }
+      }
+    }
+  }
+
+  private static void checkStorageComplexity(DirectoryProperty root) {
+    record Directory(DirectoryProperty property, int depth) {}
+    var pending = new ArrayDeque<Directory>();
+    Set<Property> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+    long entryLimit = Math.max(1, ProcessingLimits.metadataBytes() / 1024);
+    pending.push(new Directory(root, 0));
+    seen.add(root);
+    while (!pending.isEmpty()) {
+      Directory current = pending.pop();
+      var children = current.property().getChildren();
+      while (children.hasNext()) {
+        ProcessingLimits.checkCancelled();
+        Property child = children.next();
+        if (!seen.add(child)) throw Common.fail("Cyclic or repeated MSG storage entry");
+        if (seen.size() > entryLimit) throw Common.fail("MSG storage entry count exceeds the processing limit");
+        if (child instanceof DirectoryProperty directory) {
+          if (current.depth() == MAX_STORAGE_DEPTH) throw Common.fail("MSG storage nesting exceeds the processing limit");
+          pending.push(new Directory(directory, current.depth() + 1));
         }
       }
     }

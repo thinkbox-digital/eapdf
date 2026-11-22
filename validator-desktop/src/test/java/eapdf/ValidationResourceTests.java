@@ -139,14 +139,120 @@ class ValidationResourceTests {
         var fresh = JsonParser.parseString(Files.readString(output)).getAsJsonObject();
         assertEquals("NOT_RUN", fresh.getAsJsonObject("pdfa").get("status").getAsString());
     }
-    @Test void childBudgetsAreCheckedBeforeAdmissionAndSupportOrdinaryLargeCollections() {
+    @Test void reportPathsCannotReplaceTheInput() throws Exception {
+        Path output = temporary.resolve("report.json");
+        for (String suffix : List.of("", ".progress.json", ".summary.json")) {
+            Path input = Files.writeString(output.resolveSibling(output.getFileName() + suffix), "original PDF");
+            assertThrows(java.io.IOException.class, () -> new ValidationSession(input, output));
+            assertEquals("original PDF", Files.readString(input));
+            Files.delete(input);
+            assertFalse(Files.exists(output));
+        }
+    }
+    @Test void overlappingReportSetsAreLockedAcrossJvms() throws Exception {
+        var seconds = java.util.concurrent.TimeUnit.SECONDS;
+        Path input = temporary.resolve("input.pdf");
+        Path report = temporary.resolve("report.json");
+        Path overlapping = temporary.resolve("report.json.summary.json");
+        Path log = temporary.resolve("lock.log");
+        try (var lock = new ValidationRuntime.ReportSet(input, report, seconds.toNanos(2))) {
+            var probe = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+                "-cp", System.getProperty("java.class.path"), ReportLockProbe.class.getName(), input.toString(), overlapping.toString())
+                .redirectErrorStream(true).redirectOutput(log.toFile()).start();
+            try {
+                assertTrue(probe.waitFor(15, seconds));
+                assertEquals(2, probe.exitValue(), Files.readString(log));
+                assertTrue(Files.readString(log).contains("Another validation"));
+            } finally { if (probe.isAlive()) probe.destroyForcibly().waitFor(5, seconds); }
+        }
+        try (var lock = new ValidationRuntime.ReportSet(input, overlapping, seconds.toNanos(2))) {
+            assertEquals(overlapping, lock.report);
+        }
+    }
+    public static final class ReportLockProbe {
+        public static void main(String[] arguments) {
+            try (var lock = new ValidationRuntime.ReportSet(Path.of(arguments[0]), Path.of(arguments[1]),
+                     java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(300))) {
+                System.out.println("Report acquired");
+            } catch (Exception error) {
+                System.err.println(error.getMessage());
+                System.exit(2);
+            }
+        }
+    }
+    @Test void cliWorkerPublishesItsReportAndSidecars() throws Exception {
+        Path sample = Path.of("..", "examples", "eml", "eml_Agenda_and_timeline_slides_1s.pdf").toAbsolutePath().normalize();
+        Path report = temporary.resolve("cli-report.json");
+        assertEquals(0, ValidationWorker.run(sample, report));
+        var full = JsonParser.parseString(Files.readString(report)).getAsJsonObject();
+        var summary = JsonParser.parseString(Files.readString(temporary.resolve("cli-report.json.summary.json"))).getAsJsonObject();
+        assertEquals("PASS", JavaValidation.text(full.getAsJsonObject("summary"), "status"));
+        assertEquals(full.get("summary"), summary.get("summary"));
+        assertEquals(report.toString(), summary.get("report").getAsString());
+        Path progress = temporary.resolve("cli-report.json.progress.json");
+        assertTrue(Files.isRegularFile(progress));
+        assertEquals(report.toString(), JsonParser.parseString(Files.readString(progress))
+            .getAsJsonObject().get("report").getAsString());
+        assertEquals(0, ValidationWorker.run(sample, report));
+        var subsequent = JsonParser.parseString(Files.readString(report)).getAsJsonObject().getAsJsonObject("summary");
+        assertNotEquals(full.getAsJsonObject("summary").get("run_id"), subsequent.get("run_id"));
+    }
+    @Test void runningWorkerCanPublishProgressButNotItsVerdict() throws Exception {
+        Path staged = Files.createDirectory(temporary.resolve("worker")).resolve("report.json");
+        Path stagedProgress = staged.resolveSibling("report.json.progress.json");
+        String verdict = "{\"summary\":{\"status\":\"PASS\",\"validation_target\":\"eapdf\",\"run_id\":\"worker\"},\"pdfa\":{},\"failure_codes\":[]}";
+        Files.writeString(staged, verdict);
+        Files.writeString(staged.resolveSibling("report.json.summary.json"), verdict);
+        Files.writeString(stagedProgress, "{\"stage\":\"Checking EA-PDF\",\"validation_target\":\"eapdf\",\"run_id\":\"worker\"}");
+        Path report = temporary.resolve("report.json");
+        Path summary = temporary.resolve("report.json.summary.json");
+        Path progress = temporary.resolve("report.json.progress.json");
+        try (var reports = new ValidationRuntime.ReportSet(temporary.resolve("input.pdf"), report,
+                 java.util.concurrent.TimeUnit.SECONDS.toNanos(2))) {
+            reports.mirror(staged, false);
+            assertFalse(Files.exists(report));
+            assertFalse(Files.exists(summary));
+            assertTrue(Files.readString(progress).contains("Checking EA-PDF"));
+            Files.writeString(stagedProgress, "{\"stage\":\"Finished\",\"validation_target\":\"eapdf\",\"run_id\":\"worker\"}");
+            reports.mirror(staged, false);
+            assertTrue(Files.readString(progress).contains("Checking EA-PDF"));
+            reports.mirror(staged, true);
+            assertEquals(verdict, Files.readString(report));
+            var brief = JsonParser.parseString(Files.readString(summary)).getAsJsonObject();
+            assertEquals(report.toString(), brief.remove("report").getAsString());
+            assertEquals(JsonParser.parseString(verdict), brief);
+            assertTrue(Files.readString(progress).contains("Finished"));
+        }
+    }
+    @Test void childBudgetsAreCheckedBeforeAdmissionAndSupportOrdinaryLargeCollections() throws Exception {
         var children = new JavaValidation.Children();
         assertTrue(children.accepts(300L * 1024 * 1024, 0));
         for (int i = 0; i < 300; i++) assertTrue(children.accepts(1, 0));
         long before = children.bytes; int count = children.count;
         assertFalse(children.accepts(Long.MAX_VALUE, 0));
         assertEquals(before, children.bytes); assertEquals(count, children.count);
-        assertTrue(children.accepts(1, 1000));
+        assertFalse(children.accepts(1, 1000));
+    }
+    @Test void childParsersConsumeTheSameJobAllowance() throws Exception {
+        String oldBytes = System.getProperty("VALIDATOR_MAX_CHILD_BYTES");
+        String oldCount = System.getProperty("VALIDATOR_MAX_CHILDREN");
+        try {
+            System.setProperty("VALIDATOR_MAX_CHILD_BYTES", "20");
+            System.setProperty("VALIDATOR_MAX_CHILDREN", "3");
+            Path ledger = Files.write(temporary.resolve("children.bin"), new byte[Integer.BYTES + Long.BYTES]);
+            var first = new JavaValidation.Children(); first.sharedBudget = ledger;
+            var second = new JavaValidation.Children(); second.sharedBudget = ledger;
+            assertTrue(first.accepts(12, 0));
+            assertFalse(second.accepts(9, 1));
+            assertTrue(second.accepts(8, 1));
+            assertTrue(second.accepts(0, 1));
+            assertFalse(first.accepts(0, 0));
+        } finally {
+            if (oldBytes == null) System.clearProperty("VALIDATOR_MAX_CHILD_BYTES");
+            else System.setProperty("VALIDATOR_MAX_CHILD_BYTES", oldBytes);
+            if (oldCount == null) System.clearProperty("VALIDATOR_MAX_CHILDREN");
+            else System.setProperty("VALIDATOR_MAX_CHILDREN", oldCount);
+        }
     }
     @Test void glyphInventoryIsNotEvictedForPdfa1() {
         StaticContainers.clearAllContainers();

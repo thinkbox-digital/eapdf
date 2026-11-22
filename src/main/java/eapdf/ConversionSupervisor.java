@@ -41,7 +41,11 @@ public final class ConversionSupervisor {
     }
     Path temporaryRoot = workspaceRoot(entry, arguments);
     cleanAbandoned(temporaryRoot);
-    Path directory = Files.createTempDirectory(temporaryRoot, "eapdf-worker-");
+    ProcessHandle supervisor = ProcessHandle.current();
+    var started = supervisor.info().startInstant().orElseThrow(
+        () -> Common.fail("Cannot establish conversion supervisor ownership on this runtime"));
+    Path directory = Files.createTempDirectory(temporaryRoot,
+        "eapdf-worker-" + supervisor.pid() + "-" + started.toEpochMilli() + "-");
     System.out.println("Conversion working storage: " + directory);
     Process process = null;
     Thread cleanup = null;
@@ -50,13 +54,11 @@ public final class ConversionSupervisor {
     boolean successful = false;
     var cancelled = new java.util.concurrent.atomic.AtomicBoolean();
     try {
+      String supervisorStart = started.toString();
+      writeOwner(directory, new Owner(supervisor.pid(), supervisorStart, 0, "", directory.getFileName().toString()));
       Path temporary = Files.createDirectory(directory.resolve("temporary"));
       Path outputs = Files.createDirectory(directory.resolve("outputs"));
       Path manifest = directory.resolve("manifest.json");
-      ProcessHandle supervisor = ProcessHandle.current();
-      String supervisorStart = supervisor.info().startInstant().orElseThrow(
-          () -> Common.fail("Cannot establish conversion supervisor ownership on this runtime")).toString();
-      writeOwner(directory, new Owner(supervisor.pid(), supervisorStart, 0, "", directory.getFileName().toString()));
       progress = ConversionProgress.start(entry, arguments, directory);
       ConversionProgress jobProgress = progress;
       PstJobBudget budget = PstJobBudget.forInput(entry, arguments, temporary);
@@ -110,7 +112,8 @@ public final class ConversionSupervisor {
         ConversionProgress.attach(directory);
         try {
           ConversionProgress.stage("publishing");
-          OutputTransaction.publish(manifest, outputs, budget);
+          Path batchManifest = OutputTransaction.publish(manifest, outputs, budget, cancelled::get);
+          if (batchManifest != null) System.out.println("Batch manifest: " + batchManifest);
         } finally { ConversionProgress.flush(); ConversionProgress.detach(); }
       }
       successful = true;
@@ -182,8 +185,19 @@ public final class ConversionSupervisor {
         Path marker = directory.resolve("owner.json");
         try {
           if (!Files.isDirectory(directory, java.nio.file.LinkOption.NOFOLLOW_LINKS)
-              || !Files.isRegularFile(marker, java.nio.file.LinkOption.NOFOLLOW_LINKS) || Files.size(marker) > 4096
               || !Files.getOwner(directory).equals(currentOwner)) continue;
+          if (!Files.isRegularFile(marker, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+            String[] name = directory.getFileName().toString().split("-", 5);
+            if (name.length == 5 && name[2].matches("[0-9]+") && name[3].matches("[0-9]+")) {
+              long pid = Long.parseLong(name[2]), start = Long.parseLong(name[3]);
+              boolean active = ProcessHandle.of(pid).filter(ProcessHandle::isAlive)
+                  .map(process -> process.info().startInstant().map(instant -> instant.toEpochMilli() == start).orElse(true))
+                  .orElse(false);
+              if (!active) Common.deleteTree(directory);
+            }
+            continue;
+          }
+          if (Files.size(marker) > 4096) continue;
           Owner owner = new com.google.gson.Gson().fromJson(Files.readString(marker), Owner.class);
           if (owner == null || !directory.getFileName().toString().equals(owner.workspace())
               || owner.supervisor() <= 0 || !validStart(owner.supervisorStart())

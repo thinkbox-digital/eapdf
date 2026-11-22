@@ -22,20 +22,30 @@ explicit provenance refresh and review; tests do not rewrite expected records.
 
 ## Cross-edition improvements
 
-Main owns shared dependency pins, EA-PDF rules and validator code, and creator
-code used across editions. A shared improvement can start in any checkout. Land
-it as a focused Main change and carry it to each affected edition. Keep Secure's
-WeasyPrint and C2PA/PAdES changes in Secure when their impact is confined there.
+Main owns changes shared by the editions. For every Main edit, determine which
+of Main, Lite, and Secure use the affected behaviour or guidance. Apply the
+change to every affected working tree and verify each in the same task, without
+waiting for a separate request, commit, or push. This includes code, tests,
+dependencies, build and release tooling, EA-PDF rules, documentation, and agent
+instructions. Keep private maintainer instructions in each affected checkout’s
+Git-ignored `AGENTS.override.md`.
 
-While the editions share source snapshots, cherry-pick the focused Main commit
-into affected checkouts and resolve differences with their edition behavior in
-mind. Once the shared Maven modules and BOM are available, propagate changes by
-updating each affected edition's pinned shared release through a dependency
-update PR. Check all six profiles for shared creator and validator changes and
-include signed-output checks when the change affects Secure's signing workflow.
+Keep the common implementation in sync with Main wherever editions share it.
+This includes common portions of files that also contain edition-specific
+code. Apply Main’s change to the shared portion and preserve the surrounding
+Lite or Secure additions. Where an edition deliberately implements the same
+behaviour differently, adapt the fix and verify the shared behaviour there.
+Respect intentional omissions such as Lite’s narrower input support and
+preserve unrelated work in progress. If a focused Main commit already exists, it can be
+cherry-picked. A shared fix discovered in another edition goes through Main.
+Keep edition-specific changes with their owner, including Secure’s signing
+workflow and Lite’s EML-only creator. Once shared Maven modules and a BOM are
+available, carry shared module releases through each consumer’s dependency pin.
 
-For each improvement you work on or review, tell the user which editions it
-affects, which updates were applied and verified, and which are still pending.
+Run checks appropriate to the change in every affected edition. For shared
+creator or validator changes, check all six profiles and include signed-output
+checks when Secure’s signing workflow is affected. Report which editions were
+updated, the checks run, and any specific blocker that prevented propagation.
 
 ## Where to work
 
@@ -130,8 +140,9 @@ precision and other preservation repairs remain local until equivalent upstream
 behavior is verified. Keep the custom archive storage: stock PDFBox was more
 memory-intensive in the measured stream-cache and large-archive loading probes.
 
-The renderer keeps four patches, recorded in `third_party/openhtmltopdf/lock.json`.
-A clean rebuild must reproduce their commit and artifact hashes.
+The renderer keeps four base patches and a layout page allocation guard in
+`third_party/openhtmltopdf/lock.json`. The rebuild verifies the base commits and
+reproduces both sets of artifacts.
 
 The Java validator keeps local storage, decoding, cross-reference and deferred
 resource changes. New upstream interruption, progress and dictionary fixes are

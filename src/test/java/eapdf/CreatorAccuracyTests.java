@@ -300,7 +300,8 @@ class CreatorAccuracyTests {
     try {
       EapdfConfig.get().validationWarning = "One or more validation checks failed.";
       var record = AttachmentProfilePolicyTests.record("Collection preview");
-      try (var document = PdfCollectionSupport.buildCollectionStartPage(List.of(record), "c", TestSupport.fontPath(), false)) {
+      try (var cover = new PayloadStore(); var document = PdfCollectionSupport.buildCollectionStartPage(
+          List.of(record), "c", TestSupport.fontPath(), false, cover.createPdf())) {
         String text = new PDFTextStripper().getText(document);
         Assertions.assertTrue(text.contains("WARNING — Validation requires review"), text);
         Assertions.assertTrue(text.contains("One or more validation checks failed."));

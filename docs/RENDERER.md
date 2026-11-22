@@ -2,8 +2,8 @@
 
 ## Dependency provenance
 
-Upstream: `https://github.com/openhtmltopdf/openhtmltopdf`, tag `1.1.113`,
-commit `57f765415446e0ebd855232c37d10a83e18f1689`.
+Upstream: `https://github.com/openhtmltopdf/openhtmltopdf`, commit
+`ce841f1dadb45479fd5d5260375f807151eb67b8`.
 Patches: `https://github.com/jialiang/HTML-to-PDF-UA`, pinned repository commit
 `7fff0e4ad793a521659ad19d46f4d9ddb39941a2`.
 
@@ -13,22 +13,23 @@ identifiers reproducible. The rebase retains upstream transparency-group MCID ha
 
 | Patch | Original patch commit | Applied commit |
 |---|---|---|
-| 0001 | `225219232e0e87d89683a0ac2b31472f91dbf491` | `a293f39ee8e931b69420212058fe7d6d8b21762d` |
-| 0002 | `54b4513f20c1d55bc212b9ab11b83740239979d3` | `19e39585fa8db191e7e4b8e8b15df4e34bb243f5` |
-| 0003 | `9648fff9aba215891af47fc51890e498ace91074` | `04409da32d59c3836a6f6f71fdbfef7e9c8b19f8` |
-| 0004 | `98572627de49af5e978acbb50aa1ee5c8625a284` | `7287bbe0b3344c4830ae47cfd100689a1f8adaf2` |
+| 0001 | `225219232e0e87d89683a0ac2b31472f91dbf491` | `c91aaa8848a5097a1e5dc87212f6a610b830554a` |
+| 0002 | `54b4513f20c1d55bc212b9ab11b83740239979d3` | `dbd94bfcf5070a775b3b8a5fd0480f5b44c1c9b4` |
+| 0003 | `9648fff9aba215891af47fc51890e498ace91074` | `959bf8d785a2ea5754190385ddcd3b5acb379124` |
+| 0004 | `98572627de49af5e978acbb50aa1ee5c8625a284` | `a0f6c64328db5424d8d973574b5e11d539258e8d` |
 
-The patched version is **1.1.114-eapdf.1**, covering both active modules:
-`openhtmltopdf-core` and `openhtmltopdf-pdfbox`. The application POM resolves them
+The patched version is **1.1.114-eapdf.2** and covers `openhtmltopdf-core` and
+`openhtmltopdf-pdfbox`. Patch 0005 checks cancellation and the 2,048-page limit
+before OpenHTMLtoPDF creates each layout page. The application POM resolves the modules
 from the version-controlled `third_party/maven` file repository. Production
 builds do not require patched artifacts preinstalled in a developer's Maven
 cache. Flattened POMs, binary JARs, corresponding source JARs, SHA-1/SHA-256
 sidecars and a SHA-256 lock are supplied. Other PDF libraries are not added.
 
-The four source patches are retained as reviewed derivatives. A documented packaging-only step fixes
+The base source patches are retained as reviewed derivatives. A packaging step fixes
 ZIP entry order/time/mode and volatile OSGi manifest build fields
-(`Bnd-LastModified`, `Built-By`, `Build-Jdk`). Every class/resource/source byte
-except those manifest fields is retained. This is necessary because the upstream
+(`Bnd-LastModified`, `Built-By`, `Build-Jdk`). The layout guard rebuild compiles
+the changed `Layer` class and updates package version metadata. The upstream
 Bnd plugin otherwise puts build time/user information in binary JARs even with
 `project.build.outputTimestamp` fixed. Clean-source rebuild hashes now match.
 
@@ -82,9 +83,11 @@ python3 scripts/build_patched_openhtmltopdf.py --rebuild
 ```
 
 This command creates temporary source/cache directories, checks out the pinned
-upstream commit, verifies patch hashes, applies all four with `git am`, builds with
-`-Drevision=1.1.114-eapdf.1`, runs upstream tests, normalizes packaging and compares
-SHA-256 hashes against `third_party/openhtmltopdf/lock.json`.
+upstream commit, applies the four base patches with `git am`, and builds with
+`-Drevision=1.1.114-eapdf.1`. It checks the normalized base artifacts against
+`third_party/openhtmltopdf/lock.json` before compiling and verifying patch 0005.
+`python3 scripts/build_patched_openhtmltopdf.py --rebuild-layout-guard` reproduces
+the layout guard offline using the committed base artifacts.
 
 For explicit PDF/UA-2 machine checking using an existing standalone validator JAR:
 

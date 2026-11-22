@@ -4,6 +4,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor,as_completed
 from collections import Counter
 import argparse,csv,hashlib,json,os,subprocess,tempfile,time,zipfile
+from published_outputs import walk_output_files
 ROOT=Path(__file__).resolve().parents[1]
 
 def digest(path):
@@ -99,7 +100,7 @@ def main():
     from arlington_semantics import verify as verify_semantics
     try:pin['model_adapter']['installed']=verify_semantics(jar.parent.parent/'model-corrections',pin['model_adapter'])
     except (OSError,ValueError,RuntimeError) as error:parser.error('Install/verify the model adapter first: '+str(error))
-    files=[args.input] if args.input.is_file() else sorted(p for p in args.input.rglob('*') if p.is_file() and p.suffix.lower()=='.pdf')
+    files=[args.input] if args.input.is_file() else sorted(p for p in walk_output_files(args.input) if p.is_file() and p.suffix.lower()=='.pdf')
     if not files:parser.error('No PDF inputs found')
     args.reports.mkdir(parents=True,exist_ok=True)
     inventory=[{'file':str(p),'bytes':p.stat().st_size,'sha256':digest(p)} for p in files];save(args.reports/'input-files.json',inventory)

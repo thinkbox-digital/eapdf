@@ -65,8 +65,10 @@ final class MboxParser {
           throw Common.fail("invalid or missing mailbox Content-Length: " + declared);
         }
         byte[] buffer = new byte[8192];
-        ProcessingLimits.checkMessage((long)message.size() + remaining, "mailbox Content-Length");
+        long budget = ProcessingLimits.messageBytes();
+        if (remaining > budget - message.size()) throw Common.fail("Mailbox Content-Length exceeds the message byte limit");
         while (remaining > 0) {
+          ProcessingLimits.checkCancelled();
           int read = input.readBody(buffer, (int)Math.min(remaining, buffer.length));
           if (read < 0) throw Common.fail("truncated mailbox Content-Length");
           message.write(buffer, 0, read);
@@ -162,6 +164,7 @@ final class MboxParser {
       ByteArrayOutputStream line = new ByteArrayOutputStream();
       int value;
       while ((value = source.read()) >= 0) {
+        if ((line.size() & 8191) == 0) ProcessingLimits.checkCancelled();
         position++;
         line.write(value);
         if (line.size() > maxBytes) ProcessingLimits.checkMessage(line.size(), "mailbox line");

@@ -1,0 +1,38 @@
+{
+  "version": "0.9.3-eapdf.1",
+  "inputs": [
+    {
+      "name": "java-libpst-0.9.3.jar",
+      "url": "https://repo.maven.apache.org/maven2/com/pff/java-libpst/0.9.3/java-libpst-0.9.3.jar",
+      "sha256": "039cd61635ded94dba67f909d3b1763e13f9c23d02f9750eb6259af10e1dabdb"
+    },
+    {
+      "name": "java-libpst-0.9.3-sources.jar",
+      "url": "https://repo.maven.apache.org/maven2/com/pff/java-libpst/0.9.3/java-libpst-0.9.3-sources.jar",
+      "sha256": "16566cfe4415948d6ccb2cdc2b695e402b6ab627d7abea63d50f5e6b51329490"
+    },
+    {
+      "name": "java-libpst-0.9.3.pom",
+      "url": "https://repo.maven.apache.org/maven2/com/pff/java-libpst/0.9.3/java-libpst-0.9.3.pom",
+      "sha256": "95ca348d67559ba34e206ee1b1e8798893ba61f895e4fd189cfc5c17817ac4d4"
+    }
+  ],
+  "patch": {
+    "path": "third_party/java-libpst/patches/0001-bound-pst-node-decoding.patch",
+    "sha256": "b1a5a306206b2978e2fd3969308be293ebcf8a64a8cec3d67baa7e3466677e24"
+  },
+  "artifacts": [
+    {
+      "path": "third_party/maven/com/pff/java-libpst/0.9.3-eapdf.1/java-libpst-0.9.3-eapdf.1-sources.jar",
+      "sha256": "072fd0d028a7b11e11809db0d40bca9e8537686ba755d5a8efd00e90b602d1d8"
+    },
+    {
+      "path": "third_party/maven/com/pff/java-libpst/0.9.3-eapdf.1/java-libpst-0.9.3-eapdf.1.jar",
+      "sha256": "7629fa59f47f034cef97ceefca62e1d6cd5ff6e57a8b87a4e0d7202a723add61"
+    },
+    {
+      "path": "third_party/maven/com/pff/java-libpst/0.9.3-eapdf.1/java-libpst-0.9.3-eapdf.1.pom",
+      "sha256": "896fe5a74568d0955cbeb6b26d699d4732480c94576bb7036a0daf4368b377f7"
+    }
+  ]
+}

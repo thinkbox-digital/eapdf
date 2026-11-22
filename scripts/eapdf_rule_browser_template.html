@@ -24,13 +24,32 @@
 <section class="pane" aria-label="Rules in plain language"><div class="panehead"><strong id="count">Rules in plain language</strong><div><button id="prev" aria-label="Previous rule">↑</button> <span id="position"></span> <button id="next" aria-label="Next rule">↓</button></div></div><div class="list-head"><span>Source</span><span>Short rule summary</span></div><div class="scroll" id="rulePane" tabindex="0" aria-label="Validation rule rows"><div id="rows"></div></div></section>
 </main>
 <footer><span>EA-PDF 1.0 · works offline</span><span>Check links do not prove full coverage. J / K: next / previous</span></footer>
-<dialog id="notes"><button class="close" id="closeNotes">Close</button><h2>How to use this page</h2><div id="aboutBody"></div></dialog>
+<dialog id="notes"><button class="close" id="closeNotes">Close</button><h2>How to use this page</h2><div id="aboutBody">
+<p>Select a rule or scroll either pane. With <b>Sync panes</b> on, the other pane follows. Use ↑ / ↓ or J / K to move between rules.</p>
+<p>Each rule states the requirement once. Page buttons open the source; <b>Checks</b> lists check codes. Search also matches the full rule wording.</p>
+<p><b>Source highlights:</b> table matches use the original field or group. Other matches are suggestions and need review. All cited pages are available in Details.</p>
+<p><b>Terms:</b> XMP is PDF metadata. DPart groups pages by email and content. A Content Set is a related group of pages. FOAF describes people and email addresses. Bag is an unordered list; Seq is an ordered list.</p>
+<p><b>Profiles:</b> s = one email; m = multiple emails; c = collection. Add i when the original source link is missing or unreliable.</p>
+<p>The original specification is unchanged. The Mail_ContentField → Mail_Field correction is user-approved, not published errata. Open issue reports do not change the rules. Linked checks do not prove full coverage.</p>
+<details><summary>Source files and limits</summary>
+<p>All <span id="ruleSummaryCount"></span> summaries and <span id="sourcePageCount"></span> source pages are embedded. This file works offline. The source PDF has known number-tree defects and is not a passing test file.</p>
+<p>The Adobe XMP reference is from 2012; it does not prove equivalence to the cited 2019 edition. See the review questions for source links.</p>
+<p><b>Source SHA-256</b><br><span class="hash" id="sourceHash"></span><br><b>Rules SHA-256</b><br><span class="hash" id="rulesHash"></span></p>
+</details></div></dialog>
 <dialog id="questionNotes"><button class="close" id="closeQuestions">Close</button><h2 id="questionCount">Open review questions</h2><p>All eleven questions have user-authorized project interpretations. These decisions are not official errata or external approval. Draft-edition equivalence remains unverified.</p><div id="questionBody"></div></dialog>
 <script type="application/json" id="data">__EMBEDDED_DATA__</script>
 <script>
 'use strict';
 const DATA=JSON.parse(document.getElementById('data').textContent);
-const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+function element(tag,className='',...children){
+ const node=document.createElement(tag);
+ if(className)node.className=className;
+ node.append(...children);
+ return node;
+}
+function jumpButton(label){const button=element('button','jump',label);button.type='button';return button;}
+const isSourcePage=page=>Number.isInteger(page)&&page>=1&&page<=DATA.pages.length;
 const sourcePane=$('sourcePane'),rulePane=$('rulePane');
 const mandatory=new Set(['SHALL','SHALL_NOT','conditional_requirement','inherited_requirement','must_in_explanatory_section','creation_requirement','needs_in_explanatory_section','conditional_creation_requirement','required_if_present','conditional']);
 const recommended=new Set(['SHOULD','SHOULD_NOT','ought_guidance','strongly_recommended','source_dependent_guidance']);
@@ -48,42 +67,93 @@ const strengthLabel=r=>r.assessment.conformance_effect==='interpretation_require
 const highlightLabel=kind=>({'Exact table parent; child-group context':'Table group','Exact table field; row context':'Table row','Exact field label':'Field label','Suggested passage; verify against cited section':'Suggested match — check source','Cited page context; no precise passage match':'Cited page — no exact match','Validation policy; no specification passage':'No specification passage'}[kind]||kind);
 const ownerLabel=scope=>({'delegate_to_verapdf':'Checked by veraPDF','retain_custom_eapdf_requirement':'EA-PDF check','operational_only':'Validation process','split_custom_and_verapdf':'EA-PDF and veraPDF checks','split_custom_declaration_and_external_structure':'EA-PDF declaration and upstream structure checks'}[scope.decision]||'See check details');
 const questionFor=f=>DATA.questions.find(q=>q.finding_id===f.id);
-function supportLinks(q){return q.support.map(s=>{
- if('pdf_page' in s)return `<button class="jump" data-question="${esc(q.finding_id)}" data-source-page="${s.pdf_page}">${esc(s.label)}</button>`;
- if(s.url==='../verapdf-coverage/bundled-profiles.json')return `<a href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(DATA.profileEvidence,null,2))}" download="bundled-profiles.json">${esc(s.label)}</a>`;
- return `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)}</a>`;
- }).join(' · ');}
-$('metrics').innerHTML=`<b>${DATA.rows.length}</b> rule summaries · <b>${Object.keys(DATA.rules).length}</b> checks<br><b>${DATA.questions.filter(q=>q.status!=="locally_resolved").length}</b> open questions · <b>${DATA.questions.filter(q=>q.status==="locally_resolved").length}</b> local decisions · <b>${DATA.rows.filter(isGap).length}</b> rules without checks`;
+function supportLink(q,source){
+ if('pdf_page' in source){
+  if(!isSourcePage(source.pdf_page))return element('span','',source.label);
+  const button=jumpButton(source.label);
+  button.dataset.question=q.finding_id;
+  button.dataset.sourcePage=source.pdf_page;
+  return button;
+ }
+ if(source.url==='../verapdf-coverage/bundled-profiles.json'){
+  const link=element('a','',source.label);
+  link.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DATA.profileEvidence,null,2));
+  link.download='bundled-profiles.json';
+  return link;
+ }
+ let url;
+ try{url=new URL(source.url);}catch{return element('span','',source.label);}
+ if(!['https:','http:'].includes(url.protocol))return element('span','',source.label);
+ const link=element('a','',source.label);
+ link.href=url.href;
+ link.target='_blank';
+ link.rel='noopener noreferrer';
+ return link;
+}
+const localDecisions=DATA.questions.filter(q=>q.status==='locally_resolved').length;
+$('metrics').append(element('b','',DATA.rows.length),' rule summaries · ',element('b','',Object.keys(DATA.rules).length),' checks',element('br'),
+ element('b','',DATA.questions.length-localDecisions),' open questions · ',element('b','',localDecisions),' local decisions · ',element('b','',DATA.rows.filter(isGap).length),' rules without checks');
 DATA.pages.forEach((page,i)=>{
  const label=document.createElement('div');label.className='page-label';label.textContent=`PDF page ${i+1}${i>=7?' · printed page '+(i-6):' · front matter'}`;
  const el=document.createElement('div');el.className='page';el.id='pdf-page-'+(i+1);el.style.aspectRatio=`${page.width} / ${page.height}`;
- el.innerHTML=`<img alt="Original EA-PDF specification, PDF page ${i+1}" loading="lazy" decoding="async"><div class="overlay"></div>`;
+ const image=element('img');image.alt=`Original EA-PDF specification, PDF page ${i+1}`;image.loading='lazy';image.decoding='async';
+ el.append(image,element('div','overlay'));
  // Transparent text is positioned over the raster original for search/selection.
  for(const line of page.lines){const t=document.createElement('span');t.className='textline';t.textContent=line.text;const [x,y,x1,y1]=line.box;Object.assign(t.style,{left:x/page.width*100+'%',top:y/page.height*100+'%',width:(x1-x)/page.width*100+'%',height:(y1-y)/page.height*100+'%',fontSize:(y1-y)/page.width*100+'cqw'});el.append(t);}
  el.style.containerType='inline-size';sourcePane.append(label,el);pageElements.push(el);
 });
 const imageObserver=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){let i=pageElements.indexOf(e.target);e.target.querySelector('img').src='data:image/webp;base64,'+DATA.pages[i].image;imageObserver.unobserve(e.target);}}),{root:sourcePane,rootMargin:'900px'});pageElements.forEach(p=>imageObserver.observe(p));
 function ruleFindings(r){return openFindings.filter(f=>questionFor(f)?.requirement_ids.includes(r.id)||(r.issues||[]).includes(f.id)||(f.affected_rule_codes||[]).some(c=>r.candidate_rule_codes.includes(c)));}
+function ruleDetails(r){
+ const details=element('details','rule-details',element('summary','','Checks'));
+ for(const code of r.candidate_rule_codes){
+  details.append(element('div','checks',code));
+  const rule=DATA.rules[code],check=rule?.validation_scope?.check;
+  if(check)details.append(element('div','check-predicate',
+   element('p','',element('strong','',`Rule ${rule.rule_number??''} · ${check.strength??''}`),`: ${check.assertion??''}`),
+   element('p','',`Applies when: ${check.applies_when??''}`),element('p','',`Evidence needed: ${check.evidence_needed??''}`)));
+ }
+ for(const code of r.upstream_rule_codes||[])details.append(element('div','checks',`Delegated prerequisite: ${code}`));
+ return details;
+}
 function render(){
  driver=null;clearTimeout(scrollTimer);clearTimeout(sourceTimer);
  const q=$('search').value.trim().toLowerCase(),scope=$('scope').value,strength=$('strength').value,review=$('review').value;
  visible=DATA.rows.filter(r=>(scope==='all'||scope==='related'&&related(r)||r.scope===scope)&&(strength==='all'||strengthGroup(r)===strength)&&(review==='all'||review==='open'&&isOpen(r)||review==='unmapped'&&isGap(r))&&(!q||[r.id,r.plain_language.summary,r.plain_language.when,r.assertion,r.section,r.table?'Table '+r.table:'',r.applies_when,r.scope,r.strength,...r.candidate_rule_codes].join(' ').toLowerCase().includes(q))).sort((a,b)=>(a.source_highlight.page??999)-(b.source_highlight.page??999)||(a.source_highlight.boxes[0]?.[1]??0)-(b.source_highlight.boxes[0]?.[1]??0)||a.id.localeCompare(b.id));
- rowElements.clear();$('rows').innerHTML='';
+ rowElements.clear();$('rows').replaceChildren();
  for(const r of visible){
   const el=document.createElement('article');el.className='rule';el.id='rule-'+r.id;el.tabIndex=0;el.setAttribute('aria-label',r.id+': '+r.plain_language.summary);
-  const findings=ruleFindings(r),s=r.source_highlight;
-  const checks=r.candidate_rule_codes.map(c=>{const rule=DATA.rules[c],check=rule?.validation_scope?.check;return `<div class="checks">${esc(c)}</div>`+(check?`<div class="check-predicate"><p><strong>Rule ${esc(rule.rule_number)} · ${esc(check.strength)}</strong>: ${esc(check.assertion)}</p><p>Applies when: ${esc(check.applies_when)}</p><p>Evidence needed: ${esc(check.evidence_needed)}</p></div>`:'');}).join('')+(r.upstream_rule_codes||[]).map(c=>`<div class="checks">Delegated prerequisite: ${esc(c)}</div>`).join('');
-  const pages=r.pdf_pages.map((p,i)=>`<button class="jump" data-page="${p}" title="PDF page ${p}">p. ${r.printed_pages[i]??p}</button>`).join(' ');
-  const when=r.plain_language.when.toLowerCase()==='all profiles'?'':`<div class="when">${esc(r.plain_language.when)}</div>`;
-  el.innerHTML=`<div><div class="rule-id">${esc(r.id)}</div><div class="rule-meta">§ ${esc(r.section)}${r.table?'<br>Table '+r.table:''}<br>${pages||'No source page'}</div></div><div><div class="tags"><span class="tag ${strengthGroup(r)==='mandatory'?'mandatory':strengthGroup(r)==='context'?'context':''}">${esc(strengthLabel(r))}</span>${r.scope!=='file'?'<span class="tag">'+esc(scopeNames[r.scope])+'</span>':''}${isOpen(r)?'<button class="tag warning open-question" type="button">Open question</button>':''}${isGap(r)?'<span class="tag warning">No linked check</span>':''}</div><p class="assertion">${esc(r.plain_language.summary)}</p>${when}${checks?'<details class="rule-details"><summary>Checks</summary>'+checks+'</details>':''}</div>`;
-  el.querySelector('.open-question')?.addEventListener('click',()=>openQuestions(findings[0]?.id));
+  const meta=element('div','rule-meta',`§ ${r.section??''}`);
+  if(r.table)meta.append(element('br'),`Table ${r.table}`);
+  meta.append(element('br'));
+  let pageCount=0;
+  r.pdf_pages.forEach((page,index)=>{
+   if(!isSourcePage(page))return;
+   const button=jumpButton(`p. ${r.printed_pages[index]??page}`);
+   button.dataset.page=page;button.title=`PDF page ${page}`;
+   button.onclick=e=>{e.stopPropagation();driver='rules';select(r,false,false);goPage(page);};
+   if(pageCount++)meta.append(' ');
+   meta.append(button);
+  });
+  if(!pageCount)meta.append('No source page');
+  const strength=strengthGroup(r);
+  const tags=element('div','tags',element('span',strength==='recommended'?'tag':`tag ${strength}`,strengthLabel(r)));
+  if(r.scope!=='file')tags.append(element('span','tag',scopeNames[r.scope]??''));
+  if(isOpen(r)){
+   const button=element('button','tag warning open-question','Open question');button.type='button';
+   button.onclick=()=>openQuestions(ruleFindings(r)[0]?.id);tags.append(button);
+  }
+  if(isGap(r))tags.append(element('span','tag warning','No linked check'));
+  const content=element('div','',tags,element('p','assertion',r.plain_language.summary));
+  if(r.plain_language.when.toLowerCase()!=='all profiles')content.append(element('div','when',r.plain_language.when));
+  if(r.candidate_rule_codes.length||r.upstream_rule_codes?.length)content.append(ruleDetails(r));
+  el.append(element('div','',element('div','rule-id',r.id),meta),content);
   el.addEventListener('click',e=>{if(e.target.closest('a,input,button'))return;driver='rules';select(r,true,false);});
   el.addEventListener('keydown',e=>{if(e.target===el&&(e.key==='Enter'||e.key===' ')){e.preventDefault();driver='rules';select(r,true,false);}});
-  el.querySelectorAll('[data-page]').forEach(b=>b.onclick=e=>{e.stopPropagation();driver='rules';select(r,false,false);goPage(Number(b.dataset.page));});
   rowElements.set(r.id,el);$('rows').append(el);
  }
  $('count').textContent=`${visible.length} ${visible.length===1?'rule':'rules'}`;
- if(!visible.length){$('rows').innerHTML='<div class="empty">No matching rules. Adjust the search or filters.</div>';select(null,false,false);}
+ if(!visible.length){$('rows').append(element('div','empty','No matching rules. Adjust the search or filters.'));select(null,false,false);}
  else {const hash=decodeURIComponent(location.hash.slice(1));select(visible.find(r=>r.id===hash)||visible.find(r=>r.id===active?.id)||visible[0],true,true);}
 }
 function select(r,moveSource,moveRule){
@@ -110,10 +180,26 @@ $('search').addEventListener('input',render);for(const id of ['scope','strength'
 $('reset').onclick=()=>{$('search').value='';$('scope').value='related';$('strength').value='all';$('review').value='all';render();};
 $('prev').onclick=()=>step(-1);$('next').onclick=()=>step(1);$('pagePrev').onclick=()=>goPage(Number($('pageInput').value)-1);$('pageNext').onclick=()=>goPage(Number($('pageInput').value)+1);$('pageInput').onchange=()=>goPage(Number($('pageInput').value)||1);
 document.addEventListener('keydown',e=>{if(e.target.closest('input,select,textarea,summary,dialog,button'))return;if(e.key==='j')step(1);if(e.key==='k')step(-1);});
-$('aboutBody').innerHTML=`<p>Select a rule or scroll either pane. With <b>Sync panes</b> on, the other pane follows. Use ↑ / ↓ or J / K to move between rules.</p><p>Each rule states the requirement once. Page buttons open the source; <b>Checks</b> lists check codes. Search also matches the full rule wording.</p><p><b>Source highlights:</b> table matches use the original field or group. Other matches are suggestions and need review. All cited pages are available in Details.</p><p><b>Terms:</b> XMP is PDF metadata. DPart groups pages by email and content. A Content Set is a related group of pages. FOAF describes people and email addresses. Bag is an unordered list; Seq is an ordered list.</p><p><b>Profiles:</b> s = one email; m = multiple emails; c = collection. Add i when the original source link is missing or unreliable.</p><p>The original specification is unchanged. The Mail_ContentField → Mail_Field correction is user-approved, not published errata. Open issue reports do not change the rules. Linked checks do not prove full coverage.</p><details><summary>Source files and limits</summary><p>All ${DATA.rows.length} summaries and ${DATA.pages.length} source pages are embedded. This file works offline. The source PDF has known number-tree defects and is not a passing test file.</p><p>The Adobe XMP reference is from 2012; it does not prove equivalence to the cited 2019 edition. See the review questions for source links.</p><p><b>Source SHA-256</b><br><span class="hash">${DATA.sourceHash}</span><br><b>Rules SHA-256</b><br><span class="hash">${DATA.rulesHash}</span></p></details>`;
+$('ruleSummaryCount').textContent=DATA.rows.length;
+$('sourcePageCount').textContent=DATA.pages.length;
+$('sourceHash').textContent=DATA.sourceHash;
+$('rulesHash').textContent=DATA.rulesHash;
 $('questions').textContent=`${DATA.questions.length} questions`;
 $('questionCount').textContent=`${DATA.questions.length} review decisions`;
-$('questionBody').innerHTML=DATA.questions.map((q,i)=>`<article class="question-card" id="question-${esc(q.finding_id)}"><h3>${i+1}. ${esc(q.title)}</h3><p><b>${esc(q.question)}</b></p><p><b>Why:</b> ${esc(q.why_it_matters)}</p><p><b>Project decision:</b> ${esc(q.interim_boundary)}</p><p><b>Basis:</b> ${esc(q.resolution?.rationale||"Unresolved")}</p><p><b>Verification:</b> ${esc(q.resolution?.implementation_status||"Not verified")}</p><p><b>Sources:</b></p><div class="support-links">${supportLinks(q)}</div><p><b>Related rules:</b> ${q.requirement_ids.map(id=>`<button class="jump" data-rule="${esc(id)}">${esc(id)}</button>`).join(' ')}</p><small class="technical">${esc(q.finding_id)}</small></article>`).join('');
+DATA.questions.forEach((q,index)=>{
+ const sources=element('div','support-links');
+ q.support.forEach((source,i)=>{if(i)sources.append(' · ');sources.append(supportLink(q,source));});
+ const relatedRules=element('p','',element('b','','Related rules:'));
+ for(const id of q.requirement_ids){const button=jumpButton(id);button.dataset.rule=id;relatedRules.append(' ',button);}
+ const article=element('article','question-card',element('h3','',`${index+1}. ${q.title}`),element('p','',element('b','',q.question)),
+  element('p','',element('b','','Why:'),` ${q.why_it_matters??''}`),
+  element('p','',element('b','','Project decision:'),` ${q.interim_boundary??''}`),
+  element('p','',element('b','','Basis:'),` ${q.resolution?.rationale||'Unresolved'}`),
+  element('p','',element('b','','Verification:'),` ${q.resolution?.implementation_status||'Not verified'}`),
+  element('p','',element('b','','Sources:')),sources,relatedRules,element('small','technical',q.finding_id));
+ article.id='question-'+q.finding_id;
+ $('questionBody').append(article);
+});
 function openQuestions(id){$('questionNotes').showModal();if(id){document.getElementById('question-'+id)?.scrollIntoView({block:'start'});}else $('questionNotes').scrollTop=0;}
 function showRule(id){$('questionNotes').close();$('search').value='';$('scope').value='all';$('strength').value='all';$('review').value='all';history.replaceState(null,'','#'+encodeURIComponent(id));render();}
 $('questionBody').querySelectorAll('[data-rule]').forEach(b=>b.onclick=()=>showRule(b.dataset.rule));

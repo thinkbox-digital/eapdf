@@ -1231,6 +1231,7 @@ def _message_rules_dependencies():
         NS_RDF=NS_RDF,
         XmpArray=XmpArray,
         attachment_email_owners=attachment_email_owners,
+        attachment_records_with_nodes=attachment_records_with_nodes,
         check_ambiguous_source_header_values=check_ambiguous_source_header_values,
         check_native_outlook_core=check_native_outlook_core,
         check_single_message_metadata=check_single_message_metadata,
@@ -1426,16 +1427,19 @@ def xmp_array_members(root,prop):
 def check_xmp_record_array(root,prop,report,code,required=False):
     return _xmp_rules.check_xmp_record_array(_xmp_rules_dependencies(), root, prop, report, code, required)
 
-def xmp_semantic_value(node):
+def xmp_semantic_value(node, *, pair_array_members=False):
     resource=node.get(qn(NS_RDF,"resource"))
     if resource is not None:
         return XmpUri(resource)
     if len(node)==1 and node[0].tag in {qn(NS_RDF,k) for k in ("Bag","Seq","Alt")}:
-        return XmpArray([xmp_semantic_value(li) for li in node[0]],local(node[0].tag))
+        array=node[0]
+        values=((xmp_semantic_value(li),li) for li in array) if pair_array_members else (
+            xmp_semantic_value(li) for li in array)
+        return XmpArray(values,local(array.tag))
     value_node=node[0] if len(node)==1 and node[0].tag==qn(NS_RDF,"Description") else node
     qualified=value_node.find(qn(NS_RDF,"value"))
     if qualified is not None:
-        return xmp_semantic_value(qualified)
+        return xmp_semantic_value(qualified,pair_array_members=pair_array_members)
     if qn(NS_RDF,"value") in value_node.attrib:
         return value_node.get(qn(NS_RDF,"value"))
     # XMP permits typed inner resource nodes as well as rdf:Description.
@@ -1564,16 +1568,25 @@ def flatten_assets(root):
             out.append(normalize_asset_record(v))
     return out
 
+def attachment_records_with_nodes(root):
+    """Pair each structured attachment with its original array member.
+
+    Keep malformed standalone and nested records for document-level checks.
+    Only a direct array member can be copied into a scoped attachment bag.
+    """
+    for node in xmp_property_nodes(root,NS_PDFMAILMETA,"attachments"):
+        value=xmp_semantic_value(node,pair_array_members=True)
+        members=value if isinstance(value,XmpArray) else ((value,None),)
+        for item,member_node in members:
+            if isinstance(item,dict):
+                yield normalize_attachment_record(item),member_node
+            elif isinstance(item,list):
+                for record in item:
+                    if isinstance(record,dict):
+                        yield normalize_attachment_record(record),None
+
 def flatten_attachments(root):
-    vals=find_xmp_values(root,NS_PDFMAILMETA,"attachments")
-    out=[]
-    for v in vals:
-        if isinstance(v,list):
-            for item in v:
-                if isinstance(item,dict): out.append(normalize_attachment_record(item))
-        elif isinstance(v,dict):
-            out.append(normalize_attachment_record(v))
-    return out
+    return [record for record,_ in attachment_records_with_nodes(root)]
 
 def flatten_email_records(root):
     vals=find_xmp_values(root,NS_PDFMAILMETA,"email")
@@ -7326,13 +7339,34 @@ def print_text(report, pdfa=None):
 
 def collect_pdf_inputs(path_arg):
     path=Path(path_arg)
-    if path.is_dir():
-        return sorted(str(p) for p in path.glob("*.pdf"))
-    return [str(path)]
+    if not path.is_dir():
+        return [str(path)]
+    max_entries = stream_setting("VALIDATOR_MAX_DIRECTORY_ENTRIES", 16_384)
+    max_pdfs = stream_setting("VALIDATOR_MAX_INPUT_FILES", 1_024)
+    inputs = []
+    with os.scandir(path) as entries:
+        for count, entry in enumerate(entries, 1):
+            if count > max_entries:
+                raise ValueError(f"Input directory exceeds the limit of {max_entries} entries.")
+            if not os.path.normcase(entry.name).endswith(".pdf"):
+                continue
+            if len(inputs) >= max_pdfs:
+                raise ValueError(f"Input directory exceeds the limit of {max_pdfs} PDFs.")
+            inputs.append(str(path / entry.name))
+    return sorted(inputs)
 
 def validate_one(path, write_html=True, html_path=None, child_context=None, depth=0, source_file_sets=None):
-    pdfa=run_verapdf(path)
-    report=validate(path,child_context or ChildValidationContext(include_pdfa=True),depth,source_file_sets,pdfa=pdfa)
+    from validation_worker import checked_pdf_path
+    try:
+        checked_pdf_path(path)
+    except (OSError, ValueError) as error:
+        reason = str(error)
+        report = Report(path)
+        report.warn("VALIDATION_INCOMPLETE", reason, {"assessment": "unavailable"})
+        pdfa = _verapdf_default_result(path, "ERROR", reason)
+    else:
+        pdfa=run_verapdf(path)
+        report=validate(path,child_context or ChildValidationContext(include_pdfa=True),depth,source_file_sets,pdfa=pdfa)
     eapdf_summary=report.summary()
     overall_status=combined_validation_status(eapdf_summary, pdfa)
     summary=dict(eapdf_summary)
@@ -7401,7 +7435,11 @@ def main():
     ap.add_argument("--html", nargs="?", const="", default=None, help="write a single-file HTML report to the given path; omit the path to use validation/<pdf>.<id>.validation.html")
     ap.add_argument("--no-html", action="store_true", help="do not write the HTML validation report")
     args=ap.parse_args()
-    inputs=collect_pdf_inputs(args.pdf)
+    try:
+        inputs=collect_pdf_inputs(args.pdf)
+    except (OSError, ValueError) as error:
+        print(error, file=sys.stderr)
+        sys.exit(2)
     if not inputs:
         print("No PDF files found for validation.",file=sys.stderr)
         sys.exit(2)

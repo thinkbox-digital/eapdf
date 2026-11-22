@@ -1,8 +1,10 @@
 package eapdf;
 import jakarta.mail.*;
+import jakarta.mail.internet.InternetHeaders;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.ContentType;
 import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -70,10 +72,8 @@ class EmlReader {
     // No MimeMessage/Part escapes; returned payloads own byte arrays before staging.
     try (InputStream in = new jakarta.mail.util.SharedByteArrayInputStream(raw)) {
       MimeMessage mm = new MimeMessage(s, in);
-      MimeReads reads = new MimeReads(mm);
+      MimeReads reads = new MimeReads(mm, true);
       EmailRecord r = new EmailRecord();
-      r.mimePartScopes = new IdentityHashMap<>();
-      assignLocationScopes(mm, "message", List.of(), r.mimePartScopes);
       r.sourceType = "eml";
       r.sourcePath = Common.nz(sourcePath);
       r.folderPath = "";
@@ -93,7 +93,7 @@ class EmlReader {
       r.archiveGlobalId = Common.nz(globalId);
       r.archiveEmails.addAll(archiveEmails);
 
-      if (debug) dumpMimeStructure(mm, r, "");
+      if (debug) dumpMimeStructure(mm, r, "", reads);
 
       BodyChoice choice = extractBodyChoice(mm, r, debug, reads);
       ProcessingLimits.checkBody(choice.text, sourcePath);
@@ -101,7 +101,7 @@ class EmlReader {
       r.textBody = Common.normalizeBody(choice.text);
       r.bodyMime = choice.mime.isBlank() ? "text/plain" : choice.mime;
       r.bodyBaseUri = choice.baseUri;
-      r.bodyLocationScopes = choice.locationScopes;
+      r.bodyLocationScopes = scopeNames(choice.locationScope);
       r.htmlBody = !Common.nz(choice.html).isBlank() ? Common.normalizeHtml(choice.html) : Common.plainTextToHtml(r.textBody);
 
       r.sourceBytes = raw;
@@ -131,7 +131,6 @@ class EmlReader {
       collectRfc822AssociatedFiles(mm, r.associatedFiles, r, debug, new int[]{0}, reads);
       reads.finish();
       preferReadableAlternative(r, choice.plainMime);
-      r.mimePartScopes = null;
       Common.finalizeRecordMetadata(r);
 
       if (debug) {
@@ -243,6 +242,10 @@ class EmlReader {
   }
 
   static void dumpMimeStructure(Part p, EmailRecord r, String indent) throws Exception {
+    dumpMimeStructure(p, r, indent, new MimeReads(p, true));
+  }
+
+  private static void dumpMimeStructure(Part p, EmailRecord r, String indent, MimeReads reads) throws Exception {
     record Entry(Part part, String indent) {}
     var pending = new ArrayDeque<Entry>();pending.push(new Entry(p, indent));
     while (!pending.isEmpty()) {
@@ -251,7 +254,7 @@ class EmlReader {
       String disp = safeDisposition(part), fn = safeFileName(part), cid = Common.header1(part, "Content-ID");
       Common.dbg(r, item.indent() + "part ct=" + ct + " disp=" + disp + " file=" + fn + " cid=" + cid);
       if (part.isMimeType("multipart/*")) {
-        Multipart mp = (Multipart)part.getContent();
+        Multipart mp = reads.multipart(part);
         for (int i = mp.getCount() - 1; i >= 0; i--) pending.push(new Entry(mp.getBodyPart(i), item.indent() + "  "));
       }
     }
@@ -259,22 +262,55 @@ class EmlReader {
 
   /** Count decoded leaves once, while reading useful payloads; drain ignored leaves last. */
   static final class MimeReads {
+    private static final int MAX_DEPTH = 4096;
+    private final long partLimit = Math.max(1, ProcessingLimits.metadataBytes() / 1024);
+    private final Map<Part, Multipart> multiparts = new IdentityHashMap<>();
+    private final Map<Part, LocationScope> scopes = new IdentityHashMap<>();
     final Set<Part> leaves = Collections.newSetFromMap(new IdentityHashMap<>());
     final Set<Part> counted = Collections.newSetFromMap(new IdentityHashMap<>());
-    long parts, decoded;
-    MimeReads(Part part) throws Exception {
-      var pending = new ArrayDeque<Part>();
-      var seen = Collections.newSetFromMap(new IdentityHashMap<Part, Boolean>());pending.push(part);
+    long decoded;
+    private long discovered;
+
+    MimeReads(Part part) throws Exception { this(part, false); }
+
+    MimeReads(Part part, boolean parsedSource) throws Exception {
+      record Entry(Part part, int depth, LocationScope scope) {}
+      var pending = new ArrayDeque<Entry>();
+      var seen = Collections.newSetFromMap(new IdentityHashMap<Part, Boolean>());
+      reserve(0, 1);
+      pending.push(new Entry(part, 0, null));
       while (!pending.isEmpty()) {
-        ProcessingLimits.checkCancelled();Part current = pending.pop();
-        if (!seen.add(current)) throw Common.fail("Cyclic MIME structure");parts++;
+        ProcessingLimits.checkCancelled();
+        Entry entry = pending.pop();
+        Part current = entry.part();
+        if (!seen.add(current)) throw Common.fail("Cyclic MIME structure");
+        LocationScope scope = current.isMimeType("multipart/related")
+            ? new LocationScope("related-" + seen.size(), entry.scope()) : entry.scope();
+        if (scope != null) scopes.put(current, scope);
         if (current.isMimeType("multipart/*")) {
-          Multipart multipart = (Multipart)current.getContent();
-          for (int i = multipart.getCount() - 1; i >= 0; i--) pending.push(multipart.getBodyPart(i));
-        } else if (current.isMimeType("message/rfc822") && current.getContent() instanceof Part nested) pending.push(nested);
-        else leaves.add(current);
+          int depth = entry.depth() + 1;
+          Multipart multipart = parsedSource
+              ? new BoundedMultipart(current, () -> reserve(depth, 1)) : (Multipart)current.getContent();
+          int count = multipart.getCount();
+          if (!parsedSource) reserve(depth, count);
+          multiparts.put(current, multipart);
+          for (int i = count - 1; i >= 0; i--) pending.push(new Entry(multipart.getBodyPart(i), depth, scope));
+        } else if (current.isMimeType("message/rfc822")) {
+          reserve(entry.depth() + 1, 1);
+          if (current.getContent() instanceof Part nested) pending.push(new Entry(nested, entry.depth() + 1, null));
+          else leaves.add(current);
+        } else leaves.add(current);
       }
     }
+    private void reserve(int depth, int count) {
+      ProcessingLimits.checkCancelled();
+      if (count == 0) return;
+      if (depth > MAX_DEPTH || count > partLimit - discovered) throw Common.fail("MIME structure exceeds the processing complexity limit");
+      discovered += count;
+    }
+
+    Multipart multipart(Part part) { return multiparts.get(part); }
+    LocationScope scope(Part part) { return scopes.get(part); }
     InputStream open(Part part, InputStream input) {
       if (!leaves.contains(part) || !counted.add(part)) return input;
       return new FilterInputStream(input) {
@@ -291,9 +327,24 @@ class EmlReader {
     }
   }
 
-  static void checkMimeStructure(Part part, int depth, long[] totals) throws Exception {
-    MimeReads reads = new MimeReads(part);reads.finish();totals[0]+=reads.parts;totals[1]+=reads.decoded;
-    ProcessingLimits.checkMessage(totals[1],"decoded MIME contents");
+  private static final class BoundedMultipart extends MimeMultipart {
+    private final Runnable accountPart;
+
+    BoundedMultipart(Part parent, Runnable accountPart) throws MessagingException {
+      super(parent.getDataHandler().getDataSource());
+      setParent(parent);
+      this.accountPart = accountPart;
+    }
+
+    @Override protected MimeBodyPart createMimeBodyPart(InputStream source) throws MessagingException {
+      accountPart.run();
+      return super.createMimeBodyPart(source);
+    }
+
+    @Override protected MimeBodyPart createMimeBodyPart(InternetHeaders headers, byte[] content) throws MessagingException {
+      accountPart.run();
+      return super.createMimeBodyPart(headers, content);
+    }
   }
 
   static String displayFlowedText(String source, boolean delSp) {
@@ -398,21 +449,12 @@ class EmlReader {
     return out;
   }
 
-  static void assignLocationScopes(Part part, String path, List<String> inherited,
-                                   Map<Object, List<String>> scopes) throws Exception {
-    record Entry(Part part, String path, List<String> scopes) {}
-    var pending = new ArrayDeque<Entry>();pending.push(new Entry(part,path,inherited));
-    while (!pending.isEmpty()) {
-      ProcessingLimits.checkCancelled();var item=pending.pop();List<String> current=item.scopes();
-      if (item.part().isMimeType("multipart/related")) {
-        List<String> nested=new ArrayList<>();nested.add(item.path());nested.addAll(current);current=List.copyOf(nested);
-      }
-      scopes.put(item.part(),current);
-      if (item.part().isMimeType("multipart/*")) {
-        Multipart multipart=(Multipart)item.part().getContent();
-        for (int i=multipart.getCount()-1;i>=0;i--) pending.push(new Entry(multipart.getBodyPart(i),item.path()+"/"+i,current));
-      }
-    }
+  record LocationScope(String name, LocationScope parent) {}
+
+  private static List<String> scopeNames(LocationScope scope) {
+    var names = new ArrayList<String>();
+    for (LocationScope current = scope; current != null; current = current.parent()) names.add(current.name());
+    return List.copyOf(names);
   }
 
   static String locationUri(Part part) throws Exception {
@@ -488,13 +530,13 @@ class EmlReader {
         out.html = html;
         out.mime = p.getContentType();
         out.baseUri = mimeBaseUri(p);
-        out.locationScopes = r.mimePartScopes == null ? List.of() : r.mimePartScopes.getOrDefault(p, List.of());
+        out.locationScope = reads == null ? null : reads.scope(p);
         if (debug) Common.dbg(r, indent + "selected html len=" + out.html.length());
       }
       return;
     }
     if (p.isMimeType("multipart/*")) {
-      Multipart mp = (Multipart)p.getContent();
+      Multipart mp = reads == null ? (Multipart)p.getContent() : reads.multipart(p);
       if (debug) Common.dbg(r, indent + "enter multipart count=" + mp.getCount() + " alternative=" + p.isMimeType("multipart/alternative"));
       if (p.isMimeType("multipart/signed")) {
         String protocol = Common.baseMimeType(new ContentType(p.getContentType()).getParameter("protocol"));
@@ -555,7 +597,7 @@ class EmlReader {
         out.unsupported = alternative.unsupported;
         out.mime = alternative.mime;
         out.baseUri = alternative.baseUri;
-        out.locationScopes = alternative.locationScopes;
+        out.locationScope = alternative.locationScope;
         out.renderWarnings.addAll(alternative.renderWarnings);
       }
 
@@ -578,7 +620,7 @@ class EmlReader {
           String text = section.text.isBlank() ? Common.stripHtml(section.html) : section.text;
           String html = section.html.isBlank() ? Common.plainTextToHtml(section.text) : section.html;
           out.baseUri = out.html.isBlank() ? section.baseUri : "";
-          out.locationScopes = out.html.isBlank() ? section.locationScopes : List.of();
+          out.locationScope = out.html.isBlank() ? section.locationScope : null;
           if (out.text.isBlank()) out.plainMime = section.plainMime;
           else if (!section.text.isBlank() && !out.plainMime.equals(section.plainMime)) out.plainMime = "";
           out.text += (out.text.isBlank() ? "" : "\n") + text;
@@ -625,7 +667,7 @@ class EmlReader {
     while(!pending.isEmpty()){
       ProcessingLimits.checkCancelled();Part part=pending.pop();
       if(part.isMimeType("multipart/*")){
-        Multipart mp=(Multipart)part.getContent();
+        Multipart mp=reads == null ? (Multipart)part.getContent() : reads.multipart(part);
         for(int i=mp.getCount()-1;i>=0;i--)pending.push(mp.getBodyPart(i));
       }else collectRfc822Leaf(part,out,r,debug,seq,reads);
     }
@@ -680,8 +722,8 @@ class EmlReader {
     af.contentId = cid;
     af.contentLocation = location;
     if (locationPart) {
-      List<String> scopes = r.mimePartScopes == null ? List.of() : r.mimePartScopes.getOrDefault(p, List.of());
-      af.locationScope = scopes.isEmpty() ? "" : scopes.get(0);
+      LocationScope scope = reads == null ? null : reads.scope(p);
+      af.locationScope = scope == null ? "" : scope.name();
       try {
         String base = mimeBaseUri(p);
         af.resolvedContentLocation = new java.net.URI(base.isBlank() ? "thismessage:/" : base)

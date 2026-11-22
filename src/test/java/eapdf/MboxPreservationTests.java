@@ -57,4 +57,18 @@ class MboxPreservationTests {
     }
     Assertions.assertThrows(Common.UserFacingException.class, () -> parse(ENVELOPE, "unknown"));
   }
+
+  @Test
+  void lengthAdmissionIncludesHeaderBytes() {
+    String previous = System.getProperty("eapdf.maxMessageBytes");
+    try {
+      System.setProperty("eapdf.maxMessageBytes", "1024");
+      String body = "a".repeat(1000);
+      var error = Assertions.assertThrows(Common.UserFacingException.class,
+          () -> parse(ENVELOPE + "Subject: Example\nContent-Length: 1000\n\n" + body, "auto"));
+      Assertions.assertTrue(error.getMessage().contains("Content-Length exceeds"));
+    } finally {
+      ProcessingLimitRepairTests.restore("eapdf.maxMessageBytes", previous);
+    }
+  }
 }

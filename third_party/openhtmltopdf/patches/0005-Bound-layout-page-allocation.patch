@@ -1,0 +1,31 @@
+--- a/com/openhtmltopdf/layout/Layer.java
++++ b/com/openhtmltopdf/layout/Layer.java
+@@ -52,6 +52,15 @@
+ public class Layer {
+     public static final short PAGED_MODE_SCREEN = 1;
+     public static final short PAGED_MODE_PRINT = 2;
++    public static final int MAX_LAYOUT_PAGES = 2048;
++
++    public static final class LayoutLimitExceeded extends IllegalStateException {
++        private static final long serialVersionUID = 1L;
++
++        private LayoutLimitExceeded(String message) {
++            super(message);
++        }
++    }
+ 
+     private Layer _parent;
+     private boolean _stackingContext;
+@@ -532,6 +541,12 @@
+     }
+ 
+     public void addPage(CssContext c) {
++        if (Thread.currentThread().isInterrupted()) {
++            throw new LayoutLimitExceeded("HTML layout was cancelled");
++        }
++        if (_pages != null && _pages.size() >= MAX_LAYOUT_PAGES) {
++            throw new LayoutLimitExceeded("HTML layout exceeds the " + MAX_LAYOUT_PAGES + "-page processing limit");
++        }
+         String pseudoPage = null;
+         if (_pages == null) {
+             _pages = new ArrayList<>();

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -45,6 +46,17 @@ def disk_allowances(root, workers=1):
             max(1, int(os.environ.get('VALIDATOR_MAX_SCRATCH_BYTES', share))))
 
 
+def checked_pdf_path(path):
+    path = Path(path).resolve(strict=True)
+    info = path.stat()
+    if not stat.S_ISREG(info.st_mode):
+        raise ValueError("Validation input must be a regular file.")
+    maximum = max(1, int(os.environ.get("VALIDATOR_MAX_INPUT_BYTES", 64 * 1024**3)))
+    if info.st_size > maximum:
+        raise ValueError(f"Validation input exceeds the limit of {maximum} bytes.")
+    return path
+
+
 def docker_client_memory_mb():
     return max(128, int(os.environ.get("VALIDATOR_DOCKER_CLIENT_MEMORY_MB", "4096") or "4096"))
 
@@ -74,6 +86,24 @@ def run_cli(script, arguments):
         return 2, b"", b"", "Validation could not complete: " + type(error).__name__ + ": " + str(error)
 
 
+def worker_scratch_root(script):
+    configured = os.environ.get("VALIDATOR_TEMP_ROOT")
+    root = Path(configured or tempfile.gettempdir()).expanduser().resolve()
+    private_tmp = Path("/tmp").resolve()
+    if configured or not root.is_relative_to(private_tmp):
+        return root
+    docker = shutil.which("docker")
+    if not docker or Path(docker).resolve().name not in {"snap", "snapd"}:
+        return root
+    # Snap's Docker daemon has a private /tmp and cannot bind-mount worker files from it.
+    mount_root = Path(os.environ.get("VERAPDF_MOUNT_ROOT") or Path(script).resolve().parent).expanduser().resolve()
+    if mount_root.is_relative_to(private_tmp) or not os.access(mount_root, os.W_OK):
+        return Path.home()
+    root = mount_root / ".generator_web_tmp"
+    root.mkdir(mode=0o700, exist_ok=True)
+    return root
+
+
 def _run_cli(script, arguments):
     try:
         import resource
@@ -81,8 +111,7 @@ def _run_cli(script, arguments):
         return 2, b"", b"", "Native worker resource limits are unavailable on this platform."
     timeout = max(1, int(os.environ.get("VALIDATOR_JOB_TIMEOUT", "600") or "600"))
     memory = max(1, memory_allowance_bytes() // 1024**2)
-    scratch_root = Path(__file__).resolve().parent / ".generator_web_tmp"
-    scratch_root.mkdir(exist_ok=True, mode=0o700)
+    scratch_root = worker_scratch_root(script)
     maximum, scratch_maximum = disk_allowances(scratch_root)
     identity = "eapdf-web-" + uuid.uuid4().hex
     environment = dict(os.environ, EAPDF_VALIDATION_WORKER="1", VERAPDF_JOB_CONTAINER_PREFIX=identity,

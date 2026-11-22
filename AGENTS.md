@@ -1,81 +1,24 @@
-Project: Email → EA-PDF generator
+# EA-PDF contributor guidance
 
-Workspace separation, 18 November 2026:
-- This is the normal development checkout, based on GitHub main.
-- The retained C2PA/PAdES experiment is in ../eapdf-secure on experiment/c2pa-pades. Do not merge or copy experimental features here without an explicit user request.
-- PR fixes #26–#33 were selected for this checkout; other local experimental changes remain separate.
-- On 22 November 2026 the user selected Full as the Main release browser viewer. Retain the Lite exporter as shared infrastructure for EA-PDF Lite. C2PA/PAdES remains separate.
+Build with Java 21 and `mvn package`. For verification in a temporary build directory, run `mvn -Deapdf.build.directory=/tmp/eapdf-build verify`. Start with the [Where to work map](docs/ARCHITECTURE.md#where-to-work) for creator, validator, and reader code.
 
-Build:
-mvn package
+## Development
 
-Main entry point:
-src/main/java/eapdf/EmailToPDFA.java
+- Keep edits focused. Preserve CLI arguments and existing debug output unless the requested change requires otherwise. Leave generated files in `target/` and debug directories alone.
+- Main ships the Full browser viewer. Retain the shared Lite exporter for EA-PDF Lite and the viewer’s independent CSV metadata export. C2PA/PAdES development belongs in Secure. For embedded search, follow the [supported signing workflow](docs/EMBEDDED_SEARCH_INDEX.md).
+- Main is the source of truth for the common implementation. Preserve Lite and Secure additions and intentional edition differences. When changing Main, apply every shared change to each affected edition in the same task and verify it there. This includes contributor instructions and documentation. A change that applies to all three must reach Main, Lite, and Secure without a separate request. Follow the [cross-edition workflow](docs/ARCHITECTURE.md#cross-edition-improvements) and report the result for each edition.
 
-Email source readers:
-src/main/java/eapdf/EmlReader.java
-src/main/java/eapdf/MsgReader.java
-src/main/java/eapdf/PstReader.java
-src/main/java/eapdf/GmailDownloadToPdf.java
+## Conversion and validation
 
-PDF generation:
-src/main/java/eapdf/PdfMailWriter.java
+- Enable `accessibility.addPdfUaFeatures: true` for regeneration. Set `premis.enabled: false` for conversions unless PREMIS is requested. Apply both settings to custom configurations as appropriate.
+- Use bounded parallelism where supported and validate with the standalone Java validator. Use the Python validator for its regression tests and requested comparisons or diagnostics.
+- Use the real inputs under `in/` for conversion regressions. Preserve originals, record source hashes, retain logs and Java validation reports, and identify rejected or incomplete files. Use synthetic fixtures to isolate additional edge cases.
+- Append the export profile to PDF filenames. Store published examples under `examples/<input-type>/` with a lower-case type prefix, such as `eml_sample_1s.pdf`.
 
-Shared helpers:
-src/main/java/eapdf/Common.java
-src/main/java/eapdf/Models.java
+## Documentation and releases
 
-Goal:
-Convert email sources (EML, MSG, PST, Gmail) into EA-PDF compliant files using PDFBox and XMPBox.
-
-Rules:
-- Work on EA-PDF creation, validation, and reader development; the user authorized reader development on 2026-11-03
-- Do not add new features without the user's express permission
-- Keep output text plain and succinct
-- Whenever the user says "push" or "push to GitHub", check open pull requests and address outstanding fixes before pushing.
-- Whenever the user requests a push to GitHub, also publish the corresponding GitHub Release with versioned distributable assets and checksums; use prerelease status for beta versions. Retain only the current release and its immediate predecessor; verify the new release assets before deleting older releases.
-- Keep GitHub release notes brief: versions, a few user-visible changes, essential setup information, and beta status. Put implementation details, benchmarks, test counts, and audit evidence in project documentation.
-- Do not modify CLI arguments unless asked
-- Preserve existing debug output
-- Prefer minimal targeted edits
-- When locating code to edit, start with the **Where to work** map in `docs/ARCHITECTURE.md`. Use IDE symbol search when available for declarations and references. Batch related text searches into one scoped `rg` call with multiple `-e` patterns. Keep any local symbol index scoped to its checkout and current with the working tree.
-- For future file regenerations, enable Accessibility (`accessibility.addPdfUaFeatures: true`), including when using a custom configuration
-- For future conversion and example-regeneration runs, disable optional PREMIS (`premis.enabled: false`), including in custom configurations, unless the user requests it.
-- For conversion runs, use bounded parallel processing wherever supported and use the standalone Java validator. Retain the Python validator for its regression tests and explicitly requested comparisons or diagnostics.
-- Keep example outputs in examples/<input-type>/ and prefix their filenames with the lower-case input type (for example, eml_sample_1s.pdf).
-- Use the real-world files under in/ for future conversion regressions. Preserve originals, record source hashes, and retain conversion logs and Java validation reports; report rejected or incomplete files explicitly. Use synthetic fixtures only to isolate additional edge cases.
-- Do not modify files in target/ or debug directories
-- Put temporary builds and working copies in /tmp; remove obsolete copies after use and at task checkpoints. Clean only task-owned temporary files; preserve active files and unrelated /tmp contents
-- PDF validation staging may use the Docker-shared .generator_web_tmp directory; always remove staged files after success or failure
-
-- For future generated outputs, append the export profile to the filename (for example, `_1s.pdf` or `_1c.pdf`). For full `in/` to `out/` regenerations, choose suitable profiles and include a representative mix of profiles across input types.
-- For future bulk `in/` to `out/` generations, publish generated documents directly under `out/eml/`, `out/msg/`, `out/mbox/`, and `out/pst/`, without per-input or other deeper subfolders. Keep logs, JSON manifests/progress files, and validation reports outside `out/`, in the run evidence directory under `output/`. Use isolated staging directories to prevent concurrent jobs from overwriting progress files before publishing final documents.
-
-- Public documentation must not cite or link to unpublished generated documents or evidence under the local output directories. Summarize verified results in tracked documentation; use published examples or release assets for downloadable files. Use explicit temporary destinations in command examples.
-
-- Whenever the user requests a new version or a version bump, also bump the browser viewer version and rebuild the Full Chromium and Firefox packages.
-- Whenever extension distributables are regenerated, bump the browser viewer minor version first and rebuild the Full Chromium and Firefox packages together. Starting with the version after 1.6.0-beta.1, use plain `1.x.0` in browser-viewer/package.json, package-lock.json, browser manifests, distributable filenames, and current reader documentation. The creator and validator version determines the GitHub release's prerelease status. Apply one bump per regeneration batch; verification rebuilds within that batch use the same version. Refresh permanent local installations without changing their paths. Publication still requires user authorization.
-- Representative bulk samples must be balanced by output count: retain only a handful of standalone 1s/1si PDFs per input type, group EML/MSG sources into 1m/1mi archives, and use predominantly 1c/1ci/1m/1mi for PSTs. Preserve every source in the grouped/archive coverage.
-
-- Signature-compatible embedded full-text indexing was authorized on 2026-11-07; see docs/EMBEDDED_SEARCH_INDEX.md for its supported signing workflow and limits.
-- Produce distributable JARs only with the project version in their filenames; do not create unversioned creator, GUI, or validator JAR aliases.
-
-- When summarizing fixes, classify the work as Bug fix, Code improvement, New code, Speed improvement, Memory improvement, or another clear top-level category. Distinguish measured improvements from expected ones.
-
-- Keep only the latest versioned creator, GUI, validator, and desktop viewer JARs in the project root’s `dist/`. Remove superseded JARs after verifying replacements. Generate release checksums in release staging.
-- Keep the viewer’s independent CSV metadata export; removing creator finding-aid generation does not remove CSV export.
-
-- The major-version bump and publication were authorized on 2026-11-09: creator/validator 2.0.0-beta.1 and browser viewer 1.0.0-beta.1. Future publication requires user authorization.
-
-- For eapdf-regenerate, both sample and everything must keep each PST/MBOX as whole-source 1m/1mi/1c/1ci archives; never schedule individual-email 1s/1si extraction from those containers. Random EML/MSG archive groups must be bounded (currently 20 sources), cover every selected source and record their membership in run evidence.
-
-- Keep private correspondence and sample contributors anonymous in first-party documentation and release notes. Use generic interoperability labels; do not publish contributor names, company names or private sample filenames. Preserve required legal attribution and original input bytes. Run `python3 scripts/check_public_docs.py` before publication.
-
-- Maintain current handover status in docs/PROJECT_STATUS.md and separation decisions in docs/ARCHITECTURE.md. Keep docs/DEVELOPMENT_STATUS.md and docs/private local and ignored. Update the authoritative user/reference guide when behaviour changes; historical audit counts remain dated evidence.
-- Before every push, regenerate the software architecture PDF. Draw arrows downward from each Tool to the Libraries it uses to show their connections.
-
-## Cross-edition improvements
-
-Follow [the shared update workflow](docs/ARCHITECTURE.md#cross-edition-improvements)
-for shared dependencies, EA-PDF rules, and creator or validator fixes. Tell the
-user which editions each improvement affects and the status of propagation.
+- Update the user guide when behaviour changes, [project status](docs/PROJECT_STATUS.md) for handovers, and [architecture](docs/ARCHITECTURE.md) for edition decisions. Keep historical audit counts dated.
+- Anonymize private correspondence, contributors, companies, and sample filenames. Preserve required legal attribution. Link to published examples or release assets, summarize verified local results, and use explicit temporary destinations in command examples. Run `python3 scripts/check_public_docs.py` before publication.
+- For version bumps and extension regeneration, increment the browser viewer minor version once per batch and rebuild Full for Chromium and Firefox together. Use plain `1.x.0` consistently in the viewer package, lockfile, browser manifests, distributable filenames, and current reader documentation. Reuse the version for verification builds.
+- Keep only the latest versioned creator, GUI, validator, and desktop viewer JARs in `dist/`. Verify replacements before removing superseded JARs. Generate checksums in release staging.
+- For an authorized release, publish the versioned assets and checksums and verify the uploaded files. The creator and validator version determines prerelease status. Keep release notes to versions, user-visible changes, essential setup, and beta status. Record benchmarks, test counts, and audit evidence in project documentation.

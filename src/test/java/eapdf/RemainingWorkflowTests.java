@@ -171,7 +171,8 @@ class RemainingWorkflowTests {
     var second = AttachmentProfilePolicyTests.record("Second subject must not appear on cover");
     second.folderMemberships.add("Collection/Sent");
     second.sourceProblems.add("Missing original data");
-    try (var document = PdfCollectionSupport.buildCollectionStartPage(List.of(first, second), "ci", TestSupport.fontPath(), false)) {
+    try (var cover = new PayloadStore(); var document = PdfCollectionSupport.buildCollectionStartPage(
+        List.of(first, second), "ci", TestSupport.fontPath(), false, cover.createPdf())) {
       String text = new PDFTextStripper().getText(document);
       Assertions.assertTrue(text.contains("Messages 2"), text);
       Assertions.assertTrue(text.contains("Folders 2"), text);

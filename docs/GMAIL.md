@@ -19,7 +19,7 @@ Official Google references used for the setup steps:
 
 The user-authorized account was checked with read-only access. Three inbox messages produced individual PDFs, an archive and a collection; another message supplied a PDF attachment. All outputs and collection children pass the existing EA-PDF, PDF/A and selected ISO checks. Original email and attachment bytes match. Repeating the three-message export skips completed outputs.
 
-For this account, the working Google Java token store was `~/StoredCredential`; its directory is supplied with `--token-dir`. The separate `~/.gmail_token_store/StoredCredential` copy was expired. Verification used temporary private credential/token copies and left the originals untouched. Private sample PDFs are in local verification records. No email was sent, deleted, relabeled or marked read.
+That check used temporary private copies of the earlier Google token store. The current creator requires fresh consent and leaves older token files untouched.
 
 ## What This Workflow Does
 
@@ -31,8 +31,8 @@ The Gmail entrypoint connects to the Gmail API, downloads matching messages in r
 Current Gmail behavior from the code:
 - OAuth desktop-app login flow
 - Gmail scope: `GMAIL_READONLY`
-- local browser callback on port `8888`
-- token cache stored in a local directory
+- browser callback on an OS-selected IPv4 loopback port
+- in-memory tokens by default and password-protected persistence when configured
 
 Gmail label names and IDs are case sensitive. For individual PDFs, the creator
 downloads messages in sequence and converts them with a bounded worker pool.
@@ -52,7 +52,7 @@ Set `EAPDF_GMAIL_RESUME_DIR` to a private directory before running the same Gmai
 
 ```bash
 export EAPDF_GMAIL_RESUME_DIR="$HOME/.local/share/emailtopdfa/gmail-resume"
-java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf --folder INBOX --out-pdf /tmp/eapdf-gmail
+java -cp dist/emailtopdfa-2.4.0-beta.5.jar eapdf.GmailDownloadToPdf --folder INBOX --out-pdf /tmp/eapdf-gmail
 ```
 
 The existing credential discovery and OAuth settings still apply. `-Deapdf.gmailResumeDir=/private/path` is the equivalent JVM setting.
@@ -119,30 +119,20 @@ use your own downloaded OAuth client file. Do not commit real credentials.
 
 ## Step 5: Understand The Token Store
 
-On first successful login, the Google client libraries write OAuth tokens into a local token directory.
+Tokens stay in memory for the current run unless you supply a nonblank `EAPDF_GMAIL_TOKEN_PASSWORD` through the environment of the launcher. To reuse authorization, supply the same strong password on each run. The creator encrypts tokens under `~/.gmail_token_store/encrypted/` by default. Use the existing `--token-dir` option to choose another root.
 
-Default token store from the code:
-- `~/.gmail_token_store`
+The OAuth client ID and requested `--user` identify a private token directory. The default `me` uses the account authorized for that scope. Use an explicit Gmail address to keep accounts distinct and select the matching account in the browser. The password for encrypted tokens is separate from the Google OAuth client credentials in `credentials.json`.
 
-You can override that with:
-- `--token-dir /path/to/token_store`
-
-The token cache is separate from `credentials.json`:
-
-- `credentials.json`: identifies the OAuth client
-- token store: stores the user authorization and refresh token
-
-If you need to force a fresh consent/login:
-- delete the token directory you used previously
+Use a fresh token directory or remove the corresponding encrypted scope to request new consent. Older plaintext Google token files are ignored and remain available for you to remove separately.
 
 ## Step 6: First Run Behavior
 
 On the first Gmail run:
 
-1. the program starts a local receiver on port `8888`
+1. the program starts a receiver on an available port bound to `127.0.0.1`
 2. your browser opens the Google login/consent flow
 3. after you approve, Google redirects back to the local receiver
-4. the token is stored in the token directory
+4. the token is stored in the configured encrypted directory when persistence is enabled
 
 Relevant code:
 - [authorize(...)](../src/main/java/eapdf/GmailDownloadToPdf.java)
@@ -152,7 +142,7 @@ Relevant code:
 ### One PDF Per Message
 
 ```bash
-java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.4.0-beta.5.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --out-pdf out
 ```
@@ -160,7 +150,7 @@ java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
 ### Archive Output (`1m`, `1mi`, `1c`, `1ci`)
 
 ```bash
-java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.4.0-beta.5.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --archive-profile m \
   --archive-output /tmp/eapdf-gmail-inbox_1m.pdf
@@ -169,7 +159,7 @@ java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
 ### Use An Explicit Credentials File
 
 ```bash
-java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.4.0-beta.5.jar eapdf.GmailDownloadToPdf \
   --credentials config/credentials.json \
   --folder ALL_MAIL
 ```
@@ -177,7 +167,7 @@ java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
 ### Use A Custom Token Directory
 
 ```bash
-java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.4.0-beta.5.jar eapdf.GmailDownloadToPdf \
   --credentials config/credentials.json \
   --token-dir .gmail_token_store_local \
   --folder ALL_MAIL
@@ -186,7 +176,7 @@ java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
 ### Only Unread Messages
 
 ```bash
-java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.4.0-beta.5.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --unread-only
 ```
@@ -194,7 +184,7 @@ java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
 ### Limit The Number Of Downloaded Messages
 
 ```bash
-java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.4.0-beta.5.jar eapdf.GmailDownloadToPdf \
   --folder INBOX \
   --limit 100
 ```
@@ -253,14 +243,14 @@ The program did not find:
 
 Check:
 
-- port `8888` is not blocked or already in use
+- your browser can reach the callback on `127.0.0.1`
 - your browser can open the Google consent page
 - your OAuth client is a `Desktop app`
 - your Google account is permitted to use the OAuth app
 
 ### Need To Re-Authorize
 
-Delete the token directory, then run again.
+Run with a new token directory or remove the encrypted scope for the applicable account and client, then run again.
 
 Default:
 - `~/.gmail_token_store`
@@ -270,7 +260,7 @@ Default:
 Use a fresh token directory:
 
 ```bash
-java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
+java -cp dist/emailtopdfa-2.4.0-beta.5.jar eapdf.GmailDownloadToPdf \
   --credentials config/credentials.json \
   --token-dir .gmail_token_store_test \
   --folder INBOX
@@ -287,8 +277,8 @@ java -cp dist/emailtopdfa-2.4.0-beta.3.jar eapdf.GmailDownloadToPdf \
 Current defaults from the code:
 
 - credentials path fallback: `config/credentials.json`
-- token store fallback: `~/.gmail_token_store`
-- OAuth callback port: `8888`
+- encrypted token store root when configured: `~/.gmail_token_store`
+- OAuth callback: ephemeral loopback port
 - Gmail scope: read-only
 
 That means the Gmail workflow is designed for download-and-preserve behavior, not mailbox modification.

@@ -17,14 +17,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class CollectionChildAcceptanceTests {
-  @org.junit.jupiter.api.BeforeEach void requireLocalCorpus() {
-    org.junit.jupiter.api.Assumptions.assumeTrue(Files.isRegularFile(Path.of("tests/fixtures/eapdf/batch11/source.eml")), "Optional local regression corpus is not installed");
-  }
   @TempDir Path directory;
+
+  static byte[] sourceFixture() throws IOException {
+    try (var input = CollectionChildAcceptanceTests.class.getResourceAsStream("/eapdf/email/inventory-source.eml")) {
+      if (input == null) throw new IOException("Missing inventory-source.eml test fixture");
+      return input.readAllBytes();
+    }
+  }
 
   byte[] collection(String profile) throws Exception {
     Path output = directory.resolve("collection_" + profile + ".pdf");
-    byte[] source = Files.readAllBytes(Path.of("tests/fixtures/eapdf/batch11/source.eml"));
+    byte[] source = sourceFixture();
     EmailRecord record = EmlReader.readRfc822Bytes(source, "source.eml", "source.eml", "", List.of(), false);
     PdfMailWriter.writeEaPdfCollection(output, List.of(record),
         TestSupport.fontPath(), TestSupport.iccPath(), false, directory, profile);

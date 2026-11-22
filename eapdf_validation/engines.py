@@ -4,6 +4,7 @@ Root-module facades supply current configuration and callbacks on each call;
 patching the public validator functions continues to affect adapter execution.
 """
 from dataclasses import dataclass
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import hashlib
 import json
@@ -115,7 +116,7 @@ def _verapdf_timeout(pdf_path, *, configured_timeout):
 
 
 def _verapdf_heap_mb():
-    # The web parent divides its job allowance between Python and veraPDF.
+    # The CLI supervisor divides its job allowance between Python and veraPDF.
     assigned = os.environ.get("EAPDF_VERAPDF_HEAP_MB", "")
     if assigned:
         return max(128, int(assigned))
@@ -178,20 +179,56 @@ def _verapdf_command(pdf_path, output_format, profile_path=None, *, settings, wo
     ]
 
 
+class EngineOutputLimit(ValueError):
+    pass
+
+
+def run_with_output_limit(processes, command, timeout, report_limit, diagnostic_limit):
+    def read_limited(stream, limit):
+        output = bytearray()
+        while True:
+            block = stream.read1(min(65536, limit - len(output) + 1))
+            if not block:
+                return output.decode("utf-8", errors="replace")
+            if len(block) > limit - len(output):
+                process.kill()
+                raise EngineOutputLimit("veraPDF exceeded its output limit.")
+            output.extend(block)
+
+    with processes.Popen(command, stdout=processes.PIPE, stderr=processes.PIPE) as process:
+        with ThreadPoolExecutor(max_workers=2) as readers:
+            output = readers.submit(read_limited, process.stdout, report_limit)
+            errors = readers.submit(read_limited, process.stderr, diagnostic_limit)
+            try:
+                code = process.wait(timeout=timeout)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait()
+            return processes.CompletedProcess(command, code, output.result(), errors.result())
+
+
 def run_verapdf(path, profile_path=None, expected_profile=None, *, allowed_profiles, command_for, default_result, severity_for, timeout_for, executables, processes):
-    from validation_worker import docker_command
+    from validation_worker import checked_pdf_path, docker_command, memory_allowance_bytes
     docker=executables.which("docker")
     if not docker:
         return default_result(path, "SKIP", "veraPDF was skipped because Docker is not available on PATH.")
-    pdf_path=Path(path).resolve()
+    try:
+        pdf_path = checked_pdf_path(path)
+    except (OSError, ValueError) as error:
+        return default_result(path, "ERROR", str(error))
     cmd=command_for(pdf_path, "json", profile_path) if profile_path else command_for(pdf_path, "json")
     if cmd is None:
         return default_result(path, "SKIP", "veraPDF was skipped because Docker is not available on PATH.")
     timeout = timeout_for(pdf_path)
     try:
-        proc=processes.run(docker_command(cmd),capture_output=True,text=True,timeout=timeout + 10,check=False)
+        default_limit = min(64 * 1024**2, max(1, memory_allowance_bytes() // 8))
+        report_limit = max(1, int(os.environ.get("VERAPDF_MAX_REPORT_BYTES", default_limit)))
+        proc = run_with_output_limit(processes, docker_command(cmd), timeout + 10, report_limit, min(report_limit, 1024**2))
     except processes.TimeoutExpired:
         return default_result(path, "ERROR", f'veraPDF timed out after {timeout} seconds.')
+    except EngineOutputLimit as error:
+        return default_result(path, "ERROR", str(error))
     except Exception as e:
         return default_result(path, "ERROR", f"veraPDF could not be started: {e}")
     finally:

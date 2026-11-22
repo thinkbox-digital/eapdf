@@ -17,8 +17,18 @@ final class ConversionDiagnostics {
       if (report != null && !report.addWarning(key, message,
           new ConversionDiagnostic(code, source, "", "", "", message), key)) return;
     }
-    System.err.println("warning: " + message);
+    System.err.println("warning: " + redactIdentifiers(record, message));
     recordWarnings(record);
+  }
+
+  static String redactIdentifiers(EmailRecord record, String message) {
+    String redacted = Common.PerFileLogCapture.redactUris(message);
+    if (record == null) return redacted;
+    for (String value : new String[]{record.sourcePath, record.sourceFilename, record.subject, record.messageId,
+        record.from, record.to, record.cc, record.bcc, record.rawFrom, record.rawTo, record.rawCc, record.rawBcc}) {
+      if (value != null && !value.isBlank() && value.length() >= 3) redacted = redacted.replace(value, "[redacted]");
+    }
+    return redacted;
   }
 
   static void recordWarnings(EmailRecord record) {

@@ -109,7 +109,6 @@ class EmailRecord {
   String bodyMime;
   String bodyBaseUri = "";
   List<String> bodyLocationScopes = List.of();
-  transient Map<Object, List<String>> mimePartScopes;
   transient Map<String, AssociatedFile> nativeLocationResources = new LinkedHashMap<>();
   String headerTagMarker;
   java.nio.file.Path textDataPath, htmlDataPath, rtfDataPath;
@@ -146,7 +145,7 @@ class BodyChoice {
   String mime = "";
   String plainMime = "";
   String baseUri = "";
-  List<String> locationScopes = List.of();
+  EmlReader.LocationScope locationScope;
   boolean unsupported;
   List<String> renderWarnings = new ArrayList<>();
 }

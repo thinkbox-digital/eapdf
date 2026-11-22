@@ -21,7 +21,7 @@ class MimeTraversalTests {
   @Test void deeplyNestedMessagePreservesBodyAndAttachmentWithoutRecursiveWalks()throws Exception {
     byte[] raw=nested(3000);
     var record=EmlReader.readRfc822Bytes(raw,"deep.eml","deep.eml","",List.of(),false);
-    assertEquals("Deep body",record.textBody.strip());assertSame(raw,record.sourceBytes);assertNull(record.mimePartScopes);
+    assertEquals("Deep body",record.textBody.strip());assertSame(raw,record.sourceBytes);
     assertEquals(1,record.attachmentCount);
     var attachment=record.associatedFiles.stream().filter(file->file.emailAttachment).findFirst().orElseThrow();
     assertArrayEquals(new byte[]{1,2,3},attachment.bytes);assertEquals(Common.sha256Hex(attachment.bytes),attachment.checksumSha256);
@@ -61,6 +61,19 @@ class MimeTraversalTests {
       assertThrows(RuntimeException.class,reads::finish);
     }finally{if(before==null)System.clearProperty("eapdf.maxMessageBytes");else System.setProperty("eapdf.maxMessageBytes",before);}
   }
+
+  @Test void mimePartAdmissionUsesMetadataBudget() {
+    String previous = System.getProperty("eapdf.maxMetadataBytes");
+    try {
+      System.setProperty("eapdf.maxMetadataBytes", "2048");
+      var error = assertThrows(Common.UserFacingException.class,
+          () -> EmlReader.readRfc822Bytes(nested(1), "sample.eml", "sample.eml", "", List.of(), false));
+      assertTrue(error.getMessage().contains("MIME structure"));
+    } finally {
+      ProcessingLimitRepairTests.restore("eapdf.maxMetadataBytes", previous);
+    }
+  }
+
   @Test void iterativeTraversalStillCancels()throws Exception {
     var message=message(new Leaf("text/plain",new byte[]{65}));Thread.currentThread().interrupt();
     try{assertThrows(RuntimeException.class,()->new EmlReader.MimeReads(message));}

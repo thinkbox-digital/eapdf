@@ -18,8 +18,6 @@ import java.util.concurrent.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import com.openhtmltopdf.extend.FSStream;
-import com.openhtmltopdf.extend.FSStreamFactory;
-import com.openhtmltopdf.extend.FSUriResolver;
 import org.jsoup.*;
 import org.jsoup.nodes.*;
 import org.jsoup.parser.*;
@@ -45,8 +43,6 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageFitWidthDestination;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.*;
 import org.apache.pdfbox.pdmodel.interactive.viewerpreferences.PDViewerPreferences;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 class PdfMailWriter {
 static final EapdfConfig CONFIG = EapdfConfig.get();
@@ -64,12 +60,7 @@ static final MailHtmlRenderer HTML = new MailHtmlRenderer(PdfMailWriter::pdfUaFe
 static final String EMBEDDED_LINK_PREFIX = PdfAttachmentSupport.EMBEDDED_LINK_PREFIX;
 static final String EMBEDDED_BADGE_LINK_PREFIX = PdfAttachmentSupport.EMBEDDED_BADGE_LINK_PREFIX;
 static final Set<String> PDF17_STRUCTURE_ROLES = Set.of("Art", "BlockQuote", "TOC", "TOCI", "Index", "Private", "Quote", "Note", "Reference", "BibEntry", "Code");
-static final ConcurrentMap<String, String> FAILED_REMOTE_ASSET_URLS = MailRenderPolicy.FAILED_REMOTE_ASSET_URLS;
-static final FSUriResolver REMOTE_ASSET_URI_RESOLVER = MailRenderPolicy.REMOTE_ASSET_URI_RESOLVER;
-static final FSStreamFactory REMOTE_ASSET_STREAM_FACTORY = MailRenderPolicy.REMOTE_ASSET_STREAM_FACTORY;
 static final InheritableThreadLocal<EmailRecord> ACTIVE_RENDER_RECORD = MailRenderPolicy.ACTIVE_RENDER_RECORD;
-static final ThreadLocal<Set<String>> RENDERED_IMAGES = MailRenderPolicy.RENDERED_IMAGES;
-static final ThreadLocal<Map<String, String>> ORIENTED_IMAGE_URIS = MailRenderPolicy.ORIENTED_IMAGE_URIS;
 
 static {
   // Lossless compression only; preserve an explicit PDFBox override.
@@ -99,15 +90,7 @@ static FSStream trustedRenderAsset(String uri) {
 
 
 
-static class RenderedMessagePart {
-  final EmailRecord record;
-  final byte[] pdfBytes;
-
-  RenderedMessagePart(EmailRecord record, byte[] pdfBytes) {
-    this.record = record;
-    this.pdfBytes = pdfBytes;
-  }
-}
+record RenderedMessagePart(EmailRecord record, Path pdfPath) {}
 
 static class SingleMessageBuildResult {
   final byte[] pdfBytes;
@@ -370,70 +353,21 @@ static String remoteAssetKey(String raw) {
   return MailRenderPolicy.remoteAssetKey(raw);
 }
 
-static byte[] readAllBytes(Reader reader) throws IOException {
-  StringBuilder out = new StringBuilder();
-  char[] buf = new char[4096];
-  for (int n; (n = reader.read(buf)) != -1;) out.append(buf, 0, n);
-  return out.toString().getBytes(StandardCharsets.UTF_8);
-}
-
 // This affects rendered links only. The original source and its headers/body stay intact.
 static String safeRenderedHref(String original, EmailRecord record) {
   return MailRenderPolicy.safeRenderedHref(original, record);
 }
 
-static boolean shouldBlacklistRemoteAssetResponse(String key, byte[] bytes) {
-  return MailRenderPolicy.shouldBlacklistRemoteAssetResponse(key, bytes);
-}
-
-static String describeRemoteAssetResponse(String key, byte[] bytes) {
-  return MailRenderPolicy.describeRemoteAssetResponse(key, bytes);
-}
-
-static boolean looksLikeHtmlResponse(byte[] bytes) {
-  return MailRenderPolicy.looksLikeHtmlResponse(bytes);
-}
-
-static boolean isLikelyRemoteImageUrl(String key) {
-  return MailRenderPolicy.isLikelyRemoteImageUrl(key);
-}
-
-static boolean looksLikeSvg(byte[] bytes) {
-  return MailRenderPolicy.looksLikeSvg(bytes);
-}
-
-static boolean looksLikeSupportedImage(byte[] bytes) {
-  return MailRenderPolicy.looksLikeSupportedImage(bytes);
-}
-
-static boolean shouldBlacklistRemoteAssetFailure(Throwable error) {
-  return MailRenderPolicy.shouldBlacklistRemoteAssetFailure(error);
-}
-
-static String describeRemoteAssetFailure(Throwable error) {
-  return MailRenderPolicy.describeRemoteAssetFailure(error);
-}
 
 static void configureRendererLogging() {
   MailRenderPolicy.configureRendererLogging();
 }
 
-static void blacklistRemoteAsset(String key, String reason) {
-  MailRenderPolicy.blacklistRemoteAsset(key, reason);
-}
-
-static void recordBlacklistedRemoteAssetEncounter(String key) {
-  MailRenderPolicy.recordBlacklistedRemoteAssetEncounter(key);
-}
-
-static String preferRemoteAssetReason(String existing, String replacement) {
-  return MailRenderPolicy.preferRemoteAssetReason(existing, replacement);
-}
 
 static void writeEaPdfA3(Path out, EmailRecord r, String fontPath, String iccPath, boolean debug, Path debugDir, int idx) throws Exception {
   try (Common.PerFileLogCapture ignored = Common.beginPerFileLog(out)) {
   ConversionProgress.stage("rendering");
-  SingleMessageBuildResult built = buildSingleMessagePdf(out, r, fontPath, iccPath, debug, debugDir, idx, null, out, true);
+  buildSingleMessagePdf(out, r, fontPath, iccPath, debug, debugDir, idx, null, out, true);
   ConversionProgress.completed();
   Common.recordWarnings(r);
 
@@ -453,6 +387,24 @@ static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, EmailReco
   return buildSingleMessagePdf(logicalOut, r, fontPath, iccPath, debug, debugDir, idx, profileOverride, destination, false);
 }
 
+private static Path renderAssetDirectory(boolean debug, Path debugDir, int index) throws IOException {
+  return debug ? Common.createPrivateTemporaryDirectory(debugDir, String.format("message-%06d-", index))
+      : Files.createTempDirectory("emailtopdfa-assets-");
+}
+
+private static void writeRenderDebug(Path directory, EmailRecord record, String html) throws IOException {
+  writePrivateDebugText(directory.resolve("rendered.html"), html);
+  writePrivateDebugText(directory.resolve("body.txt"), Common.textBody(record));
+  writePrivateDebugText(directory.resolve("conversion.txt"), String.join("\n", record.debugLog));
+  Common.dbg(record, "Private debug files retained until removed: " + directory);
+}
+
+private static void writePrivateDebugText(Path path, String value) throws IOException {
+  Files.createFile(path);
+  Common.makeOwnerOnly(path);
+  Files.writeString(path, value, StandardCharsets.UTF_8);
+}
+
 private static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, EmailRecord r, String fontPath, String iccPath,
     boolean debug, Path debugDir, int idx, String profileOverride, Path destination, boolean outermost) throws Exception {
   Common.finalizeRecordMetadata(r);
@@ -460,29 +412,16 @@ private static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, E
   PreservationInventory expected = PreservationInventory.capture(List.of(r), chooseEaPdfConformance(r, profileOverride));
   ProcessingLimits.checkBody(Common.textBody(r), r.sourcePath);
   ProcessingLimits.checkBody(Common.htmlBody(r), r.sourcePath);
-  String stem = Common.safeFileStem((r.subject != null && !r.subject.isBlank()) ? r.subject : "message") + "_" + String.format("%06d", idx);
-  Path assetDir = debug ? debugDir.resolve(stem + "_assets") : Files.createTempDirectory("emailtopdfa-assets-");
-  Files.createDirectories(assetDir);
+  Path assetDir = renderAssetDirectory(debug, debugDir, idx);
+  Path rendered = assetDir.resolve("working.pdf");
 
-  try {
+  try (AutoCloseable assets = () -> { if (!debug) Common.deleteTree(assetDir); };
+       AutoCloseable scratch = () -> Files.deleteIfExists(rendered)) {
     String html = buildRenderHtml(r, debug, assetDir, profileOverride);
-    if (debug) {
-      Path htmlFile = debugDir.resolve(stem + ".rendered.html");
-      Path txtFile = debugDir.resolve(stem + ".body.txt");
-      Path dbgFile = debugDir.resolve(stem + ".debug.txt");
-      Files.writeString(htmlFile, html, StandardCharsets.UTF_8);
-      Files.writeString(txtFile, Common.textBody(r), StandardCharsets.UTF_8);
-      Files.writeString(dbgFile, String.join("\n", r.debugLog), StandardCharsets.UTF_8);
-      Common.dbg(r, "wrote debug html=" + htmlFile);
-      Common.dbg(r, "wrote debug txt=" + txtFile);
-      Common.dbg(r, "wrote debug log=" + dbgFile);
-    }
-
-    byte[] rendered = renderHtmlPdf(html, assetDir.toUri().toString(), fontPath, r, debug);
-    if (debug) Common.dbg(r, "rendered pdf bytes=" + rendered.length);
-
-    PDDocument doc = Loader.loadPDF(new org.apache.pdfbox.io.RandomAccessReadBuffer(rendered), org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache());
-    try {
+    if (debug) writeRenderDebug(assetDir, r, html);
+    HTML.renderHtmlPdfTo(html, assetDir.toUri().toString(), fontPath, r, debug, rendered);
+    if (debug) Common.dbg(r, "rendered pdf bytes=" + Files.size(rendered));
+    try (PDDocument doc = Loader.loadPDF(rendered.toFile(), org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
       doc.setVersion(2.0f);
       doc.getDocument().setVersion(2.0f);
       drawInlineImageFallback(doc, r, debug);
@@ -506,68 +445,43 @@ private static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, E
         else Common.writePdfAtomically(destination, temporary -> PdfFontMetadata.save(doc, temporary.toFile()), expected);
         return new SingleMessageBuildResult(null);
       }
-      ByteArrayOutputStream finalized = new ByteArrayOutputStream();
-      PdfFontMetadata.save(doc, finalized);
-      byte[] bytes = finalized.toByteArray();
-      if (EapdfConfig.get().validateOnCreation) {
-        try (PDDocument serialized = Loader.loadPDF(new org.apache.pdfbox.io.RandomAccessReadBuffer(bytes),
-            org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
-          PdfCreationValidator.validate(serialized, expected);
+      Path finalized = assetDir.resolve("finalized.pdf");
+      try (AutoCloseable cleanup = () -> Files.deleteIfExists(finalized)) {
+        PdfFontMetadata.save(doc, finalized.toFile());
+        ProcessingLimits.checkOutput(Files.size(finalized));
+        if (EapdfConfig.get().validateOnCreation) {
+          PdfCreationValidator.validate(finalized, expected, false);
         }
+        return new SingleMessageBuildResult(Files.readAllBytes(finalized));
       }
-      return new SingleMessageBuildResult(bytes);
-    } finally {
-      try { doc.close(); } catch (Exception ignored) {}
     }
-  } finally {
-    if (!debug) Common.deleteTree(assetDir);
   }
 }
 
-static byte[] buildArchiveMessagePdfBytes(EmailRecord r, String fontPath, boolean debug, Path debugDir, int idx) throws Exception {
-  return buildArchiveMessagePdfBytes(r, fontPath, debug, debugDir, idx, null);
-}
-
-static byte[] buildArchiveMessagePdfBytes(EmailRecord r, String fontPath, boolean debug, Path debugDir, int idx, String profileOverride) throws Exception {
-  return buildArchiveMessagePdfBytes(r, fontPath, debug, debugDir, idx, profileOverride, "");
-}
-
-static byte[] buildArchiveMessagePdfBytes(EmailRecord r, String fontPath, boolean debug, Path debugDir, int idx, String profileOverride, String archiveSourceName) throws Exception {
-  String stem = Common.safeFileStem((r.subject != null && !r.subject.isBlank()) ? r.subject : "message") + "_" + String.format("%06d", idx);
-  Path assetDir = debug ? debugDir.resolve(stem + "_assets") : Files.createTempDirectory("emailtopdfa-assets-");
-  Files.createDirectories(assetDir);
-
-  try {
+private static RenderedMessagePart buildArchiveMessagePdf(EmailRecord r, String fontPath, boolean debug,
+    Path debugDir, int idx, String profileOverride, String archiveSourceName, PayloadStore parts) throws Exception {
+  Path assetDir = renderAssetDirectory(debug, debugDir, idx);
+  Path rendered = assetDir.resolve("working.pdf");
+  try (AutoCloseable assets = () -> { if (!debug) Common.deleteTree(assetDir); };
+       AutoCloseable scratch = () -> Files.deleteIfExists(rendered)) {
     String html = buildRenderHtml(r, debug, assetDir, profileOverride, archiveSourceName);
-    if (debug) {
-      Path htmlFile = debugDir.resolve(stem + ".rendered.html");
-      Path txtFile = debugDir.resolve(stem + ".body.txt");
-      Path dbgFile = debugDir.resolve(stem + ".debug.txt");
-      Files.writeString(htmlFile, html, StandardCharsets.UTF_8);
-      Files.writeString(txtFile, Common.textBody(r), StandardCharsets.UTF_8);
-      Files.writeString(dbgFile, String.join("\n", r.debugLog), StandardCharsets.UTF_8);
-      Common.dbg(r, "wrote debug html=" + htmlFile);
-      Common.dbg(r, "wrote debug txt=" + txtFile);
-      Common.dbg(r, "wrote debug log=" + dbgFile);
-    }
+    if (debug) writeRenderDebug(assetDir, r, html);
 
-    byte[] rendered;
     FontSupport.ARCHIVE_FONTS.set(true);
-    try { rendered = renderHtmlPdf(html, assetDir.toUri().toString(), fontPath, r, debug); }
+    try { HTML.renderHtmlPdfTo(html, assetDir.toUri().toString(), fontPath, r, debug, rendered); }
     finally { FontSupport.ARCHIVE_FONTS.remove(); }
-    if (debug) Common.dbg(r, "rendered pdf bytes=" + rendered.length);
-    try (PDDocument doc = Loader.loadPDF(rendered)) {
+    if (debug) Common.dbg(r, "rendered pdf bytes=" + Files.size(rendered));
+    try (PDDocument doc = Loader.loadPDF(rendered.toFile(), org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
       SemanticStructure.headerFields(doc, r.headerTagMarker);
       drawInlineImageFallback(doc, r, debug);
       addOmittedAttachmentAnnotations(doc, r, fontPath);
       clearImageInterpolation(doc);
 
-      ByteArrayOutputStream finalized = new ByteArrayOutputStream();
-      PdfFontMetadata.save(doc, finalized);
-      return finalized.toByteArray();
+      Path finalized = parts.createPdf();
+      PdfFontMetadata.save(doc, finalized.toFile());
+      ProcessingLimits.checkOutput(Files.size(finalized));
+      return new RenderedMessagePart(r, finalized);
     }
-  } finally {
-    if (!debug) Common.deleteTree(assetDir);
   }
 }
 
@@ -589,7 +503,8 @@ interface RenderedPartConsumer {
   void accept(RenderedMessagePart part) throws Exception;
 }
 
-static void forEachArchiveMessagePart(List<EmailRecord> records, String fontPath, boolean debug, Path debugDir, String archiveProfile, RenderedPartConsumer consumer) throws Exception {
+private static void forEachArchiveMessagePart(List<EmailRecord> records, String fontPath, boolean debug,
+    Path debugDir, String archiveProfile, PayloadStore parts, RenderedPartConsumer consumer) throws Exception {
   List<EmailRecord> source = records == null ? List.of() : records;
   if (source.isEmpty()) return;
   // Archive names must be settled before rendering; preserve original source names
@@ -605,7 +520,7 @@ static void forEachArchiveMessagePart(List<EmailRecord> records, String fontPath
     for (EmailRecord record : source) {
       idx++;
       Common.finalizeRecordMetadata(record);
-      consumer.accept(new RenderedMessagePart(record, buildArchiveMessagePdfBytes(record, fontPath, debug, debugDir, idx, archiveProfile, sourceNames.getOrDefault(record, ""))));
+      consumeArchivePart(consumer, buildArchiveMessagePdf(record, fontPath, debug, debugDir, idx, archiveProfile, sourceNames.getOrDefault(record, ""), parts));
       ConversionProgress.completed();
     }
     return;
@@ -621,11 +536,11 @@ static void forEachArchiveMessagePart(List<EmailRecord> records, String fontPath
         final EmailRecord record = source.get(submitted);
         inFlight.put(idx, pool.submit(() -> {
           Common.finalizeRecordMetadata(record);
-          return new RenderedMessagePart(record, buildArchiveMessagePdfBytes(record, fontPath, debug, debugDir, idx, archiveProfile, sourceNames.getOrDefault(record, "")));
+          return buildArchiveMessagePdf(record, fontPath, debug, debugDir, idx, archiveProfile, sourceNames.getOrDefault(record, ""), parts);
         }));
         submitted++;
       }
-      consumer.accept(Common.awaitWorker(inFlight.remove(expected)));
+      consumeArchivePart(consumer, Common.awaitWorker(inFlight.remove(expected)));
       ConversionProgress.completed();
     }
   } catch (ExecutionException e) {
@@ -634,6 +549,12 @@ static void forEachArchiveMessagePart(List<EmailRecord> records, String fontPath
     throw new RuntimeException(cause);
   } finally {
     Common.stopWorkers(pool);
+  }
+}
+
+private static void consumeArchivePart(RenderedPartConsumer consumer, RenderedMessagePart part) throws Exception {
+  try (AutoCloseable scratch = () -> Files.deleteIfExists(part.pdfPath())) {
+    consumer.accept(part);
   }
 }
 
@@ -666,14 +587,16 @@ private static void saveArchiveDocument(Path temporary, Path out, List<EmailReco
       archive.setVersion(2.0f);
       archive.getDocument().setVersion(2.0f);
       ArchiveResourcePool resources = new ArchiveResourcePool();
-      forEachArchiveMessagePart(records, fontPath, debug, debugDir, archiveProfile, rendered -> {
-        try (PDDocument part = Loader.loadPDF(rendered.pdfBytes)) {
-          int startPage = archive.getNumberOfPages() + 1;
-          MessageSegment segment = new MessageSegment(rendered.record, startPage, startPage + part.getNumberOfPages() - 1);
-          appendClonedPagesWithLast(archive, part, segment, resources);
-          segments.add(segment);
-        }
-      });
+      try (PayloadStore parts = new PayloadStore()) {
+        forEachArchiveMessagePart(records, fontPath, debug, debugDir, archiveProfile, parts, rendered -> {
+          try (PDDocument part = Loader.loadPDF(rendered.pdfPath().toFile(), org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
+            int startPage = archive.getNumberOfPages() + 1;
+            MessageSegment segment = new MessageSegment(rendered.record(), startPage, startPage + part.getNumberOfPages() - 1);
+            appendClonedPagesWithLast(archive, part, segment, resources);
+            segments.add(segment);
+          }
+        });
+      }
       ConversionProgress.stage("assembling");
       setDocumentInfo(archive, records.get(0));
       configureArchiveCatalog(archive, archiveProfile);
@@ -749,8 +672,8 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
   List<CollectionMember> members = PdfCollectionSupport.buildFolderCollectionMembers(sections, folders, fontPath, iccPath, debug, debugDir, collectionProfile, memberStore);
   ConversionProgress.stage("assembling");
   if (members.isEmpty()) throw new IllegalArgumentException("collection requires at least one embedded EA-PDF member");
-  try (PDDocument archive = PdfCollectionSupport.buildCollectionStartPage(records,
-      collectionProfile, fontPath, debug)) {
+  try (PayloadStore cover = new PayloadStore(); PDDocument archive = PdfCollectionSupport.buildCollectionStartPage(records,
+      collectionProfile, fontPath, debug, cover.createPdf())) {
     archive.setVersion(2.0f);
     archive.getDocument().setVersion(2.0f);
     clearImageInterpolation(archive);
@@ -1717,37 +1640,8 @@ static Map<String, PDComplexFileSpecification> embedAssociatedFiles(PDDocument d
     String md5 = Common.nz(af.checksumMd5);
     String token = attachmentLaunchToken(af);
 
-    PDComplexFileSpecification fs = new PDComplexFileSpecification();
-    fs.setFile(Common.portablePdfFilename(fname));
-    fs.setFileUnicode(Common.portablePdfFilename(fname));
-
-    PDEmbeddedFile ef;
-    try (InputStream data = af.openData()) {
-      ef = new PDEmbeddedFile(doc, data, COSName.FLATE_DECODE);
-    }
-    setEmbeddedMediaType(ef, mime);
-    ef.setSize(af.size());
-    Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-    ef.setCreationDate(now);
-    ef.setModDate(now);
-    setEmbeddedChecksum(ef, md5);
-
-    COSDictionary efd = ef.getCOSObject();
-
-
-    COSDictionary params = (COSDictionary)efd.getDictionaryObject(COSName.PARAMS);
-    if (params == null) {
-      params = new COSDictionary();
-      efd.setItem(COSName.PARAMS, params);
-    }
-    params.setInt(COSName.SIZE, af.size());
-
-    fs.setEmbeddedFile(ef);
-    fs.setEmbeddedFileUnicode(ef);
-
-    COSDictionary fsd = fs.getCOSObject();
-    fsd.setName(COSName.getPDFName("AFRelationship"), rel);
-    if (!Common.nz(af.description).isBlank()) fsd.setString(COSName.DESC, af.description);
+    PDComplexFileSpecification fs = PdfAttachmentSupport.embedAssociatedFile(
+        doc, af, Common.portablePdfFilename(fname), mime, rel, md5);
 
     associateMessageFile(messageOwners, r, fs);
     String key = uniqueAttachmentKey(nameMap, fname);
@@ -1801,37 +1695,8 @@ static EmbeddedFileBindings embedAssociatedFiles(PDDocument doc, List<EmailRecor
     String rel = plan.relationship;
     String md5 = plan.checksumMd5;
 
-    PDComplexFileSpecification fs = new PDComplexFileSpecification();
-    fs.setFile(Common.portablePdfFilename(fname));
-    fs.setFileUnicode(Common.portablePdfFilename(fname));
-
-    PDEmbeddedFile ef;
-    try (InputStream data = af.openData()) {
-      ef = new PDEmbeddedFile(doc, data, COSName.FLATE_DECODE);
-    }
-    setEmbeddedMediaType(ef, mime);
-    ef.setSize(af.size());
-    Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-    ef.setCreationDate(now);
-    ef.setModDate(now);
-    setEmbeddedChecksum(ef, md5);
-
-    COSDictionary efd = ef.getCOSObject();
-
-
-    COSDictionary params = (COSDictionary)efd.getDictionaryObject(COSName.PARAMS);
-    if (params == null) {
-      params = new COSDictionary();
-      efd.setItem(COSName.PARAMS, params);
-    }
-    params.setInt(COSName.SIZE, af.size());
-
-    fs.setEmbeddedFile(ef);
-    fs.setEmbeddedFileUnicode(ef);
-
-    COSDictionary fsd = fs.getCOSObject();
-    fsd.setName(COSName.getPDFName("AFRelationship"), rel);
-    if (!Common.nz(af.description).isBlank()) fsd.setString(COSName.DESC, af.description);
+    PDComplexFileSpecification fs = PdfAttachmentSupport.embedAssociatedFile(
+        doc, af, Common.portablePdfFilename(fname), mime, rel, md5);
 
     for (EmailRecord owner : plan.owners) associateMessageFile(messageOwners, owner, fs);
     nameMap.put(reserveAttachmentKey(normalizedNames, fname), fs);

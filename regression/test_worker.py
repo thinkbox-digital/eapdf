@@ -5,11 +5,24 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
-from validation_worker import run_cli
+from validation_worker import run_cli, worker_scratch_root
 import validate_eapdf as validator
 
 
 class WorkerBoundaryTests(unittest.TestCase):
+    def test_snap_docker_scratch_uses_mount_root_unless_explicitly_overridden(self):
+        script = Path(validator.__file__)
+        mount_root = Path("/srv/eapdf")
+        with patch.dict(os.environ, {'VALIDATOR_TEMP_ROOT': '', 'VERAPDF_MOUNT_ROOT': str(mount_root)}), \
+                patch('validation_worker.tempfile.gettempdir', return_value='/tmp'), \
+                patch('validation_worker.shutil.which', return_value='/usr/bin/snap'), \
+                patch('validation_worker.os.access', return_value=True), \
+                patch('validation_worker.Path.mkdir') as mkdir:
+            self.assertEqual(mount_root / '.generator_web_tmp', worker_scratch_root(script))
+            mkdir.assert_called_once_with(mode=0o700, exist_ok=True)
+            with patch.dict(os.environ, {'VALIDATOR_TEMP_ROOT': '/tmp'}):
+                self.assertEqual(Path('/tmp').resolve(), worker_scratch_root(script))
+
     def run_script(self, source, environment=None, arguments=()):
         with tempfile.TemporaryDirectory(prefix='eapdf-worker-test-') as directory:
             script = Path(directory) / 'script.py'
@@ -80,20 +93,44 @@ class AdaptiveResourceTests(unittest.TestCase):
             with patch.dict(os.environ, {'VALIDATOR_MAX_WORK_FILE_BYTES':'1024','VALIDATOR_MAX_SCRATCH_BYTES':'2048'}):
                 self.assertEqual((1024,2048), disk_allowances(Path('.'), 4))
 
-    def test_decoder_defaults_follow_job_memory_without_lifetime_count_ceiling(self):
+    def test_decoder_defaults_bound_streams_and_aggregate_work(self):
         import pdf_stream_limits as limits
         with patch.dict(os.environ, {'VALIDATOR_JOB_MEMORY_MB':'1024'}, clear=True):
             self.assertEqual(256*1024**2, limits.setting('VALIDATOR_MAX_STREAM_BYTES', 1))
             self.assertEqual(64*1024**2, limits.setting('VALIDATOR_MAX_METADATA_BYTES', 1))
             budget=limits.Budget()
-            budget.charge(64*1024**3) # Completed decodes do not retain these bytes.
+            budget.charge(16*1024**3)
+            with self.assertRaises(limits.DecodeLimitError): budget.charge(1)
             token=limits.CURRENT.set(budget)
             try:
-                for _ in range(2050): limits.count_file()
+                for _ in range(100_000): limits.count_file()
+                with self.assertRaises(limits.DecodeLimitError): limits.count_file()
             finally: limits.CURRENT.reset(token)
             with patch.dict(os.environ, {'VALIDATOR_MAX_DECODED_BYTES':'12'}):
                 budget=limits.Budget();budget.charge(8)
                 with self.assertRaises(limits.DecodeLimitError): budget.charge(8)
+
+    def test_directory_entries_and_file_count_are_bounded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ('b.pdf', 'a.pdf', 'other.txt'):
+                (root / name).touch()
+            self.assertEqual([str(root / 'a.pdf'), str(root / 'b.pdf')], validator.collect_pdf_inputs(root))
+            for variable in ('VALIDATOR_MAX_DIRECTORY_ENTRIES', 'VALIDATOR_MAX_INPUT_FILES'):
+                with patch.dict(os.environ, {variable: '1'}):
+                    with self.assertRaises(ValueError): validator.collect_pdf_inputs(root)
+
+    def test_oversized_and_non_regular_inputs_never_reach_engines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            pdf = Path(directory, 'message.pdf')
+            pdf.write_bytes(b'%PDF-')
+            with patch.dict(os.environ, {'VALIDATOR_MAX_INPUT_BYTES': '4'}), \
+                    patch.object(validator, 'run_verapdf') as engine, patch.object(validator, 'validate') as local:
+                for path in (pdf, Path(directory)):
+                    result = validator.validate_one(path, write_html=False)
+                    self.assertEqual('INCOMPLETE', result['summary']['status'])
+                engine.assert_not_called()
+                local.assert_not_called()
 
 
 class ValidatorPipelineTests(unittest.TestCase):

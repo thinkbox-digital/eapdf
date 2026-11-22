@@ -15,6 +15,7 @@ final class CollectionValidationPool implements AutoCloseable {
     private final BlockingQueue<Worker> available = new ArrayBlockingQueue<>(WORKERS);
     private final List<Worker> workers = new ArrayList<>();
     private final Path directory;
+    final Path budget;
     private final Thread shutdown;
     private volatile boolean closed;
 
@@ -29,6 +30,12 @@ final class CollectionValidationPool implements AutoCloseable {
 
     CollectionValidationPool() throws IOException {
         directory = Files.createTempDirectory("eapdf-collection-workers-");
+        try { budget = Files.write(directory.resolve("budget.bin"), new byte[Integer.BYTES + Long.BYTES]); }
+        catch (IOException error) {
+            try { ValidationRuntime.removeDirectory(directory); }
+            catch (IOException cleanup) { error.addSuppressed(cleanup); }
+            throw error;
+        }
         for (int i = 0; i < WORKERS; i++) {
             Worker worker = new Worker(i); workers.add(worker); available.add(worker);
         }
@@ -95,8 +102,9 @@ final class CollectionValidationPool implements AutoCloseable {
                 "-Deapdf.validator.childWorker=true", "-Djava.awt.headless=true", "-Djava.io.tmpdir=" + scratch));
             System.getProperties().stringPropertyNames().stream().filter(key -> key.startsWith("VALIDATOR_"))
                 .sorted().forEach(key -> command.add("-D" + key + "=" + System.getProperty(key)));
+            command.add("-DVALIDATOR_MAX_CHILD_BYTES=" + JavaValidation.Children.byteLimit());
             command.addAll(List.of("-cp", System.getProperty("java.class.path"), CollectionValidationPool.class.getName(),
-                Long.toString(ProcessHandle.current().pid())));
+                Long.toString(ProcessHandle.current().pid()), budget.toString()));
             process = new ProcessBuilder(command).redirectError(ProcessBuilder.Redirect.INHERIT).redirectOutput(ProcessBuilder.Redirect.INHERIT).start();
             requests = new BufferedWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8));
             used = 0;
@@ -152,6 +160,7 @@ final class CollectionValidationPool implements AutoCloseable {
     /** Internal pipe protocol, not a public CLI option. */
     public static void main(String[] args) throws Exception {
         long parent = Long.parseLong(args[0]);
+        Path budget = args.length > 1 ? Path.of(args[1]) : null;
         System.setOut(System.err); // Keep diagnostics; acknowledgements use an atomic file, never stdout.
         Thread watchdog = new Thread(() -> {
             try {
@@ -166,6 +175,7 @@ final class CollectionValidationPool implements AutoCloseable {
                 ack.addProperty("id", JavaValidation.text(task, "id"));
                 try {
                     var children = new JavaValidation.Children();
+                    children.sharedBudget = budget;
                     for (var value : task.getAsJsonArray("ancestors")) children.active.add(value.getAsString());
                     JsonObject report = JavaValidation.validate(Path.of(JavaValidation.text(task, "input")), children, task.get("depth").getAsInt());
                     Path output = Path.of(JavaValidation.text(task, "output"));
