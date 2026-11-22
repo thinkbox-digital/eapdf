@@ -67,4 +67,8 @@ package readers. Successful checks write `SHA256SUMS` beside the logs and report
 For a GitHub release, dispatch **Release package acceptance** on the
 `v<VERSION>` tag with **publish** enabled. Its publish job uploads the
 verified packages after rechecking their hashes.
+
+Chrome Web Store submission looks up a successful package acceptance run for
+the release tag's commit on protected `main` and compares the ZIP's checksum
+with that run before submitting it.
 The Chrome Store workflow also requires the successful acceptance run ID.
