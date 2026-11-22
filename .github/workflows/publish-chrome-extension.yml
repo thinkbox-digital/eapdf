@@ -46,23 +46,39 @@ jobs:
               [.workflow_runs[] | select(.head_sha == $commit and .conclusion == "success"
                 and .event == "workflow_dispatch" and .head_repository.full_name == $repository)]
               | first | .id | numbers')
+          evidence_dir="$RUNNER_TEMP/cws-acceptance"
+          package_dir="$RUNNER_TEMP/cws-download"
+          mkdir "$evidence_dir" "$package_dir"
           gh run download "$acceptance_run" --repo "$GITHUB_REPOSITORY" \
-            --name release-acceptance-evidence --dir acceptance
-          mkdir package
-          gh release download --repo "$GITHUB_REPOSITORY" --pattern "$ZIP_PATTERN" --dir package -- "$RELEASE_TAG"
-          mapfile -d '' packages < <(find package -maxdepth 1 -type f -name '*.zip' -print0)
+            --name release-acceptance-evidence --dir "$evidence_dir"
+          gh release download --repo "$GITHUB_REPOSITORY" --pattern "$ZIP_PATTERN" --dir "$package_dir" -- "$RELEASE_TAG"
+          mapfile -d '' packages < <(find "$package_dir" -maxdepth 1 -type f -name '*.zip' -print0)
           if [[ ${#packages[@]} -ne 1 ]]; then
             echo "Expected exactly one extension ZIP."
             exit 1
           fi
-          name=${packages[0]#package/}
+          name=$(basename -- "${packages[0]}")
           digest=$(sha256sum -- "${packages[0]}" | cut -c1-64)
-          grep -Fx -- "$digest  $name" acceptance/SHA256SUMS
-          mv -- "${packages[0]}" extension.zip
-          unzip -p extension.zip manifest.json | jq -er '.version | strings | select(length > 0)'
+          grep -Fx -- "$digest  $name" "$evidence_dir/SHA256SUMS"
+          mv -- "${packages[0]}" "$RUNNER_TEMP/cws-extension.zip"
+          python3 -I - "$RUNNER_TEMP/cws-extension.zip" <<'PY'
+          import json
+          import sys
+          from zipfile import ZipFile
+
+          with ZipFile(sys.argv[1]) as package:
+              manifest = package.getinfo("manifest.json")
+              if manifest.file_size > 1024 * 1024:
+                  raise SystemExit("Extension manifest exceeds 1 MiB.")
+              with package.open(manifest) as stream:
+                  version = json.load(stream).get("version")
+          if not isinstance(version, str) or not version:
+              raise SystemExit("Extension manifest is missing a version.")
+          print(version)
+          PY
 
       - name: Install Google authentication library
-        run: python3 -m pip install 'google-auth[requests]'
+        run: python3 -I -m pip install 'google-auth[requests]'
 
       - name: Upload and submit for review
         env:
@@ -71,7 +87,7 @@ jobs:
           EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
           PUBLISH_ON_APPROVAL: ${{ inputs.publish_on_approval }}
         run: |
-          python3 - <<'PY'
+          python3 -I - <<'PY'
           import json
           import os
           import time
@@ -98,7 +114,7 @@ jobs:
                   raise SystemExit(f"Chrome Web Store API returned {response.status_code}: {response.text}")
               return response.json()
 
-          with open("extension.zip", "rb") as package:
+          with open(os.path.join(os.environ["RUNNER_TEMP"], "cws-extension.zip"), "rb") as package:
               upload = call(
                   "POST", f"{base}/upload/{item}:upload", data=package,
                   headers={"Content-Type": "application/zip"},
