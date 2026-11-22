@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public final class ConversionSupervisor {
   private static volatile boolean worker;
   private static final List<String> ENTRIES = List.of("eapdf.EmailToPDFA", "eapdf.GmailDownloadToPdf", "eapdf.MonthlyFilenameArchiveToPdf");
-  record Owner(long supervisor, String supervisorStart, long child, String childStart) {}
+  record Owner(long supervisor, String supervisorStart, long child, String childStart, String workspace) {}
 
   static boolean run(Class<?> entry, String[] arguments) {
     if (worker) return false;
@@ -28,6 +28,17 @@ public final class ConversionSupervisor {
 
   static int supervise(String entry, String[] arguments) throws Exception {
     if (!ENTRIES.contains(entry)) throw Common.fail("Unsupported supervised entry point");
+    if (entry.equals("eapdf.EmailToPDFA")) {
+      var options = EmailToPDFA.parseArgs(arguments);
+      String output = (String) options.get("archive-output");
+      String input = (String) options.get("in");
+      if (input != null && output != null && !output.isBlank() && Files.exists(Path.of(output))) {
+        for (String selected : EmailToPDFA.collectInputs(input)) {
+          OutputTransaction.protectInput(Path.of(output), Path.of(selected));
+        }
+        OutputTransaction.protectConfiguredInputs(Path.of(output), (String) options.get("font"), (String) options.get("icc"));
+      }
+    }
     Path temporaryRoot = workspaceRoot(entry, arguments);
     cleanAbandoned(temporaryRoot);
     Path directory = Files.createTempDirectory(temporaryRoot, "eapdf-worker-");
@@ -45,7 +56,7 @@ public final class ConversionSupervisor {
       ProcessHandle supervisor = ProcessHandle.current();
       String supervisorStart = supervisor.info().startInstant().orElseThrow(
           () -> Common.fail("Cannot establish conversion supervisor ownership on this runtime")).toString();
-      writeOwner(directory, new Owner(supervisor.pid(), supervisorStart, 0, ""));
+      writeOwner(directory, new Owner(supervisor.pid(), supervisorStart, 0, "", directory.getFileName().toString()));
       progress = ConversionProgress.start(entry, arguments, directory);
       ConversionProgress jobProgress = progress;
       PstJobBudget budget = PstJobBudget.forInput(entry, arguments, temporary);
@@ -75,7 +86,7 @@ public final class ConversionSupervisor {
       command.addAll(Arrays.asList(arguments));
       process = new ProcessBuilder(nativeLimits(command, budget)).inheritIO().start();
       Process child = process;
-      writeOwner(directory, new Owner(supervisor.pid(), supervisorStart, child.pid(), workerStart(child)));
+      writeOwner(directory, new Owner(supervisor.pid(), supervisorStart, child.pid(), workerStart(child), directory.getFileName().toString()));
       cleanup = new Thread(() -> {
         cancelled.set(true);
         stopTree(child);
@@ -111,8 +122,12 @@ public final class ConversionSupervisor {
         try { Runtime.getRuntime().removeShutdownHook(cleanup); } catch (IllegalStateException ignored) {}
       }
       synchronized (publication) {
-        OutputTransaction.recover(directory.resolve("publication.json"));
-        Common.deleteTree(directory);
+        try {
+          OutputTransaction.recover(directory.resolve("publication.json"));
+          Common.deleteTree(directory);
+        } catch (Exception error) {
+          System.err.println("warning: Conversion recovery data kept in " + directory + ": " + error.getMessage());
+        }
       }
     }
   }
@@ -148,6 +163,16 @@ public final class ConversionSupervisor {
         .flatMap(handle -> handle.info().startInstant()).map(value -> value.toString().equals(started)).orElse(false);
   }
 
+  private static boolean validStart(String value) {
+    if (value == null || value.isBlank()) return false;
+    try {
+      java.time.Instant.parse(value);
+      return true;
+    } catch (java.time.format.DateTimeParseException invalid) {
+      return false;
+    }
+  }
+
   static void cleanAbandoned(Path root) throws Exception {
     Path probe = Files.createTempFile(root, "eapdf-owner-", ".tmp");
     var currentOwner = Files.getOwner(probe);
@@ -160,7 +185,10 @@ public final class ConversionSupervisor {
               || !Files.isRegularFile(marker, java.nio.file.LinkOption.NOFOLLOW_LINKS) || Files.size(marker) > 4096
               || !Files.getOwner(directory).equals(currentOwner)) continue;
           Owner owner = new com.google.gson.Gson().fromJson(Files.readString(marker), Owner.class);
-          if (owner == null || sameProcess(owner.supervisor(), owner.supervisorStart())) continue;
+          if (owner == null || !directory.getFileName().toString().equals(owner.workspace())
+              || owner.supervisor() <= 0 || !validStart(owner.supervisorStart())
+              || owner.child() < 0 || owner.child() > 0 && !validStart(owner.childStart())
+              || sameProcess(owner.supervisor(), owner.supervisorStart())) continue;
           if (sameProcess(owner.child(), owner.childStart())) {
             var orphan = ProcessHandle.of(owner.child()).orElseThrow();
             orphan.destroyForcibly();

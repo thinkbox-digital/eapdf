@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 class ConversionProgressTests {
  @TempDir Path directory;
- JsonObject read() throws Exception {return JsonParser.parseString(Files.readString(directory.resolve("out/progress.json"))).getAsJsonObject();}
+ JsonObject read() throws Exception {return JsonParser.parseString(Files.readString(TestSupport.creatorProgress(directory.resolve("out")))).getAsJsonObject();}
  ConversionProgress begin(Path workspace) throws Exception {
   Files.createDirectories(workspace);
   return ConversionProgress.start("eapdf.EmailToPDFA",new String[]{"--out",directory.resolve("out").toString(),"input.eml"},workspace);
@@ -49,16 +49,29 @@ class ConversionProgressTests {
    assertEquals("COMPLETED",read().get("state").getAsString());
   } finally {ConversionProgress.detach();}
  }
- @Test void failuresPreservePartialCountsAndOlderJobsCannotOverwriteNewerStatus() throws Exception {
-  Path workspace=directory.resolve("old");var older=begin(workspace);
+ @Test void progressFilesAreIndependentAndPreserveUnrelatedFiles() throws Exception {
+  Path out = Files.createDirectories(directory.resolve("out"));
+  Path existing = Files.writeString(out.resolve("progress.json"), "operator data");
+  Path oldWorkspace = directory.resolve("old");
+  var older = begin(oldWorkspace);
+  Path olderReport = TestSupport.creatorProgress(out);
   try {
-   ConversionProgress.attach(workspace);ConversionProgress.total(3);ConversionProgress.completed();ConversionProgress.flush();
-   older.finish("FAILED");assertEquals(1,read().get("emails_completed").getAsInt());assertEquals(3,read().get("emails_total").getAsInt());
-   begin(directory.resolve("new"));String owner=read().get("job_id").getAsString();
-   ConversionProgress.completed();ConversionProgress.flush();older.finish("COMPLETED");
-   assertEquals(owner,read().get("job_id").getAsString());assertEquals(0,read().get("emails_completed").getAsInt());
-   assertEquals("RUNNING",read().get("state").getAsString());
-  } finally {ConversionProgress.detach();}
+   ConversionProgress.attach(oldWorkspace); ConversionProgress.total(3); ConversionProgress.completed();
+   ConversionProgress.flush(); older.finish("FAILED");
+   var newer = begin(directory.resolve("new"));
+   try (var jobs = Files.list(out)) {
+    Path newerReport = jobs.filter(Files::isDirectory).map(path -> path.resolve("progress.json"))
+        .filter(path -> !path.equals(olderReport)).findFirst().orElseThrow();
+    newer.finish("COMPLETED");
+    JsonObject oldStatus = JsonParser.parseString(Files.readString(olderReport)).getAsJsonObject();
+    JsonObject newStatus = JsonParser.parseString(Files.readString(newerReport)).getAsJsonObject();
+    assertEquals("FAILED", oldStatus.get("state").getAsString());
+    assertEquals(1, oldStatus.get("emails_completed").getAsInt());
+    assertEquals("COMPLETED", newStatus.get("state").getAsString());
+    assertEquals(0, newStatus.get("emails_completed").getAsInt());
+    assertEquals("operator data", Files.readString(existing));
+   }
+  } finally { ConversionProgress.detach(); }
  }
  @Test void stageCountsResetAndHeartbeatDoesNotInventCompletedWork() throws Exception {
   Path workspace=directory.resolve("worker");var supervisor=begin(workspace);

@@ -6,6 +6,7 @@ import json
 import mailbox
 import os
 from pathlib import Path
+from creator_progress import creator_progress
 import subprocess
 import time
 
@@ -66,7 +67,7 @@ def main():
                 subprocess.run(command, cwd=root, env=dict(os.environ, EAPDF_CONFIG=str(config_path)),
                                stdout=log, stderr=subprocess.STDOUT, check=True, timeout=1800)
             elapsed = time.monotonic() - start
-            progress = json.loads((generated / 'progress.json').read_text())
+            progress = json.loads(creator_progress(case / 'conversion.log').read_text())
             if progress['emails_discovered'] != count or progress['state'] != 'COMPLETED':
                 raise RuntimeError('Incomplete conversion or wrong message count')
             report = {'messages': count, 'sourceSha256': source_hash, 'subsetSha256': sha(source),

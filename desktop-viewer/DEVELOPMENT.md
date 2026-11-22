@@ -16,7 +16,9 @@ desktop-viewer/package.sh
 ```
 
 The command writes one versioned viewer JAR to `dist/`. Set
-`EAPDF_VIEWER_DIST` to choose another directory. GitHub Actions builds the JAR
+`EAPDF_VIEWER_DIST` to choose another directory. A later build prunes the
+previous JAR when the saved checksum still matches. Files outside that
+inventory, including older packages and edited copies, are preserved. GitHub Actions builds the JAR
 on viewer changes and attaches it to releases published from a tag that
 includes the desktop release workflow.
 

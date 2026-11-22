@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,8 +16,33 @@ final class OutputTransaction implements AutoCloseable {
   final Path workspace;
   final Map<Path, Entry> entries = new LinkedHashMap<>();
 
-  record Entry(String destination, String staged, long size, String sha256) {}
-  record Recovery(String destination, String prepared, String backup) {}
+
+  private final java.util.Set<Path> replacements = new java.util.HashSet<>();
+
+  record Entry(String destination, String staged, long size, String sha256, boolean replace) {}
+  record Recovery(String destination, String workspace, String sha256, String originalSha256) {}
+
+  static void allowReplacement(Path destination) {
+    OutputTransaction transaction = active;
+    if (transaction != null) synchronized (transaction) {
+      transaction.replacements.add(destination.toAbsolutePath().normalize());
+    }
+  }
+
+  static void protectInput(Path destination, Path input) throws IOException {
+    if (destination.toAbsolutePath().normalize().equals(input.toAbsolutePath().normalize())
+        || Files.exists(destination) && Files.exists(input) && Files.isSameFile(destination, input)) {
+      throw new IOException("The archive destination would replace an input file: " + input);
+    }
+  }
+  static void protectConfiguredInputs(Path destination, String font, String icc) throws IOException {
+    protectInput(destination, EapdfConfig.configurationPath());
+    var signing = EapdfConfig.get().signing;
+    for (String asset : new String[]{font, icc, signing.pkcs12Path}) {
+      if (asset != null && !asset.isBlank()) protectInput(destination, Path.of(asset));
+    }
+  }
+
   record Journal(boolean committed, List<Recovery> files) {}
 
   OutputTransaction(Path directory) throws IOException {
@@ -37,7 +61,7 @@ final class OutputTransaction implements AutoCloseable {
     Path output = destination.toAbsolutePath().normalize();
     if (output.startsWith(directory) || workspace != null && output.startsWith(workspace)) return output;
     Entry entry = entries.computeIfAbsent(output, key -> new Entry(key.toString(),
-        directory.resolve(String.format("%06d", entries.size()) + ".asset").toString(), 0, ""));
+        directory.resolve(String.format("%06d", entries.size()) + ".asset").toString(), 0, "", replacements.contains(key)));
     return Path.of(entry.staged());
   }
 
@@ -52,6 +76,7 @@ final class OutputTransaction implements AutoCloseable {
           || !Files.isRegularFile(source, LinkOption.NOFOLLOW_LINKS) || entries.containsKey(destination)
           || Files.size(source) != entry.size() || !Common.digestHex(source, "SHA-256").equals(entry.sha256()))
         throw new IOException("Invalid child output manifest");
+      if (entry.replace()) throw new IOException("Unexpected replacement in child output manifest");
       Path target = stage(destination);
       if (target.equals(destination)) throw new IOException("Child destination is inside working storage");
       Files.move(source, target);
@@ -85,7 +110,7 @@ final class OutputTransaction implements AutoCloseable {
       long size = Files.size(staged);
       total = Math.addExact(total, size);
       ProcessingLimits.checkOutput(total);
-      completed.add(new Entry(entry.destination(), entry.staged(), size, Common.digestHex(staged, "SHA-256")));
+      completed.add(new Entry(entry.destination(), entry.staged(), size, Common.digestHex(staged, "SHA-256"), entry.replace()));
       ConversionProgress.advance("hashing_outputs");
     }
     byte[] json = new Gson().toJson(completed).getBytes(java.nio.charset.StandardCharsets.UTF_8);
@@ -119,81 +144,154 @@ final class OutputTransaction implements AutoCloseable {
     long temporaryLimit = budget.setting("eapdf.maxTempBytes", "EAPDF_MAX_TEMP_BYTES", 2L * 1024 * 1024 * 1024);
     long currentTemporary = ConversionSupervisor.checkTemporary(directory.getParent(), temporaryLimit, budget.setting("eapdf.maxTempFiles", "EAPDF_MAX_TEMP_FILES", 100000));
     if (total > temporaryLimit - currentTemporary) throw Common.fail("Publication would exceed the temporary-storage budget");
-    publish(List.of(entries), (source, target) -> Files.move(source, target, StandardCopyOption.REPLACE_EXISTING),
+    publish(List.of(entries), (source, target) -> Files.createLink(target, source),
         manifest.resolveSibling("publication.json"));
   }
 
-  interface MoveOperation {
-    void move(Path source, Path target) throws IOException;
+  interface PublishOperation {
+    void link(Path source, Path target) throws IOException;
   }
 
-  static void publish(List<Entry> entries, MoveOperation move) throws Exception {
-    publish(entries, move, null);
+  static void publish(List<Entry> entries, PublishOperation publish) throws Exception {
+    publish(entries, publish, null);
   }
 
-  static void publish(List<Entry> entries, MoveOperation move, Path journal) throws Exception {
-    Map<Path, Path> prepared = new LinkedHashMap<>();
-    Map<Path, Path> backups = new LinkedHashMap<>();
-    List<Path> replaced = new ArrayList<>();
+  static void publish(List<Entry> entries, PublishOperation publish, Path journal) throws Exception {
+    List<Recovery> files = new ArrayList<>();
+    int started = 0;
+    var destinations = new java.util.HashSet<Path>();
     boolean committed = false;
-    boolean restored = true;
     try {
       ConversionProgress.begin("copying_outputs", entries.size(), "files");
       for (Entry entry : entries) {
-        Path destination = Path.of(entry.destination()).toAbsolutePath().normalize();
-        if (Files.exists(destination, LinkOption.NOFOLLOW_LINKS) && !Files.isRegularFile(destination, LinkOption.NOFOLLOW_LINKS)) {
-          throw new IOException("Output destination is not a regular file: " + destination);
-        }
-        Files.createDirectories(destination.getParent());
-        Path temporary = Files.createTempFile(destination.getParent(), ".eapdf-publish-", ".tmp");
-        prepared.put(destination, temporary);
+        Path requested = Path.of(entry.destination()).toAbsolutePath().normalize();
+        Files.createDirectories(requested.getParent());
+        Path destination = requested.getParent().toRealPath().resolve(requested.getFileName());
+        if (!destinations.add(destination)) throw new IOException("Duplicate output destination: " + destination);
+        String original = null;
         if (Files.exists(destination, LinkOption.NOFOLLOW_LINKS)) {
-          Path backup = Files.createTempFile(destination.getParent(), ".eapdf-backup-", ".tmp");
-          Files.delete(backup);
-          backups.put(destination, backup);
+          if (!entry.replace()) throw new java.nio.file.FileAlreadyExistsException(destination.toString());
+          if (!Files.isRegularFile(destination, LinkOption.NOFOLLOW_LINKS))
+            throw new IOException("Output destination is not a regular file: " + destination);
+          original = Common.digestHex(destination, "SHA-256");
         }
-        if (journal != null) {
-          List<Recovery> pending = prepared.entrySet().stream().map(item -> new Recovery(item.getKey().toString(),
-              item.getValue().toString(), backups.containsKey(item.getKey()) ? backups.get(item.getKey()).toString() : null)).toList();
-          writeJournal(journal, new Journal(false, pending));
-        }
-        Files.copy(Path.of(entry.staged()), temporary, StandardCopyOption.REPLACE_EXISTING);
-        try (var channel = java.nio.channels.FileChannel.open(temporary, java.nio.file.StandardOpenOption.WRITE)) {
-          Common.preserveOutputPermissions(destination, temporary);
+        Path workspace = Files.createTempDirectory(destination.getParent(), ".eapdf-publication-");
+        Recovery file = new Recovery(destination.toString(), workspace.toString(), entry.sha256(), original);
+        files.add(file);
+        if (journal != null) writeJournal(journal, new Journal(false, files));
+        Path prepared = workspace.resolve("prepared");
+        Files.copy(Path.of(entry.staged()), prepared);
+        if (!matches(prepared, file.sha256())) throw new IOException("Prepared output checksum mismatch: " + destination);
+        try (var channel = java.nio.channels.FileChannel.open(prepared, java.nio.file.StandardOpenOption.WRITE)) {
+          Common.preserveOutputPermissions(destination, prepared);
           channel.force(true);
         }
         ConversionProgress.advance("copying_outputs");
       }
-      List<Recovery> recovery = prepared.entrySet().stream().map(entry -> new Recovery(entry.getKey().toString(),
-          entry.getValue().toString(), backups.containsKey(entry.getKey()) ? backups.get(entry.getKey()).toString() : null)).toList();
-      if (journal != null) writeJournal(journal, new Journal(false, recovery));
-      ConversionProgress.begin("publishing", prepared.size(), "files");
-      for (Path destination : prepared.keySet()) {
-        if (backups.containsKey(destination)) Files.move(destination, backups.get(destination));
-        replaced.add(destination);
-        move.move(prepared.get(destination), destination);
+      ConversionProgress.begin("publishing", files.size(), "files");
+      for (Recovery file : files) {
+        Path destination = Path.of(file.destination());
+        Path workspace = Path.of(file.workspace());
+        Path original = workspace.resolve("original");
+        Path prepared = workspace.resolve("prepared");
+        started++;
+        if (file.originalSha256() != null) {
+          // Saving the original first lets a destination changed by another writer be put back safely.
+          Files.move(destination, original);
+          if (!matches(original, file.originalSha256())) {
+            Files.createLink(destination, original);
+            Files.delete(original);
+            throw new IOException("Output destination changed during publication: " + destination);
+          }
+        }
+        publish.link(prepared, destination);
         ConversionProgress.advance("publishing");
       }
-      if (journal != null) writeJournal(journal, new Journal(true, recovery));
+      if (journal != null) writeJournal(journal, new Journal(true, files));
       committed = true;
     } finally {
+      boolean restored = true;
       if (!committed) {
-        java.util.Collections.reverse(replaced);
-        for (Path destination : replaced) {
+        for (Recovery file : files.subList(0, started).reversed()) {
           try {
-            Path backup = backups.get(destination);
-            if (backup == null) Files.deleteIfExists(destination);
-            else Files.move(backup, destination, StandardCopyOption.REPLACE_EXISTING);
+            rollback(file);
           } catch (IOException error) {
             restored = false;
-            System.err.println("error: Output rollback failed; retain recovery backup " + backups.get(destination) + ": " + error.getMessage());
+            System.err.println("error: Output rollback needs attention. Recovery files retained in "
+                + file.workspace() + ": " + error.getMessage());
           }
         }
       }
-      for (Path temporary : prepared.values()) Files.deleteIfExists(temporary);
-      if (committed || restored) for (Path backup : backups.values()) Files.deleteIfExists(backup);
-      if (journal != null && (committed || restored)) Files.deleteIfExists(journal);
+      if (committed || restored) {
+        for (int index = 0; index < files.size(); index++) {
+          Recovery file = files.get(index);
+          if (!committed && index >= started) {
+            // The live transaction created this directory and has never moved a destination into it.
+            Path workspace = Path.of(file.workspace());
+            Files.deleteIfExists(workspace.resolve("prepared"));
+            Files.delete(workspace);
+          } else {
+            cleanWorkspace(file);
+          }
+        }
+        if (journal != null) Files.deleteIfExists(journal);
+      }
     }
+  }
+
+  private static boolean matches(Path path, String digest) throws IOException {
+    return digest != null && Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)
+        && Common.digestHex(path, "SHA-256").equals(digest);
+  }
+
+  private static void rollback(Recovery file) throws IOException {
+    Path destination = Path.of(file.destination());
+    Path workspace = Path.of(file.workspace());
+    Path prepared = workspace.resolve("prepared");
+    Path original = workspace.resolve("original");
+    Path displaced = workspace.resolve("displaced");
+
+    if (!Files.exists(displaced, LinkOption.NOFOLLOW_LINKS)
+        && Files.isRegularFile(destination, LinkOption.NOFOLLOW_LINKS)
+        && Files.isRegularFile(prepared, LinkOption.NOFOLLOW_LINKS)
+        && Files.isSameFile(destination, prepared) && matches(destination, file.sha256())) {
+      // Move first. Recheck the moved file before deleting anything in case a writer replaced the path.
+      Files.move(destination, displaced);
+    }
+    if (Files.exists(displaced, LinkOption.NOFOLLOW_LINKS)) {
+      if (!Files.isRegularFile(displaced, LinkOption.NOFOLLOW_LINKS) || !Files.exists(prepared)
+          || !Files.isSameFile(displaced, prepared) || !matches(displaced, file.sha256())) {
+        if (!Files.exists(destination, LinkOption.NOFOLLOW_LINKS) && Files.isRegularFile(displaced, LinkOption.NOFOLLOW_LINKS)) {
+          Files.createLink(destination, displaced);
+          Files.delete(displaced);
+        }
+        throw new IOException("Destination was changed by another writer: " + destination);
+      }
+      Files.delete(displaced);
+    }
+    if (Files.exists(original, LinkOption.NOFOLLOW_LINKS)) {
+      if (!matches(original, file.originalSha256()))
+        throw new IOException("Recovery backup changed: " + original);
+      if (Files.exists(destination, LinkOption.NOFOLLOW_LINKS)) {
+        if (!Files.isRegularFile(destination, LinkOption.NOFOLLOW_LINKS) || !Files.isSameFile(destination, original))
+          throw new IOException("Destination was changed by another writer: " + destination);
+      } else {
+        Files.createLink(destination, original);
+      }
+    }
+  }
+
+  private static void cleanWorkspace(Recovery file) throws IOException {
+    Path workspace = Path.of(file.workspace());
+    Path prepared = workspace.resolve("prepared");
+    Path original = workspace.resolve("original");
+    if (Files.exists(original, LinkOption.NOFOLLOW_LINKS) && !matches(original, file.originalSha256()))
+      throw new IOException("Recovery backup changed: " + original);
+    if (Files.exists(prepared, LinkOption.NOFOLLOW_LINKS) && !matches(prepared, file.sha256()))
+      throw new IOException("Prepared output is incomplete or has changed: " + prepared);
+    Files.deleteIfExists(prepared);
+    Files.deleteIfExists(original);
+    Files.deleteIfExists(workspace);
   }
 
   static void writeJournal(Path path, Journal journal) throws Exception {
@@ -208,18 +306,21 @@ final class OutputTransaction implements AutoCloseable {
     Journal journal = new Gson().fromJson(Files.readString(path), Journal.class);
     if (journal == null || journal.files() == null) throw new IOException("Invalid output recovery journal: " + path);
     for (Recovery file : journal.files()) {
-      Path destination = Path.of(file.destination());
-      Path prepared = Path.of(file.prepared());
-      Path backup = file.backup() == null ? null : Path.of(file.backup());
-      if (!journal.committed()) {
-        if (backup != null && Files.exists(backup, LinkOption.NOFOLLOW_LINKS)) {
-          Files.move(backup, destination, StandardCopyOption.REPLACE_EXISTING);
-        } else if (backup == null && !Files.exists(prepared, LinkOption.NOFOLLOW_LINKS)) {
-          Files.deleteIfExists(destination);
-        }
-      }
-      Files.deleteIfExists(prepared);
-      if (backup != null) Files.deleteIfExists(backup);
+      if (file.workspace() == null || file.destination() == null || file.sha256() == null
+          || !file.sha256().matches("[0-9a-f]{64}"))
+        throw new IOException("Unrecognized output recovery journal: " + path);
+      Path destination = Path.of(file.destination()).toAbsolutePath().normalize();
+      Path workspace = Path.of(file.workspace()).toAbsolutePath().normalize();
+      if (!workspace.getParent().equals(destination.getParent())
+          || !workspace.getFileName().toString().matches("\\.eapdf-publication-[0-9]+"))
+        throw new IOException("Invalid output recovery workspace: " + workspace);
+      if (!Files.exists(workspace, LinkOption.NOFOLLOW_LINKS)) continue;
+      if (!Files.isDirectory(workspace, LinkOption.NOFOLLOW_LINKS)
+          || !workspace.equals(workspace.toRealPath()) || !Files.getOwner(workspace).equals(Files.getOwner(path)))
+        throw new IOException("Invalid output recovery workspace: " + workspace);
+      Recovery checked = new Recovery(destination.toString(), workspace.toString(), file.sha256(), file.originalSha256());
+      if (!journal.committed()) rollback(checked);
+      cleanWorkspace(checked);
     }
     Files.delete(path);
   }

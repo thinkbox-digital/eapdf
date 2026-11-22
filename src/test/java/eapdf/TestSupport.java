@@ -25,6 +25,16 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlin
 import org.junit.jupiter.api.Assertions;
 
 final class TestSupport {
+  static java.nio.file.Path creatorProgress(java.nio.file.Path output) throws Exception {
+    try (var jobs = java.nio.file.Files.newDirectoryStream(output, ".eapdf-evidence-*")) {
+      var matches = jobs.iterator();
+      if (!matches.hasNext()) throw new AssertionError("No creator evidence in " + output);
+      var result = matches.next().resolve("progress.json");
+      if (matches.hasNext()) throw new AssertionError("Multiple creator jobs in " + output);
+      return result;
+    }
+  }
+
   static final List<String> INPUT_FIXTURES = List.of("sample.eml", "sample.mbox", "test.pst");
 
   private TestSupport() {}

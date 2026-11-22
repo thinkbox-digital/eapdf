@@ -87,9 +87,10 @@ class AuditRepairTests {
     Files.writeString(staged, "completed"); Files.setPosixFilePermissions(staged, PosixFilePermissions.fromString("rw-------"));
     Files.writeString(existing, "previous");
     var mode = PosixFilePermissions.fromString("r--r-----"); Files.setPosixFilePermissions(existing, mode);
-    var entries = List.of(new OutputTransaction.Entry(existing.toString(), staged.toString(), 9, ""),
-        new OutputTransaction.Entry(fresh.toString(), staged.toString(), 9, ""));
-    OutputTransaction.publish(entries, (source, target) -> Files.move(source, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING));
+    String digest = Common.digestHex(staged, "SHA-256");
+    var entries = List.of(new OutputTransaction.Entry(existing.toString(), staged.toString(), 9, digest, true),
+        new OutputTransaction.Entry(fresh.toString(), staged.toString(), 9, digest, false));
+    OutputTransaction.publish(entries, (source, target) -> Files.createLink(target, source));
     assertEquals("completed", Files.readString(existing));
     assertEquals(mode, Files.getPosixFilePermissions(existing));
     assertEquals(PosixFilePermissions.fromString("rw-------"), Files.getPosixFilePermissions(fresh));

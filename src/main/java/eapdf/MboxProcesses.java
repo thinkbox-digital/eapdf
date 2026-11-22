@@ -101,6 +101,7 @@ public final class MboxProcesses {
     command.add(Path.of(System.getProperty("java.home"), "bin", "java").toString());
     for (String argument : ManagementFactory.getRuntimeMXBean().getInputArguments())
       if (argument.startsWith("-D") && !argument.startsWith("-Djava.io.tmpdir=")) command.add(argument);
+    command.add("-Deapdf.creatorWorkerLogs=" + ConversionProgress.logsDirectory(directory.resolve("logs")));
     Collections.addAll(command, "-Xmx" + heap, "-XX:MaxDirectMemorySize=128m", "-XX:MaxMetaspaceSize=256m",
         "-XX:ReservedCodeCacheSize=128m", "-XX:ActiveProcessorCount=1", "-XX:-CreateCoredumpOnCrash",
         "-XX:ErrorFile=" + temporary.resolve("hs_err_pid%p.log"), "-Djava.io.tmpdir=" + temporary,
@@ -139,7 +140,7 @@ public final class MboxProcesses {
       throw Common.fail("Invalid MBOX worker ownership");
     // Independent of rendering progress so an orphaned worker cannot keep running.
     ConversionSupervisor.watchParent(parent, "eapdf-mbox-parent-watchdog");
-    ConversionProgress.start("eapdf.EmailToPDFA", new String[]{"--out", directory.toString(), request.input()}, directory);
+    ConversionProgress.startWorker(directory);
     ConversionProgress.attach(directory);
     try (OutputTransaction transaction = new OutputTransaction(directory.resolve("outputs"), directory)) {
       try (Common.JobReport job = Common.beginJob()) {

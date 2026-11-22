@@ -78,12 +78,17 @@ class EapdfConfig {
     }
   }
 
-  static EapdfConfig loadDefault() {
+  static Path configurationPath() {
     String envPath = System.getenv("EAPDF_CONFIG");
     Path path = (envPath != null && !envPath.isBlank())
         ? Paths.get(envPath)
         : Common.resolveExistingPath("config/eapdf_config.json", "eapdf_config.json");
-    if (path == null) path = Paths.get("config/eapdf_config.json");
+    return path == null ? Paths.get("config/eapdf_config.json") : path;
+  }
+
+  static EapdfConfig loadDefault() {
+    String envPath = System.getenv("EAPDF_CONFIG");
+    Path path = configurationPath();
     if (!Files.exists(path) && (envPath == null || envPath.isBlank())) return normalize(new EapdfConfig());
     return load(path);
   }

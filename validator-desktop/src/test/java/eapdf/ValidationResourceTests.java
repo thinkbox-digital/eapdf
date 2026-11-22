@@ -112,7 +112,7 @@ class ValidationResourceTests {
     }
     @Test void engineFailureIsIncompleteAndKeepsTheCompletedPdfaOutcome() throws Exception {
         Path output = temporary.resolve("stopped.json");
-        try (var session = new ValidationSession(temporary.resolve("email.pdf"), output)) {
+        try (var session = new ValidationSession(temporary.resolve("email.pdf"), output, "stopped", false)) {
             ValidationSession.pdfaFinished(JsonParser.parseString("{\"status\":\"PASS\",\"ran\":true,\"compliant\":true,\"profile_allowed\":true}").getAsJsonObject());
             session.failed("Stopped during EA-PDF checking.");
         }
@@ -126,16 +126,16 @@ class ValidationResourceTests {
     }
     @Test void supervisorFailureKeepsUpstreamCheckpointsButANewRunResetsThem() throws Exception {
         Path input = Files.writeString(temporary.resolve("email.pdf"), "fixture"), output = temporary.resolve("checkpoint.json");
-        try (var session = new ValidationSession(input, output)) {
+        try (var session = new ValidationSession(input, output, "worker", false)) {
             ValidationSession.pdfaFinished(JsonParser.parseString("{\"status\":\"PASS\"}").getAsJsonObject());
             ValidationSession.isoFinished(JsonParser.parseString("{\"status\":\"FAIL\"}").getAsJsonObject());
             session.failed("Worker stopped.");
         }
-        try (var session = new ValidationSession(input, output, true)) { session.failed("Supervisor observed worker termination."); }
+        try (var session = new ValidationSession(input, output, "worker", true)) { session.failed("Supervisor observed worker termination."); }
         var recovered = JsonParser.parseString(Files.readString(output)).getAsJsonObject();
         assertEquals("PASS", recovered.getAsJsonObject("pdfa").get("status").getAsString());
         assertEquals("FAIL", recovered.getAsJsonObject("summary").get("status").getAsString());
-        try (var session = new ValidationSession(input, output)) { session.failed("Starting a separate run."); }
+        try (var session = new ValidationSession(input, output, "new", true)) { session.failed("Starting a separate run."); }
         var fresh = JsonParser.parseString(Files.readString(output)).getAsJsonObject();
         assertEquals("NOT_RUN", fresh.getAsJsonObject("pdfa").get("status").getAsString());
     }

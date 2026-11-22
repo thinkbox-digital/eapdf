@@ -36,7 +36,7 @@ class ConversionDiagnosticTests {
         Common.warn(record, ConversionDiagnostic.Code.DATE_PRECISION_REDUCED, "Native date lost .446 seconds");
       }
       ConversionProgress.detach(); ConversionProgress.attach(work); supervisor.finish("COMPLETED");
-      var json = JsonParser.parseString(Files.readString(directory.resolve("out/progress.json"))).getAsJsonObject();
+      var json = JsonParser.parseString(Files.readString(TestSupport.creatorProgress(directory.resolve("out")))).getAsJsonObject();
       var entry = json.getAsJsonArray("conversion_diagnostics").get(0).getAsJsonObject();
       assertEquals("DATE_PRECISION_REDUCED", entry.get("code").getAsString());
       assertEquals("<id@example.org>", entry.get("message_id").getAsString());

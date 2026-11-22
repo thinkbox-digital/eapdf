@@ -9,7 +9,7 @@
   <name>EA-PDF Desktop Viewer</name>
 
   <properties>
-    <revision>0.8.0</revision>
+    <revision>0.9.0</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
     <eapdf.build.directory>${project.basedir}/target</eapdf.build.directory>

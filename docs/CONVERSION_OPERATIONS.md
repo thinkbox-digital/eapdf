@@ -14,7 +14,8 @@ Final PDFs are written privately and checked before publication. Internal tempor
 
 After successful conversion, the supervisor verifies the bounded manifest and payload checksums, prepares same-filesystem destination files, records a recovery journal, and replaces the requested outputs with rollback backups. Ordinary publication/disk failures restore original files and remove new outputs. Crash journals distinguish incomplete replacement (restore originals) from committed replacement (keep new files and remove backups). Failed recovery retains its directory/backups and reports their location; do not delete them manually before recovery. Cooperative GUI cancellation waits around the commit phase instead of interrupting a half-completed rename sequence.
 
-This is recoverable multi-file publication, not instantaneous multi-file visibility or an ACID transaction across filesystems/power loss. External readers should wait for successful process exit; serialize independent jobs targeting the same destinations. User-requested intentional overwrite behavior remains unchanged. Logs retain failure evidence and are not rolled back as if the attempt had never happened.
+This is recoverable multi-file publication, not instantaneous multi-file visibility or an ACID transaction across filesystems/power loss. External readers should wait for successful process exit; independent jobs choosing the same automatic filename cannot both publish to it. Supply a distinct output directory to keep both runs. An explicit archive path may replace an existing archive. Selecting an input as the destination is rejected.
+The output filesystem must support hard links for atomic publication without replacing a competing file. Logs retain failure evidence and are not rolled back as if the attempt had never happened.
 
 ## Limits
 
@@ -49,7 +50,9 @@ Before a production release, retain signed results for meaningful image alternat
 
 ## Live conversion progress
 
-Future runs write `progress.json` in the output directory. The file contains
+Each run writes `progress.json` in a fresh `.eapdf-evidence-*` subdirectory of the output directory.
+The creator prints its path on the `Progress:` line. Per-file logs share this job directory.
+Debug mode creates a separate job directory under the selected debug directory. The progress file contains
 `emails_completed`, `emails_total`, `total_known`, `stage`, `state`, and timestamps.
 Archive work also reports `stage_completed`, `stage_total` and `stage_unit` for
 bookmarks, document parts, embedding, page numbering, tagging, page streams,
@@ -225,7 +228,7 @@ eapdf-regenerate everything --dry-run
 eapdf-regenerate everything --workers 4 --jobs 2
 ```
 
-Running either generation mode clears this checkout’s `out/` directory. `--dry-run`
+Both modes preserve the files already in `out/`. `--dry-run`
 only prints the plan. The default creator is `Thinkbox.DIGITAL`; no creator argument
 is needed. Concurrent Java processes are bounded automatically by available CPU
 and memory, with two creator threads per process by default. `sample` selects the
@@ -243,9 +246,9 @@ A one-message source cannot produce 1m/1mi and is reported as not applicable.
 The run’s `plan.json` records the exact random group membership; a dry run makes
 an independent preview plan.
 
-Each creator job publishes its completed PDFs immediately and prints their paths,
-before validation starts. Validation results follow separately; a single archive
-PDF must finish converting before it can appear. Other jobs continue concurrently.
+The run stages and validates every PDF before publishing. A run with failures
+leaves prior outputs in place. When a name is occupied by different bytes, the
+new PDF gets a digest suffix before its profile suffix.
 
 Final PDFs go directly into `out/eml/`, `out/msg/`, `out/mbox/`, and `out/pst/`.
 Each run snapshots its versioned creator and validator JARs so later upgrades
@@ -268,8 +271,8 @@ If validation returns FAIL or INCOMPLETE, or is unavailable, regeneration retain
 reports under `initial-validation/`, regenerates once with a visible
 **WARNING — Validation requires review** banner, then validates the replacement.
 The banner discloses failed or unfinished checks; it does not turn the result into PASS.
-Source-data warnings remain separate. A failed replacement keeps the original PDF
-and reports the failure. This requires the updated creator JAR.
+Source-data warnings remain separate. The warning attempt and its reports help
+diagnose the failure. Both attempts stay unpublished. This requires the updated creator JAR.
 
 At completion, the terminal lists FAIL and INCOMPLETE jobs, affected output files
 (or sources that produced no PDF), and their conversion logs and validation reports.

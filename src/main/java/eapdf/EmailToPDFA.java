@@ -34,7 +34,7 @@ public class EmailToPDFA {
       job.workerLimit = jobs;
 
       Files.createDirectories(Paths.get(outDir));
-      if (debug) Files.createDirectories(Paths.get(debugDir));
+      if (debug) debugDir = ConversionProgress.startDebugDirectory(Paths.get(debugDir)).toString();
 
       List<String> inputs = collectInputs(in);
       ConversionProgress.inputsSelected(inputs.size());
@@ -159,6 +159,12 @@ public class EmailToPDFA {
     if (!"m".equals(archiveProfile) && !"mi".equals(archiveProfile)
         && !"c".equals(archiveProfile) && !"ci".equals(archiveProfile)) {
       throw Common.fail("unsupported --archive-profile (expected m, mi, c, or ci): " + archiveProfile);
+    }
+    if (archiveOutput != null && !archiveOutput.isBlank()) {
+      Path destination = Path.of(archiveOutput);
+      for (String input : inputs) OutputTransaction.protectInput(destination, Path.of(input));
+      OutputTransaction.protectConfiguredInputs(destination, fontPath, iccPath);
+      OutputTransaction.allowReplacement(destination);
     }
     List<EmailRecord> all = new ArrayList<>();
     for (List<EmailRecord> recs : readManyForArchive(inputs, globalId, archiveEmails, debug)) {

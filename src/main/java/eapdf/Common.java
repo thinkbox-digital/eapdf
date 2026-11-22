@@ -396,7 +396,7 @@ class Common {
     PerFileLogCapture(Path pdfOut) {
       this.pdfOut = pdfOut;
       Path parent = pdfOut.getParent() == null ? Paths.get("out") : pdfOut.getParent();
-      Path logsDir = parent.resolve("logs");
+      Path logsDir = ConversionProgress.logsDirectory(parent.resolve("logs"));
       String filename = pdfOut.getFileName() == null ? "output.log" : pdfOut.getFileName().toString().replaceFirst("(?i)\\.pdf$", "") + ".log";
       this.logPath = logsDir.resolve(filename);
       ACTIVE_LOG_CAPTURE.set(this);
@@ -443,7 +443,12 @@ class Common {
         Files.createDirectories(logPath.getParent());
         synchronized (this) {
           if (pendingLine.length() > 0) recordLine(pendingLine.toString());
-          Files.writeString(logPath, renderSummary(), StandardCharsets.UTF_8);
+          try {
+            Files.writeString(logPath, renderSummary(), StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
+          } catch (FileAlreadyExistsException collision) {
+            Path separateLog = Files.createTempFile(logPath.getParent(), "conversion-", ".log");
+            Files.writeString(separateLog, renderSummary(), StandardCharsets.UTF_8);
+          }
         }
       } catch (IOException ignored) {
       }

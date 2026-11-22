@@ -44,12 +44,19 @@ public class GmailDownloadToPdf {
       boolean debug = Boolean.TRUE.equals(opt.get("debug"));
       String archiveProfile = (String)opt.get("archive-profile");
       String archiveOutput = (String)opt.get("archive-output");
+      if (archiveProfile != null && archiveOutput != null && !archiveOutput.isBlank()) {
+        Path destination = Path.of(archiveOutput);
+        OutputTransaction.protectInput(destination, Path.of(credentialsPath));
+        OutputTransaction.protectInput(destination, Path.of(tokenDir, "StoredCredential"));
+        OutputTransaction.protectConfiguredInputs(destination, fontPath, iccPath);
+        OutputTransaction.allowReplacement(destination);
+      }
       boolean unreadOnly = Boolean.TRUE.equals(opt.get("unread-only"));
       int limit = (Integer)opt.getOrDefault("limit", 0);
 
       Files.createDirectories(Paths.get(outPdfDir));
       Files.createDirectories(Paths.get(tokenDir));
-      if (debug) Files.createDirectories(Paths.get(debugDir));
+      if (debug) debugDir = ConversionProgress.startDebugDirectory(Paths.get(debugDir)).toString();
 
       System.out.println("connecting: Gmail API");
       Gmail service = buildService(credentialsPath, tokenDir);
@@ -75,9 +82,10 @@ public class GmailDownloadToPdf {
       if (messages.isEmpty()) throw Common.fail("no Gmail messages matched the selection");
       for (var message : messages) Common.inputState("gmail://" + message.getId(), "accepted");
 
+      Path debugPath = Paths.get(debugDir);
       List<EmailRecord> records = convertMessages(service, user, messages, labelNames, resume, opt,
           (path, record, sequence) -> PdfMailWriter.writeEaPdfA3(path, record, fontPath, iccPath,
-              debug, Paths.get(debugDir), sequence));
+              debug, debugPath, sequence));
 
       if (archiveProfile != null) {
         if (!"m".equals(archiveProfile) && !"mi".equals(archiveProfile)

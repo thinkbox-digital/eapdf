@@ -34,7 +34,7 @@ export PYTHONDONTWRITEBYTECODE=1
 # Keep the exact build identities with the durable run evidence.
 sha256sum "$work_dir/$creator_jar" "$work_dir/$validator_jar" > "$run_dir/build-sha256.txt"
 printf 'Output: %s\nFour rendering jobs; one archive at a time; full Java validation.\n' "$run_dir"
-printf 'Progress files: %s/pst/*/conversion-*/progress.json\n' "$run_dir"
+printf 'Progress files: %s/pst/*/conversion-*/.eapdf-evidence-*/progress.json\n' "$run_dir"
 printf 'Validation progress: %s/pst/*/validation-*/*.progress.json\n' "$run_dir"
 python3 -u scripts/run_real_world_corpus.py --workers 1 --output "$run_dir" "${inputs[@]}" 2>&1 | tee -a "$run_dir/run.log"
 python3 - "$run_dir" <<'PY'

@@ -11,7 +11,11 @@ import org.verapdf.pdfa.PDFAValidator;
 /** Durable incomplete outcome and stage progress for the standalone worker. */
 final class ValidationSession implements AutoCloseable {
     private static volatile ValidationSession current;
-    private final Path input, output, progress;
+    static final String RUN_ID_PROPERTY = "eapdf.validator.runId";
+    private final Path input;
+    private final ValidationOutputs outputs;
+    private final List<Path> protectedInputs;
+    private final String runId;
     private final long started = System.nanoTime();
     private volatile String stage = "Starting validation", detail = "";
     private volatile boolean complete;
@@ -19,19 +23,21 @@ final class ValidationSession implements AutoCloseable {
     private byte[] reserve = new byte[512 * 1024];
     private final Thread shutdown;
 
-    ValidationSession(Path input, Path output) throws IOException { this(input, output, false); }
-    ValidationSession(Path input, Path output, boolean recoverUpstream) throws IOException {
-        this.input = input.toAbsolutePath(); this.output = output.toAbsolutePath();
-        if (this.input.normalize().equals(this.output.normalize()) || (Files.exists(this.output) && Files.isSameFile(this.input, this.output))) throw new IOException("The report must not overwrite the input PDF.");
-        progress = this.output.resolveSibling(this.output.getFileName() + ".progress.json");
+    ValidationSession(Path input, Path output, String runId, boolean recoverUpstream) throws IOException {
+        this.input = input.toAbsolutePath();
+        this.outputs = ValidationOutputs.of(output);
+        this.runId = runId;
+        outputs.protectInput(input);
+        protectedInputs = ValidationOutputs.protectedInputs(this.input);
         pdfa = new JsonObject(); pdfa.addProperty("status", "NOT_RUN");
         pdfa.addProperty("ran", false); pdfa.addProperty("compliant", false); pdfa.addProperty("profile_allowed", false);
         if (recoverUpstream) {
-            Path brief = this.output.resolveSibling(this.output.getFileName() + ".summary.json");
+            Path brief = outputs.summary();
             if (Files.isRegularFile(brief)) try (var reader = Files.newBufferedReader(brief)) {
                 JsonObject prior = JsonParser.parseReader(reader).getAsJsonObject();
                 JsonObject summary = prior.getAsJsonObject("summary");
-                if (this.input.toString().equals(JavaValidation.text(summary, "file"))) {
+                if (this.input.toString().equals(JavaValidation.text(summary, "file"))
+                    && runId.equals(JavaValidation.text(summary, "run_id"))) {
                     if (prior.has("pdfa")) pdfa = prior.getAsJsonObject("pdfa").deepCopy();
                     if (prior.has("iso32005")) iso32005 = prior.getAsJsonObject("iso32005").deepCopy();
                     if (summary.has("last_stage")) stage = summary.get("last_stage").getAsString();
@@ -93,7 +99,10 @@ final class ValidationSession implements AutoCloseable {
         value.addProperty("stage", stage); value.addProperty("detail", detail);
         value.addProperty("elapsed_seconds", (System.nanoTime() - started) / 1_000_000_000);
         value.addProperty("updated", Instant.now().toString());
-        try { writeAtomic(progress, value); }
+        value.addProperty("validation_target", "eapdf");
+        value.addProperty("report", outputs.report().toString());
+        value.addProperty("run_id", runId);
+        try { write(outputs.progress(), value); }
         catch (IOException error) { System.err.println("Unable to write validation progress: " + error.getMessage()); }
         System.out.println("[validation] " + stage + " — " + detail);
     }
@@ -107,6 +116,7 @@ final class ValidationSession implements AutoCloseable {
         summary.addProperty("validation_target", "eapdf");
         summary.addProperty("rule_total", JavaValidation.RULES.size()); summary.addProperty("run_state", state);
         summary.addProperty("last_stage", stage);
+        summary.addProperty("run_id", runId);
         summary.addProperty("pass", "PASS".equals(level) ? 1 : 0);
         summary.addProperty("fail", "FAIL".equals(level) ? 1 : 0);
         summary.addProperty("warn", "WARN".equals(level) ? 2 : 1); summary.addProperty("na", 0);
@@ -126,15 +136,16 @@ final class ValidationSession implements AutoCloseable {
             summary.addProperty(counter, summary.get(counter).getAsInt() + 1);
         }
         result.add("summary", summary); result.add("pdfa", pdfa); result.add("items", items);
-        writeAtomic(output, result);
         JsonObject brief = new JsonObject(); brief.add("summary", summary); brief.add("pdfa", pdfa);
+        brief.addProperty("report", outputs.report().toString());
         if (iso32005 != null) brief.add("iso32005", iso32005);
         java.util.List<String> failures = new java.util.ArrayList<>();
         if ("FAIL".equals(upstream)) failures.add("PDFA_FIRST_PASS");
         if (iso32005 != null && "FAIL".equals(JavaValidation.text(iso32005, "status"))) failures.add("ISO32005_UPSTREAM");
         brief.add("failure_codes", JavaValidation.JSON.toJsonTree(failures));
         JsonArray unavailable = new JsonArray(); unavailable.add(items.get(1)); brief.add("unavailable_examples", unavailable);
-        writeAtomic(output.resolveSibling(output.getFileName() + ".summary.json"), brief);
+        write(outputs.summary(), brief);
+        write(outputs.report(), result);
     }
     void failed(String reason) {
         reserve = null;
@@ -142,11 +153,33 @@ final class ValidationSession implements AutoCloseable {
         catch (Exception error) { System.err.println("Unable to write incomplete validation report: " + error); }
         stage = "Incomplete"; detail = reason; updateProgress(); complete = true;
     }
+    JsonObject completedSummary(JsonObject summary) {
+        summary.addProperty("run_id", runId);
+        summary.addProperty("run_state", "COMPLETE");
+        return summary;
+    }
+
+    void replaceOutput(Path temporary, Path output) throws IOException {
+        ValidationOutputs.protect(output, protectedInputs);
+        replace(temporary, output);
+    }
+
+    void write(Path output, JsonObject result) throws IOException {
+        if (!output.equals(outputs.report())) outputs.verifyPreviousSidecars();
+        writeAtomic(output, result, protectedInputs);
+    }
+
     void completed() { complete = true; stage = "Finished"; detail = "Validation report saved."; updateProgress(); }
     static void writeAtomic(Path output, JsonObject result) throws IOException {
+        writeAtomic(output, result, List.of());
+    }
+    static void writeAtomic(Path output, JsonObject result, List<Path> protectedInputs) throws IOException {
+        output = ValidationOutputs.entry(output);
+        ValidationOutputs.protect(output, protectedInputs);
         Path temporary = Files.createTempFile(output.toAbsolutePath().getParent(), ".validation-", ".json");
         try {
             try (var writer = Files.newBufferedWriter(temporary)) { JavaValidation.JSON.toJson(result, writer); }
+            ValidationOutputs.protect(output, protectedInputs);
             replace(temporary, output);
         } finally { Files.deleteIfExists(temporary); }
     }

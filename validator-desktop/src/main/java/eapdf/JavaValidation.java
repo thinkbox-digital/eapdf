@@ -57,9 +57,10 @@ public final class JavaValidation {
     String previousTemp = System.getProperty("java.io.tmpdir");
     System.setProperty("java.io.tmpdir", storage.toString());
     try {
-    try (ValidationSession session = new ValidationSession(input, output)) {
+    String runId = System.getProperty(ValidationSession.RUN_ID_PROPERTY, java.util.UUID.randomUUID().toString());
+    try (ValidationSession session = new ValidationSession(input, output, runId, false)) {
       try (Report report = inspect(input, new Children(), 0, true)) {
-        report.write(output);
+        report.write(output, session);
         session.completed();
         code = "PASS".equals(text(report.summary(), "status")) ? 0 : 2;
       } catch (OutOfMemoryError | StackOverflowError error) {
@@ -392,12 +393,16 @@ public final class JavaValidation {
       result.add("summary", summary()); result.add("pdfa", pdfa); result.add("items", items);
       return result;
     }
-    void write(Path output) throws IOException {
+    void write(Path output) throws IOException { write(output, null); }
+    void write(Path output, ValidationSession session) throws IOException {
+      var outputs = ValidationOutputs.of(output);
+      output = outputs.report();
+      JsonObject reportSummary = session == null ? summary() : session.completedSummary(summary());
       if (spoolWriter != null) spoolWriter.flush();
       Path temporary = Files.createTempFile(output.toAbsolutePath().getParent(), ".validation-", ".json");
       try {
         try (var writer = JSON.newJsonWriter(Files.newBufferedWriter(temporary))) {
-          writer.beginObject(); writer.name("summary"); JSON.toJson(summary(), writer);
+          writer.beginObject(); writer.name("summary"); JSON.toJson(reportSummary, writer);
           writer.name("pdfa"); JSON.toJson(pdfa, writer);
           writer.name("items"); writer.beginArray();
           if (spool == null) for (var item : items) JSON.toJson(item, writer);
@@ -406,10 +411,13 @@ public final class JavaValidation {
           }
           writer.endArray(); writer.endObject();
         }
-        ValidationSession.replace(temporary, output);
-        JsonObject brief = new JsonObject(); brief.add("summary", summary()); brief.add("pdfa", pdfa);
+        if (session == null) ValidationSession.replace(temporary, output);
+        else session.replaceOutput(temporary, output);
+        JsonObject brief = new JsonObject(); brief.add("summary", reportSummary); brief.add("pdfa", pdfa);
+        brief.addProperty("report", output.toString());
         brief.add("failure_codes", JSON.toJsonTree(failureCodes)); brief.add("unavailable_examples", unavailableExamples);
-        ValidationSession.writeAtomic(output.resolveSibling(output.getFileName() + ".summary.json"), brief);
+        if (session == null) ValidationSession.writeAtomic(outputs.summary(), brief);
+        else session.write(outputs.summary(), brief);
       } finally { Files.deleteIfExists(temporary); }
     }
     @Override public void close() {

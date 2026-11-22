@@ -25,7 +25,7 @@ class CreationValidationOptionTests {
       ConversionProgress.start("eapdf.EmailToPDFA", new String[]{"--out", directory.toString(), "in/sample.eml"}, workspace);
       ConversionProgress.attach(workspace);
       ConversionProgress.creationChecked(output, output, null, false);
-      var progress = com.google.gson.JsonParser.parseString(Files.readString(directory.resolve("progress.json"))).getAsJsonObject();
+      var progress = com.google.gson.JsonParser.parseString(Files.readString(TestSupport.creatorProgress(directory))).getAsJsonObject();
       var receipt = progress.getAsJsonArray("creation_receipts").get(0).getAsJsonObject();
       assertEquals("SKIPPED", receipt.get("creation_checks").getAsString());
       assertEquals("NOT_RUN", receipt.get("preservation_comparison").getAsString());

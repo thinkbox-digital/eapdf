@@ -42,13 +42,38 @@ final class ConversionProgress {
     String fallback = entry.equals("eapdf.MonthlyFilenameArchiveToPdf")
         ? Path.of((String) options.getOrDefault("in", MonthlyFilenameArchiveToPdf.DEFAULT_INPUT_DIR)).resolve("_monthly_1m").toString() : "out";
     String option = entry.equals("eapdf.GmailDownloadToPdf") ? "out-pdf" : "out";
-    Path path = Path.of((String) options.getOrDefault(option, fallback)).toAbsolutePath().normalize().resolve("progress.json");
+    Path path = Path.of((String) options.getOrDefault(option, fallback)).toAbsolutePath().normalize();
+    Files.createDirectories(path);
+    Path evidence = Files.createTempDirectory(path, ".eapdf-evidence-");
+    ConversionProgress progress = startAt(evidence.resolve("progress.json"), workspace);
+    System.out.println("Progress: " + progress.path);
+    return progress;
+  }
+
+  static void startWorker(Path workspace) throws Exception {
+    startAt(workspace.resolve("progress.json"), workspace);
+  }
+
+  private static ConversionProgress startAt(Path path, Path workspace) throws Exception {
     var progress = new ConversionProgress(path, UUID.randomUUID().toString(), Instant.now().toString());
     Common.writeAtomically(workspace.resolve("progress-target.json"), JSON.toJson(Map.of(
         "path", path.toString(), "job_id", progress.jobId, "started", progress.started)).getBytes(java.nio.charset.StandardCharsets.UTF_8));
     progress.write(false);
-    System.out.println("Progress: " + path);
     return progress;
+  }
+
+  static Path logsDirectory(Path fallback) {
+    String supervisorLogs = System.getProperty("eapdf.creatorWorkerLogs");
+    if (supervisorLogs != null && !supervisorLogs.isBlank()) return Path.of(supervisorLogs);
+    var progress = active;
+    return progress == null ? fallback : progress.path.getParent().resolve("logs");
+  }
+
+  static Path startDebugDirectory(Path parent) throws java.io.IOException {
+    Files.createDirectories(parent);
+    Path path = Files.createTempDirectory(parent, "job-");
+    System.out.println("Debug files: " + path);
+    return path;
   }
 
   static void attach(Path workspace) throws Exception {

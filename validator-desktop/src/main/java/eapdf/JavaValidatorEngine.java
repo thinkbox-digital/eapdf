@@ -24,8 +24,10 @@ final class JavaValidatorEngine implements ValidatorGui.Engine {
   @Override public ValidatorGui.Result validate(Path input) throws Exception {
     Run run = current.get();
     Path directory = null;
+    String runId = java.util.UUID.randomUUID().toString();
     try {
       run.check();
+      Path source = input.toRealPath();
       directory = ValidationRuntime.temporaryDirectory();
       Path output = directory.resolve("report.json");
       Path diagnostic = directory.resolve("diagnostics.txt");
@@ -35,8 +37,8 @@ final class JavaValidatorEngine implements ValidatorGui.Engine {
       long heap = Math.min(Runtime.getRuntime().maxMemory() / (1024 * 1024), ValidationRuntime.workerHeapMiB());
       ProcessBuilder builder = new ProcessBuilder(ValidationRuntime.boundedCommand(java.util.List.of(javaExecutable, "-Xmx" + heap + "m",
           "-XX:MaxDirectMemorySize=128m", "-XX:MaxMetaspaceSize=256m", "-XX:ReservedCodeCacheSize=128m", "-Deapdf.validator.worker=true",
-          "-XX:ActiveProcessorCount=4", "-Djava.awt.headless=true", "-Djava.io.tmpdir=" + directory, "-cp", classpath,
-          JavaValidation.class.getName(), input.toRealPath().toString(), output.toString()), heap));
+          "-XX:ActiveProcessorCount=4", "-D" + ValidationSession.RUN_ID_PROPERTY + "=" + runId, "-Djava.awt.headless=true", "-Djava.io.tmpdir=" + directory, "-cp", classpath,
+          JavaValidation.class.getName(), source.toString(), output.toString()), heap));
       builder.redirectOutput(diagnostic.toFile()).redirectErrorStream(true);
       run.check();
       run.process = builder.start();
@@ -68,7 +70,7 @@ final class JavaValidatorEngine implements ValidatorGui.Engine {
       }
       if (!diagnosticText.isBlank()) System.err.println(diagnosticText);
       if (!Files.isRegularFile(output) || timedOut || overBudget || run.stopped.get()) {
-        try (var session = new ValidationSession(input, output, true)) {
+        try (var session = new ValidationSession(source, output, runId, true)) {
           session.failed(run.stopped.get() ? "Validation was stopped before the worker could write its report."
               : overBudget ? "Validation exceeded its scratch/report budget." : timedOut ? "Validation exceeded its time limit." : "Validation worker ended before it could write its report. " + diagnosticText);
         }
