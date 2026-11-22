@@ -1,32 +1,16 @@
 # EA-PDF readers
 
-Full and Even More Lite readers **1.8.0** are included with creator and
-validator **2.4.0-beta.3**.
-Both readers restore recognized family names for affected embedded CJK fonts.
+The Full browser reader **1.8.0** ships with creator and
+validator **2.4.0-beta.3**. It restores recognized family names for affected embedded CJK fonts.
 Read local PDFs, browse email folders and save attachments. Files stay on your
 computer. No Java, server or internet connection is needed by the extensions.
 
 [Download](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.3) ·
 [User guide](../docs/manual/user-manual.html#viewer) · [Privacy](../docs/site/privacy.md)
 
-## Choose a reader
-
-| | Full | Even More Lite |
-| --- | --- | --- |
-| Message/folder navigation, PDF pages and embedded assets | Yes | Yes |
-| PDF text search and message filtering | Yes | No |
-| Independent CSV/XMP metadata export | Yes | No |
-| Conversations and Portfolio view | Yes | No |
-| Embedded search indexes and large-archive optimizations | Yes | No |
-| PDF size/page limit | See [full-reader limits](docs/security.md) | 32 MiB / 2,048 pages per PDF |
-
-Even More Lite uses three adjustable panes for messages, pages and assets.
-Pane-heading chevrons hide the side panes; Show messages and Show files restore
-them above the document. Page controls sit above the PDF. Full offers Portfolio
-view for actual PDF Portfolios; EA-PDF collections retain email navigation.
-The two extensions can be installed together. Viewer Lite is discontinued;
-its last packages remain in the previous release. See the
-[Even More Lite guide](even-more-lite/README.md) for controls and limits.
+Full offers search, filtering, CSV/XMP export, Conversations, Portfolio
+view and large-archive support. EA-PDF collections use email navigation.
+See [reader limits](docs/security.md).
 
 ## Install
 
@@ -38,22 +22,13 @@ its last packages remain in the previous release. See the
 choose **Load Temporary Add-on**, and select `manifest.json`. Repeat after restarting
 Firefox. These beta packages are unsigned.
 
-**Even More Lite web page:** extract the web ZIP to a temporary directory, then run:
-
-```sh
-python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/eapdf-viewer-even-more-lite-web
-```
-
-Open `http://127.0.0.1:8765/viewer.html`. Use the directory where you extracted the
-ZIP. Double-clicking `viewer.html` is not supported.
-
 ## Use
 
 - Click **Open PDF** or drop a file into the reader.
 - Select a message or folder on the left. Scroll or use page controls to read.
 - Open embedded PDFs, preview supported images/text, or download their original bytes.
 - Use **Parent** to return to the containing PDF.
-- In Full, use search/filtering, independent CSV/XMP exports, Conversations and Portfolio layouts.
+- Use search/filtering, independent CSV/XMP exports, Conversations and Portfolio layouts.
 
 Incomplete scans and unsupported files show a warning. A readable PDF has not
 necessarily passed validation. Original files are unchanged. Embedded scripts do not run.
@@ -62,7 +37,7 @@ necessarily passed validation. Original files are unchanged. Embedded scripts do
 
 Before regenerating extension distributables, bump the reader minor version in
 `package.json` and `package-lock.json` using the three-part format `1.x.0`. Rebuild
-Full and Even More Lite together, using one version per regeneration batch. Verification
+Full for Chromium and Firefox using one version per regeneration batch. Verification
 rebuilds in that batch retain the chosen version. Keep local installation paths
 stable; reload the extensions and reopen viewer tabs after updating their files.
 
@@ -73,13 +48,10 @@ npm ci
 npm run check
 npm test
 npm run package:beta
-npm run build:even-more-lite
 ```
 
-Packages appear in `releases/`. Even More Lite also includes a standalone source
-ZIP. Shared fixes belong in this repository; regenerate exported source.
-The retained Lite exporter supplies generic hooks and build infrastructure;
-release builds produce Full and Even More Lite packages.
+Full Chromium and Firefox packages appear in `releases/`. The shared
+exporter also supports the separate [EA-PDF Lite repository](https://github.com/thinkbox-digital/eapdf-lite).
 
 ## Tests
 

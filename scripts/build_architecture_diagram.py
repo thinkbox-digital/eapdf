@@ -36,9 +36,9 @@ def build(path):
     pdf = canvas.Canvas(str(path), pagesize=(1578, 750), invariant=1, pageCompression=1)
     pdf.setTitle('EA-PDF Software Architecture')
     pdf.setAuthor('Thinkbox.DIGITAL')
-    pdf.setSubject('Creator, standalone validation, and Full/Even More Lite readers; current product and dependency overview')
+    pdf.setSubject('Creator, standalone validation, and desktop and Full browser readers; current product and dependency overview')
     pdf.setCreator('EA-PDF architecture diagram builder')
-    pdf.setKeywords('EA-PDF, architecture, creator, validator, viewer, Even More Lite')
+    pdf.setKeywords('EA-PDF, architecture, creator, validator, viewer, JavaFX')
     blue = HexColor('#163f58'); ink = HexColor('#233b4a'); border = HexColor('#cbd9e2')
 
     def text(x, y, value, size=11, bold=False, color=ink):
@@ -70,10 +70,10 @@ def build(path):
         ('Java 21+  |  Desktop and command line', version),
         ('Checks', f'{rules} project rule definitions; PDF/A validation; selected ISO 32005 structure rules.'),
         ('Scope', 'Embedded PDFs, attachments and source consistency. Reports PASS, FAIL or INCOMPLETE. No server required.')])
-    card(xs[2], 418, width, 244, 'FULL / EVEN MORE LITE', [
+    card(xs[2], 418, width, 244, 'FULL BROWSER READER', [
         ('Chromium and Firefox  |  Local files', reader['version']),
         ('Shared reading experience', 'PDF pages, message/folder navigation and embedded assets. Full adds search, filtering and CSV/XMP export.'),
-        ('Even More Lite', 'Messages, pages and embedded assets in three adjustable panes. No search, metadata exports or Portfolio view. 32 MiB / 2,048 pages.')])
+        ('Portfolio and metadata', 'Browse PDF Portfolios and export CSV or XMP from the active document.')])
 
     card(xs[0], 122, width, 274, 'CREATOR LIBRARIES', [
         ('PDF creation and metadata', f"PDFBox / XMPBox {java['pdfbox']}; FontBox {java['fontbox']}. OpenHTMLtoPDF {java['openhtmltopdf-pdfbox']} with four maintained patches."),
@@ -85,7 +85,7 @@ def build(path):
         ('Optional development tool', 'Python CLI for regression tests and diagnostics. The web workbench and its deployment code are removed.')])
     card(xs[2], 122, width, 274, 'READER FOUNDATION', [
         ('PDF engine and shared hooks', f"PDF.js {reader['dependencies']['pdfjs-dist']}. Generic hooks expose document parts / DPM, associated files, metadata and collection membership."),
-        ('Application layer', f"TypeScript {reader['devDependencies']['typescript']}; browser extensions. Full and Even More Lite share maintained source; the smaller reader has a reproducible standalone export."),
+        ('Application layer', f"TypeScript {reader['devDependencies']['typescript']}; browser extensions. The shared source supports the standalone export for EA-PDF Lite."),
         ('Build tools only', f"Node {reader['engines']['node']}; npm {reader['engines']['npm']}; Playwright {reader['devDependencies']['playwright']}. No Java or Python needed by the extensions.")])
 
     desktop = ET.parse(ROOT / 'desktop-viewer/pom.xml').getroot()

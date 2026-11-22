@@ -15,9 +15,6 @@ permissions:
 concurrency:
   group: release-acceptance-${{ github.ref }}
 
-env:
-  EAPDF_EDITION: full
-
 jobs:
   acceptance:
     runs-on: ubuntu-24.04
@@ -67,31 +64,11 @@ jobs:
           mvn -B -f validator-desktop/pom.xml -DskipTests "-Deapdf.build.directory=$RUNNER_TEMP/validator" package
           cp -- "$RUNNER_TEMP/validator/eapdf-validator-$version.jar" "$stage/"
           viewer_version=$(node -p 'require("./browser-viewer/package.json").version')
-          if [[ "$EAPDF_EDITION" == lite || "$EAPDF_EDITION" == pdfviewfx ]]; then
-            cp -- "$RUNNER_TEMP/creator/emailtopdfa-lite-$version.jar" "$stage/"
-            npm --prefix browser-viewer run build
-            npm --prefix browser-viewer run package
-            cp -- browser-viewer/releases/eapdf-viewer-even-more-lite-"$viewer_version"-{chromium,firefox,web}.zip "$stage/"
-          else
-            cp -- "$RUNNER_TEMP/creator/emailtopdfa-$version.jar" "$stage/"
-            npm --prefix browser-viewer run package:beta
-            cp -- browser-viewer/releases/eapdf-viewer-"$viewer_version"-{chromium,firefox}.zip "$stage/"
-            if [[ "$EAPDF_EDITION" == full ]]; then
-              npm --prefix browser-viewer run build:even-more-lite
-              cp -- browser-viewer/releases/eapdf-viewer-even-more-lite-"$viewer_version"-{chromium,firefox,web}.zip "$stage/"
-            fi
-          fi
-          if [[ "$EAPDF_EDITION" == pdfviewfx ]]; then
-            # The local packager bumps the checkout version. CI tests the tagged version.
-            mvn -B -f desktop-viewer/pom.xml -DskipTests "-Deapdf.build.directory=$RUNNER_TEMP/desktop" package
-            for jar in "$RUNNER_TEMP/desktop/"*-standalone.jar; do
-              name=$(basename "$jar" -standalone.jar)
-              cp -- "$jar" "$stage/$name.jar"
-            done
-          else
-            EAPDF_VIEWER_DIST="$RUNNER_TEMP/desktop" bash desktop-viewer/package.sh -DskipTests
-            cp -- "$RUNNER_TEMP/desktop/"*.jar "$stage/"
-          fi
+          cp -- "$RUNNER_TEMP/creator/emailtopdfa-$version.jar" "$stage/"
+          npm --prefix browser-viewer run package:beta
+          cp -- browser-viewer/releases/eapdf-viewer-"$viewer_version"-{chromium,firefox}.zip "$stage/"
+          EAPDF_VIEWER_DIST="$RUNNER_TEMP/desktop" bash desktop-viewer/package.sh -DskipTests
+          cp -- "$RUNNER_TEMP/desktop/"*.jar "$stage/"
           mvn -B -f desktop-viewer/pom.xml org.apache.maven.plugins:maven-dependency-plugin:3.9.0:copy-dependencies \
             -DincludeGroupIds=org.openjfx -DincludeClassifiers=linux "-DoutputDirectory=$RUNNER_TEMP/javafx"
       - name: Verify the candidate bytes

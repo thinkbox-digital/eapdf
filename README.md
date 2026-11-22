@@ -9,12 +9,12 @@ Supports **EML, MSG, PST, MBOX and Gmail**.
 
 [User guide](https://thinkbox-digital.github.io/eapdf/) · [PDF manual](docs/EA-PDF_User_Manual.pdf) · [Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.3)
 
-**Beta:** creator and validator 2.4.0-beta.3; Full and Even More Lite readers 1.8.0.
+**Beta:** creator and validator 2.4.0-beta.3; Full browser reader 1.8.0.
 Java applications need **Java 21 or later**. The readers run locally in your browser.
 
 ## Editions
 
-- **EA-PDF Main** (this checkout) — The full creator, validator and browser readers.
+- **EA-PDF Main** (this checkout) — The full creator, validator and Full browser reader.
 - [EA-PDF Lite](https://github.com/thinkbox-digital/eapdf-lite) — An EML command-line creator, Java validation and the Even More Lite reader.
 - [EA-PDF Secure](https://github.com/thinkbox-digital/eapdf-secure) — The experimental C2PA provenance and PAdES signing and verification edition.
 
@@ -30,10 +30,9 @@ Read local PDFs and EA-PDF archives in the standalone Linux viewer. See the
 | [Validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/eapdf-validator-2.4.0-beta.3.jar) | Check the finished PDFs and save a report. |
 | [Desktop viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/eapdf-desktop-viewer-full-0.8.0.jar) | Read EA-PDF archives and PDF Portfolios in a Java 21+ desktop app. |
 | Full reader: [Chromium](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/eapdf-viewer-1.8.0-chromium.zip) / [Firefox](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/eapdf-viewer-1.8.0-firefox.zip) | Read messages, folders and attachments; includes Conversations, Portfolio view and larger-archive support. |
-| Even More Lite reader: [Chromium](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/eapdf-viewer-even-more-lite-1.8.0-chromium.zip) / [Firefox](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/eapdf-viewer-even-more-lite-1.8.0-firefox.zip) | Read messages, folders, PDF pages and embedded assets. PDFs up to 32 MiB and 2,048 pages. |
 
 The [release page](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.3)
-also has configuration, examples, the manual, Even More Lite web/source packages and checksums.
+also has configuration, examples, the manual and checksums.
 Browser extensions are unsigned; Firefox installation is temporary.
 
 ## Get started
@@ -85,7 +84,6 @@ and [configuration](config/README.md).
 In Chromium, choose **Load unpacked** once at the new checkout location.
 
 - Full — `browser-viewer/local-install/full/chromium`
-- Even More Lite — `browser-viewer/local-install/even-more-lite/chromium`
 
 Future builds should refresh these same folders. Use **Reload** on the extension
 card and reopen the viewer tab.

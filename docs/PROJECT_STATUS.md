@@ -7,7 +7,7 @@ validated children. GitHub publication through the acceptance workflow uses the
 packages and checksums from the successful job.
 
 Current release, 22 November 2026. Creator and validator **2.4.0-beta.3**,
-browser reader **1.8.0**, and desktop viewer **0.8.0**.
+Full browser reader **1.8.0**, and desktop viewer **0.8.0**.
 [Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.3).
 
 C2PA/PAdES, WeasyPrint and other experimental changes remain separate in
@@ -20,6 +20,11 @@ Java validator and the Even More Lite reader.
 [Release checks](releases/2.4.0-beta.2-validation.md) · [Code layout](ARCHITECTURE.md)
 
 ## This release
+
+- **New code.** Desktop Viewer 0.8.0 is available as a standalone Java JAR in Main and Secure.
+- **Packaging.** Main ships the Full browser reader for Chromium and Firefox.
+
+## Previous release, 21 November 2026
 
 - **Bug fix.** Even More Lite shows the open filename or embedded PDF path once
   in its header, with styling aligned to Full.

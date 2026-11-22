@@ -25,7 +25,7 @@ Isolated profiles deliberately omit source assets; they do not anonymize the ema
 
 ## About this documentation
 
-Published versions are **EA-PDF 2.4.0-beta.3** and **Full/Even More Lite readers 1.8.0**.
+Published versions are **EA-PDF 2.4.0-beta.3** and **Full browser reader 1.8.0**.
 Screenshots illustrate earlier editions; current controls may differ. This is
 beta software. Read conversion warnings and validation reports before accepting
 a PDF.

@@ -1,6 +1,6 @@
 # Downloads
 
-Download **EA-PDF 2.4.0-beta.3** and **viewer 1.8.0** from the
+Download **EA-PDF 2.4.0-beta.3** and **Full browser reader 1.8.0** from the
 [current release](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.3).
 
 | File | Use it for |
@@ -12,14 +12,10 @@ Download **EA-PDF 2.4.0-beta.3** and **viewer 1.8.0** from the
 | `eapdf-desktop-viewer-full-0.8.0.jar` | Standalone Java 21+ desktop viewer |
 | `eapdf-viewer-1.8.0-chromium.zip` | Chromium viewer extension |
 | `eapdf-viewer-1.8.0-firefox.zip` | Firefox viewer extension |
-| `eapdf-viewer-even-more-lite-1.8.0-chromium.zip` | Even More Lite Chromium reader |
-| `eapdf-viewer-even-more-lite-1.8.0-firefox.zip` | Even More Lite Firefox reader |
-| `eapdf-viewer-even-more-lite-1.8.0-web.zip` | Even More Lite reader served as a local web page |
-| `eapdf-viewer-even-more-lite-1.8.0-source.zip` | Standalone Even More Lite source code |
 | `ea-pdf-examples-2.4.0-beta.3.zip` | Example outputs and validation records |
 | `EA-PDF_User_Manual-2.4.0-beta.3.pdf` | Offline PDF/A user manual |
 | `EA-PDF_Software_Architecture-2.4.0-beta.3.pdf` | One-page product and library diagram |
-| `ea-pdf-screenshots-2.4.0-beta.3.zip` | Four 1280×800 sample screenshots |
+| `ea-pdf-screenshots-2.4.0-beta.3.zip` | Sample screenshots |
 | `PRIVACY-2.4.0-beta.3.md` | Short privacy policy |
 | `SHA256SUMS.txt` | Checksums for verifying the downloaded files |
 
