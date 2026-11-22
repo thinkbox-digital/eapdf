@@ -1,6 +1,6 @@
 """Prove that the independent oracle rejects deliberate losses in a real PDF."""
 import copy
-import importlib.util
+import sys
 import json
 from pathlib import Path
 import tempfile
@@ -9,9 +9,8 @@ import unittest
 import pymupdf as fitz
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = importlib.util.spec_from_file_location('quality', ROOT / 'scripts/check_conversion_quality.py')
-quality = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(quality)
+sys.path.insert(0, str(ROOT / "scripts"))
+import check_conversion_quality as quality
 
 class ConversionQualityGateTests(unittest.TestCase):
     def setUp(self):

@@ -97,6 +97,8 @@ public final class ViewerApplication extends Application {
     private boolean showFiles = true;
     private boolean filesVisibilityChosen;
     private long request;
+    private Thread opening;
+    private boolean cancellingOpen;
     private volatile long searchRequest;
     private volatile long mailRequest;
     private boolean archiveSearchRunning;
@@ -759,24 +761,27 @@ public final class ViewerApplication extends Application {
                       FolderStep continuation, boolean lastPage, PageTarget target) {
         if (parent != null) path.toFile().deleteOnExit();
         long token = ++request;
-        setBusy(true);
-        report("Opening " + name + "…");
-        Thread.ofVirtual().start(() -> {
+        opening = Thread.ofVirtual().unstarted(() -> {
             ViewerSession session = null;
             PDFBoxDocument document = null;
             try {
+                checkOpeningInterrupted();
                 session = ViewerSession.open(path, name, parent, source, password);
+                checkOpeningInterrupted();
                 if (target != null) session.page = resolvePage(session, target);
+                checkOpeningInterrupted();
                 document = new ViewerRenderingDocument(session.renderingPath.toFile());
+                checkOpeningInterrupted();
                 var loaded = session;
                 var rendered = document;
                 Platform.runLater(() -> {
                     if (token != request) {
                         rendered.close();
                         loaded.close();
+                        finishOpening(token);
                         return;
                     }
-                    setBusy(false);
+                    finishOpening(token);
                     if (continuation != null && loaded.mail.collection()) {
                         rendered.close();
                         loaded.close();
@@ -802,27 +807,43 @@ public final class ViewerApplication extends Application {
                     if (isPortfolio(loaded)) PortfolioView.initialFile(loaded)
                             .ifPresent(asset -> openPortfolioMember(loaded, asset));
                 });
-            } catch (IOException | RuntimeException failure) {
+            } catch (IOException | RuntimeException | OutOfMemoryError failure) {
                 if (document != null) document.close();
                 if (session != null) session.close();
+                boolean retryPassword = failure instanceof InvalidPasswordException && !Thread.currentThread().isInterrupted();
+                if (session == null && parent != null && !retryPassword) ViewerSession.deleteTemporaryFile(path);
                 Platform.runLater(() -> {
+                    finishOpening(token);
                     if (token != request) {
-                        if (parent != null) ViewerSession.deleteTemporaryFile(path);
+                        if (parent != null && retryPassword) ViewerSession.deleteTemporaryFile(path);
                         return;
                     }
-                    setBusy(false);
-                    if (failure instanceof InvalidPasswordException) {
+                    if (retryPassword) {
                         var answer = promptPassword(name);
                         if (answer != null) {
                             load(path, name, parent, source, answer, continuation, lastPage, target);
                             return;
                         }
                         report("Opening canceled.");
-                    } else error("Could not open PDF", failure);
-                    if (parent != null) ViewerSession.deleteTemporaryFile(path);
+                        if (parent != null) ViewerSession.deleteTemporaryFile(path);
+                    } else showError("Could not open PDF", messageOf(failure));
                 });
             }
         });
+        setBusy(true);
+        report("Opening " + name + "…");
+        opening.start();
+    }
+
+    private static void checkOpeningInterrupted() {
+        if (Thread.currentThread().isInterrupted()) throw new java.util.concurrent.CancellationException();
+    }
+
+    private void finishOpening(long token) {
+        opening = null;
+        cancellingOpen = false;
+        setBusy(false);
+        if (token != request) report("Opening canceled.");
     }
 
     private String promptPassword(String name) {
@@ -842,11 +863,17 @@ public final class ViewerApplication extends Application {
     }
 
     private void closeOrCancel() {
-        if (busy) {
+        if (opening != null && !cancellingOpen) {
+            request++;
+            cancellingOpen = true;
+            opening.interrupt();
+            updateControls();
+            report("Canceling opening…");
+        } else if (busy && opening == null) {
             request++;
             setBusy(false);
-            report("Opening canceled.");
-        } else if (current != null) {
+            report("Reading XMP canceled.");
+        } else if (!busy && current != null) {
             shutdown();
             showDocument(null, null);
         }
@@ -854,6 +881,7 @@ public final class ViewerApplication extends Application {
 
     private void shutdown() {
         request++;
+        if (opening != null) opening.interrupt();
         mailRequest++;
         stopArchiveSearch();
         clearDocumentSearch();
@@ -993,11 +1021,12 @@ public final class ViewerApplication extends Application {
 
     private void updateControls() {
         controls.setDisable(busy);
-        close.setDisable(current == null && !busy);
-        close.setText(busy ? "Cancel" : "×");
+        close.setDisable(cancellingOpen || (current == null && !busy));
+        close.setText(cancellingOpen ? "Canceling…" : busy ? "Cancel" : "×");
         close.setContentDisplay(busy ? javafx.scene.control.ContentDisplay.TEXT_ONLY
                 : javafx.scene.control.ContentDisplay.GRAPHIC_ONLY);
-        close.setAccessibleText(busy ? "Cancel opening" : "Close viewer");
+        String cancelLabel = opening == null ? "Cancel reading XMP" : "Cancel opening";
+        close.setAccessibleText(busy ? cancelLabel : "Close viewer");
         if (busy) close.getStyleClass().remove("icon-button");
         else if (!close.getStyleClass().contains("icon-button")) close.getStyleClass().add("icon-button");
         parentButton.setDisable(current == null || current.parent == null);

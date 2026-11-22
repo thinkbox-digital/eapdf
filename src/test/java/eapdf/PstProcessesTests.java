@@ -48,7 +48,7 @@ class PstProcessesTests {
         }
       }
       assertEquals(7,sources);ConversionProgress.flush();
-      var progress=com.google.gson.JsonParser.parseString(Files.readString(out.resolve("progress.json"))).getAsJsonObject();
+      var progress=com.google.gson.JsonParser.parseString(Files.readString(TestSupport.creatorProgress(out))).getAsJsonObject();
       assertEquals(7,progress.get("emails_completed").getAsInt());assertEquals(7,progress.get("emails_total").getAsInt());assertEquals(7,progress.getAsJsonArray("creation_receipts").size());
       for(var receipt:progress.getAsJsonArray("creation_receipts")){assertEquals("PENDING",receipt.getAsJsonObject().get("publication").getAsString());assertEquals("PASS",receipt.getAsJsonObject().get("creation_checks").getAsString());}
       try(var paths=Files.list(work)){assertFalse(paths.anyMatch(p->p.getFileName().toString().startsWith("pst-processes-")));}

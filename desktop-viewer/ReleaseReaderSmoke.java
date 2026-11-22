@@ -55,6 +55,22 @@ public final class ReleaseReaderSmoke extends Application {
         String attachment = input.get("attachment").getAsString();
         Method open = ViewerApplication.class.getDeclaredMethod("openLocal", Path.class);
         open.setAccessible(true);
+        var documents = input.getAsJsonObject("documents");
+        Path first = Path.of(documents.getAsJsonObject("1s").get("path").getAsString());
+        Path next = Path.of(documents.getAsJsonObject("1si").get("path").getAsString());
+        fx(() -> {
+            open.invoke(viewer, first);
+            Thread worker = (Thread) field("opening");
+            check(worker != null, "Opening starts a tracked worker");
+            ((Button) field("close")).fire();
+            check(Boolean.TRUE.equals(field("busy")), "Cancel keeps the viewer busy until cleanup");
+            open.invoke(viewer, next);
+            check(field("opening") == worker, "Reopen cannot start a replacement worker during cancellation");
+            return null;
+        });
+        await(() -> field("opening") == null && !Boolean.TRUE.equals(field("busy")),
+                "canceled opening cleanup");
+        check(fx(this::current) == null, "Canceled PDF never became the active document");
         for (var entry : input.getAsJsonObject("documents").entrySet()) {
             String profile = entry.getKey();
             System.out.println("Checking " + profile);

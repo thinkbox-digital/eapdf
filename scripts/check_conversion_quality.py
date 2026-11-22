@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from creator_progress import creator_progress
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -137,7 +138,7 @@ def main():
             require(len(pdfs) == 1, 'Unexpected output PDF count')
             pdf = pdfs[0]
             pages = check_pdf(pdf, case)
-            progress = json.loads((destination / 'progress.json').read_text())
+            progress = json.loads(creator_progress(destination / 'conversion.log').read_text())
             require(progress['state'] == 'COMPLETED', 'Publication did not complete')
             if case.get('required_warning'):
                 require(any(d['code'] == 'DATE_PRECISION_REDUCED' and case['required_warning'] in d['details']

@@ -7,7 +7,10 @@ import io
 import json
 import os
 from pathlib import Path
+import re
+import shutil
 import subprocess
+import time
 import xml.etree.ElementTree as ET
 import zipfile
 from email.message import EmailMessage
@@ -227,19 +230,85 @@ def check_desktop(classpath, java, label, output, manifest, javafx_lib=None):
         output / f'{label}.log')
 
 
+def check_preservation(creator, validator, fixture, sources, output):
+    directory = output / 'preservation'
+    directory.mkdir()
+    disposable = [directory/source.name for source in sources]
+    for source, copy in zip(sources, disposable):
+        shutil.copyfile(source, copy)
+    before = [sha256(source) for source in disposable]
+    run(['java', '-jar', creator, '--out', directory/'creator', '--jobs', '1',
+         '--archive-profile', 'm', '--archive-output', disposable[0], *disposable],
+        directory/'creator-input-collision.log', expected=2)
+    require([sha256(source) for source in disposable] == before, 'Creator changed an input EML')
+
+    command = ['java', '-Xmx768m', '-cp', validator, 'eapdf.JavaValidation']
+    report = directory/'report.json'
+    for kind in ('summary', 'progress'):
+        colliding = directory/f'report.json.{kind}.json'
+        shutil.copyfile(fixture, colliding)
+        before = sha256(colliding)
+        run([*command, colliding, report], directory/f'{kind}-collision.log', expected=1)
+        require(sha256(colliding) == before and not report.exists(),
+                f'Validator wrote over a {kind} collision')
+        colliding.unlink()
+
+    checked = directory/'checked.pdf'
+    shutil.copyfile(fixture, checked)
+    run([*command, checked, report], directory/'valid.log')
+    prior = json.loads(report.read_text())['summary']
+    require(prior['status'] == 'PASS', 'Stale-report control must start with a genuine PASS')
+    checked.rename(directory/'original.pdf')
+    run([*command, checked, report], directory/'missing-input.log', expected=1)
+    result = json.loads(report.read_text())['summary']
+    require(result['status'] == 'INCOMPLETE' and result['run_id'] != prior['run_id'],
+            'Missing input retained a prior validation result')
+
+
+def check_jar_window(jar, title, output, pdf=None):
+    """Launch the JAR manifest entry point on the runner's isolated X display."""
+    command = ['java', '-Deapdf.viewer.settings='+str(output/'launcher.properties'), '-jar', str(jar)]
+    if pdf:
+        command.append(str(pdf))
+    pattern = re.compile(title)
+    with (output/(jar.stem+'.launch.log')).open('w') as log:
+        with subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT) as process:
+            try:
+                deadline = time.monotonic() + 25
+                while time.monotonic() < deadline and process.poll() is None:
+                    windows = subprocess.check_output(['xwininfo', '-root', '-tree'], text=True, timeout=5)
+                    if pattern.search(windows):
+                        return
+                    time.sleep(0.3)
+                raise ValueError(f'{jar.name}: expected window did not open; see {log.name}')
+            finally:
+                if process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=8)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--creator', required=True, type=Path)
     parser.add_argument('--validator', required=True, type=Path)
     parser.add_argument('--viewer', required=True, action='append', type=Path, help='Packaged Chromium, Firefox or web ZIP')
     parser.add_argument('--desktop-viewer', type=Path, help='Packaged PDFViewFX standalone JAR')
+    parser.add_argument('--creator-gui', type=Path)
+    parser.add_argument('--validator-gui', action='store_true')
+    parser.add_argument('--security-validator', type=Path)
+    parser.add_argument('--auxiliary', type=Path, action='append', default=[])
     parser.add_argument('--output', required=True, type=Path, help='New directory for acceptance evidence')
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True)
     creator, validator = args.creator.resolve(), args.validator.resolve()
     viewers = [path.resolve() for path in args.viewer]
-    packages = [creator, validator, *viewers]
+    packages = [creator, validator, *viewers, *args.auxiliary]
+    packages += [path.resolve() for path in (args.creator_gui, args.security_validator) if path]
     javafx_lib = None
     if args.desktop_viewer:
         desktop_jar = args.desktop_viewer.resolve()
@@ -285,6 +354,22 @@ def main():
             output / f'{archive.stem}.log')
     if args.desktop_viewer:
         check_desktop(str(args.desktop_viewer.resolve()), 'java', 'desktop-viewer', output, manifest, javafx_lib)
+    first_pdf = Path(documents['1s']['path'])
+    check_preservation(creator, validator, first_pdf, sources, output)
+    if args.desktop_viewer:
+        check_jar_window(args.desktop_viewer.resolve(), r'EA-PDF Desktop Viewer', output, first_pdf)
+    if args.creator_gui:
+        check_jar_window(args.creator_gui.resolve(), r'ThinkBox (Secure )?EMailToPDF GUI', output)
+    if args.validator_gui:
+        check_jar_window(validator, r'EA-PDF Validator', output)
+    if args.security_validator:
+        security_jar = args.security_validator.resolve()
+        check_jar_window(security_jar, r'EA-PDF Security Validator Experimental', output)
+        security_report = output / 'unsigned-security.json'
+        run(['java', '-cp', security_jar, 'eapdf.SecurityValidation', first_pdf, security_report],
+            output / 'unsigned-security.log', expected=2)
+        require(json.loads(security_report.read_text())['status'] == 'NOT_APPLICABLE',
+                'Unsigned security fixture must not verify')
     require(all(sha256(Path(document['path'])) == document['sha256'] for document in documents.values()),
             'Reader changed the validated PDF')
     require(all(sha256(path) == hashes[path.name] for path in packages), 'A release package changed during verification')

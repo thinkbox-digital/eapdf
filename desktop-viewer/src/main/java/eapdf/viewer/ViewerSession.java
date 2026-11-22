@@ -56,7 +56,7 @@ final class ViewerSession implements AutoCloseable {
                 }
             }
             return new ViewerSession(path, renderingPath, name, parent, asset, pdf, mail, pdf.assets(mail), pdf.bookmarks());
-        } catch (IOException | RuntimeException error) {
+        } catch (IOException | RuntimeException | OutOfMemoryError error) {
             release(pdf, path, false);
             if (!renderingPath.equals(path)) deleteTemporaryFile(renderingPath);
             throw error;

@@ -49,8 +49,9 @@ jobs:
           python -m pip install 'pikepdf==10.18.1'
           python browser-viewer/scripts/install-ci-firefox.py "$RUNNER_TEMP/firefox-tools"
           sudo apt-get update
-          sudo apt-get install -y xvfb xauth
+          sudo apt-get install -y xvfb xauth x11-utils
           npm --prefix browser-viewer ci --ignore-scripts
+          node --test browser-viewer/tests/publish-viewer-builds.test.mjs
           cd browser-viewer
           npx playwright install --with-deps chromium
           npx playwright install-deps firefox
@@ -64,13 +65,20 @@ jobs:
           mvn -B -f validator-desktop/pom.xml -DskipTests "-Deapdf.build.directory=$RUNNER_TEMP/validator" package
           cp -- "$RUNNER_TEMP/validator/eapdf-validator-$version.jar" "$stage/"
           viewer_version=$(node -p 'require("./browser-viewer/package.json").version')
-          cp -- "$RUNNER_TEMP/creator/emailtopdfa-$version.jar" "$stage/"
+          cp -- "$RUNNER_TEMP/creator/emailtopdfa-$version"{,-gui}.jar "$stage/"
           npm --prefix browser-viewer run package:beta
           cp -- browser-viewer/releases/eapdf-viewer-"$viewer_version"-{chromium,firefox}.zip "$stage/"
           EAPDF_VIEWER_DIST="$RUNNER_TEMP/desktop" bash desktop-viewer/package.sh -DskipTests
           cp -- "$RUNNER_TEMP/desktop/"*.jar "$stage/"
           mvn -B -f desktop-viewer/pom.xml org.apache.maven.plugins:maven-dependency-plugin:3.9.0:copy-dependencies \
             -DincludeGroupIds=org.openjfx -DincludeClassifiers=linux "-DoutputDirectory=$RUNNER_TEMP/javafx"
+          cp docs/EA-PDF_Software_Architecture.pdf "$stage/EA-PDF_Software_Architecture-$version.pdf"
+          python -B scripts/package_configuration.py "$stage/configuration-$version.zip"
+          cp docs/EA-PDF_User_Manual.pdf "$stage/EA-PDF_User_Manual-$version.pdf"
+          cp docs/site/privacy.md "$stage/PRIVACY-$version.md"
+          zip -q -r "$stage/ea-pdf-examples-$version.zip" examples
+          zip -q -r "$stage/ea-pdf-screenshots-$version.zip" docs/screenshots
+          zip -q -r "$stage/licenses-and-notices-$version.zip" LICENSE NOTICE THIRD_PARTY_NOTICES.md third_party_licenses
       - name: Verify the candidate bytes
         env:
           FIREFOX_PATH: ${{ runner.temp }}/firefox-tools/firefox/firefox
@@ -81,19 +89,21 @@ jobs:
           shopt -s nullglob
           stage="$RUNNER_TEMP/release-candidates"
           evidence="$RUNNER_TEMP/release-acceptance"
+          version=$(cat VERSION)
           args=()
-          for zip in "$stage/"*.zip; do args+=(--viewer "$zip"); done
-          desktop=("$stage/"eapdf-*viewer-*.jar)
+          for zip in "$stage"/eapdf-viewer-*.zip; do args+=(--viewer "$zip"); done
+          for file in "$stage"/*; do
+            case "$file" in *.jar|*/eapdf-viewer-*.zip) ;; *) args+=(--auxiliary "$file") ;; esac
+          done
+          args+=(--creator-gui "$stage/emailtopdfa-$version-gui.jar" --validator-gui)
+          desktop=("$stage"/eapdf-desktop-viewer-*.jar)
           test "${#desktop[@]}" -eq 1
-          args+=(--desktop-viewer "${desktop[0]}")
-          creator=("$stage"/emailtopdfa-*.jar)
-          validator=("$stage"/eapdf-validator-*.jar)
-          test "${#creator[@]}" -eq 1
-          test "${#validator[@]}" -eq 1
-          xvfb-run -a python -B scripts/check_release_packages.py \
-            --creator "${creator[0]}" --validator "${validator[0]}" --output "$evidence" "${args[@]}"
+          xvfb-run -a -s '-screen 0 1280x1024x24 -noreset' python -B scripts/check_release_packages.py \
+            --creator "$stage/emailtopdfa-$version.jar" --validator "$stage/eapdf-validator-$version.jar" \
+            --desktop-viewer "${desktop[0]}" --output "$evidence" "${args[@]}"
           cp -- "$evidence/SHA256SUMS" "$stage/"
           (cd "$stage" && sha256sum --strict -c SHA256SUMS)
+          cp "docs/releases/$version.md" "$RUNNER_TEMP/release-notes.md"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
@@ -108,6 +118,11 @@ jobs:
           name: verified-release-packages
           path: ${{ runner.temp }}/release-candidates/
           if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-notes
+          path: ${{ runner.temp }}/release-notes.md
+          if-no-files-found: error
 
   publish:
     if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref_type == 'tag'
@@ -120,6 +135,10 @@ jobs:
         with:
           name: verified-release-packages
           path: release-candidates
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-notes
+          path: notes
       - name: Publish exactly the verified packages
         working-directory: release-candidates
         env:
@@ -132,7 +151,12 @@ jobs:
           mapfile -t files < <(cut -c 67- SHA256SUMS)
           test "${#files[@]}" -eq "$(find . -maxdepth 1 -type f ! -name SHA256SUMS | wc -l)"
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq .sha)" = "$VERIFIED_COMMIT"
-          options=(--repo "$GITHUB_REPOSITORY" --verify-tag --draft --generate-notes)
+          options=(--repo "$GITHUB_REPOSITORY" --verify-tag --draft --notes-file ../notes/release-notes.md)
           if [[ "$RELEASE_TAG" == *-* ]]; then options+=(--prerelease); fi
           gh release create "${options[@]}" -- "$RELEASE_TAG" SHA256SUMS "${files[@]}"
+          download=$(mktemp -d "$RUNNER_TEMP/release-download.XXXXXXXX")
+          gh release download --repo "$GITHUB_REPOSITORY" --dir "$download" -- "$RELEASE_TAG"
+          cmp -- SHA256SUMS "$download/SHA256SUMS"
+          (cd "$download" && sha256sum --strict -c SHA256SUMS)
+          test "$(find "$download" -maxdepth 1 -type f | wc -l)" -eq "$(( ${#files[@]} + 1 ))"
           gh release edit --repo "$GITHUB_REPOSITORY" --draft=false -- "$RELEASE_TAG"

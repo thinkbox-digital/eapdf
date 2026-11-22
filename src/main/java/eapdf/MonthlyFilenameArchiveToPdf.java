@@ -34,7 +34,7 @@ public class MonthlyFilenameArchiveToPdf {
       boolean debug = Boolean.TRUE.equals(opt.get("debug"));
 
       Files.createDirectories(outDir);
-      if (debug) Files.createDirectories(debugDir);
+      if (debug) debugDir = ConversionProgress.startDebugDirectory(debugDir);
 
       MonthlyInputs monthly = collectMonthlyInputs(inputDir);
       if (monthly.groupedInputs.isEmpty()) {

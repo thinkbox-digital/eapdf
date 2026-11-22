@@ -113,7 +113,18 @@ limits. CLI users can set the JVM heap with `-Xmx`; large-file checks may need m
 than the JVM's default. The measured 1.28 GB PST PDF/A check used a 16 GiB heap.
 
 CLI reports include `.progress.json` and `.summary.json` sidecars. The complete
-report is streamed to disk. The desktop keeps finding details on disk and retains
+report is streamed to disk.
+
+The CLI checks all three destinations before writing and rejects aliases of
+the input or unrecognized existing sidecars. Concurrent validations may use
+different report names in the same directory. Keep the directory's empty
+`.eapdf-validation.lock` file in place so workers can reserve overlapping paths
+across processes. The report and sidecars share a `run_id`. A missing or
+unreadable input produces a new **INCOMPLETE** report and exit `1` when the
+destinations are writable and safe. Automation should use the process exit and
+match the run identifier when reading more than one result file.
+
+The desktop keeps finding details on disk and retains
 all groups/counts; large detail panes show a stated excerpt. Save writes every
 finding. Cancellation produces an incomplete report which can also be saved.
 Private working files are removed when checking ends or the displayed report is

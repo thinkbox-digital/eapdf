@@ -8,9 +8,23 @@ import java.util.concurrent.TimeUnit;
 /** CLI controller: vendor parsers execute in a disposable, bounded JVM. */
 final class ValidationWorker {
     static int run(Path input, Path report) throws Exception {
-        if (!Files.isRegularFile(input)) throw new IOException("Validation input is not a readable file");
-        // Reset stale results before starting the parser process.
-        try (var session = new ValidationSession(input, report)) { session.failed("Validation worker is starting."); }
+        var outputs = ValidationOutputs.of(report);
+        try (var claim = outputs.claim(input)) {
+            return runClaimed(input, outputs.report());
+        }
+    }
+
+    private static int runClaimed(Path input, Path report) throws Exception {
+        String runId = UUID.randomUUID().toString();
+        // Publish the new outcome before checking whether the input is still available.
+        try (var session = new ValidationSession(input, report, runId, false)) {
+            if (!Files.isRegularFile(input) || !Files.isReadable(input)) {
+                session.failed("Validation input is not a readable file.");
+                System.err.println("Validation input is not a readable file: " + input);
+                return 1;
+            }
+            session.failed("Validation worker is starting.");
+        }
         Path directory = ValidationRuntime.temporaryDirectory();
         Process process = null;
         Thread cleanup = null;
@@ -20,7 +34,7 @@ final class ValidationWorker {
             var command = new ArrayList<String>(List.of(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
                 "-Xmx" + heap + "m", "-XX:ActiveProcessorCount=4", "-XX:MaxDirectMemorySize=128m",
                 "-XX:MaxMetaspaceSize=256m", "-XX:ReservedCodeCacheSize=128m", "-Deapdf.validator.worker=true",
-                "-Djava.awt.headless=true", "-Djava.io.tmpdir=" + directory));
+                "-D" + ValidationSession.RUN_ID_PROPERTY + "=" + runId, "-Djava.awt.headless=true", "-Djava.io.tmpdir=" + directory));
             System.getProperties().stringPropertyNames().stream().filter(key -> key.startsWith("VALIDATOR_"))
                 .sorted().forEach(key -> command.add("-D" + key + "=" + System.getProperty(key)));
             command.addAll(List.of("-cp", System.getProperty("java.class.path"), JavaValidation.class.getName(), input.toString(), report.toString()));
@@ -45,7 +59,7 @@ final class ValidationWorker {
             if (reason == null && ValidationRuntime.scratchExceeded(directory, report))
                 reason = "Validation exceeded its scratch/report budget.";
             if (reason != null || (code != 0 && code != 2)) {
-                try (var session = new ValidationSession(input, report, true)) {
+                try (var session = new ValidationSession(input, report, runId, true)) {
                     session.failed(reason == null ? "Validation worker stopped before completion (exit " + code + ")." : reason);
                 }
                 return 2;

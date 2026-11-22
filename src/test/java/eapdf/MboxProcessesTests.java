@@ -59,7 +59,7 @@ class MboxProcessesTests {
         }
       }
       ConversionProgress.flush();
-      var snapshot=com.google.gson.JsonParser.parseString(Files.readString(out.resolve("progress.json"))).getAsJsonObject();
+      var snapshot=com.google.gson.JsonParser.parseString(Files.readString(TestSupport.creatorProgress(out))).getAsJsonObject();
       assertEquals(4,snapshot.get("emails_completed").getAsInt());
       assertEquals(4,snapshot.getAsJsonArray("creation_receipts").size());
       for(var receipt:snapshot.getAsJsonArray("creation_receipts")) assertEquals("PENDING",receipt.getAsJsonObject().get("publication").getAsString());

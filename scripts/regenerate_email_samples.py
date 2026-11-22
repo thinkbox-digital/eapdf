@@ -253,8 +253,10 @@ def build_format(kind, inputs, workspace, reports, version, classpath, jobs, hea
 def main():
     version = (ROOT / "VERSION").read_text().strip()
     classpath = os.environ.get("EAPDF_GENERATOR_CLASSPATH", str(ROOT / "target" / f"emailtopdfa-{version}.jar"))
-    reports = Path(os.environ.get("EAPDF_SAMPLE_REPORT_DIR") or tempfile.mkdtemp(prefix="eapdf-sample-reports-"))
-    reports.mkdir(parents=True, exist_ok=True)
+    parent = os.environ.get("EAPDF_SAMPLE_REPORT_DIR")
+    if parent:
+        Path(parent).mkdir(parents=True, exist_ok=True)
+    reports = Path(tempfile.mkdtemp(prefix="eapdf-sample-reports-", dir=parent))
     with ZipFile(validator_jar()) as jar:
         if jar.read("validator/validator_rule_text.json") != (ROOT / "validator_rule_text.json").read_bytes():
             raise RuntimeError("Rebuild the standalone Java validator: its bundled rules differ from the current JSON")
@@ -271,18 +273,6 @@ def main():
             raise RuntimeError("An original input changed during regeneration; examples were not published")
         # Publish only after the complete format/profile matrix passes.
         publish(outputs)
-        published = {destination for _, destination in outputs}
-        for kind in (None, *SAMPLE_INPUTS):
-            folder = ROOT / "examples" if kind is None else ROOT / "examples" / kind
-            for profile in PROFILES:
-                for suffix in (".pdf", "_premis.xml", "_index.xlsx", "_finding_aid.pdf"):
-                    stems = [f"sample_{profile}"] if kind is None else [f"sample_{profile}", f"{kind}_sample_{profile}"]
-                    for stem in stems:
-                        old = folder / (stem + suffix)
-                        if old not in published:
-                            old.unlink(missing_ok=True)
-        if ROOT / "output/eml_sample_1s.pdf" in published:
-            (ROOT / "output/sample_1s.pdf").unlink(missing_ok=True)
     print(f"Updated {len(SAMPLE_INPUTS) * len(PROFILES)} email samples for {version}; reports: {reports}")
 
 

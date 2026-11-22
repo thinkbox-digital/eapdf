@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from creator_progress import creator_progress
 import shutil
 import signal
 import subprocess
@@ -69,6 +70,8 @@ def measured(command, folder, env, progress):
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
                 try:
+                    if progress is None:
+                        progress = creator_progress(folder / 'process.log')
                     state = json.loads(progress.read_text())
                 except (OSError, ValueError):
                     state = {}
@@ -162,7 +165,7 @@ def main():
                 tokens = Path(scratch)/'tokens'
                 shutil.copytree(args.gmail_token_dir, tokens)
                 command = java + ['eapdf.GmailDownloadToPdf', '--credentials', str(credentials), '--token-dir', str(tokens), '--limit', '10' if name.endswith('small') else '200', '--out-pdf', str(pdfs), '--archive-profile', 'm', '--archive-output', str(pdfs/(name+'.pdf'))]
-            result['creation'] = measured(command, folder/'creation', env, pdfs/'progress.json')
+            result['creation'] = measured(command, folder/'creation', env, None)
         print(name + ': creation exit ' + str(result['creation']['exit_code']), flush=True)
         result['pdfs'] = []
         for pdf in sorted(pdfs.glob('*.pdf')):

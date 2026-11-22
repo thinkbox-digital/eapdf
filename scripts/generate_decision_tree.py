@@ -302,7 +302,7 @@ def build_pdf(path: Path):
             "1m: one archive PDF with messages rendered inside.",
             "1mi: isolated archive PDF with no source embedding.",
             "1c / 1ci: collection or portfolio outputs.",
-            "Per-file logs are written to out/logs.",
+            "Per-file logs are stored with the job’s progress report.",
         ],
         PDF_GREEN_BG,
         PDF_GREEN,

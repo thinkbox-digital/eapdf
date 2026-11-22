@@ -7,6 +7,7 @@ import {tmpdir} from 'node:os';
 import {build,transform} from 'esbuild';
 import {verifyHooks,sha256} from './verify-hooks.mjs';
 import {makeSbom} from './sbom.mjs';
+import { publishViewerBuilds } from './publish-viewer-builds.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));process.chdir(root);
 const manifest=await verifyHooks(root),pkg=JSON.parse(await readFile('package.json','utf8'));
 const minimal=pkg.name==='eapdf-viewer-even-more-lite',profile=minimal?'even-more-lite':'lite';
@@ -29,6 +30,7 @@ const hashes=async(directory,prefix='')=>{
   else result[name]=sha256(await readFile(join(directory,item.name)));
  }return result;
 };
+let stage;
 try {
  await build({entryPoints:['src/viewer.ts'],outfile:join(temp,'viewer.js'),bundle:true,format:'esm',platform:'browser',target:'es2022',minifySyntax:true,legalComments:'inline',metafile:true}).then(async result=>{
   // A second syntax pass folds enum constants after cross-module inlining.
@@ -40,8 +42,11 @@ try {
   for(const name of Object.keys(result.metafile.inputs))if(/(?:thread-(?:preview|graph|worker)|portfolio(?:-view|-scatter|-splitter|-thumbnails)?)\.ts$/.test(name))throw Error(`Excluded presentation reached the Lite bundle: ${name}`);
  });
  await build({entryPoints:['src/extension/background.ts'],outfile:join(temp,'background.js'),bundle:true,format:'esm',platform:'browser',target:'es2022'});
- for(const browser of ['chromium','firefox','web']) {
-  const directory=join('dist',browser);await rm(directory,{recursive:true,force:true});await mkdir(join(directory,'vendor/pdfjs'),{recursive:true});
+ stage = await mkdtemp('.viewer-stage-');
+ const browsers = ['chromium', 'firefox', 'web'];
+ for (const browser of browsers) {
+  const directory = join(stage, browser);
+  await mkdir(join(directory,'vendor/pdfjs'),{recursive:true});
   await cp(temp,directory,{recursive:true});
   for(const name of ['pdf.mjs','pdf.worker.mjs']){
    if(minimal)await writeFile(join(directory,'vendor/pdfjs',name),(await transform(await readFile(join('vendor/pdfjs-patched',name),'utf8'),{format:'esm',target:'es2022',minify:true,legalComments:'inline'})).code);
@@ -69,4 +74,8 @@ try {
   await writeFile(join(directory,'build-info.json'),JSON.stringify({project:pkg.version,name:title,profile,pdfjs:manifest.version,pdfjsCommit:manifest.upstreamCommit,pdfjsMinified:minimal,...(minimal?{sourceCounts}:{}),hookManifestSha256:sha256(await readFile('vendor/pdfjs-patches/manifest.json')),provenanceSha256:sha256(await readFile('export-manifest.json')),files:await hashes(directory)},null,2)+'\n');
   console.log(`Built ${title}: ${directory}`);
  }
-} finally {await rm(temp,{recursive:true,force:true});}
+ await publishViewerBuilds(stage, 'dist', browsers);
+} finally {
+ if (stage) await rm(stage, { recursive: true, force: true });
+ await rm(temp, { recursive: true, force: true });
+}

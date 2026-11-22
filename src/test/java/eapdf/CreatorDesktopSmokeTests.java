@@ -44,7 +44,7 @@ class CreatorDesktopSmokeTests {
         assertTrue(field(gui,"summaryArea",JTextArea.class).getText().contains("Validate the PDFs"));
       });
       try(var paths=Files.list(destination)){assertEquals(1,paths.filter(p->p.toString().endsWith(".pdf")).count());}
-      assertTrue(Files.readString(destination.resolve("progress.json")).contains("COMPLETED"));
+      assertTrue(Files.readString(TestSupport.creatorProgress(destination)).contains("COMPLETED"));
       String evidence=System.getProperty("eapdf.ui.evidence");
       if(evidence!=null){
         Path retained=Files.createDirectories(Path.of(evidence));
