@@ -7,6 +7,10 @@ on:
         description: GitHub release tag
         required: true
         type: string
+      acceptance_run_id:
+        description: Successful Release package acceptance run for these bytes
+        required: true
+        type: string
       publish_on_approval:
         description: Publish automatically when Google approves
         default: false
@@ -14,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: chrome-web-store-${{ vars.CWS_EXTENSION_ID }}
@@ -24,14 +29,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Download and check the extension ZIP
+      - name: Verify the release ZIP against CI acceptance
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag }}
           ZIP_PATTERN: ${{ vars.CWS_ZIP_PATTERN }}
+          ACCEPTANCE_RUN: ${{ inputs.acceptance_run_id }}
         run: |
           set -euo pipefail
           : "${ZIP_PATTERN:?Set the CWS_ZIP_PATTERN repository variable}"
+          [[ "$ACCEPTANCE_RUN" =~ ^[0-9]+$ ]]
+          commit=$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq .sha)
+          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ACCEPTANCE_RUN")
+          jq -e --arg commit "$commit" '
+            .head_sha == $commit and .conclusion == "success"
+            and .path == ".github/workflows/release-acceptance.yml"
+            and .event == "workflow_dispatch"' <<< "$run"
+          gh run download "$ACCEPTANCE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name release-acceptance-evidence --dir acceptance
           mkdir package
           gh release download --repo "$GITHUB_REPOSITORY" --pattern "$ZIP_PATTERN" --dir package -- "$RELEASE_TAG"
           mapfile -d '' packages < <(find package -maxdepth 1 -type f -name '*.zip' -print0)
@@ -39,6 +54,9 @@ jobs:
             echo "Expected exactly one extension ZIP."
             exit 1
           fi
+          name=${packages[0]#package/}
+          digest=$(sha256sum -- "${packages[0]}" | cut -c1-64)
+          grep -Fx -- "$digest  $name" acceptance/SHA256SUMS
           mv -- "${packages[0]}" extension.zip
           unzip -p extension.zip manifest.json | jq -er '.version | strings | select(length > 0)'
 

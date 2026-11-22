@@ -88,7 +88,7 @@ def main():
     parser.add_argument('--timeout',type=int,default=1800)
     args=parser.parse_args();args.input=args.input.resolve();args.reports=args.reports.resolve()
     if min(args.jobs,args.heap_mb,args.timeout)<1:parser.error('Resource settings must be positive')
-    pin=json.loads((ROOT/'config/arlington.json').read_text());jar=ROOT/'dist/tools'/('arlington-'+pin['version'])/'bin'/('cli-arlington-'+pin['version']+'.jar')
+    pin=json.loads((ROOT/'config/arlington.json').read_text());jar=ROOT/'.local/tools'/('arlington-'+pin['version'])/'bin'/('cli-arlington-'+pin['version']+'.jar')
     if not jar.exists():parser.error('Install the checker first: python3 scripts/install_arlington.py')
     if digest(jar)!=pin['jar_sha256']:parser.error('Arlington JAR checksum mismatch')
     with zipfile.ZipFile(jar) as archive:

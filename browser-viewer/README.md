@@ -1,12 +1,12 @@
 # EA-PDF readers
 
-Full and Even More Lite readers **1.7.0** are included with creator and
-validator **2.4.0-beta.2**.
+Full and Even More Lite readers **1.8.0** are included with creator and
+validator **2.4.0-beta.3**.
 Both readers restore recognized family names for affected embedded CJK fonts.
 Read local PDFs, browse email folders and save attachments. Files stay on your
 computer. No Java, server or internet connection is needed by the extensions.
 
-[Download](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.2) ·
+[Download](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.3) ·
 [User guide](../docs/manual/user-manual.html#viewer) · [Privacy](../docs/site/privacy.md)
 
 ## Choose a reader

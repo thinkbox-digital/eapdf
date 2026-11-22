@@ -6,7 +6,7 @@ from xml.sax.saxutils import escape
 ROOT=Path(__file__).resolve().parents[1]
 def install():
     pin=json.loads((ROOT/'config/arlington.json').read_text())
-    destination=ROOT/'dist/tools'/('arlington-'+pin['version'])
+    destination=ROOT/'.local/tools'/('arlington-'+pin['version'])
     jar=destination/'bin'/('cli-arlington-'+pin['version']+'.jar')
     if not jar.exists():
         with tempfile.TemporaryDirectory(prefix='eapdf-arlington-install-',dir='/tmp') as scratch:

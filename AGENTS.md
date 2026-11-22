@@ -62,7 +62,7 @@ Rules:
 
 - When summarizing fixes, classify the work as Bug fix, Code improvement, New code, Speed improvement, Memory improvement, or another clear top-level category. Distinguish measured improvements from expected ones.
 
-- Keep only the latest versioned creator, GUI, and validator JARs in `dist/`; remove superseded JARs and their checksum files after verifying replacements.
+- Keep only the latest versioned creator, GUI, validator, and desktop viewer JARs in the project root’s `dist/`. Remove superseded JARs after verifying replacements. Generate release checksums in release staging.
 - Keep the viewer’s independent CSV metadata export; removing creator finding-aid generation does not remove CSV export.
 
 - The major-version bump and publication were authorized on 2026-11-09: creator/validator 2.0.0-beta.1 and browser viewer 1.0.0-beta.1. Future publication requires user authorization.

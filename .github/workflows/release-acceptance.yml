@@ -1,0 +1,161 @@
+name: Release package acceptance
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the verified packages for the selected version tag
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-acceptance-${{ github.ref }}
+
+env:
+  EAPDF_EDITION: full
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    outputs:
+      commit: ${{ steps.ref.outputs.commit }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check the publication ref
+        id: ref
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        run: |
+          test "$GITHUB_REF" = "refs/tags/v$(cat VERSION)"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: browser-viewer/package-lock.json
+      - name: Install acceptance dependencies
+        run: |
+          python -m pip install 'pikepdf==10.18.1'
+          python browser-viewer/scripts/install-ci-firefox.py "$RUNNER_TEMP/firefox-tools"
+          sudo apt-get update
+          sudo apt-get install -y xvfb xauth
+          npm --prefix browser-viewer ci --ignore-scripts
+          cd browser-viewer
+          npx playwright install --with-deps chromium
+          npx playwright install-deps firefox
+      - name: Build candidate packages
+        run: |
+          set -euo pipefail
+          version=$(cat VERSION)
+          mkdir "$RUNNER_TEMP/release-candidates"
+          stage="$RUNNER_TEMP/release-candidates"
+          mvn -B -DskipTests "-Deapdf.build.directory=$RUNNER_TEMP/creator" package
+          mvn -B -f validator-desktop/pom.xml -DskipTests "-Deapdf.build.directory=$RUNNER_TEMP/validator" package
+          cp -- "$RUNNER_TEMP/validator/eapdf-validator-$version.jar" "$stage/"
+          viewer_version=$(node -p 'require("./browser-viewer/package.json").version')
+          if [[ "$EAPDF_EDITION" == lite || "$EAPDF_EDITION" == pdfviewfx ]]; then
+            cp -- "$RUNNER_TEMP/creator/emailtopdfa-lite-$version.jar" "$stage/"
+            npm --prefix browser-viewer run build
+            npm --prefix browser-viewer run package
+            cp -- browser-viewer/releases/eapdf-viewer-even-more-lite-"$viewer_version"-{chromium,firefox,web}.zip "$stage/"
+          else
+            cp -- "$RUNNER_TEMP/creator/emailtopdfa-$version.jar" "$stage/"
+            npm --prefix browser-viewer run package:beta
+            cp -- browser-viewer/releases/eapdf-viewer-"$viewer_version"-{chromium,firefox}.zip "$stage/"
+            if [[ "$EAPDF_EDITION" == full ]]; then
+              npm --prefix browser-viewer run build:even-more-lite
+              cp -- browser-viewer/releases/eapdf-viewer-even-more-lite-"$viewer_version"-{chromium,firefox,web}.zip "$stage/"
+            fi
+          fi
+          if [[ "$EAPDF_EDITION" == pdfviewfx ]]; then
+            # The local packager bumps the checkout version. CI tests the tagged version.
+            mvn -B -f desktop-viewer/pom.xml -DskipTests "-Deapdf.build.directory=$RUNNER_TEMP/desktop" package
+            for jar in "$RUNNER_TEMP/desktop/"*-standalone.jar; do
+              name=$(basename "$jar" -standalone.jar)
+              cp -- "$jar" "$stage/$name.jar"
+            done
+          else
+            EAPDF_VIEWER_DIST="$RUNNER_TEMP/desktop" bash desktop-viewer/package.sh -DskipTests
+            cp -- "$RUNNER_TEMP/desktop/"*.jar "$stage/"
+          fi
+          mvn -B -f desktop-viewer/pom.xml org.apache.maven.plugins:maven-dependency-plugin:3.9.0:copy-dependencies \
+            -DincludeGroupIds=org.openjfx -DincludeClassifiers=linux "-DoutputDirectory=$RUNNER_TEMP/javafx"
+      - name: Verify the candidate bytes
+        env:
+          FIREFOX_PATH: ${{ runner.temp }}/firefox-tools/firefox/firefox
+          GECKODRIVER_PATH: ${{ runner.temp }}/firefox-tools/geckodriver
+          JAVAFX_LIB: ${{ runner.temp }}/javafx
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          stage="$RUNNER_TEMP/release-candidates"
+          evidence="$RUNNER_TEMP/release-acceptance"
+          args=()
+          for zip in "$stage/"*.zip; do args+=(--viewer "$zip"); done
+          desktop=("$stage/"eapdf-*viewer-*.jar)
+          test "${#desktop[@]}" -eq 1
+          args+=(--desktop-viewer "${desktop[0]}")
+          creator=("$stage"/emailtopdfa-*.jar)
+          validator=("$stage"/eapdf-validator-*.jar)
+          test "${#creator[@]}" -eq 1
+          test "${#validator[@]}" -eq 1
+          xvfb-run -a python -B scripts/check_release_packages.py \
+            --creator "${creator[0]}" --validator "${validator[0]}" --output "$evidence" "${args[@]}"
+          cp -- "$evidence/SHA256SUMS" "$stage/"
+          (cd "$stage" && sha256sum --strict -c SHA256SUMS)
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: release-acceptance-evidence
+          path: |
+            ${{ runner.temp }}/release-acceptance/**/*.log
+            ${{ runner.temp }}/release-acceptance/**/*.json
+            ${{ runner.temp }}/release-acceptance/SHA256SUMS
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: verified-release-packages
+          path: ${{ runner.temp }}/release-candidates/
+          if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref_type == 'tag'
+    needs: acceptance
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: verified-release-packages
+          path: release-candidates
+      - name: Publish exactly the verified packages
+        working-directory: release-candidates
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          VERIFIED_COMMIT: ${{ needs.acceptance.outputs.commit }}
+        run: |
+          set -euo pipefail
+          sha256sum --strict -c SHA256SUMS
+          mapfile -t files < <(cut -c 67- SHA256SUMS)
+          test "${#files[@]}" -eq "$(find . -maxdepth 1 -type f ! -name SHA256SUMS | wc -l)"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq .sha)" = "$VERIFIED_COMMIT"
+          options=(--repo "$GITHUB_REPOSITORY" --verify-tag --draft --generate-notes)
+          if [[ "$RELEASE_TAG" == *-* ]]; then options+=(--prerelease); fi
+          gh release create "${options[@]}" -- "$RELEASE_TAG" SHA256SUMS "${files[@]}"
+          gh release edit --repo "$GITHUB_REPOSITORY" --draft=false -- "$RELEASE_TAG"

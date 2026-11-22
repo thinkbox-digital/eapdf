@@ -8,6 +8,7 @@ debug_out/
 downloaded_attachments/
 downloaded_eml/
 dist/
+/.local/
 __pycache__/
 .generator_web_tmp/
 .validator_web_tmp/
