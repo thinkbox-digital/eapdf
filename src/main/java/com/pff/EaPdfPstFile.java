@@ -1,16 +1,26 @@
 package com.pff;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 
 /** Narrow java-libpst 0.9.3 repair for MS-PST subnode index blocks (SIBLOCK).
  * The upstream parser treats index entries as leaf entries and overruns ANSI
  * blocks. Index entries point to leaf blocks; they are not attachment values.
  */
-public final class EaPdfPstFile extends PSTFile {
-  public EaPdfPstFile(String path) throws IOException, PSTException { super(path); }
-  public EaPdfPstFile(File file) throws IOException, PSTException { super(file); }
+public final class EaPdfPstFile extends PSTFile implements AutoCloseable {
+  private EaPdfPstFile(PSTFileContent content) throws IOException, PSTException { super(content); }
+
+  public static EaPdfPstFile open(Path path) throws IOException, PSTException {
+    var content = new PSTRAFileContent(path.toFile());
+    try {
+      return new EaPdfPstFile(content);
+    } catch (IOException | PSTException | RuntimeException | Error failure) {
+      try { content.close(); }
+      catch (IOException closeFailure) { failure.addSuppressed(closeFailure); }
+      throw failure;
+    }
+  }
 
   @Override
   HashMap<Integer, PSTDescriptorItem> getPSTDescriptorItems(PSTNodeInputStream input)

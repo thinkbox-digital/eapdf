@@ -6,10 +6,14 @@ import jakarta.mail.internet.MimeMessage;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.*;
 import org.bbottema.rtftohtml.OutlookRtfToHtmlConverter;
 
 class PstReader {
+  private static final int MAX_FOLDER_DEPTH = 256;
+  private static final int MAX_EMBEDDED_DEPTH = 64;
+
   static List<EmailRecord> readPst(String path, String globalId, List<String> archiveEmails, boolean debug) throws Exception {
     List<EmailRecord> out = new ArrayList<>();
     forEach(path, globalId, archiveEmails, debug, out::add);
@@ -19,12 +23,15 @@ class PstReader {
   @FunctionalInterface interface RecordConsumer { void accept(EmailRecord record) throws Exception; }
 
   static void forEach(String path, String globalId, List<String> archiveEmails, boolean debug, RecordConsumer consumer) throws Exception {
-    PSTFile pst = new EaPdfPstFile(path);
-    try {
+    try (var pst = EaPdfPstFile.open(Path.of(path))) {
       int[] counts = new int[2];
       walkPstFolder(pst.getRootFolder(), "", path, globalId, archiveEmails, consumer, debug, counts);
       if (counts[1] > 0) System.out.println("PST non-email items skipped: " + counts[1]);
-    } finally { pst.close(); }
+    } catch (PSTNodeInputStream.ProcessingLimitExceeded limit) {
+      var error = Common.fail(limit.getMessage());
+      error.initCause(limit);
+      throw error;
+    }
   }
 
   static void walkPstFolder(PSTFolder f, String prefix, String sourcePath, String globalId, List<String> archiveEmails, List<EmailRecord> out, boolean debug) throws Exception {
@@ -40,14 +47,32 @@ class PstReader {
 
   static void walkPstFolder(PSTFolder f, String prefix, String sourcePath, String globalId, List<String> archiveEmails,
                             RecordConsumer out, boolean debug, int[] counts) throws Exception {
-    String here = prefix.isEmpty() ? Common.nz(f.getDisplayName()) : (prefix + "/" + Common.nz(f.getDisplayName()));
-    if (f.getContentCount() > 0) {
-      PSTMessage m;
-      while ((m = (PSTMessage)f.getNextChild()) != null) {
-        collectPstMessage(m, here, sourcePath, globalId, archiveEmails, out, debug, counts);
+    record Folder(PSTFolder value, String parent, int depth) {}
+    var pending = new ArrayDeque<Folder>();
+    var visited = new HashSet<Long>();
+    long folderLimit = Math.max(1, ProcessingLimits.metadataBytes() / 512);
+    pending.push(new Folder(f, prefix, 0));
+    while (!pending.isEmpty()) {
+      ProcessingLimits.checkCancelled();
+      Folder entry = pending.pop();
+      PSTFolder folder = entry.value();
+      if (!visited.add(folder.getDescriptorNodeId())) throw Common.fail("Cyclic or repeated PST folder");
+      String name = Common.nz(folder.getDisplayName());
+      String here = entry.parent().isEmpty() ? name : entry.parent() + "/" + name;
+      ProcessingLimits.checkBody(here, "PST folder path");
+      if (folder.getContentCount() > 0) {
+        PSTMessage message;
+        while ((message = (PSTMessage)folder.getNextChild()) != null) {
+          collectPstMessage(message, here, sourcePath, globalId, archiveEmails, out, debug, counts);
+        }
+      }
+      if (folder.hasSubfolders()) {
+        if (entry.depth() == MAX_FOLDER_DEPTH) throw Common.fail("PST folder nesting exceeds the processing limit");
+        var children = folder.getSubFolders();
+        if (children.size() > folderLimit - pending.size() - visited.size()) throw Common.fail("PST folder count exceeds the processing limit");
+        for (int i = children.size() - 1; i >= 0; i--) pending.push(new Folder(children.get(i), here, entry.depth() + 1));
       }
     }
-    if (f.hasSubfolders()) for (PSTFolder sf : f.getSubFolders()) walkPstFolder(sf, here, sourcePath, globalId, archiveEmails, out, debug, counts);
   }
 
   static void collectPstMessage(PSTMessage message, String folder, String sourcePath, String globalId,
@@ -69,6 +94,13 @@ class PstReader {
   }
 
   static EmailRecord readMessage(PSTMessage m, String here, String sourcePath, String globalId, List<String> archiveEmails, boolean debug, int depth) throws Exception {
+    return readMessage(m, here, sourcePath, globalId, archiveEmails, debug, depth, new AttachmentBudget());
+  }
+
+  private static EmailRecord readMessage(PSTMessage m, String here, String sourcePath, String globalId,
+                                         List<String> archiveEmails, boolean debug, int depth, AttachmentBudget budget) throws Exception {
+    ProcessingLimits.checkCancelled();
+    if (depth > MAX_EMBEDDED_DEPTH) throw Common.fail("Embedded PST message nesting exceeds the processing limit");
     String itemClass = Common.stripInvalidXml(Common.nz(m.getMessageClass())).trim();
     if (Common.isNonEmailOutlookItem(itemClass)) {
       throw Common.fail("PST item is not an email (" + itemClass + "): " + sourcePath + "#" + m.getDescriptorNodeId());
@@ -129,7 +161,7 @@ class PstReader {
         ? Common.nz(EaPdfPstProperties.boundedRtf(m, ProcessingLimits.messageBytes(), ProcessingLimits.bodyCharacters())) : "";
     populatePstBody(r, bodyText, bodyHtml, bodyRtf, nativeBody);
 
-    collectPstAttachments(m, r, depth);
+    collectPstAttachments(m, r, depth, budget);
     r.sourceBytes = null;
     r.sourceFilename = "";
     r.sourceMime = "";
@@ -359,14 +391,28 @@ class PstReader {
     record.htmlBody = !Common.nz(bodyHtml).isBlank() ? Common.normalizeHtml(bodyHtml) : Common.plainTextToHtml(record.textBody);
   }
 
-  static void collectPstAttachments(PSTMessage m, EmailRecord r) throws Exception {
-    collectPstAttachments(m, r, 0);
+  private static final class AttachmentBudget {
+    private final long limit = Math.max(1, ProcessingLimits.metadataBytes() / 1024);
+    private long count;
+    private long bytes;
+
+    void accountCount(int attachments) {
+      if (attachments < 0 || attachments > limit - count) throw Common.fail("PST attachment count exceeds the processing limit");
+      count += attachments;
+    }
+
+    void accountBytes(int length) {
+      bytes += length;
+      ProcessingLimits.checkMessage(bytes, "PST attachment tree");
+    }
   }
 
-  static void collectPstAttachments(PSTMessage m, EmailRecord r, int depth) throws Exception {
+  private static void collectPstAttachments(PSTMessage m, EmailRecord r, int depth, AttachmentBudget budget) throws Exception {
     ProcessingLimits.checkCancelled();
     int count = m.getNumberOfAttachments();
+    budget.accountCount(count);
     for (int i = 0; i < count; i++) {
+      ProcessingLimits.checkCancelled();
       PSTAttachment a0 = m.getAttachment(i);
       AssociatedFile af = new AssociatedFile();
       String longFilename = Common.normalizeAttachmentFilename(a0.getLongFilename());
@@ -387,12 +433,13 @@ class PstReader {
       af.embedInPdf = true;
       int method = a0.getAttachMethod();
       if (method == PSTAttachment.ATTACHMENT_METHOD_EMBEDDED) {
+        if (depth == MAX_EMBEDDED_DEPTH) throw Common.fail("Embedded PST message nesting exceeds the processing limit");
         PSTMessage embedded = a0.getEmbeddedPSTMessage();
         if (embedded == null) {
           Common.sourceProblem(r, "Embedded PST email is missing: " + af.filename);
           continue;
         }
-        EmailRecord child = readMessage(embedded, r.folderPath, r.sourcePath, r.archiveGlobalId, r.archiveEmails, false, depth + 1);
+        EmailRecord child = readMessage(embedded, r.folderPath, r.sourcePath, r.archiveGlobalId, r.archiveEmails, false, depth + 1, budget);
         Common.requireCreationDate(child);
         for (String problem : child.sourceProblems)
           Common.sourceProblem(r, "Attached email '" + af.filename + "': " + problem);
@@ -425,9 +472,7 @@ class PstReader {
         continue;
       }
       normalizeAttachmentContentType(r, af);
-      long size = af.bytes.length;
-      for (AssociatedFile existing : r.associatedFiles) size += existing.size();
-      ProcessingLimits.checkMessage(size, r.subject);
+      budget.accountBytes(af.bytes.length);
       af.checksumMd5 = Common.md5Hex(af.bytes);
       af.checksumSha256 = Common.sha256Hex(af.bytes);
       r.associatedFiles.add(af);

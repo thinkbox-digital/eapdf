@@ -16,7 +16,7 @@ import java.util.TreeMap;
 public class MonthlyFilenameArchiveToPdf {
   static final DateTimeFormatter FILENAME_DATE = DateTimeFormatter.BASIC_ISO_DATE;
   static final String ARCHIVE_PROFILE = "m";
-  static final String DEFAULT_INPUT_DIR = "/media/lepore/Work/temp/out/";
+  static final String DEFAULT_INPUT_DIR = "out";
 
   public static void main(String[] args) throws Exception {
     if (ConversionSupervisor.run(MonthlyFilenameArchiveToPdf.class, args)) return;

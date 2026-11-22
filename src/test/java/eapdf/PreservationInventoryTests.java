@@ -15,14 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class PreservationInventoryTests {
-  @org.junit.jupiter.api.BeforeEach void requireLocalCorpus() {
-    org.junit.jupiter.api.Assumptions.assumeTrue(Files.isRegularFile(Path.of("tests/fixtures/eapdf/batch11/source.eml")), "Optional local regression corpus is not installed");
-  }
   @TempDir Path directory;
 
   EmailRecord record(String suffix) throws Exception {
-    String raw = Files.readString(Path.of("tests/fixtures/eapdf/batch11/source.eml"), StandardCharsets.UTF_8)
+    String raw = new String(CollectionChildAcceptanceTests.sourceFixture(), StandardCharsets.UTF_8)
         .replace("Child acceptance", "Inventory " + suffix)
+        .replace("child-acceptance", "inventory-" + suffix)
         .replace("Original native attachment bytes", "Original payload " + suffix);
     return EmlReader.readRfc822Bytes(raw.getBytes(StandardCharsets.UTF_8), "source.eml", "source.eml", "", List.of(), false);
   }

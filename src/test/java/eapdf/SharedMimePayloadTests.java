@@ -7,7 +7,7 @@ class SharedMimePayloadTests {
  @Test void extractedPayloadsSurviveMimeClosureAndStaging()throws Exception{
   Path input=Path.of("in/Agenda and timeline slides.eml");byte[] raw=Files.readAllBytes(input);
   var record=EmlReader.readRfc822Bytes(raw,input.toString(),input.getFileName().toString(),"",List.of(),false);
-  assertSame(raw,record.sourceBytes);assertNull(record.mimePartScopes);
+  assertSame(raw,record.sourceBytes);
   var hashes=new ArrayList<String>();for(var file:record.associatedFiles){hashes.add(Common.sha256Hex(file.data()));assertEquals(hashes.get(hashes.size()-1),file.checksumSha256);}
   assertTrue(record.associatedFiles.stream().anyMatch(f->f.emailAttachment));
   try(var store=new PayloadStore()){

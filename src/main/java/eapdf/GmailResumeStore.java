@@ -108,7 +108,7 @@ final class GmailResumeStore implements AutoCloseable {
     ProcessingLimits.checkMessage(Files.size(path), id);
     byte[] raw = Files.readAllBytes(path);
     if (!Common.sha256Hex(raw).equals(download.checksum)) {
-      System.err.println("warning: Gmail staged message checksum mismatch; downloading again: " + id);
+      System.err.println("warning: Gmail staged message checksum mismatch; downloading again.");
       return null;
     }
     return new Message().setId(id).setRaw(Base64.getUrlEncoder().withoutPadding().encodeToString(raw))

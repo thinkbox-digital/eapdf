@@ -28,7 +28,7 @@ final class JavaValidatorEngine implements ValidatorGui.Engine {
     try {
       run.check();
       Path source = input.toRealPath();
-      directory = ValidationRuntime.temporaryDirectory();
+      directory = ValidationRuntime.controllerDirectory();
       Path output = directory.resolve("report.json");
       Path diagnostic = directory.resolve("diagnostics.txt");
       String javaExecutable = Path.of(System.getProperty("java.home"), "bin",
@@ -37,7 +37,8 @@ final class JavaValidatorEngine implements ValidatorGui.Engine {
       long heap = Math.min(Runtime.getRuntime().maxMemory() / (1024 * 1024), ValidationRuntime.workerHeapMiB());
       ProcessBuilder builder = new ProcessBuilder(ValidationRuntime.boundedCommand(java.util.List.of(javaExecutable, "-Xmx" + heap + "m",
           "-XX:MaxDirectMemorySize=128m", "-XX:MaxMetaspaceSize=256m", "-XX:ReservedCodeCacheSize=128m", "-Deapdf.validator.worker=true",
-          "-XX:ActiveProcessorCount=4", "-D" + ValidationSession.RUN_ID_PROPERTY + "=" + runId, "-Djava.awt.headless=true", "-Djava.io.tmpdir=" + directory, "-cp", classpath,
+          "-XX:ActiveProcessorCount=4", "-D" + ValidationSession.RUN_ID_PROPERTY + "=" + runId,
+          "-Djava.awt.headless=true", "-Djava.io.tmpdir=" + directory, ValidationRuntime.controllerArgument(), "-cp", classpath,
           JavaValidation.class.getName(), source.toString(), output.toString()), heap));
       builder.redirectOutput(diagnostic.toFile()).redirectErrorStream(true);
       run.check();

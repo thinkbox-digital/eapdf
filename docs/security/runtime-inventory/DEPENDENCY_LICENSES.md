@@ -17,8 +17,8 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Creator | com.google.code.findbugs:jsr305 | 3.0.2 | The Apache Software License, Version 2.0 |
 | Creator | com.google.code.gson:gson | 2.15.0 | Apache-2.0 |
 | Creator | com.google.errorprone:error_prone_annotations | 2.36.0 | Apache 2.0 |
-| Creator | com.google.guava:failureaccess | 1.0.2 | The Apache Software License, Version 2.0 |
-| Creator | com.google.guava:guava | 33.1.0-jre | Apache License, Version 2.0 |
+| Creator | com.google.guava:failureaccess | 1.0.3 | Apache License, Version 2.0 |
+| Creator | com.google.guava:guava | 33.8.0-jre | Apache License, Version 2.0 |
 | Creator | com.google.guava:listenablefuture | 9999.0-empty-to-avoid-conflict-with-guava | The Apache Software License, Version 2.0 |
 | Creator | com.google.http-client:google-http-client-apache-v2 | 2.2.0 | The Apache Software License, Version 2.0 |
 | Creator | com.google.http-client:google-http-client-gson | 2.2.0 | The Apache Software License, Version 2.0 |
@@ -60,10 +60,10 @@ Generated from resolved Maven POMs and installed Python distribution metadata. R
 | Creator | org.bouncycastle:bcpkix-jdk18on | 1.87 | MIT |
 | Creator | org.bouncycastle:bcprov-jdk18on | 1.87 | MIT |
 | Creator | org.bouncycastle:bcutil-jdk18on | 1.87 | MIT |
-| Creator | org.checkerframework:checker-qual | 3.42.0 | The MIT License |
 | Creator | org.eclipse.angus:angus-activation | 2.0.3 | EDL 1.0 |
 | Creator | org.eclipse.angus:angus-mail | 2.0.5 | EPL 2.0; GPL2 w/ CPE; EDL 1.0 |
 | Creator | org.jsoup:jsoup | 1.24.1 | The MIT License |
+| Creator | org.jspecify:jspecify | 1.0.1 | The Apache License, Version 2.0 |
 | Creator | org.simplejavamail:outlook-message-parser | 1.16.3 | The Apache Software License, Version 2.0 |
 | Creator | org.slf4j:slf4j-api | 2.0.7 | MIT License |
 | Java validator | com.beetstra.jutf7:jutf7 | 1.0.0 | MIT license |

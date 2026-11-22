@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from published_outputs import latest_batch_pdfs, walk_output_files
 from run_real_world_corpus import available_memory, execute
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -192,7 +193,8 @@ def _run_task(task, args, evidence, workspace, config, hashes, heap, warning=Fal
             return result
         if warning and 'VALIDATION WARNING BANNER:' not in log:
             raise RuntimeError('Creator did not confirm the validation banner; use the updated creator JAR.')
-        pdfs=sorted(generated.rglob('*.pdf'))
+        batch=latest_batch_pdfs(generated)
+        pdfs=list(batch)
         if not pdfs: raise RuntimeError('Creator reported success but produced no PDFs.')
         incomplete=bool(re.search(r'(?:skipped input:|source omitted|INCOMPLETE SOURCE|failed: [1-9]|not processed: [1-9])',log,re.I))
         if incomplete: result['reason']='Creator reported incomplete or omitted source data; see conversion.log.'
@@ -200,7 +202,10 @@ def _run_task(task, args, evidence, workspace, config, hashes, heap, warning=Fal
         for n,pdf in enumerate(pdfs,1):
             filename=(name if profile not in ('1s','1si') else name.rsplit('_',1)[0]+f'_{n:06d}_{profile}')+'.pdf'
             destination=ROOT/'out'/task['type']/filename
-            result['documents'].append({'path':str(destination.relative_to(ROOT)),'staged':str(pdf),'sha256':digest(pdf),'validation':'PENDING'})
+            checksum=digest(pdf)
+            if batch[pdf] is not None and checksum != batch[pdf]:
+                raise RuntimeError('Creator batch member does not match the committed manifest: '+str(pdf))
+            result['documents'].append({'path':str(destination.relative_to(ROOT)),'staged':str(pdf),'sha256':checksum,'validation':'PENDING'})
             (folder/'result.json').write_text(json.dumps(result,indent=2)+'\n')
             print('Staged: '+filename+' (validation pending)',flush=True)
         # Validate the staged bytes before any output is published.
@@ -223,7 +228,7 @@ def _run_task(task, args, evidence, workspace, config, hashes, heap, warning=Fal
         result['status']='FAIL';result['reason']=str(error)
     finally:
         # Retain creator receipts/progress outside out, never mix them with published PDFs.
-        for p in generated.rglob('*'):
+        for p in walk_output_files(generated):
             if p.is_file() and p.suffix.lower()!='.pdf':
                 dest=folder/'creator-evidence'/p.relative_to(generated);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,dest)
         (folder/'result.json').write_text(json.dumps(result,indent=2)+'\n')

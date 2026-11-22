@@ -33,6 +33,40 @@ class RuleFamilyCompatibilityTests(unittest.TestCase):
             validator.check_standard_xmp_semantics(None, [], report)
         single.assert_called_once_with(None, [], report)
 
+    def test_scoped_attachments_keep_their_source_nodes_after_malformed_members(self):
+        root = validator.ET.fromstring(f'''
+            <rdf:RDF xmlns:rdf="{validator.NS_RDF}" xmlns:mail="{validator.NS_PDFMAILMETA}">
+              <rdf:Description>
+                <mail:email><rdf:Bag>
+                  <rdf:li rdf:parseType="Resource"><mail:Mail_GUID>first</mail:Mail_GUID></rdf:li>
+                  <rdf:li rdf:parseType="Resource"><mail:Mail_GUID>second</mail:Mail_GUID></rdf:li>
+                </rdf:Bag></mail:email>
+                <mail:attachments><rdf:Bag>
+                  <rdf:li>malformed scalar</rdf:li>
+                  <rdf:li rdf:parseType="Resource">
+                    <mail:Mail_GUID>second</mail:Mail_GUID><mail:FileName>second.txt</mail:FileName>
+                  </rdf:li>
+                  <rdf:li rdf:parseType="Resource">
+                    <mail:Mail_GUID>first</mail:Mail_GUID><mail:FileName>first.txt</mail:FileName>
+                  </rdf:li>
+                </rdf:Bag></mail:attachments>
+                <mail:attachments rdf:parseType="Resource">
+                  <mail:Mail_GUID>first</mail:Mail_GUID><mail:FileName>outside-bag.txt</mail:FileName>
+                </mail:attachments>
+              </rdf:Description>
+            </rdf:RDF>''')
+        report = validator.Report('mail.pdf')
+        with patch.object(validator, 'check_single_message_metadata') as check, \
+                patch.object(validator, 'validate_attachment_records') as check_unscoped:
+            validator.check_message_metadata(root, [], 'm', report)
+
+        scoped = [validator.flatten_attachments(call.args[0]) for call in check.call_args_list]
+        self.assertEqual([[{'Mail_GUID': 'first', 'FileName': 'first.txt'}],
+                          [{'Mail_GUID': 'second', 'FileName': 'second.txt'}]], scoped)
+        check_unscoped.assert_called_once_with([{'Mail_GUID': 'first', 'FileName': 'outside-bag.txt'}], [], report)
+        self.assertTrue(any(item['level'] == 'FAIL' and item['code'] == 'ATTACHMENT_XMP_CONTAINER'
+                            for item in report.items))
+
 
 if __name__ == '__main__':
     unittest.main()

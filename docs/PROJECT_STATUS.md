@@ -2,13 +2,14 @@
 
 **Release verification.** The [package acceptance check](../TECHNICAL_GUIDE.md#release-package-acceptance)
 exercises the creator, standalone validator, and packaged readers on the same
-six generated profiles. It also checks explicit collection metadata against
-validated children. GitHub publication through the acceptance workflow uses the
-packages and checksums from the successful job.
+six generated profiles. It checks explicit collection metadata against validated
+children, runs the packaged Creator and Validator GUIs, and launches the Desktop
+Viewer JAR. GitHub publication through the acceptance workflow uses the packages
+and checksums from the successful job.
 
-Current release, 22 November 2026. Creator and validator **2.4.0-beta.3**,
-Full browser reader **1.8.0**, and desktop viewer **0.8.0**.
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.3).
+Main release **2.4.0-beta.5** includes the Full browser reader **1.10.0** and
+Desktop Viewer **0.9.0**.
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.5).
 
 C2PA/PAdES, WeasyPrint and other experimental changes remain separate in
 `../eapdf-secure` on `experiment/c2pa-pades`. Normal development continues in this
@@ -125,8 +126,8 @@ retained heap in the storage probes. This is not a general speed or memory claim
 
 Earlier counts remain dated evidence in the changelog and release records.
 
-The desktop viewer ships as one versioned Java JAR per checkout. It runs
-with Java 21 or later and a separate JavaFX runtime for the host platform.
+The desktop viewer ships as one versioned Java JAR per checkout. It runs with
+Java 21 or later and bundles JavaFX for supported host platforms.
 
 The tested desktop environment is mainly Linux with Java 21. Reader extensions
 are unsigned; Firefox installation is temporary. Browser-store distribution,

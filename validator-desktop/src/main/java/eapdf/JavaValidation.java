@@ -7,11 +7,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.ByteArrayInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HexFormat;
@@ -47,6 +49,7 @@ public final class JavaValidation {
       System.exit(ValidationWorker.run(input, output));
       return;
     }
+    ValidationRuntime.watchController();
     int code = 2;
     Path storage = ValidationRuntime.temporaryDirectory();
     Thread scratchCleanup = new Thread(() -> {
@@ -128,11 +131,41 @@ public final class JavaValidation {
   }
 
   static final class Children {
+    private final long maxDepth = Math.min(32, ValidationRuntime.setting("VALIDATOR_MAX_CHILD_DEPTH", 8));
+    private final long maxCount = ValidationRuntime.setting("VALIDATOR_MAX_CHILDREN", 10000);
+    private final long maxBytes = byteLimit();
+    Path sharedBudget;
     int count;
     long bytes;
-    boolean accepts(long size, int depth) {
-      if (size < 0 || size > Long.MAX_VALUE - bytes) return false;
-      count++; bytes += size; return true;
+
+    static long byteLimit() { return ValidationRuntime.setting("VALIDATOR_MAX_CHILD_BYTES", ValidationRuntime.scratchLimit()); }
+
+    boolean accepts(long size, int depth) throws IOException {
+      if (size < 0 || depth < 0 || depth >= maxDepth) return false;
+      if (sharedBudget == null) return charge(size, count, bytes);
+      try (var channel = java.nio.channels.FileChannel.open(sharedBudget, StandardOpenOption.READ, StandardOpenOption.WRITE);
+           var lock = channel.lock()) {
+        var totals = java.nio.ByteBuffer.allocate(Integer.BYTES + Long.BYTES);
+        while (totals.hasRemaining()) {
+          if (channel.read(totals) < 0) throw new EOFException("Incomplete collection child budget");
+        }
+        totals.flip();
+        int previousCount = totals.getInt();
+        long previousBytes = totals.getLong();
+        if (!charge(size, previousCount, previousBytes)) return false;
+        totals.clear();
+        totals.putInt(previousCount + 1).putLong(previousBytes + size).flip();
+        channel.position(0);
+        while (totals.hasRemaining()) channel.write(totals);
+        return true;
+      }
+    }
+
+    private boolean charge(long size, int totalCount, long totalBytes) {
+      if (totalCount >= Math.min(maxCount, Integer.MAX_VALUE) || size > maxBytes - totalBytes) return false;
+      count++;
+      bytes += size;
+      return true;
     }
     final Set<String> active = new LinkedHashSet<>();
     final Map<String, JsonObject> cache = new LinkedHashMap<>(32, 0.75f, true) {
@@ -426,7 +459,14 @@ public final class JavaValidation {
       resources.clear();
       try { if (spoolWriter != null) spoolWriter.close(); }
       catch (IOException error) { throw new java.io.UncheckedIOException(error); }
-      finally { if (spool != null) try { Files.deleteIfExists(spool); } catch (IOException ignored) { } }
+      finally {
+        if (spool != null) {
+          try { Files.deleteIfExists(spool); }
+          catch (IOException error) {
+            System.err.println("Unable to remove validation report spool " + spool + ": " + error);
+          }
+        }
+      }
     }
   }
 }

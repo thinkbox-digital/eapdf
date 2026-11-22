@@ -25,7 +25,7 @@ class UnfixedRegressionTests {
     try (Common.JobReport job = Common.beginJob(); var capture = Common.beginPerFileLog(output)) {
       byte[] rendered = PdfMailWriter.renderHtmlPdf("<html><body>Visible body<img src='cid:missing'/></body></html>",
           tempDir.toUri().toString(), TestSupport.fontPath(), record, false, (xhtml, baseUri, fontPath) -> {
-            if (attempts.incrementAndGet() == 1) throw new java.io.IOException("primary rendering failed");
+            if (attempts.incrementAndGet() == 1) throw new com.openhtmltopdf.util.XRRuntimeException("primary rendering failed");
             return PdfMailWriter.renderXhtmlPdf(xhtml, baseUri, fontPath);
           });
       try (PDDocument document = Loader.loadPDF(rendered)) {
@@ -40,6 +40,25 @@ class UnfixedRegressionTests {
     String log = Files.readString(tempDir.resolve("logs/fallback.log"));
     Assertions.assertTrue(log.contains("Reduced rendering:"));
     Assertions.assertTrue(log.contains("Images, formatting, and links may be missing."));
+  }
+
+  @Test
+  void rendererPropagatesInterruptionAndIoFailureWithoutRetry() throws Exception {
+    for (Exception failure : List.of(new java.io.IOException("Scratch output unavailable"), new InterruptedException())) {
+      var attempts = new java.util.concurrent.atomic.AtomicInteger();
+      try {
+        Exception thrown = Assertions.assertThrows(failure.getClass(), () -> PdfMailWriter.renderHtmlPdf(
+            "<html><body>Body</body></html>", "", TestSupport.fontPath(), new EmailRecord(), false, (xhtml, base, font) -> {
+              attempts.incrementAndGet();
+              throw failure;
+            }));
+        Assertions.assertSame(failure, thrown);
+        Assertions.assertEquals(1, attempts.get());
+        Assertions.assertEquals(failure instanceof InterruptedException, Thread.currentThread().isInterrupted());
+      } finally {
+        Thread.interrupted();
+      }
+    }
   }
 
   @Test
@@ -123,7 +142,9 @@ class UnfixedRegressionTests {
     String summary = console.toString(StandardCharsets.UTF_8);
     Assertions.assertTrue(summary.contains("accepted: 3 skipped: 1 completed: 1 failed: 1 not processed: 1"));
     Assertions.assertTrue(summary.contains("conversion warnings: 1"));
-    Assertions.assertTrue(summary.contains("warning summary: done.eml | Reduced content | Reduced rendering:"));
+    Assertions.assertTrue(summary.contains("warning summary: REVIEW_REQUIRED (1)"));
+    Assertions.assertFalse(summary.contains("done.eml"));
+    Assertions.assertFalse(summary.contains("Reduced content"));
     Assertions.assertTrue(Files.readString(tempDir.resolve("logs/warnings.log")).contains("Reduced rendering:"));
   }
 

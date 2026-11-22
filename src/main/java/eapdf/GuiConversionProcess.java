@@ -69,7 +69,14 @@ final class GuiConversionProcess implements AutoCloseable {
 
   @Override public void close() {
     if (signingPassword != null) Arrays.fill(signingPassword, '\0');
-    try { Files.deleteIfExists(tempConfigPath); } catch (Exception ignored) {}
+    deleteTemporaryConfig(tempConfigPath);
     activeProcess = null;
+  }
+
+  static void deleteTemporaryConfig(Path path) {
+    try { Files.deleteIfExists(path); }
+    catch (java.io.IOException | SecurityException error) {
+      System.err.println("Unable to remove temporary conversion configuration: " + path + " (" + error.getMessage() + ")");
+    }
   }
 }

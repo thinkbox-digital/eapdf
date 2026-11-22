@@ -8,8 +8,14 @@ import java.util.function.*;
 import org.jsoup.*;
 import org.jsoup.nodes.*;
 import org.jsoup.parser.*;
+import com.openhtmltopdf.layout.Layer;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.openhtmltopdf.outputdevice.helper.ExternalResourceControlPriority;
+import com.openhtmltopdf.util.XRRuntimeException;
+import org.apache.pdfbox.io.IOUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import static eapdf.MailRenderPolicy.*;
 
 /** HTML preparation and rendering; document assembly and publication stay with the writer. */
@@ -23,6 +29,7 @@ final class MailHtmlRenderer {
  }
  private boolean pdfUaFeaturesEnabled(){return accessibility.getAsBoolean();}
  interface XhtmlRenderer {byte[] render(String xhtml,String baseUri,String fontPath)throws Exception;}
+ interface RenderResult<T> { T render(String xhtml, String baseUri, String fontPath) throws Exception; }
  record BodyColors(String css,boolean background){}
 String nativeAttachmentHtml(EmailRecord record, AssociatedFile file) {
   return attachmentDisplayHtml(file);
@@ -42,7 +49,22 @@ byte[] renderHtmlPdf(String html, String baseUri, String fontPath, EmailRecord r
 }
 
 byte[] renderHtmlPdf(String html, String baseUri, String fontPath, EmailRecord r, boolean debug, XhtmlRenderer renderer) throws Exception {
+  return renderWithFallback(html, baseUri, fontPath, r, debug, renderer::render);
+}
+
+void renderHtmlPdfTo(String html, String baseUri, String fontPath, EmailRecord r, boolean debug, Path destination) throws Exception {
+  renderWithFallback(html, baseUri, fontPath, r, debug, (xhtml, base, font) -> {
+    try (var output = new BufferedOutputStream(Files.newOutputStream(destination))) {
+      renderXhtmlPdf(xhtml, base, font, true, ProcessingLimits.boundedOutput(output));
+    }
+    return null;
+  });
+}
+
+private <T> T renderWithFallback(String html, String baseUri, String fontPath, EmailRecord r,
+                                 boolean debug, RenderResult<T> renderer) throws Exception {
   Document d = Jsoup.parse(Common.nz(html), "", Parser.xmlParser());
+  checkLayoutComplexity(d);
   d.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
   d.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
   d.outputSettings().charset(StandardCharsets.UTF_8);
@@ -62,27 +84,25 @@ byte[] renderHtmlPdf(String html, String baseUri, String fontPath, EmailRecord r
   }
 
   EmailRecord previousRecord = ACTIVE_RENDER_RECORD.get();
-  Set<String> previousImages = RENDERED_IMAGES.get();
+  RenderedImages previousImages = RENDERED_IMAGES.get();
   Map<String, String> previousOrientations = ORIENTED_IMAGE_URIS.get();
-  RENDERED_IMAGES.set(new HashSet<>());
+  RENDERED_IMAGES.set(new RenderedImages());
   ORIENTED_IMAGE_URIS.set(new HashMap<>());
   ACTIVE_RENDER_RECORD.set(r);
   try {
     try {
-      byte[] rendered = renderer.render(finalXhtml, baseUri, fontPath);
+      T rendered = renderer.render(finalXhtml, baseUri, fontPath);
       if (debug) Common.dbg(r, "OpenHTMLtoPDF run complete");
       return rendered;
     } catch (Exception ex) {
-      for (Throwable cause = ex; cause != null && cause.getCause() != cause; cause = cause.getCause()) {
-        if (cause instanceof Common.UserFacingException limit) throw limit;
-      }
+      if (!allowsPlainTextFallback(ex)) throw ex;
       String fallbackXhtml = buildPlainTextFallbackXhtml(html);
       if (debug) {
         Common.dbg(r, "OpenHTMLtoPDF primary render failed: " + ex.getClass().getSimpleName() + ": " + Common.nz(ex.getMessage()));
         Common.dbg(r, "retrying render with plain-text fallback xhtml");
       }
       try {
-        byte[] rendered = renderer.render(fallbackXhtml, baseUri, fontPath);
+        T rendered = renderer.render(fallbackXhtml, baseUri, fontPath);
         Common.warn(r, "Reduced rendering: HTML failed (" + ex.getClass().getSimpleName() + ": "
             + Common.nz(ex.getMessage()) + "); used plain text. Images, formatting, and links may be missing.");
         if (debug) Common.dbg(r, "OpenHTMLtoPDF fallback render complete");
@@ -104,12 +124,46 @@ byte[] renderHtmlPdf(String html, String baseUri, String fontPath, EmailRecord r
   }
 }
 
+private static boolean allowsPlainTextFallback(Exception error) {
+  boolean contentFailure = false;
+  var seen = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
+  for (Throwable cause = error; cause != null && seen.add(cause); cause = cause.getCause()) {
+    if (cause instanceof InterruptedException || cause instanceof java.nio.channels.ClosedByInterruptException) {
+      Thread.currentThread().interrupt();
+      return false;
+    }
+    if (cause instanceof Common.UserFacingException || cause instanceof IOException) return false;
+    if (cause instanceof XRRuntimeException || cause instanceof org.xml.sax.SAXParseException) contentFailure = true;
+  }
+  return contentFailure && !Thread.currentThread().isInterrupted();
+}
+
+private static void checkLayoutComplexity(Document document) {
+  record Entry(Node node, int depth) {}
+  var pending = new ArrayDeque<Entry>();
+  long remaining = Math.max(1, ProcessingLimits.metadataBytes() / 512);
+  pending.push(new Entry(document, 0));
+  while (!pending.isEmpty()) {
+    ProcessingLimits.checkCancelled();
+    Entry entry = pending.pop();
+    int children = entry.node().childNodeSize();
+    if (--remaining < pending.size() + (long) children || entry.depth() > 192)
+      throw Common.fail("HTML structure exceeds the rendering complexity limit");
+    for (int i = children - 1; i >= 0; i--) pending.push(new Entry(entry.node().childNode(i), entry.depth() + 1));
+  }
+}
+
 byte[] renderXhtmlPdf(String xhtml, String baseUri, String fontPath) throws Exception {
   return renderXhtmlPdf(xhtml, baseUri, fontPath, true);
 }
 
 byte[] renderXhtmlPdf(String xhtml, String baseUri, String fontPath, boolean fitWideContent) throws Exception {
   ByteArrayOutputStream baos = new ByteArrayOutputStream();
+  renderXhtmlPdf(xhtml, baseUri, fontPath, fitWideContent, ProcessingLimits.boundedOutput(baos));
+  return baos.toByteArray();
+}
+
+private void renderXhtmlPdf(String xhtml, String baseUri, String fontPath, boolean fitWideContent, OutputStream output) throws Exception {
   PdfRendererBuilder builder = new PdfRendererBuilder();
   builder.useFastMode();
   // The patched API calls base PDF/A-4 PDFA_4_A; it does not create PDF/A-4f.
@@ -126,10 +180,19 @@ byte[] renderXhtmlPdf(String xhtml, String baseUri, String fontPath, boolean fit
   builder.useExternalResourceAccessControl((uri, type) -> isAllowedRenderResource(uri),
       ExternalResourceControlPriority.RUN_AFTER_RESOLVING_URI);
   builder.withHtmlContent(xhtml, baseUri);
-  builder.toStream(baos);
+  builder.toStream(output);
+  int[] renderedPages = {0};
+  builder.usePageSupplier((document, width, height, pageIndex, shadowIndex) -> {
+    ProcessingLimits.checkRenderPages(++renderedPages[0]);
+    PDPage page = new PDPage(new PDRectangle(width, height));
+    document.addPage(page);
+    return page;
+  });
   String fittedXhtml = null;
-  try (var renderer = builder.buildPdfRenderer()) {
+  try (var document = new PDDocument(IOUtils.createTempFileOnlyStreamCache());
+       var renderer = builder.usePDDocument(document).buildPdfRenderer()) {
     renderer.layout();
+    ProcessingLimits.checkRenderPages(renderer.getRootBox().getLayer().getPages().size());
     if (fitWideContent && renderRecord != null) {
       var root = renderer.getRootBox();
       var page = root.getLayer().getPages().get(0);
@@ -147,21 +210,14 @@ byte[] renderXhtmlPdf(String xhtml, String baseUri, String fontPath, boolean fit
         fittedXhtml = fitted.outerHtml();
       }
     }
-    if (fittedXhtml == null) {
-      renderer.setListener(new com.openhtmltopdf.pdfboxout.PDFCreationListener() {
-        private boolean counted;
-        public void preOpen(com.openhtmltopdf.pdfboxout.PdfBoxRenderer r) {}
-        public void preWrite(com.openhtmltopdf.pdfboxout.PdfBoxRenderer r, int count) {}
-        public void onClose(com.openhtmltopdf.pdfboxout.PdfBoxRenderer r) {
-          if (!counted) { counted = true; ProcessingLimits.accountPages(r.getPdfDocument().getNumberOfPages()); }
-        }
-      });
-      renderer.createPDF();
-    }
+    if (fittedXhtml == null) renderer.createPDF();
+  } catch (Layer.LayoutLimitExceeded limit) {
+    var failure = Common.fail(limit.getMessage());
+    failure.initCause(limit);
+    throw failure;
   }
-  if (fittedXhtml != null) return renderXhtmlPdf(fittedXhtml, baseUri, fontPath, false);
-  byte[] rendered = baos.toByteArray();
-  return rendered;
+  if (fittedXhtml != null) renderXhtmlPdf(fittedXhtml, baseUri, fontPath, false, output);
+  else ProcessingLimits.accountPages(renderedPages[0]);
 }
 
 String buildPlainTextFallbackXhtml(String html) throws Exception {
@@ -396,6 +452,7 @@ String canonicalizeEmailHtml(String html, EmailRecord r, boolean debug) {
   if (src.isBlank()) return "";
 
   Document d = Jsoup.parse(src);
+  checkLayoutComplexity(d);
   Element base = d.selectFirst("base[href]");
   if (r != null && base != null && !base.attr("href").isBlank()) {
     String href = base.attr("href").trim();

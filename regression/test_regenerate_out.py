@@ -375,15 +375,26 @@ class RegenerationTests(unittest.TestCase):
         args=SimpleNamespace(jobs=2,creator_jar=Path('creator.jar'),validator_jar=Path('validator.jar'),timeout=60)
         config=self.root/'config.json';config.write_text('{}')
         calls=[]
+        validated=[]
         def execute(command,log,timeout,env):
             calls.append((command,env))
             log.write_text('ok')
             if '-jar' in command:
                 out=Path(command[command.index('--out')+1])
-                (out/'one.pdf').write_bytes(b'%PDF-test')
-                (out/'two.pdf').write_bytes(b'%PDF-test-two')
+                generation='00000000-0000-4000-8000-000000000001'
+                publication=out/'.eapdf-publication'
+                entries=[]
+                for slot,(name,contents) in enumerate((('one.pdf',b'%PDF-test'),('two.pdf',b'%PDF-test-two'))):
+                    (out/name).write_bytes(b'old compatibility copy')
+                    relative=f'{slot:06d}/{name}'
+                    pdf=publication/generation/relative
+                    pdf.parent.mkdir(parents=True)
+                    pdf.write_bytes(contents)
+                    entries.append({'path':relative,'size':len(contents),'sha256':runner.digest(pdf)})
+                (publication/'current.json').write_text(json.dumps({'schemaVersion':1,'generation':generation,'files':entries}))
                 (out/'progress.json').write_text('{}')
             else:
+                validated.append(Path(command[-2]).read_bytes())
                 published=list((self.root/'out/eml').glob('*.pdf'))
                 self.assertEqual([],published,'staged files must remain unpublished during validation')
                 progress=json.loads(next(evidence.rglob('result.json')).read_text())
@@ -397,10 +408,12 @@ class RegenerationTests(unittest.TestCase):
             result=runner.run_task(next(t for t in tasks if t['profile']=='1s'),args,evidence,workspace,config,{str(source):runner.digest(source)},2*1024**3)
         self.assertEqual('PASS',result['status'])
         runner.publish_run([result])
+        self.assertEqual([b'%PDF-test',b'%PDF-test-two'],validated)
         pdf=next((self.root/'out/eml').iterdir())
         self.assertTrue(pdf.name.endswith('_1s.pdf'))
         self.assertEqual(2,len(list((self.root/'out').rglob('*.*'))))
         self.assertTrue(list(evidence.rglob('progress.json')))
+        self.assertFalse(list(evidence.rglob('current.json')))
         self.assertTrue(list(evidence.rglob('*.validation.json')))
         self.assertEqual('1',calls[0][1]['VALIDATOR_CHILD_PROCESSES'])
         self.assertEqual(str(2*1024**3),calls[0][1]['EAPDF_WORKER_HEAP_BYTES'])

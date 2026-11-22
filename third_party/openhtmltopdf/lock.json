@@ -1,5 +1,5 @@
 {
-  "version": "1.1.114-eapdf.1",
+  "version": "1.1.114-eapdf.2",
   "upstream_url": "https://github.com/openhtmltopdf/openhtmltopdf.git",
   "upstream_commit": "ce841f1dadb45479fd5d5260375f807151eb67b8",
   "patch_repository": "https://github.com/jialiang/HTML-to-PDF-UA",
@@ -34,30 +34,63 @@
   ],
   "artifacts": [
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.114-eapdf.1/openhtmltopdf-core-1.1.114-eapdf.1-sources.jar",
-      "sha256": "d167d0b53fa3849707f682ed9c8c6618964855fbbf05d2953ebdc47e0811027b"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.114-eapdf.2/openhtmltopdf-core-1.1.114-eapdf.2-sources.jar",
+      "sha256": "9bbbf268d66e43e55252ebee0f5b8d9ad463ca76c08885b8310edc8dbf40e1b4"
     },
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.114-eapdf.1/openhtmltopdf-core-1.1.114-eapdf.1.jar",
-      "sha256": "8ea6c5b90ce7ca51a1c05169a22bfe48bf1dc0a55c4b043dc197d296c35118c2"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.114-eapdf.2/openhtmltopdf-core-1.1.114-eapdf.2.jar",
+      "sha256": "a052f1ceee39d01c67cb0f9d481c8499f915e2e4787b129461fc8bfc97803b71"
     },
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.114-eapdf.1/openhtmltopdf-core-1.1.114-eapdf.1.pom",
-      "sha256": "86298672d9d862a65ba571f67013b6b14094c209f0979086357fac9687bcf015"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.114-eapdf.2/openhtmltopdf-core-1.1.114-eapdf.2.pom",
+      "sha256": "2c674358623bd35f005084385d9209c8c2f8bdd23131c6b88c4a725d04537ebc"
     },
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.114-eapdf.1/openhtmltopdf-pdfbox-1.1.114-eapdf.1-sources.jar",
-      "sha256": "f5bf9dd3850344b0b76f429f286b77f92d2a57824bdabcbbabd7cfb4ac4b94b2"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.114-eapdf.2/openhtmltopdf-pdfbox-1.1.114-eapdf.2-sources.jar",
+      "sha256": "ba6ae4645d91b43527590ef8892da6392409e296dae51f0fe62a092331968a81"
     },
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.114-eapdf.1/openhtmltopdf-pdfbox-1.1.114-eapdf.1.jar",
-      "sha256": "025227d6065e873877cdc2a3d4684b031f54539d3901fc2ba8611f08ae474d81"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.114-eapdf.2/openhtmltopdf-pdfbox-1.1.114-eapdf.2.jar",
+      "sha256": "eab89a08a21985cef93e58f47e14a4c90c631a4dcb3396b55e5bab205afce3ef"
     },
     {
-      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.114-eapdf.1/openhtmltopdf-pdfbox-1.1.114-eapdf.1.pom",
-      "sha256": "756f517967243cfd8ec5d12cf093119a9ed4dc4125d08aa1fc1068b230d25e27"
+      "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.114-eapdf.2/openhtmltopdf-pdfbox-1.1.114-eapdf.2.pom",
+      "sha256": "14225613c6ddaa7877fa8c0769218d0d56d584db3271b2fc964fb6efbbad3b85"
     }
   ],
   "output_timestamp": "2026-11-17T00:00:00Z",
-  "packaging": "normalize-jar-v1: fixed ZIP order/time/mode, deterministic Bnd-LastModified/Built-By, omit Build-Jdk patch version; class/resource/source bytes unchanged"
+  "packaging": "normalize-jar-v1: fixed ZIP order/time/mode, deterministic Bnd-LastModified/Built-By, omit Build-Jdk patch version; class/resource/source bytes unchanged",
+  "layout_guard": {
+    "patch": {
+      "path": "third_party/openhtmltopdf/patches/0005-Bound-layout-page-allocation.patch",
+      "sha256": "b07aaad0fea8d7ace292ebdbcd87c3c5ead9bf65d43d0deb04e7fda29fbc76bd"
+    },
+    "base_artifacts": [
+      {
+        "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.114-eapdf.1/openhtmltopdf-core-1.1.114-eapdf.1-sources.jar",
+        "sha256": "d167d0b53fa3849707f682ed9c8c6618964855fbbf05d2953ebdc47e0811027b"
+      },
+      {
+        "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.114-eapdf.1/openhtmltopdf-core-1.1.114-eapdf.1.jar",
+        "sha256": "8ea6c5b90ce7ca51a1c05169a22bfe48bf1dc0a55c4b043dc197d296c35118c2"
+      },
+      {
+        "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-core/1.1.114-eapdf.1/openhtmltopdf-core-1.1.114-eapdf.1.pom",
+        "sha256": "86298672d9d862a65ba571f67013b6b14094c209f0979086357fac9687bcf015"
+      },
+      {
+        "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.114-eapdf.1/openhtmltopdf-pdfbox-1.1.114-eapdf.1-sources.jar",
+        "sha256": "f5bf9dd3850344b0b76f429f286b77f92d2a57824bdabcbbabd7cfb4ac4b94b2"
+      },
+      {
+        "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.114-eapdf.1/openhtmltopdf-pdfbox-1.1.114-eapdf.1.jar",
+        "sha256": "025227d6065e873877cdc2a3d4684b031f54539d3901fc2ba8611f08ae474d81"
+      },
+      {
+        "path": "third_party/maven/io/github/openhtmltopdf/openhtmltopdf-pdfbox/1.1.114-eapdf.1/openhtmltopdf-pdfbox-1.1.114-eapdf.1.pom",
+        "sha256": "756f517967243cfd8ec5d12cf093119a9ed4dc4125d08aa1fc1068b230d25e27"
+      }
+    ],
+    "base_version": "1.1.114-eapdf.1"
+  }
 }

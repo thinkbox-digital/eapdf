@@ -75,8 +75,10 @@ def build(path):
         ('Shared reading experience', 'PDF pages, message/folder navigation and embedded assets. Full adds search, filtering and CSV/XMP export.'),
         ('Portfolio and metadata', 'Browse PDF Portfolios and export CSV or XMP from the active document.')])
 
+    renderer_lock = json.loads((ROOT / "third_party/openhtmltopdf/lock.json").read_text())
+    renderer_patches = len(renderer_lock["patches"]) + bool(renderer_lock.get("layout_guard"))
     card(xs[0], 122, width, 274, 'CREATOR LIBRARIES', [
-        ('PDF creation and metadata', f"PDFBox / XMPBox {java['pdfbox']}; FontBox {java['fontbox']}. OpenHTMLtoPDF {java['openhtmltopdf-pdfbox']} with four maintained patches."),
+        ('PDF creation and metadata', f"PDFBox / XMPBox {java['pdfbox']}; FontBox {java['fontbox']}. OpenHTMLtoPDF {java['openhtmltopdf-pdfbox']} with {renderer_patches} maintained patches."),
         ('Email and content', f"Jakarta Mail / Angus Mail, java-libpst, Outlook Message Parser, POI {java['poi']}, jsoup {java['jsoup']}, RTF-to-HTML and jutf7."),
         ('Other integrations', f"Bouncy Castle {java['bcpkix-jdk18on']}; Google Gmail / OAuth clients; Gson {java['gson']}; metadata-extractor {java['metadata-extractor']}.")])
     card(xs[1], 122, width, 274, 'VALIDATION LIBRARIES', [

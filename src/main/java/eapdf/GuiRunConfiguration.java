@@ -20,7 +20,14 @@ final class GuiRunConfiguration {
     cfg.accessibility.addPdfUaFeatures = pdfUaEnabled;
     cfg.signing = signing;
     Path tempConfig = Files.createTempFile("eapdf-gui-config-", ".json");
-    Files.writeString(tempConfig, gson.toJson(cfg), StandardCharsets.UTF_8);
+    try {
+      Common.makeOwnerOnly(tempConfig);
+      Files.writeString(tempConfig, gson.toJson(cfg), StandardCharsets.UTF_8);
+    } catch (Exception error) {
+      try { Files.deleteIfExists(tempConfig); }
+      catch (Exception cleanup) { error.addSuppressed(cleanup); }
+      throw error;
+    }
     tempConfig.toFile().deleteOnExit();
     return tempConfig;
   }

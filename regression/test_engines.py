@@ -1,12 +1,14 @@
 import os
 import json
 import subprocess
+import sys
 from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
 
 import validate_eapdf as validator
+from eapdf_validation.engines import EngineOutputLimit, run_with_output_limit
 
 
 class EngineCompatibilityTests(unittest.TestCase):
@@ -39,10 +41,21 @@ class EngineCompatibilityTests(unittest.TestCase):
         payload = {"report": {"jobs": [{"validationResult": [{"profileName": profile,
             "compliant": True, "jobEndStatus": "normal", "details": {}}]}]}}
         process = subprocess.CompletedProcess([], 0, json.dumps(payload), "")
-        with patch.object(validator.shutil, "which", return_value="/usr/bin/docker"), \
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(validator.shutil, "which", return_value="/usr/bin/docker"), \
                 patch.object(validator, "_verapdf_command", return_value=["docker", "exec", "test-daemon"]), \
-                patch.object(validator.subprocess, "run", return_value=process):
-            return validator.run_verapdf("message.pdf", expected_profile=expected_profile)
+                patch("eapdf_validation.engines.run_with_output_limit", return_value=process):
+            pdf = Path(directory, "message.pdf")
+            pdf.write_bytes(b"%PDF-")
+            return validator.run_verapdf(pdf, expected_profile=expected_profile)
+
+    def test_engine_capture_drains_both_streams_and_stops_at_either_limit(self):
+        command = [sys.executable, "-c", "import sys; print('report'); print('diagnostic', file=sys.stderr)"]
+        completed = run_with_output_limit(subprocess, command, 5, 7, 11)
+        self.assertEqual((0, "report\n", "diagnostic\n"), (completed.returncode, completed.stdout, completed.stderr))
+        for limits in ((6, 11), (7, 10)):
+            with self.assertRaises(EngineOutputLimit):
+                run_with_output_limit(subprocess, command, 5, *limits)
 
     def test_upstream_label_case_retains_the_exact_allowed_flavours(self):
         for canonical in validator.ALLOWED_VERAPDF_PROFILES:

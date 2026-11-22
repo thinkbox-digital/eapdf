@@ -1,19 +1,20 @@
 package eapdf;
+import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
-import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.client.util.store.MemoryDataStoreFactory;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.ListMessagesResponse;
 import jakarta.mail.internet.MimeMessage;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.Base64;
@@ -55,11 +56,10 @@ public class GmailDownloadToPdf {
       int limit = (Integer)opt.getOrDefault("limit", 0);
 
       Files.createDirectories(Paths.get(outPdfDir));
-      Files.createDirectories(Paths.get(tokenDir));
       if (debug) debugDir = ConversionProgress.startDebugDirectory(Paths.get(debugDir)).toString();
 
       System.out.println("connecting: Gmail API");
-      Gmail service = buildService(credentialsPath, tokenDir);
+      Gmail service = buildService(credentialsPath, tokenDir, user);
 
       String query = buildMessageQuery(unreadOnly);
       Map<String,String> labelNames = loadLabelNames(service, user);
@@ -165,7 +165,7 @@ public class GmailDownloadToPdf {
         Common.inputState(sourcePath, "started");
         if (archiveProfile == null && resume.completed(meta.getId(), Paths.get(outPdfDir))) {
           Common.inputState(sourcePath, "completed");
-          System.out.println("resumed completed Gmail message: " + meta.getId());
+          System.out.println("resumed a completed Gmail message");
           ConversionProgress.completed();
           continue;
         }
@@ -248,7 +248,9 @@ public class GmailDownloadToPdf {
         return service.users().messages().get(user, messageId).setFormat("raw").execute();
       } catch (IOException exception) {
         if (attempt >= 2 || !retryableDownload(exception)) throw exception;
-        System.err.println("warning: retrying Gmail message " + messageId + " after " + exception.getMessage());
+        String cause = exception instanceof HttpResponseException response
+            ? "HTTP " + response.getStatusCode() : exception.getClass().getSimpleName();
+        System.err.println("warning: retrying Gmail download after " + cause);
         // Network retry backoff, not polling for work; interruption cancels it.
         try {
           //noinspection BusyWait
@@ -271,21 +273,39 @@ public class GmailDownloadToPdf {
     return !(exception instanceof InterruptedIOException);
   }
 
-  static Gmail buildService(String credentialsPath, String tokenDir) throws Exception {
+  static Gmail buildService(String credentialsPath, String tokenDir, String user) throws Exception {
     NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-    Credential credential = authorize(httpTransport, credentialsPath, tokenDir);
-    return new Gmail.Builder(httpTransport, JSON_FACTORY, credential).setApplicationName("GmailDownloadToPdf").build();
+    Credential credential = authorize(httpTransport, credentialsPath, tokenDir, user);
+    Gmail service = new Gmail.Builder(httpTransport, JSON_FACTORY, credential).setApplicationName("GmailDownloadToPdf").build();
+    if (!"me".equalsIgnoreCase(user)) {
+      try { service.users().getProfile(user).execute(); }
+      catch (HttpResponseException error) {
+        if (error.getStatusCode() != 403 && error.getStatusCode() != 404) throw error;
+        throw Common.fail("Google did not authorize the requested Gmail mailbox. Check the account and permissions, then authorize again if needed.");
+      }
+    }
+    return service;
   }
 
-  static Credential authorize(NetHttpTransport httpTransport, String credentialsPath, String tokenDir) throws Exception {
+  static Credential authorize(NetHttpTransport httpTransport, String credentialsPath, String tokenDir, String user) throws Exception {
     try (InputStream in = Files.newInputStream(Paths.get(credentialsPath))) {
-      GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
-      GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(httpTransport, JSON_FACTORY, clientSecrets, SCOPES)
-        .setDataStoreFactory(new FileDataStoreFactory(new File(tokenDir)))
-        .setAccessType("offline")
-        .build();
-      LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
-      return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+      GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in, StandardCharsets.UTF_8));
+      var builder = new GoogleAuthorizationCodeFlow.Builder(httpTransport, JSON_FACTORY, clientSecrets, SCOPES)
+          .setAccessType("offline");
+      String configured = System.getenv(GmailTokenStore.PASSWORD_ENV);
+      if (configured == null || configured.isBlank()) builder.setDataStoreFactory(new MemoryDataStoreFactory());
+      else {
+        char[] password = configured.toCharArray();
+        try {
+          builder.setCredentialDataStore(GmailTokenStore.open(Path.of(tokenDir), clientSecrets.getDetails().getClientId(), user, password));
+        } finally { Arrays.fill(password, '\0'); }
+      }
+      var receiver = new GmailOAuthReceiver();
+      return new AuthorizationCodeInstalledApp(builder.build(), receiver) {
+        @Override protected void onAuthorization(AuthorizationCodeRequestUrl url) throws IOException {
+          super.onAuthorization(url.setState(receiver.state));
+        }
+      }.authorize(GmailTokenStore.KEY);
     }
   }
 

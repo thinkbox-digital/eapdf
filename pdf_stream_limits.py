@@ -30,13 +30,12 @@ CURRENT = ContextVar("pdf_decoding_budget", default=None)
 
 class Budget:
     def __init__(self):
-        self.remaining = setting("VALIDATOR_MAX_DECODED_BYTES", 1) if os.environ.get("VALIDATOR_MAX_DECODED_BYTES") else None
+        self.remaining = setting("VALIDATOR_MAX_DECODED_BYTES", max(8 * 1024**3, memory_allowance_bytes() * 16))
+        self.file_limit = setting("VALIDATOR_MAX_EMBEDDED_FILES", 100_000)
         self.files = 0
         self.limited = None
 
     def charge(self, size):
-        if self.remaining is None:
-            return
         if size > self.remaining:
             raise DecodeLimitError("Aggregate decoded-stream byte limit reached")
         self.remaining -= size
@@ -64,7 +63,7 @@ def count_file():
     budget = CURRENT.get()
     if budget is not None:
         budget.files += 1
-        if os.environ.get("VALIDATOR_MAX_EMBEDDED_FILES") and budget.files > setting("VALIDATOR_MAX_EMBEDDED_FILES", 1):
+        if budget.files > budget.file_limit:
             raise DecodeLimitError("Embedded-file count limit reached")
 
 

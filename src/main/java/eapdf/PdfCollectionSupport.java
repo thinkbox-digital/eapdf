@@ -54,7 +54,7 @@ final class PdfCollectionSupport {
 
   // Collection wrapper pages describe the whole archive, not an individual email (§7.6).
   static PDDocument buildCollectionStartPage(List<EmailRecord> records, String profile,
-      String fontPath, boolean debug) throws Exception {
+      String fontPath, boolean debug, Path rendered) throws Exception {
     long attachments = records.stream().mapToLong(r -> Math.max(r.attachmentCount, 0)).sum();
     int folders = buildFolderSections(records).size();
     long incomplete = records.stream().filter(r -> !r.sourceProblems.isEmpty()).count();
@@ -89,11 +89,12 @@ final class PdfCollectionSupport {
     if (incomplete > 0) html.append("<div class=\"warning\"><p><strong>INCOMPLETE SOURCE — conversion warnings</strong></p><p>")
         .append(incomplete).append(" message(s) have source-data warnings. Review the warnings in the embedded messages.</p></div>");
     html.append("</body></html>");
-    byte[] rendered = PdfMailWriter.renderHtmlPdf(html.toString(), PdfMailWriter.ROOT_URI(), fontPath, new EmailRecord(), debug);
-    PDDocument document = Loader.loadPDF(new org.apache.pdfbox.io.RandomAccessReadBuffer(rendered),
-        org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache());
-    try { ProcessingLimits.accountPages(document.getNumberOfPages()); return document; }
-    catch (Exception error) { document.close(); throw error; }
+    return renderCollectionCover(html.toString(), fontPath, debug, rendered);
+  }
+
+  private static PDDocument renderCollectionCover(String html, String fontPath, boolean debug, Path rendered) throws Exception {
+    PdfMailWriter.HTML.renderHtmlPdfTo(html, PdfMailWriter.ROOT_URI(), fontPath, new EmailRecord(), debug, rendered);
+    return Loader.loadPDF(rendered.toFile(), org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache());
   }
 
   static String buildMessageCollectionRenderHtml(List<PdfCollectionSupport.CollectionMember> members, String collectionProfile, String folderName) {
@@ -454,11 +455,8 @@ final class PdfCollectionSupport {
     List<PdfCollectionSupport.CollectionMember> members = buildMessageCollectionMembers(records, fontPath, iccPath, debug, debugDir, collectionProfile);
     if (members.isEmpty()) throw new IllegalArgumentException("collection requires at least one embedded EA-PDF member");
 
-    EmailRecord debugRecord = new EmailRecord();
     String html = buildMessageCollectionRenderHtml(members, collectionProfile, folderName);
-    byte[] rendered = PdfMailWriter.renderHtmlPdf(html, PdfMailWriter.ROOT_URI(), fontPath, debugRecord, debug);
-
-    try (PDDocument doc = Loader.loadPDF(rendered)) {
+    try (PayloadStore cover = new PayloadStore(); PDDocument doc = renderCollectionCover(html, fontPath, debug, cover.createPdf())) {
       doc.setVersion(2.0f);
       doc.getDocument().setVersion(2.0f);
       PdfMailWriter.clearImageInterpolation(doc);

@@ -1,0 +1,19 @@
+From: Fixture Sender <sender@example.org>
+To: Fixture Recipient <recipient@example.org>
+Date: Tue, 10 Nov 2026 10:00:00 +0000
+Message-ID: <child-acceptance@example.org>
+Subject: Child acceptance
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="inventory-fixture"
+
+--inventory-fixture
+Content-Type: text/plain; charset=utf-8
+
+Email body.
+--inventory-fixture
+Content-Type: application/octet-stream; name="native.txt"
+Content-Disposition: attachment; filename="native.txt"
+Content-Transfer-Encoding: 7bit
+
+Original native attachment bytes
+--inventory-fixture--

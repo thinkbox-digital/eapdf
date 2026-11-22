@@ -409,7 +409,7 @@ final class EaPdfChecks {
 
   private void embedded(Path path) throws Exception {
     COSDictionary names = dict(catalog, "Names");
-    readNameTree(dict(names, "EmbeddedFiles"), identitySet(), 0);
+    readNameTree(dict(names, "EmbeddedFiles"));
     Set<COSDictionary> allSpecs = identitySet();
     allSpecs.addAll(nameTreeSpecs);
     if (java.nio.file.Files.size(path) >= 128L * 1024 * 1024 && !document.isEncrypted())
@@ -531,21 +531,37 @@ final class EaPdfChecks {
     else if (!report.seen.contains("SOURCE_FILE_SET")) report.check("SOURCE_FILE_SET", true, "Declared source supplement members are available.", null);
   }
 
-  private void readNameTree(COSDictionary tree, Set<COSDictionary> seen, int depth) throws IOException {
+  private void readNameTree(COSDictionary tree) throws IOException {
     if (tree == null) return;
-    if (!seen.add(tree)) throw new IOException("EmbeddedFiles tree contains a cycle or repeated node");
-    COSBase names = get(tree, "Names");
-    if (names instanceof COSArray array) {
-      if (array.size() % 2 != 0) throw new IOException("EmbeddedFiles name tree has an unmatched entry");
-      for (int index = 1; index < array.size(); index += 2) if (array.getObject(index) instanceof COSDictionary spec) {
-        nameTreeSpecs.add(spec);
-        treeKeys.computeIfAbsent(spec, ignored -> new ArrayList<>()).add(string(array.getObject(index - 1)));
-        COSDictionary ef = dict(spec, "EF");
-        if (ef != null) for (COSName key : ef.keySet()) if (get(ef, key.getName()) instanceof COSStream stream) nameTreeStreams.add(stream);
+    long maxEntries = ValidationRuntime.setting("VALIDATOR_MAX_NAME_TREE_ENTRIES", 250000);
+    long entries = 1;
+    Set<COSDictionary> seen = identitySet();
+    seen.add(tree);
+    var pending = new java.util.ArrayDeque<COSDictionary>();
+    pending.add(tree);
+    while (!pending.isEmpty()) {
+      if (Thread.currentThread().isInterrupted()) throw new java.io.InterruptedIOException("Validation interrupted");
+      COSDictionary node = pending.removeLast();
+      if (get(node, "Names") instanceof COSArray array) {
+        if (array.size() % 2 != 0) throw new IOException("EmbeddedFiles name tree has an unmatched entry");
+        entries += array.size() / 2;
+        if (entries > maxEntries) throw new IOException("EmbeddedFiles name tree exceeds its entry budget");
+        for (int index = 1; index < array.size(); index += 2) if (array.getObject(index) instanceof COSDictionary spec) {
+          nameTreeSpecs.add(spec);
+          treeKeys.computeIfAbsent(spec, ignored -> new ArrayList<>()).add(string(array.getObject(index - 1)));
+          COSDictionary ef = dict(spec, "EF");
+          if (ef != null) for (COSName key : ef.keySet()) if (get(ef, key.getName()) instanceof COSStream stream) nameTreeStreams.add(stream);
+        }
       }
-    }
-    if (get(tree, "Kids") instanceof COSArray kids) for (COSBase child : kids) {
-      if (resolve(child) instanceof COSDictionary dictionary) readNameTree(dictionary, seen, depth + 1);
+      if (get(node, "Kids") instanceof COSArray kids) {
+        entries += kids.size();
+        if (entries > maxEntries) throw new IOException("EmbeddedFiles name tree exceeds its entry budget");
+        for (int index = kids.size() - 1; index >= 0; index--) {
+          if (!(kids.getObject(index) instanceof COSDictionary child)) continue;
+          if (!seen.add(child)) throw new IOException("EmbeddedFiles tree contains a cycle or repeated node");
+          pending.add(child);
+        }
+      }
     }
   }
 
@@ -687,7 +703,7 @@ final class EaPdfChecks {
       if (!nameTreeSpecs.contains(file.spec()) || sourceIdentities.contains(file.spec()) || "RF".equals(file.relationship()) || "Supplement".equals(file.relationship()) || !seen.add(file.stream())) continue;
       // Check measured decoded size before allocating or opening an embedded PDF.
       if (!children.accepts(file.size(), depth)) {
-        report.unavailable("COLLECTION_CHILD_VALIDATION", "Collection child size is invalid or its byte accounting exceeds numeric capacity.");
+        report.unavailable("COLLECTION_CHILD_VALIDATION", "Collection child depth, count, or decoded bytes exceed the job budget.");
         report.unavailable("COLLECTION_CONTENT_TYPES", "Some collection members could not be inspected within the child budget.");
         limited = true; break;
       }
@@ -777,12 +793,13 @@ final class EaPdfChecks {
     var staged = new HashSet<Path>();
     long lastProgress = 0;
     try (var pool = new CollectionValidationPool()) {
+      children.sharedBudget = pool.budget;
       int next = 0;
       while (next < members.size() || !pending.isEmpty()) {
         while (!limited && next < members.size() && pending.size() < CollectionValidationPool.WINDOW) {
           Embedded file = members.get(next++);
           if (!children.accepts(file.size(), depth)) {
-            report.unavailable("COLLECTION_CHILD_VALIDATION", "Collection child size is invalid or its byte accounting exceeds numeric capacity.");
+            report.unavailable("COLLECTION_CHILD_VALIDATION", "Collection child depth, count, or decoded bytes exceed the job budget.");
             report.unavailable("COLLECTION_CONTENT_TYPES", "Some collection members could not be inspected within the child budget.");
             limited = true; break;
           }
@@ -825,7 +842,10 @@ final class EaPdfChecks {
         }
         if (limited && pending.isEmpty()) break;
       }
-    } finally { for (Path path : staged) Files.deleteIfExists(path); }
+    } finally {
+      children.sharedBudget = null;
+      for (Path path : staged) Files.deleteIfExists(path);
+    }
     if (!report.seen.contains("COLLECTION_CONTENT_TYPES")) report.check("COLLECTION_CONTENT_TYPES", true, "No contained non-source file contradicts EA-PDF identification.", null);
     if (!limited || inspected > 0) report.check("COLLECTION_CHILD_VALIDATION", inspected > 0, "A collection requires identifiable email PDF members.", Map.of("count", inspected));
     if (metadataChecks != null) metadataChecks.finishChildren(!limited && evidence && inspected > 0);

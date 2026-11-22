@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -453,7 +454,7 @@ public class EapdfGui {
       password.setText("");
       if (choice != JOptionPane.OK_OPTION) {
         java.util.Arrays.fill(signingPassword, '\0');
-        try { Files.deleteIfExists(tempConfigPath); } catch (Exception ignored) {}
+        GuiConversionProcess.deleteTemporaryConfig(tempConfigPath);
         return;
       }
     } else signingPassword = null;
@@ -473,7 +474,7 @@ public class EapdfGui {
       runLog=Files.createTempFile(logs,"conversion-",".log");
     } catch(Exception error) {
       if(signingPassword!=null)java.util.Arrays.fill(signingPassword,'\0');
-      try{Files.deleteIfExists(tempConfigPath);}catch(Exception ignored){}
+      GuiConversionProcess.deleteTemporaryConfig(tempConfigPath);
       showError("Could not create the conversion log: "+error.getMessage());return;
     }
     List<String> logHeader=List.of("", "== "+label+" ==", "$ "+shellCommand(command),
@@ -820,7 +821,7 @@ public class EapdfGui {
 
   private String javaExecutable() {
     Path javaBin = Paths.get(System.getProperty("java.home"), "bin",
-        System.getProperty("os.name", "").toLowerCase().contains("win") ? "java.exe" : "java");
+        System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win") ? "java.exe" : "java");
     return Files.exists(javaBin) ? javaBin.toString() : "java";
   }
 

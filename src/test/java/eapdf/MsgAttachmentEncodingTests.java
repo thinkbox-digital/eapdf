@@ -90,6 +90,25 @@ class MsgAttachmentEncodingTests {
   }
 
   @Test
+  void conversionOwnsAndReleasesTheStagedOriginal() throws Exception {
+    Path message = directory.resolve("staged.msg");
+    fixture(message, 1252, "Notes.txt", false);
+    byte[] original = Files.readAllBytes(message);
+    try (var job = Common.beginJob()) {
+      EmailRecord record = MsgReader.readMsg(message.toString(), "", List.of(), false);
+      assertNull(record.sourceBytes);
+      var source = record.associatedFiles.stream().filter(file -> "Source".equals(file.afRelationship)).findFirst().orElseThrow();
+      assertArrayEquals(original, source.data());
+      Common.stageRecord(record);
+      Path snapshot = source.dataPath;
+      assertNotEquals(message, snapshot);
+      job.release(record);
+      assertFalse(Files.exists(snapshot));
+      assertArrayEquals(original, Files.readAllBytes(message));
+    }
+  }
+
+  @Test
   void attachedMessageFilenameUsesItsParentMessageEncoding() throws Exception {
     Path source = directory.resolve("nested.msg");
     fixture(source, 1251, "Вложенное.msg", true);

@@ -3,7 +3,7 @@
 ## From the command line
 
 ```sh
-java -Xmx2g -jar emailtopdfa-2.4.0-beta.4.jar --jobs 2 --out /tmp/eapdf-output message.eml
+java -Xmx2g -jar emailtopdfa-2.4.0-beta.5.jar --jobs 2 --out /tmp/eapdf-output message.eml
 ```
 
 For a collection, add `--archive-profile c --archive-output /tmp/eapdf-output/archive_1c.pdf`.
@@ -46,13 +46,13 @@ before running them.
 ## Release package acceptance
 
 Run the same acceptance check locally with the candidate JARs and viewer ZIPs.
-Use JDK 21, Python 3.12 with `pikepdf`, and the browser viewer's Node dependencies
-and Playwright Chromium. For Firefox set `FIREFOX_PATH` and `GECKODRIVER_PATH`
-if the executables are outside PATH. For the desktop JAR use a graphical session
-or `xvfb-run` and set `JAVAFX_LIB` when JavaFX is installed separately.
+Use Linux with JDK 21, Python 3.12 with `pikepdf`, Xvfb, `xwininfo`, and the browser
+viewer's Node dependencies and Playwright Chromium. For Firefox set `FIREFOX_PATH`
+and `GECKODRIVER_PATH` if the executables are outside PATH. Place the Creator GUI
+JAR alongside the Creator CLI JAR with the same stem followed by `-gui.jar`.
 
 ```sh
-python3 -B scripts/check_release_packages.py \
+xvfb-run -a python3 -B scripts/check_release_packages.py \
   --creator "$CREATOR_JAR" --validator "$VALIDATOR_JAR" \
   --viewer "$CHROMIUM_ZIP" --viewer "$FIREFOX_ZIP" \
   --desktop-viewer "$DESKTOP_JAR" --output "$(mktemp -d)/acceptance"
@@ -62,7 +62,9 @@ Pass each browser or web ZIP with a separate `--viewer` argument. The gate
 generates all six profiles from dedicated EML fixtures, checks PDF structure
 and payloads, requires standalone EA-PDF and veraPDF PDF/A-4f success, rejects
 missing and invalid collection children, and opens the same PDFs in the
-package readers. Successful checks write `SHA256SUMS` beside the logs and reports.
+package readers. It also converts a sample in the Creator GUI, saves a report
+from the Validator GUI, and launches the Desktop Viewer with JavaFX from its
+JAR. Successful checks write `SHA256SUMS` beside the logs and reports.
 
 For a GitHub release, dispatch **Release package acceptance** on the
 `v<VERSION>` tag with **publish** enabled. Its publish job uploads the

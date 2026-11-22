@@ -39,13 +39,14 @@ reader controls. The former web service has been removed.
 | Java disk-streamed non-image payload | Work-file allowance derived from available disk |
 | Java in-memory payload / Python decoded stream | One quarter of worker heap / Python job allowance; Java array capacity also applies |
 | Java/Python metadata stream | One sixteenth of worker heap / Python job allowance |
-| Completed decodes / embedded-file count | No default lifetime byte/count cutoff; active memory and disk budgets remain enforced |
-| Python optional lifetime quotas | Explicit `VALIDATOR_MAX_DECODED_BYTES` / `VALIDATOR_MAX_EMBEDDED_FILES` only |
+| Python aggregate decode / embedded-file count | Greater of 8 GiB or 16 times worker memory / 100,000 embedded-file inspections |
+| Python CLI input / directory admission | 64 GiB per regular file / 16,384 entries and 1,024 PDF candidates |
+| Python veraPDF diagnostics / report | 1 MiB diagnostics / smaller of 64 MiB or one eighth of worker memory |
 | Python generalized stream filter chain | 8 filters |
 | XML | Python: 64 levels / 100,000 nodes; Java and browser have no fixed node/depth cutoff |
 | Validation worker open files | OS hard allowance; explicit `VALIDATOR_MAX_OPEN_FILES` remains effective |
 | Java validation work file / aggregate scratch | One eighth / one quarter of free working-disk space; explicit overrides supported |
-| Python CLI worker | Half available host/container memory; scratch uses half free project-disk space, with half that share per work file; 600 s; explicit overrides supported |
+| Python CLI worker | Half available host/container memory, half free scratch-disk space with half that share per work file, and a 600 s deadline |
 | Java worker | Heap bounded by launcher `-Xmx` and available-memory budget; Linux virtual-address allowance includes heap, 4 GiB native headroom and admitted scratch mappings |
 | Java validation time | 600 s minimum, proportional to input bytes, maximum 24 h |
 | Browser root / embedded stream / session extracted bytes | 4 GiB / 32 MiB / 512 MiB concurrent reservations |
@@ -58,10 +59,12 @@ Validator settings use `VALIDATOR_MAX_STREAM_BYTES`, `VALIDATOR_MAX_METADATA_BYT
 `VALIDATOR_MAX_WORK_FILE_BYTES`, `VALIDATOR_MAX_SCRATCH_BYTES`,
 `VALIDATOR_MAX_OPEN_FILES` and
 `VALIDATOR_JOB_TIMEOUT`. Java also accepts the corresponding JVM properties for
-stream/storage settings. Python additionally supports explicit lifetime quotas
-`VALIDATOR_MAX_DECODED_BYTES` and `VALIDATOR_MAX_EMBEDDED_FILES`. Python CLI memory uses `VALIDATOR_JOB_MEMORY_MB`;
-`VALIDATOR_MAX_CONCURRENT_JOBS` caps directory workers. Existing CLI arguments are
-unchanged. Browser input/decoding ceilings can only be lowered by application session options. The 4 GiB input ceiling is an acceptance ceiling, not a guarantee that a browser has enough memory to open that input.
+stream/storage settings. Python supports `VALIDATOR_MAX_DECODED_BYTES` and
+`VALIDATOR_MAX_EMBEDDED_FILES` for aggregate inspection. `VALIDATOR_MAX_INPUT_BYTES`,
+`VALIDATOR_MAX_DIRECTORY_ENTRIES`, and `VALIDATOR_MAX_INPUT_FILES` control admission.
+`VALIDATOR_JOB_MEMORY_MB` overrides CLI memory, `VALIDATOR_TEMP_ROOT` selects scratch,
+`VALIDATOR_MAX_CONCURRENT_JOBS` caps directory workers, and `VERAPDF_MAX_REPORT_BYTES`
+controls the engine report. Browser session options can lower input/decoding limits.
 Python CLI and regeneration disk budgets divide half available disk among concurrent jobs.
 Headroom shares are admission budgets, not reservations or promises that another process
 will leave those resources free. Exhaustion remains an explicit incomplete outcome.
@@ -116,10 +119,11 @@ For a dependency update: resolve exact artifacts; review upstream advisories and
 license/source obligations; reproduce local patches; run creator, validator,
 Python, corpus, affected upstream and both native browser suites; compare frozen
 semantic/source-byte expectations; regenerate SBOMs and hashes; build twice in
-separate directories; publish with accurate limitations. A successful build does
-not replace review of security advisories. The npm audit is recorded separately;
-Java/Python dependencies have not received a fresh exhaustive advisory review in
-this checkpoint. No advisory-free claim is made for them.
+separate directories; publish with accurate limitations. Release acceptance
+generates candidate-specific CycloneDX inventories and blocks high and critical
+findings reported by Grype. The inventories include upstream advisory coordinates
+for patched Java dependencies and vendored PDF.js. Review components without
+published advisory coordinates alongside the scan results.
 
 Use [PDF.js patch maintenance](../../browser-viewer/docs/pdfjs-patch-maintenance.md)
 for source/hash/patch updates and [extension submission instructions](../../browser-viewer/docs/beta-release.md)
