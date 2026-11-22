@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """Build, verify and atomically install the self-contained Java 21 validator."""
 import hashlib
-import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
 import tempfile
-from datetime import datetime, timezone
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
 
@@ -50,20 +48,6 @@ def main():
         replace_file(built, destination)
         if sha(destination) != checksum:
             raise RuntimeError('Published validator differs from the verified build')
-        checksum_file = scratch/'checksum'
-        checksum_file.write_text(checksum + '  ' + filename + '\n')
-        replace_file(checksum_file, destination.with_suffix('.jar.sha256'))
-        paths = [ROOT/'validator-desktop/pom.xml', ROOT/'validator_rule_text.json',
-                 ROOT/'config/verapdf/ISO-32005.xml', Path(__file__).resolve()]
-        paths += sorted((ROOT/'validator-desktop/src/main').rglob('*'))
-        data = {'date': datetime.now(timezone.utc).isoformat(), 'version': version,
-                'scope': 'Verified executable packaging; large-file acceptance is documented separately.',
-                'main_class': 'eapdf.ValidatorGui', 'java_release': 21,
-                'jars': {destination.name: checksum},
-                'source_hashes': {str(path.relative_to(ROOT)): sha(path) for path in paths if path.is_file()}}
-        metadata = scratch/'validator-build.json'
-        metadata.write_text(json.dumps(data, indent=2) + '\n')
-        replace_file(metadata, ROOT/'dist/validator-build.json')
         print('Verified executable validator: ' + str(destination))
         print('SHA-256: ' + checksum)
 

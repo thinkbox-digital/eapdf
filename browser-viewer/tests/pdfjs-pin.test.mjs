@@ -6,7 +6,7 @@ const read = async name => readFile(new URL(`../${name}`, import.meta.url), 'utf
 const pin = JSON.parse(await read('vendor/pdfjs-pin.json'));
 const pkg = JSON.parse(await read('package.json'));
 const lock = JSON.parse(await read('package-lock.json'));
-const documents = { readme: await read('README.md'), notices: await read('THIRD_PARTY_NOTICES.md'),
+const documents = { development: await read('DEVELOPMENT.md'), notices: await read('THIRD_PARTY_NOTICES.md'),
   maintenance: await read('docs/pdfjs-patch-maintenance.md') };
 const bundles = { main: await read('vendor/pdfjs-patched/pdf.mjs'), worker: await read('vendor/pdfjs-patched/pdf.worker.mjs') };
 test('current PDF.js pins, documentation, package lock and bundles agree', verifyPatchedPdfjs);

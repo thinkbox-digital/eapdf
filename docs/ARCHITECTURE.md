@@ -82,8 +82,8 @@ Both patch recipes include upstream PDF.js PR #22521 as patch 0010 for RTL glyph
 ordering; this correction does not introduce the Full reader's archive optimizations.
 Shared patch 0012 uses equivalent quote character classes in font-name validation.
 
-Full and Even More Lite are the published editions. Viewer Lite is discontinued;
-its exporter and generic hooks remain shared build infrastructure.
+Main publishes the Full browser reader. EA-PDF Lite uses Even More Lite.
+The exporter and generic hooks remain shared build infrastructure.
 The full reader is the source for shared fixes. `npm run build:even-more-lite` selects its
 shared modules and adds the overrides in `even-more-lite/overrides`. Do not edit
 generated exports by hand.

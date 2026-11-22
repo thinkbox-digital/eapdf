@@ -4,7 +4,7 @@ Keep each change focused. Explain the problem, the fix and how you tested it.
 
 - Read [AGENTS.md](AGENTS.md) and the [code layout](docs/ARCHITECTURE.md).
 - Use Java 21. Run `mvn -Deapdf.build.directory=/tmp/eapdf-build verify`.
-- For reader changes, follow the [reader build and tests](browser-viewer/README.md#build).
+- For reader changes, follow the [reader build and tests](browser-viewer/DEVELOPMENT.md#build).
 - Keep original test files unchanged. Explain any change to expected results.
 - Update the user guide when behaviour changes.
 - Keep private email, passwords, tokens and debug captures out of commits and issues.

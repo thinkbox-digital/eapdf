@@ -1,0 +1,32 @@
+name: Desktop viewer
+on:
+  pull_request:
+    paths: ['desktop-viewer/**', '.github/workflows/desktop-viewer.yml']
+  push:
+    paths: ['desktop-viewer/**', '.github/workflows/desktop-viewer.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: desktop-viewer/pom.xml
+      - name: Package desktop viewer JAR
+        run: |
+          export EAPDF_VIEWER_DIST="$RUNNER_TEMP/desktop-viewer"
+          desktop-viewer/package.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-viewer
+          path: ${{ runner.temp }}/desktop-viewer/*.jar
+          if-no-files-found: error

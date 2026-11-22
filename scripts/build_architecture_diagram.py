@@ -33,12 +33,12 @@ def build(path):
     rules = len(json.loads((ROOT / 'validator_rule_text.json').read_text()))
     pdfmetrics.registerFont(TTFont('Arch', str(ROOT / 'src/main/resources/assets/DejaVuSans.ttf')))
     pdfmetrics.registerFont(TTFont('ArchBold', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'))
-    pdf = canvas.Canvas(str(path), pagesize=(1200, 750), invariant=1, pageCompression=1)
+    pdf = canvas.Canvas(str(path), pagesize=(1578, 750), invariant=1, pageCompression=1)
     pdf.setTitle('EA-PDF Software Architecture')
     pdf.setAuthor('Thinkbox.DIGITAL')
-    pdf.setSubject('Creator, standalone validation, and Full/Even More Lite readers; current product and dependency overview')
+    pdf.setSubject('Creator, standalone validation, and desktop and Full browser readers; current product and dependency overview')
     pdf.setCreator('EA-PDF architecture diagram builder')
-    pdf.setKeywords('EA-PDF, architecture, creator, validator, viewer, Even More Lite')
+    pdf.setKeywords('EA-PDF, architecture, creator, validator, viewer, JavaFX')
     blue = HexColor('#163f58'); ink = HexColor('#233b4a'); border = HexColor('#cbd9e2')
 
     def text(x, y, value, size=11, bold=False, color=ink):
@@ -61,7 +61,7 @@ def build(path):
     text(40, 707, 'EA-PDF SOFTWARE ARCHITECTURE', 24, True, blue)
     text(40, 683, 'Thinkbox.DIGITAL  |  Product and dependency overview  |  ' + date.today().strftime('%d %B %Y'), 11)
     width = (1120 - 32) / 3
-    xs = [40, 40 + width + 16, 40 + 2 * (width + 16)]
+    xs = [40 + column * (width + 16) for column in range(4)]
     card(xs[0], 418, width, 244, 'EA-PDF CREATOR', [
         ('Java 21+  |  Desktop and command line', version),
         ('Email to preservation PDF', 'EML, MSG, PST, MBOX and Gmail. PDF 2.0 / PDF/A-4f, email metadata, document parts and attachments.'),
@@ -70,10 +70,10 @@ def build(path):
         ('Java 21+  |  Desktop and command line', version),
         ('Checks', f'{rules} project rule definitions; PDF/A validation; selected ISO 32005 structure rules.'),
         ('Scope', 'Embedded PDFs, attachments and source consistency. Reports PASS, FAIL or INCOMPLETE. No server required.')])
-    card(xs[2], 418, width, 244, 'FULL / EVEN MORE LITE', [
+    card(xs[2], 418, width, 244, 'FULL BROWSER READER', [
         ('Chromium and Firefox  |  Local files', reader['version']),
         ('Shared reading experience', 'PDF pages, message/folder navigation and embedded assets. Full adds search, filtering and CSV/XMP export.'),
-        ('Even More Lite', 'Messages, pages and embedded assets in three adjustable panes. No search, metadata exports or Portfolio view. 32 MiB / 2,048 pages.')])
+        ('Portfolio and metadata', 'Browse PDF Portfolios and export CSV or XMP from the active document.')])
 
     card(xs[0], 122, width, 274, 'CREATOR LIBRARIES', [
         ('PDF creation and metadata', f"PDFBox / XMPBox {java['pdfbox']}; FontBox {java['fontbox']}. OpenHTMLtoPDF {java['openhtmltopdf-pdfbox']} with four maintained patches."),
@@ -85,8 +85,20 @@ def build(path):
         ('Optional development tool', 'Python CLI for regression tests and diagnostics. The web workbench and its deployment code are removed.')])
     card(xs[2], 122, width, 274, 'READER FOUNDATION', [
         ('PDF engine and shared hooks', f"PDF.js {reader['dependencies']['pdfjs-dist']}. Generic hooks expose document parts / DPM, associated files, metadata and collection membership."),
-        ('Application layer', f"TypeScript {reader['devDependencies']['typescript']}; browser extensions. Full and Even More Lite share maintained source; the smaller reader has a reproducible standalone export."),
+        ('Application layer', f"TypeScript {reader['devDependencies']['typescript']}; browser extensions. The shared source supports the standalone export for EA-PDF Lite."),
         ('Build tools only', f"Node {reader['engines']['node']}; npm {reader['engines']['npm']}; Playwright {reader['devDependencies']['playwright']}. No Java or Python needed by the extensions.")])
+
+    desktop = ET.parse(ROOT / 'desktop-viewer/pom.xml').getroot()
+    desktop_version = desktop.findtext('m:properties/m:revision', namespaces=NS)
+    javafx_version = desktop.findtext('m:properties/m:javafx.version', namespaces=NS)
+    viewer_java = dependencies(ROOT / 'desktop-viewer/pom.xml')
+    card(xs[3], 418, width, 244, 'DESKTOP VIEWER', [
+        ('Java 21+  |  Standalone JAR', desktop_version),
+        ('Archive reading', 'Open PDFs, browse message and collection navigation, and preview or save embedded files.'),
+        ('Desktop tools', 'Search message text, export CSV and XMP, and browse PDF Portfolios.')])
+    card(xs[3], 122, width, 274, 'DESKTOP VIEWER LIBRARIES', [
+        ('Interface', f'JavaFX {javafx_version} with bundled platform-specific graphics.'),
+        ('PDF and metadata', f"PDFViewFX {viewer_java['pdfviewfx']}, PDFBox {viewer_java['pdfbox']} and Gson {viewer_java['gson']}.")])
 
     pdf.setStrokeColor(blue); pdf.setFillColor(blue); pdf.setLineWidth(1.5)
     for x in xs:

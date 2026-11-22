@@ -11,8 +11,8 @@ export function verifyCurrentMetadata(pin, pkg, lock, documents, bundles) {
   assert.equal(lock.packages[''].dependencies['pdfjs-dist'], pin.version, 'lock root PDF.js version');
   assert.equal(lock.packages['node_modules/pdfjs-dist'].version, pin.version, 'lock resolved PDF.js version');
   assert.equal(lock.packages['node_modules/pdfjs-dist'].integrity, pin.npm_integrity, 'lock PDF.js integrity');
-  assert.equal(documents.readme.match(/PDF\.js upstream commit: `([a-f0-9]+)`/)?.[1], pin.upstream_commit, 'README upstream commit');
-  assert.equal(documents.readme.match(/and PDF\.js \*\*([\d.]+)\*\*/)?.[1], pin.version, 'README PDF.js version');
+  assert.equal(documents.development.match(/PDF\.js upstream commit: `([a-f0-9]+)`/)?.[1], pin.upstream_commit, 'Development guide upstream commit');
+  assert.equal(documents.development.match(/and PDF\.js \*\*([\d.]+)\*\*/)?.[1], pin.version, 'Development guide PDF.js version');
   assert.equal(documents.notices.match(/pinned source README\]\(https:\/\/github\.com\/mozilla\/pdf\.js\/blob\/([a-f0-9]+)\//)?.[1], pin.upstream_commit, 'notices source link');
   assert.equal(documents.maintenance.match(/pinned to \*\*([\d.]+)\*\*/)?.[1], pin.version, 'maintenance version');
   assert.equal(documents.maintenance.match(/commit\s+`([a-f0-9]+)`/)?.[1], pin.upstream_commit, 'maintenance commit');
@@ -32,7 +32,7 @@ export async function verifyPatchedPdfjs() {
   }
   const read = name => readFile(resolve(root, name), 'utf8');
   verifyCurrentMetadata(upstream, JSON.parse(await read('package.json')), JSON.parse(await read('package-lock.json')),
-    { readme: await read('README.md'), notices: await read('THIRD_PARTY_NOTICES.md'),
+    { development: await read('DEVELOPMENT.md'), notices: await read('THIRD_PARTY_NOTICES.md'),
       maintenance: await read('docs/pdfjs-patch-maintenance.md') },
     Object.fromEntries(await Promise.all(Object.keys(manifest.outputs).map(async name => [name, await read(name)]))));
   return manifest;

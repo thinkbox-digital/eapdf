@@ -43,7 +43,9 @@ final class MetadataChecks {
   private final Map<String, Set<String>> childRenderedSources = new java.util.HashMap<>();
   private final Map<COSDictionary, Set<String>> childRenderedOccurrences = new java.util.IdentityHashMap<>();
   private final Set<String> ambiguousChildOccurrences = new HashSet<>();
+  private final Set<String> unmatchedCollectionGuids = new HashSet<>();
   private boolean childCountsComplete = true, childrenFinished;
+  private boolean childGuidEvidenceComplete = true;
   private final Map<Source, List<NativeAttachment>> attachmentInventories = new java.util.HashMap<>();
   private final Map<Element, List<Element>> attachmentOwnerCache = new java.util.IdentityHashMap<>();
   private final Map<Element, List<Element>> attachmentsByEmail = new java.util.IdentityHashMap<>();
@@ -71,6 +73,12 @@ final class MetadataChecks {
     for (Element email : emails.isEmpty() && legacyEmail != null ? List.of(legacyEmail) : emails) {
       emailsByGuid.computeIfAbsent(field(email, "Mail_GUID"), ignored -> new ArrayList<>()).add(email);
       emailsByMessageId.computeIfAbsent(normal(field(email, "messageid")), ignored -> new ArrayList<>()).add(email);
+    }
+    if (Set.of("c", "ci").contains(profile)) {
+      for (Element email : emails) {
+        String guid = field(email, "Mail_GUID");
+        if (!guid.isEmpty() && simple(fieldElement(email, "Mail_GUID"))) unmatchedCollectionGuids.add(guid);
+      }
     }
     for (Element attachment : attachments) {
       Set<Element> owners = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
@@ -467,7 +475,12 @@ final class MetadataChecks {
   }
 
   void childCounts(com.google.gson.JsonObject child) {
-    if (!"PASS".equals(JavaValidation.text(child.getAsJsonObject("summary"), "status"))) { childCountsComplete = false; return; }
+    if (!"PASS".equals(JavaValidation.text(child.getAsJsonObject("summary"), "status"))) {
+      childCountsComplete = false;
+      childGuidEvidenceComplete = false;
+      return;
+    }
+    if (!unmatchedCollectionGuids.isEmpty()) childGuidEvidenceComplete &= matchChildGuids(child);
     int declared = -1;
     Map<String, String> sources = new java.util.LinkedHashMap<>();
     for (var item : child.getAsJsonArray("items")) {
@@ -498,7 +511,35 @@ final class MetadataChecks {
       if (!childRenderedSources.computeIfAbsent(source.getValue(), ignored -> new HashSet<>()).add(source.getKey())) childCountsComplete = false;
   }
 
-  void finishChildren(boolean complete) { childrenFinished = complete; }
+  private boolean matchChildGuids(com.google.gson.JsonObject child) {
+    boolean identified = false, nestedComplete = true;
+    for (var item : child.getAsJsonArray("items")) {
+      var row = item.getAsJsonObject();
+      if (!"PASS".equals(JavaValidation.text(row, "level")) || !row.get("details").isJsonObject()) continue;
+      var details = row.getAsJsonObject("details");
+      String code = JavaValidation.text(row, "code");
+      if ("MAIL_GUID_UNIQUE".equals(code)) {
+        String guid = JavaValidation.text(details, "value");
+        if (!guid.isEmpty()) {
+          unmatchedCollectionGuids.remove(guid);
+          identified = true;
+        }
+      } else if ("COLLECTION_CHILD_VALIDATION".equals(code) && details.has("result")) {
+        nestedComplete &= matchChildGuids(details.getAsJsonObject("result"));
+        identified = true;
+      }
+    }
+    return identified && nestedComplete;
+  }
+
+  void finishChildren(boolean complete) {
+    childrenFinished = complete;
+    if (complete && childGuidEvidenceComplete && !unmatchedCollectionGuids.isEmpty()) {
+      report.check("COLLECTION_CHILD_VALIDATION", false,
+          "Collection metadata lists emails that are absent from the validated children.",
+          Map.of("missing_mail_guids", unmatchedCollectionGuids.stream().sorted().toList()));
+    }
+  }
 
   private static String mediaParameters(String type) {
     if (type == null) return "";

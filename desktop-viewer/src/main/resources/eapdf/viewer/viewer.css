@@ -1,0 +1,685 @@
+.root {
+    -fx-font-family: "System";
+    -fx-font-size: 14px;
+    -ea-ink: #1d2733;
+    -ea-muted: #566273;
+    -ea-accent: #1f4e8c;
+    -ea-accent-dark: #193f73;
+    -ea-line: #d5dce5;
+    -ea-control-line: #8793a3;
+    -ea-canvas: #eceff4;
+    -ea-surface: #ffffff;
+    -ea-soft: #f7f9fb;
+    -ea-hover: #e8edf3;
+    -ea-selected: #e3ecf8;
+    -fx-base: -ea-surface;
+    -fx-background: -ea-canvas;
+    -fx-control-inner-background: -ea-surface;
+    -fx-accent: -ea-accent;
+    -fx-selection-bar: -ea-selected;
+    -fx-selection-bar-non-focused: -ea-selected;
+    -fx-focus-color: -ea-accent;
+    -fx-faint-focus-color: transparent;
+    -fx-text-base-color: -ea-ink;
+    -fx-text-background-color: -ea-ink;
+    -ea-selected-line: #c5d6ee;
+}
+
+.viewer-shell {
+    -fx-background-color: -ea-canvas;
+}
+
+.viewer-toolbar, .viewer-controls, .viewer-search, .viewer-status, .reader-heading {
+    -fx-background-color: -ea-surface;
+    -fx-border-color: -ea-line;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.viewer-toolbar {
+    -fx-padding: 8px 16px;
+    -fx-spacing: 12px;
+    -fx-hgap: 12px;
+    -fx-vgap: 8px;
+    -fx-min-height: 60px;
+    -fx-alignment: center-left;
+}
+
+.viewer-controls {
+    -fx-padding: 8px;
+    -fx-spacing: 8px;
+    -fx-hgap: 8px;
+    -fx-vgap: 8px;
+    -fx-min-height: 60px;
+    -fx-alignment: center;
+}
+
+.viewer-search {
+    -fx-padding: 0;
+    -fx-spacing: 7px;
+    -fx-alignment: center-left;
+    -fx-border-width: 0;
+}
+
+.search-panel {
+    -fx-padding: 12px;
+    -fx-background-color: -ea-surface;
+    -fx-background-radius: 8px;
+    -fx-border-color: -ea-control-line;
+    -fx-border-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(29, 39, 51, 0.15), 24, 0, 0, 6);
+}
+
+.search-panel-heading {
+    -fx-spacing: 12px;
+    -fx-alignment: center-left;
+}
+
+.toolbar-group, .page-position-controls, .page-zoom-controls {
+    -fx-spacing: 6px;
+    -fx-alignment: center-left;
+}
+
+.page-zoom-controls {
+    -fx-border-color: -ea-line;
+    -fx-border-width: 0 0 0 1px;
+    -fx-padding: 0 0 0 8px;
+}
+
+.global-actions {
+    -fx-spacing: 8px;
+    -fx-alignment: center-right;
+}
+
+.viewer-brand {
+    -fx-spacing: 8px;
+    -fx-alignment: center-left;
+}
+
+.viewer-brand > .label {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ea-accent;
+}
+
+.brand-square {
+    -fx-background-color: -ea-accent;
+    -fx-background-radius: 2px;
+    -fx-min-width: 10px;
+    -fx-max-width: 10px;
+    -fx-min-height: 10px;
+    -fx-max-height: 10px;
+}
+
+.sidebar-title {
+    -fx-text-fill: -ea-ink;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+}
+
+.document-location {
+    -fx-alignment: center-left;
+    -fx-min-height: 28px;
+    -fx-padding: 0 0 0 12px;
+    -fx-border-color: -ea-line;
+    -fx-border-width: 0 0 0 1px;
+}
+
+.document-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ea-ink;
+}
+
+.viewer-toolbar .button, .viewer-toolbar .toggle-button, .viewer-toolbar .menu-button,
+.viewer-controls .button, .viewer-controls .toggle-button, .viewer-controls .menu-button,
+.viewer-controls .text-field, .viewer-controls .combo-box,
+.viewer-search .button, .viewer-search .text-field, .viewer-search .combo-box,
+.viewer-sidebar .button, .viewer-sidebar .combo-box, .viewer-sidebar .filter-field, .reader-heading .button,
+.primary-button, .icon-button {
+    -fx-min-height: 44px;
+    -fx-background-color: -ea-surface;
+    -fx-background-insets: 0;
+    -fx-background-radius: 8px;
+    -fx-border-color: -ea-control-line;
+    -fx-border-radius: 8px;
+    -fx-padding: 0 12px;
+    -fx-text-fill: -ea-ink;
+}
+
+.viewer-toolbar .button, .viewer-toolbar .toggle-button, .viewer-toolbar .menu-button,
+.viewer-controls .button, .viewer-controls .toggle-button, .viewer-controls .menu-button,
+.viewer-search .button, .viewer-sidebar .button, .reader-heading .button,
+.primary-button, .icon-button {
+    -fx-min-width: 44px;
+    -fx-cursor: hand;
+    -fx-font-weight: normal;
+}
+
+.viewer-toolbar .button:hover, .viewer-toolbar .toggle-button:hover, .viewer-toolbar .menu-button:hover,
+.viewer-controls .button:hover, .viewer-controls .toggle-button:hover, .viewer-controls .menu-button:hover,
+.viewer-controls .combo-box:hover, .viewer-search .button:hover,
+.viewer-sidebar .button:hover, .viewer-sidebar .combo-box:hover, .icon-button:hover {
+    -fx-background-color: -ea-selected;
+    -fx-border-color: -ea-accent;
+}
+
+.viewer-toolbar .toggle-button:selected, .viewer-controls .toggle-button:selected,
+.viewer-controls .button:shown {
+    -fx-background-color: -ea-selected;
+    -fx-border-color: -ea-accent;
+    -fx-text-fill: -ea-accent-dark;
+}
+
+.viewer-toolbar .button:focused, .viewer-toolbar .toggle-button:focused, .viewer-toolbar .menu-button:focused,
+.viewer-controls .button:focused, .viewer-controls .toggle-button:focused, .viewer-controls .menu-button:focused,
+.viewer-controls .text-field:focused, .viewer-controls .combo-box:focused,
+.viewer-search .button:focused, .viewer-search .text-field:focused,
+.viewer-sidebar .button:focused, .viewer-sidebar .combo-box:focused, .viewer-sidebar .filter-field:focused,
+.primary-button:focused, .icon-button:focused {
+    -fx-border-color: -ea-accent;
+    -fx-effect: dropshadow(gaussian, rgba(31, 78, 140, 0.30), 4, 0.15, 0, 0);
+}
+
+.viewer-toolbar .button:disabled, .viewer-toolbar .toggle-button:disabled,
+.viewer-controls .button:disabled, .viewer-controls .toggle-button:disabled,
+.viewer-search .button:disabled, .viewer-sidebar .button:disabled, .icon-button:disabled {
+    -fx-opacity: 1;
+    -fx-text-fill: -ea-muted;
+    -fx-background-color: -ea-soft;
+    -fx-border-color: -ea-line;
+    -fx-cursor: default;
+}
+
+.viewer-toolbar .quiet, .viewer-sidebar .quiet, .reader-heading .quiet {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: -ea-muted;
+}
+
+.viewer-toolbar .quiet:hover, .viewer-sidebar .quiet:hover, .reader-heading .quiet:hover {
+    -fx-background-color: -ea-selected;
+    -fx-border-color: -ea-accent;
+}
+
+.viewer-toolbar .quiet:focused, .viewer-sidebar .quiet:focused, .reader-heading .quiet:focused {
+    -fx-border-color: -ea-accent;
+}
+
+.viewer-toolbar .primary-button, .primary-button {
+    -fx-background-color: -ea-accent;
+    -fx-border-color: -ea-accent;
+    -fx-text-fill: white;
+    -fx-padding: 0 14px;
+    -fx-font-weight: bold;
+}
+
+.viewer-toolbar .primary-button:hover, .primary-button:hover {
+    -fx-background-color: -ea-accent-dark;
+    -fx-border-color: -ea-accent-dark;
+}
+
+.primary-button .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+.viewer-toolbar .icon-button, .viewer-controls .icon-button, .viewer-search .icon-button, .icon-button {
+    -fx-min-width: 44px;
+    -fx-padding: 0 8px;
+    -fx-font-size: 19px;
+}
+
+.viewer-toolbar .ikonli-font-icon, .viewer-controls .ikonli-font-icon {
+    -fx-icon-size: 18px;
+}
+
+.viewer-controls .page-field {
+    -fx-alignment: center;
+    -fx-padding: 0 3px;
+    -fx-min-width: 44px;
+    -fx-pref-width: 58px;
+}
+
+.viewer-controls .zoom-select {
+    -fx-padding: 0;
+    -fx-pref-width: 114px;
+}
+
+.viewer-controls .combo-box > .list-cell {
+    -fx-padding: 0 0 0 12px;
+}
+
+.viewer-search .search-field, .viewer-sidebar .filter-field {
+    -fx-background-color: -ea-surface;
+    -fx-prompt-text-fill: -ea-muted;
+}
+
+.viewer-search .search-field:focused, .viewer-sidebar .filter-field:focused {
+    -fx-background-color: -ea-surface;
+}
+
+.page-count, .search-count {
+    -fx-text-fill: -ea-muted;
+}
+
+.search-count {
+    -fx-padding: 0 4px;
+}
+
+.viewer-toolbar .separator:vertical .line, .viewer-controls .separator:vertical .line {
+    -fx-border-color: -ea-line;
+    -fx-padding: 0;
+}
+
+.viewer-shell .split-pane {
+    -fx-background-color: -ea-canvas;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.viewer-shell .split-pane:horizontal > .split-pane-divider {
+    -fx-background-color: -ea-line;
+    -fx-background-insets: 0;
+    -fx-padding: 0 4px;
+}
+
+.viewer-shell .split-pane:vertical > .split-pane-divider {
+    -fx-background-color: -ea-line;
+    -fx-background-insets: 0;
+    -fx-padding: 2px 0;
+}
+
+.viewer-shell .split-pane > .split-pane-divider:hover,
+.viewer-shell .split-pane > .split-pane-divider:focused {
+    -fx-background-color: -ea-accent;
+}
+
+.viewer-sidebar, .viewer-sidebar .viewport, .viewer-sidebar .scroll-pane,
+.sidebar-list, .sidebar-list .virtual-flow, .sidebar-list .virtual-flow .clipped-container {
+    -fx-background-color: -ea-soft;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.viewer-left, .viewer-right {
+    -fx-padding: 0 12px 12px;
+    -fx-min-width: 180px;
+}
+
+.sidebar-header {
+    -fx-padding: 8px 0;
+    -fx-spacing: 6px;
+    -fx-alignment: center-left;
+    -fx-background-color: -ea-soft;
+    -fx-min-height: 60px;
+}
+
+.sidebar-header .badge {
+    -fx-background-color: -ea-hover;
+    -fx-background-radius: 12px;
+    -fx-padding: 1px 8px;
+    -fx-min-width: 26px;
+    -fx-alignment: center;
+    -fx-font-size: 14px;
+    -fx-text-fill: -ea-ink;
+}
+
+.viewer-sidebar .sidebar-tabs {
+    -fx-padding: 0;
+}
+
+.viewer-sidebar .sidebar-tabs > .list-cell {
+    -fx-padding: 0 0 0 12px;
+}
+
+.sidebar-list .list-cell, .sidebar-list .tree-cell, .sidebar-list .tree-table-row-cell {
+    -fx-background-color: -ea-soft;
+    -fx-text-fill: -ea-ink;
+    -fx-min-height: 40px;
+    -fx-padding: 6px 10px;
+}
+
+.sidebar-list .list-cell:filled:hover, .sidebar-list .tree-cell:filled:hover,
+.sidebar-list .tree-table-row-cell:filled:hover {
+    -fx-background-color: -ea-hover;
+}
+
+.sidebar-list .list-cell:filled:selected, .sidebar-list .tree-cell:filled:selected,
+.sidebar-list .tree-table-row-cell:filled:selected {
+    -fx-background-color: -ea-selected-line, -ea-accent, -ea-selected;
+    -fx-background-insets: 0, 1px, 1px 1px 1px 4px;
+    -fx-background-radius: 6px;
+    -fx-text-fill: -ea-ink;
+}
+
+.sidebar-list .tree-disclosure-node > .arrow, .sidebar-list .show-hide-columns-button .show-hide-column-image {
+    -fx-background-color: -ea-muted;
+}
+
+.message-tree .tree-cell {
+    -fx-padding: 8px;
+}
+
+.message-title {
+    -fx-text-fill: -ea-ink;
+    -fx-font-weight: bold;
+}
+
+.message-detail {
+    -fx-font-size: 12px;
+    -fx-text-fill: -ea-muted;
+}
+
+.asset-list .list-cell {
+    -fx-padding: 0 2px;
+}
+
+.asset-heading {
+    -fx-padding: 8px 0;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ea-muted;
+    -fx-min-height: 44px;
+}
+
+.asset-card {
+    -fx-padding: 10px 0;
+    -fx-border-color: -ea-line;
+    -fx-border-width: 0 0 1px;
+}
+
+.asset-title {
+    -fx-font-weight: bold;
+    -fx-text-fill: -ea-ink;
+    -fx-font-size: 14px;
+}
+
+.asset-meta, .muted-label, .sidebar-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: -ea-muted;
+}
+
+.viewer-sidebar {
+    -fx-font-size: 16px;
+}
+
+.viewer-sidebar .sidebar-title {
+    -fx-font-size: 19px;
+}
+
+.viewer-sidebar .message-title, .viewer-sidebar .asset-title {
+    -fx-font-size: 17px;
+}
+
+.viewer-sidebar .message-detail, .viewer-sidebar .asset-meta,
+.viewer-sidebar .muted-label, .viewer-sidebar .asset-heading,
+.viewer-sidebar .sidebar-subtitle, .viewer-sidebar .asset-actions .button {
+    -fx-font-size: 15px;
+}
+
+.asset-actions {
+    -fx-spacing: 6px;
+    -fx-hgap: 6px;
+    -fx-vgap: 6px;
+}
+
+.asset-actions .button {
+    -fx-padding: 0 8px;
+    -fx-font-size: 13px;
+}
+
+.viewer-status {
+    -fx-padding: 8px 16px;
+    -fx-border-width: 1px 0 0 0;
+    -fx-min-height: 34px;
+    -fx-spacing: 12px;
+}
+
+.viewer-status, .status-message {
+    -fx-font-size: 13px;
+    -fx-text-fill: -ea-muted;
+}
+
+.profile-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -ea-muted;
+}
+
+.archive-stats {
+    -fx-border-color: -ea-line;
+    -fx-border-width: 0 0 0 1px;
+    -fx-padding: 0 0 0 12px;
+    -fx-font-size: 13px;
+    -fx-text-fill: -ea-muted;
+}
+
+.reader-pane, .welcome-pane, .preview-window {
+    -fx-background-color: -ea-canvas;
+}
+
+.reader-pane {
+    -fx-min-width: 240px;
+}
+
+.reader-heading {
+    -fx-padding: 5px 10px;
+    -fx-spacing: 8px;
+    -fx-alignment: center-left;
+}
+
+.viewer-breadcrumbs {
+    -fx-spacing: 5px;
+    -fx-alignment: center-left;
+}
+
+.viewer-breadcrumbs .label, .viewer-breadcrumbs .breadcrumb-part {
+    -fx-font-size: 16px;
+    -fx-text-fill: -ea-muted;
+}
+
+.viewer-breadcrumbs .breadcrumb-current {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ea-ink;
+}
+
+.viewer-breadcrumbs .breadcrumb-part, .viewer-toolbar .viewer-breadcrumbs .breadcrumb-part {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-min-height: 0;
+    -fx-pref-height: 28px;
+    -fx-max-height: 28px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.viewer-breadcrumbs .breadcrumb-part:hover, .viewer-breadcrumbs .breadcrumb-part:focused {
+    -fx-text-fill: -ea-accent;
+}
+
+.continuous-reader {
+    -fx-background-color: -ea-canvas;
+}
+
+.page-placeholder {
+    -fx-font-size: 12px;
+    -fx-text-fill: -ea-muted;
+}
+
+.preview-window > .text-area {
+    -fx-background-color: -ea-surface;
+    -fx-background-insets: 0;
+    -fx-padding: 12px;
+    -fx-font-size: 15px;
+}
+
+.preview-window > .text-area .content {
+    -fx-background-color: -ea-surface;
+}
+
+.xmp-browser {
+    -fx-padding: 14px;
+}
+
+.preview-window .xmp-preview {
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 14px;
+}
+
+.portfolio-shell, .portfolio-tiles, .portfolio-shell .scroll-pane, .portfolio-shell .viewport {
+    -fx-background-color: -ea-canvas;
+}
+
+.portfolio-toolbar {
+    -fx-alignment: center-left;
+}
+
+.portfolio-toolbar .search-field {
+    -fx-background-color: -ea-soft;
+    -fx-prompt-text-fill: -ea-muted;
+}
+
+.portfolio-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ea-ink;
+}
+
+.portfolio-count {
+    -fx-text-fill: -ea-muted;
+    -fx-padding: 0 9px 0 0;
+}
+
+.portfolio-table {
+    -fx-background-color: -ea-surface;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.portfolio-table .column-header, .portfolio-table .filler {
+    -fx-size: 38px;
+    -fx-background-color: -ea-soft;
+    -fx-border-color: -ea-line;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.portfolio-table .column-header .label {
+    -fx-alignment: center-left;
+    -fx-padding: 0 10px;
+    -fx-text-fill: -ea-muted;
+}
+
+.portfolio-table .table-cell {
+    -fx-padding: 6px 10px;
+    -fx-alignment: center-left;
+}
+
+.portfolio-table .table-row-cell:filled:hover {
+    -fx-background-color: -ea-hover;
+}
+
+.portfolio-table .table-row-cell:filled:selected {
+    -fx-background-color: -ea-selected;
+}
+
+.portfolio-tiles {
+    -fx-padding: 16px;
+}
+
+.portfolio-tile {
+    -fx-padding: 14px;
+    -fx-background-color: -ea-surface;
+    -fx-background-radius: 9px;
+    -fx-border-color: -ea-line;
+    -fx-border-radius: 9px;
+}
+
+.portfolio-actions .button {
+    -fx-min-height: 44px;
+    -fx-min-width: 44px;
+    -fx-padding: 0 9px;
+    -fx-background-color: -ea-surface;
+    -fx-background-insets: 0;
+    -fx-background-radius: 7px;
+    -fx-border-color: -ea-control-line;
+    -fx-border-radius: 7px;
+    -fx-text-fill: -ea-ink;
+    -fx-cursor: hand;
+}
+
+.portfolio-actions .button:hover, .portfolio-actions .button:focused {
+    -fx-background-color: -ea-hover;
+    -fx-border-color: -ea-accent;
+}
+
+.welcome-card {
+    -fx-background-color: transparent;
+    -fx-border-color: -ea-line;
+    -fx-border-radius: 16px;
+    -fx-padding: 18px;
+    -fx-spacing: 14px;
+}
+
+.welcome-title {
+    -fx-font-size: 19px;
+    -fx-text-fill: -ea-muted;
+}
+
+.welcome-copy {
+    -fx-font-size: 14px;
+    -fx-text-fill: -ea-muted;
+}
+
+.pdf-view {
+    -fx-search-result-color: #ffb526;
+    -fx-selection-color: #3986be;
+}
+
+.pdf-view > .border-pane > .main-area,
+.pdf-view > .border-pane > .main-area > .scroll-pane,
+.pdf-view > .border-pane > .main-area > .scroll-pane > .viewport {
+    -fx-background-color: -ea-canvas;
+    -fx-background-insets: 0;
+}
+
+.pdf-view > .border-pane > .main-area > .scroll-pane .image-view-wrapper {
+    -fx-effect: dropshadow(gaussian, rgba(29, 39, 51, 0.14), 10, 0, 0, 2);
+}
+
+.pdf-view > .border-pane > .main-area > .search-navigator {
+    -fx-background-color: -ea-surface;
+    -fx-padding: 6px 12px;
+    -fx-border-color: -ea-line;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.pdf-view .search-navigator .button, .pdf-view .tool-bar-button {
+    -fx-min-width: 44px;
+    -fx-min-height: 44px;
+}
+.viewer-filename-row {
+    -fx-background-color: white;
+    -fx-padding: 0 16px 7px;
+    -fx-border-color: #d5dce5;
+    -fx-border-width: 0 0 1px;
+}
+
+.collection-results {
+    -fx-padding: 0;
+}
+
+.archive-hit-list .list-cell:filled {
+    -fx-alignment: top-left;
+    -fx-cursor: hand;
+}
+
+.pdf-bookmarks {
+    -fx-background-color: -ea-surface;
+}
+
+.primary-button .viewer-glyph-path {
+    -fx-stroke: white;
+}
+
+.navigation-row .viewer-glyph {
+    -fx-translate-y: 2px;
+}

@@ -6,6 +6,7 @@ Start with the [user guide](manual/user-manual.html) or [PDF manual](EA-PDF_User
 | --- | --- |
 | Current release and limits | [Project status](PROJECT_STATUS.md) |
 | Code ownership | [Code layout](ARCHITECTURE.md) |
+| Desktop Viewer setup and use | [User manual](manual/user-manual.html#desktop-viewer) |
 | Reader installation and use | [Reader guide](../browser-viewer/README.md) |
 | Conversion and recovery | [Operations](CONVERSION_OPERATIONS.md) |
 | Gmail | [Gmail setup](GMAIL.md) |

@@ -34,7 +34,7 @@ outer object graph does not validate its embedded PDF payloads.
 `config/arlington.json` pins veraPDF Arlington 1.30.3, the installer archive hash,
 installed CLI JAR hash, and bundled PDF 2.0 profile hash. Upstream release notes
 identify Arlington model revision `c48b363e9b78902deea03e958693c09339248a3a`.
-The installer stores the tool under `dist/tools/arlington-1.30.3/`. Downloads and
+The installer stores the tool under `.local/tools/arlington-1.30.3/`. Downloads and
 installer working files use a task-owned `/tmp` directory and are removed.
 
 The pinned release has a hard-coded 10,000-result retention ceiling, even with

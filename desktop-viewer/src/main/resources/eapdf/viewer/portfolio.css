@@ -1,0 +1,29 @@
+.portfolio-shell .portfolio-name {
+    -fx-alignment: center-left;
+    -fx-background-color: transparent;
+    -fx-padding: 3px 6px 3px 0;
+    -fx-min-height: 28px;
+    -fx-text-fill: -ea-ink;
+    -fx-cursor: hand;
+}
+
+.portfolio-shell .portfolio-name:hover, .portfolio-shell .portfolio-name:focused {
+    -fx-underline: true;
+}
+
+.portfolio-shell .portfolio-card-type {
+    -fx-background-color: -ea-soft;
+    -fx-background-radius: 6px;
+    -fx-padding: 8px;
+    -fx-text-fill: -ea-muted;
+    -fx-font-weight: bold;
+    -fx-graphic-text-gap: 8px;
+}
+
+.portfolio-shell .portfolio-tile:selected {
+    -fx-background-color: -ea-selected;
+}
+
+.portfolio-shell .tree-cell {
+    -fx-padding: 7px;
+}

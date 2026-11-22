@@ -4,7 +4,7 @@ Workspace separation, 18 November 2026:
 - This is the normal development checkout, based on GitHub main.
 - The retained C2PA/PAdES experiment is in ../eapdf-secure on experiment/c2pa-pades. Do not merge or copy experimental features here without an explicit user request.
 - PR fixes #26–#33 were selected for this checkout; other local experimental changes remain separate.
-- On 18 November 2026 the user selected Even More Lite for transfer and publication in place of Lite. Build and publish Full and Even More Lite; retain the Lite exporter as shared infrastructure. C2PA/PAdES remains separate.
+- On 22 November 2026 the user selected Full as the Main release browser viewer. Retain the Lite exporter as shared infrastructure for EA-PDF Lite. C2PA/PAdES remains separate.
 
 Build:
 mvn package
@@ -53,8 +53,8 @@ Rules:
 
 - Public documentation must not cite or link to unpublished generated documents or evidence under the local output directories. Summarize verified results in tracked documentation; use published examples or release assets for downloadable files. Use explicit temporary destinations in command examples.
 
-- Whenever the user requests a new version or a version bump, also bump the browser viewer version and rebuild Full and Even More Lite packages.
-- Whenever extension distributables are regenerated, bump the browser viewer minor version first and rebuild Full and Even More Lite together. Starting with the version after 1.6.0-beta.1, use plain `1.x.0` in browser-viewer/package.json, package-lock.json, browser manifests, distributable filenames, and current reader documentation. The creator and validator version determines the GitHub release's prerelease status. Apply one bump per regeneration batch; verification rebuilds within that batch use the same version. Refresh permanent local installations without changing their paths. Publication still requires user authorization.
+- Whenever the user requests a new version or a version bump, also bump the browser viewer version and rebuild the Full Chromium and Firefox packages.
+- Whenever extension distributables are regenerated, bump the browser viewer minor version first and rebuild the Full Chromium and Firefox packages together. Starting with the version after 1.6.0-beta.1, use plain `1.x.0` in browser-viewer/package.json, package-lock.json, browser manifests, distributable filenames, and current reader documentation. The creator and validator version determines the GitHub release's prerelease status. Apply one bump per regeneration batch; verification rebuilds within that batch use the same version. Refresh permanent local installations without changing their paths. Publication still requires user authorization.
 - Representative bulk samples must be balanced by output count: retain only a handful of standalone 1s/1si PDFs per input type, group EML/MSG sources into 1m/1mi archives, and use predominantly 1c/1ci/1m/1mi for PSTs. Preserve every source in the grouped/archive coverage.
 
 - Signature-compatible embedded full-text indexing was authorized on 2026-11-07; see docs/EMBEDDED_SEARCH_INDEX.md for its supported signing workflow and limits.
@@ -62,7 +62,7 @@ Rules:
 
 - When summarizing fixes, classify the work as Bug fix, Code improvement, New code, Speed improvement, Memory improvement, or another clear top-level category. Distinguish measured improvements from expected ones.
 
-- Keep only the latest versioned creator, GUI, and validator JARs in `dist/`; remove superseded JARs and their checksum files after verifying replacements.
+- Keep only the latest versioned creator, GUI, validator, and desktop viewer JARs in the project root’s `dist/`. Remove superseded JARs after verifying replacements. Generate release checksums in release staging.
 - Keep the viewer’s independent CSV metadata export; removing creator finding-aid generation does not remove CSV export.
 
 - The major-version bump and publication were authorized on 2026-11-09: creator/validator 2.0.0-beta.1 and browser viewer 1.0.0-beta.1. Future publication requires user authorization.

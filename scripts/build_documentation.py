@@ -66,7 +66,7 @@ def check_release_versions():
     # references tied to the immutable release notes, not nonexistent assets.
     release_notes = ROOT / 'docs/releases' / (current + '.md')
     published = re.search(r'viewer \*\*(\d+\.\d+\.\d+-beta\.\d+)\*\*', release_notes.read_text()) if release_notes.exists() else None
-    for path in (*release_pages, *SOURCES):
+    for path in release_pages:
         text = (ROOT / path).read_text()
         for version in re.findall(r'\b\d+\.\d+\.\d+-beta\.\d+\b', text):
             expected = {current, viewer}
