@@ -1,32 +1,12 @@
 # Downloads
 
-Download **EA-PDF 2.4.0-beta.3** and **Full browser reader 1.8.0** from the
-[current release](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.3).
+Download the apps from the [EA-PDF Main 2.4.0-beta.3 release](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.3).
 
-| File | Use it for |
+| App | Use it to |
 | --- | --- |
-| `emailtopdfa-2.4.0-beta.3-gui.jar` | Desktop email conversion |
-| `emailtopdfa-2.4.0-beta.3.jar` | Command-line conversion |
-| `eapdf-validator-2.4.0-beta.3.jar` | Standalone Java validation |
-| `configuration-2.4.0-beta.3.zip` | Public application configuration |
-| `eapdf-desktop-viewer-full-0.8.0.jar` | Standalone Java 21+ desktop viewer |
-| `eapdf-viewer-1.8.0-chromium.zip` | Chromium viewer extension |
-| `eapdf-viewer-1.8.0-firefox.zip` | Firefox viewer extension |
-| `ea-pdf-examples-2.4.0-beta.3.zip` | Example outputs and validation records |
-| `EA-PDF_User_Manual-2.4.0-beta.3.pdf` | Offline PDF/A user manual |
-| `EA-PDF_Software_Architecture-2.4.0-beta.3.pdf` | One-page product and library diagram |
-| `ea-pdf-screenshots-2.4.0-beta.3.zip` | Sample screenshots |
-| `PRIVACY-2.4.0-beta.3.md` | Short privacy policy |
-| `SHA256SUMS.txt` | Checksums for verifying the downloaded files |
+| [Desktop Viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/eapdf-desktop-viewer-full-0.8.0.jar) | Open PDFs, browse email and attachments, and save files. |
+| [Creator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/emailtopdfa-2.4.0-beta.3-gui.jar) | Convert email to PDF in a desktop window. |
+| [Validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/eapdf-validator-2.4.0-beta.3.jar) | Check a PDF and save a report. |
+| Full browser reader for [Chromium](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/eapdf-viewer-1.8.0-chromium.zip) or [Firefox](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.3/eapdf-viewer-1.8.0-firefox.zip) | Read PDFs in your browser. |
 
-Java applications require **Java 21 or later**. Extract the configuration bundle
-beside the JARs. The creator defaults to `Thinkbox.DIGITAL`. Follow the
-[installation guide](manual/installation.md) before converting.
-
-Viewer packages are unsigned and require manual installation. Firefox uses a
-temporary installation. See [viewer instructions](manual/viewer.md).
-
-The release also includes specification review documents and dependency notices.
-Project-maintained patched libraries are distributed through
-[GitHub Packages](https://github.com/thinkbox-digital/eapdf/packages);
-see [library usage](developers/packages.md).
+Desktop apps require a desktop version of Java 21 or later. Double-click a downloaded JAR to open it. For help, see [Get the tools ready](manual/installation.md).
