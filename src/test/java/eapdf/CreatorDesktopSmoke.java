@@ -88,10 +88,13 @@ public final class CreatorDesktopSmoke {
         find(frame, JTextArea.class, area -> area.getText().contains("Validate the PDFs"));
       });
       require(pdfCount(destination) == 1, "Creator must write exactly one PDF");
-      require(Files.readString(destination.resolve("progress.json")).contains("COMPLETED"),
+      Path progress = progressFile(destination);
+      var receipt = com.google.gson.JsonParser.parseString(Files.readString(progress)).getAsJsonObject();
+      require("COMPLETED".equals(receipt.get("state").getAsString()),
           "Creator progress did not record completion");
       if (evidence != null) {
         recordEvidence(frame, inputPath, destination, evidence);
+        Files.copy(progress, evidence.resolve("progress.json"));
       }
 
       Path stopped = Files.createDirectory(work.resolve("stopped"));
@@ -110,6 +113,18 @@ public final class CreatorDesktopSmoke {
       System.out.println("Creator GUI smoke passed");
     } finally {
       SwingUtilities.invokeAndWait(frame::dispose);
+    }
+  }
+
+  private static Path progressFile(Path directory) throws Exception {
+    try (var paths = Files.newDirectoryStream(directory, ".eapdf-evidence-*")) {
+      var candidates = new java.util.ArrayList<Path>();
+      for (Path run : paths) {
+        Path progress = run.resolve("progress.json");
+        if (Files.isRegularFile(progress)) candidates.add(progress);
+      }
+      require(candidates.size() == 1, "Expected one Creator progress receipt in " + directory);
+      return candidates.getFirst();
     }
   }
 
