@@ -2,22 +2,39 @@ package eapdf.viewer;
 
 import com.google.gson.JsonParser;
 import com.sun.javafx.application.ParametersImpl;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
+import javafx.stage.Window;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
+import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 
 /** Smoke test compiled and launched against the candidate standalone viewer JAR. */
 public final class ReleaseReaderSmoke extends Application {
@@ -71,7 +88,10 @@ public final class ReleaseReaderSmoke extends Application {
         await(() -> field("opening") == null && !Boolean.TRUE.equals(field("busy")),
                 "canceled opening cleanup");
         check(fx(this::current) == null, "Canceled PDF never became the active document");
-        for (var entry : input.getAsJsonObject("documents").entrySet()) {
+        runAttachmentImageChecks();
+        checkLargeArchiveOpen(open);
+        checkImageWindowLifecycle(open, Path.of(documents.getAsJsonObject("1s").get("path").getAsString()));
+        for (var entry : documents.entrySet()) {
             String profile = entry.getKey();
             System.out.println("Checking " + profile);
             Path path = Path.of(entry.getValue().getAsJsonObject().get("path").getAsString());
@@ -126,6 +146,110 @@ public final class ReleaseReaderSmoke extends Application {
             }
         }
         System.out.println("PASS: desktop opened all six validated PDFs, navigated messages and children, and exported exact bytes.");
+    }
+
+    private void checkLargeArchiveOpen(Method open) throws Exception {
+        Path path = Path.of("examples/mbox/mbox_enron_1m.pdf").toAbsolutePath();
+        check(Files.isRegularFile(path), "Missing large archive fixture " + path);
+        long started = System.nanoTime();
+        fx(() -> open.invoke(viewer, path));
+        await(() -> showing(path) && rendered() && archiveMessagePaneFilled(),
+                "Enron archive first page and populated message pane");
+        long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+        fx(() -> {
+            var viewport = (ContinuousReader) field("viewport");
+            var session = current();
+            check(viewport.getPage() == 0 && viewport.getPageCount() == 1839, "Unexpected Enron archive pages");
+            check(session.mail.messages().size() == 1433, "Unexpected Enron archive message count");
+            check(session.assets.size() == 1433, "Unexpected Enron archive file count");
+            return null;
+        });
+        System.out.println("PASS: desktop opened and rendered the Enron archive in " + elapsedMillis + " ms.");
+    }
+
+    private boolean archiveMessagePaneFilled() throws ReflectiveOperationException {
+        var tree = tree();
+        if (tree.getExpandedItemCount() != 1434 || !(tree.lookup(".virtual-flow") instanceof VirtualFlow<?> flow)) {
+            return false;
+        }
+        var first = flow.getFirstVisibleCell();
+        var last = flow.getLastVisibleCell();
+        if (first == null || first.getIndex() != 0 || Math.abs(first.getLayoutY()) > 1
+                || last == null || last.getIndex() <= first.getIndex()) {
+            return false;
+        }
+        double rowHeight = last.getLayoutBounds().getHeight();
+        double gap = flow.getViewportLength() - last.getLayoutY() - rowHeight;
+        return rowHeight > 0 && gap <= rowHeight;
+    }
+
+    private void checkImageWindowLifecycle(Method open, Path other) throws Exception {
+        var preview = ViewerApplication.class.getDeclaredMethod("openVariant", PdfNavigation.Asset.class,
+                PdfNavigation.AssetStream.class);
+        preview.setAccessible(true);
+        Path scratch = Files.createTempDirectory("eapdf-desktop-preview-window-");
+        Path fixture = scratch.resolve("image-attachment.pdf");
+        String name = "preview.png";
+        try {
+            ReleaseReaderImageSmoke.writeImageFixture(fixture, name,
+                    ReleaseReaderImageSmoke.encodeImage(ReleaseReaderImageSmoke.solidImage(960, 720, Color.RED), "png"));
+            fx(() -> open.invoke(viewer, fixture));
+            await(() -> showing(fixture), "image attachment fixture");
+            fx(() -> {
+                var asset = current().assets.stream().filter(file -> name.equals(file.name())).findFirst().orElseThrow();
+                var stream = asset.variants().getFirst();
+                preview.invoke(viewer, asset, stream);
+                preview.invoke(viewer, asset, stream);
+                check(field("pendingImagePreview") != null, "Second image preview did not queue");
+                open.invoke(viewer, other);
+                check(field("pendingImagePreview") == null, "Document switch retained an old queued preview");
+                return null;
+            });
+            await(() -> showing(other) && Boolean.FALSE.equals(field("decodingImagePreview")),
+                    "document switch and previous preview completion");
+            check(fx(() -> field("imagePreviewWindow")) == null, "Old document opened a stale image preview");
+
+            fx(() -> open.invoke(viewer, fixture));
+            await(() -> showing(fixture), "return to image attachment fixture");
+            fx(() -> {
+                var asset = current().assets.stream().filter(file -> name.equals(file.name())).findFirst().orElseThrow();
+                return preview.invoke(viewer, asset, asset.variants().getFirst());
+            });
+            await(() -> field("imagePreviewWindow") instanceof Stage popup && popup.isShowing(), "image preview window");
+            fx(() -> {
+                var popup = (Stage) field("imagePreviewWindow");
+                check(Window.getWindows().stream().filter(window -> window instanceof Stage stage && stage.isShowing()
+                        && name.equals(stage.getTitle())).count() == 1, "Expected one visible image preview window");
+                check(popup.getScene().getRoot().lookupAll(".image-view").stream().anyMatch(node ->
+                        node instanceof ImageView view && view.getImage() != null
+                        && view.getImage().getWidth() <= 760 && view.getImage().getHeight() <= 560),
+                        "Image preview window did not display a bounded image");
+                popup.close();
+                return open.invoke(viewer, other);
+            });
+            await(() -> showing(other), "close image attachment fixture");
+        } finally {
+            Files.deleteIfExists(fixture);
+            Files.deleteIfExists(scratch);
+        }
+        System.out.println("PASS: desktop discarded queued previews on document switch and opened one bounded image window.");
+    }
+
+    private boolean showing(Path path) throws ReflectiveOperationException {
+        return current() != null && current().path.equals(path) && !Boolean.TRUE.equals(field("busy"));
+    }
+
+    private static void runAttachmentImageChecks() throws IOException, InterruptedException {
+        var java = Path.of(System.getProperty("java.home"), "bin", "java");
+        var process = new ProcessBuilder(java.toString(), "-Xmx128m", "-Djava.awt.headless=true",
+                "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"), "-cp", System.getProperty("java.class.path"),
+                ReleaseReaderImageSmoke.class.getName()).inheritIO().start();
+        try {
+            check(process.waitFor(75, TimeUnit.SECONDS), "Desktop image attachment checks timed out");
+            check(process.exitValue() == 0, "Desktop image attachment checks failed");
+        } finally {
+            if (process.isAlive()) process.destroyForcibly();
+        }
     }
 
     private static void check(boolean condition, String message) {
@@ -193,5 +317,119 @@ public final class ReleaseReaderSmoke extends Application {
 final class ReleaseReaderSmokeLauncher {
     public static void main(String[] args) {
         ReleaseReaderSmoke.run(args);
+    }
+}
+
+/** Exercises the packaged image decoder and attachment save path with a bounded heap. */
+final class ReleaseReaderImageSmoke {
+    public static void main(String[] args) throws IOException {
+        check(Runtime.getRuntime().maxMemory() <= 128L * 1024 * 1024, "Attachment smoke exceeded its heap cap");
+        var source = solidImage(960, 720, Color.RED);
+        for (String format : List.of("png", "jpeg", "gif")) {
+            byte[] input = encodeImage(source, format);
+            for (int attempt = 0; attempt < 24; attempt++) {
+                var preview = AttachmentImagePreview.decode(input);
+                check(preview.getWidth() <= 760 && preview.getHeight() <= 560,
+                        format + " preview exceeded its display size");
+                check(preview.getWidth() < source.getWidth() && preview.getHeight() < source.getHeight(),
+                        format + " preview did not downsample");
+                var pixel = new Color(preview.getRGB(preview.getWidth() / 2, preview.getHeight() / 2));
+                check(pixel.getRed() > 240 && pixel.getGreen() < 15 && pixel.getBlue() < 15,
+                        format + " preview did not retain the source image");
+            }
+        }
+        var firstFrame = AttachmentImagePreview.decode(animatedGif());
+        check(firstFrame.getRGB(0, 0) == Color.RED.getRGB(), "GIF preview did not use the first frame");
+        checkImageRejected(new byte[]{1, 2, 3}, "malformed image");
+        checkRejectedImageExport(encodeImage(solidImage(8193, 1, Color.BLACK), "png"));
+        System.out.println("PASS: desktop repeated image previews under 128 MiB and preserved exact bytes on save after rejection.");
+    }
+
+    private static void checkRejectedImageExport(byte[] original) throws IOException {
+        Path scratch = Files.createTempDirectory("eapdf-desktop-image-smoke-");
+        Path fixture = scratch.resolve("attached-image.pdf");
+        Path exported = scratch.resolve("exported.png");
+        String name = "attached.png";
+        try {
+            writeImageFixture(fixture, name, original);
+            try (var navigation = PdfNavigation.open(fixture)) {
+                var attachment = navigation.assets().stream().filter(asset -> name.equals(asset.name()))
+                        .findFirst().orElseThrow();
+                var variant = attachment.variants().getFirst();
+                checkImageRejected(navigation.preview(variant), "over-width image");
+                navigation.save(variant, exported);
+            }
+            check(Arrays.equals(original, Files.readAllBytes(exported)), "Saved image differed after preview rejection");
+        } finally {
+            Files.deleteIfExists(exported);
+            Files.deleteIfExists(fixture);
+            Files.deleteIfExists(scratch);
+        }
+    }
+
+    static void writeImageFixture(Path fixture, String name, byte[] original) throws IOException {
+        try (var document = new PDDocument(); var bytes = new ByteArrayInputStream(original)) {
+            document.addPage(new PDPage());
+            var embedded = new PDEmbeddedFile(document, bytes);
+            embedded.setSubtype("image/png");
+            embedded.setSize(original.length);
+            var attachment = new PDComplexFileSpecification();
+            attachment.setFile(name);
+            attachment.setEmbeddedFile(embedded);
+            var tree = new PDEmbeddedFilesNameTreeNode();
+            tree.setNames(Map.of(name, attachment));
+            var catalog = document.getDocumentCatalog();
+            var names = new PDDocumentNameDictionary(catalog);
+            names.setEmbeddedFiles(tree);
+            catalog.setNames(names);
+            document.save(fixture.toFile());
+        }
+    }
+
+    static BufferedImage solidImage(int width, int height, Color color) {
+        var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        var graphics = image.createGraphics();
+        try {
+            graphics.setColor(color);
+            graphics.fillRect(0, 0, width, height);
+        } finally {
+            graphics.dispose();
+        }
+        return image;
+    }
+
+    static byte[] encodeImage(BufferedImage image, String format) throws IOException {
+        var bytes = new ByteArrayOutputStream();
+        check(ImageIO.write(image, format, bytes), "Missing smoke fixture writer for " + format);
+        return bytes.toByteArray();
+    }
+
+    private static byte[] animatedGif() throws IOException {
+        var writer = ImageIO.getImageWritersByFormatName("gif").next();
+        var bytes = new ByteArrayOutputStream();
+        try (var stream = new MemoryCacheImageOutputStream(bytes)) {
+            writer.setOutput(stream);
+            writer.prepareWriteSequence(null);
+            for (Color color : List.of(Color.RED, Color.BLUE)) {
+                writer.writeToSequence(new IIOImage(solidImage(48, 32, color), null, null), null);
+            }
+            writer.endWriteSequence();
+        } finally {
+            writer.dispose();
+        }
+        return bytes.toByteArray();
+    }
+
+    private static void checkImageRejected(byte[] bytes, String description) {
+        try {
+            AttachmentImagePreview.decode(bytes);
+        } catch (IOException expected) {
+            return;
+        }
+        throw new AssertionError("Desktop preview accepted " + description);
+    }
+
+    private static void check(boolean condition, String message) {
+        if (!condition) throw new AssertionError(message);
     }
 }

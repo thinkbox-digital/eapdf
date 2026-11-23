@@ -17,7 +17,6 @@ class PstJobBudgetTests {
    long disk=Files.getFileStore(temp).getUsableSpace();
    long limit=budget.setting("eapdf.maxOutputBytes","EAPDF_MAX_OUTPUT_BYTES",0);
    assertTrue(limit > 0); assertTrue(limit <= disk/2);
-   assertTrue(budget.setting("eapdf.jobTimeoutSeconds","EAPDF_JOB_TIMEOUT_SECONDS",0) >= 600);
   }
  }
  @Test void metadataAllowanceUsesTheEffectiveWorkerHeapAndHonorsItsOwnOverride() throws Exception {

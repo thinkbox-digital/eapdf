@@ -1,6 +1,5 @@
 """Bounded real-input profile matrix; invoked by eapdf-regenerate."""
 import argparse
-from contextlib import ExitStack
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 import fcntl
@@ -82,35 +81,18 @@ def active_conversion(root):
     return None
 
 
-def prepare_output(root):
+def clear_output(root):
     output = root/'out'
     if output.is_symlink() or output.resolve() != root.resolve()/'out':
-        raise RuntimeError('Refusing a symlinked or out-of-tree output directory.')
+        raise RuntimeError('Refusing an out directory that is a symlink or resolves outside the project.')
     output.mkdir(exist_ok=True)
-    for kind in KINDS:
-        folder = output/kind
-        if folder.is_symlink():
-            raise RuntimeError('Refusing a symlinked output directory: '+str(folder))
-        folder.mkdir(exist_ok=True)
+    for child in output.iterdir():
+        if child.is_dir() and not child.is_symlink(): shutil.rmtree(child)
+        else: child.unlink()
+    for kind in KINDS: (output/kind).mkdir()
 
 
-def publish_run(results):
-    """Publish verified PDFs using a hard link as an atomic no-replace operation."""
-    prepare_output(ROOT)
-    for result in sorted(results, key=lambda entry: entry['id']):
-        for document in result['documents']:
-            source = Path(document['staged'])
-            destination = ROOT/document['path']
-            stem, profile = destination.stem.rsplit('_', 1)
-            if digest(source) != document['sha256']:
-                raise RuntimeError('Staged PDF changed before publication: '+str(source))
-            output = publish_pdf(source, destination, stem, profile, document['sha256'])
-            document['report_basename'] = destination.name
-            document['path'] = str(output.relative_to(ROOT))
-            document['published'] = True
-
-
-def publish_pdf(source, destination, stem, profile, expected_hash):
+def publish_pdf(source, destination, expected_hash=None):
     # The final PDF name appears only after the complete copy is closed.
     checksum = hashlib.sha256()
     handle, pending = tempfile.mkstemp(prefix='.'+destination.stem+'-', suffix='.tmp', dir=destination.parent)
@@ -119,21 +101,12 @@ def publish_pdf(source, destination, stem, profile, expected_hash):
             for block in iter(lambda: original.read(1024*1024), b''):
                 output.write(block)
                 checksum.update(block)
+        copied_hash = checksum.hexdigest()
+        if expected_hash is not None and copied_hash != expected_hash:
+            raise RuntimeError('Staged PDF changed during validation.')
         shutil.copystat(source, pending)
-        if checksum.hexdigest() != expected_hash:
-            raise RuntimeError('Staged PDF changed while copying: '+str(source))
-        candidate = destination
-        copy = 0
-        while True:
-            try:
-                os.link(pending, candidate)
-                return candidate
-            except FileExistsError:
-                if not candidate.is_symlink() and candidate.is_file() and digest(candidate) == expected_hash:
-                    return candidate
-                copy += 1
-                suffix = expected_hash[:12] + ('' if copy == 1 else f'-{copy}')
-                candidate = destination.with_name(f'{stem}_{suffix}_{profile}.pdf')
+        os.replace(pending, destination)
+        return copied_hash
     finally:
         Path(pending).unlink(missing_ok=True)
 
@@ -153,16 +126,16 @@ def validation_status(report):
     summary=Path(str(report)+'.summary.json')
     selected=summary if summary.is_file() else report
     if not selected.is_file(): return 'UNAVAILABLE'
-    with selected.open() as stream:
-        return json.load(stream).get('summary',{}).get('status','UNAVAILABLE')
+    try:
+        with selected.open() as stream:
+            return json.load(stream).get('summary',{}).get('status','UNAVAILABLE')
+    except (OSError, ValueError, AttributeError):
+        return 'UNAVAILABLE'
 
 
 def _run_task(task, args, evidence, workspace, config, hashes, heap, warning=False):
     name, profile = task['id'], task['profile']
-    folder = evidence/name
-    if warning:
-        folder = folder/'warning-attempt'
-    folder.mkdir(parents=warning)
+    folder = evidence/name; folder.mkdir(exist_ok=warning)
     stage = workspace/(name+'-validation-warning' if warning else name); stage.mkdir()
     generated = stage/'generated'; generated.mkdir()
     scratch = stage/'scratch'; scratch.mkdir()
@@ -203,27 +176,40 @@ def _run_task(task, args, evidence, workspace, config, hashes, heap, warning=Fal
             filename=(name if profile not in ('1s','1si') else name.rsplit('_',1)[0]+f'_{n:06d}_{profile}')+'.pdf'
             destination=ROOT/'out'/task['type']/filename
             checksum=digest(pdf)
-            if batch[pdf] is not None and checksum != batch[pdf]:
-                raise RuntimeError('Creator batch member does not match the committed manifest: '+str(pdf))
-            result['documents'].append({'path':str(destination.relative_to(ROOT)),'staged':str(pdf),'sha256':checksum,'validation':'PENDING'})
-            (folder/'result.json').write_text(json.dumps(result,indent=2)+'\n')
-            print('Staged: '+filename+' (validation pending)',flush=True)
-        # Validate the staged bytes before any output is published.
+            if batch[pdf] is not None and checksum!=batch[pdf]:
+                raise RuntimeError('Committed PDF does not match its publication manifest.')
+            result['documents'].append({'destination':str(destination.relative_to(ROOT)),'sha256':checksum,'validation':'PENDING'})
+        (folder/'result.json').write_text(json.dumps(result,indent=2)+'\n')
         for pdf,document in zip(pdfs,result['documents']):
-            filename=Path(document['path']).name
+            filename=Path(document['destination']).name
             report=folder/(filename+'.validation.json')
+            for stale in (report,Path(str(report)+'.summary.json'),Path(str(report)+'.progress.json')):
+                stale.unlink(missing_ok=True)
             validation_env=validation_environment(environment,pdf,getattr(args,'workers',1))
             document['validation_limits']={key:validation_env[key] for key in ('VALIDATOR_MAX_WORK_FILE_BYTES','VALIDATOR_MAX_SCRATCH_BYTES')}
             validation=execute(['java','-Xmx'+str(max(256,heap//1024**2))+'m','-XX:ActiveProcessorCount='+str(args.jobs),'-Djava.io.tmpdir='+str(scratch),'-cp',str(args.validator_jar),'eapdf.JavaValidation',str(pdf),str(report)],folder/(filename+'.validation.log'),args.timeout,validation_env)
             status=validation_status(report)
-            if status not in ('PASS','WARN') or validation['exit_code'] not in (0,2):
+            if (validation.get('timeout') or validation['exit_code'] not in (0,2)
+                    or status == 'PASS' and validation['exit_code'] != 0):
+                status='UNAVAILABLE'
+            if status not in ('PASS','WARN'):
                 outcome='INCOMPLETE' if status in ('INCOMPLETE','UNAVAILABLE','PENDING') else 'FAIL'
                 if result['status']!='FAIL': result['status']=outcome
             document.update(validation=status,validation_execution=validation)
             (folder/'result.json').write_text(json.dumps(result,indent=2)+'\n')
-            print('Validated: '+document['path']+' — '+status,flush=True)
+            print('Validated: '+document['destination']+' — '+status,flush=True)
         if result['status']=='VALIDATING': result['status']='INCOMPLETE' if incomplete else 'PASS'
         if any(digest(p)!=hashes[str(p)] for p in sources): raise RuntimeError('Original source hash changed during conversion.')
+        for pdf,document in zip(pdfs,result['documents']):
+            destination=ROOT/document['destination']
+            if result['status']=='PASS':
+                publish_pdf(pdf,destination,document['sha256'])
+                print('Published: '+str(destination),flush=True)
+            else:
+                destination=folder/'quarantine'/destination.name
+                destination.parent.mkdir(exist_ok=True,mode=0o700)
+                publish_pdf(pdf,destination)
+            document['path']=str(destination.relative_to(ROOT))
     except Exception as error:
         result['status']='FAIL';result['reason']=str(error)
     finally:
@@ -244,10 +230,12 @@ def run_task(task, args, evidence, workspace, config, hashes, heap):
     folder=evidence/task['id']
     initial=folder/'initial-validation';initial.mkdir()
     # Preserve the first verdict and all diagnostic evidence before regenerating.
-    for path in list(folder.iterdir()):
-        if path==initial: continue
-        if path.is_dir(): shutil.copytree(path,initial/path.name)
-        else: shutil.copy2(path,initial/path.name)
+    for path in folder.iterdir():
+        if path!=initial: path.rename(initial/path.name)
+    for document in result['documents']:
+        if 'path' in document:
+            document['path']=str((initial/'quarantine'/Path(document['path']).name).relative_to(ROOT))
+    (initial/'result.json').write_text(json.dumps(result,indent=2)+'\n')
     warning_config=json.loads(config.read_text())
     failed=any(d.get('validation')=='FAIL' for d in result['documents'])
     warning_config['validationWarning']=('One or more validation checks failed.' if failed else 'One or more validation checks could not be completed.')+' Conformance was not established by the initial check. Consult the initial and final validation reports.'
@@ -258,17 +246,11 @@ def run_task(task, args, evidence, workspace, config, hashes, heap):
     replacement['validation_warning']=True
     replacement['initial_validation_status']=result['status']
     replacement['initial_validation_evidence']=str(initial)
-    # Keep the first attempt in staging when the warning conversion fails.
+    # Keep the rejected first attempt in the run evidence if regeneration fails.
     if not replacement['documents']:
         replacement['documents']=result['documents']
         replacement['validation_warning']=False
-        replacement['reason']='Could not generate the validation-warning replacement; initial attempt kept in staging. '+replacement.get('reason','')
-    for report in folder.glob('*.validation*'):
-        report.unlink()
-    for report in (folder/'warning-attempt').glob('*.validation*'):
-        report.replace(folder/report.name)
-    if (folder/'warning-attempt/conversion.log').is_file():
-        shutil.copy2(folder/'warning-attempt/conversion.log', folder/'conversion.log')
+        replacement['reason']='Could not generate the validation-warning replacement. Original PDF quarantined. '+replacement.get('reason','')
     (folder/'result.json').write_text(json.dumps(replacement,indent=2)+'\n')
     return replacement
 
@@ -290,10 +272,12 @@ def final_summary(results, evidence, changed=()):
                   or d.get('validation_execution',{}).get('exit_code',1) not in (0,2)]
         # Source omissions can leave a valid PDF but an incomplete conversion.
         for document in affected or documents:
-            lines.append('  File: '+str(ROOT/document['path']) + (' (staged, unpublished)' if 'staged' in document and not document.get('published') else '')+' (validation: '+document.get('validation','UNAVAILABLE')+')')
-            report=folder/(document.get('report_basename', Path(document['path']).name)+'.validation.json')
+            path=document.get('path',document.get('destination',''))
+            label='File' if 'path' in document else 'Unpublished destination'
+            lines.append('  '+label+': '+str(ROOT/path)+' (validation: '+document.get('validation','UNAVAILABLE')+')')
+            report=folder/(Path(path).name+'.validation.json')
             if report.is_file(): lines.append('  Report: '+str(report))
-            log=folder/(document.get('report_basename', Path(document['path']).name)+'.validation.log')
+            log=folder/(Path(path).name+'.validation.log')
             if log.is_file(): lines.append('  Validation log: '+str(log))
         if not documents: lines.append('  No PDF produced.')
         lines.append('  Conversion log: '+str(folder/'conversion.log'))
@@ -330,7 +314,7 @@ def snapshot_jars(args, evidence):
 
 
 def main():
-    parser=argparse.ArgumentParser(description='Regenerate a sample or every supported in/ file. Logs and Java validation reports go under output/.',epilog='Examples: eapdf-regenerate sample; eapdf-regenerate everything --workers 4 --jobs 2. Use --dry-run to preview without writing to out/. EML/MSG sources are randomly grouped by type into archives of up to 20 messages, covering every selected source. Each PST/MBOX source produces only 1m, 1mi, 1c and 1ci archives; no individual-message extraction. PST files larger than 250 MB (250,000,000 bytes) are skipped. Single-email 1m/1mi cases are reported not applicable.')
+    parser=argparse.ArgumentParser(description='Clear project out/ and regenerate a sample or every supported in/ file. Logs and Java validation reports go under output/.',epilog='Examples: eapdf-regenerate main sample; eapdf-regenerate main everything --workers 4 --jobs 2. Use --dry-run to preview without clearing out/. EML/MSG sources are randomly grouped by type into archives of up to 20 messages, covering every selected source. Each PST/MBOX source produces only 1m, 1mi, 1c and 1ci archives; no individual-message extraction. PST files larger than 250 MB (250,000,000 bytes) are skipped. Single-email 1m/1mi cases are reported not applicable.')
     parser.add_argument('mode',choices=('sample','everything'))
     parser.add_argument('--creator',default=os.environ.get('EAPDF_CREATOR'))
     parser.add_argument('--workers',type=int,help='Concurrent Java jobs (default: CPU/memory bounded auto)')
@@ -369,9 +353,7 @@ def main():
     config['validationWarning']=''
     config.setdefault('signing',{})['enabled']=False
     (ROOT/'output').mkdir(exist_ok=True)
-    with ExitStack() as resources:
-        lock = os.open(ROOT, os.O_RDONLY | os.O_DIRECTORY)
-        resources.callback(os.close, lock)
+    with (ROOT/'output/.regenerate-out.lock').open('w') as lock:
         try: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         except BlockingIOError: parser.error('Another regeneration run is active.')
         evidence=Path(tempfile.mkdtemp(prefix='regenerate-'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-',dir=ROOT/'output'))
@@ -380,17 +362,15 @@ def main():
         (evidence/'sources.json').write_text(json.dumps({'selected':[{'path':str(p.relative_to(ROOT)),'sha256':hashes[str(p)]} for p in selected],'skipped':skipped,'not_selected':[str(p.relative_to(ROOT)) for p in paths if p not in selected],'unsupported':[str(p.relative_to(ROOT)) for p in paths if p.suffix.lower()[1:] not in KINDS]},indent=2)+'\n')
         (evidence/'plan.json').write_text(json.dumps([{**task,'sources':[str(p.relative_to(ROOT)) for p in task['sources']]} for task in tasks],indent=2)+'\n')
         config_file=evidence/'config.json';config_file.write_text(json.dumps(config,indent=2)+'\n')
-        print('Preparing verified outputs; evidence: '+str(evidence),flush=True)
+        print('Clearing '+str(ROOT/'out')+'; evidence: '+str(evidence),flush=True)
+        clear_output(ROOT)
         results=[]
         with working_directory() as directory, ThreadPoolExecutor(max_workers=args.workers) as pool:
             futures=[pool.submit(run_task,t,args,evidence,Path(directory),config_file,hashes,heap) for t in tasks]
             for future in as_completed(futures):
                 result=future.result();results.append(result);print(result['status']+' '+result['id'],flush=True)
                 (evidence/'summary.json').write_text(json.dumps(results,indent=2)+'\n')
-            changed=[str(p) for p in selected if digest(p)!=hashes[str(p)]]
-            if not changed and all(row['status'] in ('PASS','NOT_APPLICABLE') for row in results):
-                publish_run(results)
-                (evidence/'summary.json').write_text(json.dumps(results,indent=2)+'\n')
+        changed=[str(p) for p in selected if digest(p)!=hashes[str(p)]]
         (evidence/'source-check.json').write_text(json.dumps({'unchanged':not changed,'changed':changed},indent=2)+'\n')
         return 1 if final_summary(results,evidence,changed) else 0
 

@@ -1,0 +1,433 @@
+From 1719c7dedc4482885c432fa95e57a426f2fc2984 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Andreas=20Lehmk=C3=BChler?= <lehmi@apache.org>
+Date: Mon, 21 Sep 2026 06:12:11 +0000
+Subject: [PATCH] PDFBOX-6268: replace keycache to avoid rebuilding it again
+ and again as proposed by Tim Allison
+
+git-svn-id: https://svn.apache.org/repos/asf/pdfbox/branches/3.0@1938403 13f79535-47bb-0310-9956-ffa450edef68
+---
+ .../org/apache/pdfbox/cos/COSDocument.java    | 151 +++++++++++++++++-
+ .../apache/pdfbox/pdfparser/BaseParser.java   |  27 +---
+ .../apache/pdfbox/cos/COSDocumentTest.java    | 144 ++++++++++++++++-
+ 3 files changed, 284 insertions(+), 38 deletions(-)
+
+diff --git a/pdfbox/src/main/java/org/apache/pdfbox/cos/COSDocument.java b/pdfbox/src/main/java/org/apache/pdfbox/cos/COSDocument.java
+index 6291cc29869..424da92152d 100644
+--- a/pdfbox/src/main/java/org/apache/pdfbox/cos/COSDocument.java
++++ b/pdfbox/src/main/java/org/apache/pdfbox/cos/COSDocument.java
+@@ -23,6 +23,8 @@
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Map.Entry;
++import java.util.function.BiFunction;
++import java.util.function.Function;
+ import java.util.stream.Collectors;
+ 
+ import org.apache.commons.logging.Log;
+@@ -58,8 +60,7 @@ public class COSDocument extends COSBase implements Closeable
+     /**
+      * Maps object and generation id to object byte offsets.
+      */
+-    private final Map<COSObjectKey, Long> xrefTable =
+-        new HashMap<>();
++    private final XrefTable xrefTable = new XrefTable();
+ 
+     /**
+      * List containing all streams which are created when creating a new pdf.
+@@ -520,9 +521,9 @@ public COSObject getObjectFromPool(COSObjectKey key)
+     }
+ 
+     /**
+-     * Populate XRef HashMap with given values.
+-     * Each entry maps ObjectKeys to byte offsets in the file.
+-     * @param xrefTableValues  xref table entries to be added
++     * Adds the given entries to the xref table. Each entry maps an ObjectKey to a byte offset in the file.
++     *
++     * @param xrefTableValues xref table entries to be added
+      */
+     public void addXRefTable( Map<COSObjectKey, Long> xrefTableValues )
+     {
+@@ -530,8 +531,9 @@ public void addXRefTable( Map<COSObjectKey, Long> xrefTableValues )
+     }
+ 
+     /**
+-     * Returns the xrefTable which is a mapping of ObjectKeys
+-     * to byte offsets in the file.
++     * Returns the xrefTable which is a mapping of ObjectKeys to byte offsets in the file. The map is live and
++     * mutable; like any HashMap it keeps the first key instance when an equal key is put again.
++     *
+      * @return mapping of ObjectsKeys to byte offsets
+      */
+     public Map<COSObjectKey, Long> getXrefTable()
+@@ -539,6 +541,19 @@ public Map<COSObjectKey, Long> getXrefTable()
+         return xrefTable;
+     }
+ 
++    /**
++     * Internal PDFBox use only. Returns the key instance held by the xref table for the given object and
++     * generation number, which carries the object stream index. The lookup is live against the current table.
++     *
++     * @param num the object number
++     * @param gen the generation number
++     * @return the key stored in the xref table, or null if the table has no entry for it
++     */
++    public COSObjectKey getXrefKey(long num, int gen)
++    {
++        return xrefTable.getKey(num, gen);
++    }
++
+     /**
+      * This method set the startxref value of the document. This will only 
+      * be needed for incremental updates.
+@@ -609,5 +624,125 @@ public COSDocumentState getDocumentState()
+     {
+         return documentState;
+     }
+-    
++
++    /**
++     * HashMap which also indexes its keys by internal hash, so the stored key instance (which carries the object stream
++     * index) can be looked up without scanning; HashMap has no API for that. Every method that can insert a key is
++     * overridden to index the inserted instance. Removals through views are not intercepted, so the index may hold keys
++     * no longer in the table; {@link #getKey(long, int)} checks for that.
++     */
++    private static final class XrefTable extends HashMap<COSObjectKey, Long>
++    {
++        private static final long serialVersionUID = 1L;
++
++        private Map<Long, COSObjectKey> keysByHash = new HashMap<>();
++
++        COSObjectKey getKey(long num, int gen)
++        {
++            long hash = COSObjectKey.computeInternalHash(num, gen);
++            COSObjectKey key = keysByHash.get(hash);
++            if (key != null && !containsKey(key))
++            {
++                keysByHash.remove(hash);
++                return null;
++            }
++            return key;
++        }
++
++        // only new keys are indexed: HashMap keeps the existing instance for an equal key
++        private void indexIfAbsent(COSObjectKey key)
++        {
++            if (key != null && !containsKey(key))
++            {
++                keysByHash.put(key.getInternalHash(), key);
++            }
++        }
++
++        @Override
++        public Long put(COSObjectKey key, Long value)
++        {
++            indexIfAbsent(key);
++            return super.put(key, value);
++        }
++
++        @Override
++        public void putAll(Map<? extends COSObjectKey, ? extends Long> map)
++        {
++            map.keySet().forEach(this::indexIfAbsent);
++            super.putAll(map);
++        }
++
++        @Override
++        public Long putIfAbsent(COSObjectKey key, Long value)
++        {
++            indexIfAbsent(key);
++            return super.putIfAbsent(key, value);
++        }
++
++        @Override
++        public Long computeIfAbsent(COSObjectKey key,
++                Function<? super COSObjectKey, ? extends Long> mappingFunction)
++        {
++            boolean absent = !containsKey(key);
++            Long value = super.computeIfAbsent(key, mappingFunction);
++            indexIfInserted(key, absent);
++            return value;
++        }
++
++        @Override
++        public Long compute(COSObjectKey key,
++                BiFunction<? super COSObjectKey, ? super Long, ? extends Long> remappingFunction)
++        {
++            boolean absent = !containsKey(key);
++            Long value = super.compute(key, remappingFunction);
++            indexIfInserted(key, absent);
++            return value;
++        }
++
++        @Override
++        public Long merge(COSObjectKey key, Long value,
++                BiFunction<? super Long, ? super Long, ? extends Long> remappingFunction)
++        {
++            boolean absent = !containsKey(key);
++            Long result = super.merge(key, value, remappingFunction);
++            indexIfInserted(key, absent);
++            return result;
++        }
++
++        // the compute family stores the key only if the function returned a value
++        private void indexIfInserted(COSObjectKey key, boolean wasAbsent)
++        {
++            if (wasAbsent && key != null && containsKey(key))
++            {
++                keysByHash.put(key.getInternalHash(), key);
++            }
++        }
++
++        @Override
++        public Long remove(Object key)
++        {
++            if (key instanceof COSObjectKey)
++            {
++                keysByHash.remove(((COSObjectKey) key).getInternalHash());
++            }
++            return super.remove(key);
++        }
++
++        @Override
++        public void clear()
++        {
++            keysByHash.clear();
++            super.clear();
++        }
++
++        @Override
++        public Object clone()
++        {
++            // HashMap.clone() is shallow, so give the copy its own index
++            XrefTable copy = (XrefTable) super.clone();
++            copy.keysByHash = new HashMap<>();
++            copy.keySet().forEach(copy::indexIfAbsent);
++            return copy;
++        }
++    }
+ }
+diff --git a/pdfbox/src/main/java/org/apache/pdfbox/pdfparser/BaseParser.java b/pdfbox/src/main/java/org/apache/pdfbox/pdfparser/BaseParser.java
+index 05a20f7074e..4d333a831fe 100644
+--- a/pdfbox/src/main/java/org/apache/pdfbox/pdfparser/BaseParser.java
++++ b/pdfbox/src/main/java/org/apache/pdfbox/pdfparser/BaseParser.java
+@@ -27,9 +27,6 @@
+ import java.nio.charset.CodingErrorAction;
+ import java.nio.charset.StandardCharsets;
+ 
+-import java.util.HashMap;
+-import java.util.Map;
+-
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ 
+@@ -73,8 +70,6 @@ public abstract class BaseParser
+     
+     private int recursionDepth = 0;
+ 
+-    private final Map<Long, COSObjectKey> keyCache = new HashMap<>();
+-
+     static
+     {
+         Charset cs;
+@@ -178,7 +173,8 @@ private static boolean isHexDigit(char ch)
+ 
+     /**
+      * Returns the object key for the given combination of object and generation number. The object key from the cross
+-     * reference table/stream will be reused if available. Otherwise a newly created object will be returned.
++     * reference table/stream will be reused if available. Otherwise, and when this parser has no document, a newly
++     * created object key will be returned.
+      * 
+      * @param num the given object number
+      * @param gen the given generation number
+@@ -187,23 +183,8 @@ private static boolean isHexDigit(char ch)
+      */
+     protected COSObjectKey getObjectKey(long num, int gen)
+     {
+-        if (document == null || document.getXrefTable().isEmpty())
+-        {
+-            return new COSObjectKey(num, gen);
+-        }
+-        // use a cache to get the COSObjectKey as iterating over the xref-table-map gets slow for big pdfs
+-        // in the long run we have to overhaul the object pool or even better remove it
+-        Map<COSObjectKey, Long> xrefTable = document.getXrefTable();
+-        if (xrefTable.size() > keyCache.size())
+-        {
+-            for (COSObjectKey key : xrefTable.keySet())
+-            {
+-                keyCache.putIfAbsent(key.getInternalHash(), key);
+-            }
+-        }
+-        long internalHashCode = COSObjectKey.computeInternalHash(num, gen);
+-        COSObjectKey foundKey = keyCache.get(internalHashCode);
+-        return foundKey != null ? foundKey : new COSObjectKey(num, gen);
++        COSObjectKey key = document == null ? null : document.getXrefKey(num, gen);
++        return key != null ? key : new COSObjectKey(num, gen);
+     }
+ 
+     /**
+diff --git a/pdfbox/src/test/java/org/apache/pdfbox/cos/COSDocumentTest.java b/pdfbox/src/test/java/org/apache/pdfbox/cos/COSDocumentTest.java
+index 5a7a5d3be60..e5346d3b063 100644
+--- a/pdfbox/src/test/java/org/apache/pdfbox/cos/COSDocumentTest.java
++++ b/pdfbox/src/test/java/org/apache/pdfbox/cos/COSDocumentTest.java
+@@ -16,24 +16,154 @@
+  */
+ package org.apache.pdfbox.cos;
+ 
++import java.io.IOException;
+ import java.util.Collections;
+ import java.util.HashMap;
++import java.util.Iterator;
+ import java.util.Map;
++import java.util.Map.Entry;
+ 
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+ import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertSame;
++
+ import org.junit.jupiter.api.Test;
+ 
+ class COSDocumentTest
+ {
+     @Test
+-    void testPDFBox6132()
++    void testPDFBox6132() throws IOException
++    {
++        try (COSDocument document = new COSDocument())
++        {
++            Map<COSObjectKey, Long> xrefTable = new HashMap<>();
++            xrefTable.put(null, 10L);
++            document.addXRefTable(xrefTable);
++            document.getXrefTable().put(null, 11L);
++            assertEquals(Collections.emptyList(), document.getObjectsByType(COSName.T));
++            assertNull(document.getLinearizedDictionary());
++            assertNull(document.getXrefKey(4, 0));
++        }
++    }
++
++    @Test
++    void testGetXrefKeyFollowsXrefTable() throws IOException
++    {
++        try (COSDocument document = new COSDocument())
++        {
++            Map<COSObjectKey, Long> xrefTable = document.getXrefTable();
++            assertNull(document.getXrefKey(4, 0));
++
++            COSObjectKey indexed = new COSObjectKey(4, 0, 2);
++            xrefTable.put(indexed, 100L);
++            assertSame(indexed, document.getXrefKey(4, 0));
++
++            // like any HashMap, putting an equal key keeps the first instance
++            xrefTable.put(new COSObjectKey(4, 0, 1), 200L);
++            assertEquals(1, xrefTable.size());
++            assertSame(indexed, xrefTable.keySet().iterator().next());
++            assertSame(indexed, document.getXrefKey(4, 0));
++            assertEquals(200L, xrefTable.get(new COSObjectKey(4, 0)));
++
++            xrefTable.remove(new COSObjectKey(4, 0));
++            assertNull(document.getXrefKey(4, 0));
++
++            COSObjectKey reinserted = new COSObjectKey(4, 0, 9);
++            xrefTable.put(reinserted, 300L);
++            Map<COSObjectKey, Long> added = new HashMap<>();
++            added.put(new COSObjectKey(4, 0, 2), 400L);
++            added.put(new COSObjectKey(5, 0, 0), 500L);
++            document.addXRefTable(added);
++            assertSame(reinserted, document.getXrefKey(4, 0),
++                    "present key keeps its instance on putAll");
++            assertEquals(400L, xrefTable.get(reinserted));
++            assertEquals(0, document.getXrefKey(5, 0).getStreamIndex(),
++                    "new key indexed on putAll");
++
++            COSObjectKey viaPutIfAbsent = new COSObjectKey(6, 0, 3);
++            xrefTable.putIfAbsent(viaPutIfAbsent, 600L);
++            xrefTable.putIfAbsent(new COSObjectKey(6, 0, 8), 601L);
++            assertSame(viaPutIfAbsent, document.getXrefKey(6, 0));
++            COSObjectKey viaCompute = new COSObjectKey(7, 0, 4);
++            xrefTable.computeIfAbsent(viaCompute, k -> 700L);
++            assertSame(viaCompute, document.getXrefKey(7, 0));
++            xrefTable.compute(new COSObjectKey(8, 0, 5), (k, v) -> null);
++            assertNull(document.getXrefKey(8, 0), "compute that stores nothing indexes nothing");
++            COSObjectKey viaCompute2 = new COSObjectKey(8, 0, 6);
++            xrefTable.compute(viaCompute2, (k, v) -> 800L);
++            assertSame(viaCompute2, document.getXrefKey(8, 0));
++            COSObjectKey viaMerge = new COSObjectKey(9, 0, 7);
++            xrefTable.merge(viaMerge, 900L, Long::sum);
++            assertSame(viaMerge, document.getXrefKey(9, 0));
++            xrefTable.merge(new COSObjectKey(7, 0), 1L, (a, b) -> null);
++            assertNull(document.getXrefKey(7, 0), "key removed by merge");
++
++            xrefTable.clear();
++            assertNull(document.getXrefKey(4, 0), "key 4 after clear");
++            assertNull(document.getXrefKey(5, 0), "key 5 after clear");
++        }
++    }
++
++    @Test
++    void testViewRemovalsDropStaleKeys() throws IOException
++    {
++        try (COSDocument document = new COSDocument())
++        {
++            Map<COSObjectKey, Long> xrefTable = document.getXrefTable();
++            for (int i = 1; i <= 6; i++)
++            {
++                xrefTable.put(new COSObjectKey(i, 0, i), i * 100L);
++            }
++            xrefTable.keySet().remove(new COSObjectKey(1, 0));
++            xrefTable.values().remove(200L);
++            xrefTable.entrySet().removeIf(e -> e.getKey().getNumber() == 3);
++            Iterator<Entry<COSObjectKey, Long>> it = xrefTable.entrySet().iterator();
++            while (it.hasNext())
++            {
++                if (it.next().getKey().getNumber() == 4)
++                {
++                    it.remove();
++                }
++            }
++            assertEquals(2, xrefTable.size());
++            for (int i = 1; i <= 4; i++)
++            {
++                assertNull(document.getXrefKey(i, 0), "entry " + i);
++            }
++            assertEquals(5, document.getXrefKey(5, 0).getStreamIndex());
++            assertEquals(6, document.getXrefKey(6, 0).getStreamIndex());
++
++            // a key inserted again after a view removal replaces the stale index entry
++            COSObjectKey reinserted = new COSObjectKey(1, 0, 7);
++            xrefTable.put(reinserted, 101L);
++            assertSame(reinserted, document.getXrefKey(1, 0));
++            COSObjectKey computed = new COSObjectKey(2, 0, 8);
++            xrefTable.computeIfAbsent(computed, k -> 201L);
++            assertSame(computed, document.getXrefKey(2, 0));
++
++            xrefTable.entrySet().clear();
++            assertEquals(0, xrefTable.size());
++            assertNull(document.getXrefKey(5, 0));
++        }
++    }
++
++    @Test
++    void testXrefTableCloneHasOwnIndex() throws ReflectiveOperationException, IOException
+     {
+-        COSDocument document = new COSDocument();
+-        Map<COSObjectKey, Long> xrefTable = new HashMap<>();
+-        xrefTable.put(null, 10L);
+-        document.addXRefTable(xrefTable);
+-        assertEquals(Collections.emptyList(), document.getObjectsByType(COSName.T));
+-        assertNull(document.getLinearizedDictionary());
++        try (COSDocument document = new COSDocument())
++        {
++            Map<COSObjectKey, Long> xrefTable = document.getXrefTable();
++            COSObjectKey key = new COSObjectKey(4, 0, 2);
++            xrefTable.put(key, 100L);
++            @SuppressWarnings("unchecked")
++            Map<COSObjectKey, Long> copy = (Map<COSObjectKey, Long>) xrefTable.getClass()
++                    .getMethod("clone").invoke(xrefTable);
++            assertEquals(xrefTable, copy);
++            // the clone has its own index: mutating it must not affect the original
++            copy.remove(key);
++            assertSame(key, document.getXrefKey(4, 0));
++            copy.put(new COSObjectKey(4, 0, 7), 101L);
++            assertSame(key, document.getXrefKey(4, 0));
++        }
+     }
+ }

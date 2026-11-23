@@ -66,7 +66,8 @@ final class PdfCollectionSupport {
         .append(".profile { color: #555; margin-bottom: 24px; }")
         .append("table { width: 100%; border-collapse: collapse; margin: 20px 0; }")
         .append("th, td { text-align: left; padding: 10px; border-bottom: 1px solid #ccc; }")
-        .append("th { width: 65%; } .warning { border: 2px solid #8b6500; padding: 10px; margin: 16px 0; }")
+        .append("th { width: 65%; }")
+        .append(MailHtmlRenderer.WARNING_STYLES)
         .append("</style></head><body><h1>Email Collection</h1><p class=\"profile\">EA-PDF 1")
         .append(Common.escapeHtml(profile)).append(" — ")
         .append("ci".equals(profile) ? "Isolated collection" : "Email archive")
@@ -83,10 +84,12 @@ final class PdfCollectionSupport {
     String warning = Common.nz(EapdfConfig.get().validationWarning);
     if (!warning.isBlank()) {
       System.err.println("warning: VALIDATION WARNING BANNER: " + warning);
-      html.append("<div class=\"warning\"><p><strong>WARNING — Validation requires review</strong></p><p>")
+      html.append("<div class=\"conversion-warning validation-warning\">")
+          .append("<p class=\"warning-title\"><strong>WARNING — Validation requires review</strong></p><p>")
           .append(Common.escapeHtml(warning)).append("</p></div>");
     }
-    if (incomplete > 0) html.append("<div class=\"warning\"><p><strong>INCOMPLETE SOURCE — conversion warnings</strong></p><p>")
+    if (incomplete > 0) html.append("<div class=\"conversion-warning\">")
+        .append("<p class=\"warning-title\"><strong>INCOMPLETE SOURCE — conversion warnings</strong></p><p>")
         .append(incomplete).append(" message(s) have source-data warnings. Review the warnings in the embedded messages.</p></div>");
     html.append("</body></html>");
     return renderCollectionCover(html.toString(), fontPath, debug, rendered);
@@ -217,10 +220,9 @@ final class PdfCollectionSupport {
   private record PendingCollectionMember(PdfCollectionSupport.CollectionFolder folder,
       Future<PdfCollectionSupport.CollectionMember> future, boolean alias) {}
 
-  static List<PdfCollectionSupport.CollectionMember> buildFolderCollectionMembers(List<PdfCollectionSupport.FolderSection> sections, List<PdfCollectionSupport.CollectionFolder> folders, String fontPath, String iccPath, boolean debug, Path debugDir, String collectionProfile, PayloadStore memberStore) throws Exception {
+  static List<PdfCollectionSupport.CollectionMember> buildFolderCollectionMembers(List<PdfCollectionSupport.FolderSection> sections, List<PdfCollectionSupport.CollectionFolder> folders, String fontPath, String iccPath, boolean debug, Path debugDir, String collectionProfile, PayloadStore memberStore, int parallelism) throws Exception {
     List<PdfCollectionSupport.CollectionMember> members = new ArrayList<>();
     Map<EmailRecord, Future<PdfCollectionSupport.CollectionMember>> rendered = new IdentityHashMap<>();
-    int parallelism = PdfMailWriter.renderParallelism(Integer.MAX_VALUE);
     var pending = new java.util.ArrayDeque<PendingCollectionMember>();
     ExecutorService pool = Common.newWorkers(parallelism);
     int globalIndex = 0;
@@ -479,7 +481,7 @@ final class PdfCollectionSupport {
   static List<PdfCollectionSupport.CollectionMember> buildMessageCollectionMembers(List<EmailRecord> records, String fontPath, String iccPath, boolean debug, Path debugDir, String collectionProfile) throws Exception {
     List<PdfCollectionSupport.CollectionMember> members = new ArrayList<>();
     List<EmailRecord> ordered = sortRecordsChronologically(records);
-    int parallelism = PdfMailWriter.renderParallelism(ordered.size());
+    int parallelism = PdfMailWriter.archiveRenderWorkers(ordered);
     if (parallelism <= 1) {
       int index = 0;
       for (EmailRecord record : ordered) {

@@ -2,6 +2,7 @@ package eapdf;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -160,11 +161,10 @@ public class EmailToPDFA {
         && !"c".equals(archiveProfile) && !"ci".equals(archiveProfile)) {
       throw Common.fail("unsupported --archive-profile (expected m, mi, c, or ci): " + archiveProfile);
     }
-    if (archiveOutput != null && !archiveOutput.isBlank()) {
-      Path destination = Path.of(archiveOutput);
-      for (String input : inputs) OutputTransaction.protectInput(destination, Path.of(input));
-      OutputTransaction.protectConfiguredInputs(destination, fontPath, iccPath);
-      OutputTransaction.allowReplacement(destination);
+    Path requestedOutput = archiveOutput == null || archiveOutput.isBlank() ? null : Path.of(archiveOutput);
+    if (requestedOutput != null) {
+      OutputTransaction.protectArchiveInputs(requestedOutput, inputs, fontPath, iccPath);
+      OutputTransaction.allowReplacement(requestedOutput);
     }
     List<EmailRecord> all = new ArrayList<>();
     for (List<EmailRecord> recs : readManyForArchive(inputs, globalId, archiveEmails, debug)) {
@@ -189,8 +189,8 @@ public class EmailToPDFA {
     for (EmailRecord r : all) r.embedSourceMessage = embedSource;
 
     Path out;
-    if (archiveOutput != null && !archiveOutput.isBlank()) {
-      out = Paths.get(archiveOutput);
+    if (requestedOutput != null) {
+      out = requestedOutput;
     } else {
       String inputStem = Common.safeFileStem(Paths.get(inputs.get(0)).getFileName().toString().replaceFirst("\\.[^.]+$", ""));
       if (inputs.size() > 1) inputStem = inputStem + "_archive";
@@ -215,7 +215,7 @@ public class EmailToPDFA {
       return out;
     }
 
-    int workers = PdfMailWriter.renderParallelism(inputs.size());
+    int workers = localMessageWorkers(inputs, Integer.MAX_VALUE);
     ExecutorService pool = Common.newWorkers(workers);
     try {
       Deque<Future<List<EmailRecord>>> futures = new ArrayDeque<>();
@@ -240,10 +240,33 @@ public class EmailToPDFA {
     }
   }
 
+  static int localMessageWorkers(List<String> inputs, int jobs) {
+    int slots = PdfMailWriter.renderSlots(Math.min(inputs.size(), jobs));
+    if (slots <= 1) return 1;
+    long largestSourceBytes = 0;
+    long messageLimit = ProcessingLimits.messageBytes();
+    for (String input : inputs) {
+      ProcessingLimits.checkCancelled();
+      if (!input.toLowerCase(Locale.ROOT).endsWith(".eml"))
+        return PdfMailWriter.renderParallelism(slots);
+      try {
+        var attributes = Files.readAttributes(Path.of(input), BasicFileAttributes.class);
+        if (!attributes.isRegularFile() || attributes.size() > messageLimit)
+          return PdfMailWriter.renderParallelism(slots);
+        largestSourceBytes = Math.max(largestSourceBytes, attributes.size());
+      } catch (IOException unavailable) {
+        // The reader will report any input failure in its original position.
+        return PdfMailWriter.renderParallelism(slots);
+      }
+    }
+    return PdfMailWriter.sizedMessageWorkers(slots, largestSourceBytes);
+  }
+
   static void runParallel(List<String> inputs, String outDir, String fontPath, String iccPath, String globalId,
                           List<String> archiveEmails, boolean debug, String debugDir, int jobs, boolean multiInput,
                           boolean omitSource) throws Exception {
-    int workers = Math.max(1, Math.min(jobs, PdfMailWriter.renderParallelism(inputs.size())));
+    int workers = localMessageWorkers(inputs, jobs);
+    System.out.println("Local conversion workers: " + workers + " (requested " + jobs + ").");
     ExecutorService pool = Common.newWorkers(workers);
     AtomicInteger seq = new AtomicInteger();
     Deque<Future<?>> futures = new ArrayDeque<>();

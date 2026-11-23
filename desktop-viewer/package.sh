@@ -27,10 +27,13 @@ cleanup() {
 trap cleanup EXIT
 
 mvn -B -f "$pom" "$@" "-Drevision=$version" "-Deapdf.build.directory=$build_dir" package >&2
+standalone="$build_dir/eapdf-desktop-viewer-$version-standalone.jar"
+python3 -B "$viewer_dir/../scripts/build_patched_fontbox.py" --verify-shaded "$standalone" >&2
+python3 -B "$viewer_dir/../scripts/build_patched_pdfbox.py" --verify-shaded "$standalone" >&2
 jar_name="eapdf-desktop-viewer-$edition-$version.jar"
 mkdir -p -- "$dist_dir"
 staged_jar=$(mktemp "$dist_dir/.$jar_name.XXXXXX")
-install -m 0644 -- "$build_dir/eapdf-desktop-viewer-$version-standalone.jar" "$staged_jar"
+install -m 0644 -- "$standalone" "$staged_jar"
 
 exec 9<"$dist_dir"
 flock 9

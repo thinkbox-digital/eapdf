@@ -10,7 +10,7 @@ Build with Java 21 and `mvn package`. For verification in a temporary build dire
 
 ## Conversion and validation
 
-- Enable `accessibility.addPdfUaFeatures: true` for regeneration. Set `premis.enabled: false` for conversions unless PREMIS is requested. Apply both settings to custom configurations as appropriate.
+- Leave optional conversion features off in GUI runs, CLI runs, custom configurations, and regeneration unless the user explicitly requests each feature. This includes Accessibility (PDF/UA), embedded metadata and full-text search indexes, digital signing, C2PA provenance, and PREMIS where supported. Use regeneration helpers that respect these choices.
 - Use bounded parallelism where supported and validate with the standalone Java validator. Use the Python validator for its regression tests and requested comparisons or diagnostics.
 - Use the real inputs under `in/` for conversion regressions. Preserve originals, record source hashes, retain logs and Java validation reports, and identify rejected or incomplete files. Use synthetic fixtures to isolate additional edge cases.
 - Append the export profile to PDF filenames. Store published examples under `examples/<input-type>/` with a lower-case type prefix, such as `eml_sample_1s.pdf`.

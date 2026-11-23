@@ -16,6 +16,11 @@ Current source builds use OpenHTMLtoPDF 1.1.114-eapdf.2 and the FontBox
 hashes are in [the backport lock](../third_party/fontbox/lock.json).
 **No GitHub token is needed.**
 
+The Desktop Viewer uses a PDFBox 3.0.8 backport of
+[PDFBOX-6268](https://issues.apache.org/jira/browse/PDFBOX-6268) to reuse the
+document's cross-reference index when reading compressed PDF objects. The
+[PDFBox backport lock](../third_party/pdfbox/lock.json) pins the source and patch.
+
 Other projects can use `https://maven.pkg.github.com/thinkbox-digital/eapdf`.
 GitHub requires a token with `read:packages`, even for public Maven packages.
 Follow [GitHub's setup guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry).

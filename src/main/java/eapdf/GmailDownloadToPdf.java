@@ -45,12 +45,12 @@ public class GmailDownloadToPdf {
       boolean debug = Boolean.TRUE.equals(opt.get("debug"));
       String archiveProfile = (String)opt.get("archive-profile");
       String archiveOutput = (String)opt.get("archive-output");
-      if (archiveProfile != null && archiveOutput != null && !archiveOutput.isBlank()) {
-        Path destination = Path.of(archiveOutput);
-        OutputTransaction.protectInput(destination, Path.of(credentialsPath));
-        OutputTransaction.protectInput(destination, Path.of(tokenDir, "StoredCredential"));
-        OutputTransaction.protectConfiguredInputs(destination, fontPath, iccPath);
-        OutputTransaction.allowReplacement(destination);
+      Path requestedOutput = archiveOutput == null || archiveOutput.isBlank() ? null : Path.of(archiveOutput);
+      if (requestedOutput != null) {
+        OutputTransaction.protectInput(requestedOutput, Path.of(credentialsPath));
+        OutputTransaction.protectInput(requestedOutput, Path.of(tokenDir, "StoredCredential"));
+        OutputTransaction.protectConfiguredInputs(requestedOutput, fontPath, iccPath);
+        if (archiveProfile != null) OutputTransaction.allowReplacement(requestedOutput);
       }
       boolean unreadOnly = Boolean.TRUE.equals(opt.get("unread-only"));
       int limit = (Integer)opt.getOrDefault("limit", 0);
@@ -59,7 +59,7 @@ public class GmailDownloadToPdf {
       if (debug) debugDir = ConversionProgress.startDebugDirectory(Paths.get(debugDir)).toString();
 
       System.out.println("connecting: Gmail API");
-      Gmail service = buildService(credentialsPath, tokenDir, user);
+      Gmail service = buildService(credentialsPath, tokenDir, user, requestedOutput);
 
       String query = buildMessageQuery(unreadOnly);
       Map<String,String> labelNames = loadLabelNames(service, user);
@@ -96,8 +96,8 @@ public class GmailDownloadToPdf {
         for (EmailRecord r : records) r.embedSourceMessage = embedSource;
 
         Path out;
-        if (archiveOutput != null && !archiveOutput.isBlank()) {
-          out = Paths.get(archiveOutput);
+        if (requestedOutput != null) {
+          out = requestedOutput;
         } else {
           out = Common.availableArchivePath(Paths.get(outPdfDir).resolve("gmail_" + Common.safeFileStem(defaultArchiveStem(folderName)) + "_1" + archiveProfile + ".pdf"));
         }
@@ -273,9 +273,9 @@ public class GmailDownloadToPdf {
     return !(exception instanceof InterruptedIOException);
   }
 
-  static Gmail buildService(String credentialsPath, String tokenDir, String user) throws Exception {
+  static Gmail buildService(String credentialsPath, String tokenDir, String user, Path archive) throws Exception {
     NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-    Credential credential = authorize(httpTransport, credentialsPath, tokenDir, user);
+    Credential credential = authorize(httpTransport, credentialsPath, tokenDir, user, archive);
     Gmail service = new Gmail.Builder(httpTransport, JSON_FACTORY, credential).setApplicationName("GmailDownloadToPdf").build();
     if (!"me".equalsIgnoreCase(user)) {
       try { service.users().getProfile(user).execute(); }
@@ -287,7 +287,8 @@ public class GmailDownloadToPdf {
     return service;
   }
 
-  static Credential authorize(NetHttpTransport httpTransport, String credentialsPath, String tokenDir, String user) throws Exception {
+  static Credential authorize(NetHttpTransport httpTransport, String credentialsPath, String tokenDir, String user,
+                              Path archive) throws Exception {
     try (InputStream in = Files.newInputStream(Paths.get(credentialsPath))) {
       GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in, StandardCharsets.UTF_8));
       var builder = new GoogleAuthorizationCodeFlow.Builder(httpTransport, JSON_FACTORY, clientSecrets, SCOPES)
@@ -295,9 +296,16 @@ public class GmailDownloadToPdf {
       String configured = System.getenv(GmailTokenStore.PASSWORD_ENV);
       if (configured == null || configured.isBlank()) builder.setDataStoreFactory(new MemoryDataStoreFactory());
       else {
+        String client = clientSecrets.getDetails().getClientId();
+        Path tokenRoot = Path.of(tokenDir);
+        if (archive != null) {
+          Path tokenStore = GmailTokenStore.directory(tokenRoot, client, user);
+          OutputTransaction.protectInput(archive, tokenStore.resolve("tokens.bin"));
+          OutputTransaction.protectInput(archive, tokenStore.resolve("tokens.lock"));
+        }
         char[] password = configured.toCharArray();
         try {
-          builder.setCredentialDataStore(GmailTokenStore.open(Path.of(tokenDir), clientSecrets.getDetails().getClientId(), user, password));
+          builder.setCredentialDataStore(GmailTokenStore.open(tokenRoot, client, user, password));
         } finally { Arrays.fill(password, '\0'); }
       }
       var receiver = new GmailOAuthReceiver();

@@ -103,7 +103,7 @@ class SupervisedConversionTests {
     Process process = sleeper();
     try {
       var error = Assertions.assertThrows(Common.UserFacingException.class,
-          () -> ConversionSupervisor.monitor(process, directory, Duration.ofSeconds(10), 1));
+          () -> ConversionSupervisor.monitor(process, directory, Duration.ZERO, 1));
       Assertions.assertTrue(error.getMessage().contains("temporary-storage"));
       Assertions.assertFalse(process.isAlive());
       Assertions.assertEquals("original", Files.readString(protectedFile));
@@ -134,6 +134,40 @@ class SupervisedConversionTests {
     Assertions.assertEquals("replacement XML", Files.readString(sidecar));
   }
 
+  @Test void completedPdfAppearsBeforeOtherFilesAndBatchSnapshot() throws Exception {
+    Path workspace = Files.createDirectory(directory.resolve("worker"));
+    Files.createDirectory(workspace.resolve("ready"));
+    Path output = Files.createDirectory(directory.resolve("out"));
+    Path first = output.resolve("first.pdf"), second = output.resolve("second.pdf");
+    Path stage = workspace.resolve("outputs"), manifest = workspace.resolve("manifest.json");
+    Path current = output.resolve(".eapdf-publication/current.json");
+    var budget = new PstJobBudget();
+    var publication = new OutputTransaction.LivePublication(workspace, budget, () -> false);
+    try (var transaction = new OutputTransaction(stage, workspace)) {
+      OutputTransaction.write(first, temporary -> Files.writeString(temporary, "new first.pdf"));
+      OutputTransaction.write(second, temporary -> Files.writeString(temporary, "new second.pdf"));
+      publication.drain(0);
+      Assertions.assertFalse(Files.exists(first));
+
+      OutputTransaction.complete(first);
+      publication.drain(0);
+      Assertions.assertEquals("new first.pdf", Files.readString(first));
+      Assertions.assertFalse(Files.exists(second));
+      Assertions.assertFalse(Files.exists(current));
+
+      Files.writeString(first, "external edit");
+      OutputTransaction.complete(second);
+      publication.drain(0);
+      transaction.finish(manifest);
+    }
+
+    Path batch = OutputTransaction.publish(manifest, stage, budget, () -> false, publication.published);
+    Assertions.assertEquals("external edit", Files.readString(first));
+    Assertions.assertEquals("new second.pdf", Files.readString(second));
+    assertBatchFiles(batch, "new", "");
+    Assertions.assertEquals(Files.readString(batch), Files.readString(current));
+  }
+
   @Test void failedSecondPublicationRollsBackEveryExistingAndNewOutput() throws Exception {
     Path first = directory.resolve("first.pdf");
     Path second = directory.resolve("second.xml");
@@ -143,13 +177,12 @@ class SupervisedConversionTests {
     Path payload = directory.resolve("payload");
     Files.writeString(payload, "replacement");
     AtomicInteger moves = new AtomicInteger();
-    String digest = Common.digestHex(payload, "SHA-256");
-    var entries = List.of(new OutputTransaction.Entry(first.toString(), payload.toString(), 11, digest, true),
-        new OutputTransaction.Entry(third.toString(), payload.toString(), 11, digest, false),
-        new OutputTransaction.Entry(second.toString(), payload.toString(), 11, digest, true));
+    var entries = List.of(new OutputTransaction.Entry(first.toString(), payload.toString(), 11, ""),
+        new OutputTransaction.Entry(third.toString(), payload.toString(), 11, ""),
+        new OutputTransaction.Entry(second.toString(), payload.toString(), 11, ""));
     Assertions.assertThrows(java.io.IOException.class, () -> OutputTransaction.publish(entries, (source, target) -> {
       if (moves.incrementAndGet() == 3) throw new java.io.IOException("simulated disk exhaustion");
-      Files.createLink(target, source);
+      Files.move(source, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     }));
     Assertions.assertEquals("first original", Files.readString(first));
     Assertions.assertEquals("second original", Files.readString(second));
@@ -165,13 +198,13 @@ class SupervisedConversionTests {
     for (String name : List.of("first.pdf", "second.pdf")) {
       Path source = Files.writeString(stage.resolve(name), version + " " + name);
       entries.add(new OutputTransaction.Entry(output.resolve(prefix + name).toString(), source.toString(),
-          Files.size(source), Common.digestHex(source, "SHA-256"), true));
+          Files.size(source), Common.digestHex(source, "SHA-256")));
     }
     return entries;
   }
 
   private static void replaceBatchFile(Path source, Path target) throws IOException {
-    Files.createLink(target, source);
+    Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
   }
 
   private static void assertBatchFiles(Path manifest, String version, String prefix) throws IOException {
@@ -245,11 +278,10 @@ class SupervisedConversionTests {
     Path latest = OutputTransaction.publish(batchEntries(output, "more", "other-"), SupervisedConversionTests::replaceBatchFile,
         directory.resolve("latest.journal"));
     Path destination = output.resolve("first.pdf");
-    Path workspace = Files.createTempDirectory(output, ".eapdf-publication-");
-    Path original = Files.writeString(workspace.resolve("original"), "original before old batch");
-    var entry = new OutputTransaction.Recovery(destination.toString(), workspace.toString(),
-        Common.digestHex(destination, "SHA-256"), Common.digestHex(original, "SHA-256"));
+    Path backup = Files.writeString(output.resolve(".eapdf-backup-recovery.tmp"), "original before old batch");
     Path recoveryJournal = directory.resolve("interrupted.journal");
+    var entry = new OutputTransaction.Recovery(destination.toString(), output.resolve(".eapdf-publish-recovery.tmp").toString(),
+        backup.toString(), OutputTransaction.fileIdentity(destination));
     // Simulate a crash after the atomic move consumed the ready pointer, before journal cleanup.
     Assertions.assertFalse(Files.exists(old.resolveSibling(".current.json.tmp")));
     OutputTransaction.writeJournal(recoveryJournal,
@@ -261,7 +293,7 @@ class SupervisedConversionTests {
     Assertions.assertEquals("old first.pdf", Files.readString(destination));
     assertBatchFiles(old, "old", "");
     assertBatchFiles(latest, "more", "other-");
-    Assertions.assertFalse(Files.exists(workspace));
+    Assertions.assertFalse(Files.exists(backup));
     Assertions.assertFalse(Files.exists(recoveryJournal));
   }
 
@@ -349,58 +381,108 @@ class SupervisedConversionTests {
     }
   }
 
-  @Test void recoveryRestoresOriginalButPreservesAnInterveningDestination() throws Exception {
+  @Test void recoveryRestoresInterruptedPublicationButKeepsCommittedPublication() throws Exception {
     Path destination = directory.resolve("output.pdf");
-    Path publication = Files.createTempDirectory(directory.toRealPath(), ".eapdf-publication-");
-    Path original = Files.writeString(publication.resolve("original"), "original PDF");
-    Path prepared = Files.writeString(publication.resolve("prepared"), "new PDF");
-    String oldDigest = Common.digestHex(original, "SHA-256");
-    String newDigest = Common.digestHex(prepared, "SHA-256");
-    var recovery = List.of(new OutputTransaction.Recovery(destination.toString(), publication.toString(), newDigest, oldDigest));
+    Path backup = directory.resolve("backup.pdf");
+    Path prepared = directory.resolve("prepared.pdf");
     Path journal = directory.resolve("publication.json");
-    Files.createLink(destination, prepared);
+    Files.writeString(destination, "new PDF");
+    var recovery = List.of(new OutputTransaction.Recovery(destination.toString(), prepared.toString(), backup.toString(),
+        OutputTransaction.fileIdentity(destination)));
+    Files.writeString(backup, "original PDF");
     OutputTransaction.writeJournal(journal, new OutputTransaction.Journal(false, recovery));
     OutputTransaction.recover(journal);
     Assertions.assertEquals("original PDF", Files.readString(destination));
     Assertions.assertFalse(Files.exists(journal));
-
-    Files.createDirectory(publication);
-    Files.writeString(original, "original PDF");
-    Files.writeString(prepared, "new PDF");
-    Files.writeString(destination, "user replacement");
+    Files.writeString(destination, "committed PDF");
+    Files.writeString(backup, "original PDF");
+    OutputTransaction.writeJournal(journal, new OutputTransaction.Journal(true, recovery));
+    OutputTransaction.recover(journal);
+    Assertions.assertEquals("committed PDF", Files.readString(destination));
+    Assertions.assertFalse(Files.exists(backup));
+    Files.writeString(prepared, "interrupted preparation");
     OutputTransaction.writeJournal(journal, new OutputTransaction.Journal(false, recovery));
-    Assertions.assertThrows(java.io.IOException.class, () -> OutputTransaction.recover(journal));
-    Assertions.assertEquals("user replacement", Files.readString(destination));
-    Assertions.assertEquals("original PDF", Files.readString(original));
-    Assertions.assertTrue(Files.exists(journal));
+    OutputTransaction.recover(journal);
+    Assertions.assertEquals("committed PDF", Files.readString(destination));
+    Assertions.assertFalse(Files.exists(prepared));
   }
 
-  @Test void explicitArchiveCannotReplaceInputOrHardLink() throws Exception {
-    Path input = Files.copy(Path.of("in/sample.eml"), directory.resolve("source.eml"));
-    Path alias = Files.createLink(directory.resolve("archive.pdf"), input);
-    String original = Common.digestHex(input, "SHA-256");
-    Path parentAlias = Files.createSymbolicLink(directory.resolve("alias"), directory.toRealPath());
-    Path relative = Path.of("").toAbsolutePath().relativize(input.toAbsolutePath());
-    for (Path output : List.of(input, alias, relative, parentAlias.resolve(input.getFileName()))) {
-      var error = Assertions.assertThrows(java.io.IOException.class, () -> ConversionSupervisor.supervise(
-          "eapdf.EmailToPDFA", new String[]{"--archive-profile", "m", "--archive-output", output.toString(),
-              "--out", directory.resolve("out").toString(), input.toString()}));
-      Assertions.assertTrue(error.getMessage().contains("would replace an input file"));
-      Assertions.assertEquals(original, Common.digestHex(input, "SHA-256"));
-    }
-    Assertions.assertFalse(Files.exists(directory.resolve("out")));
-  }
-
-  @Test void automaticPublicationNeverReplacesACompetingDestination() throws Exception {
+  @Test void stalePublicationCannotRollBackANewerOutput() throws Exception {
     Path destination = directory.resolve("output.pdf");
-    Path staged = Files.writeString(directory.resolve("staged"), "new archive");
-    String digest = Common.digestHex(staged, "SHA-256");
-    var entry = new OutputTransaction.Entry(destination.toString(), staged.toString(), Files.size(staged), digest, false);
-    Assertions.assertThrows(java.nio.file.FileAlreadyExistsException.class, () -> OutputTransaction.publish(List.of(entry), (source, target) -> {
-      Files.writeString(target, "other conversion result");
-      Files.createLink(target, source);
-    }));
-    Assertions.assertEquals("other conversion result", Files.readString(destination));
+    Path prepared = directory.resolve("prepared.pdf");
+    Path backup = directory.resolve("backup.pdf");
+    Path journal = directory.resolve("publication.json");
+    Files.writeString(destination, "previous replacement");
+    Files.writeString(backup, "previous original");
+    var recovery = new OutputTransaction.Recovery(destination.toString(), prepared.toString(), backup.toString(),
+        OutputTransaction.fileIdentity(destination));
+    OutputTransaction.writeJournal(journal, new OutputTransaction.Journal(false, List.of(recovery)));
+    Files.writeString(prepared, "new committed output");
+    Files.move(prepared, destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+    OutputTransaction.recover(journal);
+    Assertions.assertEquals("new committed output", Files.readString(destination));
+    Assertions.assertFalse(Files.exists(backup));
+  }
+
+  @Test void archiveDestinationCannotAliasSourceOrConfiguration() throws Exception {
+    Path source = Files.writeString(directory.resolve("source.eml"), "Subject: Source\r\n\r\nBody");
+    Path alias = Files.createLink(directory.resolve("alias.pdf"), source);
+    Path config = EapdfConfig.configurationPath();
+    for (Path destination : List.of(source, alias, config)) {
+      byte[] original = Files.readAllBytes(destination);
+      String[] args = {"--archive-profile", "c", "--archive-output", destination.toString(), source.toString()};
+      var error = Assertions.assertThrows(IOException.class,
+          () -> ConversionSupervisor.supervise(EmailToPDFA.class.getName(), args));
+      Assertions.assertTrue(error.getMessage().contains("would replace an input file"), error.getMessage());
+      Assertions.assertThrows(IOException.class, () -> EmailToPDFA.runArchive(List.of(source.toString()),
+          directory.toString(), destination.toString(), null, null, "", List.of(), false, directory.toString(), "c"));
+      Assertions.assertArrayEquals(original, Files.readAllBytes(destination));
+    }
+  }
+
+  @Test void recoversPublishedBeta5JournalWithOrWithoutBatchCommit() throws Exception {
+    for (boolean committed : new boolean[]{false, true}) {
+      Path output = Files.createDirectory(directory.toRealPath().resolve(committed ? "committed" : "interrupted"));
+      Path workspace = Files.createDirectory(output.resolve(".eapdf-publication-" + java.util.UUID.randomUUID()));
+      Path prepared = Files.writeString(workspace.resolve("prepared"), "new output");
+      Path original = Files.writeString(workspace.resolve("original"), "original output");
+      Path destination = Files.createLink(output.resolve("output.pdf"), prepared);
+      Path batchRoot = Files.createDirectory(output.resolve(".eapdf-publication"));
+      Path generation = Files.createDirectory(batchRoot.resolve(java.util.UUID.randomUUID().toString()));
+      Path candidate = Files.writeString(generation.resolve(".current.json.tmp"), "{}");
+      Files.writeString(generation.resolve("manifest.json"), "{}");
+      if (committed) Files.move(candidate, batchRoot.resolve("current.json"));
+
+      Path journal = output.resolve("publication.json");
+      var legacyFile = new LegacyOutputJournal.Recovery(destination.toString(), workspace.toString(),
+          Common.digestHex(prepared, "SHA-256"), Common.digestHex(original, "SHA-256"));
+      var legacyBatch = new OutputTransaction.Batch(generation.toString(), true);
+      Files.writeString(journal, new com.google.gson.Gson().toJson(
+          new LegacyOutputJournal.Journal(false, List.of(legacyFile), legacyBatch)));
+
+      OutputTransaction.recover(journal);
+
+      Assertions.assertEquals(committed ? "new output" : "original output", Files.readString(destination));
+      Assertions.assertEquals(committed, Files.exists(generation));
+      Assertions.assertEquals(committed, Files.exists(batchRoot.resolve("current.json")));
+      Assertions.assertFalse(Files.exists(workspace));
+      Assertions.assertFalse(Files.exists(journal));
+    }
+  }
+
+  @Test void generatedOutputCannotOverwriteFileAppearingDuringPublication() throws Exception {
+    Path created = directory.resolve("created.pdf");
+    Path competitor = directory.resolve("competitor.pdf");
+    Path staged = Files.writeString(directory.resolve("staged.pdf"), "new PDF");
+    var outputs = List.of(new OutputTransaction.Entry(created.toString(), staged.toString(), 7, "", false),
+        new OutputTransaction.Entry(competitor.toString(), staged.toString(), 7, "", true));
+    Assertions.assertThrows(java.nio.file.FileAlreadyExistsException.class,
+        () -> OutputTransaction.publish(outputs, (prepared, target) -> {
+          Files.move(prepared, target);
+          Files.writeString(competitor, "other writer");
+        }));
+    Assertions.assertFalse(Files.exists(created));
+    Assertions.assertEquals("other writer", Files.readString(competitor));
   }
 
   @Test void automaticallyNamedOutputCannotReplaceAConcurrentPublication() throws Exception {
@@ -422,10 +504,9 @@ class SupervisedConversionTests {
       Path destination = Path.of(args[0]);
       Path payload = Path.of(args[1]);
       System.out.println("Starting");
-      var entry = new OutputTransaction.Entry(destination.toString(), payload.toString(), Files.size(payload),
-          Common.digestHex(payload, "SHA-256"), true);
+      var entry = new OutputTransaction.Entry(destination.toString(), payload.toString(), Files.size(payload), "");
       OutputTransaction.publish(List.of(entry), (source, target) -> {
-        Files.createLink(target, source);
+        Files.move(source, target, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
         System.out.println("Published");
         if (Boolean.parseBoolean(args[3])) new java.util.concurrent.Semaphore(0).acquireUninterruptibly();
       }, Path.of(args[2]));
@@ -455,7 +536,7 @@ class SupervisedConversionTests {
         Assertions.assertTrue(children.get(1).waitFor(30, TimeUnit.SECONDS),
             "Second publisher did not complete after the lock holder exited");
         Assertions.assertEquals(0, children.get(1).exitValue());
-        Assertions.assertThrows(IOException.class, () -> OutputTransaction.recover(directory.resolve("first.journal")));
+        OutputTransaction.recover(directory.resolve("first.journal"));
         Assertions.assertEquals("second", Files.readString(destination));
       } finally {
         for (Process child : children) if (child.isAlive()) child.destroyForcibly().waitFor(10, TimeUnit.SECONDS);
@@ -467,13 +548,9 @@ class SupervisedConversionTests {
     Path abandoned = Files.createDirectory(directory.resolve("eapdf-worker-abandoned"));
     Path active = Files.createDirectory(directory.resolve("eapdf-worker-active"));
     var process = ProcessHandle.current();
-    ConversionSupervisor.writeOwner(abandoned, new ConversionSupervisor.Owner(process.pid(), "2000-01-01T00:00:00Z", 0, "", abandoned.getFileName().toString()));
-    ConversionSupervisor.writeOwner(active, new ConversionSupervisor.Owner(process.pid(), process.info().startInstant().orElseThrow().toString(), 0, "", active.getFileName().toString()));
-    Path unknown = Files.createDirectory(directory.resolve("eapdf-worker-unknown"));
-    Path notes = Files.writeString(unknown.resolve("operator-notes.txt"), "preserve");
-    Files.writeString(unknown.resolve("owner.json"), "{}");
+    ConversionSupervisor.writeOwner(abandoned, new ConversionSupervisor.Owner(process.pid(), process.info().startInstant().orElseThrow().minusSeconds(1).toString(), 0, ""));
+    ConversionSupervisor.writeOwner(active, new ConversionSupervisor.Owner(process.pid(), process.info().startInstant().orElseThrow().toString(), 0, ""));
     ConversionSupervisor.cleanAbandoned(directory);
-    Assertions.assertEquals("preserve", Files.readString(notes));
     Assertions.assertFalse(Files.exists(abandoned));
     Assertions.assertTrue(Files.exists(active));
   }

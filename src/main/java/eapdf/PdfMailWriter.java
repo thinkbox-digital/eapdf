@@ -365,14 +365,14 @@ static void configureRendererLogging() {
 
 
 static void writeEaPdfA3(Path out, EmailRecord r, String fontPath, String iccPath, boolean debug, Path debugDir, int idx) throws Exception {
-  try (Common.PerFileLogCapture ignored = Common.beginPerFileLog(out)) {
+  Common.withPerFileLog(out, () -> {
   ConversionProgress.stage("rendering");
   buildSingleMessagePdf(out, r, fontPath, iccPath, debug, debugDir, idx, null, out, true);
   ConversionProgress.completed();
   Common.recordWarnings(r);
 
   if (debug) Common.dbg(r, "wrote pdf=" + out);
-  }
+  });
 }
 
 static SingleMessageBuildResult buildSingleMessagePdf(Path logicalOut, EmailRecord r, String fontPath, String iccPath, boolean debug, Path debugDir, int idx) throws Exception {
@@ -487,16 +487,48 @@ private static RenderedMessagePart buildArchiveMessagePdf(EmailRecord r, String 
 
 static int renderParallelism(int workItems) {
   if (workItems <= 1) return 1;
-  int cpu = Math.max(1, Runtime.getRuntime().availableProcessors());
   Common.JobReport report = Common.ACTIVE_JOB.get();
   long perWorker = report != null && report.largestSourceMessageBytes > 0
       ? Math.max(128L * 1024 * 1024, report.largestSourceMessageBytes * 16)
       : ProcessingLimits.messageBytes() * 16;
-  int memoryWorkers = (int)Math.max(1, Math.min(Integer.MAX_VALUE, Runtime.getRuntime().maxMemory() / perWorker));
-  int workers = Math.max(1, Math.min(memoryWorkers, Math.min(workItems, Math.min(cpu, report == null ? 4 : report.workerLimit))));
+  int workers = renderParallelism(workItems, Runtime.getRuntime().maxMemory(), perWorker);
   if (report != null && report.largestSourceMessageBytes > 0)
     System.out.println("Gmail archive rendering workers: " + workers);
   return workers;
+}
+
+static int renderSlots(int workItems) {
+  int cpu = Runtime.getRuntime().availableProcessors();
+  Common.JobReport report = Common.ACTIVE_JOB.get();
+  return Math.min(workItems, Math.min(cpu, report == null ? 4 : report.workerLimit));
+}
+
+static int renderParallelism(int workItems, long heapBudget, long perWorker) {
+  return (int)Math.max(1, Math.min(renderSlots(workItems), heapBudget / perWorker));
+}
+
+static int sizedMessageWorkers(int workItems, long largestSourceBytes) {
+  // Reserve half the heap for shared job state and transient rendering work.
+  long perWorker = Math.max(256 * ConversionMemory.MIB, largestSourceBytes * 16);
+  return renderParallelism(workItems, Runtime.getRuntime().maxMemory() / 2, perWorker);
+}
+
+static int archiveRenderWorkers(List<EmailRecord> records) {
+  int slots = renderSlots(records.size());
+  if (slots <= 1) return 1;
+  Common.JobReport report = Common.ACTIVE_JOB.get();
+  if (report != null && report.largestSourceMessageBytes > 0) return renderParallelism(slots);
+
+  long largestMessageBytes = 0;
+  for (EmailRecord record : records) {
+    ProcessingLimits.checkCancelled();
+    if (!record.payloadStaged) return renderParallelism(slots);
+    long bytes = (long)record.textDataLength + record.htmlDataLength + record.rtfDataLength;
+    for (AssociatedFile file : record.associatedFiles) bytes += file.size();
+    for (byte[] asset : record.renderAssets.values()) bytes += asset.length;
+    largestMessageBytes = Math.max(largestMessageBytes, bytes);
+  }
+  return sizedMessageWorkers(slots, largestMessageBytes);
 }
 
 interface RenderedPartConsumer {
@@ -514,7 +546,7 @@ private static void forEachArchiveMessagePart(List<EmailRecord> records, String 
   for (ArchiveEmbeddedFilePlan plan : buildArchiveEmbeddedFilePlans(source))
     if ("Source".equals(plan.relationship)) sourceNames.putIfAbsent(plan.record, Common.portablePdfFilename(plan.filename));
   ConversionProgress.stage("rendering");
-  int parallelism = renderParallelism(source.size());
+  int parallelism = archiveRenderWorkers(source);
   if (parallelism <= 1) {
     int idx = 0;
     for (EmailRecord record : source) {
@@ -559,7 +591,7 @@ private static void consumeArchivePart(RenderedPartConsumer consumer, RenderedMe
 }
 
 static void writeEaPdfArchive(Path out, List<EmailRecord> records, String fontPath, String iccPath, boolean debug, Path debugDir, String archiveProfile) throws Exception {
-  try (Common.PerFileLogCapture ignored = Common.beginPerFileLog(out)) {
+  Common.withPerFileLog(out, () -> {
   if (records == null || records.size() < 2) throw Common.fail("PDF/mail-1m and PDF/mail-1mi require at least two emails; use a single-message profile for one email.");
   ProcessingLimits.checkCount(records.size());
   Set<String> identifiers = new HashSet<>();
@@ -575,7 +607,7 @@ static void writeEaPdfArchive(Path out, List<EmailRecord> records, String fontPa
   Common.writeOuterPdfAtomically(out, temporary -> saveArchiveDocument(
       temporary, out, records, fontPath, iccPath, debug, debugDir, archiveProfile), expected);
   for (EmailRecord record : records) Common.recordWarnings(record);
-  }
+  });
 }
 
 
@@ -661,7 +693,8 @@ private static AppendedPages appendClonedPagesWithLast(PDDocument target, PDDocu
 }
 
 static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fontPath, String iccPath, boolean debug, Path debugDir, String collectionProfile) throws Exception {
-  try (Common.PerFileLogCapture ignored = Common.beginPerFileLog(out); PayloadStore memberStore = new PayloadStore()) {
+  Common.withPerFileLog(out, () -> {
+  try (PayloadStore memberStore = new PayloadStore()) {
   if (records == null || records.isEmpty()) throw new IllegalArgumentException("records must not be empty");
   ProcessingLimits.checkCount(records.size());
   PreservationInventory expected = PreservationInventory.capture(records, collectionProfile);
@@ -669,7 +702,7 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
   if (sections.isEmpty()) throw new IllegalArgumentException("collection requires at least one folder section");
   List<CollectionFolder> folders = PdfCollectionSupport.buildCollectionFolders(sections);
   ConversionProgress.stage("rendering");
-  List<CollectionMember> members = PdfCollectionSupport.buildFolderCollectionMembers(sections, folders, fontPath, iccPath, debug, debugDir, collectionProfile, memberStore);
+  List<CollectionMember> members = PdfCollectionSupport.buildFolderCollectionMembers(sections, folders, fontPath, iccPath, debug, debugDir, collectionProfile, memberStore, archiveRenderWorkers(records));
   ConversionProgress.stage("assembling");
   if (members.isEmpty()) throw new IllegalArgumentException("collection requires at least one embedded EA-PDF member");
   try (PayloadStore cover = new PayloadStore(); PDDocument archive = PdfCollectionSupport.buildCollectionStartPage(records,
@@ -703,6 +736,7 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
   }
   for (EmailRecord record : records) Common.recordWarnings(record);
   }
+  });
 }
 
 static String ROOT_URI() {

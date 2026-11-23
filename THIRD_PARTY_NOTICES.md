@@ -164,7 +164,9 @@ The application bundles the unmodified `DroidSansFallbackFull.ttf` font for Chin
 
 The application bundles the unmodified `NanumGothic-Regular.ttf` font for Korean glyph coverage. Copyright (c) 2010, NHN Corporation. Licensed under the SIL Open Font License 1.1. The [copyright and license](third_party_licenses/NanumGothic-OFL.txt) and [pinned source and SHA-256](third_party_licenses/NanumGothic-provenance.json) are packaged with the font.
 
-### Bundled DejaVu Sans Mono
+### Bundled DejaVu Sans and DejaVu Sans Mono
+
+`src/main/resources/assets/DejaVuSans-Bold.ttf` is the DejaVu Sans 2.37 bold face used for PDF headings and other bold text. It is covered by the same Bitstream Vera license and DejaVu notices.
 
 `src/main/resources/assets/DejaVuSansMono.ttf` is DejaVu Sans Mono 2.37. It is used for plain-text email and code blocks. Its Bitstream Vera license and DejaVu notices are included in `third_party_licenses/DejaVu-LICENSE.txt` and packaged in both JARs.
 

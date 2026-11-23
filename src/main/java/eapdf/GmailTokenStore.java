@@ -38,9 +38,14 @@ final class GmailTokenStore extends AbstractDataStore<StoredCredential> {
   private final String scope;
   private final char[] password;
 
-  static DataStore<StoredCredential> open(Path root, String client, String account, char[] password) throws Exception {
+  static Path directory(Path root, String client, String account) throws Exception {
     String scope = Common.sha256Hex((client + "\n" + account.strip().toLowerCase(Locale.ROOT)).getBytes(StandardCharsets.UTF_8));
-    Path directory = root.resolve("encrypted").resolve(scope);
+    return root.resolve("encrypted").resolve(scope);
+  }
+
+  static DataStore<StoredCredential> open(Path root, String client, String account, char[] password) throws Exception {
+    Path directory = directory(root, client, account);
+    String scope = directory.getFileName().toString();
     Files.createDirectories(directory);
     if (!Files.isDirectory(directory, LinkOption.NOFOLLOW_LINKS)) throw new IOException("Gmail token storage is not a private directory.");
     Common.makeOwnerOnly(directory);

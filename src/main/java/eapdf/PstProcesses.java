@@ -34,15 +34,15 @@ final class PstProcesses {
         Path temporary = Files.createDirectory(directory.resolve("temporary"));
         var request = new MboxProcesses.Request(owner.pid(), owner.info().startInstant().orElseThrow().toString(), input,
             output, font, icc, debug, debugDirectory, omitSource, List.of(), true, offset, multiInput);
-        Process process = MboxProcesses.startWorker(directory, temporary, heap, request);
+        Process process = MboxProcesses.startWorker(directory, temporary, heap, request, transaction.incremental());
         workers.add(new MboxProcesses.Worker(directory, process));
         System.out.println("PST render worker: " + process.pid());
       }
       PstReader.forEach(input, globalId, archiveEmails, debug, record -> {
-        reap(workers, pending, job);
+        reap(workers, pending, job, transaction);
         while (pending.size() == workers.size()) {
           TimeUnit.MILLISECONDS.sleep(10);
-          reap(workers, pending, job);
+          reap(workers, pending, job, transaction);
         }
         var worker = workers.stream().filter(w -> !pending.containsKey(w)).findFirst().orElseThrow();
         int index = ++submitted[0];
@@ -57,7 +57,7 @@ final class PstProcesses {
       });
       ConversionProgress.inputRead();
       while (!pending.isEmpty()) {
-        reap(workers, pending, job);
+        reap(workers, pending, job, transaction);
         if (!pending.isEmpty()) TimeUnit.MILLISECONDS.sleep(10);
       }
       if (submitted[0] == 0) throw Common.fail("no messages found in input: " + input);
@@ -83,16 +83,17 @@ final class PstProcesses {
 
   static void requireSuccess(MboxProcesses.Worker worker) {
     if (worker.process().exitValue() != 0)
-      throw Common.fail("PST render worker " + worker.process().pid() + " failed (exit " + worker.process().exitValue() + "); no outputs published");
+      throw Common.fail("PST render worker " + worker.process().pid() + " failed (exit " + worker.process().exitValue() + ")");
   }
 
   static void reap(List<MboxProcesses.Worker> workers, Map<MboxProcesses.Worker, Pending> pending,
-                   Common.JobReport job) throws Exception {
+                   Common.JobReport job, OutputTransaction transaction) throws Exception {
     ProcessingLimits.checkCancelled();
     for (var worker : workers) {
+      transaction.adoptReady(worker.directory());
       if (!worker.process().isAlive()) {
         requireSuccess(worker);
-        throw Common.fail("PST render worker stopped before input completion; no outputs published");
+        throw Common.fail("PST render worker stopped before input completion");
       }
       Pending task = pending.get(worker);
       if (task == null) continue;
@@ -107,7 +108,7 @@ final class PstProcesses {
         ConversionProgress.completed();
       } else if (System.nanoTime() - task.started() > TimeUnit.SECONDS.toNanos(
           ProcessingLimits.setting("eapdf.workerTimeoutSeconds", "EAPDF_WORKER_TIMEOUT_SECONDS", 300))) {
-        throw Common.fail("PST render worker exceeded the message processing time limit; no outputs published");
+        throw Common.fail("PST render worker exceeded the message processing time limit");
       }
     }
   }

@@ -5,7 +5,10 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.ContentType;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.internet.MimePart;
 import jakarta.mail.internet.MimeUtility;
+import jakarta.mail.internet.ParseException;
+import org.eclipse.angus.mail.util.DecodingException;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -46,12 +49,13 @@ class EmlReader {
   }
 
   static EmailRecord readEml(String path, String globalId, List<String> archiveEmails, boolean debug) throws Exception {
-    ProcessingLimits.checkMessage(Files.size(Paths.get(path)), path);
+    Path source = Path.of(path);
+    ProcessingLimits.checkMessage(Files.size(source), path);
     byte[] raw;
-    try (InputStream input = Files.newInputStream(Paths.get(path))) {
+    try (InputStream input = Files.newInputStream(source)) {
       raw = ProcessingLimits.read(input, path);
     }
-    String sourceName = Paths.get(path).getFileName().toString();
+    String sourceName = source.getFileName().toString();
     return readRfc822Bytes(raw, path, sourceName, globalId, archiveEmails, debug);
   }
 
@@ -72,7 +76,6 @@ class EmlReader {
     // No MimeMessage/Part escapes; returned payloads own byte arrays before staging.
     try (InputStream in = new jakarta.mail.util.SharedByteArrayInputStream(raw)) {
       MimeMessage mm = new MimeMessage(s, in);
-      MimeReads reads = new MimeReads(mm, true);
       EmailRecord r = new EmailRecord();
       r.sourceType = "eml";
       r.sourcePath = Common.nz(sourcePath);
@@ -93,6 +96,7 @@ class EmlReader {
       r.archiveGlobalId = Common.nz(globalId);
       r.archiveEmails.addAll(archiveEmails);
 
+      MimeReads reads = new MimeReads(mm, r);
       if (debug) dumpMimeStructure(mm, r, "", reads);
 
       BodyChoice choice = extractBodyChoice(mm, r, debug, reads);
@@ -129,7 +133,7 @@ class EmlReader {
       r.associatedFiles.add(src);
 
       collectRfc822AssociatedFiles(mm, r.associatedFiles, r, debug, new int[]{0}, reads);
-      reads.finish();
+      reads.finish(r);
       preferReadableAlternative(r, choice.plainMime);
       Common.finalizeRecordMetadata(r);
 
@@ -221,9 +225,13 @@ class EmlReader {
     return Common.internetAddressListLenient(rawHeader);
   }
 
-  static String safeDisposition(Part p) {
+  private static String safeDisposition(Part p, EmailRecord record) throws MessagingException {
     try {
       return Common.nz(p.getDisposition());
+    } catch (ParseException malformed) {
+      Common.sourceProblem(record, "A MIME part has a malformed Content-Disposition header. Its parameters were omitted.");
+      String disposition = Common.baseMimeType(Common.header1(p, "Content-Disposition"));
+      return Part.ATTACHMENT.equals(disposition) || Part.INLINE.equals(disposition) ? disposition : "";
     } catch (Exception ignored) {
       return "";
     }
@@ -242,7 +250,7 @@ class EmlReader {
   }
 
   static void dumpMimeStructure(Part p, EmailRecord r, String indent) throws Exception {
-    dumpMimeStructure(p, r, indent, new MimeReads(p, true));
+    dumpMimeStructure(p, r, indent, new MimeReads(p, r));
   }
 
   private static void dumpMimeStructure(Part p, EmailRecord r, String indent, MimeReads reads) throws Exception {
@@ -251,10 +259,11 @@ class EmlReader {
     while (!pending.isEmpty()) {
       ProcessingLimits.checkCancelled();var item = pending.pop();Part part = item.part();
       String ct = Common.baseMimeType(Common.nz(part.getContentType()));
-      String disp = safeDisposition(part), fn = safeFileName(part), cid = Common.header1(part, "Content-ID");
+      String disp = safeDisposition(part, r), fn = safeFileName(part), cid = Common.header1(part, "Content-ID");
       Common.dbg(r, item.indent() + "part ct=" + ct + " disp=" + disp + " file=" + fn + " cid=" + cid);
       if (part.isMimeType("multipart/*")) {
         Multipart mp = reads.multipart(part);
+        if (mp == null) continue;
         for (int i = mp.getCount() - 1; i >= 0; i--) pending.push(new Entry(mp.getBodyPart(i), item.indent() + "  "));
       }
     }
@@ -270,10 +279,11 @@ class EmlReader {
     final Set<Part> counted = Collections.newSetFromMap(new IdentityHashMap<>());
     long decoded;
     private long discovered;
+    private boolean unreadableBody;
 
-    MimeReads(Part part) throws Exception { this(part, false); }
+    MimeReads(Part part) throws Exception { this(part, null); }
 
-    MimeReads(Part part, boolean parsedSource) throws Exception {
+    MimeReads(Part part, EmailRecord record) throws Exception {
       record Entry(Part part, int depth, LocationScope scope) {}
       var pending = new ArrayDeque<Entry>();
       var seen = Collections.newSetFromMap(new IdentityHashMap<Part, Boolean>());
@@ -289,10 +299,11 @@ class EmlReader {
         if (scope != null) scopes.put(current, scope);
         if (current.isMimeType("multipart/*")) {
           int depth = entry.depth() + 1;
-          Multipart multipart = parsedSource
-              ? new BoundedMultipart(current, () -> reserve(depth, 1)) : (Multipart)current.getContent();
+          Multipart multipart = record == null ? (Multipart)current.getContent()
+              : readMultipart(current, depth, record);
+          if (multipart == null) continue;
           int count = multipart.getCount();
-          if (!parsedSource) reserve(depth, count);
+          if (record == null) reserve(depth, count);
           multiparts.put(current, multipart);
           for (int i = count - 1; i >= 0; i--) pending.push(new Entry(multipart.getBodyPart(i), depth, scope));
         } else if (current.isMimeType("message/rfc822")) {
@@ -302,6 +313,31 @@ class EmlReader {
         } else leaves.add(current);
       }
     }
+
+    private Multipart readMultipart(Part part, int depth, EmailRecord record) throws MessagingException {
+      Runnable accountPart = () -> reserve(depth, 1);
+      try {
+        var multipart = new BoundedMultipart(part, accountPart, false);
+        multipart.getCount();
+        return multipart;
+      } catch (ParseException malformed) {
+        if ("Missing start boundary".equals(malformed.getMessage())) {
+          // Jakarta Mail reports this before admitting any child parts.
+          try {
+            var recovered = new BoundedMultipart(part, accountPart, true);
+            if (recovered.getCount() > 0 && recovered.isComplete()) {
+              Common.sourceProblem(record, "The declared MIME multipart boundary was not found. A complete boundary in the body was used to extract the parts.");
+              return recovered;
+            }
+          } catch (ParseException unreadable) {
+            // Without a complete alternative boundary, leave this section in the original source only.
+          }
+        }
+        Common.sourceProblem(record, "A MIME multipart section could not be parsed. Its contents were omitted from the displayed message and separate attachments.");
+        return null;
+      }
+    }
+
     private void reserve(int depth, int count) {
       ProcessingLimits.checkCancelled();
       if (count == 0) return;
@@ -319,21 +355,38 @@ class EmlReader {
         @Override public int read(byte[] bytes,int offset,int length)throws IOException {int count=in.read(bytes,offset,length);account(count);return count;}
       };
     }
-    void finish() throws Exception {
+    void finish(EmailRecord record) throws Exception {
       byte[] buffer = new byte[8192];
-      for (Part part : leaves) if (!counted.contains(part)) {
-        try (InputStream input = open(part,part.getInputStream())) {while(input.read(buffer)!=-1)ProcessingLimits.checkCancelled();}
+      for (Part part : leaves) {
+        if (counted.contains(part)) continue;
+        try (InputStream input = open(part, part.getInputStream())) {
+          while (input.read(buffer) != -1) ProcessingLimits.checkCancelled();
+        } catch (IOException error) {
+          if (!malformedTransferEncoding(part, error)) throw error;
+          reportMalformedTransferEncoding(part, record);
+        }
       }
     }
   }
 
   private static final class BoundedMultipart extends MimeMultipart {
     private final Runnable accountPart;
+    private final boolean recoverBoundary;
 
-    BoundedMultipart(Part parent, Runnable accountPart) throws MessagingException {
+    BoundedMultipart(Part parent, Runnable accountPart, boolean recoverBoundary) throws MessagingException {
       super(parent.getDataHandler().getDataSource());
       setParent(parent);
       this.accountPart = accountPart;
+      this.recoverBoundary = recoverBoundary;
+    }
+
+    @Override protected void initializeProperties() {
+      super.initializeProperties();
+      if (recoverBoundary) {
+        ignoreExistingBoundaryParameter = true;
+        ignoreMissingEndBoundary = false;
+        allowEmpty = false;
+      }
     }
 
     @Override protected MimeBodyPart createMimeBodyPart(InputStream source) throws MessagingException {
@@ -380,26 +433,47 @@ class EmlReader {
     return displayed.toString();
   }
 
-  static String readText(Part part, EmailRecord record) throws Exception {return readText(part,record,null);}
+  private record LeafContentType(ContentType parsed, String metadata) {}
 
-  static String readText(Part part, EmailRecord record, MimeReads reads) throws Exception {
-    ContentType type = new ContentType(part.getContentType());
-    String charset = type.getParameter("charset");
-    String encoding = jakarta.mail.internet.MimeUtility.javaCharset(charset == null ? "US-ASCII" : charset);
+  private static LeafContentType leafContentType(Part part, EmailRecord record) throws MessagingException {
+    String declared = part.getContentType();
+    try {
+      return new LeafContentType(new ContentType(declared), declared);
+    } catch (ParseException malformed) {
+      Common.sourceProblem(record, "A MIME part has a malformed Content-Type header. Its parameters were omitted.");
+      try {
+        return new LeafContentType(null, new ContentType(Common.baseMimeType(declared)).getBaseType());
+      } catch (ParseException invalidType) {
+        return new LeafContentType(null, "application/octet-stream");
+      }
+    }
+  }
+
+  private static Charset guessTextCharset(byte[] bytes) {
+    try {
+      StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes));
+      return StandardCharsets.UTF_8;
+    } catch (CharacterCodingException notUtf8) {
+      return Charset.forName("windows-1252");
+    }
+  }
+
+  private record DecodedText(String text, String mime) {}
+
+  private static DecodedText readText(Part part, EmailRecord record, MimeReads reads) throws Exception {
+    LeafContentType contentType = leafContentType(part, record);
+    ContentType type = contentType.parsed();
+    String charset = type == null ? null : type.getParameter("charset");
     try (InputStream input = reads==null?part.getInputStream():reads.open(part,part.getInputStream())) {
       byte[] bytes = ProcessingLimits.read(input, record.sourcePath);
       String text;
       Charset decoderCharset;
       try {
-        decoderCharset = Charset.forName(encoding);
+        decoderCharset = type == null ? guessTextCharset(bytes)
+            : Charset.forName(MimeUtility.javaCharset(charset == null ? "US-ASCII" : charset));
       } catch (IllegalArgumentException unsupported) {
         // Keep the original MIME bytes; only the displayed recovery uses a guess.
-        try {
-          StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes));
-          decoderCharset = StandardCharsets.UTF_8;
-        } catch (CharacterCodingException notUtf8) {
-          decoderCharset = Charset.forName("windows-1252");
-        }
+        decoderCharset = guessTextCharset(bytes);
         Common.warn(record, ConversionDiagnostic.Code.TEXT_RECOVERED, "Unsupported MIME charset '" + charset + "'; displayed text recovered using "
             + decoderCharset.name() + ". Original source bytes are retained.");
       }
@@ -408,7 +482,7 @@ class EmlReader {
       } catch (CharacterCodingException invalidText) {
         text = new String(bytes, decoderCharset);
         String notice = "MIME text could not be decoded completely as " + decoderCharset.name()
-            + "; invalid byte sequences were replaced in recovered text (" + type.getBaseType() + ").";
+            + "; invalid byte sequences were replaced in recovered text (" + Common.baseMimeType(contentType.metadata()) + ").";
         Common.warn(record, ConversionDiagnostic.Code.TEXT_RECOVERED, notice);
       }
       // Legacy mail often labels Windows punctuation as Latin-1. C1 controls
@@ -424,10 +498,18 @@ class EmlReader {
         }
       }
       ProcessingLimits.checkBody(text, record.sourcePath);
-      if (type.match("text/plain") && "flowed".equalsIgnoreCase(type.getParameter("format"))) {
+      if (type != null && type.match("text/plain") && "flowed".equalsIgnoreCase(type.getParameter("format"))) {
         text = displayFlowedText(text, "yes".equalsIgnoreCase(type.getParameter("delsp")));
       }
-      return text;
+      return new DecodedText(text, contentType.metadata());
+    } catch (IOException error) {
+      if (!malformedTransferEncoding(part, error)) throw error;
+      reportMalformedTransferEncoding(part, record);
+      if (reads != null) {
+        reads.counted.add(part); // An unknown encoding can fail before open() accounts for the leaf.
+        reads.unreadableBody = true;
+      }
+      return new DecodedText("", contentType.metadata());
     }
   }
 
@@ -436,6 +518,11 @@ class EmlReader {
   static BodyChoice extractBodyChoice(Part p, EmailRecord r, boolean debug, MimeReads reads) throws Exception {
     BodyChoice out = new BodyChoice();
     extractBodyChoiceInto(p, out, r, debug, "", false, reads);
+    if (reads != null && reads.unreadableBody && out.text.isBlank() && out.html.isBlank()) {
+      out.text = "The MIME message body could not be read. The original email retains its contents.";
+      out.mime = "text/plain";
+      out.unsupported = true;
+    }
     if (out.html.isBlank() && !out.text.isBlank()) out.html = Common.plainTextToHtml(out.text);
     if (out.text.isBlank() && !out.html.isBlank()) out.text = Common.stripHtml(out.html);
     if (out.unsupported) r.contentSetDescription = out.text.startsWith("Encrypted") ? "Encrypted email body not rendered" : "Unsupported email body not rendered";
@@ -491,7 +578,7 @@ class EmlReader {
   }
 
   private static void readBodyPart(Part p, BodyChoice out, EmailRecord r, boolean debug, String indent, boolean relatedRoot, MimeReads reads, Deque<BodyAction> pending) throws Exception {
-    if (!relatedRoot && Part.ATTACHMENT.equalsIgnoreCase(safeDisposition(p))) {
+    if (!relatedRoot && Part.ATTACHMENT.equalsIgnoreCase(safeDisposition(p, r))) {
       if (debug) Common.dbg(r, indent + "skip attachment part");
       return;
     }
@@ -516,19 +603,21 @@ class EmlReader {
     }
     if (p.isMimeType("text/plain")) {
       if (out.text.isBlank()) {
-        out.text = readText(p, r, reads);
-        out.mime = p.getContentType();
+        DecodedText decoded = readText(p, r, reads);
+        out.text = decoded.text();
+        out.mime = decoded.mime();
         out.plainMime = out.mime;
         if (debug) Common.dbg(r, indent + "selected text/plain len=" + out.text.length());
       }
       return;
     }
     if (p.isMimeType("text/html")) {
-      String html = readText(p, r, reads);
+      DecodedText decoded = readText(p, r, reads);
+      String html = decoded.text();
       if (debug) Common.dbg(r, indent + "seen text/html len=" + html.length());
       if (out.html.isBlank() || html.length() > out.html.length()) {
         out.html = html;
-        out.mime = p.getContentType();
+        out.mime = decoded.mime();
         out.baseUri = mimeBaseUri(p);
         out.locationScope = reads == null ? null : reads.scope(p);
         if (debug) Common.dbg(r, indent + "selected html len=" + out.html.length());
@@ -537,6 +626,10 @@ class EmlReader {
     }
     if (p.isMimeType("multipart/*")) {
       Multipart mp = reads == null ? (Multipart)p.getContent() : reads.multipart(p);
+      if (mp == null) {
+        if (reads != null) reads.unreadableBody = true;
+        return;
+      }
       if (debug) Common.dbg(r, indent + "enter multipart count=" + mp.getCount() + " alternative=" + p.isMimeType("multipart/alternative"));
       if (p.isMimeType("multipart/signed")) {
         String protocol = Common.baseMimeType(new ContentType(p.getContentType()).getParameter("protocol"));
@@ -585,7 +678,7 @@ class EmlReader {
     void advance(Deque<BodyAction> pending)throws Exception {
       while(next<multipart.getCount()){
         BodyPart part=multipart.getBodyPart(next++);
-        if(Part.ATTACHMENT.equalsIgnoreCase(safeDisposition(part))){if(debug)Common.dbg(r,indent+"skip attachment part");continue;}
+        if(Part.ATTACHMENT.equalsIgnoreCase(safeDisposition(part,r))){if(debug)Common.dbg(r,indent+"skip attachment part");continue;}
         BodyChoice section=new BodyChoice();pending.push(()->advance(pending));pending.push(()->accept(section));
         pending.push(()->readBodyPart(part,section,r,debug,debug?indent+"  ":"",false,reads,pending));return;
       }
@@ -668,9 +761,34 @@ class EmlReader {
       ProcessingLimits.checkCancelled();Part part=pending.pop();
       if(part.isMimeType("multipart/*")){
         Multipart mp=reads == null ? (Multipart)part.getContent() : reads.multipart(part);
+        if (mp == null) continue;
         for(int i=mp.getCount()-1;i>=0;i--)pending.push(mp.getBodyPart(i));
-      }else collectRfc822Leaf(part,out,r,debug,seq,reads);
+      } else {
+        try {
+          collectRfc822Leaf(part, out, r, debug, seq, reads);
+        } catch (IOException error) {
+          if (!malformedTransferEncoding(part, error)) throw error;
+          reportMalformedTransferEncoding(part, r);
+        }
+      }
     }
+  }
+
+  private static boolean malformedTransferEncoding(Part part, IOException error) throws MessagingException {
+    if (error instanceof DecodingException) return true;
+    // Jakarta Mail's MimePartDataSource exposes an unknown encoding as a plain IOException.
+    String detail = error.getMessage();
+    return detail != null && detail.startsWith("Unknown encoding: ") && part instanceof MimePart mimePart
+        && detail.equals("Unknown encoding: " + mimePart.getEncoding());
+  }
+
+  private static void reportMalformedTransferEncoding(Part part, EmailRecord record) throws MessagingException {
+    String mime = Common.preview(Common.baseMimeType(part.getContentType()), 100);
+    String filename = Common.preview(safeFileName(part), 160);
+    String label = filename.isBlank() ? mime : mime + " (" + filename + ")";
+    String encoding = Common.preview(Common.header1(part, "Content-Transfer-Encoding"), 40);
+    Common.sourceProblem(record, "Could not decode " + encoding + " transfer encoding for MIME part " + label
+        + ". Its decoded contents were omitted.");
   }
 
   private static void collectRfc822Leaf(Part p,List<AssociatedFile> out,EmailRecord r,boolean debug,int[] seq,MimeReads reads)throws Exception {
@@ -678,8 +796,8 @@ class EmlReader {
       AssociatedFile attachedMessage = new AssociatedFile();
       attachedMessage.filename = safeFileName(p);
       if (attachedMessage.filename.isBlank()) attachedMessage.filename = "attached_message_" + String.format("%03d", ++seq[0]) + ".eml";
-      attachedMessage.mime = Common.baseMimeType(p.getContentType());
-      attachedMessage.rawContentType = p.getContentType();
+      attachedMessage.rawContentType = leafContentType(p, r).metadata();
+      attachedMessage.mime = Common.baseMimeType(attachedMessage.rawContentType);
       attachedMessage.afRelationship = "Data";
       attachedMessage.emailAttachment = true;
       attachedMessage.description = "Complete attached " + (p.isMimeType("message/global") ? "international" : "RFC 822")
@@ -692,8 +810,7 @@ class EmlReader {
       return;
     }
 
-    String disp = safeDisposition(p);
-    String ct = Common.baseMimeType(Common.nz(p.getContentType()));
+    String disp = safeDisposition(p, r);
     String cid = Common.header1(p, "Content-ID");
     String fn = safeFileName(p);
     String location = Common.header1(p, "Content-Location");
@@ -707,6 +824,8 @@ class EmlReader {
 
     if (!attachment && !(inline && (hasFileName || cidPart)) && !((cidPart || locationPart) && !bodyText) && !(hasFileName && !bodyText)) return;
 
+    String contentType = leafContentType(p, r).metadata();
+    String ct = Common.baseMimeType(contentType);
     byte[] bytes;
     if (ct.startsWith("message/")) bytes = attachedMessageBytes(p, r.sourcePath, reads);
     else try (InputStream in = reads==null?p.getInputStream():reads.open(p,p.getInputStream())) {
@@ -716,7 +835,7 @@ class EmlReader {
     AssociatedFile af = new AssociatedFile();
     af.filename = hasFileName ? fn : ("part_" + String.format("%03d", ++seq[0]) + Common.extensionForMime(ct, fn));
     af.mime = ct;
-    af.rawContentType = p.getContentType();
+    af.rawContentType = contentType;
     af.bytes = bytes;
     boolean treatAsInline = !attachment && (inline || cidPart || locationPart);
     af.contentId = cid;
