@@ -38,3 +38,10 @@ The new font changes text widths and some header wrapping, with 0.889% to
 source and attachment checks, and Java EA-PDF and PDF/A validation passed.
 The reviewed DejaVu Sans images are the new reference pages. The rasterizer,
 visual threshold, and source expectations stay the same.
+
+For EA-PDF Main 2.4.0-beta.6, the EML and MSG first pages and both MBOX
+pages were reviewed side by side. Header spacing and line wrapping changed,
+with 2.144% to 7.085% of pixels differing. The two attachment pages had no
+changes at the comparison threshold. All source and attachment fidelity,
+page-count, and standalone Java validation checks passed. The four reviewed
+reference images use the existing rasterizer and comparison threshold.
