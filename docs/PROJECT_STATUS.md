@@ -7,9 +7,9 @@ children, runs the packaged Creator and Validator GUIs, and launches the Desktop
 Viewer JAR. GitHub publication through the acceptance workflow uses the packages
 and checksums from the successful job.
 
-Main release **2.4.0-beta.5** includes the Full browser reader **1.10.0** and
-Desktop Viewer **0.9.0**.
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.5).
+Main release **2.4.0-beta.6** includes the Full browser reader **1.11.0** and
+Desktop Viewer **0.9.1**.
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.6).
 
 C2PA/PAdES, WeasyPrint and other experimental changes remain separate in
 `../eapdf-secure` on `experiment/c2pa-pades`. Normal development continues in this
@@ -68,6 +68,55 @@ Java validator and the Even More Lite reader.
 
 ## Unreleased
 
+- **Speed improvement, 23 November 2026.** Local archive rendering uses the
+  largest extracted message, including decoded bodies and staged attachments,
+  to bound workers for EML, MSG, PST, MBOX, and mixed inputs. In paired CLI runs
+  with four jobs requested and a 2 GiB heap, a whole 71-message PST took 30.55
+  to 17.03 seconds for 1m and 17.53 to 14.54 seconds for 1c. The 24-message MBOX
+  took 12.02 to 8.02 seconds for 1m and 7.76 to 5.26 seconds for 1c. The PST 1m
+  peak process RSS increased from 472 to 1,083 MiB. Each timing is a single run.
+  A scale run on 2,200 distinct real EMLs up to 64 KiB each used a 4 GiB heap.
+  The merged archive took 212 seconds and the collection took 96 seconds.
+  Both preserved all embedded originals byte-for-byte. The prior and rebuilt
+  JARs had the same merged-archive validation failures and the same per-child
+  validation outcomes for all 2,200 collection members. Both large PDFs are
+  diagnostic artifacts.
+- **Speed improvement, 23 November 2026.** Local EML archives and collections now use
+  the largest message to size their worker pools. With 24 real EMLs, four requested
+  jobs, a 2 GiB heap, and the default message limit, 1m took 6.28 seconds (previously
+  9.49) and 1c took 4.42 seconds (previously 5.63). Peak process RSS for 1m rose from
+  576 to 1,151 MiB. Each timing is one end-to-end CLI run.
+  All four EML archive profiles passed independent EA-PDF and PDF/A-4f validation. All
+  four profiles also passed for Outlook MSG, whole MBOX and PST files, and a mixed
+  EML/MSG/MBOX batch. Additional whole-file checks preserved 71 messages in a PST
+  merged archive and 24 in an MBOX collection.
+- **Speed improvement, 23 November 2026.** Separate-PDF EML batches size their
+  worker pools from the largest input, leaving half of the worker JVM heap for
+  shared and transient work. On 480 local EMLs with all optional features off and
+  a 2 GiB heap, the GUI took 37.9 seconds with four workers. The old GUI used one
+  worker and took 107.4 seconds in the paired run and 78.4 seconds in an earlier
+  run. Sampled peak worker RSS in the paired run rose from 624 to 1,249 MiB.
+- **Bug fix.** Converter jobs have no default whole-job deadline. A positive
+  configured timeout still limits the job. Verified PDFs appear as they finish
+  and stay available if a later message fails or the user stops the batch.
+- **Bug fix.** Malformed MIME transfer encoding no longer stops an entire
+  folder conversion. The creator keeps the original message and available parts
+  and reports the incomplete content. The creator uses plain text when an
+  upstream HTML form-field error prevents rendering.
+- **Code improvement.** Optional Creator features default to off. The status
+  shows completed message counts without elapsed timers and skips transient
+  phases. Per-PDF output logs are
+  written when the conversion records a warning, error or blocked asset.
+- **Checks and profile, 23 November 2026.** The Creator GUI produced 7,446
+  local 1s PDFs with optional features off. Two GUI sessions took 493.5 seconds
+  of combined runtime, with the first PDF visible after 6.9 seconds. The first
+  session retained its PDFs when the HTML form-field error stopped it. The
+  second session converted the remaining messages after the fix. HTML
+  preparation and rendering accounted for 41.3% of 16,500 sampled Java
+  execution stacks across the two workers. All embedded original EMLs matched
+  their source SHA-256, and all PDF hashes matched their creator receipts.
+  Standalone Java validation passed four of eight sampled PDFs and reported
+  sent-date or source-metadata findings on the other four.
 - **Bug fix.** Even More Lite shows the open filename or embedded PDF path once
   in its header, with styling aligned to Full.
 - **Packaging.** The Full and Even More Lite local builds use version 1.7.0.

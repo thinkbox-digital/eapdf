@@ -34,8 +34,9 @@ declared child MD5, declared child byte length]`. Subject, sender, recipients an
 date are read directly from authoritative catalog XMP. Folder membership comes
 from the checked collection keys. Omitting duplicate headers and folder strings
 lets substantially more messages fit the unchanged 8 MiB decoded payload budget.
-The GUI’s **Embed searchable index** checkbox enables this filtering index and the
-separate full-text index. Their byte limits and failure diagnostics are independent.
+The GUI’s **Embed searchable index** checkbox starts unchecked. Selecting it
+enables this filtering index and the separate full-text index. Their byte limits
+and failure diagnostics are independent.
 
 ### Legacy version 1 (still readable)
 

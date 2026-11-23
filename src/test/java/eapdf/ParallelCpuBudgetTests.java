@@ -6,6 +6,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class ParallelCpuBudgetTests {
+  @Test void nativeCpuAllowanceIsUnlimitedByDefault() {
+    assumeTrue(System.getProperty("os.name").toLowerCase().contains("linux"));
+    String previous = System.getProperty("eapdf.jobTimeoutSeconds");
+    try {
+      System.setProperty("eapdf.jobTimeoutSeconds", "");
+      var command = ConversionSupervisor.nativeLimits(List.of("java", "example"));
+      assertTrue(command.stream().noneMatch(argument -> argument.startsWith("--cpu=")));
+    } finally {
+      if (previous == null) System.clearProperty("eapdf.jobTimeoutSeconds");
+      else System.setProperty("eapdf.jobTimeoutSeconds", previous);
+    }
+  }
+
   @Test void nativeCpuAllowanceAccountsForConcurrentWorkerThreads() {
     assumeTrue(System.getProperty("os.name").toLowerCase().contains("linux"));
     String previous = System.getProperty("eapdf.jobTimeoutSeconds");

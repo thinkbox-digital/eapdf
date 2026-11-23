@@ -17,9 +17,12 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharacterCodingException;
 import java.nio.file.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 class MsgReader {
   private static final int MAX_STORAGE_DEPTH = 128;
+  private static final Pattern PLAIN_TEXT_RTF_HEADER = Pattern.compile(
+      "\\A\\{\\\\rtf1(?:\\s*\\\\[a-z]++(?:-?\\d++)?){0,8}?\\s*\\\\fromtext(?![a-z0-9-])");
 
   static String headerValue(OutlookMessage m, String name) {
     Map<String, Collection<String>> headers = m.getHeadersMap();
@@ -463,11 +466,15 @@ class MsgReader {
   static void populateMsgBody(OutlookMessage message, EmailRecord record, int nativeBody, Boolean rtfInSync, String plainText) {
     String html = Common.nz(message.getBodyHTML());
     String convertedRtf = Common.nz(message.getConvertedBodyHTML());
-    boolean hasRtf = !Common.nz(message.getBodyRTF()).isBlank() && !convertedRtf.isBlank();
+    String rawRtf = Common.nz(message.getBodyRTF());
+    boolean hasRtf = !rawRtf.isBlank() && !convertedRtf.isBlank();
     int selected;
     if (nativeBody == 1 && message.getBodyText() != null) selected = 1;
     else if (nativeBody == 2 && hasRtf) selected = 2;
     else if (nativeBody == 3 && message.getBodyHTML() != null) selected = 3;
+    // The RTF copy of a plain-text message should keep its original line breaks.
+    else if (nativeBody == 0 && html.isBlank() && hasRtf && Boolean.TRUE.equals(rtfInSync)
+        && !Common.nz(plainText).isBlank() && PLAIN_TEXT_RTF_HEADER.matcher(rawRtf).lookingAt()) selected = 1;
     else {
       if (hasRtf && Boolean.TRUE.equals(rtfInSync)) selected = 2;
       else if (message.getBodyHTML() != null) selected = 3;
@@ -480,7 +487,7 @@ class MsgReader {
     }
     record.textBody = Common.normalizeBody(plainText);
     record.bodyMime = selected == 2 ? "text/rtf" : selected == 3 ? "text/html" : "text/plain";
-    if (selected == 2) record.rtfBody = message.getBodyRTF();
+    if (selected == 2) record.rtfBody = rawRtf;
     if (selected == 3) html = decodeMsgHtml(message, record);
     String rendered = selected == 2 ? convertedRtf : selected == 3 ? html : "";
     record.htmlBody = selected == 1 ? Common.plainTextToHtml(record.textBody) : Common.normalizeHtml(rendered);

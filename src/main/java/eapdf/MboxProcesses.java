@@ -57,7 +57,7 @@ public final class MboxProcesses {
         for (int i = slot; i < records.size(); i += count) items.add(new Item(i + 1, records.get(i)));
         Request request = new Request(owner.pid(), owner.info().startInstant().orElseThrow().toString(), input,
             output, font, icc, debug, debugDirectory, omitSource, items, false, 0, false);
-        Process process = startWorker(directory, temporary, heap, request);
+        Process process = startWorker(directory, temporary, heap, request, transaction.incremental());
         workers.add(new Worker(directory, process));
         System.out.println("MBOX render worker: " + process.pid() + "; messages: " + items.size());
       }
@@ -68,9 +68,10 @@ public final class MboxProcesses {
         running = false;
         long completed = 0;
         for (Worker worker : workers) {
+          transaction.adoptReady(worker.directory());
           if (worker.process().isAlive()) running = true;
           else if (worker.process().exitValue() != 0)
-            throw Common.fail("MBOX render worker " + worker.process().pid() + " failed (exit " + worker.process().exitValue() + "); no outputs published");
+            throw Common.fail("MBOX render worker " + worker.process().pid() + " failed (exit " + worker.process().exitValue() + ")");
           Path progress = worker.directory().resolve("progress.json");
           if (Files.exists(progress)) {
             if (Files.size(progress) > ProcessingLimits.metadataBytes()) throw Common.fail("Worker progress exceeds the metadata budget");
@@ -93,7 +94,8 @@ public final class MboxProcesses {
     }
   }
 
-  static Process startWorker(Path directory, Path temporary, long heap, Request request) throws Exception {
+  static Process startWorker(Path directory, Path temporary, long heap, Request request, boolean incremental) throws Exception {
+    if (incremental) Files.createDirectory(directory.resolve("ready"));
     try (var writer = Files.newBufferedWriter(directory.resolve("request.json"))) { JSON.toJson(request, writer); }
     if (Files.size(directory.resolve("request.json")) > ProcessingLimits.metadataBytes())
       throw Common.fail("Render worker request exceeds the metadata budget");
@@ -110,7 +112,8 @@ public final class MboxProcesses {
   }
 
   static void importWorker(Path directory, OutputTransaction transaction, Common.JobReport job) throws Exception {
-        transaction.adopt(directory.resolve("manifest.json"), directory.resolve("outputs"));
+        if (transaction.incremental()) transaction.adoptReady(directory);
+        else transaction.adopt(directory.resolve("manifest.json"), directory.resolve("outputs"));
         ConversionProgress.importReceipts(directory.resolve("progress.json"));
         Report report;
         try (var reader = Files.newBufferedReader(directory.resolve("report.json"))) { report = JSON.fromJson(reader, Report.class); }
@@ -171,7 +174,7 @@ public final class MboxProcesses {
           JSON.toJson(new Report(job.warnings, job.diagnostics, job.renderedPages.get(), job.imagePixels.get()), writer);
         }
       }
-      transaction.finish(directory.resolve("manifest.json"));
+      if (!transaction.incremental()) transaction.finish(directory.resolve("manifest.json"));
     } finally { ConversionProgress.flush(); ConversionProgress.detach(); }
   }
 }

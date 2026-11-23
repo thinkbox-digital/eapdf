@@ -7,16 +7,20 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <body>
 <section class="chapter" id="start">
 <h1>EA-PDF</h1>
-<p class="edition" data-edition="2026-11-22">User Manual · Creator and validators 2.4.0-beta.5 · documentation revision 22 November 2026</p>
+<p class="edition" data-edition="2026-11-22">User Manual · Creator and validators 2.4.0-beta.3 · documentation revision 22 November 2026</p>
 <p>EA-PDF converts email into PDF files for preservation and access. It supports saved EML and MSG messages, PST and MBOX mailboxes, and Gmail downloads.</p>
 <p>The creator produces readable email pages with structured metadata and retained source messages and attachments where the selected profile allows them. The validators check PDF/A and EA-PDF requirements. The viewer lets people browse messages, collections and embedded files.</p>
 <p>Created by <strong>Thinkbox.DIGITAL</strong>.</p>
 <p class="note">Screenshots illustrate real earlier beta sessions using fictional mail; some layouts and labels have since changed. Follow the current controls described in the text. The screenshot set is not a fresh acceptance record for this documentation revision.</p>
 </section>
 <section class="chapter" id="basics"><h1>1. Understand your files and choose an output</h1>
+<p>The Creator refreshes the message count once a second and shows longer phases in its status line.</p>
+<p>When generating a PDF filename from the input filename or email subject, the creator removes replacement characters (�) and keeps readable characters.</p>
 <h2>Read the conversion warnings</h2>
-<p>A finished conversion can still have limitations. Review the warnings before accepting the PDF. The output folder contains <code>progress.json</code>: open it in a text editor to see the job status, the PDF checksums and the warnings. Keep it with the conversion log and validation reports. A later conversion to the same folder replaces this status file.</p>
+<p>Open the PDF and look for the shaded <strong>INCOMPLETE SOURCE</strong> notice above the message headers. For a collection, the cover points to warnings in the embedded messages.</p>
+<p>A finished conversion can still have limitations. Review the warnings before accepting the PDF. The output folder contains <code>progress.json</code>: open it in a text editor to see the job status, the PDF checksums and the warnings. When the creator records a warning, error, or blocked remote asset for a PDF, it writes a summary in the output folder's <code>logs/</code> directory. Keep the status file with the conversion log and validation reports. A later conversion to the same folder replaces this status file.</p>
 <p>Each entry in <code>conversion_diagnostics</code> identifies the source and message, explains what happened and its effect, and suggests what to do. For example, <code>TEXT_RECOVERED</code> means some displayed characters may differ from the original. <code>SOURCE_INCOMPLETE</code> means source content could not be recovered. A <code>DATE_PRECISION_REDUCED</code> warning means native PST fractional seconds became whole seconds in the reconstructed message and PDF date. Keep the original PST if that timing matters.</p>
+<p>If an EML attachment or inline image fails MIME transfer decoding, the creator reports <code>SOURCE_INCOMPLETE</code> and continues with the available content. The PDF omits the affected decoded part. The creator warns about malformed MIME parameters and omits them from generated metadata. It retains readable content and assigns a generated name when an attachment has no readable filename. If a declared multipart boundary is missing from the body, the creator warns and uses a complete boundary found in the body. An unreadable section is omitted if no complete boundary can be recovered. Profiles <strong>1s</strong>, <strong>1m</strong> and <strong>1c</strong> embed the original EML byte for byte.</p>
 <p>The creation receipt identifies the finished PDF but does not replace validation. Its PDF/A and EA-PDF validation fields say <code>NOT_RUN</code> because those checks belong to the separate validator. Run the Java validator on the published PDF and keep its report. A passing report does not erase conversion warnings.</p>
 <h2>What the project produces</h2>
 <p>The creator turns email into searchable PDF pages and adds information that identifies messages, their sources and their attachments. EA-PDF means <strong>Email Archiving PDF</strong>: it describes how email information is organized inside the PDF. PDF/A is a preservation format for PDFs. This creator currently writes PDF 2.0 with PDF/A-4f identification for all six EA-PDF profiles.</p>
@@ -39,15 +43,16 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <tr><td>1c</td><td>One collection file containing separately openable email PDFs, with folder/label grouping.</td><td>Retains sources and attachments in the message PDFs. This creator makes 1s children.</td></tr>
 <tr><td>1ci</td><td>A collection containing separately openable copies with originals omitted.</td><td>This creator makes 1si message children.</td></tr></table>
 <p>Start with <strong>1s</strong> for one email. Choose <strong>1m</strong> for a combined reading copy. Choose <strong>1c</strong> when folder browsing and separately extractable messages matter. The local archive command requires two or more messages for 1m/1mi. A collection can contain one message.</p>
+<p>For local combined archives and collections, the Creator can render several messages at once, including messages read from a single mailbox. It uses the size of extracted bodies and attachments and available memory to choose how many workers to use.</p>
 <p>The letter <strong>i</strong> means isolated. It does <strong>not</strong> mean anonymized or redacted. Visible addresses, body text, metadata and inline images can remain. Attachment markers may remain while their payloads contain zero bytes.</p>
 <h2>Keep your originals</h2>
 <p>For EML and MSG, a retained-source PDF includes the original message asset. For PST, MBOX and Gmail, it includes individual exported or reconstructed messages. It does <strong>not</strong> include the original PST/MBOX container or a complete copy of the Gmail account. Keep the original mailbox export separately when its full format and properties matter. Conversion does not recover information that was already missing or damaged.</p>
 <p>A collection's outer pages are its introduction and index. To read the actual emails, open its embedded message PDFs. A basic PDF reader may show only those outer pages. The project viewer supports browsing these children.</p>
 </section>
 <section class="chapter" id="installation"><h1>2. Get the tools ready</h1>
-<p>Open the <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.5">release downloads</a>. Install a desktop version of Java 21 or later, then download the apps you need.</p>
+<p>Open the <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.6">release downloads</a>. Install a desktop version of Java 21 or later, then download the apps you need.</p>
 <ul><li><strong>Desktop Viewer:</strong> open a PDF and browse its email and attachments.</li><li><strong>Validator:</strong> check a PDF and save a report.</li><li><strong>Creator:</strong> turn email into PDFs in a desktop window.</li></ul>
-<p>For the Creator, download the <a href="https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.5/configuration-2.4.0-beta.5.zip">configuration ZIP</a> and extract it beside the Creator JAR.</p>
+<p>The Creator can run with built-in settings. See the <a href="../../config/README.md">configuration guide</a> to customize them.</p>
 <p>Double-click a desktop app’s JAR file to open it. A JAR is the app itself. If a ZIP or archive program opens, use <strong>Open with</strong> in your file manager and select Java.</p>
 <p>Double-click Creator, choose a small email file, and select an output folder. Click <strong>Convert Local Input</strong>. When the conversion finishes, check the PDF in Validator and read it in Desktop Viewer.</p>
 <p>Keep your original email in a separate folder. Save converted PDFs and validation reports where you can find them again.</p>
@@ -63,16 +68,17 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <p>The creator prints the actual output paths. Automatically chosen names avoid replacing existing exports by adding a suffix. An explicitly supplied archive destination in the command line is a requested replacement destination. Use a new output folder for each important run so the files and logs are easy to identify.</p>
 <figure><img src="screenshots/creator-complete.png" alt="A successful creator run, with Finished status and the created archive filename."/><figcaption>Completed conversion. The summary gives the PDF filename; the saved-to line identifies the output folder. This is a real conversion, not a simulated progress screen.</figcaption></figure>
 <h2>Features and extra files</h2>
+<p>Accessibility, searchable indexing, and signing start unchecked in the Creator. Select the features you want for the conversion.</p>
 <table><tr><th>Control</th><th>What it does</th></tr>
-<tr><td>Embed searchable index</td><td>Builds optional offline metadata and full-text indexes for supported archives. Uses built-in Java PDFBox extraction.</td></tr>
+<tr><td>Embed searchable index</td><td>Starts unchecked in the Creator window. Select it to build offline metadata and full-text indexes for supported archives. Uses built-in Java PDFBox extraction.</td></tr>
 <tr><td>Accessibility (PDF/UA)</td><td>Adds available semantic/accessibility structures. This is not proven PDF/UA conformance.</td></tr>
 <tr><td>Sign output</td><td>Requests a certificate-based signature. Configure the certificate first; see chapter 8.</td></tr>
-<tr><td>Debug output</td><td>Writes additional diagnostic information. It can contain private email data.</td></tr></table>
+<tr><td>Command-line <code>--debug</code></td><td>Writes additional diagnostic information when requested. It can contain private email data.</td></tr></table>
 <p>Branding, Finding Aid and PREMIS generation have been removed. Collections retain their required cover page. These removals do not affect the viewer’s independent CSV metadata export.</p>
 
 <h2>Progress, stopping and errors</h2>
-<p><strong>Summary</strong> shows the outcome. <strong>Details</strong> contains the fuller log. Reading, rendering, assembling, checking and publishing are different stages; finished email rendering does not mean the final PDF is ready. Wait for publication to finish.</p>
-<p>Click <strong>Stop</strong> to cancel an active conversion. Do not treat a stopped run as a completed archive. Check the summary and output folder before restarting. The creator uses private working storage and checks outputs before publication; existing destinations are protected on failed publication. Temporary work can use more space than the finished PDF.</p>
+<p><strong>Summary</strong> lists PDFs as the creator saves them in the output folder. <strong>Details</strong> contains the fuller log. Each PDF becomes available after its creation checks and any requested signing finish.</p>
+<p>Click <strong>Stop</strong> to cancel an active conversion. The output folder keeps PDFs already saved, including after a later conversion error. Check the summary for the final job status before restarting. Temporary work can use more space than the finished PDF.</p>
 <p>For missing text or unexpected appearance, compare with the original email. Remote resources are not automatically fetched. Unsafe link schemes are removed from rendered pages in the hardened checkpoint. Source bytes can still contain the original link text.</p>
 </section>
 <section class="chapter" id="gmail"><h1>4. Creator: download from Gmail</h1>
@@ -119,10 +125,10 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <section class="chapter" id="viewer"><h1>7. Viewer: read messages and attachments</h1>
 
 <h2 id="desktop-viewer">Open a PDF in Desktop Viewer</h2>
-<ol><li><a href="https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.5/eapdf-desktop-viewer-full-0.9.0.jar">Download Desktop Viewer 0.9.0</a> and double-click the JAR.</li><li>Choose <strong>Open PDF…</strong> or drag a PDF into the window.</li><li>Select a message or folder to see its pages. Use the Files pane to preview or save an attachment. In a collection, open a member and use <strong>Parent</strong> to return.</li><li>Use <strong>Search</strong> to find text. Open Portfolio view when you want to browse the files in a PDF Portfolio.</li></ol>
+<ol><li><a href="https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.6/eapdf-desktop-viewer-full-0.9.1.jar">Download Desktop Viewer 0.9.1</a> and double-click the JAR.</li><li>Choose <strong>Open PDF…</strong> or drag a PDF into the window.</li><li>Select a message or folder to see its pages. Use the Files pane to preview or save an attachment. In a collection, open a member and use <strong>Parent</strong> to return.</li><li>Use <strong>Search</strong> to find text. Open Portfolio view when you want to browse the files in a PDF Portfolio.</li></ol>
 <p>Desktop Viewer requires a desktop version of Java 21 or later. On Linux, the app uses a graphical session with GTK 3. See the <a href="https://github.com/thinkbox-digital/eapdf/blob/main/desktop-viewer/USER_GUIDE.md">Desktop Viewer guide</a> for more controls.</p>
 <h2>Read in your browser</h2>
-<p>The <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.5">Full browser reader</a> is an alternative for Chromium and Firefox.</p>
+<p>The <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.6">Full browser reader</a> is an alternative for Chromium and Firefox.</p>
 <h2>Install in Chromium or Chrome</h2>
 <p>Use the Chromium viewer ZIP, extract it, and keep the extracted folder in a stable location. The current package requires Chromium 156 or newer.</p>
 <ol><li>Enter <code>chrome://extensions</code> in the browser's address bar.</li><li>Enable <strong>Developer mode</strong>.</li><li>Click <strong>Load unpacked</strong> and select the extracted extension folder containing <code>manifest.json</code>.</li><li>Open the extensions menu and click <strong>EA-PDF viewer beta</strong>. Pin it if you want easy access.</li></ol>
@@ -172,7 +178,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <section class="chapter" id="settings"><h1>8. Settings, signatures and preservation</h1>
 <h2>Make repeatable settings</h2>
 <p>Use the Creator window to choose output and accessibility settings. Select <strong>Creator identity</strong> to enter the name of the person or organization responsible for the PDF.</p>
-<table><tr><th>Setting</th><th>Meaning</th></tr><tr><td>searchIndex.enabled / searchIndex.fullTextEnabled</td><td>Enable embedded search indexes and full-text generation for supported archives; both default true. Unsupported or invalid indexes fall back to page scanning.</td></tr><tr><td>accessibility</td><td>Language, reading direction, page labels and partial semantic tagging. Experimental unavailable options do not prove accessibility conformance.</td></tr></table>
+<table><tr><th>Setting</th><th>Meaning</th></tr><tr><td>searchIndex.enabled / searchIndex.fullTextEnabled</td><td>Enable embedded search indexes and full-text generation for supported archives. Both default to true for command-line conversions. Unsupported or invalid indexes fall back to page scanning.</td></tr><tr><td>accessibility</td><td>Language, reading direction, page labels and partial semantic tagging. Experimental unavailable options do not prove accessibility conformance.</td></tr></table>
 <p>The creator uses bundled DejaVu Sans as the primary font and embeds the bundled sRGB profile. Built-in fallback fonts cover additional scripts. Complete configuration details are in <code>config/README.md</code>.</p>
 <h2>Sign the outer PDF</h2>
 <p>A digital signature helps establish whether signed bytes changed. You need your own document-signing certificate and private key in a password-protected <strong>PKCS#12</strong> file, normally ending in <code>.p12</code> or <code>.pfx</code>.</p>
@@ -216,7 +222,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <section class="chapter" id="maintenance"><h1>11. Updates and help</h1>
 <h2>Edition and verification notes</h2>
 <p>This manual was updated on 22 November 2026.</p>
-<p class="note"><strong>Edition and availability.</strong> This guide covers creator and validator 2.4.0-beta.5 and Full browser reader 1.10.0. The Full reader restores recognized family names for affected embedded CJK fonts. macOS Firefox rendering still needs platform verification. Read the release notes for the exact package you use.</p>
+<p class="note"><strong>Edition and availability.</strong> This guide covers creator and validator 2.4.0-beta.3 and Full browser reader 1.8.0. The Full reader restores recognized family names for affected embedded CJK fonts. macOS Firefox rendering still needs platform verification. Read the release notes for the exact package you use.</p>
 <p>The names, addresses, messages and attachments in the screenshots are fictional. The screenshots come from the actual applications on Linux; window borders and file pickers will look different on other systems. Linux and the listed browser versions are the tested environment.</p>
 <h2>Update carefully</h2>
 <p>Keep a copy of your configuration, originals and completed records. Read the new release notes, download the intended files, and test a small known email before a large job. Replacing a JAR does not update a conversion that is already running. Unpacked viewer installations need an explicit reload and a new viewer tab.</p>

@@ -74,6 +74,58 @@ class RemainingWorkflowTests {
   }
 
   @Test
+  void localWorkerAdmissionUsesSizesForIndependentEmls() throws Exception {
+    Path first = Files.writeString(tempDir.resolve("first.eml"), "Subject: One\r\n\r\nBody");
+    Path second = Files.writeString(tempDir.resolve("second.EML"), "Subject: Two\r\n\r\nBody");
+    List<String> messages = List.of(first.toString(), second.toString());
+    Assertions.assertEquals(1, EmailToPDFA.localMessageWorkers(messages, 1));
+    var runtime = Runtime.getRuntime();
+    int expected = runtime.availableProcessors() >= 2 && runtime.maxMemory() >= 1024 * ConversionMemory.MIB ? 2 : 1;
+    Assertions.assertEquals(expected, EmailToPDFA.localMessageWorkers(messages, 2));
+    Assertions.assertEquals(1, PdfMailWriter.renderParallelism(4, 256 * ConversionMemory.MIB, 256 * ConversionMemory.MIB));
+    Assertions.assertEquals(PdfMailWriter.renderParallelism(2),
+        EmailToPDFA.localMessageWorkers(List.of(first.toString(), tempDir.resolve("missing.eml").toString()), 2));
+    Assertions.assertEquals(PdfMailWriter.renderParallelism(2),
+        EmailToPDFA.localMessageWorkers(List.of(first.toString(), tempDir.resolve("archive.mbox").toString()), 2));
+  }
+
+  @Test
+  void archiveWorkersUseStagedMessageSizesAndFallBackWhenUnknown() throws Exception {
+    Path first = Files.writeString(tempDir.resolve("first.eml"), "Subject: First\r\n\r\nBody");
+    Path second = Files.writeString(tempDir.resolve("second.EML"), "Subject: Second\r\n\r\nLonger body");
+    var inputs = List.of(first.toString(), second.toString());
+    try (var job = Common.beginJob()) {
+      job.workerLimit = 2;
+      var batches = EmailToPDFA.readManyForArchive(inputs, "", List.of(), false);
+      var records = List.of(batches.get(0).get(0), batches.get(1).get(0));
+      Assertions.assertTrue(records.get(0).payloadStaged);
+      Assertions.assertNull(records.get(0).sourceBytes);
+      Assertions.assertEquals(EmailToPDFA.localMessageWorkers(inputs, 2), PdfMailWriter.archiveRenderWorkers(records));
+
+      Path renamed = Files.copy(first, tempDir.resolve("mail.msg"));
+      var other = EmlReader.readEml(renamed.toString(), "", List.of(), false);
+      other.sourceType = "msg";
+      Assertions.assertFalse(other.payloadStaged);
+      Assertions.assertEquals(PdfMailWriter.renderParallelism(2),
+          PdfMailWriter.archiveRenderWorkers(List.of(records.get(0), other)));
+
+      Common.stageRecord(other);
+      Assertions.assertEquals(EmailToPDFA.localMessageWorkers(inputs, 2),
+          PdfMailWriter.archiveRenderWorkers(List.of(records.get(0), other)));
+
+      // A large staged attachment counts even after its byte array has been released.
+      var attachment = new AssociatedFile();
+      attachment.storedSize = Integer.MAX_VALUE;
+      other.associatedFiles.add(attachment);
+      Assertions.assertEquals(PdfMailWriter.sizedMessageWorkers(2, Integer.MAX_VALUE),
+          PdfMailWriter.archiveRenderWorkers(List.of(records.get(0), other)));
+
+      job.workerLimit = 1;
+      Assertions.assertEquals(1, PdfMailWriter.archiveRenderWorkers(records));
+    }
+  }
+
+  @Test
   void parallelOutputsKeepTheSequentialInputToFilenameMapping() throws Exception {
     Path first = tempDir.resolve("first.eml");
     Path second = tempDir.resolve("second.eml");

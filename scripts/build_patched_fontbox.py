@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Verify or reproduce the narrow FontBox 3.0.8 backport (Git, JDK 21, Python 3)."""
 import argparse
+from collections import Counter
 import hashlib
 import json
 from pathlib import Path
@@ -84,9 +85,29 @@ def build(destination):
         (destination / ('fontbox-' + LOCK['version'] + '.pom')).write_bytes(pom)
 
 
+def verify_shaded(path):
+    jar_name = f"fontbox-{LOCK['version']}.jar"
+    reference = next(ROOT / item['path'] for item in LOCK['artifacts'] if Path(item['path']).name == jar_name)
+    class_names = tuple(name.removesuffix('.java') for name in SOURCES)
+    entries = {name + '.class' for name in class_names}
+    entries.update({'META-INF/eapdf-fontbox-backport.json',
+                    'META-INF/maven/org.apache.pdfbox/fontbox/pom.properties',
+                    'META-INF/maven/org.apache.pdfbox/fontbox/pom.xml'})
+    with zipfile.ZipFile(reference) as expected, zipfile.ZipFile(path) as package:
+        companion_prefixes = tuple(name + '$' for name in class_names)
+        entries.update(name for name in expected.namelist()
+                       if name.startswith(companion_prefixes) and name.endswith('.class'))
+        counts = Counter(package.namelist())
+        for entry in sorted(entries):
+            if counts[entry] != 1 or package.read(entry) != expected.read(entry):
+                raise SystemExit(f'{path}: {entry} does not match the locked FontBox backport exactly once')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--rebuild', action='store_true')
+    parser.add_argument('--verify-shaded', metavar='JAR', type=Path,
+                        help='Check the actual shaded FontBox classes and provenance against the locked backport')
     args = parser.parse_args()
     for item in LOCK['patches'] + LOCK['artifacts']:
         if digest((ROOT / item['path']).read_bytes()) != item['sha256']:
@@ -97,6 +118,9 @@ def main():
             for item in LOCK['artifacts']:
                 if digest((Path(temporary) / Path(item['path']).name).read_bytes()) != item['sha256']:
                     raise SystemExit('Rebuild mismatch: ' + item['path'])
+    if args.verify_shaded:
+        verify_shaded(args.verify_shaded)
+        print(f'FontBox backport verified in {args.verify_shaded}.')
     print('FontBox backport patches and artifacts verified.')
 
 

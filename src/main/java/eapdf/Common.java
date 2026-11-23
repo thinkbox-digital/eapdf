@@ -392,6 +392,7 @@ class Common {
       if (outermost) ConversionProgress.creationChecked(destination, temporary, expected, checked);
       ProcessingLimits.checkCancelled();
     });
+    if (outermost) OutputTransaction.complete(destination);
   }
 
   static void exitWithError(String s) {
@@ -407,6 +408,25 @@ class Common {
   static PerFileLogCapture beginPerFileLog(Path pdfOut) {
     ensureLogCaptureInstalled();
     return new PerFileLogCapture(pdfOut);
+  }
+
+  @FunctionalInterface
+  interface FileConversion {
+    void run() throws Exception;
+  }
+
+  static void withPerFileLog(Path pdfOut, FileConversion conversion) throws Exception {
+    try (PerFileLogCapture capture = beginPerFileLog(pdfOut)) {
+      try {
+        conversion.run();
+      } catch (Exception failure) {
+        if (!(failure instanceof InterruptedException || failure instanceof java.util.concurrent.CancellationException)
+            && !Thread.currentThread().isInterrupted()) {
+          capture.recordFailure(failure);
+        }
+        throw failure;
+      }
+    }
   }
 
   static void ensureLogCaptureInstalled() {
@@ -436,7 +456,7 @@ class Common {
     PerFileLogCapture(Path pdfOut) {
       this.pdfOut = pdfOut;
       Path parent = pdfOut.getParent() == null ? Paths.get("out") : pdfOut.getParent();
-      Path logsDir = ConversionProgress.logsDirectory(parent.resolve("logs"));
+      Path logsDir = parent.resolve("logs");
       String filename = pdfOut.getFileName() == null ? "output.log" : pdfOut.getFileName().toString().replaceFirst("(?i)\\.pdf$", "") + ".log";
       this.logPath = logsDir.resolve(filename);
       ACTIVE_LOG_CAPTURE.set(this);
@@ -468,19 +488,21 @@ class Common {
       }
     }
 
+    synchronized void recordFailure(Exception failure) {
+      String message = failure.getMessage();
+      recordLine("error: " + failure.getClass().getSimpleName()
+          + (message == null || message.isBlank() ? "" : ": " + message));
+    }
+
     @Override
     public void close() {
       ACTIVE_LOG_CAPTURE.remove();
       try {
-        Files.createDirectories(logPath.getParent());
         synchronized (this) {
           if (pendingLine.length() > 0) recordLine(pendingLine.toString());
-          try {
-            Files.writeString(logPath, renderSummary(), StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
-          } catch (FileAlreadyExistsException collision) {
-            Path separateLog = Files.createTempFile(logPath.getParent(), "conversion-", ".log");
-            Files.writeString(separateLog, renderSummary(), StandardCharsets.UTF_8);
-          }
+          if (warningCounts.isEmpty() && errorCounts.isEmpty() && blockedAssetEncounters == 0) return;
+          Files.createDirectories(logPath.getParent());
+          Common.writeAtomically(logPath, temporary -> Files.writeString(temporary, renderSummary(), StandardCharsets.UTF_8));
         }
       } catch (Exception error) {
         System.err.println("Unable to write conversion summary: " + error.getClass().getSimpleName());
@@ -523,11 +545,6 @@ class Common {
       out.append("Errors recorded: ").append(errorTotal).append(System.lineSeparator());
       out.append("Blocked remote asset encounters: ").append(blockedAssetEncounters).append(System.lineSeparator());
       out.append("Distinct blocked remote assets tracked: ").append(blockedAssets.size()).append(System.lineSeparator());
-
-      if (warningTotal == 0 && errorTotal == 0 && blockedAssetEncounters == 0) {
-        out.append(System.lineSeparator()).append("No warnings or errors recorded.").append(System.lineSeparator());
-        return out.toString();
-      }
 
       if (!warningCounts.isEmpty()) appendCountSection(out, "Warning Summary", warningCounts);
       if (!errorCounts.isEmpty()) appendCountSection(out, "Error Summary", errorCounts);
@@ -1276,7 +1293,9 @@ static String stripInvalidXml(String s) {
   static String nz(String s) { return s == null ? "" : s; }
 
   static String safeFileStem(String s) {
-    String t = stripInvalidXml(nz(s)).trim();
+    // A replacement character stands in for undecodable input. Keep readable
+    // fragments apart and let a wholly undecodable stem use the normal fallback.
+    String t = stripInvalidXml(nz(s)).replace('\uFFFD', ' ').trim();
     if (t.isEmpty()) t = "message";
     t = t.replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]+", "_");
     t = t.replaceAll("\\s+", " ").trim();

@@ -65,6 +65,40 @@ class PdfWriterArchiveTests {
   }
 
   @Test
+  void cleanConversionDoesNotCreateOrReplaceASidecar() throws Exception {
+    Path out = tempDir.resolve("clean.pdf");
+    try (var capture = Common.beginPerFileLog(out)) {
+      capture.append("[progress] rendering\n");
+      capture.append("com.openhtmltopdf.general INFO:: Renderer started\n");
+      capture.append("com.openhtmltopdf.css-parse WARNING:: ignored malformed CSS declaration\n");
+    }
+    Assertions.assertFalse(Files.exists(tempDir.resolve("logs")));
+
+    Path previousLog = Files.createDirectories(tempDir.resolve("logs")).resolve("clean.log");
+    Files.writeString(previousLog, "Earlier conversion issue");
+    Common.withPerFileLog(out, () -> {});
+    Assertions.assertEquals("Earlier conversion issue", Files.readString(previousLog));
+  }
+
+  @Test
+  void standaloneBlockedAssetAndThrownConversionFailureCreateSidecars() throws Exception {
+    Common.withPerFileLog(tempDir.resolve("blocked-only.pdf"),
+        () -> Common.recordBlockedRemoteAsset("https://example.com/image.png"));
+    String blocked = Files.readString(tempDir.resolve("logs/blocked-only.log"));
+    Assertions.assertTrue(blocked.contains("Blocked remote asset encounters: 1"));
+    Assertions.assertFalse(blocked.contains("example.com"));
+
+    Path failed = tempDir.resolve("failed.pdf");
+    Exception failure = new java.io.IOException("Cannot write the converted PDF");
+    Assertions.assertSame(failure, Assertions.assertThrows(java.io.IOException.class,
+        () -> Common.withPerFileLog(failed, () -> { throw failure; })));
+    Assertions.assertFalse(Files.exists(failed));
+    String error = Files.readString(tempDir.resolve("logs/failed.log"));
+    Assertions.assertTrue(error.contains("Errors recorded: 1"));
+    Assertions.assertTrue(error.contains("IOException: Cannot write the converted PDF"));
+  }
+
+  @Test
   void perFileLogCaptureWritesSummaryOnly() throws Exception {
     Path out = tempDir.resolve("summary.pdf");
     try (Common.PerFileLogCapture capture = Common.beginPerFileLog(out)) {

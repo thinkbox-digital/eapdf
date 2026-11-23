@@ -40,6 +40,55 @@ class SmallInputReliabilityTests {
     }
   }
 
+  @Test void malformedInlineBase64WarnsAndArchivesExactOriginal() throws Exception {
+    byte[] raw = """
+        From: sender@example.org
+        To: recipient@example.org
+        Subject: Undecodable inline image
+        Date: Thu, 22 Oct 2026 12:00:00 +0000
+        Message-ID: <malformed-image@example.org>
+        MIME-Version: 1.0
+        Content-Type: multipart/related; boundary="parts"
+
+        --parts
+        Content-Type: text/html; charset=UTF-8
+
+        <html><body><p>Available message text</p><img src="cid:broken@example.org"></body></html>
+        --parts
+        Content-Type: image/gif; name="broken.gif"
+        Content-ID: <broken@example.org>
+        Content-Transfer-Encoding: base64
+
+        R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=
+        --parts
+        Content-Type: application/octet-stream
+        Content-Disposition: attachment; filename="valid.bin"
+        Content-Transfer-Encoding: base64
+
+        aGVsbG8=
+        --parts--
+        """.getBytes(StandardCharsets.US_ASCII);
+    var record = parse(raw);
+    assertArrayEquals(raw, record.sourceBytes);
+    assertTrue(record.diagnosticCodes.entrySet().stream().anyMatch(entry ->
+        entry.getValue() == ConversionDiagnostic.Code.SOURCE_INCOMPLETE && entry.getKey().contains("broken.gif")));
+    assertFalse(record.associatedFiles.stream().anyMatch(file -> file.filename.equals("broken.gif")));
+    var valid = record.associatedFiles.stream().filter(file -> file.filename.equals("valid.bin")).findFirst().orElseThrow();
+    assertArrayEquals("hello".getBytes(StandardCharsets.US_ASCII), valid.data());
+
+    var second = TextDecodeWarningTests.parse("text/plain", "Second message".getBytes(StandardCharsets.US_ASCII));
+    Path archive = directory.resolve("malformed_1m.pdf");
+    PdfMailWriter.writeEaPdfArchive(archive, List.of(record, second), TestSupport.fontPath(),
+        TestSupport.iccPath(), false, directory, "m");
+    try (var document = Loader.loadPDF(archive.toFile())) {
+      assertTrue(new PDFTextStripper().getText(document).contains("Available message text"));
+      var source = AttachmentProfilePolicyTests.files(document).get("edge.eml");
+      assertNotNull(source);
+      assertEquals("Source", source.getCOSObject().getNameAsString(org.apache.pdfbox.cos.COSName.getPDFName("AFRelationship")));
+      assertArrayEquals(raw, AttachmentProfilePolicyTests.bytes(source));
+    }
+  }
+
   @Test void nestedAttachedMessagesArePreservedBeyondFormerDepthCutoff() {
     String before = System.getProperty("eapdf.maxMimeDepth");
     try {

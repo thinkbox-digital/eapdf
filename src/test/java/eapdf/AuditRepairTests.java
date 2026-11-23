@@ -38,6 +38,21 @@ class AuditRepairTests {
     assertArrayEquals(source, record.sourceBytes);
   }
 
+  @Test void generatedPdfFilenamesKeepReadableUnicodeWithoutReplacementCharacters() throws Exception {
+    byte[] source = ("Subject: =?UTF-8?Q?Caf=C3=A9=FF=FFnotes?=\r\n\r\nBody")
+        .getBytes(StandardCharsets.US_ASCII);
+    EmailRecord record = EmlReader.readRfc822Bytes(source, "sample.eml", "sample.eml", "", List.of(), false);
+
+    assertEquals("Café\uFFFD\uFFFDnotes", record.subject);
+    String inputStem = Common.safeFileStem("\uFFFD日本語\uFFFD");
+    String subjectStem = Common.safeFileStem(record.subject);
+    assertEquals("日本語__Café notes_000001.pdf",
+        EmailToPDFA.uniqueFileName(directory.toString(), inputStem, subjectStem, 1, 1, false));
+    assertFalse(PdfCollectionSupport.collectionMemberFilename(record.subject, "s", 1).contains("\uFFFD"));
+    assertEquals("message", Common.safeFileStem("\uFFFD\uFFFD"));
+    assertArrayEquals(source, record.sourceBytes);
+  }
+
   @Test void malformedInlineImageDoesNotDiscardHtmlFormatting() throws Exception {
     EmailRecord record = AttachmentProfilePolicyTests.record("Malformed inline image");
     record.htmlBody = "<p>Before <b>formatted</b></p><img alt='broken' src='data:image/png;base64,A'><p>After</p>";
@@ -88,9 +103,9 @@ class AuditRepairTests {
     Files.writeString(existing, "previous");
     var mode = PosixFilePermissions.fromString("r--r-----"); Files.setPosixFilePermissions(existing, mode);
     String digest = Common.digestHex(staged, "SHA-256");
-    var entries = List.of(new OutputTransaction.Entry(existing.toString(), staged.toString(), 9, digest, true),
-        new OutputTransaction.Entry(fresh.toString(), staged.toString(), 9, digest, false));
-    OutputTransaction.publish(entries, (source, target) -> Files.createLink(target, source));
+    var entries = List.of(new OutputTransaction.Entry(existing.toString(), staged.toString(), 9, digest, false),
+        new OutputTransaction.Entry(fresh.toString(), staged.toString(), 9, digest, true));
+    OutputTransaction.publish(entries, (source, target) -> Files.move(source, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING));
     assertEquals("completed", Files.readString(existing));
     assertEquals(mode, Files.getPosixFilePermissions(existing));
     assertEquals(PosixFilePermissions.fromString("rw-------"), Files.getPosixFilePermissions(fresh));

@@ -4,24 +4,25 @@
 
 Local, Gmail and monthly CLI entry points now supervise a fresh JVM without changing their public arguments. GUI-launched conversions use the same supervisor. The worker inherits configuration/debug properties and forwards ordinary stdout/stderr; user-visible output paths remain the requested paths, not internal staging paths.
 
-Workers use a private temporary workspace, bounded heap/direct/class/code memory, a whole-conversion deadline and monitored temporary storage. On Linux, `/usr/bin/prlimit` (util-linux) additionally bounds native address space, CPU time and individual file size; it is required rather than silently skipping these controls. Other platforms retain JVM/deadline/storage controls but need platform-native resource verification before hostile-input deployment. These controls are process/resource isolation, not a filesystem/network security sandbox for compromised third-party code. Use a dedicated service identity/container and least-privilege read-only inputs for that threat model; do not grant unrestricted Docker-socket privileges casually.
+Workers use a private temporary workspace, bounded heap/direct/class/code memory and monitored temporary storage. Conversion runs without a whole-job deadline by default. On Linux, `/usr/bin/prlimit` (util-linux) also bounds native address space and individual file size, and applies a CPU allowance when a deadline is configured. Other platforms retain JVM, storage and explicitly configured deadline controls. These controls are process/resource isolation, not a filesystem/network security sandbox for compromised third-party code. Use a dedicated service identity/container and least-privilege read-only inputs for that threat model; do not grant unrestricted Docker-socket privileges casually.
 
 The GUI Stop action requests supervisor shutdown off the UI thread. Shutdown terminates/reaps descendants before cleanup; a hard fallback has a bounded wait. An independent worker watchdog exits when its supervisor disappears. On the next invocation, owned abandoned workspaces are reclaimed only after checking process start identities, not PID alone. Active workspaces and other users' directories are left alone.
 
 ## Output transaction
 
-Final PDFs are written privately and checked before publication. Internal temporary collection children are **not** final outputs and remain readable in the private worker workspace. Branding, finding-aid/spreadsheet generation and PREMIS output have been removed. A worker failure, native resource failure or timeout publishes no staged output and cannot overwrite an existing PDF. Gmail completion hashes describe staged bytes; if publication fails, the next resume detects missing/mismatched published files and rebuilds them.
+Final PDFs are written privately and checked before publication. Internal collection children stay in the private worker workspace until the collection is assembled. Branding, finding-aid/spreadsheet generation and PREMIS output have been removed.
 
-After successful conversion, the supervisor verifies the manifest and payload
-checksums. It locks the destination directories across processes, prepares files
-on the destination filesystem, and records a recovery journal before replacing
-outputs. An automatic filename collision fails publication and preserves the
-other job's output. Explicitly requested destinations can be replaced. The creator rejects an archive
-destination that would overwrite one of its inputs.
+As each PDF finishes, the supervisor verifies its size and checksum, locks the
+destination directory across processes, and commits the file atomically on the
+destination filesystem. An automatic filename collision fails publication and
+preserves the other job's output. Explicitly requested destinations can be
+replaced.
 
-Cancellation before the commit point rolls back completed replacements. The journal
-lets recovery restore previous files when it can confirm ownership of the
+A cancelled or failed job keeps every PDF already committed. A recovery journal
+rolls back the in-progress replacement when it can confirm ownership of the
 installed output. Recovery retains the working data when ownership is uncertain.
+Gmail resume checks published files against the recorded hashes and rebuilds
+missing or changed files.
 
 For a multi-file job, the supervisor also copies the verified results to a
 generation under `.eapdf-publication/` and atomically replaces `current.json`
@@ -32,9 +33,9 @@ immutable `manifest.json` for that job, even if another job advances `current.js
 The generation copies stay available as output history for readers holding an
 earlier manifest.
 
-The direct PDF paths are compatibility copies with per-file replacement. Use
-the manifest to read a consistent batch. A single-PDF job publishes its PDF
-atomically and leaves the latest multi-file manifest available.
+The direct PDF paths are available during conversion. Read the manifest for a
+consistent snapshot of a completed batch. A failed, cancelled, or single-PDF job
+leaves the latest completed multi-file manifest available.
 
 ## Limits
 
@@ -42,7 +43,7 @@ All settings are positive integers, with JVM properties taking precedence over c
 
 | Environment | JVM property | Default |
 | --- | --- | --- |
-| `EAPDF_JOB_TIMEOUT_SECONDS` | `eapdf.jobTimeoutSeconds` | 600 seconds per conversion worker |
+| `EAPDF_JOB_TIMEOUT_SECONDS` | `eapdf.jobTimeoutSeconds` | Unlimited |
 | `EAPDF_WORKER_HEAP_BYTES` | `eapdf.workerHeapBytes` | Automatic: half available memory; explicit worker or launcher limits remain effective |
 | `EAPDF_WORKER_ADDRESS_BYTES` | `eapdf.workerAddressBytes` | Chosen heap plus 4 GiB native headroom plus the scratch allowance for file mappings (unless explicitly set) |
 | `EAPDF_MAX_TEMP_BYTES` | `eapdf.maxTempBytes` | 80% of available working-disk space at job admission |
@@ -69,9 +70,7 @@ Before a production release, retain signed results for meaningful image alternat
 
 ## Live conversion progress
 
-Each run writes `progress.json` in a fresh `.eapdf-evidence-*` subdirectory of the output directory.
-The creator prints its path on the `Progress:` line. Per-file logs share this job directory.
-Debug mode creates a separate job directory under the selected debug directory. The progress file contains
+Future runs write `progress.json` in the output directory. The file contains
 `emails_completed`, `emails_total`, `total_known`, `stage`, `state`, and timestamps.
 Archive work also reports `stage_completed`, `stage_total` and `stage_unit` for
 bookmarks, document parts, embedding, page numbering, tagging, page streams,
@@ -90,8 +89,9 @@ with an unknown total (direct dictionaries also count), followed by counted
 metadata streams; attachment annotation checking reports examined attachments. A quiet work counter can reflect a single long operation.
 
 The conversion log prints `[progress]` lines on stage changes, final known counts
-and at ten-second intervals. The GUI shows these in its status line as well as
-Details. Reopen an already-running GUI after installing the updated JAR.
+and at ten-second intervals. The GUI refreshes the message count once per second
+and shows longer phases in the status line. Details keeps the stage history.
+Reopen an already-running GUI after installing the updated JAR.
 While reading an input, `emails_total` is `null` until the exact count is known;
 `emails_discovered` shows how many source emails have been read so far. No extra
 full input scan is performed just to obtain a total.
@@ -101,14 +101,15 @@ For a collection, they are unique completed email children (folder aliases do no
 increase the count). For separate-message output, they have passed the creator's
 output checks and have been staged. Gmail includes already completed messages
 reused during resume. A streamed input can therefore have completed emails while
-its final total remains unknown. Snapshots refresh once per second, including during long assembly stages.
-Stage changes, final email counts, input completion and job completion are written
-immediately. The `updated` timestamp indicates a status refresh, not necessarily
-another completed email.
+its final total remains unknown. Snapshots refresh about once per second, including
+during long assembly stages. Large receipt lists use the same interval for stage
+updates. The final snapshot records the job outcome and its receipts immediately.
+The `updated` timestamp records the last snapshot write.
 
 Even when `emails_completed` equals `emails_total`, assembly, signing, checks, and
-publication can remain. Only `state: COMPLETED` means the conversion has published
-its outputs. A separate standalone-validator run is not included in that state.
+publication can remain. `state: COMPLETED` confirms publication of the full job.
+Individual PDFs can appear while the job is still running. Standalone validation
+is a separate step.
 FAILED or CANCELLED retains the last recorded counts. An abrupt process kill can
 leave the last snapshot; it is not proof of successful conversion. For concurrent
 jobs, use different output directories; the latest job owns a shared directory's
@@ -154,6 +155,15 @@ threshold). Final output
 may use half the temporary-storage allowance; the former 8x input / 16 GiB cap is
 removed. Explicit limits still win. Four rendering jobs are requested by the
 corpus runner and web converter; large corpus inputs run alone.
+
+For separate PDFs from local EML files, the Creator uses the largest source
+file to size the worker pool. For local combined archives (1m/1mi) and
+collections (1c/1ci), it sizes the rendering pool using the largest extracted
+message, including staged attachments and decoded bodies. It budgets at least
+256 MiB per worker or sixteen times that size, whichever is greater. It reserves
+half the worker JVM heap for shared data and transient allocations. The
+requested job count and available CPUs also cap parallelism.
+A single PST or MBOX is read before its extracted messages are rendered.
 
 The Python validator runs as a CLI. It accepts regular files up to 64 GiB
 (`VALIDATOR_MAX_INPUT_BYTES`) and directories with up to 16,384 entries
@@ -224,8 +234,7 @@ post-write creator validation, including in-memory collection children. The
 default is true. Skipped creation checks are recorded as `SKIPPED`; preservation
 comparison and standalone PDF/A/EA-PDF validation are `NOT_RUN`. This option
 does not disable atomic publication, output hashing, cancellation or resource
-safeguards. It does not establish conformance. Future regeneration configs must
-also enable `accessibility.addPdfUaFeatures`, per the user's preference.
+safeguards. It does not establish conformance.
 
 
 ## Creator GUI logs
@@ -237,6 +246,10 @@ Display updates are batched without discarding the saved output. Existing logs
 are retained rather than automatically deleted. The display limits bound retained
 history, not the temporary allocation for an individual exceptionally long line.
 
+The creator writes a per-PDF summary under the output folder's `logs/`
+directory when it records a conversion warning, an error, or a blocked remote
+asset. Clean conversions leave existing sidecars alone and create no new log.
+
 
 ## Regenerating local outputs
 
@@ -244,14 +257,25 @@ history, not the temporary allocation for an individual exceptionally long line.
 The installed `eapdf-regenerate` launcher prints basic instructions without arguments:
 
 ```bash
-eapdf-regenerate sample
-eapdf-regenerate everything
-eapdf-regenerate everything --dry-run
-eapdf-regenerate everything --workers 4 --jobs 2
+eapdf-regenerate main sample
+eapdf-regenerate lite everything
+eapdf-regenerate secure everything --dry-run
+eapdf-regenerate main everything --workers 4 --jobs 2
 ```
 
-Both modes preserve the files already in `out/`. `--dry-run`
-only prints the plan. The default creator is `Thinkbox.DIGITAL`; no creator argument
+The first argument selects the `lite`, `main`, or `secure` project. Running either
+generation mode clears the selected project's `out/` directory. `--dry-run`
+only prints the plan. Lite accepts EML inputs. Secure requires C2PA and PAdES
+B-LTA signing and removes its temporary run evidence on exit. Use
+`eapdf-regenerate <project> --help` for edition-specific options. The following
+details describe Main.
+
+The launcher uses the JARs named by the selected checkout's `VERSION` when both
+are present. Otherwise, it uses and reports the sole matching creator and
+validator version in `dist/`. The `--creator-jar` and `--validator-jar` options
+override the corresponding selections.
+
+The default creator is `Thinkbox.DIGITAL`; no creator argument
 is needed. Concurrent Java processes are bounded automatically by available CPU
 and memory, with two creator threads per process by default. `sample` selects the
 two smallest eligible sources of each type. `everything` covers every eligible
@@ -268,15 +292,16 @@ A one-message source cannot produce 1m/1mi and is reported as not applicable.
 The run’s `plan.json` records the exact random group membership; a dry run makes
 an independent preview plan.
 
-The run stages and validates every PDF before publishing. A run with failures
-leaves prior outputs in place. When a name is occupied by different bytes, the
-new PDF gets a digest suffix before its profile suffix.
+Each creator job validates all of its completed PDFs in staging. After acceptance,
+the job publishes the PDFs and prints their paths. Other jobs continue concurrently.
 
-Final PDFs go directly into `out/eml/`, `out/msg/`, `out/mbox/`, and `out/pst/`.
+Final PDFs go directly into `out/eml/`, `out/msg/`, `out/mbox/`, and `out/pst/`
+in the selected project.
 Each run snapshots its versioned creator and validator JARs so later upgrades
 do not interrupt it. Source hashes, logs, progress and standalone Java validation reports go into the
-run’s evidence directory under `output/`. Each process has isolated temporary
-staging. Accessibility and both indexes are enabled; signing is disabled. Original
+run’s evidence directory under that project's `output/`. Each process has isolated temporary
+staging. This command enables Accessibility (PDF/UA) and both indexes and disables
+signing. Use it when the user requests Accessibility and both indexes. Original
 inputs are preserved. Failed or incomplete conversions are reported with a nonzero
 exit status. Existing conversions using `out/` must finish before regeneration.
 Conversion staging and Java scratch use private directories under
@@ -292,9 +317,10 @@ precedence; each document's result records its budgets.
 If validation returns FAIL or INCOMPLETE, or is unavailable, regeneration retains the initial
 reports under `initial-validation/`, regenerates once with a visible
 **WARNING — Validation requires review** banner, then validates the replacement.
+Rejected and incomplete PDFs stay in the run's `quarantine/` directories under `output/`.
 The banner discloses failed or unfinished checks; it does not turn the result into PASS.
-Source-data warnings remain separate. The warning attempt and its reports help
-diagnose the failure. Both attempts stay unpublished. This requires the updated creator JAR.
+Source-data warnings remain separate. If the replacement fails, the original PDF
+stays in quarantine and the run reports the failure. This requires the updated creator JAR.
 
 At completion, the terminal lists FAIL and INCOMPLETE jobs, affected output files
 (or sources that produced no PDF), and their conversion logs and validation reports.

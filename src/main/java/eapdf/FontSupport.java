@@ -1,5 +1,6 @@
 package eapdf;
 
+import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import java.awt.Font;
 import java.io.File;
@@ -19,18 +20,29 @@ import org.jsoup.Jsoup;
 final class FontSupport {
   static final ThreadLocal<Boolean> ARCHIVE_FONTS = ThreadLocal.withInitial(() -> false);
   static void register(PdfRendererBuilder builder, File file, String family) {
+    register(builder, file, family, 400);
+  }
+
+  private static void register(PdfRendererBuilder builder, File file, String family, int weight) {
     if (!ARCHIVE_FONTS.get() || family.startsWith("ArchiveFallback")) {
-      builder.useFont(file, family);
+      builder.useFont(file, family, weight, FontStyle.NORMAL, true);
       return;
     }
     // The renderer's File supplier always subsets; its stream supplier honors this flag.
     builder.useFont((com.openhtmltopdf.extend.FSSupplier<java.io.InputStream>) () -> {
       try { return java.nio.file.Files.newInputStream(file.toPath()); }
       catch (java.io.IOException error) { throw new java.io.UncheckedIOException(error); }
-    }, family, 400,
-        com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle.NORMAL,
-        false);
+    }, family, weight, FontStyle.NORMAL, false);
   }
+
+  static Path bundledBoldFace(Path primary) {
+    Path regular = Common.bundledAssetPath("assets/DejaVuSans.ttf", ".ttf");
+    if (!primary.toAbsolutePath().normalize().equals(regular)) return null;
+    Path bold = Common.bundledAssetPath("assets/DejaVuSans-Bold.ttf", ".ttf");
+    if (bold == null) throw Common.fail("Bundled font DejaVuSans-Bold.ttf is missing");
+    return bold;
+  }
+
   // Cache metrics only; PDFont instances belong to their individual documents.
   private static final com.openhtmltopdf.extend.FSCacheEx<String, com.openhtmltopdf.extend.FSCacheValue> METRICS =
       new com.openhtmltopdf.extend.FSCacheEx<>() {
@@ -109,6 +121,11 @@ final class FontSupport {
           public com.openhtmltopdf.extend.FSCacheValue get(String key) { return METRICS.get(namespace + key); }
           public com.openhtmltopdf.extend.FSCacheValue get(String key, java.util.concurrent.Callable<? extends com.openhtmltopdf.extend.FSCacheValue> loader) { return METRICS.get(namespace + key, loader); }
         });
+    Path bold = bundledBoldFace(fonts.getFirst());
+    if (bold != null) {
+      ProcessingLimits.checkFont(bold);
+      register(builder, bold.toFile(), "ArchiveFont", 700);
+    }
     StringBuilder families = new StringBuilder("ArchiveFont");
     for (int index = 1; index < fonts.size(); index++) {
       String family = "ArchiveFallback" + index;

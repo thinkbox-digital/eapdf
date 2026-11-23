@@ -23,6 +23,10 @@ class MsgBodySelectionTests {
   }
 
   static void writeMsg(Path path, Integer nativeBody, boolean rtfInSync) throws Exception {
+    writeMsg(path, nativeBody, rtfInSync, false);
+  }
+
+  private static void writeMsg(Path path, Integer nativeBody, boolean rtfInSync, boolean plainTextCopy) throws Exception {
     Map<Integer, byte[]> streams = new LinkedHashMap<>();
     streams.put(0x0037001f, unicode("MSG body selection"));
     streams.put(0x0042001f, unicode("Sender"));
@@ -31,10 +35,14 @@ class MsgBodySelectionTests {
     streams.put(0x007d001f, unicode("From: Sender <sender@example.org>\r\nTo: Recipient <recipient@example.org>\r\n"
         + "Date: Thu, 22 Oct 2026 12:00:00 +0000\r\nMessage-ID: <body-selection@example.org>\r\n"));
     String plain = nativeBody != null && nativeBody == 2 && rtfInSync ? "Converted RTF body" : "Original plain body";
+    if (plainTextCopy) plain = "Message text\r\n\r\nFirst signature line\r\nSecond signature line";
     streams.put(0x1000001f, unicode(plain));
-    streams.put(0x10130102, "<html><body><p>Native HTML body</p></body></html>".getBytes(StandardCharsets.UTF_8));
-    String rtfText = rtfInSync ? plain : "Converted RTF body";
-    byte[] rtf = ("{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Arial;}}\\f0\\fs24 " + rtfText + "\\par}")
+    if (!plainTextCopy) {
+      streams.put(0x10130102, "<html><body><p>Native HTML body</p></body></html>".getBytes(StandardCharsets.UTF_8));
+    }
+    String rtfText = rtfInSync ? plain.replace("\r\n", "\\par ") : "Converted RTF body";
+    String fromText = plainTextCopy ? "\\fromtext" : "";
+    byte[] rtf = ("{\\rtf1\\ansi" + fromText + "\\deff0{\\fonttbl{\\f0 Arial;}}\\f0\\fs24 " + rtfText + "\\par}")
         .getBytes(StandardCharsets.US_ASCII);
     ByteBuffer storedRtf = ByteBuffer.allocate(16 + rtf.length).order(ByteOrder.LITTLE_ENDIAN);
     storedRtf.putInt(rtf.length + 12).putInt(rtf.length).putInt(0x414c454d).putInt(0).put(rtf);
@@ -112,6 +120,18 @@ class MsgBodySelectionTests {
     Assertions.assertEquals("text/rtf", record.bodyMime);
     Assertions.assertTrue(Jsoup.parse(record.htmlBody).text().contains("Original plain body"));
     Assertions.assertTrue(record.rtfBody.contains("Original plain body"));
+  }
+
+  @Test
+  void synchronizedCopyOfPlainTextKeepsSingleSignatureLineBreaks() throws Exception {
+    Path source = tempDir.resolve("plain-text-copy.msg");
+    writeMsg(source, null, true, true);
+    EmailRecord record = MsgReader.readMsg(source.toString(), "", List.of(), false);
+    Assertions.assertEquals("text/plain", record.bodyMime);
+    var body = Jsoup.parse(record.htmlBody).selectFirst(".ea-plain-text");
+    Assertions.assertNotNull(body);
+    Assertions.assertEquals("Message text\n\nFirst signature line\nSecond signature line", body.wholeText());
+    Assertions.assertArrayEquals(Files.readAllBytes(source), record.sourceBytes);
   }
 
   @Test

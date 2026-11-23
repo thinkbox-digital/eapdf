@@ -316,6 +316,15 @@ class CreatorAccuracyTests {
       EmailRecord record = parse("", "text/plain", "Original body", "missing.eml");
       byte[] bytes = create(record, profile);
       try (PDDocument document = Loader.loadPDF(bytes)) {
+        var resources = document.getPage(0).getResources();
+        boolean embeddedBold = false;
+        for (var name : resources.getFontNames()) {
+          var font = resources.getFont(name);
+          String fontName = font.getName();
+          embeddedBold |= font.isEmbedded()
+              && (fontName.endsWith("DejaVuSans-Bold") || fontName.endsWith("ArchiveFont-Bold"));
+        }
+        Assertions.assertTrue(embeddedBold, "The warning page must use real embedded bold text");
         String text = new PDFTextStripper().getText(document);
         Assertions.assertTrue(text.contains("INCOMPLETE SOURCE"));
         Assertions.assertTrue(text.contains("Original body"));

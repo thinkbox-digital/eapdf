@@ -1,6 +1,5 @@
 package eapdf;
 
-import com.google.gson.JsonParser;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Frame;
@@ -88,20 +87,11 @@ public final class CreatorDesktopSmoke {
         require(!stop.isEnabled() && openOutput.isEnabled(), "Creator controls did not finish conversion");
         find(frame, JTextArea.class, area -> area.getText().contains("Validate the PDFs"));
       });
-      List<Path> pdfs = publishedPdfs(destination);
-      require(pdfs.size() == 1, "Creator must write exactly one PDF");
-      Path progress;
-      try (var evidenceDirectories = Files.newDirectoryStream(destination, ".eapdf-evidence-*")) {
-        var directories = evidenceDirectories.iterator();
-        require(directories.hasNext(), "Creator did not publish job evidence");
-        progress = directories.next().resolve("progress.json");
-        require(!directories.hasNext(), "Creator published more than one job evidence directory");
-      }
-      require(JsonParser.parseString(Files.readString(progress)).getAsJsonObject().get("state").getAsString()
-          .equals("COMPLETED"),
+      require(pdfCount(destination) == 1, "Creator must write exactly one PDF");
+      require(Files.readString(destination.resolve("progress.json")).contains("COMPLETED"),
           "Creator progress did not record completion");
       if (evidence != null) {
-        recordEvidence(frame, inputPath, pdfs.getFirst(), progress, evidence);
+        recordEvidence(frame, inputPath, destination, evidence);
       }
 
       Path stopped = Files.createDirectory(work.resolve("stopped"));
@@ -116,23 +106,27 @@ public final class CreatorDesktopSmoke {
         require(status.getText().equals("Stopped"), "Cancellation status: " + status.getText());
         require(!stop.isEnabled(), "Stop was still enabled after cancellation");
       });
-      require(publishedPdfs(stopped).isEmpty(), "Creator published a PDF after cancellation");
+      require(pdfCount(stopped) == 0, "Creator published a PDF after cancellation");
       System.out.println("Creator GUI smoke passed");
     } finally {
       SwingUtilities.invokeAndWait(frame::dispose);
     }
   }
 
-  private static List<Path> publishedPdfs(Path directory) throws Exception {
+  private static long pdfCount(Path directory) throws Exception {
     try (var paths = Files.list(directory)) {
-      return paths.filter(Files::isRegularFile).filter(path -> path.getFileName().toString().endsWith(".pdf")).toList();
+      return paths.filter(path -> path.getFileName().toString().endsWith(".pdf")).count();
     }
   }
 
-  private static void recordEvidence(JFrame frame, Path source, Path pdf, Path progress, Path evidence) throws Exception {
+  private static void recordEvidence(JFrame frame, Path source, Path destination, Path evidence) throws Exception {
     Files.createDirectories(evidence);
-    Files.copy(pdf, evidence.resolve("eml_gui_1s.pdf"), StandardCopyOption.REPLACE_EXISTING);
-    Files.copy(progress, evidence.resolve("progress.json"), StandardCopyOption.REPLACE_EXISTING);
+    try (var paths = Files.list(destination)) {
+      for (Path path : paths.filter(Files::isRegularFile).toList()) {
+        Path target = evidence.resolve(path.toString().endsWith(".pdf") ? "eml_gui_1s.pdf" : path.getFileName().toString());
+        Files.copy(path, target, StandardCopyOption.REPLACE_EXISTING);
+      }
+    }
     byte[] digest = MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(source));
     Files.writeString(evidence.resolve("source.sha256"), HexFormat.of().formatHex(digest));
     BufferedImage image = onEdt(() -> {

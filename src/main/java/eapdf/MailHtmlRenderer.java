@@ -20,6 +20,25 @@ import static eapdf.MailRenderPolicy.*;
 
 /** HTML preparation and rendering; document assembly and publication stay with the writer. */
 final class MailHtmlRenderer {
+ static final String WARNING_STYLES = """
+     .conversion-warning {
+       background-color: #fff6ed;
+       border-left: 3px solid #99491d;
+       color: #522a15;
+       font-size: 10pt;
+       line-height: 1.4;
+       margin: 0 0 12px;
+       padding: 8px 12px;
+     }
+     .validation-warning {
+       background-color: #fff5ce;
+       border-left-color: #8b6500;
+       color: #473500;
+     }
+     .conversion-warning p { margin: 0; }
+     .conversion-warning .warning-title { font-size: 11pt; margin: 0 0 3px; }
+     .conversion-warning ul { margin: 0; padding: 0 0 0 17px; }
+     """;
  private final BooleanSupplier accessibility;
  private final BiFunction<EmailRecord,String,String> profile;
  private final Function<EmailRecord,List<AssociatedFile>> displayFiles;
@@ -133,9 +152,30 @@ private static boolean allowsPlainTextFallback(Exception error) {
       return false;
     }
     if (cause instanceof Common.UserFacingException || cause instanceof IOException) return false;
-    if (cause instanceof XRRuntimeException || cause instanceof org.xml.sax.SAXParseException) contentFailure = true;
+    if (cause instanceof XRRuntimeException || cause instanceof org.xml.sax.SAXParseException
+        || isAccessibilityTableFailure(cause) || isFormFieldFailure(cause)) contentFailure = true;
   }
   return contentFailure && !Thread.currentThread().isInterrupted();
+}
+
+private static boolean isAccessibilityTableFailure(Throwable cause) {
+  if (!(cause instanceof NullPointerException)) return false;
+  StackTraceElement[] stack = cause.getStackTrace();
+  // OpenHTMLtoPDF can fail while reporting an incompatible accessibility table child.
+  return stack.length > 0
+      && stack[0].getClassName().equals("com.openhtmltopdf.pdfboxout.PdfBoxAccessibilityHelper")
+      && stack[0].getMethodName().equals("logIncompatibleChild");
+}
+
+private static boolean isFormFieldFailure(Throwable cause) {
+  if (!(cause instanceof NullPointerException)) return false;
+  StackTraceElement[] stack = cause.getStackTrace();
+  // A broken OpenHTMLtoPDF form-field hierarchy can pass a null child to PDFBox.
+  return stack.length > 1
+      && stack[0].getClassName().equals("org.apache.pdfbox.pdmodel.common.COSArrayList")
+      && stack[0].getMethodName().equals("add")
+      && stack[1].getClassName().equals("com.openhtmltopdf.pdfboxout.PdfBoxForm")
+      && stack[1].getMethodName().equals("createNonTerminalFields");
 }
 
 private static void checkLayoutComplexity(Document document) {
@@ -316,6 +356,7 @@ String buildRenderHtml(EmailRecord r, boolean debug, Path assetDir, String profi
   s.append(messagePageStyle(r));
   s.append("html, body { font-family: ArchiveFont; }");
   s.append("body { margin: 8px 8px 0; font-size: 11pt; color: #222; line-height: 1.35; }");
+  s.append(WARNING_STYLES);
   s.append(".hdr { margin-bottom: 18px; }");
   s.append(".hdr-table { border-collapse: collapse; }");
   s.append(".hdr-table td { padding: 2px 0; }");
@@ -355,13 +396,13 @@ String buildRenderHtml(EmailRecord r, boolean debug, Path assetDir, String profi
   s.append("</style></head><body>");
   if (!Common.nz(EapdfConfig.get().validationWarning).isBlank()) {
     System.err.println("warning: VALIDATION WARNING BANNER: " + EapdfConfig.get().validationWarning);
-    s.append("<div style='border:2px solid #8b6500;background:#fff5ce;padding:10px;margin-bottom:12px;color:#473500'>")
-        .append("<p><strong>WARNING — Validation requires review</strong></p><p>")
+    s.append("<div class='conversion-warning validation-warning'>")
+        .append("<p class='warning-title'><strong>WARNING — Validation requires review</strong></p><p>")
         .append(Common.escapeHtml(EapdfConfig.get().validationWarning)).append("</p></div>");
   }
   if (!r.sourceProblems.isEmpty()) {
-    s.append("<div style='border:2px solid #8b3500;padding:10px;margin-bottom:12px;color:#582400'>")
-        .append("<p><strong>INCOMPLETE SOURCE — conversion warnings</strong></p><ul>");
+    s.append("<div class='conversion-warning'>")
+        .append("<p class='warning-title'><strong>INCOMPLETE SOURCE — conversion warnings</strong></p><ul>");
     for (String problem : r.sourceProblems) s.append("<li>").append(Common.escapeHtml(problem)).append("</li>");
     s.append("</ul></div>");
   }

@@ -1,21 +1,53 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Installed launcher; the maintained worker lives with the project.
-project=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/.." && pwd)
-if (($# == 0)); then
-  printf '%s\n' 'Usage: eapdf-regenerate sample|everything [options]' \
-    'Both modes validate staged PDFs before adding new files to out/. Existing files are preserved.' \
+workspace=/media/lepore/Work/thinkbox/eapdf
+if (($# == 0)) || [[ $1 == --help || $1 == -h ]]; then
+  printf '%s\n' 'Usage: eapdf-regenerate lite|main|secure sample|everything [options]' \
+    'Both modes CLEAR the selected project out/ directory when run.' \
     'sample: two small inputs per type; everything: every eligible supported input file.' \
-    'PST/MBOX: whole-source 1m, 1mi, 1c and 1ci archives; no individual-email PDFs.' \
-    'PST files larger than 250 MB (250,000,000 bytes) are skipped and recorded.' \
-    'EML/MSG: groups of up to 20 messages, then standalone PDFs for the same type.' \
-    'Completed PDFs are published after the run passes validation.' \
-    'Ends with failed/incomplete files and report paths; saves summary.txt with the run evidence.' \
+    'Lite accepts EML inputs. Secure requires C2PA and PAdES signing.' \
     'Uses concurrent Java processes, limited automatically by available CPU and memory.' \
-    'Example: eapdf-regenerate everything --workers 4 --jobs 2' \
+    'Example: eapdf-regenerate main everything --workers 4 --jobs 2' \
     'Default creator: Thinkbox.DIGITAL (no creator argument required).' \
-    'Preview: eapdf-regenerate everything --dry-run' \
-    'Help: eapdf-regenerate --help'
+    'Preview: eapdf-regenerate main everything --dry-run' \
+    'Detailed help: eapdf-regenerate main --help'
   exit 0
+fi
+case $1 in
+  lite|main|secure) project="$workspace/eapdf-$1" ;;
+  *) printf 'Invalid project: %s. Choose lite, main, or secure.\n' "$1" >&2; exit 2 ;;
+esac
+shift
+creator_prefix=emailtopdfa
+[[ $project == */eapdf-lite ]] && creator_prefix=emailtopdfa-lite
+version=$(<"$project/VERSION")
+creator_set=false
+validator_set=false
+for arg in "$@"; do
+  case $arg in
+    --creator-jar|--creator-jar=*) creator_set=true ;;
+    --validator-jar|--validator-jar=*) validator_set=true ;;
+    -h|--help) exec python3 -B "$project/scripts/regenerate_out.py" "$@" ;;
+  esac
+done
+if [[ ! -f $project/dist/$creator_prefix-$version.jar || ! -f $project/dist/eapdf-validator-$version.jar ]]; then
+  shopt -s nullglob
+  pairs=()
+  for creator in "$project/dist/$creator_prefix-"*.jar; do
+    candidate=${creator#"$project/dist/$creator_prefix-"}
+    candidate=${candidate%.jar}
+    [[ -f $project/dist/eapdf-validator-$candidate.jar ]] && pairs+=("$candidate")
+  done
+  if ((${#pairs[@]} == 1)); then
+    version=${pairs[0]}
+    extra=()
+    $creator_set || extra+=(--creator-jar "$project/dist/$creator_prefix-$version.jar")
+    $validator_set || extra+=(--validator-jar "$project/dist/eapdf-validator-$version.jar")
+    if ((${#extra[@]})); then
+      printf 'Using installed %s creator/validator JARs (version %s).\n' "${project##*/}" "$version"
+      set -- "${extra[@]}" "$@"
+    fi
+  fi
 fi
 exec python3 -B "$project/scripts/regenerate_out.py" "$@"

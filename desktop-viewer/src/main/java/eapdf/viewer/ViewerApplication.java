@@ -3,7 +3,7 @@ package eapdf.viewer;
 import com.dlsc.pdfviewfx.PDFBoxDocument;
 import com.dlsc.pdfviewfx.PDFView;
 import com.sun.javafx.stage.WindowHelper;
-import java.io.ByteArrayInputStream;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,6 +19,7 @@ import java.util.Properties;
 import java.util.function.Supplier;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.Task;
 import javafx.geometry.Orientation;
@@ -51,7 +52,7 @@ import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.skin.SplitPaneSkin;
-import javafx.scene.image.Image;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.InputEvent;
 import javafx.scene.input.KeyCombination;
@@ -85,6 +86,10 @@ public final class ViewerApplication extends Application {
 
     private Stage stage;
     private ViewerSession current;
+    private boolean decodingImagePreview;
+    private ImagePreviewRequest pendingImagePreview;
+    private long imagePreviewGeneration;
+    private Stage imagePreviewWindow;
     private ViewerSession navigationDocument;
     private final Map<ViewerSession, Node> portfolioBrowsers = new HashMap<>();
     private MailNavigation.Message message;
@@ -439,6 +444,9 @@ public final class ViewerApplication extends Application {
         toggle(outlines, false);
         tree.setShowRoot(false);
         tree.setAccessibleText("Messages and collections");
+        // JavaFX measures virtual rows before assigning their own width.
+        // Reserve room for cell padding, disclosure, the icon and the scrollbar.
+        var messageContentWidth = Bindings.max(0, tree.widthProperty().subtract(74));
         tree.setCellFactory(ignored -> new TreeCell<>() {
             {
                 setPrefWidth(0);
@@ -451,7 +459,7 @@ public final class ViewerApplication extends Application {
                 var label = empty ? null : styled(new Label(row.title()), "message-title");
                 if (label != null) {
                     label.setWrapText(true);
-                    label.maxWidthProperty().bind(widthProperty().subtract(58));
+                    label.maxWidthProperty().bind(messageContentWidth);
                 }
                 Node content = label;
                 if (!empty && row.message() != null) {
@@ -464,7 +472,7 @@ public final class ViewerApplication extends Application {
                     var date = styled(new Label(sent), "message-detail");
                     date.setMinWidth(Region.USE_PREF_SIZE);
                     var detail = new HBox(6, from, date);
-                    detail.maxWidthProperty().bind(widthProperty().subtract(58));
+                    detail.maxWidthProperty().bind(messageContentWidth);
                     content = new VBox(3, label, detail);
                 }
                 if (content != null) {
@@ -759,6 +767,7 @@ public final class ViewerApplication extends Application {
 
     private void load(Path path, String name, ViewerSession parent, PdfNavigation.Asset source, String password,
                       FolderStep continuation, boolean lastPage, PageTarget target) {
+        discardImagePreview();
         if (parent != null) path.toFile().deleteOnExit();
         long token = ++request;
         opening = Thread.ofVirtual().unstarted(() -> {
@@ -880,6 +889,7 @@ public final class ViewerApplication extends Application {
     }
 
     private void shutdown() {
+        discardImagePreview();
         request++;
         if (opening != null) opening.interrupt();
         mailRequest++;
@@ -911,6 +921,7 @@ public final class ViewerApplication extends Application {
         boolean changedNavigation = navigationDocument != activeNavigation;
         var previousPortfolio = portfolioDocument(current);
         var activePortfolio = portfolioDocument(session);
+        if (current != session) discardImagePreview();
         current = session;
         navigationDocument = activeNavigation;
         portfolioBrowsers.keySet().removeIf(owner -> !containsSession(session, owner));
@@ -1543,7 +1554,11 @@ public final class ViewerApplication extends Application {
             }
         } else if (variant.canPreview()) {
             try {
-                showPreview(asset.name(), variant, source.pdf.preview(variant));
+                if (isImagePreview(asset.name(), variant.mimeType())) {
+                    openImagePreview(new ImagePreviewRequest(source, asset, variant));
+                } else {
+                    showTextPreview(asset.name(), variant, source.pdf.preview(variant));
+                }
             } catch (IOException | RuntimeException failure) {
                 error("Could not preview embedded file", failure);
             }
@@ -1552,37 +1567,98 @@ public final class ViewerApplication extends Application {
         }
     }
 
-    private void showPreview(String title, PdfNavigation.AssetStream stream, byte[] payload) throws IOException {
+    private static boolean isImagePreview(String title, String media) {
+        return media.matches("image/(?:png|jpeg|gif)")
+                || (!media.startsWith("text/") && title.toLowerCase(Locale.ROOT).matches(".*\\.(?:png|jpe?g|gif)$"));
+    }
+
+    private record ImagePreviewRequest(ViewerSession source, PdfNavigation.Asset asset,
+                                       PdfNavigation.AssetStream stream) {}
+
+    private void openImagePreview(ImagePreviewRequest preview) {
+        discardImagePreview();
+        if (decodingImagePreview) {
+            pendingImagePreview = preview;
+            report("Waiting for the previous image preview…");
+            return;
+        }
+        byte[] payload;
+        try {
+            payload = preview.source().pdf.preview(preview.stream());
+        } catch (IOException | RuntimeException failure) {
+            error("Could not preview embedded file", failure);
+            return;
+        }
+        long generation = imagePreviewGeneration;
+        decodingImagePreview = true;
+        report("Opening image preview…");
+        var decode = new Task<BufferedImage>() {
+            @Override
+            protected BufferedImage call() throws IOException {
+                return AttachmentImagePreview.decode(payload);
+            }
+        };
+        decode.setOnSucceeded(event -> finishImagePreview(generation, preview, decode.getValue(), null));
+        decode.setOnFailed(event -> finishImagePreview(generation, preview, null, decode.getException()));
+        Thread.ofVirtual().name("eapdf-image-preview").start(decode);
+    }
+
+    private void finishImagePreview(long generation, ImagePreviewRequest preview,
+                                    BufferedImage thumbnail, Throwable failure) {
+        decodingImagePreview = false;
+        if (pendingImagePreview != null) {
+            openImagePreview(pendingImagePreview);
+            return;
+        }
+        if (imagePreviewGeneration != generation) return;
         Node content;
-        String media = stream.mimeType();
-        if (media.matches("image/(?:png|jpeg|gif)")
-                || (!media.startsWith("text/") && title.toLowerCase(Locale.ROOT).matches(".*\\.(?:png|jpe?g|gif)$"))) {
-            var image = new Image(new ByteArrayInputStream(payload));
-            if (image.isError()) throw new IOException("The image could not be decoded.", image.getException());
-            var picture = new ImageView(image);
+        if (failure == null) {
+            var picture = new ImageView(SwingFXUtils.toFXImage(thumbnail, null));
             picture.setPreserveRatio(true);
-            picture.setFitWidth(760);
-            picture.setFitHeight(560);
+            picture.setFitWidth(AttachmentImagePreview.WIDTH);
+            picture.setFitHeight(AttachmentImagePreview.HEIGHT);
             var scroll = new ScrollPane(picture);
             scroll.setFitToWidth(true);
             content = scroll;
+            report("Image preview opened.");
         } else {
-            var charset = StandardCharsets.UTF_8;
-            var parameter = java.util.regex.Pattern.compile("(?i)\\bcharset\\s*=\\s*\"?([^\";\\s]+)")
-                    .matcher(java.util.Objects.toString(stream.mediaTypeParameters(), ""));
-            if (parameter.find()) {
-                try {
-                    charset = java.nio.charset.Charset.forName(parameter.group(1));
-                } catch (IllegalArgumentException ignored) {
-                    // Unknown declarations are shown using the default preview encoding.
-                }
-            }
-            var text = new TextArea(new String(payload, 0, Math.min(payload.length, 1_000_000), charset));
-            text.setEditable(false);
-            text.setWrapText(true);
-            content = text;
+            String detail = failure instanceof IOException && failure.getMessage() != null
+                    ? failure.getMessage() : "The image could not be decoded.";
+            var explanation = new Label(detail);
+            explanation.setWrapText(true);
+            var save = button("Save Original…", "Save the embedded image",
+                    () -> saveVariant(preview.source(), preview.asset(), preview.stream()));
+            content = new VBox(12, explanation, save);
+            report("Image preview unavailable.");
         }
-        showWindow(title, content, 820, 600);
+        Stage popup = showWindow(preview.asset().name(), content, 820, 600);
+        imagePreviewWindow = popup;
+        popup.setOnHidden(event -> {
+            if (imagePreviewWindow == popup) imagePreviewWindow = null;
+        });
+    }
+
+    private void discardImagePreview() {
+        imagePreviewGeneration++;
+        pendingImagePreview = null;
+        if (imagePreviewWindow != null) imagePreviewWindow.close();
+    }
+
+    private void showTextPreview(String title, PdfNavigation.AssetStream stream, byte[] payload) {
+        var charset = StandardCharsets.UTF_8;
+        var parameter = java.util.regex.Pattern.compile("(?i)\\bcharset\\s*=\\s*\"?([^\";\\s]+)")
+                .matcher(java.util.Objects.toString(stream.mediaTypeParameters(), ""));
+        if (parameter.find()) {
+            try {
+                charset = java.nio.charset.Charset.forName(parameter.group(1));
+            } catch (IllegalArgumentException ignored) {
+                // Unknown declarations are shown using the default preview encoding.
+            }
+        }
+        var text = new TextArea(new String(payload, 0, Math.min(payload.length, 1_000_000), charset));
+        text.setEditable(false);
+        text.setWrapText(true);
+        showWindow(title, text, 820, 600);
     }
 
     private PdfNavigation.AssetStream chooseVariant(PdfNavigation.Asset asset) {
@@ -2201,7 +2277,7 @@ public final class ViewerApplication extends Application {
         return false;
     }
 
-    private void showWindow(String title, Node content, int width, int height) {
+    private Stage showWindow(String title, Node content, int width, int height) {
         var popup = new Stage();
         popup.initOwner(stage);
         popup.setTitle(title);
@@ -2221,6 +2297,7 @@ public final class ViewerApplication extends Application {
         });
         popup.setScene(scene);
         popup.show();
+        return popup;
     }
 
     private void report(String message) {

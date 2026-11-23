@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public final class ConversionSupervisor {
   private static volatile boolean worker;
   private static final List<String> ENTRIES = List.of("eapdf.EmailToPDFA", "eapdf.GmailDownloadToPdf", "eapdf.MonthlyFilenameArchiveToPdf");
-  record Owner(long supervisor, String supervisorStart, long child, String childStart, String workspace) {}
+  record Owner(long supervisor, String supervisorStart, long child, String childStart) {}
 
   static boolean run(Class<?> entry, String[] arguments) {
     if (worker) return false;
@@ -30,13 +30,13 @@ public final class ConversionSupervisor {
     if (!ENTRIES.contains(entry)) throw Common.fail("Unsupported supervised entry point");
     if (entry.equals("eapdf.EmailToPDFA")) {
       var options = EmailToPDFA.parseArgs(arguments);
-      String output = (String) options.get("archive-output");
+      String archiveOutput = (String) options.get("archive-output");
       String input = (String) options.get("in");
-      if (input != null && output != null && !output.isBlank() && Files.exists(Path.of(output))) {
-        for (String selected : EmailToPDFA.collectInputs(input)) {
-          OutputTransaction.protectInput(Path.of(output), Path.of(selected));
+      if (input != null && archiveOutput != null && !archiveOutput.isBlank()) {
+        Path output = Path.of(archiveOutput).toAbsolutePath().normalize();
+        if (Files.exists(output)) {
+          OutputTransaction.protectArchiveInputs(output, EmailToPDFA.collectInputs(input), null, null);
         }
-        OutputTransaction.protectConfiguredInputs(Path.of(output), (String) options.get("font"), (String) options.get("icc"));
       }
     }
     Path temporaryRoot = workspaceRoot(entry, arguments);
@@ -51,17 +51,21 @@ public final class ConversionSupervisor {
     Thread cleanup = null;
     Object publication = new Object();
     ConversionProgress progress = null;
+    OutputTransaction.LivePublication live = null;
     boolean successful = false;
     var cancelled = new java.util.concurrent.atomic.AtomicBoolean();
     try {
       String supervisorStart = started.toString();
-      writeOwner(directory, new Owner(supervisor.pid(), supervisorStart, 0, "", directory.getFileName().toString()));
+      writeOwner(directory, new Owner(supervisor.pid(), supervisorStart, 0, ""));
       Path temporary = Files.createDirectory(directory.resolve("temporary"));
       Path outputs = Files.createDirectory(directory.resolve("outputs"));
+      Files.createDirectory(directory.resolve("ready"));
       Path manifest = directory.resolve("manifest.json");
       progress = ConversionProgress.start(entry, arguments, directory);
       ConversionProgress jobProgress = progress;
       PstJobBudget budget = PstJobBudget.forInput(entry, arguments, temporary);
+      live = new OutputTransaction.LivePublication(directory, budget, cancelled::get);
+      OutputTransaction.LivePublication jobPublication = live;
       long heap = ConversionMemory.workerHeap(budget.setting("eapdf.workerHeapBytes", "EAPDF_WORKER_HEAP_BYTES",
           ConversionMemory.defaultHeap(512L * 1024 * 1024)));
       budget.useWorkerHeap(heap);
@@ -88,12 +92,12 @@ public final class ConversionSupervisor {
       command.addAll(Arrays.asList(arguments));
       process = new ProcessBuilder(nativeLimits(command, budget)).inheritIO().start();
       Process child = process;
-      writeOwner(directory, new Owner(supervisor.pid(), supervisorStart, child.pid(), workerStart(child), directory.getFileName().toString()));
+      writeOwner(directory, new Owner(supervisor.pid(), supervisorStart, child.pid(), workerStart(child)));
       cleanup = new Thread(() -> {
         cancelled.set(true);
         stopTree(child);
-        jobProgress.finish("CANCELLED");
         synchronized (publication) {
+          jobProgress.finish("CANCELLED", jobPublication.published);
           try {
             OutputTransaction.recover(directory.resolve("publication.json"));
             Common.deleteTree(directory);
@@ -103,34 +107,35 @@ public final class ConversionSupervisor {
         }
       }, "eapdf-worker-cleanup");
       Runtime.getRuntime().addShutdownHook(cleanup);
-      monitor(process, directory, Duration.ofSeconds(budget.setting("eapdf.jobTimeoutSeconds", "EAPDF_JOB_TIMEOUT_SECONDS", 600)),
+      monitor(process, directory, Duration.ofSeconds(budget.setting("eapdf.jobTimeoutSeconds", "EAPDF_JOB_TIMEOUT_SECONDS", 0)),
           budget.setting("eapdf.maxTempBytes", "EAPDF_MAX_TEMP_BYTES", 2L * 1024 * 1024 * 1024),
-          budget.setting("eapdf.maxTempFiles", "EAPDF_MAX_TEMP_FILES", 100000));
+          budget.setting("eapdf.maxTempFiles", "EAPDF_MAX_TEMP_FILES", 100000), temporaryBytes -> {
+            synchronized (publication) {
+              if (!cancelled.get()) jobPublication.drain(temporaryBytes);
+            }
+          });
       if (process.exitValue() != 0) return process.exitValue();
       synchronized (publication) {
         if (cancelled.get()) throw Common.fail("Conversion cancelled before publication");
         ConversionProgress.attach(directory);
         try {
           ConversionProgress.stage("publishing");
-          Path batchManifest = OutputTransaction.publish(manifest, outputs, budget, cancelled::get);
+          Path batchManifest = OutputTransaction.publish(manifest, outputs, budget, cancelled::get, live.published);
           if (batchManifest != null) System.out.println("Batch manifest: " + batchManifest);
         } finally { ConversionProgress.flush(); ConversionProgress.detach(); }
       }
       successful = true;
       return 0;
     } finally {
-      if (progress != null) progress.finish(successful ? "COMPLETED" : cancelled.get() ? "CANCELLED" : "FAILED");
       if (process != null) stopTree(process);
       if (cleanup != null) {
         try { Runtime.getRuntime().removeShutdownHook(cleanup); } catch (IllegalStateException ignored) {}
       }
       synchronized (publication) {
-        try {
-          OutputTransaction.recover(directory.resolve("publication.json"));
-          Common.deleteTree(directory);
-        } catch (Exception error) {
-          System.err.println("warning: Conversion recovery data kept in " + directory + ": " + error.getMessage());
-        }
+        if (progress != null) progress.finish(successful ? "COMPLETED" : cancelled.get() ? "CANCELLED" : "FAILED",
+            live == null ? java.util.Map.of() : live.published);
+        OutputTransaction.recover(directory.resolve("publication.json"));
+        Common.deleteTree(directory);
       }
     }
   }
@@ -157,7 +162,9 @@ public final class ConversionSupervisor {
   }
 
   static void writeOwner(Path directory, Owner owner) throws Exception {
-    Common.writeAtomically(directory.resolve("owner.json"), new com.google.gson.Gson().toJson(owner).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    var marker = new com.google.gson.Gson().toJsonTree(owner).getAsJsonObject();
+    marker.addProperty("workspace", directory.getFileName().toString());
+    Common.writeAtomically(directory.resolve("owner.json"), marker.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 
   static boolean sameProcess(long identifier, String started) {
@@ -198,9 +205,10 @@ public final class ConversionSupervisor {
             continue;
           }
           if (Files.size(marker) > 4096) continue;
-          Owner owner = new com.google.gson.Gson().fromJson(Files.readString(marker), Owner.class);
-          if (owner == null || !directory.getFileName().toString().equals(owner.workspace())
-              || owner.supervisor() <= 0 || !validStart(owner.supervisorStart())
+          var metadata = com.google.gson.JsonParser.parseString(Files.readString(marker)).getAsJsonObject();
+          if (!metadata.has("workspace") || !directory.getFileName().toString().equals(metadata.get("workspace").getAsString())) continue;
+          Owner owner = new com.google.gson.Gson().fromJson(metadata, Owner.class);
+          if (owner == null || owner.supervisor() <= 0 || !validStart(owner.supervisorStart())
               || owner.child() < 0 || owner.child() > 0 && !validStart(owner.childStart())
               || sameProcess(owner.supervisor(), owner.supervisorStart())) continue;
           if (sameProcess(owner.child(), owner.childStart())) {
@@ -245,8 +253,10 @@ public final class ConversionSupervisor {
         Math.max(ProcessingLimits.messageBytes(), budget.setting("eapdf.maxOutputBytes", "EAPDF_MAX_OUTPUT_BYTES", 1024L * 1024 * 1024)))));
     // RLIMIT_CPU counts all threads, whereas the monitor bounds wall time.
     // Give parallel rendering/GC the same wall-time allowance as one thread.
-    long wallSeconds = budget.setting("eapdf.jobTimeoutSeconds", "EAPDF_JOB_TIMEOUT_SECONDS", 600);
-    limited.add("--cpu=" + inheritedLimit("Max cpu time", Math.multiplyExact(wallSeconds, Math.min(4, Runtime.getRuntime().availableProcessors()))));
+    long wallSeconds = budget.setting("eapdf.jobTimeoutSeconds", "EAPDF_JOB_TIMEOUT_SECONDS", 0);
+    if (wallSeconds > 0) {
+      limited.add("--cpu=" + inheritedLimit("Max cpu time", Math.multiplyExact(wallSeconds, Math.min(4, Runtime.getRuntime().availableProcessors()))));
+    }
     limited.add("--");
     limited.addAll(command);
     return limited;
@@ -281,16 +291,26 @@ public final class ConversionSupervisor {
   }
 
   static void monitor(Process process, Path directory, Duration timeout, long maxTemporaryBytes, long maxFiles) throws Exception {
-    long started = System.nanoTime(), nextScan = started;
+    monitor(process, directory, timeout, maxTemporaryBytes, maxFiles, bytes -> {});
+  }
+
+  @FunctionalInterface
+  private interface PublicationCheck { void run(long temporaryBytes) throws Exception; }
+
+  private static void monitor(Process process, Path directory, Duration timeout, long maxTemporaryBytes,
+                              long maxFiles, PublicationCheck publication) throws Exception {
+    long started = System.nanoTime(), nextScan = started, temporaryBytes = 0;
     try {
       while (!process.waitFor(100, TimeUnit.MILLISECONDS)) {
-        if (System.nanoTime() - started > timeout.toNanos()) throw Common.fail("Conversion exceeded the whole-job time limit");
+        if (!timeout.isZero() && Duration.ofNanos(System.nanoTime() - started).compareTo(timeout) > 0)
+          throw Common.fail("Conversion exceeded the whole-job time limit");
         if (System.nanoTime() >= nextScan) {
-          checkTemporary(directory, maxTemporaryBytes, maxFiles);
+          temporaryBytes = checkTemporary(directory, maxTemporaryBytes, maxFiles);
           nextScan = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
         }
+        publication.run(temporaryBytes);
       }
-      checkTemporary(directory, maxTemporaryBytes, maxFiles);
+      publication.run(checkTemporary(directory, maxTemporaryBytes, maxFiles));
     } catch (Exception error) {
       stopTree(process);
       throw error;

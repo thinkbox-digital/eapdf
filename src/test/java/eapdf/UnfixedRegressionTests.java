@@ -11,21 +11,37 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class UnfixedRegressionTests {
   @TempDir
   Path tempDir;
 
-  @Test
-  void successfulPlainTextFallbackIsReportedWithoutDebugAndKeepsSource() throws Exception {
+  @ParameterizedTest
+  @ValueSource(strings = {"renderer", "accessibility table", "form field"})
+  void successfulPlainTextFallbackIsReportedWithoutDebugAndKeepsSource(String failureType) throws Exception {
     byte[] raw = "Date: Fri, 16 Oct 2026 12:00:00 +0000\r\nSubject: Fallback\r\n\r\nOriginal body".getBytes(StandardCharsets.UTF_8);
     EmailRecord record = EmlReader.readRfc822Bytes(raw, "fallback.eml", "fallback.eml", "", List.of(), false);
     var attempts = new java.util.concurrent.atomic.AtomicInteger();
+    Exception failure = new com.openhtmltopdf.util.XRRuntimeException("primary rendering failed");
+    if (failureType.equals("accessibility table")) {
+      failure = new NullPointerException("primary rendering failed");
+      failure.setStackTrace(new StackTraceElement[] {new StackTraceElement(
+          "com.openhtmltopdf.pdfboxout.PdfBoxAccessibilityHelper", "logIncompatibleChild",
+          "PdfBoxAccessibilityHelper.java", 1267)});
+    } else if (failureType.equals("form field")) {
+      failure = new NullPointerException("primary rendering failed");
+      failure.setStackTrace(new StackTraceElement[] {
+          new StackTraceElement("org.apache.pdfbox.pdmodel.common.COSArrayList", "add", "COSArrayList.java", 208),
+          new StackTraceElement("com.openhtmltopdf.pdfboxout.PdfBoxForm", "createNonTerminalFields", "PdfBoxForm.java", 229)});
+    }
+    Exception primaryFailure = failure;
     Path output = tempDir.resolve("fallback.pdf");
     try (Common.JobReport job = Common.beginJob(); var capture = Common.beginPerFileLog(output)) {
       byte[] rendered = PdfMailWriter.renderHtmlPdf("<html><body>Visible body<img src='cid:missing'/></body></html>",
           tempDir.toUri().toString(), TestSupport.fontPath(), record, false, (xhtml, baseUri, fontPath) -> {
-            if (attempts.incrementAndGet() == 1) throw new com.openhtmltopdf.util.XRRuntimeException("primary rendering failed");
+            if (attempts.incrementAndGet() == 1) throw primaryFailure;
             return PdfMailWriter.renderXhtmlPdf(xhtml, baseUri, fontPath);
           });
       try (PDDocument document = Loader.loadPDF(rendered)) {
@@ -43,8 +59,9 @@ class UnfixedRegressionTests {
   }
 
   @Test
-  void rendererPropagatesInterruptionAndIoFailureWithoutRetry() throws Exception {
-    for (Exception failure : List.of(new java.io.IOException("Scratch output unavailable"), new InterruptedException())) {
+  void rendererPropagatesInterruptionIoAndUnrelatedRuntimeFailuresWithoutRetry() throws Exception {
+    for (Exception failure : List.of(new java.io.IOException("Scratch output unavailable"),
+        new InterruptedException(), new NullPointerException("Unrelated rendering error"))) {
       var attempts = new java.util.concurrent.atomic.AtomicInteger();
       try {
         Exception thrown = Assertions.assertThrows(failure.getClass(), () -> PdfMailWriter.renderHtmlPdf(

@@ -1,9 +1,19 @@
 name: Desktop viewer
 on:
   pull_request:
-    paths: ['desktop-viewer/**', '.github/workflows/desktop-viewer.yml']
+    paths:
+      - 'desktop-viewer/**'
+      - 'scripts/build_patched_pdfbox.py'
+      - 'third_party/pdfbox/**'
+      - 'third_party/maven/org/apache/pdfbox/pdfbox/**'
+      - '.github/workflows/desktop-viewer.yml'
   push:
-    paths: ['desktop-viewer/**', '.github/workflows/desktop-viewer.yml']
+    paths:
+      - 'desktop-viewer/**'
+      - 'scripts/build_patched_pdfbox.py'
+      - 'third_party/pdfbox/**'
+      - 'third_party/maven/org/apache/pdfbox/pdfbox/**'
+      - '.github/workflows/desktop-viewer.yml'
   workflow_dispatch:
 
 permissions:

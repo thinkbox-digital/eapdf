@@ -8,6 +8,9 @@ import java.util.*;
 /** Live job status; this is deliberately separate from transactional PDF publication. */
 final class ConversionProgress {
   private static final Gson JSON = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+  // Each snapshot includes all receipts. Coalesce writes as the list grows.
+  private static final long LARGE_RECEIPT_LIST = 64 * 1024;
+  private static final long SNAPSHOT_INTERVAL_NANOS = 1_000_000_000L;
   private static volatile ConversionProgress active;
   private static java.util.concurrent.ScheduledExecutorService refresher;
   private final Path path;
@@ -127,7 +130,7 @@ final class ConversionProgress {
       if (size > ProcessingLimits.metadataBytes() - p.receiptBytes)
         throw Common.fail("Conversion receipts exceed the metadata budget");
       p.creationReceipts.add(receipt); p.receiptBytes += size;
-      p.write(true);
+      if (p.snapshotDue(true)) p.write(true);
     }
   }
 
@@ -211,14 +214,22 @@ final class ConversionProgress {
   private static long secondsSince(String value) {
     return Math.max(0, java.time.Duration.between(Instant.parse(value), Instant.now()).getSeconds());
   }
-  static void flush() { var p = active; if (p != null) synchronized (p) { p.emit(true); } }
+  static void flush() { var p = active; if (p != null) synchronized (p) { p.persist(); } }
   static void detach() {
     active = null;
     if (refresher != null) { refresher.shutdownNow(); refresher = null; }
   }
 
   private void emit(boolean force) {
-    if (!force && System.nanoTime() - lastWrite < 1_000_000_000L) return;
+    if (snapshotDue(force)) persist();
+    else logProgress();
+  }
+
+  private boolean snapshotDue(boolean force) {
+    return (force && receiptBytes < LARGE_RECEIPT_LIST) || System.nanoTime() - lastWrite >= SNAPSHOT_INTERVAL_NANOS;
+  }
+
+  private void persist() {
     try { write(true); }
     catch (Exception error) {
       if (!warned) { warned = true; System.err.println("warning: Could not update conversion progress: " + path); }
@@ -227,9 +238,9 @@ final class ConversionProgress {
 
   private void write(boolean checkOwner) throws Exception {
     if (checkOwner) {
-      if (!ownsFile()) return;
+      if (!Files.exists(path)) return;
       JsonObject existing = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
-      if (!"RUNNING".equals(existing.get("state").getAsString())) return;
+      if (!jobId.equals(existing.get("job_id").getAsString()) || !"RUNNING".equals(existing.get("state").getAsString())) return;
     }
     if (savingFile != null && Files.exists(savingFile)) {
       long bytes = Files.size(savingFile);
@@ -257,11 +268,20 @@ final class ConversionProgress {
     snapshot.put("started", started); snapshot.put("updated", Instant.now().toString());
     Common.writeAtomically(path, JSON.toJson(snapshot).getBytes(java.nio.charset.StandardCharsets.UTF_8));
     lastWrite = System.nanoTime();
-    if (checkOwner && (!stage.equals(loggedStage) || lastWrite - lastLog >= 10_000_000_000L
-        || count != null && done == count && done != loggedCompleted)) {
+    if (checkOwner) logProgress();
+  }
+
+  private void logProgress() {
+    long now = System.nanoTime();
+    long done = stage.equals("rendering") ? completed : stage.equals("reading") ? discovered : stageCompleted;
+    Long count = stage.equals("rendering") ? total : stageTotal;
+    if (!stage.equals(loggedStage) || now - lastLog >= 10_000_000_000L
+        || count != null && done == count && done != loggedCompleted) {
+      String unit = stage.equals("rendering") || stage.equals("reading") ? "emails" : stageUnit;
       String work = unit == null ? "" : " — " + done + (count == null ? "" : "/" + count) + " " + unit;
-      System.out.println("[progress] " + stage.replace('_', ' ') + work + " — " + stageElapsed + "s in stage; " + elapsed + "s total; CPU " + snapshot.get("process_cpu_seconds") + "s; emails completed " + completed + "/" + (total == null ? "?" : total));
-      loggedStage = stage; loggedCompleted = done; lastLog = lastWrite;
+      Long cpu = ProcessHandle.current().info().totalCpuDuration().map(java.time.Duration::toSeconds).orElse(null);
+      System.out.println("[progress] " + stage.replace('_', ' ') + work + " — CPU " + cpu + "s — emails completed " + completed + "/" + (total == null ? "?" : total));
+      loggedStage = stage; loggedCompleted = done; lastLog = now;
     }
   }
 
@@ -270,11 +290,19 @@ final class ConversionProgress {
   }
 
   void finish(String state) {
+    finish(state, Map.of());
+  }
+
+  void finish(String state, Map<Path, OutputTransaction.Entry> published) {
     try {
       if (!ownsFile()) return; // A newer job in this folder owns the displayed status.
       JsonObject snapshot = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
-      if (snapshot.has("creation_receipts")) for (var item : snapshot.getAsJsonArray("creation_receipts"))
-        item.getAsJsonObject().addProperty("publication", state.equals("COMPLETED") ? "PUBLISHED" : "NOT_CONFIRMED");
+      if (snapshot.has("creation_receipts")) for (var item : snapshot.getAsJsonArray("creation_receipts")) {
+        var receipt = item.getAsJsonObject();
+        var output = published.get(Path.of(receipt.get("file").getAsString()));
+        boolean committed = output != null && output.sha256().equals(receipt.get("sha256").getAsString());
+        receipt.addProperty("publication", state.equals("COMPLETED") || committed ? "PUBLISHED" : "NOT_CONFIRMED");
+      }
       snapshot.addProperty("last_work_stage", snapshot.get("stage").getAsString());
       snapshot.addProperty("elapsed_seconds", secondsSince(started));
       snapshot.addProperty("state", state);

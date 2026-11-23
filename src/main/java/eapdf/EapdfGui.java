@@ -41,20 +41,21 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class EapdfGui {
   private static final java.util.regex.Pattern JAVA_FAILURE = java.util.regex.Pattern.compile(
       "^(?:Exception in thread \"[^\"]+\" |Caused by: )([\\w.$]+)(?::\\s*(.*))?$");
-  private static final java.util.regex.Pattern PROGRESS_COUNTS =
-      java.util.regex.Pattern.compile("; emails completed (\\d{1,10})/(\\d{1,10}|\\?)$");
   private final JFrame frame = new JFrame("ThinkBox EMailToPDF GUI");
   private final JTextArea logArea = new JTextArea();
   private final JTextArea summaryArea = new JTextArea();
   private final JProgressBar progressBar = new JProgressBar();
   private final JTabbedPane messageTabs = new JTabbedPane();
   private final JLabel statusLabel = new JLabel("Ready");
+  private final GuiLog.ProgressStatus progressStatus = new GuiLog.ProgressStatus();
+  private final Timer progressRefresh = new Timer(GuiLog.PROGRESS_REFRESH_MILLIS, event -> refreshProgress());
   private final JButton stopButton = new JButton("Stop");
   private final JButton openOutputButton = new JButton("Open output folder");
   private final JLabel outputLabel = new JLabel(" ");
@@ -64,6 +65,7 @@ public class EapdfGui {
 
   private boolean stopRequested() { return conversionProcess != null && conversionProcess.stopRequested(); }
   private boolean running;
+  private String runningStatus;
   private boolean closeRequested;
   private String lastRunError;
   private boolean incompleteSource;
@@ -541,12 +543,22 @@ public class EapdfGui {
   private void stopActiveProcess() {
     if (!running || stopRequested()) return;
     conversionProcess.requestStop();
+    progressRefresh.stop();
     appendLog("Stopping active process...");
     statusLabel.setText("Stopping...");
     stopButton.setEnabled(false);
   }
 
   private void setRunning(boolean running, String status) {
+    if (running) {
+      runningStatus = status;
+      progressStatus.clear();
+      progressRefresh.start();
+    } else {
+      progressRefresh.stop();
+      updateProgressCounts();
+      progressStatus.clear();
+    }
     this.running = running;
     statusLabel.setText(status);
     stopButton.setEnabled(running);
@@ -574,13 +586,15 @@ public class EapdfGui {
   private void appendLogLines(List<String> lines) {
     var detail=new StringBuilder();var summary=new StringBuilder();
     for(String line:lines){
-      if (line.startsWith("[progress] ")) line = displayProgress(line);
+      if (line.startsWith(GuiLog.PROGRESS_PREFIX)) {
+        GuiLog.Progress progress = GuiLog.Progress.parse(line);
+        if (running && !stopRequested()) progressStatus.accept(progress, System.nanoTime());
+        line = GuiLog.PROGRESS_PREFIX + progress.description();
+      }
       GuiLog.tail(detail,line+System.lineSeparator(),GuiLog.DISPLAY_CHARACTERS);
       if (line.contains("INCOMPLETE SOURCE:")) incompleteSource = true;
-      if (line.startsWith("[progress] ") && running && !stopRequested())
-        statusLabel.setText(line.substring("[progress] ".length()));
       String error = conversionError(line),message=null;
-      if (line.startsWith("wrote: ") || line.startsWith("wrote archive: ") || line.startsWith("wrote pdf: ")) {
+      if (line.startsWith("Published PDF: ")) {
         try {message="Converted: " + Paths.get(line.substring(line.indexOf(':') + 1).trim()).getFileName();}
         catch (java.nio.file.InvalidPathException ex) {message=line;}
       } else if (error != null && (!line.startsWith("Caused by: ") || lastRunError == null)) {
@@ -592,18 +606,21 @@ public class EapdfGui {
     if(!summary.isEmpty())GuiLog.append(summaryArea,summary.toString(),GuiLog.SUMMARY_CHARACTERS);
   }
 
-  private String displayProgress(String line) {
-    var counts = PROGRESS_COUNTS.matcher(line);
-    if (counts.find()) {
-      progressBar.setString(counts.group(1) + "/" + counts.group(2));
-      if (!counts.group(2).equals("?") && Long.parseLong(counts.group(2)) > 0) {
-        progressBar.setIndeterminate(false);
-        progressBar.setValue((int) Math.min(100, Long.parseLong(counts.group(1)) * 100 / Long.parseLong(counts.group(2))));
-      }
-      line = line.substring(0, counts.start());
+  private void refreshProgress() {
+    if (!running || stopRequested()) return;
+    updateProgressCounts();
+    statusLabel.setText(progressStatus.text(runningStatus, System.nanoTime()));
+  }
+
+  private void updateProgressCounts() {
+    GuiLog.Progress progress = progressStatus.latest();
+    if (progress == null || progress.completed() == null) return;
+    progressBar.setString(progress.completed() + "/" + progress.total());
+    long total = progress.total().equals("?") ? 0 : Long.parseLong(progress.total());
+    if (total > 0) {
+      progressBar.setIndeterminate(false);
+      progressBar.setValue((int) Math.min(100, Long.parseLong(progress.completed()) * 100 / total));
     }
-    // The durable process log retains CPU diagnostics; the GUI shows wall time.
-    return line.replaceFirst("; CPU (?:\\d+|null)s(?=;|$)", "");
   }
 
   static String conversionError(String line) {
@@ -626,9 +643,9 @@ public class EapdfGui {
 
   static RunConfigControls buildRunConfigControls() {
     EapdfConfig cfg = EapdfConfig.normalize(EapdfConfig.get());
-    JCheckBox searchIndex = new JCheckBox("Embed searchable index", cfg.searchIndex.enabled);
+    JCheckBox searchIndex = new JCheckBox("Embed searchable index");
     searchIndex.setToolTipText("Embed a compact message-filter index and a separate full-text index for faster offline filtering and searches. Full-text generation uses built-in PDFBox extraction; unsupported outputs retain ordinary search.");
-    JCheckBox pdfUa = new JCheckBox("Accessibility (PDF/UA)", cfg.accessibility != null && cfg.accessibility.addPdfUaFeatures);
+    JCheckBox pdfUa = new JCheckBox("Accessibility (PDF/UA)");
 
     pdfUa.setToolTipText("Enable accessibility features. This does not establish PDF/UA conformance.");
 
@@ -864,7 +881,7 @@ public class EapdfGui {
       this.pdfUa = pdfUa;
       this.searchIndex = searchIndex;
       this.signing = new Gson().fromJson(new Gson().toJson(defaults), EapdfConfig.SigningConfig.class);
-      this.signOutput = new JCheckBox("Sign output", defaults.enabled);
+      this.signOutput = new JCheckBox("Sign output");
       this.signOutput.setToolTipText("Sign each outer EA-PDF with your certificate. Embedded files stay unchanged.");
     }
 

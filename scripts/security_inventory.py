@@ -199,7 +199,8 @@ def main():
         if not args.desktop_jar or not args.desktop_dependencies:
             parser.error('--desktop-jar and --desktop-dependencies must be supplied together')
         desktop = desktop_components(args.desktop_dependencies, args.desktop_jar)
-        write_bom(args.output/'desktop-viewer.cdx.json', 'EA-PDF desktop viewer', desktop, [args.desktop_jar])
+        write_bom(args.output/'desktop-viewer.cdx.json', 'EA-PDF desktop viewer',
+                  desktop + list(upstream_maven_components(desktop)), [args.desktop_jar])
     for package in args.browser_zip:
         browser_inventory(args.output/(package.stem + '.cdx.json'), package)
     (args.output/'python-runtime-versions.txt').write_text('# Installed runtime closure; platform-specific snapshot, no artifact-hash lock.\n'+''.join(c['name']+'=='+c['version']+'\n' for c in python))

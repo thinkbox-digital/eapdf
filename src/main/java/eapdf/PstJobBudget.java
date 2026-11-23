@@ -41,8 +41,6 @@ final class PstJobBudget {
     // the supervisor still enforces the aggregate allowance and explicit overrides.
     budget.defaults.put("eapdf.maxTempBytes", space);
     budget.defaults.put("eapdf.maxOutputBytes", space / 2);
-    // Input bytes cannot predict message count; keep the existing one-day ceiling.
-    budget.defaults.put("eapdf.jobTimeoutSeconds", 86400L);
     System.out.println("Large email input processing: " + bytes + " input bytes; memory and work allowances sized to this input.");
     return budget;
   }

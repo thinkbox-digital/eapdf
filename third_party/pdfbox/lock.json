@@ -1,0 +1,53 @@
+{
+  "version": "3.0.8-eapdf.1",
+  "upstream_commits": [
+    "1719c7dedc4482885c432fa95e57a426f2fc2984"
+  ],
+  "inputs": [
+    {
+      "name": "pdfbox-3.0.8.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox/3.0.8/pdfbox-3.0.8.jar",
+      "sha256": "97647cfbde61ebcfc06b4cf8c9b0ffcaaee073396eceb4a7f6836a9b9128903c"
+    },
+    {
+      "name": "pdfbox-3.0.8-sources.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox/3.0.8/pdfbox-3.0.8-sources.jar",
+      "sha256": "eaed642d27599c78229857e4ab571805979f828f5ec8c695e3135ca933766132"
+    },
+    {
+      "name": "pdfbox-3.0.8.pom",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox/3.0.8/pdfbox-3.0.8.pom",
+      "sha256": "1acfce718edc900dff75b17afd44272b022a4f0e914adbe76531df56862403dd"
+    },
+    {
+      "name": "pdfbox-io-3.0.8.jar",
+      "url": "https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox-io/3.0.8/pdfbox-io-3.0.8.jar",
+      "sha256": "36a0e04001010b4c764857817412b96339930b19755e728959805cc0352061b2"
+    },
+    {
+      "name": "commons-logging-1.4.0.jar",
+      "url": "https://repo.maven.apache.org/maven2/commons-logging/commons-logging/1.4.0/commons-logging-1.4.0.jar",
+      "sha256": "d175dbd751dd782a63bde28c7a039520e971f25e84b79c19b8435edc3603e0dc"
+    }
+  ],
+  "patches": [
+    {
+      "path": "third_party/pdfbox/patches/0001-PDFBOX-6268.patch",
+      "sha256": "a755352f846c808e1dbcdc96d41a5b32940c09a319166cf655e8de99db7c167f"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "third_party/maven/org/apache/pdfbox/pdfbox/3.0.8-eapdf.1/pdfbox-3.0.8-eapdf.1-sources.jar",
+      "sha256": "8e92274a489f9821b56e939ca1e2c8973abf0ca671cc3452ceef8f6e0549479e"
+    },
+    {
+      "path": "third_party/maven/org/apache/pdfbox/pdfbox/3.0.8-eapdf.1/pdfbox-3.0.8-eapdf.1.jar",
+      "sha256": "c37a997072f8f675687232deb2deddd0b5f3c392429296db47cc5d3b9ff5b78f"
+    },
+    {
+      "path": "third_party/maven/org/apache/pdfbox/pdfbox/3.0.8-eapdf.1/pdfbox-3.0.8-eapdf.1.pom",
+      "sha256": "e10a49e0e89accbf3f925ed2b11f4201155e13c7d8bdd2877a0c12c528b80c9d"
+    }
+  ]
+}

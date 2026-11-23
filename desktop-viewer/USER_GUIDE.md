@@ -5,6 +5,9 @@ at launch. The desktop interface follows the Full extension's header, page
 toolbar, adjustable panes, search panel, and footer. It uses system interface
 fonts and renders PDF text at the visible size and display pixel density.
 
+While the viewer opens a PDF, click **Cancel** to stop. You can open another
+file after the viewer finishes cleaning up.
+
 ## Read and navigate
 
 - Browse messages, expand **PDF bookmarks**, or switch to Conversations in
@@ -27,6 +30,8 @@ fonts and renders PDF text at the visible size and display pixel density.
   saving a PDF keeps a maximized window in place.
 - Open embedded PDFs, preview supported images or inert text, and save the
   original bytes of any readable asset with the eye and download icons.
+  PNG, JPEG, and GIF previews use size-limited thumbnails. GIF previews show
+  the first frame. If an image cannot be previewed, use **Save Original**.
   File cards show variants and recorded attachment pages. Internal links can
   jump to a page or open an embedded file.
 - In a PDF Portfolio, browse the file list and the selected PDF together.

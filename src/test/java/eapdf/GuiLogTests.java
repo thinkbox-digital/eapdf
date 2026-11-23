@@ -4,12 +4,39 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class GuiLogTests {
  @TempDir Path directory;
+
+ @Test void progressOmitsTimingAndKeepsStageAndEmailCounts() {
+  var progress = GuiLog.Progress.parse(
+      "[progress] checking embedded files — 2/5 files — CPU 32s — emails completed 18/100");
+  assertEquals("checking embedded files — 2/5 files", progress.description());
+  assertEquals("checking embedded files", progress.stage());
+  assertEquals("18", progress.completed());
+  assertEquals("100", progress.total());
+  assertEquals(new GuiLog.Progress("checking", "checking", "18", "?"), GuiLog.Progress.parse(
+      "[progress] checking — 0s in stage; 32s total; CPU nulls; emails completed 18/?"));
+ }
+
+ @Test void rapidStagesKeepTheJobStatusAndLongStagesShowTheirLatestCount() {
+  long second = TimeUnit.SECONDS.toNanos(1);
+  var status = new GuiLog.ProgressStatus();
+  status.accept(GuiLog.Progress.parse("[progress] rendering — emails completed 2/100"), 0);
+  status.accept(GuiLog.Progress.parse("[progress] checking — emails completed 3/100"), second / 2);
+  assertEquals("Converting", status.text("Converting", second));
+  status.accept(GuiLog.Progress.parse(
+      "[progress] checking — 1/4 files — emails completed 3/100"), second);
+  assertEquals("checking — 1/4 files", status.text("Converting", 3 * second / 2));
+  assertEquals("3", status.latest().completed());
+  status.clear();
+  assertEquals("Converting", status.text("Converting", 2 * second));
+ }
+
  @Test void completeLogIsSavedWhileDisplayAndBatchSizesRemainBounded()throws Exception{
   String input=("warning: café 日本語 " + "x".repeat(80)+System.lineSeparator()).repeat(20_000);
   Path log=directory.resolve("conversion.log");var area=new JTextArea();int[] batches={0};
