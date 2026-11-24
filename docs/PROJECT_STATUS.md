@@ -7,9 +7,9 @@ children, runs the packaged Creator and Validator GUIs, and launches the Desktop
 Viewer JAR. GitHub publication through the acceptance workflow uses the packages
 and checksums from the successful job.
 
-Main release **2.4.0-beta.6** includes the Full browser reader **1.11.0** and
+Main release **2.4.0-beta.7** includes the Full browser reader **1.12.0** and
 Desktop Viewer **0.9.1**.
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.6).
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.7).
 
 C2PA/PAdES, WeasyPrint and other experimental changes remain separate in
 `../eapdf-secure` on `experiment/c2pa-pades`. Normal development continues in this
@@ -22,8 +22,8 @@ Java validator and the Even More Lite reader.
 
 ## This release
 
-- **New code.** Desktop Viewer 0.8.0 is available as a standalone Java JAR in Main and Secure.
-- **Packaging.** Main ships the Full browser reader for Chromium and Firefox.
+- **Documentation.** The Main README shows an anonymized message open in the Desktop Viewer and offers a ZIP of the examples.
+- **Packaging.** The documentation workflow captures the screenshot from the current build on pushes to Main.
 
 ## Previous release, 21 November 2026
 

@@ -18,6 +18,7 @@ from mkdocs.config import load_config
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = 'https://github.com/thinkbox-digital/eapdf'
 SOURCES = {
+    'README.md': 'index.md',
     'docs/site/privacy.md': 'privacy.md',
     'docs/PROJECT_STATUS.md': 'developers/project-status.md',
     'docs/ARCHITECTURE.md': 'developers/architecture.md',
@@ -35,9 +36,20 @@ SOURCES = {
     'docs/WEBSITE.md': 'developers/website.md',
     'SECURITY.md': 'developers/security.md',
 }
+HOMEPAGE_ASSETS = {
+    'ea-pdf-examples.zip': 'ea-pdf-examples.zip',
+    'docs/manual/user-manual.html': 'manual/user-manual.html',
+    'docs/EA-PDF_User_Manual.pdf': 'EA-PDF_User_Manual.pdf',
+    'docs/EA-PDF_Software_Architecture.pdf': 'EA-PDF_Software_Architecture.pdf',
+    'docs/screenshots/readme-viewer-1m.png': 'screenshots/readme-viewer-1m.png',
+    'docs/screenshots/creator-1280x800.png': 'screenshots/creator-1280x800.png',
+    'docs/screenshots/validator-1280x800.png': 'screenshots/validator-1280x800.png',
+    'docs/screenshots/viewer-1280x800.png': 'screenshots/viewer-1280x800.png',
+    'examples/eml/eml_seating_archive_1m.pdf': 'examples/eml/eml_seating_archive_1m.pdf',
+}
 
 
-def rewrite_links(text, source, destination):
+def rewrite_links(text, source, destination, site_paths):
     """Keep selected documents on-site; link other repository files to GitHub."""
     def replace(match):
         value = match.group(2)
@@ -49,8 +61,8 @@ def rewrite_links(text, source, destination):
         path = posixpath.normpath(posixpath.join(posixpath.dirname(source), url.path))
         if not (ROOT / path).exists():
             raise ValueError(f'{source}: missing link target {path}')
-        if path in SOURCES:
-            target = posixpath.relpath(SOURCES[path], posixpath.dirname(destination))
+        if path in site_paths:
+            target = posixpath.relpath(site_paths[path], posixpath.dirname(destination))
         else:
             kind = 'tree' if (ROOT / path).is_dir() else 'blob'
             target = f'{REPOSITORY}/{kind}/main/{quote(path)}'
@@ -61,7 +73,7 @@ def rewrite_links(text, source, destination):
 def check_release_versions():
     current = (ROOT / 'VERSION').read_text().strip()
     viewer = json.loads((ROOT / 'browser-viewer/package.json').read_text())['version']
-    release_pages = ('docs/manual/user-manual.html', 'docs/site/index.md', 'docs/site/downloads.md')
+    release_pages = ('docs/manual/user-manual.html', 'README.md', 'docs/site/downloads.md')
     # A local viewer-only beta can precede publication. Keep released download
     # references tied to the immutable release notes, not nonexistent assets.
     release_notes = ROOT / 'docs/releases' / (current + '.md')
@@ -82,7 +94,12 @@ def assemble(destination):
     for source, target in SOURCES.items():
         out = destination / target
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(rewrite_links((ROOT / source).read_text(), source, target))
+        site_paths = SOURCES | HOMEPAGE_ASSETS if source == 'README.md' else SOURCES
+        out.write_text(rewrite_links((ROOT / source).read_text(), source, target, site_paths))
+    for source, target in HOMEPAGE_ASSETS.items():
+        out = destination / target
+        out.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / source, out)
     manual = BeautifulSoup((ROOT / 'docs/manual/user-manual.html').read_text(), 'html.parser')
     chapters = manual.select('section.chapter')
     if len(chapters) != 12:
