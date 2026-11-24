@@ -1,6 +1,26 @@
-/* Adjust this one value to change the site's maximum content width. */
-:root { --eapdf-content-width: 90rem; }
+:root {
+  --eapdf-content-width: 68rem;
+  --eapdf-header-height: 2.2rem;
+}
+
 .md-grid { max-width: var(--eapdf-content-width); }
+.md-main__inner { margin-top: 1rem; }
+
+.md-header__title {
+  height: var(--eapdf-header-height);
+  line-height: var(--eapdf-header-height);
+}
+
+.md-header__inner .md-header__button { margin-block: .1rem; }
+.md-header__source .md-source__icon { height: var(--eapdf-header-height); }
+.md-header__source .md-source__icon svg {
+  margin-top: calc((var(--eapdf-header-height) - 1.2rem) / 2);
+}
+
+@media screen and (min-width: 60em) {
+  .md-search { padding-block: .1rem; }
+}
+
 .md-typeset { line-height: 1.65; }
 .md-typeset img { height: auto; border-radius: .25rem; }
 .md-typeset table:not([class]) { font-size: .75rem; }
