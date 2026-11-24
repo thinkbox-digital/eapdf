@@ -17,7 +17,7 @@ Turn saved emails and mailboxes into PDFs you can read, search and archive. Supp
 | [Validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.7/eapdf-validator-2.4.0-beta.7.jar) | Check a PDF and save a report. |
 | [Desktop Viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.7/eapdf-desktop-viewer-full-0.9.1.jar) | Open PDFs, browse email and attachments, and save files. |
 | Full browser readers for [Chromium](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.7/eapdf-viewer-1.12.0-chromium.zip) and [Firefox](https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.7/eapdf-viewer-1.12.0-firefox.zip) | Read PDFs in your browser. |
-| [Examples (ZIP)](ea-pdf-examples.zip?raw=true) | Download sample EA-PDF messages, archives and collections. |
+| [Examples (ZIP)](https://thinkbox-digital.github.io/eapdf/ea-pdf-examples.zip) | Download sample EA-PDF messages, archives and collections. |
 
 ## Get started
 
