@@ -19,7 +19,7 @@ Normal conversions also retain the input stem; `auriza.mbox` produces
 | PST | [1s](pst/pst_quality-attached-message_1s.pdf) | [1si](pst/pst_quality-attached-message_1si.pdf) | [1m](pst/pst_quality-attached-message_1m.pdf) | [1mi](pst/pst_quality-attached-message_1mi.pdf) | [1c](pst/pst_quality-attached-message_1c.pdf) | [1ci](pst/pst_quality-attached-message_1ci.pdf) |
 | MBOX | [1s](mbox/mbox_enron-sample_1s.pdf) | [1si](mbox/mbox_enron-sample_1si.pdf) | [1m](mbox/mbox_enron-sample_1m.pdf) | [1mi](mbox/mbox_enron-sample_1mi.pdf) | [1c](mbox/mbox_enron-sample_1c.pdf) | [1ci](mbox/mbox_enron-sample_1ci.pdf) |
 
-Two additional beta.19 examples make the public set **26 PDFs**:
+Two additional examples from beta.19:
 
 - [Enron archive](mbox/mbox_enron_1m.pdf): 1,433 messages from `in/enron.mbox`.
   Conversion and source-preservation comparison completed, and its full-text
@@ -31,6 +31,10 @@ Two additional beta.19 examples make the public set **26 PDFs**:
   the top-level Date header from the Agenda source. PDF/A and selected ISO
   checks pass; EA-PDF validation **fails as expected** with `MESSAGE_SENT_XMP`.
   This demonstrates incomplete source metadata without inventing a sent date.
+
+The [seating archive](eml/eml_seating_archive_1m.pdf) contains two anonymized
+messages from a public email corpus. The Main README shows the first message
+open in the Desktop Viewer.
 
 Sources:
 

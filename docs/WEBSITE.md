@@ -13,11 +13,13 @@ Releases and Packages. Pages serves documentation only, not an email-processing 
   docs/ARCHITECTURE.md for architectural decisions. docs/README.md maps ownership.
 - Edit the original Markdown files for reference and developer guides.
   `SOURCES` in `scripts/build_documentation.py` is the explicit publication list.
-- Edit `docs/site/` for the website home, downloads and stylesheet.
+- Edit the root `README.md` for the website homepage. The build serves the linked
+  manuals, project screenshots, architecture diagram, featured archive and examples ZIP on Pages.
+- Edit `docs/site/` for downloads, privacy and the stylesheet.
 - Edit `mkdocs.yml` for navigation and theme settings. Change
   `--eapdf-content-width` in `docs/site/stylesheets/extra.css` to adjust width.
 
-Only these selected sources and manual screenshots enter the site.
+Only these selected sources and their listed assets enter the site.
 The ignored local development log and docs/private archive never enter this list. Audit trees,
 email fixtures, local build output and credentials are not copied. Links to other
 repository documents lead to GitHub. Downloadable applications stay in Releases.
@@ -41,9 +43,16 @@ Remove these task-owned temporary directories when finished.
 ## Publish
 
 The **Documentation** Actions workflow builds pull requests without publishing.
-A push to `main` builds and deploys using GitHub Pages' artifact workflow.
+A push to `main` builds the current Full Desktop Viewer, opens the example 1m
+archive, and captures the selected email. GitHub Pages deploys the screenshot
+with the website homepage. The repository README displays the checked-in capture.
 Maintainers can also run it manually. The deployment job alone has Pages and OIDC
 write permissions; it runs only from `main`, never from pull requests.
+
+To refresh the checked-in README image on x86-64 Linux with a graphical display,
+build the current viewer with `desktop-viewer/package.sh`, then run
+`bash scripts/manual/capture-readme.sh /path/to/full-desktop-viewer.jar`.
+Use a temporary `EAPDF_VIEWER_DIST` when only refreshing the screenshot.
 
 Pages settings must use **GitHub Actions** as the build source. The `github-pages`
 environment records deployments. A failed build does not replace the live site.

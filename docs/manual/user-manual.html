@@ -7,7 +7,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <body>
 <section class="chapter" id="start">
 <h1>EA-PDF</h1>
-<p class="edition" data-edition="2026-11-23">User Manual · Creator and validators 2.4.0-beta.6 · documentation revision 23 November 2026</p>
+<p class="edition" data-edition="2026-11-24">User Manual · Creator and validators 2.4.0-beta.7 · documentation revision 24 November 2026</p>
 <p>EA-PDF converts email into PDF files for preservation and access. It supports saved EML and MSG messages, PST and MBOX mailboxes, and Gmail downloads.</p>
 <p>The creator produces readable email pages with structured metadata and retained source messages and attachments where the selected profile allows them. The validators check PDF/A and EA-PDF requirements. The viewer lets people browse messages, collections and embedded files.</p>
 <p>Created by <strong>Thinkbox.DIGITAL</strong>.</p>
@@ -50,7 +50,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <p>A collection's outer pages are its introduction and index. To read the actual emails, open its embedded message PDFs. A basic PDF reader may show only those outer pages. The project viewer supports browsing these children.</p>
 </section>
 <section class="chapter" id="installation"><h1>2. Get the tools ready</h1>
-<p>Open the <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.6">release downloads</a>. Install a desktop version of Java 21 or later, then download the apps you need.</p>
+<p>Open the <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.7">release downloads</a>. Install a desktop version of Java 21 or later, then download the apps you need.</p>
 <ul><li><strong>Desktop Viewer:</strong> open a PDF and browse its email and attachments.</li><li><strong>Validator:</strong> check a PDF and save a report.</li><li><strong>Creator:</strong> turn email into PDFs in a desktop window.</li></ul>
 <p>The Creator can run with built-in settings. See the <a href="https://github.com/thinkbox-digital/eapdf/blob/main/config/README.md">configuration guide</a> to customize them.</p>
 <p>Double-click a desktop app’s JAR file to open it. A JAR is the app itself. If a ZIP or archive program opens, use <strong>Open with</strong> in your file manager and select Java.</p>
@@ -125,10 +125,10 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <section class="chapter" id="viewer"><h1>7. Viewer: read messages and attachments</h1>
 
 <h2 id="desktop-viewer">Open a PDF in Desktop Viewer</h2>
-<ol><li><a href="https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.6/eapdf-desktop-viewer-full-0.9.1.jar">Download Desktop Viewer 0.9.1</a> and double-click the JAR.</li><li>Choose <strong>Open PDF…</strong> or drag a PDF into the window.</li><li>Select a message or folder to see its pages. Use the Files pane to preview or save an attachment. In a collection, open a member and use <strong>Parent</strong> to return.</li><li>Use <strong>Search</strong> to find text. Open Portfolio view when you want to browse the files in a PDF Portfolio.</li></ol>
+<ol><li><a href="https://github.com/thinkbox-digital/eapdf/releases/download/v2.4.0-beta.7/eapdf-desktop-viewer-full-0.9.1.jar">Download Desktop Viewer 0.9.1</a> and double-click the JAR.</li><li>Choose <strong>Open PDF…</strong> or drag a PDF into the window.</li><li>Select a message or folder to see its pages. Use the Files pane to preview or save an attachment. In a collection, open a member and use <strong>Parent</strong> to return.</li><li>Use <strong>Search</strong> to find text. Open Portfolio view when you want to browse the files in a PDF Portfolio.</li></ol>
 <p>Desktop Viewer requires a desktop version of Java 21 or later. On Linux, the app uses a graphical session with GTK 3. See the <a href="https://github.com/thinkbox-digital/eapdf/blob/main/desktop-viewer/USER_GUIDE.md">Desktop Viewer guide</a> for more controls.</p>
 <h2>Read in your browser</h2>
-<p>The <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.6">Full browser reader</a> is an alternative for Chromium and Firefox.</p>
+<p>The <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.7">Full browser reader</a> is an alternative for Chromium and Firefox.</p>
 <h2>Install in Chromium or Chrome</h2>
 <p>Use the Chromium viewer ZIP, extract it, and keep the extracted folder in a stable location. The current package requires Chromium 156 or newer.</p>
 <ol><li>Enter <code>chrome://extensions</code> in the browser's address bar.</li><li>Enable <strong>Developer mode</strong>.</li><li>Click <strong>Load unpacked</strong> and select the extracted extension folder containing <code>manifest.json</code>.</li><li>Open the extensions menu and click <strong>EA-PDF viewer beta</strong>. Pin it if you want easy access.</li></ol>
@@ -222,7 +222,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <section class="chapter" id="maintenance"><h1>11. Updates and help</h1>
 <h2>Edition and verification notes</h2>
 <p>This manual was updated on 22 November 2026.</p>
-<p class="note"><strong>Edition and availability.</strong> This guide covers creator and validator 2.4.0-beta.6 and Full browser reader 1.11.0. The Full reader restores recognized family names for affected embedded CJK fonts. macOS Firefox rendering still needs platform verification. Read the release notes for the exact package you use.</p>
+<p class="note"><strong>Edition and availability.</strong> This guide covers creator and validator 2.4.0-beta.7 and Full browser reader 1.12.0. The Full reader restores recognized family names for affected embedded CJK fonts. macOS Firefox rendering still needs platform verification. Read the release notes for the exact package you use.</p>
 <p>The names, addresses, messages and attachments in the screenshots are fictional. The screenshots come from the actual applications on Linux; window borders and file pickers will look different on other systems. Linux and the listed browser versions are the tested environment.</p>
 <h2>Update carefully</h2>
 <p>Keep a copy of your configuration, originals and completed records. Read the new release notes, download the intended files, and test a small known email before a large job. Replacing a JAR does not update a conversion that is already running. Unpacked viewer installations need an explicit reload and a new viewer tab.</p>
