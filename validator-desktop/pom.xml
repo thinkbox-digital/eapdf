@@ -53,6 +53,10 @@
         <includes><include>LICENSE</include><include>NOTICE</include></includes>
       </resource>
       <resource><directory>src/main/resources</directory><filtering>false</filtering></resource>
+      <resource>
+        <directory>${project.basedir}/../docs/reference</directory><targetPath>validator/specification</targetPath><filtering>false</filtering>
+        <includes><include>EA-PDF-v1.pdf</include><include>README.md</include></includes>
+      </resource>
       <resource><directory>${project.basedir}/../third_party_licenses</directory><targetPath>META-INF/eapdf/third-party</targetPath><filtering>false</filtering>
         <includes><include>jutf7-MIT.txt</include></includes>
       </resource>

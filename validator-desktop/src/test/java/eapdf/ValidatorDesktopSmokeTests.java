@@ -18,6 +18,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.text.StyleConstants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
@@ -94,10 +95,23 @@ class ValidatorDesktopSmokeTests {
         assertTrue(selected >= 0);
         table.setRowSelectionInterval(selected, selected);
         assertTrue(specification.getText().contains("Section 9.1; printed page(s) 62; PDF page(s) 69"));
-        assertTrue(specification.getText().contains("SHALL NOT contain a PieceInfo"));
         assertEquals(JavaValidation.ruleNumber("CATALOG_PIECEINFO"), table.getValueAt(selected, 1));
         assertTrue(detail.getText().startsWith("Rule " + JavaValidation.ruleNumber("CATALOG_PIECEINFO")));
         assertTrue(detail.isShowing()); assertTrue(specification.isShowing());
+      });
+      await(() -> {
+        var document = specification.getStyledDocument();
+        for (int offset = 0; offset < document.getLength();) {
+          var element = document.getCharacterElement(offset);
+          var icon = StyleConstants.getIcon(element.getAttributes());
+          if (icon != null) return icon.getIconWidth() > 0 && icon.getIconHeight() > 0;
+          offset = element.getEndOffset();
+        }
+        return false;
+      });
+      SwingUtilities.invokeAndWait(() -> {
+        assertTrue(specification.getText().contains("Printed page 62 / PDF page 69"));
+        assertFalse(specification.getText().contains("SHALL NOT contain a PieceInfo"));
         int total = table.getRowCount();
         ruleFilter.setText("CaTaLoG pieceinfo");
         assertTrue(table.getRowCount() > 0 && table.getRowCount() < total);

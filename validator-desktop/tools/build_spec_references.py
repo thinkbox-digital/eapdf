@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Rebuild the bundled specification page excerpts from the pinned local PDF.
 
-Development tool only. The JAR reads JSON and needs neither Python nor the PDF.
+Development tool only. The JAR renders the bundled PDF and uses JSON for
+reviewed citations and text fallback.
 Page bodies preserve extracted wording; layout whitespace is simplified.
 Reviewed summaries remain explicitly separate from specification quotations.
 """

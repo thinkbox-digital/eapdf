@@ -79,10 +79,11 @@ PDF/A failures. The table includes rule numbers. **Keyword in Rule** filters rul
 codes using all entered words. **Esc** clears the filter. Finding and
 **Specification** appear side by side.
 Findings name concrete required values and types, such as version 1 and revision
-2024. The specification pane shows the cited specification text,
-section, table and both printed/PDF page numbers. References are bundled; the
-source PDF is not needed at runtime. Summaries are labeled as paraphrases, and
-operational checks do not receive invented specification pages.
+2024. The **Specification** pane identifies the cited sections, tables and
+printed and PDF page numbers. It renders pages from the bundled EA-PDF
+specification, preserving their original tables and surrounding text. Reviewed
+summaries are selectable paraphrases. If a page cannot be rendered, the pane
+shows its extracted text.
 The initial list follows specification order. Identical rule/result/message rows
 are grouped. Select a group to see its occurrence count and details;
 different results or messages remain separate. Collection details show each
