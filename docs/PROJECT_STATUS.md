@@ -7,9 +7,9 @@ children, runs the packaged Creator and Validator GUIs, and launches the Desktop
 Viewer JAR. GitHub publication through the acceptance workflow uses the packages
 and checksums from the successful job.
 
-Main release **2.4.0-beta.7** includes the Full browser reader **1.12.0** and
+Main release **2.4.0-beta.8** includes the Full browser reader **1.13.0** and
 Desktop Viewer **0.9.1**.
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.7).
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.8).
 
 C2PA/PAdES, WeasyPrint and other experimental changes remain separate in
 `../eapdf-secure` on `experiment/c2pa-pades`. Normal development continues in this
@@ -21,6 +21,12 @@ Java validator and the Even More Lite reader.
 [Release checks](releases/2.4.0-beta.2-validation.md) · [Code layout](ARCHITECTURE.md)
 
 ## This release
+
+- **Validator.** The Specification pane renders the cited EA-PDF pages in PDF order, preserving tables and other formatting.
+  The reviewed summaries use bold headings and regular body text. They show requirements, applicability, strength and evidence.
+- **Checks.** The desktop smoke tests and all six EA-PDF sample profiles passed in Main and Secure.
+
+## Previous release, 24 November 2026
 
 - **Documentation.** The Main README shows an anonymized message open in the Desktop Viewer and offers a ZIP of the examples.
 - **Packaging.** The documentation workflow captures the screenshot from the current build on pushes to Main.
