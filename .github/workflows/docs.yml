@@ -4,6 +4,8 @@ on:
     branches: [main]
   pull_request:
     paths:
+      - 'VERSION'
+      - 'browser-viewer/package.json'
       - 'README.md'
       - 'ea-pdf-examples.zip'
       - 'docs/**'

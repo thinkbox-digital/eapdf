@@ -11,6 +11,10 @@ import zlib
 from validation_worker import memory_allowance_bytes
 
 
+class MalformedStreamError(ValueError):
+    """A supported filter encountered malformed PDF stream data."""
+
+
 class DecodeLimitError(ValueError):
     def __init__(self, message):
         super().__init__(message)
@@ -47,6 +51,9 @@ def bounded_validation(function):
         token = CURRENT.set(Budget()) if CURRENT.get() is None else None
         try:
             return function(pdf, report, *args, **kwargs)
+        except MalformedStreamError as error:
+            report.fail("PDF_STREAM_MALFORMED", "A PDF stream could not be decoded", {"reason": str(error)})
+            return report
         except DecodeLimitError as error:
             report.warn("VALIDATION_INCOMPLETE", "Inspection stopped at a security limit", {"reason": str(error)})
             return report
@@ -101,7 +108,7 @@ def read_stream(stream, maximum):
                     emit(chunk)
                     pending = decoder.unconsumed_tail
             if not decoder.eof:
-                raise ValueError("Truncated Flate stream")
+                raise MalformedStreamError("Truncated Flate stream")
         elif name in ("/ASCIIHexDecode", "/AHx"):
             digits = bytearray()
             for value in data:
@@ -112,20 +119,21 @@ def read_stream(stream, maximum):
                 digits.append(value)
                 if len(digits) == 8192:
                     emit(bytes.fromhex(digits.decode("ascii"))); digits.clear()
+            else:
+                raise MalformedStreamError("ASCIIHex stream is missing its end marker")
             if len(digits) % 2:
                 digits.append(48)
             emit(bytes.fromhex(digits.decode("ascii")))
         elif name in ("/ASCII85Decode", "/A85"):
-            group = bytearray(); ended = False
-            for value in data:
-                if ended:
-                    if value != 62:
-                        raise ValueError("Invalid ASCII85 terminator")
-                    break
+            group = bytearray()
+            values = iter(data)
+            for value in values:
                 if value in b"\x00\t\n\x0c\r ":
                     continue
                 if value == 126:
-                    ended = True; continue
+                    if next(values, None) != 62:
+                        raise MalformedStreamError("Invalid ASCII85 end marker")
+                    break
                 if value == 122:
                     if group:
                         raise ValueError("Invalid ASCII85 zero group")
@@ -133,6 +141,8 @@ def read_stream(stream, maximum):
                 group.append(value)
                 if len(group) == 5:
                     emit(base64.a85decode(group)); group.clear()
+            else:
+                raise MalformedStreamError("ASCII85 stream is missing its end marker")
             if len(group) == 1:
                 raise ValueError("Invalid ASCII85 final group")
             if group:
@@ -145,9 +155,11 @@ def read_stream(stream, maximum):
                     break
                 length = count + 1 if count < 128 else 1
                 if offset + length > len(data):
-                    raise ValueError("Truncated RunLength stream")
+                    raise MalformedStreamError("Truncated RunLength stream")
                 emit(data[offset:offset + length] if count < 128 else bytes([data[offset]]) * (257 - count))
                 offset += length
+            else:
+                raise MalformedStreamError("RunLength stream is missing its end marker")
         elif name is None:
             for offset in range(0, len(data), 65536):
                 emit(data[offset:offset + 65536])
@@ -158,5 +170,10 @@ def read_stream(stream, maximum):
     if not filters:
         data = decode(data, None, None)
     for index, name in enumerate(filters):
-        data = decode(data, str(name), parameters[index] if index < len(parameters) else None)
+        try:
+            data = decode(data, str(name), parameters[index] if index < len(parameters) else None)
+        except (DecodeLimitError, MalformedStreamError):
+            raise
+        except (ValueError, TypeError, AttributeError, zlib.error) as error:
+            raise MalformedStreamError(f"Invalid {name} stream data or decode parameters") from error
     return bytes(data)

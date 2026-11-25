@@ -15,12 +15,6 @@ Official Google references used for the setup steps:
 - Google Workspace credentials guide: https://developers.google.com/workspace/guides/manage-credentials
 - Create credentials: https://developers.google.com/workspace/guides/create-credentials
 
-## Live check — C95, 2026-10-23
-
-The user-authorized account was checked with read-only access. Three inbox messages produced individual PDFs, an archive and a collection; another message supplied a PDF attachment. All outputs and collection children pass the existing EA-PDF, PDF/A and selected ISO checks. Original email and attachment bytes match. Repeating the three-message export skips completed outputs.
-
-That check used temporary private copies of the earlier Google token store. The current creator requires fresh consent and leaves older token files untouched.
-
 ## What This Workflow Does
 
 The Gmail entrypoint connects to the Gmail API, downloads matching messages in raw RFC822 form, maps them into the existing email pipeline, and writes either:

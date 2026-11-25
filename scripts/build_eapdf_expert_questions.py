@@ -1,70 +1,305 @@
-"""Build the concise specification decision brief from its reviewed question data."""
-from pathlib import Path
-import hashlib,json,re
+"""Build the specification decision brief from the reviewed question data."""
+
+from datetime import datetime
+from hashlib import sha256
 from io import BytesIO
+import json
+from pathlib import Path
+
 from docx import Document
-from docx.shared import Inches,Pt,RGBColor
+from docx.enum.style import WD_STYLE_TYPE
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.opc.constants import RELATIONSHIP_TYPE as RT
-import pymupdf as fitz
-ROOT=Path(__file__).resolve().parents[1]
-DATA=ROOT/'docs/improvement/specification-questions-2026-11-02'
-DEST=ROOT/'docs/specification-review/EA_PDF_Specification_Questions_for_Experts.docx'
-def link(p,text,url):
- h=OxmlElement('w:hyperlink');h.set(qn('r:id'),p.part.relate_to(url,RT.HYPERLINK,is_external=True));r=OxmlElement('w:r');pr=OxmlElement('w:rPr');c=OxmlElement('w:color');c.set(qn('w:val'),'175A87');pr.append(c);r.append(pr);t=OxmlElement('w:t');t.text=text;r.append(t);h.append(r);p._p.append(h)
-def label(doc,name,text):
- p=doc.add_paragraph();p.add_run(name+' ').bold=True;p.add_run(text);return p
+from docx.opc.constants import RELATIONSHIP_TYPE
+from docx.shared import Inches, Pt, RGBColor
+import pymupdf
+
+
+ROOT = Path(__file__).resolve().parents[1]
+REVIEW = ROOT / "docs" / "specification-review"
+DATA = REVIEW / "expert-questions.json"
+DESTINATION = REVIEW / "EA_PDF_Specification_Questions_for_Experts.docx"
+SPECIFICATION = ROOT / "docs" / "reference" / "EA-PDF-v1.pdf"
+SPECIFICATION_URL = "https://pdfa.org/download-area/specifications/EA-PDF-v1.pdf"
+ISSUES_URL = "https://github.com/pdf-association/report-an-issue/issues"
+LICENSE_URL = "https://creativecommons.org/licenses/by/4.0/"
+PRINTED_PAGE_OFFSET = 7
+
+HEADING_COLOR = "244C69"
+LINK_COLOR = "175A87"
+SECONDARY_COLOR = "475569"
+
+
+def add_link(paragraph, label, *, url=None, anchor=None):
+    hyperlink = OxmlElement("w:hyperlink")
+    if url is not None:
+        relationship = paragraph.part.relate_to(
+            url, RELATIONSHIP_TYPE.HYPERLINK, is_external=True
+        )
+        hyperlink.set(qn("r:id"), relationship)
+    else:
+        hyperlink.set(qn("w:anchor"), anchor)
+
+    run = OxmlElement("w:r")
+    formatting = OxmlElement("w:rPr")
+    color = OxmlElement("w:color")
+    color.set(qn("w:val"), LINK_COLOR)
+    formatting.append(color)
+    underline = OxmlElement("w:u")
+    underline.set(qn("w:val"), "single")
+    formatting.append(underline)
+    run.append(formatting)
+    text = OxmlElement("w:t")
+    text.text = label
+    run.append(text)
+    hyperlink.append(run)
+    paragraph._p.append(hyperlink)
+
+
+def add_bookmark(paragraph, name, number):
+    start = OxmlElement("w:bookmarkStart")
+    start.set(qn("w:id"), str(number))
+    start.set(qn("w:name"), name)
+    end = OxmlElement("w:bookmarkEnd")
+    end.set(qn("w:id"), str(number))
+    paragraph._p.insert(1, start)
+    paragraph._p.append(end)
+
+
+def configure_document(document):
+    section = document.sections[0]
+    section.top_margin = Inches(0.64)
+    section.bottom_margin = Inches(0.63)
+    section.left_margin = Inches(0.76)
+    section.right_margin = Inches(0.76)
+    section.footer_distance = Inches(0.34)
+
+    normal = document.styles["Normal"]
+    normal.font.name = "Calibri"
+    normal.font.size = Pt(11)
+    normal.paragraph_format.space_after = Pt(5)
+
+    contents = document.styles.add_style("Question contents", WD_STYLE_TYPE.PARAGRAPH)
+    contents.base_style = normal
+    contents.font.size = Pt(10)
+    contents.paragraph_format.space_after = Pt(2)
+    contents.paragraph_format.line_spacing = 1
+
+    for name, size in (("Title", 27), ("Heading 1", 16), ("Heading 2", 13)):
+        style = document.styles[name]
+        style.font.name = "Calibri"
+        style.font.size = Pt(size)
+        style.font.color.rgb = RGBColor.from_string(HEADING_COLOR)
+        style.paragraph_format.keep_with_next = True
+
+    heading = document.styles["Heading 1"]
+    heading.paragraph_format.space_before = Pt(14)
+    heading.paragraph_format.space_after = Pt(5)
+
+    for name in ("Subtitle", "Caption", "Footer"):
+        document.styles[name].font.color.rgb = RGBColor.from_string(SECONDARY_COLOR)
+    document.styles["Caption"].font.size = Pt(9)
+    document.styles["Caption"].font.italic = False
+    document.styles["Footer"].font.size = Pt(9)
+
+    footer = section.footer.paragraphs[0]
+    footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    footer.add_run("Thinkbox.DIGITAL  ·  EA-PDF specification review  ·  ")
+    page_field = OxmlElement("w:fldSimple")
+    page_field.set(qn("w:instr"), "PAGE")
+    footer._p.append(page_field)
+
+
+def add_contents(document, questions, sections, body_width):
+    document.add_heading(f"Questions at a glance ({len(questions)})", level=1)
+    table = document.add_table(rows=0, cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = False
+    for column in table.columns:
+        column.width = body_width // 2
+
+    for index in range(0, len(questions), 2):
+        row = table.add_row()
+        row._tr.get_or_add_trPr().append(OxmlElement("w:cantSplit"))
+        for cell, question in zip(row.cells, questions[index:index + 2]):
+            cell.width = body_width // 2
+            paragraph = cell.paragraphs[0]
+            paragraph.style = "Question contents"
+            add_link(
+                paragraph,
+                f"{question['id']}  {question['title']}",
+                anchor=question["id"],
+            )
+
+    paragraph = document.add_paragraph()
+    paragraph.paragraph_format.space_before = Pt(7)
+    for index, (label, anchor) in enumerate(sections):
+        if index:
+            paragraph.add_run("  ·  ")
+        add_link(paragraph, label, anchor=anchor)
+
+
+def add_labeled_paragraph(document, label, text):
+    paragraph = document.add_paragraph()
+    paragraph.add_run(f"{label}  ").bold = True
+    paragraph.add_run(text)
+    return paragraph
+
+
+def add_question(document, question, index):
+    heading = document.add_heading(f"{question['id']}  {question['title']}", level=1)
+    add_bookmark(heading, question["id"], index)
+
+    source = add_labeled_paragraph(document, "Source", question["source"])
+    source.paragraph_format.keep_with_next = True
+    rule = add_labeled_paragraph(document, "Specification", question["rule"])
+    rule.paragraph_format.keep_with_next = True
+    add_labeled_paragraph(document, "Example", question["example"])
+    add_labeled_paragraph(document, "Current release", question["release"])
+    decision = add_labeled_paragraph(document, "Decision requested", question["ask"])
+    decision.paragraph_format.keep_with_next = True
+    add_labeled_paragraph(document, "Proposed resolution", question["proposal"])
+
+    if question.get("refs"):
+        paragraph = document.add_paragraph()
+        paragraph.add_run("References  ").bold = True
+        for index, (label, url) in enumerate(question["refs"]):
+            if index:
+                paragraph.add_run("  ·  ")
+            add_link(paragraph, label, url=url)
+
+
+def add_section(document, sections, position, question_count):
+    label, anchor = sections[position]
+    heading = document.add_heading(label, level=1)
+    add_bookmark(heading, anchor, question_count + position + 1)
+    return heading
+
+
+def add_detail_table(document, first_heading, second_heading, rows, body_width, issue_links=False):
+    table = document.add_table(rows=1, cols=2)
+    table.style = "Light Shading Accent 1"
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = False
+    first_width = Inches(0.68 if issue_links else 1.44)
+    widths = (first_width, body_width - first_width)
+    for column, width in zip(table.columns, widths):
+        column.width = width
+
+    header = table.rows[0]
+    header._tr.get_or_add_trPr().append(OxmlElement("w:tblHeader"))
+    for cell, label, width in zip(header.cells, (first_heading, second_heading), widths):
+        cell.width = width
+        cell.text = label
+
+    for label, description in rows:
+        row = table.add_row()
+        row._tr.get_or_add_trPr().append(OxmlElement("w:cantSplit"))
+        first, second = row.cells
+        first.width, second.width = widths
+        if issue_links:
+            add_link(first.paragraphs[0], f"#{label}", url=f"{ISSUES_URL}/{label}")
+        else:
+            first.text = str(label)
+        second.text = description
+
+    for row in table.rows:
+        for cell in row.cells:
+            for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_before = Pt(3)
+                paragraph.paragraph_format.space_after = Pt(3)
+
+
+def add_source_exhibits(document, pages, heading, body_width):
+    heading.paragraph_format.page_break_before = True
+    with pymupdf.open(SPECIFICATION) as pdf:
+        for index, printed_page in enumerate(pages):
+            pdf_page = printed_page + PRINTED_PAGE_OFFSET
+            caption = document.add_heading(
+                f"Printed page {printed_page} · PDF page {pdf_page}", level=2
+            )
+            caption.paragraph_format.page_break_before = index > 0
+            credits = document.add_paragraph(style="Caption")
+            credits.paragraph_format.keep_with_next = True
+            credits.paragraph_format.space_before = Pt(0)
+            add_link(credits, "EA-PDF 1.0 Specification", url=SPECIFICATION_URL)
+            credits.add_run("  ·  © 2025 PDF Association  ·  ")
+            add_link(credits, "CC BY 4.0", url=LICENSE_URL)
+
+            page = pdf[pdf_page - 1]
+            image = page.get_pixmap(dpi=150, alpha=False)
+            width = int(min(body_width, Inches(8.40) * page.rect.width / page.rect.height))
+            shape = document.add_picture(BytesIO(image.tobytes("png")), width=width)
+            shape._inline.docPr.set(
+                "descr",
+                f"EA-PDF 1.0, printed page {printed_page}. "
+                "The linked specification provides selectable text.",
+            )
+            paragraph = document.paragraphs[-1]
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            paragraph.paragraph_format.space_after = Pt(0)
+
+
+def build_document(data, destination):
+    digest = sha256(SPECIFICATION.read_bytes()).hexdigest()
+    if digest != data["specification_sha256"]:
+        raise ValueError(f"Source PDF SHA-256 mismatch for {SPECIFICATION}. Found {digest}.")
+
+    document = Document()
+    configure_document(document)
+    section = document.sections[0]
+    body_width = section.page_width - section.left_margin - section.right_margin
+    questions = data["questions"]
+    sections = (
+        ("Publication corrections", "PublicationCorrections"),
+        ("Public issue review", "PublicIssueReview"),
+        ("Sources", "Sources"),
+        ("Source exhibits", "SourceExhibits"),
+    )
+    document.core_properties.title = data["title"]
+    document.core_properties.subject = data["subtitle"]
+    document.core_properties.author = "Thinkbox.DIGITAL"
+    review_date = datetime.fromisoformat(data["review_date"])
+    document.core_properties.created = review_date
+    document.core_properties.modified = review_date
+    document.core_properties.last_modified_by = document.core_properties.author
+    document.core_properties.comments = ""
+
+    document.add_heading(data["title"], level=0)
+    document.add_paragraph(data["subtitle"], style="Subtitle")
+    for paragraph in data["intro"]:
+        document.add_paragraph(paragraph)
+    add_contents(document, questions, sections, body_width)
+
+    for index, question in enumerate(questions, start=1):
+        add_question(document, question, index)
+
+    add_section(document, sections, 0, len(questions))
+    add_detail_table(document, "Location", "Correction", data["corrections"], body_width)
+
+    add_section(document, sections, 1, len(questions))
+    add_detail_table(
+        document, "Issue", "Status and review", data["issues"], body_width, issue_links=True
+    )
+
+    add_section(document, sections, 2, len(questions))
+    for label, url in data["sources"]:
+        add_link(document.add_paragraph(), label, url=url)
+    add_labeled_paragraph(document, "Pinned local PDF", str(SPECIFICATION.relative_to(ROOT)))
+    add_labeled_paragraph(document, "SHA-256", digest)
+
+    exhibit_heading = add_section(document, sections, 3, len(questions))
+    add_source_exhibits(document, data["exhibits"], exhibit_heading, body_width)
+    document.save(destination)
+
 
 def main():
- data=json.loads((DATA/'questions.json').read_text());doc=Document();sec=doc.sections[0];sec.top_margin=sec.bottom_margin=Inches(.65)
- normal=doc.styles['Normal'];normal.font.name='Calibri';normal.font.size=Pt(11);normal.paragraph_format.space_after=Pt(6)
- for name in ['Heading 1','Heading 2']:doc.styles[name].font.color.rgb=RGBColor.from_string('244C69')
- doc.add_heading('EA-PDF: decisions needed from the specification experts',0)
- doc.add_paragraph('Plain-language decision brief • 2 November 2026 • Thinkbox.DIGITAL')
- doc.add_paragraph('This brief identifies 25 decisions needed to make EA-PDF 1.0 consistent and interoperable. Each question gives the source, the practical problem, current project handling and a proposed way forward. Proposals are for discussion; they are not approved corrections.')
- doc.add_paragraph('The highest-impact decisions concern truthful missing dates, Core Field requirements, source identity and what a validator can actually prove. Resolve those before tightening validation or requiring changes to existing archives.')
- doc.add_paragraph('The baseline is the PDF Association EA-PDF 1.0 Specification, February 2025: 97 PDF pages, with 90 printed content pages. Page references below are printed pages; add seven for the PDF page. PDF/A validation is delegated to veraPDF on the finished bytes. Separate applicable ISO/TS 32005 requirements remain in scope.')
- doc.add_paragraph('For each decision, the experts should record: agreed meaning; exact replacement wording and location; applicable edition/revision; treatment of existing files; and at least one passing and one failing example. Any schema change also needs exact property names, data types and a complete example packet.')
- doc.add_heading('Questions at a glance',1)
- for item in data['items']:doc.add_paragraph(item['id']+' — '+item['title'])
- for item in data['items']:
-  doc.add_heading(item['id']+' — '+item['title'],1)
-  pages=', '.join(str(p) for p in item['pages'])
-  label(doc,'Source:',item['source']+'; printed pages '+pages+'.')
-  doc.add_paragraph(item['problem'])
-  label(doc,'Example:',item['example'])
-  label(doc,'Current handling:',item['current'])
-  label(doc,'Decision needed:',item['decision'])
-  label(doc,'Suggested resolution:',item['proposal'])
-  if item['discussion']:
-   p=doc.add_paragraph('Discussion: ');link(p,'PDF Association issue #'+str(item['discussion']),'https://github.com/pdf-association/report-an-issue/issues/'+str(item['discussion']))
- doc.add_heading('Publication corrections to settle alongside the policy decisions',1)
- doc.add_paragraph('These repairs should be published as an itemized errata sheet and corrected examples. They do not justify changing valid underlying PDF syntax to match a faulty illustration.')
- rows=[('p9, Table 2','Replace PDF/A-4fe with the intended published conformance level; see Q01.'),('pp24–25, Figure 6','Align the diagram’s identification/schema names with Tables 14–15, including the version property.'),('pp46–48, Examples 3–4','Correct MIME-parameter and PDF-object examples; provide a syntactically valid, machine-tested replacement.'),('pp51 and68, Collection/Collections','Use the PDF catalog key Collection consistently. A plural spelling is not a new PDF key.'),('pp53–55, collection example','Reconcile ownership descriptions and duplicate object numbering with the actual embedded child objects.'),('pp72–74, DPart example','Publish a valid nested child-array/Parent/page-range example; apply the published inherited correction concerning DPart Metadata streams.'),('p76, Table 11','Confirm Mail_Field replaces the undefined Mail_ContentField; see the content-set ancestry question.'),('pp81–83, Example 7','Use the intended content-set tag, valid TJ array operands, explicit namespace connections and the permitted root representation.'),('Tables 16 and19','Correct case-sensistive. Preserve the current distinct ContentType/Checksum and Content-Type/CheckSum spellings until any deliberate schema change is specified.'),('Specification PDF itself','Repair the reported malformed number tree in a separately identified publication. Retain the original pinned source for traceability.')]
- t=doc.add_table(rows=1,cols=2);t.style='Light Shading Accent 1';t.rows[0].cells[0].text='Location';t.rows[0].cells[1].text='Requested correction'
- for a,b in rows:c=t.add_row().cells;c[0].text=a;c[1].text=b
- doc.add_heading('Points already explicit in the published text',1)
- doc.add_paragraph('The project issue discussions also raised points that the pinned source already answers: section 9.8/Table 14 requires pdfmail as well as pdfmailid and pdfmailmeta; section 9.3 requires attachment annotations in each applicable body rendering; and section 9.8 names the EA-PDF file creation date. A different policy would be an amendment, not merely a validator bug fix.')
- doc.add_paragraph('The single Document root may be role-mapped under the applicable PDF rules; a missing End in a single-page DPart defaults to Start. Embedded PDF CheckSum is a 16-byte binary MD5 value, unlike the 32-character hexadecimal XMP form. These implementation repairs should not be reopened as new EA-PDF ambiguities.')
- doc.add_paragraph('PDF/A font rules, including CIDSet, belong to the selected PDF/A edition and engine. Do not assume a proposed future amendment is already effective. Viewer behaviour, store approval and limitations in a particular source parser are separate from the meaning of EA-PDF.')
- doc.add_heading('Source extracts: the conflicting Core Field tables',1)
- doc.add_paragraph('The next three pages reproduce the published table pages for direct comparison. In particular compare Sent, Raw-Sent, original size, attachment count, Content-Type and In-Reply-To. Other source locations are given with each question. Copyright 2025 PDF Association, CC BY 4.0.')
- pdf=fitz.open(ROOT/'docs/reference/EA-PDF-v1.pdf')
- for page in [37,87,88]:
-  doc.add_page_break();doc.add_heading(f'Published source — printed page {page} (PDF page {page+7})',2)
-  pix=pdf[page+6].get_pixmap(matrix=fitz.Matrix(1.6,1.6));doc.add_picture(BytesIO(pix.tobytes('png')),width=Inches(5.65))
- doc.add_page_break();doc.add_heading('Sources and review status',1)
- doc.add_paragraph('Source PDF: docs/reference/EA-PDF-v1.pdf\nSHA-256: '+hashlib.sha256((ROOT/'docs/reference/EA-PDF-v1.pdf').read_bytes()).hexdigest())
- doc.add_paragraph('Current implementation reference: release 1.6.0-beta.5 and the 229-rule catalogue. Earlier audit decisions were checked for superseded implementation statements; repaired rule extraction or validator defects are not listed as outstanding policy questions.')
- doc.add_paragraph('Public discussions were reread on 2 November 2026. The PDF Association repository returned 26 issues, including broader publication/dependency matters; its EA-PDF issues 8, 10, 13, 14, 17, 21 and 22 remain open. The project repository returned two issues. An open issue or a comment is not adopted errata.')
- for url in ['https://github.com/pdf-association/report-an-issue/issues','https://github.com/thinkbox-digital/eapdf/issues']:
-  link(doc.add_paragraph(),url,url)
- doc.add_paragraph('Project issue #2 was closed on 2 November 2026: its final comment says most implementation issues are addressed in recent builds, while remaining matters need adjudication by the PDF Association and others. Closure does not adopt a specification amendment.')
- doc.add_paragraph('Supporting local review: docs/improvement/specification-audit/specification-reexamination-2026-10-31.txt; docs/improvement/rule-refinement-2026-10-31/project-issues-review.txt; docs/specification-review/EA_PDF_Rule_Review_for_Specification_Authors.docx. This decision brief is self-contained; those files provide the fuller extraction history and rule-by-rule exhibits.')
- footer=sec.footer.paragraphs[0];footer.add_run('Thinkbox.DIGITAL • EA-PDF specification questions • ');field=OxmlElement('w:fldSimple');field.set(qn('w:instr'),'PAGE');footer._p.append(field)
- doc.core_properties.author='Thinkbox.DIGITAL';doc.core_properties.title='EA-PDF specification: decisions needed from experts'
- doc.save(DEST)
- (DATA/'build.json').write_text(json.dumps({'document':DEST.name,'sha256':hashlib.sha256(DEST.read_bytes()).hexdigest(),'questions':len(data['items']),'source_pages_reproduced':[37,87,88],'source_sha256':hashlib.sha256((ROOT/'docs/reference/EA-PDF-v1.pdf').read_bytes()).hexdigest()},indent=2)+'\n')
- print(DEST)
-if __name__=='__main__':main()
+    data = json.loads(DATA.read_text(encoding="utf-8"))
+    build_document(data, DESTINATION)
+    print(DESTINATION)
+
+
+if __name__ == "__main__":
+    main()

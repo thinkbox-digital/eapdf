@@ -1,18 +1,24 @@
-# Historical specification review material
+# EA-PDF specification review
 
-- [Rule review for specification authors](EA_PDF_Rule_Review_for_Specification_Authors.docx)
-- [Questions for experts](EA_PDF_Specification_Questions_for_Experts.docx)
+The [questions for specification experts](EA_PDF_Specification_Questions_for_Experts.docx)
+were reviewed on 23 November 2026 against EA-PDF 1.0, public issue discussions,
+and the Main creator and validator release **2.4.0-beta.5**. The brief records the
+published requirements, current handling, and proposed decisions for the
+specification authors.
 
-These are preserved discussion documents, not current product acceptance or a
-replacement for the specification. They were moved from the repository root
-without changing their bytes. Historical release notes retain the filenames used
-for those releases.
+The [historical rule review for specification authors](EA_PDF_Rule_Review_for_Specification_Authors.docx)
+preserves the earlier rule-by-rule analysis and source exhibits. Its maintenance
+script, `scripts/sync_eapdf_author_review.py`, needs the original local review
+inputs.
 
-The maintenance tools are scripts/sync_eapdf_author_review.py and
-scripts/build_eapdf_expert_questions.py. Their current output paths are here.
-Their original review inputs include local, ignored material; running a generator
-requires those inputs and review of any resulting document changes. A clean
-checkout can read the preserved DOCX files without regenerating them.
+To regenerate the expert questions from a clean checkout, install `python-docx`
+and `PyMuPDF` in the Python environment and run the following from the repository
+root. The generator reads [the reviewed question data](expert-questions.json)
+and verifies the checksum of the [pinned specification](../reference/EA-PDF-v1.pdf).
+
+```sh
+python3 scripts/build_eapdf_expert_questions.py
+```
 
 Use [current status](../PROJECT_STATUS.md), [coverage](../VALIDATOR_COVERAGE.md)
 and [architecture](../ARCHITECTURE.md) for the current project. Keep new

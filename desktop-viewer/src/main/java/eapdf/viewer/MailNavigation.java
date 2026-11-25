@@ -1,8 +1,6 @@
 package eapdf.viewer;
 
-import java.io.FilterInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -435,7 +433,7 @@ final class MailNavigation {
     private static Metadata readMetadata(PDMetadata metadata, Set<String> warnings) {
         var empty = new Metadata("", "", List.of(), List.of());
         if (metadata == null) return empty;
-        try (var input = new MetadataInput(metadata.createInputStream())) {
+        try (var input = PdfMetadataStreams.open(metadata.getCOSObject(), MAX_METADATA)) {
             var factory = XMLInputFactory.newDefaultFactory();
             factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
             factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
@@ -461,7 +459,7 @@ final class MailNavigation {
             }
         } catch (IOException | ParserConfigurationException | XMLStreamException unreadable) {
             Throwable cause = unreadable;
-            while (cause != null && !(cause instanceof MetadataTooLarge)) cause = cause.getCause();
+            while (cause != null && !(cause instanceof PdfMetadataStreams.Limit)) cause = cause.getCause();
             warnings.add(cause != null ? "The catalog metadata exceeds the 128 MiB inspection limit."
                     : "The catalog metadata could not be read.");
             return empty;
@@ -683,30 +681,6 @@ final class MailNavigation {
         int event = parser.next();
         if (event == XMLStreamConstants.DTD) throw new XMLStreamException("DTD declarations are unavailable.");
         return event;
-    }
-
-    private static final class MetadataTooLarge extends IOException {}
-
-    private static final class MetadataInput extends FilterInputStream {
-        private int remaining = MAX_METADATA;
-
-        MetadataInput(InputStream input) { super(input); }
-
-        @Override
-        public int read() throws IOException {
-            int value = in.read();
-            if (value != -1 && remaining-- <= 0) throw new MetadataTooLarge();
-            return value;
-        }
-
-        @Override
-        public int read(byte[] bytes, int offset, int length) throws IOException {
-            if (length == 0) return 0;
-            if (remaining == 0) return read();
-            int count = in.read(bytes, offset, Math.min(length, remaining));
-            if (count > 0) remaining -= count;
-            return count;
-        }
     }
 
     private static Map<String, String> fields(List<Element> rows, Set<String> warnings) {

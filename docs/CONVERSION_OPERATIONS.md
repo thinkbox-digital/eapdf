@@ -168,7 +168,9 @@ A single PST or MBOX is read before its extracted messages are rendered.
 The Python validator runs as a CLI. It accepts regular files up to 64 GiB
 (`VALIDATOR_MAX_INPUT_BYTES`) and directories with up to 16,384 entries
 (`VALIDATOR_MAX_DIRECTORY_ENTRIES`) and 1,024 PDF candidates
-(`VALIDATOR_MAX_INPUT_FILES`). It creates private job directories under the
+(`VALIDATOR_MAX_INPUT_FILES`). Use `--html PATH` for a single PDF. When
+validating multiple PDFs, omit the path to write a separate report for each.
+The validator creates private job directories under the
 system temporary directory. With Snap Docker and system scratch under `/tmp`, it
 uses `.generator_web_tmp` under the writable veraPDF mount root, which defaults
 to the checkout. A read-only mount root falls back to the home directory. Set

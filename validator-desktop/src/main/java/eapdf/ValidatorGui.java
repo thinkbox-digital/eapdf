@@ -21,6 +21,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -65,6 +67,19 @@ import javax.swing.plaf.FontUIResource;
 /** Desktop interface for checking one EA-PDF with the bundled Java validation engine. */
 public final class ValidatorGui {
   static final float GUI_FONT_SIZE = 16f;
+
+  static String projectVersion() {
+    try (InputStream resource = ValidatorGui.class.getResourceAsStream("/eapdf-validator-build.properties")) {
+      if (resource != null) {
+        Properties metadata = new Properties();
+        metadata.load(resource);
+        String version = metadata.getProperty("version", "").trim();
+        if (!version.isBlank() && !version.contains("${")) return version;
+      }
+    } catch (IOException ignored) {
+    }
+    return "dev";
+  }
 
   private static void configureFonts() {
     for (Object key : new ArrayList<>(UIManager.getDefaults().keySet())) {
@@ -338,6 +353,7 @@ public final class ValidatorGui {
     split.setContinuousLayout(true); split.setDividerSize(9);
     content.add(split, BorderLayout.CENTER);
     JPanel footer = new JPanel(new BorderLayout(8, 8));
+    footer.add(new JLabel("Version " + projectVersion()), BorderLayout.WEST);
     footer.add(status, BorderLayout.CENTER);
     JPanel badges = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
     for (JLabel badge : List.of(outcome, warnings)) {

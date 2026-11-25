@@ -96,30 +96,32 @@ public class EmailToPDFA {
       Common.inputState(path, "accepted");
       return List.of(path);
     }
-    List<String> out = new ArrayList<>();
+    List<String> files;
     try (var walk = Files.walk(p)) {
-      List<Path> files = walk.filter(Files::isRegularFile).toList();
+      files = walk.filter(Files::isRegularFile).sorted().map(Path::toString)
+          .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
       ProcessingLimits.checkCount(files.size());
-      files = files.stream().sorted().toList();
-      for (Path file : files) {
-        String candidate = file.toString();
+      int accepted = 0;
+      for (int index = 0; index < files.size(); index++) {
+        String candidate = files.get(index);
         if (!isSupportedInput(candidate)) {
           Common.inputState(candidate, "skipped");
           System.out.println("skipped input: " + candidate + " (unsupported extension)");
           continue;
         }
-        if (!shouldCollectInput(file)) {
+        if (!shouldCollectInput(Path.of(candidate))) {
           Common.inputState(candidate, "skipped");
           System.out.println("skipped input: " + candidate + " (not an Outlook MSG or RFC 822 email)");
           continue;
         }
-        out.add(candidate);
         Common.inputState(candidate, "accepted");
+        files.set(accepted++, candidate);
       }
+      files.subList(accepted, files.size()).clear();
     }
-    if (out.isEmpty()) throw Common.fail("no supported messages found under: " + path);
-    System.out.println("inputs accepted: " + out.size());
-    return out;
+    if (files.isEmpty()) throw Common.fail("no supported messages found under: " + path);
+    System.out.println("inputs accepted: " + files.size());
+    return files;
   }
 
   static boolean isSupportedInput(String path) {
@@ -131,7 +133,9 @@ public class EmailToPDFA {
     String p = path.toString().toLowerCase(Locale.ROOT);
     if (!p.endsWith(".msg")) return true;
     try {
-      String kind = detectMsgInputKind(path);
+      // Let conversion report an oversized source in its original position in the batch.
+      if (Files.size(path) > ProcessingLimits.messageBytes()) return true;
+      String kind = sniffMsgInputKind(path);
       return "application/vnd.ms-outlook".equals(kind) || "message/rfc822".equals(kind);
     } catch (IOException ignored) {
       return true;
@@ -361,17 +365,22 @@ public class EmailToPDFA {
                              boolean debug, String debugDir, AtomicInteger seq, boolean multiInput, boolean omitSource) throws Exception {
     if (recs.isEmpty()) throw Common.fail("no messages found in input: " + input);
     System.out.println("input: " + input + " messages: " + recs.size());
-    String inputStem = Common.safeFileStem(Paths.get(input).getFileName().toString().replaceFirst("\\.[^.]+$", ""));
+    Common.JobReport job = Common.ACTIVE_JOB.get();
     if (!multiInput && input.toLowerCase(Locale.ROOT).endsWith(".mbox")
         && MboxProcesses.convert(input, recs, outDir, fontPath, iccPath, debug, debugDir, omitSource)) {
+      if (job != null) {
+        for (EmailRecord record : recs) job.release(record);
+      }
       seq.addAndGet(recs.size());
       return;
     }
     int localIndex = 0;
-    for (EmailRecord r : recs) {
-      localIndex++;
+    for (EmailRecord record : recs) {
+      int index = ++localIndex;
       int globalIndex = seq.incrementAndGet();
-      processRecord(input, r, outDir, fontPath, iccPath, debug, debugDir, localIndex, globalIndex, multiInput, omitSource);
+      withRecordRelease(
+          () -> processRecord(input, record, outDir, fontPath, iccPath, debug, debugDir, index, globalIndex, multiInput, omitSource),
+          () -> { if (job != null) job.release(record); });
     }
   }
 
@@ -441,10 +450,15 @@ public class EmailToPDFA {
   }
 
   static String detectMsgInputKind(Path path) throws IOException {
+    ProcessingLimits.checkMessage(Files.size(path), path.toString());
+    return sniffMsgInputKind(path);
+  }
+
+  private static String sniffMsgInputKind(Path path) throws IOException {
     byte[] head = readHead(path, 512);
     if (looksLikeOle2(head)) {
       try (POIFSFileSystem storage = new POIFSFileSystem(path.toFile(), true)) {
-        if (Common.isNonEmailOutlookItem(MsgReader.storageString(storage.getRoot(), "001A"))) return "application/x-outlook-item";
+        if (Common.isNonEmailOutlookItem(MsgReader.messageClass(storage.getRoot()))) return "application/x-outlook-item";
       }
       return "application/vnd.ms-outlook";
     }

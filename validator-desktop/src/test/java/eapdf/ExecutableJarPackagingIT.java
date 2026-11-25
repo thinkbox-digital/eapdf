@@ -27,12 +27,15 @@ class ExecutableJarPackagingIT {
         try(var input=jar.getInputStream(entry)){for(int count;(count=input.read(buffer))!=-1;){crc.update(buffer,0,count);length+=count;}}
         assertEquals(entry.getSize(),length,entry.getName());assertEquals(entry.getCrc(),crc.getValue(),entry.getName());
       }
-      for(String required:List.of("eapdf/ValidatorGui.class","eapdf/JavaValidation.class",
+      for(String required:List.of("eapdf/ValidatorGui.class","eapdf/JavaValidation.class", "eapdf-validator-build.properties",
           "com/google/gson/Gson.class","org/apache/pdfbox/Loader.class","org/verapdf/pdfa/Foundries.class",
           "jakarta/mail/internet/MimeMessage.class","org/eclipse/angus/mail/util/MailStreamProvider.class",
           "validator/validator_rule_text.json","validator/config/verapdf/ISO-32005.xml",
           "validator/specification/EA-PDF-v1.pdf","validator/specification/README.md",
           "META-INF/services/jakarta.mail.util.StreamProvider"))assertTrue(names.contains(required),"Missing runtime entry: "+required);
+      var build = new Properties();
+      try (var input = jar.getInputStream(jar.getJarEntry("eapdf-validator-build.properties"))) { build.load(input); }
+      assertEquals(System.getProperty("validator.projectVersion"), build.getProperty("version"));
       try(var input=new java.io.DataInputStream(jar.getInputStream(jar.getJarEntry("eapdf/ValidatorGui.class")))) {
         assertEquals(0xcafebabe,input.readInt());input.readUnsignedShort();assertEquals(65,input.readUnsignedShort(),"Java 21 bytecode");
       }

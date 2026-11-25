@@ -44,6 +44,11 @@ Limits: 32 MiB / 2,048 pages per PDF, 16 MiB per decoded asset, 2 MiB metadata
 per document and four embedded levels. Only the current document and its parents
 are retained; returning to a parent releases the child. Incomplete inventories
 show a warning. Application limits do not bound total browser memory.
+Separately, one PDF's asset inspection stops after 1,000,000 object visits,
+1,024 levels or 16,384 file specifications (with at most 32 streams per file),
+and tagged-PDF accessibility trees are guarded at 128 levels, 50,000 nodes and
+one million retained string characters. These are per-PDF inspection/display
+limits, not child-document retention or nesting limits.
 Unreadable assets and exceeded limits are reported. Downloads retain the original
 bytes and warn about conflicting declared sizes/checksums. Embedded PDF opening
 requires matching declarations. The source PDF remains unchanged.

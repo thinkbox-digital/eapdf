@@ -135,7 +135,7 @@
    }
 --- /dev/null
 +++ b/src/core/document_assets.js
-@@ -0,0 +1,493 @@
+@@ -0,0 +1,525 @@
 +/* Copyright 2026 PDF.js contributors
 + * Licensed under the Apache License, Version 2.0.
 + * http://www.apache.org/licenses/LICENSE-2.0
@@ -148,7 +148,7 @@
 +
 +const CEILINGS = Object.freeze({
 +  maxObjects: 1000000,
-+  maxDepth: 64,
++  maxDepth: 1024,
 +  maxFiles: 16384,
 +  maxMetadataBytes: 16777216,
 +  maxStreamBytes: 16777216,
@@ -275,8 +275,20 @@
 +      if (error instanceof MissingDataException) throw error;
 +      diagnostics.push({ code, locator: loc });
 +    };
-+    let visits = 0;
++    let visits = 0,
++      stopped = false,
++      fileLimitReported = false;
++    const stop = loc => {
++      if (!stopped) {
++        stopped = true;
++        report("OBJECT_LIMIT", loc);
++      }
++      return false;
++    };
 +    const step = (loc, depth) => {
++      if (stopped) return false;
++      if (depth > limits.maxDepth || visits >= limits.maxObjects) return stop(loc);
++      visits++;
 +      return true;
 +    };
 +    const add = (raw, origin) => {
@@ -288,10 +300,21 @@
 +          return;
 +        }
 +        if (!files.has(loc.path)) {
++          if (files.size >= limits.maxFiles) {
++            if (!fileLimitReported) {
++              fileLimitReported = true;
++              report("FILE_LIMIT", loc);
++            }
++            return;
++          }
 +          const streams = new Map(),
 +            ef = spec.get("EF");
 +          if (ef instanceof Dict) {
 +            for (const [key, rawStream] of ef.getRawEntries()) {
++              if (streams.size >= 32) {
++                report("STREAM_COUNT_LIMIT", loc);
++                break;
++              }
 +              const sloc = locator(rawStream, loc.path + "/EF/" + key);
 +              if (streams.has(sloc.path)) {
 +                streams.get(sloc.path).efKeys.push("/" + key);
@@ -382,7 +405,7 @@
 +            i + 1 < pairs.length;
 +            i += 2
 +          ) {
-+            if (!step(loc, depth)) break;
++            if (!step(loc, depth)) return;
 +            add(
 +              pairs[i + 1],
 +              origin(
@@ -395,7 +418,7 @@
 +          }
 +        }
 +        if (Array.isArray(kids))
-+          for (let i = 0; i < kids.length; i++)
++          for (let i = 0; i < kids.length && !stopped; i++)
 +            nameTree(kids[i], path + `/Kids[${i}]`, depth + 1);
 +      } catch (error) {
 +        report("NAME_TREE_UNAVAILABLE", loc, error);
@@ -410,9 +433,10 @@
 +    const pending = [[this.root, "catalog", 0]], scheduled = new Set([this.root]);
 +    const identity = raw => raw instanceof Ref ? raw.toString() : raw;
 +    let totalMetadata = 0, next = 0, edges = 0;
-+    while (next < pending.length) {
++    while (next < pending.length && !stopped) {
 +      const [raw, path, depth] = pending[next++],
 +        loc = locator(raw, path);
++      if (!step(loc, depth)) break;
 +      try {
 +        const obj = fetch(raw),
 +          key = raw instanceof Ref ? loc.path : obj;
@@ -425,7 +449,6 @@
 +          (visited.has(key) || visited.has(obj))
 +        )
 +          continue;
-+        if (!step(loc, depth)) continue;
 +        visited.add(key);
 +        visited.add(obj);
 +        const dict = obj instanceof BaseStream ? obj.dict : obj;
@@ -443,6 +466,7 @@
 +              );
 +            }
 +          else if (af !== undefined) report("INVALID_AF_ARRAY", loc);
++          if (stopped) break;
 +          if (
 +            dict.get("Type") instanceof Name &&
 +            dict.get("Type").name === "Page"
@@ -470,6 +494,7 @@
 +                }
 +              }
 +          }
++          if (stopped) break;
 +          if (dict.has("Metadata")) {
 +            const rawMeta = dict.getRaw("Metadata"),
 +              mloc = locator(rawMeta, loc.path + "/Metadata");
@@ -522,6 +547,10 @@
 +          ) {
 +            const key = identity(child);
 +            if (scheduled.has(key) || visited.has(child)) continue;
++            if (pending.length - next >= limits.maxObjects - visits) {
++              stop(loc);
++              break;
++            }
 +            scheduled.add(key);
 +            pending.push([
 +              child,
@@ -532,6 +561,7 @@
 +            ]);
 +          }
 +        }
++        if (stopped) break;
 +      } catch (error) {
 +        report("OBJECT_UNAVAILABLE", loc, error);
 +      }
@@ -544,7 +574,7 @@
 +        schemaKeys: [],
 +        folders: [],
 +      };
-+    if (collectionRaw !== undefined) {
++    if (collectionRaw !== undefined && !stopped) {
 +      collection.locator = locator(collectionRaw, "catalog/Collection");
 +      collection.state = "invalid";
 +      try {
@@ -582,7 +612,7 @@
 +          };
 +          collection.folders.push(folder);
 +          walk(obj.getRaw("Child"), loc.path, path + "/Child", depth + 1);
-+          walk(obj.getRaw("Next"), parent, path + "/Next", depth + 1);
++          if (!stopped) walk(obj.getRaw("Next"), parent, path + "/Next", depth + 1);
 +        };
 +        walk(
 +          dict.getRaw("Folders"),
@@ -597,6 +627,8 @@
 +      } catch (error) {
 +        report("COLLECTION_UNAVAILABLE", collection.locator, error);
 +      }
++    } else if (collectionRaw !== undefined) {
++      collection.state = "unavailable";
 +    }
 +    return {
 +      apiVersion: 1,

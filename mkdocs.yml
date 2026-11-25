@@ -69,7 +69,6 @@ nav:
   - Developers:
       - Current project status: developers/project-status.md
       - Architecture and separation: developers/architecture.md
-      - PDF.js archive comparison: developers/pdfjs-comparison.md
       - Documentation map: developers/documentation-map.md
       - Contributing: developers/contributing.md
       - Patched libraries: developers/packages.md

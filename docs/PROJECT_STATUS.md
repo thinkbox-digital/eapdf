@@ -7,9 +7,9 @@ children, runs the packaged Creator and Validator GUIs, and launches the Desktop
 Viewer JAR. GitHub publication through the acceptance workflow uses the packages
 and checksums from the successful job.
 
-Main release **2.4.0-beta.8** includes the Full browser reader **1.13.0** and
-Desktop Viewer **0.9.1**.
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.8).
+Main release **2.5.0-beta.1** includes the Full browser reader **1.14.0** and
+Desktop Viewer **0.10.0**.
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.5.0-beta.1).
 
 C2PA/PAdES, WeasyPrint and other experimental changes remain separate in
 `../eapdf-secure` on `experiment/c2pa-pades`. Normal development continues in this
@@ -21,6 +21,15 @@ Java validator and the Even More Lite reader.
 [Release checks](releases/2.4.0-beta.2-validation.md) · [Code layout](ARCHITECTURE.md)
 
 ## This release
+
+- **Bug fixes.** The creator releases staged records earlier and stops stalled
+  MBOX workers. Validation reports malformed stream encodings and respects
+  inherited worker limits. Both viewers bound the work needed to inspect files.
+- **Performance improvements.** Python validation shares decoded payloads and
+  hashes across associations. Folder counts and desktop bookmark lookups avoid
+  repeated scans.
+
+## Previous release, 25 November 2026
 
 - **Validator.** The Specification pane renders the cited EA-PDF pages in PDF order, preserving tables and other formatting.
   The reviewed summaries use bold headings and regular body text. They show requirements, applicability, strength and evidence.
@@ -147,11 +156,18 @@ document-part links. The explicit Portfolio whole-file download remains availabl
 include Mozilla's RTL ligature correction. Chromium and Firefox checks cover
 partial archives, original bytes, Arabic/Latin text, search, highlights and copying.
 
-Both readers use the supplied PNG and SVG artwork. A short [privacy policy](site/privacy.md)
-explains local files, optional connections and saved data. The release includes
-1280×800 screenshots of the Creator, Validator and both readers with fictional data.
+The Full reader uses the supplied PNG and SVG artwork. A short [privacy policy](site/privacy.md)
+explains local files, optional connections and saved data. Current Creator, Validator
+and reader screenshots use fictional data at their native capture sizes.
 
 ## Checks and limits
+
+- **Bug fixes, 25 November 2026.** Python validation reports malformed supported
+  PDF stream encodings and rejects an explicit HTML report path for multiple PDFs.
+  The documentation workflow checks version inputs before merge.
+- **Speed and memory improvements.** Python validation reuses decoded attachment
+  bytes and hashes across associations and checks scratch-file sizes with fewer
+  filesystem calls. End-to-end speed and memory changes have not been benchmarked.
 
 Historical dependency integration, 14 November: all 19 dependency PRs are
 included together. TypeScript 7 builds both readers; the Lite exporter and type

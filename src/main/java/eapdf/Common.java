@@ -1076,6 +1076,10 @@ static String stripInvalidXml(String s) {
     return values == null ? List.of() : Arrays.asList(values);
   }
 
+  static List<String> xmpReplyValues(EmailRecord record) {
+    return record.inReplyTo.stream().map(Common::normalizeBody).filter(value -> !value.isBlank()).toList();
+  }
+
   private static final java.util.regex.Pattern SOURCE_EMAIL_DATE = java.util.regex.Pattern.compile(
       "(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\\s+)?[0-9]{1,2}\\s+"
       + "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+(?:[0-9]{4}|[0-9]{2})\\s+"

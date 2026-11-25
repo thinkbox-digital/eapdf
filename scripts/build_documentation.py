@@ -22,8 +22,6 @@ SOURCES = {
     'docs/site/privacy.md': 'privacy.md',
     'docs/PROJECT_STATUS.md': 'developers/project-status.md',
     'docs/ARCHITECTURE.md': 'developers/architecture.md',
-    'docs/PDFJS_LARGE_ARCHIVE_COMPARISON.md': 'developers/pdfjs-comparison.md',
-    'docs/benchmarks/pdfjs-large-archives-20261111.json': 'developers/pdfjs-large-archives-20261111.json',
     'docs/README.md': 'developers/documentation-map.md',
     'config/README.md': 'reference/configuration.md',
     'docs/GMAIL.md': 'reference/gmail.md',
@@ -42,7 +40,7 @@ HOMEPAGE_ASSETS = {
     'docs/EA-PDF_User_Manual.pdf': 'EA-PDF_User_Manual.pdf',
     'docs/EA-PDF_Software_Architecture.pdf': 'EA-PDF_Software_Architecture.pdf',
     'docs/screenshots/readme-viewer-1m.png': 'screenshots/readme-viewer-1m.png',
-    'docs/screenshots/creator-1280x800.png': 'screenshots/creator-1280x800.png',
+    'docs/screenshots/creator-1280x1024.png': 'screenshots/creator-1280x1024.png',
     'docs/screenshots/validator-1280x800.png': 'screenshots/validator-1280x800.png',
     'docs/screenshots/viewer-1280x800.png': 'screenshots/viewer-1280x800.png',
     'examples/eml/eml_seating_archive_1m.pdf': 'examples/eml/eml_seating_archive_1m.pdf',
@@ -118,6 +116,7 @@ def assemble(destination):
 
 
 def check_site(output, site_url):
+    output = output.resolve()
     prefix = urlsplit(site_url).path
     errors = []
     for page in output.rglob('*.html'):
@@ -134,8 +133,10 @@ def check_site(output, site_url):
             else:
                 target = (page.parent / unquote(url.path)).resolve()
             if target.is_dir():
-                target /= 'index.html'
-            if not target.exists():
+                target = (target / 'index.html').resolve()
+            if not target.is_relative_to(output):
+                errors.append(f'{page.name}: URL outside generated site {url.path}')
+            elif not target.exists():
                 errors.append(f'{page.name}: missing {url.path}')
     if errors:
         raise ValueError('Broken website links: ' + '; '.join(errors))

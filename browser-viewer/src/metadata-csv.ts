@@ -2,6 +2,10 @@ import type {BrowserDocument} from './browser-session.js';
 import type {AssociatedFile,EmbeddedStream,InspectionResult,MailMessage} from './domain/inspection.js';
 import {fileLabel} from './navigation.js';
 
+const MAX_FOLDER_PATH_LENGTH = 16_384;
+const MAX_FOLDER_PATHS = 256;
+const MAX_FOLDER_PATH_TEXT = 256 * 1024;
+
 // Quote every field, flatten embedded line breaks, and neutralize spreadsheet formulas.
 // Normalize tabs to spaces for spreadsheet importers that also split on tabs.
 export function csvCell(value:string):string {
@@ -29,13 +33,31 @@ function folderIndex(inspection:InspectionResult):(fileId:string)=>string[]{
       names.unshift(folder.name.value.replaceAll('\\','\\\\').replaceAll('/','\\/'));id=folder.parentId;
     }
     const path=names.filter(Boolean).join('/');
-    if(path.length>16384)throw new Error('Collection folder path is too long; no CSV was downloaded.');
+    if(path.length>MAX_FOLDER_PATH_LENGTH)throw new Error('Collection folder path is too long; no CSV was downloaded.');
     paths.add(path);
   }
-  if(!paths.size||paths.size>256)throw new Error('Collection folder memberships are unavailable or excessive; no CSV was downloaded.');
+  if(!paths.size||paths.size>MAX_FOLDER_PATHS)throw new Error('Collection folder memberships are unavailable or excessive; no CSV was downloaded.');
   return [...paths];
   };
 }
+
+function combineFolderPaths(prefixes: readonly string[], suffixes: readonly string[]): string[] {
+  const paths = new Set<string>();
+  let totalLength = 0;
+  for (const prefix of prefixes) {
+    for (const suffix of suffixes) {
+      const path = prefix && suffix ? `${prefix}/${suffix}` : prefix || suffix;
+      if (paths.has(path)) continue;
+      if (path.length > MAX_FOLDER_PATH_LENGTH) throw new Error('Nested folder path is too long; no CSV was downloaded.');
+      if (paths.size === MAX_FOLDER_PATHS) throw new Error('Too many folder paths for one email; no CSV was downloaded.');
+      totalLength += path.length;
+      if (totalLength > MAX_FOLDER_PATH_TEXT) throw new Error('Folder path text exceeds export limits; no CSV was downloaded.');
+      paths.add(path);
+    }
+  }
+  return [...paths];
+}
+
 function attachmentIndex(inspection:InspectionResult):(message:MailMessage)=>[string,string]{
   const records=new Map(inspection.metadataRecords.map(r=>[r.id,r]));
   const namesByOwner=new Map<string,string[]>();
@@ -101,17 +123,10 @@ export async function metadataCsv(root:BrowserDocument,
         if(!file.streams.length&&/\.pdf$/i.test(fileLabel(file)))throw new Error(`Missing embedded PDF: ${fileLabel(file)}.`);
         for(const stream of file.streams){
           if(stream.mimeType.value?.split(';')[0]?.toLowerCase()!=='application/pdf'&&!/\.pdf$/i.test(fileLabel(file)))continue;
-          const localFolders=folders(file.id),combined=new Set<string>();
-          for(const parent of folderPaths)for(const local of localFolders){
-            const path=[parent,local].filter(Boolean).join('/');
-            if(path.length>16384)throw new Error('Nested folder path is too long; no CSV was downloaded.');
-            combined.add(path);
-            if(combined.size>256)throw new Error('Too many folder paths for one email; no CSV was downloaded.');
-          }
-          if([...combined].reduce((n,p)=>n+p.length,0)>256*1024)throw new Error('Folder path text exceeds export limits; no CSV was downloaded.');
+          const combined=combineFolderPaths(folderPaths,folders(file.id));
           check();progress(rows,fileLabel(file));
           const nested=await child(doc,file,stream);members++;
-          try{check();await visit(nested,path+' / '+nested.name,[...combined]);}
+          try{check();await visit(nested,path+' / '+nested.name,combined);}
           finally{await release(nested);}
         }
       }
@@ -123,10 +138,8 @@ export async function metadataCsv(root:BrowserDocument,
   while(ancestor.parent){
     const parent=ancestor.parent;path=parent.name+' / '+path;
     if(parent.inspection.collection.value&&ancestor.parentFileId){
-      const local=folderIndex(parent.inspection)(ancestor.parentFileId),combined=new Set<string>();
-      for(const prefix of local)for(const suffix of folderPaths)combined.add([prefix,suffix].filter(Boolean).join('/'));
-      if(combined.size>256)throw new Error('Too many folder paths for this message.');
-      folderPaths=[...combined];
+      const local=folderIndex(parent.inspection)(ancestor.parentFileId);
+      folderPaths=combineFolderPaths(local,folderPaths);
     }
     ancestor=parent;
   }

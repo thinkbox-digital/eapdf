@@ -40,6 +40,7 @@ final class EaPdfChecks {
   static final String DECLARATIONS = "http://pdfa.org/declarations/";
   static final String FOAF = "http://xmlns.com/foaf/0.1/";
   static final Set<String> PROFILES = Set.of("s", "si", "m", "mi", "c", "ci");
+  static final int MAX_XMP_DEPTH = 256;
   private final PDDocument document;
   private final JavaValidation.Report report;
   private final JavaValidation.Children children;
@@ -180,24 +181,34 @@ final class EaPdfChecks {
     report.check("PDF_EFFECTIVE_VERSION", effective == 1.7f || effective == 2.0f, "The effective PDF version must be 1.7 or 2.0.", Map.of("version", effective));
   }
 
+  private static Element parseMetadata(COSStream stream) throws Exception {
+    var factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    factory.setAttribute("jdk.xml.maxElementDepth", MAX_XMP_DEPTH);
+    factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+    try (var input = BoundedPdfStreams.open(stream, BoundedPdfStreams.metadataLimit())) {
+      return factory.newDocumentBuilder().parse(input).getDocumentElement();
+    } catch (org.xml.sax.SAXParseException error) {
+      if (error.toString().contains("JAXP00010006")) {
+        var limit = new BoundedPdfStreams.Limit("XMP exceeds the XML depth limit of " + MAX_XMP_DEPTH);
+        limit.initCause(error);
+        throw limit;
+      }
+      throw error;
+    }
+  }
+
   private void metadata() throws Exception {
     try {
-      if (document.getDocumentCatalog().getMetadata() == null) throw new IOException("Document XMP is missing");
-      var factory = DocumentBuilderFactory.newInstance();
-      factory.setNamespaceAware(true);
-      factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-      factory.setAttribute("http://www.oracle.com/xml/jaxp/properties/maxElementDepth", "0");
-      factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-      factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-      xml = factory.newDocumentBuilder().parse(new ByteArrayInputStream(BoundedPdfStreams.bytes(document.getDocumentCatalog().getMetadata().getCOSObject(), BoundedPdfStreams.metadataLimit()))).getDocumentElement();
+      var metadata = document.getDocumentCatalog().getMetadata();
+      if (metadata == null) throw new IOException("Document XMP is missing");
+      xml = parseMetadata(metadata.getCOSObject());
     } catch (BoundedPdfStreams.Limit limit) {
       report.unavailable("EAPDF_XMP_UNCHECKED", "Metadata inspection stopped at a security limit: " + limit.getMessage());
       return;
     } catch (Exception error) {
-      if (error.toString().contains("JAXP00010006") || error.toString().contains("maxElementDepth")) {
-        report.unavailable("EAPDF_XMP_UNCHECKED", "Metadata inspection stopped at the XML depth limit.");
-        return;
-      }
       report.check("EAPDF_XMP_UNCHECKED", false, "EA-PDF metadata cannot be inspected.", Map.of("error", error.toString()));
       report.unavailable("PDFA_XMP_UNCHECKED", "PDF/A identification could not be read from document XMP.");
       report.unavailable("XMP_KEYWORDS_UNCHECKED", "XMP keywords could not be inspected.");
@@ -677,11 +688,7 @@ final class EaPdfChecks {
         boolean identified = false;
         try (PDDocument child = IndexedPdfLoader.load(temporary, org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
           if (child.getDocumentCatalog().getMetadata() != null) {
-            var factory = DocumentBuilderFactory.newInstance(); factory.setNamespaceAware(true);
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            factory.setAttribute("http://www.oracle.com/xml/jaxp/properties/maxElementDepth", "0");
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, ""); factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-            Element metadata = factory.newDocumentBuilder().parse(new ByteArrayInputStream(BoundedPdfStreams.bytes(child.getDocumentCatalog().getMetadata().getCOSObject(), BoundedPdfStreams.metadataLimit()))).getDocumentElement();
+            Element metadata = parseMetadata(child.getDocumentCatalog().getMetadata().getCOSObject());
             Map<String, String> identification = new LinkedHashMap<>();
             for (Element element : descendants(metadata)) if (is(element, RDF, "Description")) {
               for (Element property : children(element)) if (ID.equals(property.getNamespaceURI()) && simple(property)) identification.put(property.getLocalName(), property.getTextContent());
@@ -689,6 +696,8 @@ final class EaPdfChecks {
             }
             identified = "1".equals(identification.get("version")) && "2024".equals(identification.get("rev")) && PROFILES.contains(identification.getOrDefault("conformance", ""));
           }
+        } catch (BoundedPdfStreams.Limit limit) {
+          throw limit;
         } catch (IOException error) { /* An unreadable PDF cannot establish the required member type. */ }
     return identified;
   }
@@ -748,7 +757,7 @@ final class EaPdfChecks {
       finally { if (activeAdded) children.active.remove(hash); Files.deleteIfExists(temporary); }
     }
     if (!report.seen.contains("COLLECTION_CONTENT_TYPES")) report.check("COLLECTION_CONTENT_TYPES", true, "No contained non-source file contradicts EA-PDF identification.", null);
-    if (!limited || inspected > 0) report.check("COLLECTION_CHILD_VALIDATION", inspected > 0, "A collection requires identifiable email PDF members.", Map.of("count", inspected));
+    if (inspected > 0 || (!limited && countEvidenceComplete)) report.check("COLLECTION_CHILD_VALIDATION", inspected > 0, "A collection requires identifiable email PDF members.", Map.of("count", inspected));
     if (metadataChecks != null) metadataChecks.finishChildren(!limited && countEvidenceComplete && inspected > 0);
   }
 
@@ -847,7 +856,7 @@ final class EaPdfChecks {
       for (Path path : staged) Files.deleteIfExists(path);
     }
     if (!report.seen.contains("COLLECTION_CONTENT_TYPES")) report.check("COLLECTION_CONTENT_TYPES", true, "No contained non-source file contradicts EA-PDF identification.", null);
-    if (!limited || inspected > 0) report.check("COLLECTION_CHILD_VALIDATION", inspected > 0, "A collection requires identifiable email PDF members.", Map.of("count", inspected));
+    if (inspected > 0 || (!limited && evidence)) report.check("COLLECTION_CHILD_VALIDATION", inspected > 0, "A collection requires identifiable email PDF members.", Map.of("count", inspected));
     if (metadataChecks != null) metadataChecks.finishChildren(!limited && evidence && inspected > 0);
   }
 

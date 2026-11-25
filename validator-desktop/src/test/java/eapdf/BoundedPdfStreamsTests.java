@@ -83,4 +83,42 @@ class BoundedPdfStreamsTests {
             assertThrows(BoundedPdfStreams.Limit.class, () -> BoundedPdfStreams.bytes(stream, 1024));
         }
     }
+
+    @Test void terminalFiltersRequireTheirPdfEndMarkers() throws Exception {
+        assertMalformedTerminalFilter("ASCIIHexDecode", "48656c6c6f".getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+        assertMalformedTerminalFilter("ASCII85Decode", "87cURD]j7BEbo7".getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+        assertMalformedTerminalFilter("RunLengthDecode", new byte[] {2, 'a', 'b', 'c'});
+        assertMalformedTerminalFilter("RunLengthDecode", new byte[] {0, (byte)128});
+    }
+
+    @Test void terminalFiltersAcceptTheirPdfEndMarkers() throws Exception {
+        assertTerminalFilter("ASCIIHexDecode", "48656c6c6f>".getBytes(java.nio.charset.StandardCharsets.US_ASCII), "Hello");
+        assertTerminalFilter("ASCII85Decode", "87cURD]j7BEbo7~>".getBytes(java.nio.charset.StandardCharsets.US_ASCII), "Hello world");
+        assertTerminalFilter("RunLengthDecode", new byte[] {2, 'a', 'b', 'c', (byte)128}, "abc");
+        assertTerminalFilterBytes("RunLengthDecode", new byte[] {0, (byte)128, (byte)128}, new byte[] {(byte)128});
+    }
+
+    private static void assertMalformedTerminalFilter(String filter, byte[] encoded) throws Exception {
+        try (var stream = rawStream(filter, encoded)) {
+            IOException error = assertThrows(IOException.class, () -> BoundedPdfStreams.bytes(stream, 1024));
+            assertTrue(error.getMessage().contains("end marker"), error::getMessage);
+        }
+    }
+
+    private static void assertTerminalFilter(String filter, byte[] encoded, String expected) throws Exception {
+        assertTerminalFilterBytes(filter, encoded, expected.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+    }
+
+    private static void assertTerminalFilterBytes(String filter, byte[] encoded, byte[] expected) throws Exception {
+        try (var stream = rawStream(filter, encoded)) {
+            assertArrayEquals(expected, BoundedPdfStreams.bytes(stream, 1024));
+        }
+    }
+
+    private static COSStream rawStream(String filter, byte[] encoded) throws IOException {
+        var stream = new COSStream();
+        stream.setItem(COSName.FILTER, COSName.getPDFName(filter));
+        try (var output = stream.createRawOutputStream()) { output.write(encoded); }
+        return stream;
+    }
 }

@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.CharacterCodingException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -656,17 +657,36 @@ class MsgReader {
     }
   }
 
+  static String messageClass(DirectoryNode storage) throws IOException {
+    // MS-OXCMSG allows 255 characters, with room for a terminator in the MSG stream.
+    return storageString(storage, "001A", Charset.forName("windows-1252"), 255);
+  }
+
   static String storageString(DirectoryNode storage, String propertyId) throws IOException {
     return storageString(storage, propertyId, java.nio.charset.Charset.forName("windows-1252"));
   }
 
   static String storageString(DirectoryNode storage, String propertyId, Charset ansiCharset) throws IOException {
+    return storageString(storage, propertyId, ansiCharset, 0);
+  }
+
+  private static String storageString(DirectoryNode storage, String propertyId, Charset ansiCharset,
+                                      int maxCharacters) throws IOException {
     for (String type : List.of("001F", "001E")) {
       String name = "__substg1.0_" + propertyId + type;
       if (!storage.hasEntry(name)) continue;
       try (InputStream input = storage.createDocumentInputStream(name)) {
-        var charset = type.equals("001F") ? java.nio.charset.StandardCharsets.UTF_16LE : ansiCharset;
-        return Common.stripInvalidXml(new String(input.readAllBytes(), charset)).trim();
+        boolean unicode = type.equals("001F");
+        var charset = unicode ? StandardCharsets.UTF_16LE : ansiCharset;
+        byte[] bytes;
+        if (maxCharacters == 0) {
+          bytes = input.readAllBytes();
+        } else {
+          int maxBytes = (maxCharacters + 1) * (unicode ? 2 : 1);
+          bytes = input.readNBytes(maxBytes + 1);
+          if (bytes.length > maxBytes) throw new IOException("Outlook message class exceeds " + maxCharacters + " characters");
+        }
+        return Common.stripInvalidXml(new String(bytes, charset)).trim();
       }
     }
     return "";

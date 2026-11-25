@@ -187,14 +187,35 @@ final class ValidationRuntime {
         // Leave address space for all admitted scratch as well as heap/native work.
         return Math.addExact(Math.multiplyExact(heapMiB + 4096, 1024L * 1024), scratchLimit());
     }
+
+    // A sandboxed parent may already have a tighter hard limit. A child cannot
+    // raise it; attempting to do so makes prlimit exit before Java starts.
+    static long inheritedLimit(String name, long requested) throws IOException {
+        try {
+            return inheritedLimit(Files.readAllLines(Path.of("/proc/self/limits")), name, requested);
+        } catch (NumberFormatException error) {
+            throw new IOException("Cannot read inherited process limits: " + error.getMessage(), error);
+        }
+    }
+
+    static long inheritedLimit(List<String> limits, String name, long requested) throws IOException {
+        for (String line : limits) {
+            if (!line.startsWith(name + " ")) continue;
+            String[] values = line.substring(name.length()).trim().split("\\s+");
+            if (values.length < 2) break;
+            return "unlimited".equals(values[1]) ? requested : Math.min(requested, Long.parseLong(values[1]));
+        }
+        throw new IOException("Inherited process limit is unavailable: " + name);
+    }
+
     static java.util.List<String> boundedCommand(java.util.List<String> command, long heapMiB) throws IOException {
         if (!System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("linux")) return command;
         Path limiter = Path.of("/usr/bin/prlimit");
         if (!Files.isExecutable(limiter)) throw new IOException("Linux validation requires /usr/bin/prlimit (util-linux)");
         var bounded = new java.util.ArrayList<String>();
-        bounded.add(limiter.toString()); bounded.add("--as=" + addressLimit(heapMiB));
-        bounded.add("--fsize=" + workFileLimit());
-        bounded.add("--nofile=" + openFileLimit()); bounded.add("--core=0");
+        bounded.add(limiter.toString()); bounded.add("--as=" + inheritedLimit("Max address space", addressLimit(heapMiB)));
+        bounded.add("--fsize=" + inheritedLimit("Max file size", workFileLimit()));
+        bounded.add("--nofile=" + inheritedLimit("Max open files", openFileLimit())); bounded.add("--core=0");
         bounded.add(command.getFirst());
         if (Path.of(command.getFirst()).getFileName().toString().equals("java")) {
             // Freeze the controller's disk share for the worker and its children.

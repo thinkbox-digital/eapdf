@@ -7,7 +7,9 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -29,10 +31,13 @@ import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 
@@ -88,6 +93,7 @@ public final class ReleaseReaderSmoke extends Application {
         await(() -> field("opening") == null && !Boolean.TRUE.equals(field("busy")),
                 "canceled opening cleanup");
         check(fx(this::current) == null, "Canceled PDF never became the active document");
+        checkMetadataDecoding();
         runAttachmentImageChecks();
         checkLargeArchiveOpen(open);
         checkImageWindowLifecycle(open, Path.of(documents.getAsJsonObject("1s").get("path").getAsString()));
@@ -117,6 +123,7 @@ public final class ReleaseReaderSmoke extends Application {
                     return null;
                 });
                 await(() -> current() != null && current().path.equals(path) && rendered(), profile + " parent return");
+                if (profile.equals("1c")) checkSearchResultOpening();
             } else {
                 String subject = input.getAsJsonArray("subjects").get(profile.startsWith("1m") ? 1 : 0).getAsString();
                 int page = fx(() -> {
@@ -143,9 +150,82 @@ public final class ReleaseReaderSmoke extends Application {
                 });
                 check(Arrays.equals(Files.readAllBytes(target), Files.readAllBytes(manifest.resolveSibling(attachment))),
                         "Desktop attachment export bytes differ");
+                var session = fx(this::current);
+                var xmp = manifest.resolveSibling("desktop-original.xmp");
+                fx(() -> {
+                    ViewerTools.exportXmp(session, xmp);
+                    return null;
+                });
+                var catalog = ViewerXmp.collect(session).packets().stream()
+                        .filter(packet -> "Catalog".equals(packet.locator())).findFirst().orElseThrow();
+                check(Arrays.equals(Files.readAllBytes(xmp), catalog.bytes()), "XMP export and browse bytes differ");
             }
         }
         System.out.println("PASS: desktop opened all six validated PDFs, navigated messages and children, and exported exact bytes.");
+    }
+
+    private static void checkMetadataDecoding() throws IOException {
+        byte[] xml = "<description>Reader metadata</description>".getBytes(StandardCharsets.UTF_8);
+        try (var pdf = new PDDocument()) {
+            var filters = new COSArray();
+            filters.add(COSName.ASCII_HEX_DECODE);
+            filters.add(COSName.FLATE_DECODE);
+            var metadata = new PDMetadata(pdf).getCOSObject();
+            try (var output = metadata.createOutputStream(filters)) {
+                output.write(xml);
+            }
+            // The limit applies to every stage, including the intermediate encoding.
+            try (var decoded = PdfMetadataStreams.open(metadata, 256)) {
+                check(Arrays.equals(decoded.readAllBytes(), xml), "Decoding changed metadata bytes");
+            }
+            try (var decoded = PdfMetadataStreams.open(metadata, xml.length - 1)) {
+                throw new AssertionError("Metadata exceeded the test's decoded-byte limit");
+            } catch (PdfMetadataStreams.Limit expected) {
+                // The bounded decoder rejects the stream before returning an input stream.
+            }
+            var repeated = new PDMetadata(pdf).getCOSObject();
+            var repeatedFilters = new COSArray();
+            repeatedFilters.add(COSName.FLATE_DECODE);
+            repeatedFilters.add(COSName.FLATE_DECODE);
+            try (var output = repeated.createOutputStream(repeatedFilters)) {
+                output.write(xml);
+            }
+            try (var decoded = PdfMetadataStreams.open(repeated, 256)) {
+                check(Arrays.equals(decoded.readAllBytes(), xml), "Repeated filters changed metadata bytes");
+            }
+            var attachment = new PDEmbeddedFile(pdf);
+            try (var output = attachment.createOutputStream(COSName.FLATE_DECODE)) {
+                output.write(xml);
+            }
+            try (var decoded = PdfMetadataStreams.openAsset(attachment.getCOSObject(), 256)) {
+                check(Arrays.equals(decoded.readAllBytes(), xml), "Decoding changed embedded-file bytes");
+            }
+            try (var ignored = PdfMetadataStreams.open(metadata, 256, () -> true)) {
+                throw new AssertionError("Canceled metadata decoding started");
+            } catch (InterruptedIOException expected) {
+                // The search cancellation guard is honored before an empty or filtered stream can be staged.
+            }
+        }
+    }
+
+    private void checkSearchResultOpening() throws Exception {
+        var openHit = ViewerApplication.class.getDeclaredMethod("openArchiveHit", ViewerSession.class,
+                String.class, ViewerSearch.Hit.class);
+        openHit.setAccessible(true);
+        var root = fx(this::current);
+        var member = root.assets.stream().filter(PdfNavigation.Asset::isCollectionPdf).findFirst().orElseThrow();
+        var hit = new ViewerSearch.Hit(List.of(member.nameTreeKeys().getFirst()), 0, "");
+        fx(() -> {
+            openHit.invoke(viewer, root, "", hit);
+            check(field("opening") != null, "Search result did not start a tracked open");
+            ((Button) field("close")).fire();
+            return null;
+        });
+        await(() -> field("opening") == null && !Boolean.TRUE.equals(field("busy")), "canceled search result opening");
+        check(fx(this::current) == root, "Canceled search result replaced the collection");
+        fx(() -> openHit.invoke(viewer, root, "", hit));
+        await(() -> current() != null && current().parent == root && current().parentAsset == member && rendered(),
+                "search result opening");
     }
 
     private void checkLargeArchiveOpen(Method open) throws Exception {
@@ -200,12 +280,12 @@ public final class ReleaseReaderSmoke extends Application {
                 var stream = asset.variants().getFirst();
                 preview.invoke(viewer, asset, stream);
                 preview.invoke(viewer, asset, stream);
-                check(field("pendingImagePreview") != null, "Second image preview did not queue");
+                check(field("pendingAttachmentPreview") != null, "Second image preview did not queue");
                 open.invoke(viewer, other);
-                check(field("pendingImagePreview") == null, "Document switch retained an old queued preview");
+                check(field("pendingAttachmentPreview") == null, "Document switch retained an old queued preview");
                 return null;
             });
-            await(() -> showing(other) && Boolean.FALSE.equals(field("decodingImagePreview")),
+            await(() -> showing(other) && Boolean.FALSE.equals(field("loadingAttachmentPreview")),
                     "document switch and previous preview completion");
             check(fx(() -> field("imagePreviewWindow")) == null, "Old document opened a stale image preview");
 

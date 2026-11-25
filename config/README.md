@@ -31,7 +31,7 @@ These environment variables also have JVM property equivalents:
 | `EAPDF_MAX_BODY_CHARS` | `eapdf.maxBodyChars` | Java heap bytes / 64 characters |
 | `EAPDF_MAX_METADATA_BYTES` | `eapdf.maxMetadataBytes` | One eighth of the Java heap for estimated record/warning/checkpoint metadata |
 | `EAPDF_MAX_IMAGE_PIXELS` | `eapdf.maxImagePixels` | Java heap bytes / 32 pixels per raster image |
-| `EAPDF_WORKER_TIMEOUT_SECONDS` | `eapdf.workerTimeoutSeconds` | 300 seconds per awaited parallel worker |
+| `EAPDF_WORKER_TIMEOUT_SECONDS` | `eapdf.workerTimeoutSeconds` | 300 seconds per awaited or non-progressing render worker |
 | `EAPDF_WORKER_SHUTDOWN_SECONDS` | `eapdf.workerShutdownSeconds` | 5 seconds to wait for cancelled workers |
 | `EAPDF_FALLBACK_FONTS` | `eapdf.fallbackFonts` | Bundled Droid Sans Fallback and Nanum Gothic; up to 16 fallback TTF paths in total |
 | `EAPDF_GMAIL_RESUME_DIR` | `eapdf.gmailResumeDir` | Unset: no persistent email staging |

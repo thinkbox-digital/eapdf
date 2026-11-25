@@ -600,7 +600,7 @@
  
 @@ -12,7 +12,7 @@
    maxObjects: 1000000,
-   maxDepth: 64,
+   maxDepth: 1024,
    maxFiles: 16384,
 -  maxMetadataBytes: 16777216,
 +  maxMetadataBytes: 134217728,
@@ -665,11 +665,11 @@
 -    const pending = [[this.root, "catalog", 0]], scheduled = new Set([this.root]);
 -    const identity = raw => raw instanceof Ref ? raw.toString() : raw;
 -    let totalMetadata = 0, next = 0, edges = 0;
--    while (next < pending.length) {
+-    while (next < pending.length && !stopped) {
 -      const [raw, path, depth] = pending[next++],
-+    // Annotation page references are mapped below by Catalog.
-+    // Visit related objects together to reuse compressed streams. Mark references
-+    // when queued so shared back-links never repeat the traversal.
++    // Annotation page references are mapped below by Catalog. Visit related
++    // objects together to reuse compressed streams, without retaining more
++    // queued work than the remaining object budget can cover.
 +    const pending = [[this.root, "catalog", 0]];
 +    const scheduledRefs = new Set(), scheduledObjects = new WeakSet([this.root]);
 +    const scheduled = {
@@ -678,10 +678,11 @@
 +    };
 +    const identity = raw => raw instanceof Ref ? (raw.gen === 0 ? raw.num : raw.toString()) : raw;
 +    let totalMetadata = 0, visitsSinceYield = 0;
-+    while (pending.length) {
++    while (pending.length && !stopped) {
 +      if (++visitsSinceYield % 512 === 0) await new Promise(resolve => setTimeout(resolve, 0));
 +      const [raw, path, depth] = pending.pop(),
          loc = locator(raw, path);
+       if (!step(loc, depth)) break;
        try {
 -        const obj = fetch(raw),
 -          key = raw instanceof Ref ? loc.path : obj;
@@ -696,7 +697,6 @@
 +          visitedObjects.has(obj)
          )
            continue;
-         if (!step(loc, depth)) continue;
 -        visited.add(key);
 -        visited.add(obj);
 +        visitedObjects.add(obj);
@@ -747,12 +747,20 @@
          for (const [key_, child] of children) {
            if (
              child instanceof Ref ||
-@@ -383,17 +401,18 @@
+@@ -383,22 +401,23 @@
              Array.isArray(child)
            ) {
              const key = identity(child);
 -            if (scheduled.has(key) || visited.has(child)) continue;
+-            if (pending.length - next >= limits.maxObjects - visits) {
+-              stop(loc);
+-              break;
+-            }
 +            if (scheduled.has(key) || visitedObjects.has(child)) continue;
++            if (pending.length + nextChildren.length >= limits.maxObjects - visits) {
++              stop(loc);
++              break;
++            }
              scheduled.add(key);
 -            pending.push([
 +            nextChildren.push([
@@ -765,6 +773,7 @@
              ]);
            }
          }
+         if (stopped) break;
 +        for (let i = nextChildren.length - 1; i >= 0; i--) pending.push(nextChildren[i]);
        } catch (error) {
          report("OBJECT_UNAVAILABLE", loc, error);

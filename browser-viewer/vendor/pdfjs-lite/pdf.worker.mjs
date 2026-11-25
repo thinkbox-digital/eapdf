@@ -39128,7 +39128,7 @@ class FileSpec {
 
 const CEILINGS = Object.freeze({
   maxObjects: 1000000,
-  maxDepth: 64,
+  maxDepth: 1024,
   maxFiles: 16384,
   maxMetadataBytes: 16777216,
   maxStreamBytes: 16777216
@@ -39242,8 +39242,20 @@ class DocumentAssets {
         locator: loc
       });
     };
-    let visits = 0;
+    let visits = 0,
+      stopped = false,
+      fileLimitReported = false;
+    const stop = loc => {
+      if (!stopped) {
+        stopped = true;
+        report("OBJECT_LIMIT", loc);
+      }
+      return false;
+    };
     const step = (loc, depth) => {
+      if (stopped) return false;
+      if (depth > limits.maxDepth || visits >= limits.maxObjects) return stop(loc);
+      visits++;
       return true;
     };
     const add = (raw, origin) => {
@@ -39255,10 +39267,21 @@ class DocumentAssets {
           return;
         }
         if (!files.has(loc.path)) {
+          if (files.size >= limits.maxFiles) {
+            if (!fileLimitReported) {
+              fileLimitReported = true;
+              report("FILE_LIMIT", loc);
+            }
+            return;
+          }
           const streams = new Map(),
             ef = spec.get("EF");
           if (ef instanceof Dict) {
             for (const [key, rawStream] of ef.getRawEntries()) {
+              if (streams.size >= 32) {
+                report("STREAM_COUNT_LIMIT", loc);
+                break;
+              }
               const sloc = locator(rawStream, loc.path + "/EF/" + key);
               if (streams.has(sloc.path)) {
                 streams.get(sloc.path).efKeys.push("/" + key);
@@ -39327,14 +39350,14 @@ class DocumentAssets {
         if (Array.isArray(pairs)) {
           if (pairs.length % 2) report("INVALID_NAME_TREE", loc);
           for (let i = 0; i + 1 < pairs.length; i += 2) {
-            if (!step(loc, depth)) break;
+            if (!step(loc, depth)) return;
             add(pairs[i + 1], origin("name-tree", {
               ...loc,
               path: loc.path + `/Names[${i}]`
             }, null, fetch(pairs[i])));
           }
         }
-        if (Array.isArray(kids)) for (let i = 0; i < kids.length; i++) nameTree(kids[i], path + `/Kids[${i}]`, depth + 1);
+        if (Array.isArray(kids)) for (let i = 0; i < kids.length && !stopped; i++) nameTree(kids[i], path + `/Kids[${i}]`, depth + 1);
       } catch (error) {
         report("NAME_TREE_UNAVAILABLE", loc, error);
       }
@@ -39346,14 +39369,14 @@ class DocumentAssets {
     let totalMetadata = 0,
       next = 0,
       edges = 0;
-    while (next < pending.length) {
+    while (next < pending.length && !stopped) {
       const [raw, path, depth] = pending[next++],
         loc = locator(raw, path);
+      if (!step(loc, depth)) break;
       try {
         const obj = fetch(raw),
           key = raw instanceof Ref ? loc.path : obj;
         if (!(obj instanceof Dict || obj instanceof BaseStream || Array.isArray(obj)) || visited.has(key) || visited.has(obj)) continue;
-        if (!step(loc, depth)) continue;
         visited.add(key);
         visited.add(obj);
         const dict = obj instanceof BaseStream ? obj.dict : obj;
@@ -39366,6 +39389,7 @@ class DocumentAssets {
               path: loc.path + `/AF[${i}]`
             }));
           } else if (af !== undefined) report("INVALID_AF_ARRAY", loc);
+          if (stopped) break;
           if (dict.get("Type") instanceof Name && dict.get("Type").name === "Page") {
             const annots = dict.get("Annots");
             if (Array.isArray(annots)) for (let i = 0; i < annots.length; i++) {
@@ -39378,6 +39402,7 @@ class DocumentAssets {
               }
             }
           }
+          if (stopped) break;
           if (dict.has("Metadata")) {
             const rawMeta = dict.getRaw("Metadata"),
               mloc = locator(rawMeta, loc.path + "/Metadata");
@@ -39410,10 +39435,15 @@ class DocumentAssets {
           if (child instanceof Ref || child instanceof Dict || child instanceof BaseStream || Array.isArray(child)) {
             const key = identity(child);
             if (scheduled.has(key) || visited.has(child)) continue;
+            if (pending.length - next >= limits.maxObjects - visits) {
+              stop(loc);
+              break;
+            }
             scheduled.add(key);
             pending.push([child, loc.path + (Array.isArray(obj) ? `[${key_}]` : "/" + key_), depth + (dict instanceof Dict && dict.has("Title") && dict.has("Parent") && (key_ === "Next" || key_ === "Prev") ? 0 : 1)]);
           }
         }
+        if (stopped) break;
       } catch (error) {
         report("OBJECT_UNAVAILABLE", loc, error);
       }
@@ -39426,7 +39456,7 @@ class DocumentAssets {
         schemaKeys: [],
         folders: []
       };
-    if (collectionRaw !== undefined) {
+    if (collectionRaw !== undefined && !stopped) {
       collection.locator = locator(collectionRaw, "catalog/Collection");
       collection.state = "invalid";
       try {
@@ -39460,13 +39490,15 @@ class DocumentAssets {
           };
           collection.folders.push(folder);
           walk(obj.getRaw("Child"), loc.path, path + "/Child", depth + 1);
-          walk(obj.getRaw("Next"), parent, path + "/Next", depth + 1);
+          if (!stopped) walk(obj.getRaw("Next"), parent, path + "/Next", depth + 1);
         };
         walk(dict.getRaw("Folders"), null, collection.locator.path + "/Folders", 0);
         for (const folder of collection.folders) folder.children = collection.folders.filter(f => f.parent === folder.locator.path).map(f => f.locator.path);
       } catch (error) {
         report("COLLECTION_UNAVAILABLE", collection.locator, error);
       }
+    } else if (collectionRaw !== undefined) {
+      collection.state = "unavailable";
     }
     return {
       apiVersion: 1,

@@ -3,7 +3,7 @@
 ## From the command line
 
 ```sh
-java -Xmx2g -jar emailtopdfa-2.4.0-beta.8.jar --jobs 2 --out /tmp/eapdf-output message.eml
+java -Xmx2g -jar emailtopdfa-2.5.0-beta.1.jar --jobs 2 --out /tmp/eapdf-output message.eml
 ```
 
 For a collection, add `--archive-profile c --archive-output /tmp/eapdf-output/archive_1c.pdf`.

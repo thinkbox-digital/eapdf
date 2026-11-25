@@ -33,7 +33,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 final class ViewerXmp {
     private static final int MAX_TOTAL = 64 * 1024 * 1024;
-    private static final int MAX_PACKET = 32 * 1024 * 1024;
+    static final int MAX_PACKET = 32 * 1024 * 1024;
     private static final int MAX_PREVIEW = 256 * 1024;
 
     record Packet(String name, String document, String locator, byte[] bytes) {
@@ -103,10 +103,12 @@ final class ViewerXmp {
 
     private void read(String document, String locator, COSStream stream) {
         int allowed = Math.min(MAX_PACKET, MAX_TOTAL - used);
-        try (var input = stream.createInputStream()) {
-            if (allowed <= 0) throw new IOException("Metadata budget exhausted");
-            byte[] bytes = input.readNBytes(allowed + 1);
-            if (bytes.length > allowed) throw new IOException("Metadata stream exceeds the export limit");
+        if (allowed <= 0) {
+            issues.add(document + " · " + locator + " · Metadata budget exhausted");
+            return;
+        }
+        try (var input = PdfMetadataStreams.open(stream, allowed)) {
+            byte[] bytes = input.readAllBytes();
             used += bytes.length;
             packets.add(new Packet(String.format(Locale.ROOT, "metadata-%04d.xmp", packets.size() + 1),
                     document, locator, bytes));

@@ -64,4 +64,34 @@ class OutlookInputKindTests {
       assertEquals(1, EmailToPDFA.readAny(source.toString(), "", List.of(), false).size());
     }
   }
+
+  @Test
+  void messageClassAtTheSupportedLengthIsReadInBothEncodings() throws Exception {
+    String itemClass = "IPM.Note." + "X".repeat(246);
+    try (var unicode = new POIFSFileSystem(); var ansi = new POIFSFileSystem()) {
+      unicode.getRoot().createDocument("__substg1.0_001A001F",
+          new ByteArrayInputStream(MsgBodySelectionTests.unicode(itemClass)));
+      ansi.getRoot().createDocument("__substg1.0_001A001E",
+          new ByteArrayInputStream((itemClass + "\0").getBytes(StandardCharsets.US_ASCII)));
+      assertEquals(itemClass, MsgReader.messageClass(unicode.getRoot()));
+      assertEquals(itemClass, MsgReader.messageClass(ansi.getRoot()));
+    }
+  }
+
+  @Test
+  void sourceLimitIsCheckedBeforeDirectClassificationAndDeferredDuringDirectoryDiscovery() throws Exception {
+    Path source = directory.resolve("second.msg");
+    MsgBodySelectionTests.writeMsg(source, 1, false);
+    Path earlier = Files.writeString(directory.resolve("first.eml"), "Subject: earlier\r\n\r\nBody");
+    String property = "eapdf.maxMessageBytes";
+    String previous = System.getProperty(property);
+    try {
+      System.setProperty(property, Long.toString(Files.size(source) - 1));
+      var error = assertThrows(Common.UserFacingException.class, () -> EmailToPDFA.detectMsgInputKind(source));
+      assertTrue(error.getMessage().contains("Message exceeds the processing limit"));
+      assertEquals(List.of(earlier.toString(), source.toString()), EmailToPDFA.collectInputs(directory.toString()));
+    } finally {
+      ProcessingLimitRepairTests.restore(property, previous);
+    }
+  }
 }

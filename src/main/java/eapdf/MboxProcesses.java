@@ -21,6 +21,10 @@ public final class MboxProcesses {
                  boolean streaming, int globalOffset, boolean multiInput) {}
   record Report(Map<String, String> warnings, Map<String, ConversionDiagnostic> diagnostics, long pages, long pixels) {}
   record Worker(Path directory, Process process) {}
+  private static final class WorkerProgress {
+    long completed, lastProgress;
+    WorkerProgress(long started) { lastProgress = started; }
+  }
 
   static int workerCount(int requested, int messages, long heap, long available, int cpus) {
     long memory = Math.max(0, heap / (256 * ConversionMemory.MIB) - 1);
@@ -47,6 +51,7 @@ public final class MboxProcesses {
     long heap = childHeap(count, Runtime.getRuntime().maxMemory(), available);
     Path root = Files.createTempDirectory(transaction.workspace, "mbox-processes-");
     List<Worker> workers = new ArrayList<>();
+    Map<Worker, WorkerProgress> progressByWorker = new HashMap<>();
     System.out.println("MBOX render processes: " + count + "; child heap: " + heap / ConversionMemory.MIB + " MiB each");
     try {
       ProcessHandle owner = ProcessHandle.current();
@@ -58,24 +63,41 @@ public final class MboxProcesses {
         Request request = new Request(owner.pid(), owner.info().startInstant().orElseThrow().toString(), input,
             output, font, icc, debug, debugDirectory, omitSource, items, false, 0, false);
         Process process = startWorker(directory, temporary, heap, request, transaction.incremental());
-        workers.add(new Worker(directory, process));
+        Worker worker = new Worker(directory, process);
+        workers.add(worker);
+        progressByWorker.put(worker, new WorkerProgress(System.nanoTime()));
         System.out.println("MBOX render worker: " + process.pid() + "; messages: " + items.size());
       }
       long reported = 0;
+      long workerTimeout = TimeUnit.SECONDS.toNanos(
+          ProcessingLimits.setting("eapdf.workerTimeoutSeconds", "EAPDF_WORKER_TIMEOUT_SECONDS", 300));
       boolean running;
       do {
         ProcessingLimits.checkCancelled();
         running = false;
         long completed = 0;
+        long now = System.nanoTime();
         for (Worker worker : workers) {
           transaction.adoptReady(worker.directory());
-          if (worker.process().isAlive()) running = true;
-          else if (worker.process().exitValue() != 0)
+          WorkerProgress workerProgress = progressByWorker.get(worker);
+          boolean alive = worker.process().isAlive();
+          if (!alive && worker.process().exitValue() != 0)
             throw Common.fail("MBOX render worker " + worker.process().pid() + " failed (exit " + worker.process().exitValue() + ")");
           Path progress = worker.directory().resolve("progress.json");
           if (Files.exists(progress)) {
             if (Files.size(progress) > ProcessingLimits.metadataBytes()) throw Common.fail("Worker progress exceeds the metadata budget");
-            completed += JsonParser.parseString(Files.readString(progress)).getAsJsonObject().get("emails_completed").getAsLong();
+            long workerCompleted = JsonParser.parseString(Files.readString(progress)).getAsJsonObject().get("emails_completed").getAsLong();
+            if (workerCompleted > workerProgress.completed) {
+              workerProgress.completed = workerCompleted;
+              workerProgress.lastProgress = now;
+            }
+            completed += workerCompleted;
+          }
+          if (alive) {
+            running = true;
+            if (workerDeadlineExceeded(workerProgress.lastProgress, now, workerTimeout))
+              throw Common.fail("MBOX render worker " + worker.process().pid()
+                  + " exceeded the message processing time limit after " + workerProgress.completed + " completed messages");
           }
         }
         ConversionProgress.stage("rendering");
@@ -92,6 +114,10 @@ public final class MboxProcesses {
       for (Worker worker : workers) ConversionSupervisor.stopTree(worker.process());
       Common.deleteTree(root);
     }
+  }
+
+  static boolean workerDeadlineExceeded(long lastProgress, long now, long timeoutNanos) {
+    return now - lastProgress > timeoutNanos;
   }
 
   static Process startWorker(Path directory, Path temporary, long heap, Request request, boolean incremental) throws Exception {

@@ -45,12 +45,23 @@ test('zero-byte streams are extractable and unknown filters are not executed',as
   const f=fixture();f.stream.dict.set('Filter',Name.get('JBIG2Decode'));
   assert.throws(()=>boundedBytes(f.stream,100),/Unsupported extraction filter/);
 });
-test('object and collection cycles stop; user limits cannot exceed ceilings',async()=>{
+test('object and collection cycles stop; user limits report incomplete traversal',async()=>{
   const f=fixture(), folder=f.dict({ID:0,Name:'Root'}); folder.set('Next',folder);
   f.root.set('Self',f.root);f.root.set('Collection',f.dict({Folders:folder}));
   assert.ok((await f.reader.inspect()).diagnostics.some(d=>d.code==='FOLDER_CYCLE'));
-  assert.equal((await f.reader.inspect({maxObjects:1})).files.length,1);
+  assert.ok((await f.reader.inspect({maxObjects:1})).diagnostics.some(d=>d.code==='OBJECT_LIMIT'));
   await assert.rejects(()=>f.reader.inspect({maxObjects:Infinity}),/Invalid/);
+  // Keep this intentionally small: previously queued indirect work must not be
+  // fetched once the shared object budget is consumed by the first branch.
+  const bounded=fixture(),root=bounded.dict({}),first=Ref.get(50,0),deferred=Ref.get(51,0),shared=[bounded.dict({}),bounded.dict({}),bounded.dict({})];
+  bounded.map.set(first,bounded.dict({AF:shared}));bounded.map.set(deferred,bounded.dict({}));
+  root.set('A',first);root.set('B',deferred);root.set('Shared',shared);
+  bounded.reader=new DocumentAssets(bounded.reader.catalog,root);
+  const fetch=bounded.reader.catalog.xref.fetch;let deferredFetches=0;
+  bounded.reader.catalog.xref.fetch=raw=>{if(raw===deferred)deferredFetches++;return fetch(raw);};
+  const limited=await bounded.reader.inspect({maxObjects:5});
+  assert.equal(deferredFetches,0);
+  assert.equal(limited.diagnostics.filter(d=>d.code==='OBJECT_LIMIT').length,1);
 });
 
 // These guards apply without calling the attachment inspection API.

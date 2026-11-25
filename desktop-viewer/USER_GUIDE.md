@@ -32,6 +32,8 @@ file after the viewer finishes cleaning up.
   original bytes of any readable asset with the eye and download icons.
   PNG, JPEG, and GIF previews use size-limited thumbnails. GIF previews show
   the first frame. If an image cannot be previewed, use **Save Original**.
+  Text previews show up to 1,000,000 bytes; use the download icon to retain
+  the complete original file.
   File cards show variants and recorded attachment pages. Internal links can
   jump to a page or open an embedded file.
 - In a PDF Portfolio, browse the file list and the selected PDF together.
@@ -53,6 +55,8 @@ file after the viewer finishes cleaning up.
   it for archive search.
 - **Download this message** saves a standalone message or its verified body
   pages. **Export metadata…** offers configurable CSV and original XMP.
+- **Export original XMP…** saves the active PDF's document metadata as an XMP
+  file. Open a collection member first to export that member's metadata.
 - In **Browse and export XMP streams…**, select a row to read its wrapped,
   indented XML. **Preview** opens it in a larger window. Press Esc to
   close either window. **Save ZIP…** exports the selected streams in

@@ -187,6 +187,7 @@ public class EapdfGui {
     actions.add(progressBar);
     controls.add(actions, BorderLayout.WEST);
     controls.add(statusLabel, BorderLayout.CENTER);
+    controls.add(new JLabel("Version " + Common.projectVersion()), BorderLayout.EAST);
 
     JScrollPane logScroll = new JScrollPane(logArea);
     logScroll.setPreferredSize(new Dimension(960, 250));

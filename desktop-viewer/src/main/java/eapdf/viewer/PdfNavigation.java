@@ -2,6 +2,7 @@ package eapdf.viewer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -17,6 +18,7 @@ import java.util.HexFormat;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.apache.pdfbox.Loader;
@@ -103,6 +105,9 @@ final class PdfNavigation implements AutoCloseable {
             return List.of();
         }
 
+        Map<COSDictionary, Integer> pageIndexes = new IdentityHashMap<>();
+        int index = 0;
+        for (var page : document.getPages()) pageIndexes.put(page.getCOSObject(), index++);
         List<Bookmark> bookmarks = new ArrayList<>();
         Set<COSDictionary> visited = Collections.newSetFromMap(new IdentityHashMap<>());
         var pending = new ArrayDeque<OutlineEntry>();
@@ -117,8 +122,8 @@ final class PdfNavigation implements AutoCloseable {
             if (child != null) pending.push(new OutlineEntry(child, entry.depth() + 1));
             var page = item.findDestinationPage(document);
             if (page == null) continue;
-            int pageIndex = document.getPages().indexOf(page);
-            if (pageIndex >= 0) {
+            Integer pageIndex = pageIndexes.get(page.getCOSObject());
+            if (pageIndex != null) {
                 String title = item.getTitle();
                 bookmarks.add(new Bookmark(title == null || title.isBlank() ? "Page " + (pageIndex + 1) : title,
                         pageIndex, entry.depth()));
@@ -222,9 +227,10 @@ final class PdfNavigation implements AutoCloseable {
             throw new IllegalStateException(impossible);
         }
         int size = 0;
-        try (var input = new DigestInputStream(stream.file().createInputStream(), digest)) {
+        try (var input = new DigestInputStream(PdfMetadataStreams.openAsset(stream.file().getCOSObject(), MAX_ASSET_BYTES), digest)) {
             byte[] buffer = new byte[8192];
             for (int read; (read = input.read(buffer)) != -1; ) {
+                if (Thread.currentThread().isInterrupted()) throw new InterruptedIOException("Reading the embedded file was canceled.");
                 size += read;
                 if (size > MAX_ASSET_BYTES) throw new IOException("Embedded asset exceeds the 32 MiB limit.");
                 output.write(buffer, 0, read);

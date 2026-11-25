@@ -75,7 +75,8 @@ export class DocumentSearch {
     if(this.pdf!==doc.pdf){this.clear();this.pdf=doc.pdf;}
     const normalized=normalizeSearchText(query),previous=this.cursor;
     const deadline=performance.now()+120000;
-    for(let step=0;step<=doc.pdf.numPages;step++){
+    let wrapCount=0;
+    for(let step=0;step<doc.pdf.numPages;step++){
       check();if(performance.now()>deadline)return {incomplete:true};const number=((page-1+step*direction)%doc.pdf.numPages+doc.pdf.numPages)%doc.pdf.numPages+1;
       const key=String(number);let value=this.cache.get(key);
       if(value===undefined){
@@ -85,9 +86,10 @@ export class DocumentSearch {
         if(value.length<=4_000_000){while(this.characters+value.length>4_000_000&&this.cache.size){const first=this.cache.keys().next().value!;this.characters-=this.cache.get(first)!.length;this.cache.delete(first);}this.cache.set(key,value);this.characters+=value.length;}
       }
       const matches=textMatches(value,query);let index=direction===1?0:matches.length-1;
-      if(step===0&&previous?.query===normalized&&previous.page===page)index=previous.index+direction;
+      if(step===0&&previous?.query===normalized&&previous.page===page){index=previous.index+direction;if(index<0||index>=matches.length)wrapCount=matches.length;}
       if(index>=0&&index<matches.length){this.cursor={query:normalized,page:number,index};return {page:number,index,count:matches.length};}
     }
+    if(wrapCount){const index=direction===1?0:wrapCount-1;this.cursor={query:normalized,page,index};return {page,index,count:wrapCount};}
     return {incomplete:false};
   }
 }

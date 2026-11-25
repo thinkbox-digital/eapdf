@@ -79,9 +79,10 @@ final class PdfMetadataWriter {
       text(email, "NumberAttachments", Integer.toString(Math.max(record.attachmentCount, 0)));
       text(email, "Mail_GUID", record.mailGuid);
       text(email, "messageid", record.messageId);
-      if (!record.inReplyTo.isEmpty()) {
+      List<String> replyValues = Common.xmpReplyValues(record);
+      if (!replyValues.isEmpty()) {
         ArrayProperty replies = array(email, "In-Reply-To", Cardinality.Bag);
-        for (String identifier : record.inReplyTo) item(replies, identifier);
+        for (String value : replyValues) replies.addProperty(new TextType(metadata, RDF, "rdf", "li", value));
       }
       agents(email, "From", record.fromAgents);
       agents(email, "To", record.toAgents);

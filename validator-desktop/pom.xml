@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>local</groupId><artifactId>eapdf-validator</artifactId><version>2.4.0-beta.8</version>
+  <groupId>local</groupId><artifactId>eapdf-validator</artifactId><version>2.5.0-beta.1</version>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
     <validator.main.class>eapdf.ValidatorGui</validator.main.class>
@@ -52,7 +52,14 @@
         <directory>${project.basedir}/..</directory><targetPath>META-INF/eapdf</targetPath><filtering>false</filtering>
         <includes><include>LICENSE</include><include>NOTICE</include></includes>
       </resource>
-      <resource><directory>src/main/resources</directory><filtering>false</filtering></resource>
+      <resource>
+        <directory>src/main/resources</directory><filtering>false</filtering>
+        <excludes><exclude>eapdf-validator-build.properties</exclude></excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory><filtering>true</filtering>
+        <includes><include>eapdf-validator-build.properties</include></includes>
+      </resource>
       <resource>
         <directory>${project.basedir}/../docs/reference</directory><targetPath>validator/specification</targetPath><filtering>false</filtering>
         <includes><include>EA-PDF-v1.pdf</include><include>README.md</include></includes>
@@ -77,6 +84,7 @@
             <systemPropertyVariables>
               <validator.packagedJar>${project.build.directory}/${project.build.finalName}.jar</validator.packagedJar>
               <validator.mainClass>${validator.main.class}</validator.mainClass>
+              <validator.projectVersion>${project.version}</validator.projectVersion>
             </systemPropertyVariables>
           </configuration>
         </execution></executions>
