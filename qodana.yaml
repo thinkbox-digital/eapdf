@@ -24,7 +24,12 @@ profile:
 #      - <path/where/not/run/inspection>
 
 projectJDK: "21" #(Applied in CI/CD pipeline)
-
+exclude:
+  - name: All
+    paths:
+      - in
+      - out
+      - examples
 #Execute shell command before Qodana execution (Applied in CI/CD pipeline)
 #bootstrap: sh ./prepare-qodana.sh
 
