@@ -10,6 +10,25 @@ class DecodedObjectStreamCacheTests {
   @org.junit.jupiter.api.io.TempDir Path temporary;
   record Result(boolean compliant,long checks,int failures) {}
   private Result validate(Path path,boolean bounded) throws Exception {
+    // veraPDF retains both model caches and a Rhino context in ThreadLocals.
+    // Use the same disposable-worker boundary as JavaValidation.pdfa(), so this
+    // direct parser regression does not leak into an unrelated JUnit method.
+    var task=new java.util.concurrent.FutureTask<Result>(() -> validateOnWorker(path,bounded));
+    Thread worker=new Thread(task,"eapdf-test-upstream-check");
+    worker.start();
+    boolean interrupted=false;
+    try {
+      while(worker.isAlive())try { worker.join(); } catch(InterruptedException cancelled) { interrupted=true;worker.interrupt(); }
+      if(interrupted)throw new InterruptedException("Upstream validation test was interrupted.");
+      try { return task.get(); }
+      catch(java.util.concurrent.ExecutionException failed) {
+        if(failed.getCause() instanceof Exception error)throw error;
+        if(failed.getCause() instanceof Error error)throw error;
+        throw new IllegalStateException("Upstream validation test failed",failed.getCause());
+      } catch(InterruptedException cancelled) { interrupted=true;throw cancelled; }
+    } finally { if(interrupted)Thread.currentThread().interrupt(); }
+  }
+  private Result validateOnWorker(Path path,boolean bounded) throws Exception {
     JavaValidation.initialise();var foundry=Foundries.defaultInstance();
     try(var parser=foundry.createParser(path.toFile(),PDFAFlavour.NO_FLAVOUR);
         var validator=foundry.createValidator(parser.getFlavour(),100,false,true,false)) {
