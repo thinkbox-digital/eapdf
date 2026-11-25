@@ -46,11 +46,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.RowFilter;
 import javax.swing.JTextArea;
-import javax.swing.JTextPane;
 import javax.swing.JTabbedPane;
 import javax.swing.Icon;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.KeyStroke;
@@ -108,19 +105,6 @@ public final class ValidatorGui {
         else if ("FAIL".equals(state) || "WARN".equals(state)) { g.drawLine(10, 6, 10, 11); g.fillOval(9, 14, 2, 2); }
         else g.drawLine(5, 10, 15, 10);
       } finally { g.dispose(); }
-    }
-  }
-
-  private void setSpecification(String text) {
-    specification.setText(text);
-    var normal = new SimpleAttributeSet(); StyleConstants.setBold(normal, false);
-    specification.getStyledDocument().setCharacterAttributes(0, text.length(), normal, true);
-    var bold = new SimpleAttributeSet(); StyleConstants.setBold(bold, true);
-    int offset = 0;
-    for (String line : text.split("\n", -1)) {
-      if (offset == 0 || line.startsWith("Rule ") || line.startsWith("Section ") || line.endsWith(":"))
-        specification.getStyledDocument().setCharacterAttributes(offset, line.length(), bold, false);
-      offset += line.length() + 1;
     }
   }
 
@@ -247,7 +231,7 @@ public final class ValidatorGui {
   private final JTable table = new JTable(rows);
   private final TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(rows);
   private final JTextArea detail = new JTextArea();
-  private final JTextPane specification = new JTextPane();
+  private final SpecificationPane specification = new SpecificationPane();
   private Result result;
   private List<FindingGroup> groups = List.of();
   private boolean running;
@@ -327,9 +311,7 @@ public final class ValidatorGui {
     detail.setEditable(false);
     detail.setLineWrap(true);
     detail.setWrapStyleWord(true);
-    specification.setEditable(false);
     detail.setMargin(new Insets(12, 12, 12, 12));
-    specification.setMargin(new Insets(12, 12, 12, 12));
     JScrollPane findingPane = new JScrollPane(detail);
     JTabbedPane findingTabs = new JTabbedPane(); findingTabs.addTab("Finding", findingPane);
     JScrollPane specificationPane = new JScrollPane(specification);
@@ -419,13 +401,12 @@ public final class ValidatorGui {
 
   private void selectedFinding() {
     if (result == null || table.getSelectedRow() < 0) {
-      detail.setText(""); specification.setText(""); return;
+      detail.setText(""); specification.showRule(null); return;
     }
     FindingGroup finding = groups.get(table.convertRowIndexToModel(table.getSelectedRow()));
     detail.setText(finding.detailText());
     detail.setCaretPosition(0);
-    setSpecification(SpecificationReferences.text(finding.code()));
-    specification.setCaretPosition(0);
+    specification.showRule(finding.code());
   }
 
   private void filterRules() {
@@ -463,7 +444,6 @@ public final class ValidatorGui {
     rows.setRowCount(0);
     filterRules();
     detail.setText("");
-    specification.setText("");
     save.setEnabled(false);
     outcome.setVisible(false); warnings.setVisible(false);
     progress.setValue(0); groupProgress.setValue(0);

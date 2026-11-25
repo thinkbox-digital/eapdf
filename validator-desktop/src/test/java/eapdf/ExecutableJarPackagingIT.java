@@ -31,6 +31,7 @@ class ExecutableJarPackagingIT {
           "com/google/gson/Gson.class","org/apache/pdfbox/Loader.class","org/verapdf/pdfa/Foundries.class",
           "jakarta/mail/internet/MimeMessage.class","org/eclipse/angus/mail/util/MailStreamProvider.class",
           "validator/validator_rule_text.json","validator/config/verapdf/ISO-32005.xml",
+          "validator/specification/EA-PDF-v1.pdf","validator/specification/README.md",
           "META-INF/services/jakarta.mail.util.StreamProvider"))assertTrue(names.contains(required),"Missing runtime entry: "+required);
       try(var input=new java.io.DataInputStream(jar.getInputStream(jar.getJarEntry("eapdf/ValidatorGui.class")))) {
         assertEquals(0xcafebabe,input.readInt());input.readUnsignedShort();assertEquals(65,input.readUnsignedShort(),"Java 21 bytecode");

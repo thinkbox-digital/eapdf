@@ -44,7 +44,7 @@ From the repository root, using Java 21 and Maven:
 mvn -f validator-desktop/pom.xml verify
 ```
 
-On Linux, the JAR is written to `/tmp/eapdf-validator-build/eapdf-validator-2.4.0-beta.3.jar`.
+On Linux, the JAR is written to `/tmp/eapdf-validator-build/eapdf-validator-2.4.0-beta.8.jar`.
 Override the build directory with `-Deapdf.build.directory=/tmp/your-build`.
 No build files are written to the creator's `target/` directory.
 `verify` checks the final shaded JAR's manifest, ZIP CRCs, bundled runtime classes,
@@ -55,16 +55,16 @@ To build, verify and atomically replace the distributable:
 
 ```sh
 python3 scripts/package_validator.py
-(cd dist && sha256sum -c eapdf-validator-2.4.0-beta.3.jar.sha256)
+sha256sum dist/eapdf-validator-2.4.0-beta.8.jar
 ```
 
-Publish the executable `eapdf-validator-2.4.0-beta.3.jar`, not the unshaded `original-` JAR.
+Publish the executable `eapdf-validator-2.4.0-beta.8.jar`, not the unshaded `original-` JAR.
 The packaging command verifies the build before replacing the distributable.
 
 ## Run
 
 ```sh
-java -jar /path/to/eapdf-validator-2.4.0-beta.3.jar
+java -jar /path/to/eapdf-validator-2.4.0-beta.8.jar
 ```
 
 The JAR includes its runtime libraries, rules and specification references; only
@@ -79,10 +79,11 @@ PDF/A failures. The table includes rule numbers. **Keyword in Rule** filters rul
 codes using all entered words. **Esc** clears the filter. Finding and
 **Specification** appear side by side.
 Findings name concrete required values and types, such as version 1 and revision
-2024. The specification pane shows the cited specification text,
-section, table and both printed/PDF page numbers. References are bundled; the
-source PDF is not needed at runtime. Summaries are labeled as paraphrases, and
-operational checks do not receive invented specification pages.
+2024. The **Specification** pane identifies the cited sections, tables and
+printed and PDF page numbers. It renders pages from the bundled EA-PDF
+specification, preserving their original tables and surrounding text. Reviewed
+summaries are selectable paraphrases. If a page cannot be rendered, the pane
+shows its extracted text.
 The initial list follows specification order. Identical rule/result/message rows
 are grouped. Select a group to see its occurrence count and details;
 different results or messages remain separate. Collection details show each
