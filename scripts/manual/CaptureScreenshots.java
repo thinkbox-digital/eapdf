@@ -32,19 +32,24 @@ public final class CaptureScreenshots {
         });
     }
     public static void main(String[] args) throws Exception {
-        String mode=args[0];Path work=Path.of(args[1]);Path output=Path.of(args[2]);Files.createDirectories(output);
+        if(args.length!=3&&args.length!=5)throw new IllegalArgumentException("Usage: CaptureScreenshots creator|validator WORK OUTPUT [WIDTH HEIGHT]");
+        String mode=args[0];if(!mode.equals("creator")&&!mode.equals("validator"))throw new IllegalArgumentException("Unknown capture mode: "+mode);
+        Path work=Path.of(args[1]);Path output=Path.of(args[2]);Files.createDirectories(output);
+        int width=args.length==5?Integer.parseInt(args[3]):1200;
+        int height=args.length==5?Integer.parseInt(args[4]):mode.equals("creator")?955:850;
+        if(width<1||height<1)throw new IllegalArgumentException("Capture dimensions must be positive");
         Object[] instance={null};
         SwingUtilities.invokeAndWait(()->{
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 if(mode.equals("creator")) {
                     var gui=new EapdfGui();instance[0]=gui;invoke(gui,"show");
-                    JFrame frame=(JFrame)field(gui,"frame");frame.setSize(1100,850);frame.validate();
+                    JFrame frame=(JFrame)field(gui,"frame");frame.setSize(width,height);frame.validate();
                     var fields=components(frame,JTextField.class);fields.get(0).setText(work.resolve("emails").toString());fields.get(1).setText(work.resolve("converted").toString());
                     components(frame,JComboBox.class).getFirst().setSelectedIndex(2);
                 } else {
                     var gui=new ValidatorGui(new JavaValidatorEngine());instance[0]=gui;gui.show();
-                    ((JFrame)field(gui,"frame")).setSize(1200,850);
+                    ((JFrame)field(gui,"frame")).setSize(width,height);
                     ((JTextField)field(gui,"file")).setText(work.resolve("manual_1m.pdf").toString());
                 }
             } catch(Exception error){throw new RuntimeException(error);}

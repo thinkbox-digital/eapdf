@@ -115,7 +115,7 @@ final class PreservationInventory {
     addresses.put("Cc", captureAgents(record.ccAgents));
     addresses.put("Bcc", captureAgents(record.bccAgents));
     return new Headers(Map.copyOf(fields), Map.copyOf(addresses),
-        record.inReplyTo.stream().map(Common::normalizeBody).toList());
+        Common.xmpReplyValues(record));
   }
 
   private static List<Agent> captureAgents(List<MailAgent> agents) {

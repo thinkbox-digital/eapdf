@@ -110,24 +110,33 @@ def _run_cli(script, arguments):
     except ImportError:
         return 2, b"", b"", "Native worker resource limits are unavailable on this platform."
     timeout = max(1, int(os.environ.get("VALIDATOR_JOB_TIMEOUT", "600") or "600"))
-    memory = max(1, memory_allowance_bytes() // 1024**2)
+    mib = 1024**2
+    memory = max(1, memory_allowance_bytes() // mib) * mib
+    hard_memory = max(memory, docker_client_memory_mb() * mib)
     scratch_root = worker_scratch_root(script)
     maximum, scratch_maximum = disk_allowances(scratch_root)
+    _, inherited_memory = resource.getrlimit(resource.RLIMIT_AS)
+    if inherited_memory != resource.RLIM_INFINITY:
+        memory = min(memory, inherited_memory)
+        hard_memory = min(hard_memory, inherited_memory)
+    _, inherited_file_size = resource.getrlimit(resource.RLIMIT_FSIZE)
+    if inherited_file_size != resource.RLIM_INFINITY:
+        maximum = min(maximum, inherited_file_size)
+    memory_mb = max(1, memory // mib)
     identity = "eapdf-web-" + uuid.uuid4().hex
     environment = dict(os.environ, EAPDF_VALIDATION_WORKER="1", VERAPDF_JOB_CONTAINER_PREFIX=identity,
-                       EAPDF_VERAPDF_HEAP_MB=str(max(128, memory // 2)), VALIDATOR_JOB_MEMORY_MB=str(memory))
+                       EAPDF_VERAPDF_HEAP_MB=str(max(128, memory_mb // 2)), VALIDATOR_JOB_MEMORY_MB=str(memory_mb))
     bootstrap = (
         "import os,resource,runpy,sys; "
-        "memory=int(sys.argv[1]);maximum=int(sys.argv[2]); "
-        "hard=max(memory,int(os.environ.get('VALIDATOR_DOCKER_CLIENT_MEMORY_MB','4096'))*1024**2); "
-        "resource.setrlimit(resource.RLIMIT_AS,(memory,hard)); "
+        "memory=int(sys.argv[1]);hard_memory=int(sys.argv[2]);maximum=int(sys.argv[3]); "
+        "resource.setrlimit(resource.RLIMIT_AS,(memory,hard_memory)); "
         "resource.setrlimit(resource.RLIMIT_FSIZE,(maximum,maximum)); "
         "soft,hard=resource.getrlimit(resource.RLIMIT_NOFILE); "
         "requested=max(1,int(os.environ.get('VALIDATOR_MAX_OPEN_FILES',str(soft if hard==resource.RLIM_INFINITY else hard)))); "
         "limit=requested if hard==resource.RLIM_INFINITY else min(requested,hard); "
         "resource.setrlimit(resource.RLIMIT_NOFILE,(limit,limit)); "
         "resource.setrlimit(resource.RLIMIT_CORE,(0,0)); "
-        "sys.argv=sys.argv[3:];runpy.run_path(sys.argv[0],run_name='__main__')"
+        "sys.argv=sys.argv[4:];runpy.run_path(sys.argv[0],run_name='__main__')"
     )
     process = None
     with tempfile.TemporaryDirectory(prefix="eapdf-python-validator-", dir=scratch_root) as directory:
@@ -136,19 +145,21 @@ def _run_cli(script, arguments):
         reason = None
         def over_budget():
             size = 0
-            for path in root.rglob("*"):
-                try:
-                    if path.is_symlink() or not path.is_file(): continue
-                    size += path.stat().st_size
-                except FileNotFoundError:
-                    continue
-                if size > scratch_maximum:
-                    return True
+            for folder, _, files in os.walk(root):
+                for name in files:
+                    try:
+                        info = os.stat(os.path.join(folder, name), follow_symlinks=False)
+                    except FileNotFoundError:
+                        continue
+                    if stat.S_ISREG(info.st_mode):
+                        size += info.st_size
+                        if size > scratch_maximum:
+                            return True
             return False
         try:
             with (root / "stdout").open("w+b") as stdout, (root / "stderr").open("w+b") as stderr:
                 process = subprocess.Popen([sys.executable, "-B", "-c", bootstrap,
-                    str(memory * 1024**2), str(maximum), str(script), *arguments], env=environment,
+                    str(memory), str(hard_memory), str(maximum), str(script), *arguments], env=environment,
                     stdout=stdout, stderr=stderr, start_new_session=True)
                 deadline = time.monotonic() + timeout
                 while process.poll() is None:
@@ -164,7 +175,7 @@ def _run_cli(script, arguments):
                 code = process.wait()
                 if reason is None and over_budget():
                     reason = "Validation exceeded its scratch/report budget."
-                output_limit = min(maximum, memory * 1024**2 // 4)
+                output_limit = min(maximum, memory // 4)
                 stdout.seek(0); output = stdout.read(min(os.fstat(stdout.fileno()).st_size, output_limit + 1))
                 stderr.seek(0); errors = stderr.read(min(os.fstat(stderr.fileno()).st_size, output_limit + 1))
                 if len(output) > output_limit or len(errors) > output_limit:

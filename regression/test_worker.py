@@ -120,6 +120,17 @@ class AdaptiveResourceTests(unittest.TestCase):
                 with patch.dict(os.environ, {variable: '1'}):
                     with self.assertRaises(ValueError): validator.collect_pdf_inputs(root)
 
+    def test_explicit_html_path_is_rejected_for_multiple_inputs(self):
+        with patch.object(sys, "argv", ["validator", ".", "--html", "report.html"]), \
+                patch.object(validator, "collect_pdf_inputs", return_value=["a.pdf", "b.pdf"]), \
+                patch("validation_worker.run_cli") as worker, patch("sys.stderr") as errors:
+            with self.assertRaises(SystemExit) as result:
+                validator.main()
+            self.assertEqual(2, result.exception.code)
+            self.assertIn("--html PATH requires a single PDF",
+                          "".join(call.args[0] for call in errors.write.call_args_list))
+            worker.assert_not_called()
+
     def test_oversized_and_non_regular_inputs_never_reach_engines(self):
         with tempfile.TemporaryDirectory() as directory:
             pdf = Path(directory, 'message.pdf')
@@ -134,6 +145,26 @@ class AdaptiveResourceTests(unittest.TestCase):
 
 
 class ValidatorPipelineTests(unittest.TestCase):
+    def test_repeated_embedded_stream_reuses_payload_but_keeps_association(self):
+        import pikepdf
+        from weakref import WeakValueDictionary
+
+        with pikepdf.new() as pdf:
+            stream = pdf.make_stream(b"attachment")
+            spec = pikepdf.Dictionary(EF=pikepdf.Dictionary(F=stream))
+            token = validator._embedded_payloads.set(WeakValueDictionary())
+            try:
+                with patch.object(validator, "get_stream_bytes", wraps=validator.get_stream_bytes) as read:
+                    named = validator.parse_filespec("example", spec, "EmbeddedFiles")
+                    associated = validator.parse_filespec("", spec, "AF")
+                    read.assert_called_once()
+                self.assertEqual("EmbeddedFiles", named["source"])
+                self.assertEqual("AF", associated["source"])
+                self.assertIs(named["bytes"], associated["bytes"])
+                self.assertEqual(named["sha256"], associated["sha256"])
+            finally:
+                validator._embedded_payloads.reset(token)
+
     def test_empty_page_completes_without_engine_exception(self):
         import pikepdf
         with tempfile.TemporaryDirectory() as directory:

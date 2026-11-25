@@ -254,15 +254,10 @@ final class ViewerTools {
     }
 
     static void exportXmp(ViewerSession session, Path target) throws IOException {
-        exportXmp(session, target, null);
-    }
-
-    static void exportXmp(ViewerSession session, Path target, Message selected) throws IOException {
-        if (selected != null && !belongs(session, selected)) throw new IOException("Select a message in the open PDF.");
         var metadata = session.pdf.document().getDocumentCatalog().getMetadata();
         if (metadata == null) throw new IOException("This PDF has no catalog XMP metadata.");
         withOutput(session, target, staging -> {
-            try (var input = metadata.createInputStream()) {
+            try (var input = PdfMetadataStreams.open(metadata.getCOSObject(), ViewerXmp.MAX_PACKET)) {
                 Files.copy(input, staging, StandardCopyOption.REPLACE_EXISTING);
             }
         });

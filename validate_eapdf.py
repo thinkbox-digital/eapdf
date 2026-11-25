@@ -2,11 +2,13 @@
 
 import sys, json, hashlib, argparse, re, os, subprocess, shutil
 import uuid
-from pdf_stream_limits import DecodeLimitError, bounded_validation, count_file, read_stream, setting as stream_setting
+from pdf_stream_limits import DecodeLimitError, MalformedStreamError, bounded_validation, count_file, read_stream, setting as stream_setting
 import tempfile
 import base64
 import quopri
+from contextvars import ContextVar
 from copy import deepcopy
+from dataclasses import dataclass
 from email.header import decode_header, make_header
 from email.errors import (HeaderDefect, HeaderParseError, InvalidHeaderDefect, FirstHeaderLineIsContinuationDefect,
                           MisplacedEnvelopeHeaderDefect, MissingHeaderBodySeparatorDefect)
@@ -38,6 +40,7 @@ from email.parser import BytesParser
 from email.message import Message as MimeHeaders
 from email.utils import parsedate_to_datetime, getaddresses, collapse_rfc2231_value
 from urllib.parse import urlsplit, urlunsplit, parse_qs, unquote
+from weakref import WeakValueDictionary
 import pikepdf
 from pypdf import PdfReader, PageObject
 from pypdf.generic import ContentStream, DecodedStreamObject, DictionaryObject, IndirectObject, NameObject
@@ -973,7 +976,7 @@ def is_pdf_array(value):
 def get_stream_bytes(obj):
     try:
         return read_stream(obj, stream_setting("VALIDATOR_MAX_STREAM_BYTES", 64 * 1024**2))
-    except DecodeLimitError:
+    except (DecodeLimitError, MalformedStreamError):
         raise
     except Exception:
         return b""
@@ -988,6 +991,29 @@ def normalize_pdf_checksum(value):
     except Exception:
         pass
     return norm_text(str(value))
+
+@dataclass(frozen=True)
+class EmbeddedPayload:
+    data: bytes
+    md5: str
+    sha256: str
+
+
+_embedded_payloads = ContextVar("embedded_payloads", default=None)
+
+
+def observe_embedded_payload(stream):
+    cache = _embedded_payloads.get()
+    identity = objgen(stream)
+    cacheable = cache is not None and identity not in (None, (0, 0))
+    if cacheable and (payload := cache.get(identity)) is not None:
+        return payload
+    data = get_stream_bytes(stream)
+    payload = EmbeddedPayload(data, md5hex(data), sha256hex(data))
+    if cacheable:
+        cache[identity] = payload
+    return payload
+
 
 def embedded_file_candidates(pdf,efiles,afiles):
     candidates=[]
@@ -1951,7 +1977,7 @@ def read_metadata_stream(pdf):
     meta=dict_get(root,"/Metadata",None)
     if meta is None: return b""
     try: return read_stream(meta, stream_setting("VALIDATOR_MAX_METADATA_BYTES", 16 * 1024**2))
-    except DecodeLimitError: raise
+    except (DecodeLimitError, MalformedStreamError): raise
     except Exception: return b""
 
 def get_declared_pdf_version(pdf):
@@ -2099,11 +2125,13 @@ def parse_filespec(tree_name,spec,source="unknown"):
         if cs is None and params is not None:
             cs=dict_get(params,"/Checksum",None)
         if cs is not None: info["checksum"]=normalize_pdf_checksum(cs)
-        b=get_stream_bytes(stream)
-        info["bytes"]=b
-        info["md5"]=md5hex(b)
-        info["sha256"]=sha256hex(b)
-        info["size"]=len(b)
+        payload=observe_embedded_payload(stream)
+        # The weak per-document cache shares bytes only while an observation uses them.
+        info["_payload"]=payload
+        info["bytes"]=payload.data
+        info["md5"]=payload.md5
+        info["sha256"]=payload.sha256
+        info["size"]=len(payload.data)
     return info
 
 def page_objgen_map(pdf):
@@ -2257,6 +2285,8 @@ def page_contents_nonempty(page):
                 if isinstance(item,pikepdf.Stream):
                     total+=len(get_stream_bytes(item).strip())
             return total>0
+    except MalformedStreamError:
+        raise
     except Exception:
         return False
     return False
@@ -2287,6 +2317,8 @@ def iter_page_content_bytes(page):
                 if isinstance(item,pikepdf.Stream):
                     out.append(get_stream_bytes(item))
             return out
+    except MalformedStreamError:
+        raise
     except Exception:
         pass
     return []
@@ -7225,6 +7257,14 @@ def check_collection_children(efiles,eapdf_conf,report,context,depth,source_asse
 
 @bounded_validation
 def validate_pdf(pdf,report,child_context=None,depth=0,source_file_sets=None,pdfa=None):
+    token = _embedded_payloads.set(WeakValueDictionary())
+    try:
+        return _validate_pdf(pdf,report,child_context,depth,source_file_sets,pdfa)
+    finally:
+        _embedded_payloads.reset(token)
+
+
+def _validate_pdf(pdf,report,child_context,depth,source_file_sets,pdfa):
     record_verapdf_delegations(report,pdfa)
     check_iso32005_upstream(pdf,report,pdfa)
     report.ok("OPEN","Opened PDF successfully",{"file":str(report.path),"pdf_version":str(pdf.pdf_version),"pages":len(pdf.pages)})
@@ -7432,7 +7472,7 @@ def main():
     ap.add_argument("pdf", help="PDF file or directory containing PDFs")
     ap.add_argument("--jobs", type=int, default=max(1, os.cpu_count() or 1), help="number of worker processes for directory validation")
     ap.add_argument("--json",action="store_true")
-    ap.add_argument("--html", nargs="?", const="", default=None, help="write a single-file HTML report to the given path; omit the path to use validation/<pdf>.<id>.validation.html")
+    ap.add_argument("--html", nargs="?", const="", default=None, help="write the report to this path when validating one PDF; omit the path to use validation/<pdf>.<id>.validation.html")
     ap.add_argument("--no-html", action="store_true", help="do not write the HTML validation report")
     args=ap.parse_args()
     try:
@@ -7443,6 +7483,8 @@ def main():
     if not inputs:
         print("No PDF files found for validation.",file=sys.stderr)
         sys.exit(2)
+    if args.html and len(inputs) > 1 and not args.no_html:
+        ap.error("--html PATH requires a single PDF. Omit PATH to write a report for each input.")
     if os.environ.get("EAPDF_VALIDATION_WORKER") != "1":
         from validation_worker import run_cli
         code, output, errors, reason = run_cli(Path(__file__).resolve(), sys.argv[1:])

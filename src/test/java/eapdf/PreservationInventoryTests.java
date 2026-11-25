@@ -18,7 +18,11 @@ class PreservationInventoryTests {
   @TempDir Path directory;
 
   EmailRecord record(String suffix) throws Exception {
-    String raw = new String(CollectionChildAcceptanceTests.sourceFixture(), StandardCharsets.UTF_8)
+    return record(suffix, "");
+  }
+
+  EmailRecord record(String suffix, String replyHeaders) throws Exception {
+    String raw = replyHeaders + new String(CollectionChildAcceptanceTests.sourceFixture(), StandardCharsets.UTF_8)
         .replace("Child acceptance", "Inventory " + suffix)
         .replace("child-acceptance", "inventory-" + suffix)
         .replace("Original native attachment bytes", "Original payload " + suffix);
@@ -78,6 +82,32 @@ class PreservationInventoryTests {
       checkedWrite(directory.resolve("accepted-" + profile + ".pdf"), inventory, bytes);
       retain("valid-" + profile, inventory, bytes, "PASS", "Input inventory reconciled");
     }
+  }
+
+  @Test void blankReplyHeadersAreOmittedFromXmpWithoutLosingNonblankValues() throws Exception {
+    String mail = "http://www.pdfa.org/eapdf/ns/meta/";
+    String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    String replyHeader = "In-Reply-To: <Parent@example.org>\r\n";
+    var blank = record("blank", "In-Reply-To: \r\n");
+    var mixed = record("mixed", "In-Reply-To:\r\n" + replyHeader.repeat(2));
+    Assertions.assertEquals(List.of(""), blank.inReplyTo);
+    Assertions.assertEquals(List.of("", "<Parent@example.org>", "<Parent@example.org>"), mixed.inReplyTo);
+
+    var single = List.of(blank);
+    byte[] standalone = create(single, "s");
+    checkedWrite(directory.resolve("blank-replies_1s.pdf"), capture(single, "s"), standalone);
+    Assertions.assertEquals(0, TestSupport.parseMetadata(PdfMailWriter.buildXmpMetadata(blank))
+        .getElementsByTagNameNS(mail, "In-Reply-To").getLength());
+
+    var records = List.of(blank, mixed);
+    byte[] combined = create(records, "m");
+    checkedWrite(directory.resolve("mixed-replies_1m.pdf"), capture(records, "m"), combined);
+    var fields = TestSupport.parseMetadata(PdfMailWriter.buildXmpMetadata(records, "m"))
+        .getElementsByTagNameNS(mail, "In-Reply-To");
+    Assertions.assertEquals(1, fields.getLength());
+    var values = ((org.w3c.dom.Element) fields.item(0)).getElementsByTagNameNS(rdf, "li");
+    Assertions.assertEquals(2, values.getLength());
+    for (int i = 0; i < values.getLength(); i++) Assertions.assertEquals("<Parent@example.org>", values.item(i).getTextContent());
   }
 
   @Test void missingMessageAndItsMetadataCannotDisappearTogether() throws Exception {

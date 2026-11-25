@@ -116,7 +116,8 @@ final class EmbeddedTextSearch {
         factory.setXMLResolver((publicId, systemId, base, namespace) -> {
             throw new XMLStreamException("External XML resources are unavailable.");
         });
-        try (var input = new LimitedInput(metadata.createInputStream(), MAX_DECODED, guard)) {
+        try (var input = new LimitedInput(PdfMetadataStreams.open(metadata.getCOSObject(), MAX_DECODED,
+                guard.canceled()), MAX_DECODED, guard)) {
             var reader = factory.createXMLStreamReader(input);
             try {
                 String payload = null, digest = null;

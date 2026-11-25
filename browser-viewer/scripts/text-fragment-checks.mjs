@@ -13,8 +13,10 @@ export async function checkTextFragments(evaluate){
    p.streamTextContent=(...args)=>streamText(...args).pipeThrough(new TransformStream({transform(chunk,controller){for(const item of chunk.items)controller.enqueue({...chunk,items:[item]});}}));
    await layer.render(p,1);
    const counts=['contract','annual report','email','Belmonte mailto'].map(query=>({query,scan:textMatches(text,query).length,highlight:layer.highlight(query),marks:[...container.querySelectorAll('mark')].map(m=>m.textContent)}));
+   layer.highlight('contract',1);
+   const active=[...container.querySelectorAll('mark.current-match')].map(m=>m.textContent);
    const raw=content.items.filter(i=>'str'in i).map(i=>i.str+(i.hasEOL?'\n':'')).join('');
-   layer.clear();return {counts,oldEmailCount:(raw.toLowerCase().match(/email/g)??[]).length,cleared:container.childNodes.length===0};
+   layer.clear();return {counts,active,oldEmailCount:(raw.toLowerCase().match(/email/g)??[]).length,cleared:container.childNodes.length===0};
   }finally{layer.clear();container.remove();p.cleanup();await task.destroy();}
  });
  assert.deepEqual(fragmentCheck.counts.map(({scan,highlight})=>({scan,highlight})),[{scan:2,highlight:2},{scan:1,highlight:1},{scan:1,highlight:1},{scan:1,highlight:1}]);assert.ok(fragmentCheck.cleared);
@@ -22,5 +24,6 @@ export async function checkTextFragments(evaluate){
  assert.deepEqual(fragmentCheck.counts[2].marks,['email']);
  assert.deepEqual(fragmentCheck.counts[3].marks,['Belmonte','mailto']);
  assert.deepEqual(fragmentCheck.counts[0].marks,['con','tract','con-','tract']);
+ assert.deepEqual(fragmentCheck.active,['con-','tract']);
  return fragmentCheck;
 }

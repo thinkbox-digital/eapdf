@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.io.IOUtils;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 
 final class ViewerSession implements AutoCloseable {
     final Path path;
@@ -69,6 +72,49 @@ final class ViewerSession implements AutoCloseable {
 
     int depth() {
         return parent == null ? 0 : parent.depth() + 1;
+    }
+
+    byte[] preview(PdfNavigation.Asset asset, PdfNavigation.AssetStream stream) throws IOException {
+        return readAsset(asset, stream, PdfNavigation::preview);
+    }
+
+    Path extract(PdfNavigation.Asset asset, PdfNavigation.AssetStream stream) throws IOException {
+        return readAsset(asset, stream, PdfNavigation::extract);
+    }
+
+    @FunctionalInterface
+    private interface AssetRead<T> {
+        T read(PdfNavigation document, PdfNavigation.AssetStream stream) throws IOException;
+    }
+
+    private <T> T readAsset(PdfNavigation.Asset asset, PdfNavigation.AssetStream stream, AssetRead<T> operation)
+            throws IOException {
+        try (var document = PdfNavigation.open(renderingPath)) {
+            var key = stream.file().getCOSObject().getKey();
+            if (key != null && path.equals(renderingPath)
+                    && document.document().getDocument().getObjectFromPool(key).getObject() instanceof COSStream found) {
+                return operation.read(document, new PdfNavigation.AssetStream(stream.name(), stream.mimeType(),
+                        stream.mediaTypeParameters(), stream.declaredSize(), stream.declaredMd5(), stream.keys(),
+                        new PDEmbeddedFile(found)));
+            }
+            // PDFBox can renumber objects when it writes the decrypted rendering copy.
+            int assetIndex = assets.indexOf(asset);
+            int streamIndex = asset.variants().indexOf(stream);
+            var reopened = document.assets();
+            if (assetIndex >= 0 && assetIndex < reopened.size() && streamIndex >= 0) {
+                var candidate = reopened.get(assetIndex);
+                if (candidate.name().equals(asset.name()) && candidate.nameTreeKeys().equals(asset.nameTreeKeys())
+                        && streamIndex < candidate.variants().size()) {
+                    var variant = candidate.variants().get(streamIndex);
+                    if (variant.keys().equals(stream.keys()) && variant.mimeType().equals(stream.mimeType())
+                            && Objects.equals(variant.declaredSize(), stream.declaredSize())
+                            && Objects.equals(variant.declaredMd5(), stream.declaredMd5())) {
+                        return operation.read(document, variant);
+                    }
+                }
+            }
+            throw new IOException("The selected embedded file is no longer available.");
+        }
     }
 
     @Override

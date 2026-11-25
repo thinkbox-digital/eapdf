@@ -27,6 +27,21 @@ class MetadataLimitTests {
             .anyMatch(v->"EAPDF_XMP_UNCHECKED".equals(v.get("code").getAsString()) && "FAIL".equals(v.get("level").getAsString())));
         assertArrayEquals(before, Files.readAllBytes(original));
     }
+    @Test void xmpDepthBeyondInspectionLimitIsReportedAsUnavailable() throws Exception {
+        Path original = Path.of("../examples/eml/eml_Agenda_and_timeline_slides_1s.pdf");
+        Path file = directory.resolve("metadata-limit.pdf");
+        int depth = EaPdfChecks.MAX_XMP_DEPTH + 1;
+        try (var pdf = Loader.loadPDF(original.toFile())) {
+            byte[] packet = ("<x>".repeat(depth) + "</x>".repeat(depth)).getBytes(StandardCharsets.UTF_8);
+            pdf.getDocumentCatalog().setMetadata(new PDMetadata(pdf, new java.io.ByteArrayInputStream(packet)));
+            pdf.save(file.toFile());
+        }
+        var items = JavaValidation.validate(file).getAsJsonArray("items").asList();
+        assertTrue(items.stream().map(item -> item.getAsJsonObject()).anyMatch(item ->
+            "EAPDF_XMP_UNCHECKED".equals(item.get("code").getAsString()) && "WARN".equals(item.get("level").getAsString())));
+        assertFalse(items.stream().map(item -> item.getAsJsonObject()).anyMatch(item ->
+            "EAPDF_XMP_UNCHECKED".equals(item.get("code").getAsString()) && "FAIL".equals(item.get("level").getAsString())));
+    }
     @Test void unreadableXmpDoesNotInventIdentityOrDeclarationMismatches() throws Exception {
         String old = System.getProperty("VALIDATOR_MAX_METADATA_BYTES");
         try {

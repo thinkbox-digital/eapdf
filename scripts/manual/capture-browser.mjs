@@ -3,11 +3,14 @@ import {chromium} from '../../browser-viewer/node_modules/playwright/index.mjs';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import assert from 'node:assert/strict';
-const root=resolve(import.meta.dirname,'../..'), work=process.env.MANUAL_WORK??'/tmp/eapdf-user-manual', screenshots=resolve(root,'docs/manual/screenshots');
+const root=resolve(import.meta.dirname,'../..'), work=process.env.MANUAL_WORK??'/tmp/eapdf-user-manual', screenshots=resolve(root,process.env.MANUAL_SCREENSHOTS??'docs/manual/screenshots');
+const viewport=(process.env.MANUAL_VIEWPORT??'1200x850').match(/^(\d+)x(\d+)$/);
+if(!viewport)throw new Error('MANUAL_VIEWPORT must be WIDTHxHEIGHT');
+const [width,height]=viewport.slice(1).map(Number);
 const extension=resolve(root,'browser-viewer/dist/chromium');
 await mkdir(screenshots,{recursive:true});
 if(process.env.MANUAL_SKIP_VIEWER!=='1') {
-const context=await chromium.launchPersistentContext('',{headless:true,viewport:{width:1200,height:850},executablePath:process.env.CHROMIUM_PATH,args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`]});
+const context=await chromium.launchPersistentContext('',{headless:true,viewport:{width,height},executablePath:process.env.CHROMIUM_PATH,args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`]});
 try {
  await context.setOffline(true);
  const service=context.serviceWorkers()[0]??await context.waitForEvent('serviceworker');
@@ -24,7 +27,8 @@ try {
  await page.keyboard.press('Escape');
  await page.locator('#file').setInputFiles(work+'/manual_1c.pdf');await ready();
  await page.screenshot({path:resolve(screenshots,'viewer-collection.png')});
- const csv=page.waitForEvent('download');await page.locator('#export-csv').click();const download=await csv;await download.saveAs(work+'/metadata.csv');
+ await page.locator('#export-csv').click();await page.locator('#metadata-dialog').waitFor({state:'visible'});
+ const csv=page.waitForEvent('download');await page.locator('#metadata-save').click();const download=await csv;await download.saveAs(work+'/metadata.csv');
  assert.match(await readFile(work+'/metadata.csv','utf8'),/October planning meeting/);
 } finally {await context.close();}
 }

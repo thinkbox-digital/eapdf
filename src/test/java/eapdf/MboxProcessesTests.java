@@ -3,6 +3,7 @@ package eapdf;
 import static org.junit.jupiter.api.Assertions.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.apache.pdfbox.Loader;
@@ -19,6 +20,13 @@ class MboxProcessesTests {
     assertEquals(2, MboxProcesses.workerCount(4, 1433, 2*gib, 8*gib, 2));
     assertEquals(1, MboxProcesses.workerCount(4, 1, 2*gib, 8*gib, 8));
     assertEquals(1, MboxProcesses.workerCount(4, 1433, 2*gib, 512*ConversionMemory.MIB, 8));
+  }
+
+  @Test void workerDeadlineStartsOverWhenProgressAdvances() {
+    long second = TimeUnit.SECONDS.toNanos(1);
+    assertFalse(MboxProcesses.workerDeadlineExceeded(0, second, second));
+    assertTrue(MboxProcesses.workerDeadlineExceeded(0, second + 1, second));
+    assertFalse(MboxProcesses.workerDeadlineExceeded(second, second + 1, second));
   }
 
   @Test void realMboxPayloadsAndProvenanceSurviveProcessSerialization() throws Exception {

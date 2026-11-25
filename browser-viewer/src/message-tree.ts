@@ -1,5 +1,5 @@
 import type {BrowserDocument} from './browser-session.js';
-import type {AssociatedFile,EmbeddedStream,MailMessage} from './domain/inspection.js';
+import type {AssociatedFile,CollectionNode,EmbeddedStream,MailMessage} from './domain/inspection.js';
 import type {IndexedMessage} from './message-index.js';
 import {fileLabel} from './navigation.js';
 import {treeIcon} from './viewer-icons.js';
@@ -10,6 +10,35 @@ import {isPdf} from './attachment-types.js';
 type PdfLink={file:AssociatedFile;stream:EmbeddedStream};
 export type PdfPlacement={row?:HTMLLIElement;list?:VirtualList<PdfLink>;index:number};
 const pdfKey=(file:AssociatedFile,stream:EmbeddedStream)=>JSON.stringify([file.id,stream.locator.path]);
+
+export function collectionFolderMessageCounts(collection:CollectionNode,messages:readonly IndexedMessage[]):Map<string,number> {
+  const parents=new Map<string,string|null>();
+  for(const folder of collection.folders)if(!parents.has(folder.id))parents.set(folder.id,folder.parentId);
+  const messagesByFile=new Map<string,number>();
+  for(const {path} of messages){
+    const file=path[0];
+    if(file)messagesByFile.set(file.fileId,(messagesByFile.get(file.fileId)??0)+1);
+  }
+  const foldersByFile=new Map<string,string[]>();
+  for(const {fileId,folderIds} of collection.entries){
+    if(!messagesByFile.has(fileId)||!folderIds.value?.length)continue;
+    let folders=foldersByFile.get(fileId);
+    if(!folders)foldersByFile.set(fileId,folders=[]);
+    for(const id of folderIds.value)folders.push(id);
+  }
+  const counts=new Map<string,number>();
+  for(const [fileId,folders] of foldersByFile){
+    const seen=new Set<string>(),count=messagesByFile.get(fileId)!;
+    // Aliases sharing an ancestor contribute only once to that folder.
+    for(let id of folders)while(id&&!seen.has(id)){
+      seen.add(id);
+      counts.set(id,(counts.get(id)??0)+count);
+      id=parents.get(id)??'';
+    }
+  }
+  return counts;
+}
+
 interface TreeActions {
   busy():boolean;
   singleMessage(doc:BrowserDocument):MailMessage|undefined;
@@ -104,7 +133,20 @@ export class MessageTree {
   };
   }
   updateFolderCounts(doc:BrowserDocument,messages:readonly IndexedMessage[]):void {
-      const collection=doc.inspection.collection.value;if(collection)for(const summary of this.nodes.get(doc)?.querySelectorAll<HTMLElement>('summary[data-folder-id]')??[]){const members=new Set<string>();for(const entry of collection.entries)for(let id of entry.folderIds.value??[]){const seen=new Set<string>();while(id&&!seen.has(id)){seen.add(id);if(id===summary.dataset.folderId)members.add(entry.fileId);id=collection.folders.find(f=>f.id===id)?.parentId??'';}}const count=messages.filter(m=>m.path[0]&&members.has(m.path[0].fileId)).length;const pill=text('span',String(count));pill.className='folder-count';summary.querySelector('.folder-count')?.remove();summary.append(pill);}
+    const collection=doc.inspection.collection.value;
+    const summaries=this.nodes.get(doc)?.querySelectorAll<HTMLElement>('summary[data-folder-id]');
+    if(!collection||!summaries?.length)return;
+    const counts=collectionFolderMessageCounts(collection,messages);
+    for(const summary of summaries){
+      const label=String(counts.get(summary.dataset.folderId??'')??0);
+      const current=summary.querySelector('.folder-count');
+      if(current)current.textContent=label;
+      else{
+        const pill=text('span',label);
+        pill.className='folder-count';
+        summary.append(pill);
+      }
+    }
   }
 
 markSelection(node:HTMLElement|undefined):void {for(const n of this.tree.querySelectorAll('[aria-current]'))n.removeAttribute('aria-current');node?.setAttribute('aria-current','true');for(let parent=node?.parentElement;parent&&parent!==this.tree;parent=parent.parentElement)if(parent instanceof HTMLDetailsElement)parent.open=true;else if(parent.tagName==='UL'&&parent.hidden){parent.hidden=false;parent.parentElement?.querySelector(':scope > .document-disclosure')?.setAttribute('aria-expanded','true');}}

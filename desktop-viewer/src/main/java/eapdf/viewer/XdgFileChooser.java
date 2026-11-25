@@ -10,10 +10,13 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.freedesktop.dbus.DBusPath;
 import org.freedesktop.dbus.annotations.DBusInterfaceName;
 import org.freedesktop.dbus.connections.IDisconnectCallback;
+import org.freedesktop.dbus.connections.impl.DBusConnection;
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder;
 import org.freedesktop.dbus.exceptions.DBusException;
 import org.freedesktop.dbus.interfaces.DBus;
@@ -26,6 +29,7 @@ import org.freedesktop.dbus.types.Variant;
 final class XdgFileChooser {
     private static final String PORTAL = "org.freedesktop.portal.Desktop";
     private static final String DESKTOP_PATH = "/org/freedesktop/portal/desktop";
+    private static final long RESPONSE_TIMEOUT_MINUTES = 5;
 
     private XdgFileChooser() {}
 
@@ -61,7 +65,16 @@ final class XdgFileChooser {
                         ? chooser.OpenFile(parentWindow, title, options)
                         : chooser.SaveFile(parentWindow, title, options);
                 var response = pending.computeIfAbsent(request.getPath(), path -> new CompletableFuture<>());
-                return selectedPath((DBusSignal) CompletableFuture.anyOf(response, unavailable).get());
+                try {
+                    return selectedPath((DBusSignal) CompletableFuture.anyOf(response, unavailable)
+                            .get(RESPONSE_TIMEOUT_MINUTES, TimeUnit.MINUTES));
+                } catch (TimeoutException timeout) {
+                    closeRequest(connection, portalOwner, request);
+                    throw new IOException("The desktop file picker did not respond.", timeout);
+                } catch (InterruptedException interrupted) {
+                    closeRequest(connection, portalOwner, request);
+                    throw interrupted;
+                }
             }
         } catch (InterruptedException failure) {
             Thread.currentThread().interrupt();
@@ -74,6 +87,14 @@ final class XdgFileChooser {
         } catch (Exception failure) {
             throw new IOException("Could not use the desktop file picker. Check that the XDG Desktop Portal "
                     + "and a file chooser backend are available for this session.", failure);
+        }
+    }
+
+    private static void closeRequest(DBusConnection connection, String owner, DBusPath request) {
+        try {
+            connection.getRemoteObject(owner, request.getPath(), Request.class, false).Close();
+        } catch (DBusException | RuntimeException ignored) {
+            // The portal may have already closed the request.
         }
     }
 
@@ -120,5 +141,10 @@ final class XdgFileChooser {
         DBusPath OpenFile(String parentWindow, String title, Map<String, Variant<?>> options);
 
         DBusPath SaveFile(String parentWindow, String title, Map<String, Variant<?>> options);
+    }
+
+    @DBusInterfaceName("org.freedesktop.portal.Request")
+    public interface Request extends DBusInterface {
+        void Close();
     }
 }

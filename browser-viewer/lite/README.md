@@ -23,6 +23,12 @@ Inputs are limited to 32 MiB and 2,048 pages per PDF, metadata to 2 MiB, and dec
 attachments to 16 MiB each. A session permits 32 retained child documents and four child levels. Released
 children do not consume a lifetime opening allowance; background scans can read
 more than 32 messages while foreground navigation remains available.
+Those child-document limits are separate from one PDF's generic asset inspection:
+it stops after 1,000,000 object visits, 1,024 levels, or 16,384 file specifications
+(with at most 32 streams per file), reports an incomplete inventory and avoids
+fetching queued objects after the cap. Tagged-PDF accessibility trees are checked
+before rendering and are limited to 128 levels, 50,000 nodes and one million
+retained string characters.
 Limit failures and partial inventories are reported. Use the full viewer for
 larger archives. Indexed PDFs remain readable; searches scan PDF.js text instead.
 No conformance validation is performed.
@@ -57,7 +63,7 @@ npm run build:pdfjs
 
 This verifies existing output hashes. Intentional hook updates use --write, review
 all source/input/output hashes, then repeat without --write from a clean build.
-The recipe retains shared patches 0001, 0002 and the navigation/metadata subset of 0007–0009, plus the upstream RTL ligature correction in 0010, opt-in page-only extraction in 0011 and equivalent font-name quote character classes in 0012, with explicit checked
+The recipe retains shared patches 0001, 0002 and the navigation/metadata subset of 0007–0009, plus the upstream RTL ligature correction in 0010, opt-in page-only extraction in 0011, equivalent font-name quote character classes in 0012 and the tricky TrueType family-name correction in 0013, with explicit checked
 adaptations for their original archive-dependent context. Portfolio schema/layout
 inspection and folder-thumbnail decoding are excluded; collection membership,
 folders, associated files and GoToE navigation remain available. Patch 0003 is excluded;

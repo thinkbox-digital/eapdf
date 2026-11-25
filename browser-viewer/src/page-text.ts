@@ -45,14 +45,26 @@ export class PageText {
     // in the original strings used by each PDF.js text div.
     const values=layer.textContentItemsStr,divs=layer.textDivs;
     const text=values.map((str,i)=>(this.gaps[i]??'')+str+(this.eols[i]?'\n':'')).join('');
-    const matches=textMatches(text,query);let start=0;
+    const matches=textMatches(text,query);
+    let start=0,firstMatch=0;
     values.forEach((value,index)=>{
       start+=(this.gaps[index]??'').length;const div=divs[index],end=start+value.length;
       if(!div){start=end+(this.eols[index]?1:0);return;}
-      const parts=matches.filter(m=>m.start<end&&m.end>start);
-      if(!parts.length){div.textContent=value;start=end+(this.eols[index]?1:0);return;}
+      // Keep matches that continue into this fragment.
+      while(firstMatch<matches.length&&matches[firstMatch]!.end<=start)firstMatch++;
+      if(firstMatch===matches.length||matches[firstMatch]!.start>=end){
+        div.textContent=value;start=end+(this.eols[index]?1:0);return;
+      }
       const fragment=document.createDocumentFragment();let cursor=0;
-      for(const m of parts){const a=Math.max(0,m.start-start),b=Math.min(value.length,m.end-start);fragment.append(document.createTextNode(value.slice(cursor,a)));const mark=document.createElement('mark');mark.textContent=value.slice(a,b);if(activeIndex!==undefined&&matches[activeIndex]===m)mark.className='current-match';fragment.append(mark);cursor=b;}
+      for(let i=firstMatch;i<matches.length&&matches[i]!.start<end;i++){
+        const match=matches[i]!;
+        const from=Math.max(0,match.start-start),to=Math.min(value.length,match.end-start);
+        fragment.append(document.createTextNode(value.slice(cursor,from)));
+        const mark=document.createElement('mark');
+        mark.textContent=value.slice(from,to);
+        if(i===activeIndex)mark.className='current-match';
+        fragment.append(mark);cursor=to;
+      }
       fragment.append(document.createTextNode(value.slice(cursor)));div.replaceChildren(fragment);start=end+(this.eols[index]?1:0);
     });
     this.container.querySelector('.current-match')?.scrollIntoView({block:'nearest',inline:'nearest'});

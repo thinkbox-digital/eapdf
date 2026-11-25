@@ -29,7 +29,9 @@ def main():
     config=json.loads((ROOT/'config/eapdf_config.json').read_text())
     config['creator']='Example Archives - manual demonstration'
     config['signing']['enabled']=False
-    config['accessibility']['addPdfUaFeatures']=True
+    config['searchIndex']['enabled']=False
+    config['searchIndex']['fullTextEnabled']=False
+    config['accessibility']['addPdfUaFeatures']=False
     if 'premis' in config:
         config['premis']['enabled']=False
     (args.work/'config.json').write_text(json.dumps(config,indent=2)+'\n')

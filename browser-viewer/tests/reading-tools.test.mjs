@@ -1,4 +1,4 @@
-import {boundedStructureTree} from '../dist/chromium/structure-tree.js';
+import {boundedStructureTree,STRUCTURE_TREE_LIMITS} from '../dist/chromium/structure-tree.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {textMatches,DocumentSearch} from '../dist/chromium/document-search.js';
@@ -18,6 +18,14 @@ test('search cancellation stops page traversal',async()=>{
   const search=new DocumentSearch();let pages=0;const doc={pdf:{numPages:100,getPage:async()=>{pages++;throw new Error('should not read');}},run:p=>p};
   await assert.rejects(search.find(doc,'x',1,1,()=>{throw new Error('cancelled');}),/cancelled/);assert.equal(pages,0);
 });
+test('a full miss does not reread an oversized starting page',async()=>{
+  let reads=0;const text='x'.repeat(4_000_001),doc={pdf:{numPages:1,getPage:async()=>({getTextContent:async()=>{reads++;return {items:[{str:text}]};},cleanup(){}})},run:p=>p};
+  assert.deepEqual(await new DocumentSearch().find(doc,'wanted',1,1,()=>{}),{incomplete:false});assert.equal(reads,1);
+});
+test('a repeated one-page hit wraps without rereading an oversized starting page',async()=>{
+  let reads=0;const text=`one ${'x'.repeat(4_000_001)} one`,doc={pdf:{numPages:1,getPage:async()=>({getTextContent:async()=>{reads++;return {items:[{str:text}]};},cleanup(){}})},run:p=>p};
+  const search=new DocumentSearch();assert.deepEqual(await search.find(doc,'one',1,1,()=>{}),{page:1,index:0,count:2});assert.deepEqual(await search.find(doc,'one',1,1,()=>{}),{page:1,index:1,count:2});assert.deepEqual(await search.find(doc,'one',1,1,()=>{}),{page:1,index:0,count:2});assert.equal(reads,3);
+});
 test('email ownership requires one complete syntactically valid source Message-ID header',()=>{
   const bytes=s=>new TextEncoder().encode(s);
   assert.equal(sourceMessageId(bytes('Subject: A\r\nMessage-ID: <a@example.org>\r\n\r\nBody')),'<a@example.org>');
@@ -36,10 +44,11 @@ test('collection search preserves member paths and reports unreadable children a
   assert.equal(result.matches.length,1);assert.equal(result.matches[0].count,2);assert.deepEqual(result.matches[0].path,[{fileId:'a',streamPath:'one'}]);assert.ok(result.incomplete.some(x=>/broken child/.test(x)));assert.ok(result.incomplete.some(x=>/members are unavailable/.test(x)));assert.deepEqual(opened,['a','b']);
 });
 
-test('structure rendering accepts deep trees and rejects cycles or excessive text',()=>{
+test('structure rendering bounds depth and nodes, and rejects cycles or excessive text',()=>{
   const valid={role:'Document',children:[{role:'P',children:[{type:'content',id:'p1'}]}]};assert.equal(boundedStructureTree(valid),true);assert.equal(boundedStructureTree(null),true);
   const cycle={children:[]};cycle.children.push(cycle);assert.equal(boundedStructureTree(cycle),false);
-  let deep={};for(let i=0;i<66;i++)deep={children:[deep]};assert.equal(boundedStructureTree(deep),true);
+  let deep={};for(let i=0;i<=STRUCTURE_TREE_LIMITS.depth;i++)deep={children:[deep]};assert.equal(boundedStructureTree(deep),false);
+  assert.equal(boundedStructureTree({children:Array(STRUCTURE_TREE_LIMITS.nodes).fill({})}),false);
   assert.equal(boundedStructureTree({alt:'x'.repeat(1_000_001)}),false);
 });
 

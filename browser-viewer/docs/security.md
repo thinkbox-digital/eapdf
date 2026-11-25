@@ -55,6 +55,13 @@ a 32 MiB LRU cache; cached reads return copies and do not consume another decode
 reservation. The recovery-only Reopen PDF action explicitly closes all workers and resets
 limits; it also resets navigation to the root. Child count and nesting depth have no fixed cutoff. Repeated opens of the same
 child reuse it; ancestor cycles are rejected.
+That child-document policy is separate from a single PDF's asset inspection: it
+stops after 1,000,000 object visits, 1,024 levels, or 16,384 discovered file
+specifications (and at most 32 streams per file), reports one bounded-limit
+diagnostic, and does not keep fetching queued objects. Tagged-PDF accessibility
+trees are likewise checked before PDF.js renders them: 128 levels, 50,000 nodes
+and one million retained string characters are the display limits. A cyclic or
+oversized tree is marked unavailable rather than recursively rendered.
 Concurrent opens are capped at three. Metadata inspection retains a 128 MiB
 per-stream byte ceiling. XML node, depth and record counts do not stop inspection. Unavailable metadata produces a concise warning and blocks CSV export; details are logged to the browser debug console.
 Collection CSV exports enumerate actual child messages, omitting parent index

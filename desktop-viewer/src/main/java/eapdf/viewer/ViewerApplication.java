@@ -16,6 +16,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.LongConsumer;
 import java.util.function.Supplier;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -86,9 +87,9 @@ public final class ViewerApplication extends Application {
 
     private Stage stage;
     private ViewerSession current;
-    private boolean decodingImagePreview;
-    private ImagePreviewRequest pendingImagePreview;
-    private long imagePreviewGeneration;
+    private boolean loadingAttachmentPreview;
+    private AttachmentPreviewRequest pendingAttachmentPreview;
+    private long attachmentPreviewGeneration;
     private Stage imagePreviewWindow;
     private ViewerSession navigationDocument;
     private final Map<ViewerSession, Node> portfolioBrowsers = new HashMap<>();
@@ -97,6 +98,7 @@ public final class ViewerApplication extends Application {
     private boolean archiveOverview;
     private boolean busy;
     private boolean viewerInputBlocked;
+    private Task<Path> portalPicker;
     private boolean syncing;
     private boolean showMessages = true;
     private boolean showFiles = true;
@@ -104,6 +106,9 @@ public final class ViewerApplication extends Application {
     private long request;
     private Thread opening;
     private boolean cancellingOpen;
+    private final Object openingCompletionLock = new Object();
+    private Runnable pendingOpeningCleanup;
+    private boolean stopping;
     private volatile long searchRequest;
     private volatile long mailRequest;
     private boolean archiveSearchRunning;
@@ -271,6 +276,14 @@ public final class ViewerApplication extends Application {
 
     @Override
     public void stop() {
+        if (portalPicker != null) portalPicker.cancel(true);
+        Runnable cleanup;
+        synchronized (openingCompletionLock) {
+            stopping = true;
+            cleanup = pendingOpeningCleanup;
+            pendingOpeningCleanup = null;
+        }
+        if (cleanup != null) cleanup.run();
         saveDividers();
         if (windowState != null) {
             windowState.save(stage, leftDivider, rightDivider, showMessages, showFiles, filesVisibilityChosen, zoom.getValue());
@@ -692,10 +705,17 @@ public final class ViewerApplication extends Application {
         };
         picker.setOnSucceeded(event -> Platform.exitNestedEventLoop(picker, null));
         picker.setOnFailed(event -> Platform.exitNestedEventLoop(picker, null));
-        withViewerInputBlocked(owner, () -> {
-            Thread.ofVirtual().start(picker);
-            return Platform.enterNestedEventLoop(picker);
-        });
+        picker.setOnCancelled(event -> Platform.exitNestedEventLoop(picker, null));
+        portalPicker = picker;
+        try {
+            withViewerInputBlocked(owner, () -> {
+                Thread.ofVirtual().start(picker);
+                return Platform.enterNestedEventLoop(picker);
+            });
+        } finally {
+            portalPicker = null;
+        }
+        if (picker.isCancelled()) return null;
         var failure = picker.getException();
         if (failure instanceof IOException) {
             return chooseNativePath(owner, title, suggestedName);
@@ -709,10 +729,15 @@ public final class ViewerApplication extends Application {
 
     private void filterViewerInput(Stage window, Scene scene) {
         scene.addEventFilter(InputEvent.ANY, event -> {
-            if (viewerInputBlocked) event.consume();
+            if (!viewerInputBlocked) return;
+            if (portalPicker != null && event instanceof KeyEvent key && key.getEventType() == KeyEvent.KEY_PRESSED
+                    && key.getCode() == KeyCode.ESCAPE) portalPicker.cancel(true);
+            event.consume();
         });
         window.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, event -> {
-            if (viewerInputBlocked) event.consume();
+            if (!viewerInputBlocked) return;
+            if (portalPicker != null) portalPicker.cancel(true);
+            event.consume();
         });
     }
 
@@ -754,28 +779,22 @@ public final class ViewerApplication extends Application {
             error("Could not open PDF", failure);
             return;
         }
-        load(source, source.getFileName().toString(), null, null);
+        load(source, source.getFileName().toString(), null, null, null, "", null, false, null);
     }
 
-    private void load(Path path, String name, ViewerSession parent, PdfNavigation.Asset source) {
-        load(path, name, parent, source, "");
-    }
-
-    private void load(Path path, String name, ViewerSession parent, PdfNavigation.Asset source, String password) {
-        load(path, name, parent, source, password, null, false, null);
-    }
-
-    private void load(Path path, String name, ViewerSession parent, PdfNavigation.Asset source, String password,
-                      FolderStep continuation, boolean lastPage, PageTarget target) {
-        discardImagePreview();
-        if (parent != null) path.toFile().deleteOnExit();
-        long token = ++request;
-        opening = Thread.ofVirtual().unstarted(() -> {
+    private void load(Path path, String name, ViewerSession parent, PdfNavigation.Asset source,
+                      PdfNavigation.AssetStream stream, String password, FolderStep continuation,
+                      boolean lastPage, PageTarget target) {
+        startOpening(name, token -> {
+            Path openedPath = path;
             ViewerSession session = null;
             PDFBoxDocument document = null;
             try {
                 checkOpeningInterrupted();
-                session = ViewerSession.open(path, name, parent, source, password);
+                if (openedPath == null) openedPath = parent.extract(source, stream);
+                if (parent != null) openedPath.toFile().deleteOnExit();
+                checkOpeningInterrupted();
+                session = ViewerSession.open(openedPath, name, parent, source, password);
                 checkOpeningInterrupted();
                 if (target != null) session.page = resolvePage(session, target);
                 checkOpeningInterrupted();
@@ -783,10 +802,13 @@ public final class ViewerApplication extends Application {
                 checkOpeningInterrupted();
                 var loaded = session;
                 var rendered = document;
-                Platform.runLater(() -> {
+                Runnable discard = () -> {
+                    rendered.close();
+                    loaded.close();
+                };
+                completeOpening(() -> {
                     if (token != request) {
-                        rendered.close();
-                        loaded.close();
+                        discard.run();
                         finishOpening(token);
                         return;
                     }
@@ -815,33 +837,61 @@ public final class ViewerApplication extends Application {
                     }
                     if (isPortfolio(loaded)) PortfolioView.initialFile(loaded)
                             .ifPresent(asset -> openPortfolioMember(loaded, asset));
-                });
+                }, discard);
             } catch (IOException | RuntimeException | OutOfMemoryError failure) {
                 if (document != null) document.close();
                 if (session != null) session.close();
                 boolean retryPassword = failure instanceof InvalidPasswordException && !Thread.currentThread().isInterrupted();
-                if (session == null && parent != null && !retryPassword) ViewerSession.deleteTemporaryFile(path);
-                Platform.runLater(() -> {
+                Path candidate = openedPath;
+                Runnable discard = () -> {
+                    if (parent != null && candidate != null) ViewerSession.deleteTemporaryFile(candidate);
+                };
+                if (session == null && !retryPassword) discard.run();
+                completeOpening(() -> {
                     finishOpening(token);
                     if (token != request) {
-                        if (parent != null && retryPassword) ViewerSession.deleteTemporaryFile(path);
+                        if (retryPassword) discard.run();
                         return;
                     }
                     if (retryPassword) {
                         var answer = promptPassword(name);
                         if (answer != null) {
-                            load(path, name, parent, source, answer, continuation, lastPage, target);
+                            load(candidate, name, parent, source, null, answer, continuation, lastPage, target);
                             return;
                         }
                         report("Opening canceled.");
-                        if (parent != null) ViewerSession.deleteTemporaryFile(path);
-                    } else showError("Could not open PDF", messageOf(failure));
-                });
+                        discard.run();
+                    } else showError(continuation != null ? "Could not open the next PDF in this folder"
+                            : parent != null ? "Could not open embedded PDF" : "Could not open PDF", messageOf(failure));
+                }, discard);
             }
         });
+    }
+
+    private void startOpening(String name, LongConsumer task) {
+        discardImagePreview();
+        long token = ++request;
+        opening = Thread.ofVirtual().name("eapdf-open-pdf").unstarted(() -> task.accept(token));
         setBusy(true);
         report("Opening " + name + "…");
         opening.start();
+    }
+
+    private void completeOpening(Runnable finish, Runnable cleanup) {
+        synchronized (openingCompletionLock) {
+            if (!stopping) {
+                pendingOpeningCleanup = cleanup;
+                Platform.runLater(() -> {
+                    synchronized (openingCompletionLock) {
+                        if (stopping) return;
+                        pendingOpeningCleanup = null;
+                    }
+                    finish.run();
+                });
+                return;
+            }
+        }
+        cleanup.run();
     }
 
     private static void checkOpeningInterrupted() {
@@ -1081,8 +1131,8 @@ public final class ViewerApplication extends Application {
         if (portfolio != null) panels.add(portfolioBrowsers.computeIfAbsent(portfolio, owner ->
                 PortfolioView.build(owner, asset -> openPortfolioMember(owner, asset),
                         asset -> saveAsset(owner, asset), () -> {
-                            if (current != owner) returnTo(owner);
-                            if (current == owner && !busy) goPage(0);
+                            if (current != owner) returnTo(owner, true, 0);
+                            else if (!busy) goPage(0);
                         })));
         if (left) panels.add(leftPanel);
         panels.add(reader);
@@ -1461,22 +1511,44 @@ public final class ViewerApplication extends Application {
     }
 
     private void returnTo(ViewerSession destination) {
-        returnTo(destination, true);
+        returnTo(destination, true, null);
     }
 
     private void returnTo(ViewerSession destination, boolean markChild) {
+        returnTo(destination, markChild, null);
+    }
+
+    private void returnTo(ViewerSession destination, boolean markChild, Integer page) {
         if (busy) return;
-        try {
-            var document = new ViewerRenderingDocument(destination.renderingPath.toFile());
-            var previousSession = current;
-            var directChild = previousSession;
-            while (directChild != null && directChild.parent != destination) directChild = directChild.parent;
-            showDocument(destination, document);
-            if (markChild && directChild != null) markCollectionMember(directChild.parentAsset);
-            closeSessions(previousSession, destination);
-        } catch (RuntimeException failure) {
-            error("Could not return to parent PDF", failure);
-        }
+        startOpening(destination.name, token -> {
+            ViewerRenderingDocument document = null;
+            try {
+                checkOpeningInterrupted();
+                document = new ViewerRenderingDocument(destination.renderingPath.toFile());
+                checkOpeningInterrupted();
+                var rendered = document;
+                completeOpening(() -> {
+                    finishOpening(token);
+                    if (token != request) {
+                        rendered.close();
+                        return;
+                    }
+                    var previousSession = current;
+                    var directChild = previousSession;
+                    while (directChild != null && directChild.parent != destination) directChild = directChild.parent;
+                    showDocument(destination, rendered);
+                    if (page != null) goPage(page);
+                    if (markChild && directChild != null) markCollectionMember(directChild.parentAsset);
+                    closeSessions(previousSession, destination);
+                }, rendered::close);
+            } catch (RuntimeException | OutOfMemoryError failure) {
+                if (document != null) document.close();
+                completeOpening(() -> {
+                    finishOpening(token);
+                    if (token == request) showError("Could not return to parent PDF", messageOf(failure));
+                }, () -> {});
+            }
+        });
     }
 
     private void markCollectionMember(PdfNavigation.Asset member) {
@@ -1547,21 +1619,10 @@ public final class ViewerApplication extends Application {
                 report("This document reached the eight-level embedded PDF limit.");
                 return;
             }
-            try {
-                load(source.pdf.extract(variant), asset.name(), source, asset, "", null, false, target);
-            } catch (IOException | RuntimeException failure) {
-                error("Could not open embedded PDF", failure);
-            }
+            load(null, asset.name(), source, asset, variant, "", null, false, target);
         } else if (variant.canPreview()) {
-            try {
-                if (isImagePreview(asset.name(), variant.mimeType())) {
-                    openImagePreview(new ImagePreviewRequest(source, asset, variant));
-                } else {
-                    showTextPreview(asset.name(), variant, source.pdf.preview(variant));
-                }
-            } catch (IOException | RuntimeException failure) {
-                error("Could not preview embedded file", failure);
-            }
+            openAttachmentPreview(new AttachmentPreviewRequest(source, asset, variant,
+                    isImagePreview(asset.name(), variant.mimeType())));
         } else {
             saveVariant(source, asset, variant);
         }
@@ -1572,48 +1633,50 @@ public final class ViewerApplication extends Application {
                 || (!media.startsWith("text/") && title.toLowerCase(Locale.ROOT).matches(".*\\.(?:png|jpe?g|gif)$"));
     }
 
-    private record ImagePreviewRequest(ViewerSession source, PdfNavigation.Asset asset,
-                                       PdfNavigation.AssetStream stream) {}
+    private record AttachmentPreviewRequest(ViewerSession source, PdfNavigation.Asset asset,
+                                            PdfNavigation.AssetStream stream, boolean image) {}
 
-    private void openImagePreview(ImagePreviewRequest preview) {
+    private record AttachmentPreview(BufferedImage image, String text) {}
+
+    private void openAttachmentPreview(AttachmentPreviewRequest preview) {
         discardImagePreview();
-        if (decodingImagePreview) {
-            pendingImagePreview = preview;
-            report("Waiting for the previous image preview…");
+        if (loadingAttachmentPreview) {
+            pendingAttachmentPreview = preview;
+            report("Waiting for the previous attachment preview…");
             return;
         }
-        byte[] payload;
-        try {
-            payload = preview.source().pdf.preview(preview.stream());
-        } catch (IOException | RuntimeException failure) {
-            error("Could not preview embedded file", failure);
-            return;
-        }
-        long generation = imagePreviewGeneration;
-        decodingImagePreview = true;
-        report("Opening image preview…");
-        var decode = new Task<BufferedImage>() {
+        long generation = attachmentPreviewGeneration;
+        loadingAttachmentPreview = true;
+        report("Opening attachment preview…");
+        var decode = new Task<AttachmentPreview>() {
             @Override
-            protected BufferedImage call() throws IOException {
-                return AttachmentImagePreview.decode(payload);
+            protected AttachmentPreview call() throws IOException {
+                byte[] payload = preview.source().preview(preview.asset(), preview.stream());
+                return preview.image() ? new AttachmentPreview(AttachmentImagePreview.decode(payload), null)
+                        : new AttachmentPreview(null, previewText(preview.stream(), payload));
             }
         };
-        decode.setOnSucceeded(event -> finishImagePreview(generation, preview, decode.getValue(), null));
-        decode.setOnFailed(event -> finishImagePreview(generation, preview, null, decode.getException()));
-        Thread.ofVirtual().name("eapdf-image-preview").start(decode);
+        decode.setOnSucceeded(event -> finishAttachmentPreview(generation, preview, decode.getValue(), null));
+        decode.setOnFailed(event -> finishAttachmentPreview(generation, preview, null, decode.getException()));
+        Thread.ofVirtual().name("eapdf-attachment-preview").start(decode);
     }
 
-    private void finishImagePreview(long generation, ImagePreviewRequest preview,
-                                    BufferedImage thumbnail, Throwable failure) {
-        decodingImagePreview = false;
-        if (pendingImagePreview != null) {
-            openImagePreview(pendingImagePreview);
+    private void finishAttachmentPreview(long generation, AttachmentPreviewRequest preview,
+                                         AttachmentPreview ready, Throwable failure) {
+        loadingAttachmentPreview = false;
+        if (pendingAttachmentPreview != null) {
+            openAttachmentPreview(pendingAttachmentPreview);
             return;
         }
-        if (imagePreviewGeneration != generation) return;
+        if (attachmentPreviewGeneration != generation) return;
+        if (!preview.image()) {
+            if (failure != null) showError("Could not preview embedded file", messageOf(failure));
+            else showTextPreview(preview.asset().name(), ready.text());
+            return;
+        }
         Node content;
         if (failure == null) {
-            var picture = new ImageView(SwingFXUtils.toFXImage(thumbnail, null));
+            var picture = new ImageView(SwingFXUtils.toFXImage(ready.image(), null));
             picture.setPreserveRatio(true);
             picture.setFitWidth(AttachmentImagePreview.WIDTH);
             picture.setFitHeight(AttachmentImagePreview.HEIGHT);
@@ -1639,12 +1702,12 @@ public final class ViewerApplication extends Application {
     }
 
     private void discardImagePreview() {
-        imagePreviewGeneration++;
-        pendingImagePreview = null;
+        attachmentPreviewGeneration++;
+        pendingAttachmentPreview = null;
         if (imagePreviewWindow != null) imagePreviewWindow.close();
     }
 
-    private void showTextPreview(String title, PdfNavigation.AssetStream stream, byte[] payload) {
+    private static String previewText(PdfNavigation.AssetStream stream, byte[] payload) {
         var charset = StandardCharsets.UTF_8;
         var parameter = java.util.regex.Pattern.compile("(?i)\\bcharset\\s*=\\s*\"?([^\";\\s]+)")
                 .matcher(java.util.Objects.toString(stream.mediaTypeParameters(), ""));
@@ -1655,7 +1718,14 @@ public final class ViewerApplication extends Application {
                 // Unknown declarations are shown using the default preview encoding.
             }
         }
-        var text = new TextArea(new String(payload, 0, Math.min(payload.length, 1_000_000), charset));
+        int length = Math.min(payload.length, 1_000_000);
+        String preview = new String(payload, 0, length, charset);
+        return length == payload.length ? preview
+                : preview + "\n\nPreview limited. Save the embedded file to view all of its contents.";
+    }
+
+    private void showTextPreview(String title, String value) {
+        var text = new TextArea(value);
         text.setEditable(false);
         text.setWrapText(true);
         showWindow(title, text, 820, 600);
@@ -1732,12 +1802,8 @@ public final class ViewerApplication extends Application {
             report(streams.isEmpty() ? "Missing embedded PDF: " + sibling.name() : "Ambiguous PDF streams: " + sibling.name());
             return;
         }
-        try {
-            load(step.parent().pdf.extract(streams.getFirst()), sibling.name(), step.parent(), sibling,
-                    "", step, step.direction() < 0, null);
-        } catch (IOException | RuntimeException failure) {
-            error("Could not open the next PDF in this folder", failure);
-        }
+        load(null, sibling.name(), step.parent(), sibling, streams.getFirst(), "", step,
+                step.direction() < 0, null);
     }
 
     private void followPageLink(int page, Point2D position) {
@@ -1753,8 +1819,7 @@ public final class ViewerApplication extends Application {
                 else if (link.parent() && current.parent != null) {
                     var parent = current.parent;
                     Integer destination = target == null ? null : resolvePage(parent, target);
-                    returnTo(parent);
-                    if (destination != null && current == parent) goPage(destination);
+                    returnTo(parent, true, destination);
                 }
                 else if (link.targetPage() != null) goPage(link.targetPage());
                 else if (link.broken()) report("The attachment or page link is unavailable.");
@@ -1986,33 +2051,56 @@ public final class ViewerApplication extends Application {
             if (!query.isBlank() && !query.equals(view.getSearchText())) searchThisPdf(query);
             return;
         }
-        var found = root;
-        try {
-            for (var key : hit.path()) {
-                var asset = ViewerSearch.resolve(found.assets, key);
-                if (asset == null) throw new IOException("The search result’s PDF is no longer available.");
-                var stream = ViewerSearch.preferredStream(asset);
-                if (stream == null) throw new IOException("The search result has no embedded PDF data.");
-                var path = found.pdf.extract(stream);
-                try {
-                    found = ViewerSession.open(path, asset.name(), found, asset);
-                } catch (IOException | RuntimeException error) {
-                    ViewerSession.deleteTemporaryFile(path);
-                    throw error;
+        String name = hit.path().isEmpty() ? root.name : hit.path().getLast().replaceFirst("^<\\d+>", "");
+        startOpening(name, token -> {
+            var found = root;
+            ViewerRenderingDocument document = null;
+            try {
+                for (var key : hit.path()) {
+                    checkOpeningInterrupted();
+                    var asset = ViewerSearch.resolve(found.assets, key);
+                    if (asset == null) throw new IOException("The search result’s PDF is no longer available.");
+                    var stream = ViewerSearch.preferredStream(asset);
+                    if (stream == null) throw new IOException("The search result has no embedded PDF data.");
+                    var path = found == root ? found.extract(asset, stream) : found.pdf.extract(stream);
+                    try {
+                        checkOpeningInterrupted();
+                        found = ViewerSession.open(path, asset.name(), found, asset);
+                    } catch (IOException | RuntimeException | OutOfMemoryError failure) {
+                        ViewerSession.deleteTemporaryFile(path);
+                        throw failure;
+                    }
                 }
+                checkOpeningInterrupted();
+                document = new ViewerRenderingDocument(found.renderingPath.toFile());
+                checkOpeningInterrupted();
+                var loaded = found;
+                var rendered = document;
+                Runnable discard = () -> {
+                    rendered.close();
+                    closeSessions(loaded, root);
+                };
+                completeOpening(() -> {
+                    finishOpening(token);
+                    if (token != request) {
+                        discard.run();
+                        return;
+                    }
+                    var previousSession = current;
+                    loaded.page = hit.page();
+                    showDocument(loaded, rendered, !query.isBlank());
+                    closeSessions(previousSession, root);
+                    if (!query.isBlank()) searchThisPdf(query);
+                }, discard);
+            } catch (IOException | RuntimeException | OutOfMemoryError failure) {
+                if (document != null) document.close();
+                closeSessions(found, root);
+                completeOpening(() -> {
+                    finishOpening(token);
+                    if (token == request) showError("Could not open search result", messageOf(failure));
+                }, () -> {});
             }
-            var document = new ViewerRenderingDocument(found.renderingPath.toFile());
-            var previousSession = current;
-            found.page = hit.page();
-            showDocument(found, document, !query.isBlank());
-            closeSessions(previousSession, root);
-            if (!query.isBlank()) {
-                searchThisPdf(query);
-            }
-        } catch (IOException | RuntimeException failure) {
-            closeSessions(found, root);
-            error("Could not open search result", failure);
-        }
+        });
     }
 
     private boolean isActiveRoute(ViewerSession root, List<String> route) {
@@ -2133,22 +2221,10 @@ public final class ViewerApplication extends Application {
 
     private void exportXmp() {
         if (current == null) return;
-        var selected = selectedMessage();
-        if (selected != null) {
-            var scope = new javafx.scene.control.ChoiceDialog<>("This PDF",
-                    "This PDF", "Selected message’s PDF");
-            scope.initOwner(stage);
-            scope.setTitle("Export original XMP");
-            scope.setContentText("Scope");
-            scope.getDialogPane().getStylesheets().add(STYLE);
-            var choice = showDialog(scope);
-            if (choice.isEmpty()) return;
-            if ("This PDF".equals(choice.get())) selected = null;
-        }
         Path path = savePath("Export original XMP", "metadata.xmp");
         if (path == null) return;
         try {
-            ViewerTools.exportXmp(current, path, selected);
+            ViewerTools.exportXmp(current, path);
             report("Saved " + path.getFileName());
         } catch (IOException | RuntimeException failure) {
             error("Could not export XMP", failure);

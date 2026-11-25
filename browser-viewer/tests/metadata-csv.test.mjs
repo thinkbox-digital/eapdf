@@ -139,3 +139,28 @@ test('current child export retains its parent collection folder memberships',asy
  const root=collection('root.pdf',[folder('in','Inbox'),folder('sent','Sent')],[{fileId:'email',folderIds:present(['in'])},{fileId:'email',folderIds:present(['sent'])}],[member('email')]);
  const child=doc('child.pdf');child.parent=root;child.parentFileId='email';const csv=await(await run(child)).blob.text();assert.match(csv,/root.pdf \/ child.pdf/);assert.match(csv,/\/Inbox; \/Sent/);
 });
+
+test('both CSV scopes enforce the same limits on combined folder paths', async () => {
+ const nestedCollection = (name, fileId, names) => collection(
+  name, names.map((value, index) => folder(String(index), value)),
+  names.map((_, index) => ({fileId, folderIds:present([String(index)])})), [member(fileId)]);
+ const createArchive = (prefixes, suffixes) => {
+  const root = nestedCollection('root.pdf', 'nested', prefixes);
+  const nested = nestedCollection('nested.pdf', 'email', suffixes);
+  const email = doc('email.pdf');
+  Object.assign(nested, {parent:root, parentFileId:'nested'});
+  Object.assign(email, {parent:nested, parentFileId:'email'});
+  return {whole:() => run(root, async parent => parent === root ? nested : email), selected:() => run(email)};
+ };
+ const atLimit = createArchive(['a'.repeat(8192)], ['b'.repeat(8191)]);
+ assert.equal(await (await atLimit.whole()).blob.text(), await (await atLimit.selected()).blob.text());
+ for (const [prefixes, suffixes, error] of [
+  [['a'.repeat(8192)], ['b'.repeat(8192)], /path is too long/],
+  [Array.from({length:17}, (_, index) => `Inbox ${index}`), Array.from({length:16}, (_, index) => `Saved ${index}`), /Too many folder paths/],
+  [Array.from({length:17}, (_, index) => `${index}`.padEnd(8192, 'a')), ['b'.repeat(8191)], /path text exceeds/],
+ ]) {
+  const archive = createArchive(prefixes, suffixes);
+  await assert.rejects(archive.whole, error);
+  await assert.rejects(archive.selected, error);
+ }
+});

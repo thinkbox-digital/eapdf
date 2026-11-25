@@ -159,10 +159,12 @@ export async function queryFullTextIndex(index:FullTextIndex,root:BrowserDocumen
 }
 
 export function fullTextPageOwners(doc:BrowserDocument):Map<number,string>{
- const owners=new Map<number,string>();
+ const owners=new Map<number,string>(),messages=new Map<string,typeof doc.inspection.messages[number]>();
+ for(const message of doc.inspection.messages)if(!messages.has(message.id))messages.set(message.id,message);
  for(const part of doc.inspection.parts){
   if(part.pageRange.state!=='present'||part.messageIds.value?.length!==1)continue;
-  const message=doc.inspection.messages.find(m=>m.id===part.messageIds.value![0]);if(!message)continue;
+  const messageId=part.messageIds.value[0];if(messageId===undefined)continue;
+  const message=messages.get(messageId);if(!message)continue;
   const {start,end}=part.pageRange.value;
   requireValue(start>=0&&end<doc.pdf.numPages&&end>=start,'invalid ownership page range');
   for(let page=start+1;page<=end+1;page++){const guid=message.mailGuid.value??'';requireValue(!owners.has(page)||owners.get(page)===guid,'ambiguous page owner');owners.set(page,guid);}

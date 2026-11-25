@@ -25,10 +25,10 @@
     "vendor/pdfjs-patches/build-task.mjs": "4aab30eba5ff01eaab59b3d31644e540fa5c6b7f3b3da7c25d0dcc329c735a28",
     "vendor/pdfjs-patches/core.test.mjs": "2a660274a29e88d955f6aa04b1bac0ea9ec4150299fdf8fd919541026213cab1",
     "scripts/rebuild-pdfjs.mjs": "ecf221832581abf19442a9ff70db96f39d219ec5adb1cb4a8ceb017a79725020",
-    "vendor/pdfjs-patches/0002-document-assets.patch": "cd376f863c20e96684f557db40d19e9fd08b0dd1b067f4a11535c650ec2e69c1",
-    "vendor/pdfjs-patches/assets.test.mjs": "21e5dffb59b5fe79b4c70942af4a43df1ce9aaa7bae9022b4fcc893a197e0b09",
-    "vendor/pdfjs-patches/0003-large-archives.patch": "610144363542a8c75d68cd457efac86bf8a0cf3d28252f7cae6ae259e5bd260b",
-    "vendor/pdfjs-patches/0004-inspection-yield.patch": "b3e3ef5ebdfaec061b85a9179a78f2401b929485f9a282857257c0b2c2320658",
+    "vendor/pdfjs-patches/0002-document-assets.patch": "ad4e97f564ac429f5ec51ddd10ca5d046640307d96ddceb8ece33f5134d6fb54",
+    "vendor/pdfjs-patches/assets.test.mjs": "489fcaa61a683748b1a3fca74fd046e9fe5295a98bbf3b5a874d94649b8af3a5",
+    "vendor/pdfjs-patches/0003-large-archives.patch": "12ed628f619ba2556d00f9ef8d79bb882f19b4d8e96c4827cc15a534d76ab3b1",
+    "vendor/pdfjs-patches/0004-inspection-yield.patch": "bf83717a6c84a2b24ff584504899b22ba3552d6df928aa400e5f3fd8e6ae2bae",
     "vendor/pdfjs-patches/0005-zero-width-xref.patch": "bf25e1643a7f6351a9fb06d2e9f178fcd9cd9bc1d5cde976d0b9e11b96c81055",
     "vendor/pdfjs-patches/0006-collection-presentation.patch": "1dc9ff984e956ddcdf94da1fa6a4950a6efe089ce6e9f792751a205d7a948c61",
     "vendor/pdfjs-patches/0007-collection-navigation.patch": "97693e1d0e8f963763e00fc393de3c0e295a36a0a0104d12d9bd7160ddb830b9",
@@ -41,7 +41,7 @@
   },
   "outputs": {
     "vendor/pdfjs-patched/pdf.mjs": "8b40947296f939f61f1b042fd805a73fd0e6f5f3b056bffed6d9ec0e07a2a095",
-    "vendor/pdfjs-patched/pdf.worker.mjs": "b0152b1acd68b0b548329f3a055720f1e1d99c64ec54a72dee3821284c71b6b9"
+    "vendor/pdfjs-patched/pdf.worker.mjs": "d0836719c1c3db43f984d9ba3642a1ca035910142f6180f840cd9a18a594fe8d"
   },
   "internalEventBuildDefine": "0a475cb6-573c-46ed-869d-fa7c5839d995",
   "patches": [

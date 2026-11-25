@@ -93,9 +93,6 @@ final class CollectionValidationPool implements AutoCloseable {
                 ValidationRuntime.workerHeapMiB() / (2 * WORKERS)));
             long heap = ValidationRuntime.setting("VALIDATOR_CHILD_HEAP_MIB", defaultHeap);
             var command = new ArrayList<String>();
-            if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("linux")) {
-                command.addAll(List.of("/usr/bin/prlimit", "--as=" + ValidationRuntime.addressLimit(heap), "--nofile=" + ValidationRuntime.openFileLimit(), "--fsize=" + ValidationRuntime.workFileLimit(), "--core=0"));
-            }
             command.addAll(List.of(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
                 "-Xmx" + heap + "m", "-XX:ActiveProcessorCount=1", "-XX:MaxDirectMemorySize=128m",
                 "-XX:MaxMetaspaceSize=256m", "-XX:ReservedCodeCacheSize=128m", "-XX:-CreateCoredumpOnCrash",
@@ -105,7 +102,8 @@ final class CollectionValidationPool implements AutoCloseable {
             command.add("-DVALIDATOR_MAX_CHILD_BYTES=" + JavaValidation.Children.byteLimit());
             command.addAll(List.of("-cp", System.getProperty("java.class.path"), CollectionValidationPool.class.getName(),
                 Long.toString(ProcessHandle.current().pid()), budget.toString()));
-            process = new ProcessBuilder(command).redirectError(ProcessBuilder.Redirect.INHERIT).redirectOutput(ProcessBuilder.Redirect.INHERIT).start();
+            process = new ProcessBuilder(ValidationRuntime.boundedCommand(command, heap))
+                .redirectError(ProcessBuilder.Redirect.INHERIT).redirectOutput(ProcessBuilder.Redirect.INHERIT).start();
             requests = new BufferedWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8));
             used = 0;
             System.out.println("[validation] Collection worker " + (number + 1) + " started: pid=" + process.pid() + ", heap=" + heap + " MiB");

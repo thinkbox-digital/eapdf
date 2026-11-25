@@ -1,0 +1,661 @@
+{
+  "title": "EA-PDF 1.0 questions for experts",
+  "subtitle": "Main Creator and Validator 2.4.0-beta.5  ·  Review dated 23 November 2026",
+  "intro": [
+    "Priorities for the authors are source ownership in collections (Q02), missing send dates (Q04), conflicting collection sizes (Q07), source-dependent validation (Q10) and tagged collection front matter (Q21).",
+    "The February 2025 specification defines its conventions in §2. Sections 8 and 9 set normative requirements for EA-PDF-aware software and for the file format, respectively. Page references use printed numbering. Add seven for the PDF page. Release evidence comes from Main’s tagged source, tests, sample PDFs and 229-entry rule catalogue.",
+    "The review covered all 27 reports in the PDF Association tracker on 23 November 2026 and the discussion on the directly relevant issues. Proposed changes are identified separately from adopted errata. Q25 is now two questions on addresses and attachment inventories.",
+    "For each decision, please identify the clause and revision affected, provide passing and failing examples, and explain how existing 1.0 files should be treated."
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "title": "Which PDF/A levels apply to each EA-PDF profile?",
+      "source": "§3.2 Table 2, pp. 8–11. §4, p. 15. §7.6, p. 49. §9.1, p. 61.",
+      "rule": "Section 9.1 lists the PDF/A levels available across the format. Table 2 gives narrower lists by profile. Its collection footnotes explain why PDF/A-4e was omitted, while §7.6 describes collections as compatible with PDF/A-4e. Section 4 deliberately cites the 2024 draft revision of PDF/A-4.",
+      "example": "A PDF/A-4e collection can use the PDF collection mechanism. Can it claim PDF/mail-1c? Table 2 also prints “PDF/A-4fe” for 1m.",
+      "release": "The Creator emits PDF/A-4f with revision 2020. The Java Validator recognizes the §9.1 levels and uses veraPDF for PDF/A assessment. Issue #10 proposes the narrow correction from 4fe to 4e.",
+      "ask": "Does Table 2 impose profile-specific exclusions? Which PDF/A-4 edition and corrections should be used when assessing files written against 1.0?",
+      "proposal": "Publish a profile-by-level matrix, the dependency edition for each case, and transition guidance for existing files.",
+      "refs": [
+        [
+          "PDF Association issue #10",
+          "https://github.com/pdf-association/report-an-issue/issues/10"
+        ],
+        [
+          "Creator XMP",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/main/java/eapdf/PdfMetadataWriter.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q02",
+      "title": "Where must a collection preserve its original sources?",
+      "source": "§3.1 and Table 2, pp. 7–11. §7.2, pp. 34–35. §7.6 and Figure 11, pp. 49–51. §9.1, p. 62.",
+      "rule": "Section 7.2 permits exporting a message from a mailbox and converting that export to 1s. It also requires faithful source coverage for the emails represented in a non-isolated file. Section 7.6 describes packaging self-contained children into 1c. Section 9.1 still requires a Source in the outer catalog.",
+      "example": "Two self-contained 1s children each embed their original EML. The outer 1c embeds the children and has no separate catalog Source. Figure 11 illustrates this preservation arrangement.",
+      "release": "The Java Validator checks the outer non-isolated collection for a primary Source. In the released 1c example used in Q07, the outer catalog and its first child both have Source entries. Main identifies exported messages as the retained sources on its PST/MBOX paths.",
+      "ask": "Can child-held originals alone satisfy the outer 1c requirement? How should a collection identify partially retained or redacted originals when only some children retain complete sources?",
+      "proposal": "Specify the outer and child profiles and catalog entries for child-only, parent-only and partially retained sources. Identify the exported EML and its parent mailbox separately in the provenance example.",
+      "refs": [
+        [
+          "Source and profile checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/EaPdfChecks.java"
+        ],
+        [
+          "PDF Association issue #27",
+          "https://github.com/pdf-association/report-an-issue/issues/27"
+        ]
+      ]
+    },
+    {
+      "id": "Q03",
+      "title": "Which Core Fields must appear in XMP and on the page?",
+      "source": "§7.3.1 and Table 4, pp. 36–38. §9.3, pp. 64–65. §9.8.3 and Table 18, pp. 86–88.",
+      "rule": "Table 4 requires original message size, attachment count and email Content-Type. Table 18 makes per-message size optional, gives the count a default of zero and provides no dedicated email Content-Type entry. Rendering nonblank fields is strongly recommended. Section 9.3 requires PDF text objects for Core Fields and values when present.",
+      "example": "A received message has a known Subject and zero attachments. Its native mailbox supplies no independent byte length for that message. Which values must the metadata packet and visible rendering contain?",
+      "release": "The Creator writes SizeInBytes and NumberAttachments, including zero counts. When the per-message source size is unavailable, its size calculation can fall back to the length of a synthesized EML or zero. The Validator permits omitted message size and checks source-conditioned fields when evidence is available.",
+      "ask": "Which original, derived and unknown values are permitted for each field? What property carries the top-level email Content-Type, and when may a field be absent from the rendering?",
+      "proposal": "Publish a matrix with original availability, XMP type and presence, rendered presence, and any permitted derivation. Give a mailbox example where the source message size cannot be measured.",
+      "refs": [
+        [
+          "XMP writer and size calculation",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/main/java/eapdf/PdfMetadataWriter.java"
+        ],
+        [
+          "Core Field checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/MetadataChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q04",
+      "title": "How can an unknown send date be represented truthfully?",
+      "source": "Tables 4 and 18, pp. 37 and 87.",
+      "rule": "Table 4 requires Sent even when empty. Table 18 requires an xsd:dateTime. A blank value cannot satisfy that type. An offset-free local date-time, an incomplete calendar date and an entirely absent date represent different cases.",
+      "example": "An unsent draft has no Date header. A second message has an impossible calendar date but retains the header text. Neither supplies a truthful send instant.",
+      "release": "The Creator preserves a message with an unrecoverable date, omits Sent and marks the output INCOMPLETE SOURCE with conversion:status set to INCOMPLETE. The tagged missing-date example contains that marker and no Sent element. The standalone Validator flags the missing requirement.",
+      "ask": "May Sent be omitted for a genuinely unknown date, and what status may the file claim? Which partial or malformed dates may a writer normalize from source evidence?",
+      "proposal": "Give passing and failing XMP examples for an unsent draft, an invalid date and a known local time with an unknown offset. Keep the raw header when available.",
+      "refs": [
+        [
+          "Released missing-date example",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/examples/eml/eml_missing_date_1s.pdf"
+        ],
+        [
+          "Creator acceptance cases",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/test/java/eapdf/CreatorAccuracyTests.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q05",
+      "title": "When should a valid date retain its Raw-Sent header?",
+      "source": "Tables 4 and 18, pp. 37 and 87.",
+      "rule": "Both tables require raw text for an erroneous date that cannot be represented as a valid XMP date-time. Table 4 permits retention otherwise. Table 18 discourages it. That distinction affects recommendations for valid dates.",
+      "example": "An email has a valid Date header with unusual spacing. The normalized XMP value loses that spelling.",
+      "release": "The Creator can preserve unparseable nonblank date text. The Java Validator treats Raw-Sent on a valid date as a recommendation issue.",
+      "ask": "Which changes count as ordinary normalization, and when does a defect trigger required preservation of the raw header?",
+      "proposal": "Use matching language in both tables and include a valid but unusually formatted header alongside a genuinely invalid one.",
+      "refs": [
+        [
+          "Raw-Sent checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/MetadataChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q06",
+      "title": "How much source body text must survive as PDF text?",
+      "source": "§7.4.1, p. 39. §9.3, pp. 64–65.",
+      "rule": "Section 7.4.1 says textual email content must use PDF text objects. Normative §9.3 recommends text objects for source text and requires them for Core Fields and their values when present. Both passages allow a raster appearance with invisible text in rendering mode 3.",
+      "example": "The headers remain searchable. A rasterized HTML body has a text layer for its first paragraph only.",
+      "release": "The Java Validator distinguishes Core Field text checks from the source-text recommendation. It can report unavailable evidence when it cannot establish what was rendered.",
+      "ask": "Does the partial body text layer affect conformance, and what source-to-PDF comparison, if any, should establish sufficient coverage?",
+      "proposal": "Give outcomes for a raster body with complete, partial and absent text layers. Address source images that contain text as a separate case.",
+      "refs": [
+        [
+          "Text checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/PageContentChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q07",
+      "title": "Which byte count belongs in the collection Size column?",
+      "source": "§7.6 Table 5 and Example 5, pp. 53–54. §9.5 Table 6, p. 68. ISO 32000-2 Table 155.",
+      "rule": "Table 5 describes original message bytes. Table 6 and Example 5 select the PDF collection Size subtype, which describes the embedded file. A collection row can therefore present two different sizes for the same child.",
+      "example": "In a collection distributed with Main, the item’s explicit Size and the child’s email XMP give 69,830 bytes. The decoded embedded child PDF contains 126,021 bytes.",
+      "release": "The normal collection writer declares the Size subtype and writes message metadata size into the item’s Size entry. The embedded child stream has its own length. The discrepancy is present in a released example.",
+      "ask": "Should the displayed column report the embedded PDF length or original message bytes? What value belongs in the row for a multi-message child?",
+      "proposal": "Reserve the predefined Size subtype for embedded bytes. If original size is required, define a numeric custom field, its collection-item value, and the treatment of unknown or aggregate sizes.",
+      "refs": [
+        [
+          "PDF Association issue #17",
+          "https://github.com/pdf-association/report-an-issue/issues/17"
+        ],
+        [
+          "Collection schema and item writer",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/main/java/eapdf/PdfCollectionSupport.java"
+        ],
+        [
+          "Release collection example",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/examples/eml/eml_Agenda_and_timeline_slides_archive_1c.pdf"
+        ]
+      ]
+    },
+    {
+      "id": "Q08",
+      "title": "How should a collection distinguish a blank Bcc from an unrecorded Bcc?",
+      "source": "Tables 5 and 6 and Example 5, pp. 53–54, 68. Table 18, p. 88.",
+      "rule": "Table 6 requires Bcc and Message-ID keys in the schema. Table 5 and its example omit Message-ID. Footnote 23 recognizes that an actual message may lack an ID. Defining the column does not establish what was known when a particular row was created.",
+      "example": "A received email omits Bcc. An archive should be able to distinguish a field the writer examined and found blank from one for which it has no evidence.",
+      "release": "The Creator defines both schema fields and omits corresponding empty item values. The working-group rationale recorded in issue #17 favors capturing the distinction. The thread does not give separate encodings for the two states.",
+      "ask": "Does EA-PDF require an item value or an explicit state for either condition? Should a corresponding XMP representation be supplied?",
+      "proposal": "Align the two schema tables. Show the schema, collection item and matching XMP for a populated, known-empty and unavailable value.",
+      "refs": [
+        [
+          "PDF Association issue #17",
+          "https://github.com/pdf-association/report-an-issue/issues/17"
+        ],
+        [
+          "Working-group rationale",
+          "https://github.com/pdf-association/report-an-issue/issues/17#issuecomment-3525476611"
+        ]
+      ]
+    },
+    {
+      "id": "Q09",
+      "title": "How should a collection row describe a multi-email child?",
+      "source": "Table 2, pp. 10–11. §7.6, pp. 49–54. §9.5 Table 6, p. 68. Table 16, p. 85.",
+      "rule": "Multi-email children are expressly permitted. Section 7.6 even recommends placing 1m or 1mi children in folders in some workflows. The collection row has single fields for Subject, From, Message-ID and Sent. Table 16 NumberMessages describes a source asset.",
+      "example": "A 1c collection spans two folders. One row represents a 1m child with three senders and three subjects. Which values can a generic collection viewer display accurately?",
+      "release": "Main’s ordinary collection writer creates one 1s or 1si child per message. That path does not establish an aggregation convention for multi-email children. Issue #27 requests an example spanning folders.",
+      "ask": "Which fields may a writer omit or summarize for a multi-email child? How should a reader distinguish a summary from an original header?",
+      "proposal": "Publish a two-folder 1c example containing a multi-email child, its outer item dictionary and its XMP. Identify the fields a generic collection viewer is expected to show.",
+      "refs": [
+        [
+          "PDF Association issue #27",
+          "https://github.com/pdf-association/report-an-issue/issues/27"
+        ],
+        [
+          "Collection writer",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/main/java/eapdf/PdfCollectionSupport.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q10",
+      "title": "What conformance claim can a PDF-only validator make?",
+      "source": "§9 introduction, p. 61. §9.2, p. 63. §9.8.3, p. 86.",
+      "rule": "Section 9 assumes mandatory requirements can be assessed from PDF and XMP alone. Section 9.8.3 nevertheless requires all nonempty original Core Fields to be recorded. An omitted field can leave a PDF internally consistent.",
+      "example": "The original Subject was populated. Both the rendered headers and XMP omit it. Without an independently associated source, a PDF-only validator sees no discrepancy.",
+      "release": "The Java Validator compares attributable source evidence when available. An omitted original can make a check inapplicable for an isolated profile. Ambiguous evidence for a required comparison can produce INCOMPLETE. The release documents PASS, FAIL and INCOMPLETE.",
+      "ask": "What may a validator assert after checking internal consistency? How should it report a required preservation check that needs source evidence it cannot obtain?",
+      "proposal": "Define the creator’s preservation duty, PDF-only checks, source-aware checks and permissible outcomes separately. Provide reports for the same PDF with and without independently attributable source evidence.",
+      "refs": [
+        [
+          "Release validation coverage",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/docs/VALIDATOR_COVERAGE.md"
+        ],
+        [
+          "Source-aware metadata checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/MetadataChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q11",
+      "title": "Which exit-from-full-screen preference applies to a PDF 1.7 collection?",
+      "source": "§7.7.1, p. 56. §9.1, p. 62. ISO 32000-2 Table 147.",
+      "rule": "Section 7.7.1 describes UseOutlines for NonFullScreenPageMode. Section 9.1 requires UseAttachments for collections. Its explicit PDF 1.7 fallback to UseOutlines applies to single-message files with attachments. Issue #14 also questions requiring an exit-from-full-screen setting when none of the allowed initial modes is FullScreen.",
+      "example": "A PDF 1.7 collection opens with PageMode set to UseAttachments. Which NonFullScreenPageMode value should a writer store?",
+      "release": "The Creator writes PDF 2.0 collections with UseAttachments. The Java Validator applies a local UseOutlines fallback to PDF 1.7 collections. The fallback is an implementation choice.",
+      "ask": "What is the valid 1.0 interpretation for PDF 1.7 collections, and should a subsequent revision continue requiring this preference?",
+      "proposal": "Supply one table by PDF version and EA-PDF profile, covering both PageMode and NonFullScreenPageMode. Identify any future removal as an amendment.",
+      "refs": [
+        [
+          "PDF Association issue #14",
+          "https://github.com/pdf-association/report-an-issue/issues/14"
+        ],
+        [
+          "Viewer preference checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/EaPdfChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q12",
+      "title": "May the catalog identify several independent primary sources?",
+      "source": "§7.2, pp. 34–35. §§9.1 and 9.4, pp. 62–63, 67.",
+      "rule": "Section 7.2 expressly describes multiple primary Source entries. Section 9.1 requires at least one. Section 9.4 combines “only” with “at least one” for non-isolated single and multiple profiles. For a source comprising a set of files, RF and additional Supplement entries are expressly offered as alternatives.",
+      "example": "A combined archive preserves two independent EMLs. A different archive has a primary file that needs two companion files to function. Their catalog relationships serve different purposes.",
+      "release": "The Java Validator requires at least one primary catalog Source for a non-isolated profile and permits multiple primary sources. It also assesses source metadata when a source is supplied.",
+      "ask": "Should §9.4 explicitly permit multiple primary sources? How should a validator connect each primary to the emails it supplies when a file has several?",
+      "proposal": "Replace the contradictory quantifier. Give one object-level example with two independent primaries and another with a single multi-file source. Address outer collection ownership under Q02.",
+      "refs": [
+        [
+          "PDF Association issue #14",
+          "https://github.com/pdf-association/report-an-issue/issues/14"
+        ],
+        [
+          "Catalog AF checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/EaPdfChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q13",
+      "title": "Can a file containing zero valid messages claim an EA-PDF profile?",
+      "source": "Table 2, pp. 8–11. §9.2 and footnote 22, p. 63. §9.6, p. 70.",
+      "rule": "Footnote 22 anticipates preserving an empty source or a source with no valid emails. Footnotes add context under §2. The profile and DPart requirements still prescribe message or child counts. An empty draft is one identifiable message.",
+      "example": "An empty MBOX and a saved draft with no body both have little to render. Only the draft supplies a message record.",
+      "release": "Main’s CLI rejects a conversion that discovers no messages. Its archive and collection builders require nonempty input. Q04 describes its separate handling of an identifiable message with missing Sent metadata.",
+      "ask": "Is zero-message preservation outside 1.0 conformance, or did the authors intend a file structure that satisfies all applicable counts?",
+      "proposal": "Give outcomes for an empty mailbox, an unreadable asset and an identifiable empty draft. Specify profile, XMP cardinality, page requirements and conformance claim for any supported case.",
+      "refs": [
+        [
+          "Creator entry point",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/main/java/eapdf/EmailToPDFA.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q14",
+      "title": "Which pages in a content set must be nonblank?",
+      "source": "§9.2, p. 63.",
+      "rule": "Section 9.2 requires at least one content set of at least one page that shall not be blank. For 1m and 1mi it also requires a nonblank set per message and at least two nonblank pages overall. Its visibility definition refers to painted content or annotations inside the page CropBox.",
+      "example": "A two-page message ends with a blank separator. Would the answer change if that separator formed its own one-page content set?",
+      "release": "The Java Validator accepts a DPart leaf range when it finds a paint operator or an annotation on any page in that range. This test cannot establish that every counted operator or annotation actually paints inside the CropBox.",
+      "ask": "Must each page, each set, or a minimum number of pages per represented message meet the visibility test? May an additional all-blank set exist?",
+      "proposal": "State the quantifier for each profile. Show expected outcomes for mixed pages, a separate blank set, and content wholly outside the CropBox.",
+      "refs": [
+        [
+          "Nonblank-page checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/PageContentChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q15",
+      "title": "Where should an attachment annotation go when an email has no body?",
+      "source": "§7.5, pp. 43–45. §9.3, p. 65. Table 8, pp. 70–71.",
+      "rule": "Section 7.5 describes attaching a preserved file to a page through an annotation. Section 9.3 requires an annotation for each attachment identified in XMP in every body rendering of the owning email. It supplies no page-placement rule when that email has no BodyRendering set.",
+      "example": "A multi-message archive has one message with two rendered bodies and another with a header, an attachment and no rendered body. Which page should expose the second message’s attachment?",
+      "release": "The Creator normally emits a BodyRendering DPart per message. The Validator can waive the per-body check when all sets are known to be non-body. Unresolved DParts can leave it unavailable, and a missing matching body in a mixed archive can produce a failure.",
+      "ask": "Must a preserved attachment of a body-less message have a page annotation somewhere? If so, which set may own it and what evidence identifies its message?",
+      "proposal": "Provide a mixed-archive example with the owning email GUID, attachment record, file specification, annotation and permitted page range.",
+      "refs": [
+        [
+          "Attachment ownership checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/AttachmentChecks.java"
+        ],
+        [
+          "Creator DParts",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/main/java/eapdf/PdfDocumentParts.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q16",
+      "title": "How should a valid stream MIME type be compared with the original header?",
+      "source": "§9.4, pp. 66–67. Table 19, pp. 89–90.",
+      "rule": "Section 9.4 separates the embedded-stream Subtype from parameters. Its reconstruction steps append a semicolon before any optional parameters. Table 19 assigns the raw original header, including errors, to Content-Type and describes equivalence with the reconstructed value.",
+      "example": "Consider text/plain with no parameters, a quoted charset parameter, and a malformed type containing a space. Can a syntactically valid PDF spelling match all three original headers?",
+      "release": "The Creator retains raw MIME text in attachment XMP and splits the stream type and parameters at the first semicolon. The Java Validator reconstructs a value with the separator, then compares parsed types and parameters, including charset normalization. Malformed input can fail a comparison.",
+      "ask": "Does a missing parameter list require a trailing delimiter? Which differences count as equivalent, and how should a valid stream type be evaluated against a malformed raw header?",
+      "proposal": "Publish exact PDF objects, XMP strings and outcomes for the three cases. Keep Table 19 as the place that records what the source actually said.",
+      "refs": [
+        [
+          "MIME comparison",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/MetadataChecks.java"
+        ],
+        [
+          "Stream MIME writer",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/main/java/eapdf/PdfAttachmentSupport.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q17",
+      "title": "Should a future revision permit Adobe extension levels above 5?",
+      "source": "§9.5, p. 68.",
+      "rule": "EA-PDF 1.0 requires PDF 1.7 collections to declare ADBE BaseVersion /1.7 and integer ExtensionLevel 5. Issue #22 proposes changing this to a minimum. A reply asks for publicly available documentation of higher levels before widening acceptance.",
+      "example": "A PDF 1.7 collection declares level 8 and otherwise uses only the collection features available at level 5.",
+      "release": "The Java Validator checks for the exact value 5. The Creator writes PDF 2.0, so its normal output does not exercise this PDF 1.7 branch.",
+      "ask": "Is there a documented higher level that the authors intend to admit in a later revision, and which existing files would change status?",
+      "proposal": "Retain the 1.0 test in the worked example. If broader acceptance is adopted, cite the relevant extension specification and give the first revision in which it applies.",
+      "refs": [
+        [
+          "PDF Association issue #22",
+          "https://github.com/pdf-association/report-an-issue/issues/22"
+        ],
+        [
+          "Extension-level discussion",
+          "https://github.com/pdf-association/report-an-issue/issues/22#issuecomment-4230635005"
+        ],
+        [
+          "PDF 1.7 checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/EaPdfChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q18",
+      "title": "How are repeated source or attachment occurrences identified?",
+      "source": "Source and stream sharing, pp. 33–38. §7.5, pp. 44–45. §9.6, pp. 69–70. Tables 16, 18 and 19, pp. 85, 87, 89–90.",
+      "rule": "Mail_GUID identifies email records and is the linking identifier for PDF data within and across EA-PDF files. Table 19 nevertheless requires the owning email’s GUID only when Message-ID is absent. Streams can be shared, and equal filenames or digests do not distinguish two occurrences.",
+      "example": "Two emails reuse the same Message-ID and each has an attachment named scan.pdf with identical bytes. A separate pair of primary source entries also has identical bytes. Which occurrence belongs to which owner?",
+      "release": "The Java Validator looks for evidence within the owning email and can report ambiguity as unavailable. It uses occurrence-aware comparisons for attachments. Deduplicating storage alone cannot establish which original occurrence was described.",
+      "ask": "What is the authoritative association from attachment description to owning message and stream, and from a primary source occurrence to its rendered messages?",
+      "proposal": "Provide a duplicate-ID example and a shared-stream example with expected attribution. Specify any required identifier, its uniqueness scope and its relationship to NumberMessages.",
+      "refs": [
+        [
+          "Occurrence matching",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/AttachmentChecks.java"
+        ],
+        [
+          "Source attribution",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/MetadataChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q19",
+      "title": "Which unused role mappings must a tagged file carry?",
+      "source": "§7.3.2 Example 2, p. 39. §9.7 Tables 9–10, pp. 74–75.",
+      "rule": "Section 9.7 calls for an EA-PDF namespace with RoleMapNS in PDF/A-4 files with logical structure and a compatibility role map. Table 9 maps PDF 2.0 tags to PDF 1.7, starting with Artifact to Private. Table 10 introduces its custom mappings when any listed custom tag occurs. Issue #21 questions those broad triggers and the value of legacy mappings.",
+      "example": "A collection uses Mail_ContentSet but no Mail_Field tags. A second tagged PDF uses only standard structure elements. Which dictionaries and which entries must each file contain?",
+      "release": "The Java Validator distinguishes namespace and legacy mappings and checks custom mappings for tags used. A distributed 1c example has only Mail_ContentSet mapped to Art in its structure-root RoleMap. That example demonstrates the difference from reading Table 9 as requiring its full list.",
+      "ask": "Do the authors intend complete tables even for unused tags? For a standard-only file, must an unused EA-PDF namespace be declared? Would changing either trigger require an amendment?",
+      "proposal": "Show the minimal structure-root RoleMap, namespace RoleMapNS and element namespace references for both files. Mark mappings included exclusively for PDF 1.7 readers.",
+      "refs": [
+        [
+          "PDF Association issue #21",
+          "https://github.com/pdf-association/report-an-issue/issues/21"
+        ],
+        [
+          "Role-map checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/LogicalStructureChecks.java"
+        ],
+        [
+          "Namespace resolution",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/StructureRoles.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q20",
+      "title": "What guidance should creators follow for invalid HTML structure?",
+      "source": "§7, p. 23. §9.7, p. 74.",
+      "rule": "Recreating equivalent source structure is recommended. A PDF 2.0 EA-PDF with logical structure must conform to ISO/TS 32005 and include its XMP declaration. Section 7 leaves handling flawed inputs to the creator while requiring conforming output. Issue #21 proposes an exception for preserved source tags.",
+      "example": "An HTML table has invalid nesting. Directly copying its hierarchy into a tagged PDF produces invalid output, although a creator can preserve the original email bytes.",
+      "release": "The Java Validator checks the declaration and relies on upstream assessment for the applicable tagged-PDF checks. If the required assessment cannot be established, it can report incomplete evidence.",
+      "ask": "Would a worked repair example suffice under 1.0? If an exception is intended for a future revision, how would a reader or validator identify its precise scope?",
+      "proposal": "Show one valid transformation of a malformed HTML table and how it is recorded. Describe the declaration and conformance consequences of any proposed exception.",
+      "refs": [
+        [
+          "PDF Association issue #21",
+          "https://github.com/pdf-association/report-an-issue/issues/21"
+        ],
+        [
+          "Tagged-PDF assessment",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/LogicalStructureChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q21",
+      "title": "Where does a tagged collection put its front matter?",
+      "source": "Figure 12 and Tables 7–8, pp. 69–71. §9.7 and Tables 11–13, pp. 75–79.",
+      "rule": "Page 78 assigns a collection’s content sets to its top-level Document. Table 13 requires a Mail_ContentSet below Mail_Message while prohibiting Mail_Message in a collection. The same ancestry rule causes a problem for front matter and conversion reports covering an entire multi-email archive.",
+      "example": "A tagged 1c has one front-matter page. Its DPart class is FrontMatter and it has no email-owning DPart. Where can the corresponding Mail_ContentSet legally appear?",
+      "release": "Main uses the outer Document for collection-wide sets. For multi-email files the Validator recognizes FrontMatter, ConversionReport and PolicySettings as document-wide only when supported by the DPart evidence. It interprets Table 11’s undefined Mail_ContentField as Mail_Field.",
+      "ask": "Which parent is permitted for each document-wide content set, and how should its tag correspond to the DPart tree? Is Mail_Field the intended Table 11 spelling?",
+      "proposal": "Supply minimal paired DPart and structure trees for the one-page collection and for a 1m with a shared conversion report. Amend the ancestry wording in Table 13.",
+      "refs": [
+        [
+          "Structure checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/LogicalStructureChecks.java"
+        ],
+        [
+          "Document-wide ownership checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/PageContentChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q22",
+      "title": "Which XMP value should a content group match?",
+      "source": "Table 8, pp. 70–71. §9.7 and Tables 10, 12–13, pp. 75, 77, 79.",
+      "rule": "Table 13 recommends a Mail_ContentSetType attribute on Mail_ContentGroup and asks for a match to DPM and XMP if present. Table 8 assigns set types to individual DPart leaves. The published XMP tables give no corresponding group property, and the note to Table 10 describes grouping as a structural concept.",
+      "example": "One group contains a BodyRendering and an AttachmentRendering. Both DPart leaves have a type, but neither value describes the whole group.",
+      "release": "The Java Validator compares the group attribute with connected DPart content where it can establish that relationship. The comparison can succeed when types agree. A DPart match does not demonstrate a match to an independently identified XMP group property.",
+      "ask": "What exact XMP path and association does Table 13 intend? If the group has children of different types, which value should its attribute carry?",
+      "proposal": "Either define a group-level XMP property and show a mixed group, or limit the comparison to the applicable DPart data and specify when the attribute should be omitted.",
+      "refs": [
+        [
+          "Group comparison",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/PageContentChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q23",
+      "title": "How should regeneration affect the EA-PDF creation date and history?",
+      "source": "§9.8, pp. 83–84. Table 18, p. 87.",
+      "rule": "Section 9.8 explicitly assigns xmp:CreateDate to creation of the EA-PDF file. It also requires dc:creator[0] and pdf:Producer. The email send time has its own Sent field. Issue #22 records differing archival practices and support for identifying the PDF creation event.",
+      "example": "An email sent in 2010 was first converted in 2020. In 2026 one workflow rebuilds the PDF from the original and another edits only its metadata. Which history and identifier fields should distinguish those workflows?",
+      "release": "The Creator records the configured responsible entity and the PDF creation time, and writes a conversion event with time and software agent in xmpMM:History. Sent is recorded separately. A validator can inspect these fields without proving the underlying events.",
+      "ask": "Which operations create a new resource for CreateDate purposes? How should a writer carry forward earlier creation history, document identifiers and the responsible entity?",
+      "proposal": "Provide dated examples for first conversion, full regeneration and a metadata-only update. Identify the fields a validator can check independently of provenance evidence.",
+      "refs": [
+        [
+          "PDF Association issue #22",
+          "https://github.com/pdf-association/report-an-issue/issues/22"
+        ],
+        [
+          "Release XMP and history",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/main/java/eapdf/PdfMetadataWriter.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q24",
+      "title": "What are the email-list property and the canonical XMP identifiers?",
+      "source": "§9.6 Table 7, p. 70. §§9.8.2–9.8.4 and Tables 16, 18–19, pp. 85–90.",
+      "rule": "Section 9.8.3 describes an unordered set of email records without naming the enclosing property. Table 7 refers to XMP pdfmailmeta:messageid. Table 18 spells the XMP field Message-ID and describes In-Reply-To as an “unordered sequence”. The PDF dictionary key Mail_MessageID is separately named.",
+      "example": "Two XMP writers agree on the email contents. One writes messageid, another Message-ID. They also choose different RDF containers for two reply identifiers.",
+      "release": "The Creator writes pdfmailmeta:email with an rdf:Bag, lowercase messageid in email records and a Bag for In-Reply-To. The Java Validator accepts messageid and Message-ID and checks conflicting values. Compatibility in this implementation does not define a portable alias.",
+      "ask": "Which expanded XMP property names, container types and structured-record form are canonical? When should a reader accept a historical spelling, and what happens if both occur with different values?",
+      "proposal": "Publish a complete two-email XMP packet and schema including both reply identifiers. Add a crosswalk for PDF dictionary keys and XMP fields and a migration example.",
+      "refs": [
+        [
+          "XMP serialization",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/main/java/eapdf/PdfMetadataWriter.java"
+        ],
+        [
+          "Identifier comparison",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/MetadataChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q25a",
+      "title": "How should a writer preserve an address without a usable mailbox URI?",
+      "source": "§9.8.3 and Table 18, pp. 86–88.",
+      "rule": "Structured addresses use ordered FOAF Agent records with a required foaf:mbox for each supplied agent. Table 18 also defines raw text properties. The difficult case is a real source address that cannot truthfully populate the structured mailbox.",
+      "example": "An MSG identifies an internal Exchange recipient but supplies no SMTP address. A second message contains malformed address text that would change meaning if normalized.",
+      "release": "The Creator preserves raw address fields and emits structured mailboxes for addresses it can represent. The Java Validator recognizes several RDF/XML serializations, including an mbox attribute, element text and rdf:resource.",
+      "ask": "When may a raw field alone satisfy preservation of a nonempty address? Which RDF terms, URI schemes and normalization rules apply to structured mailboxes?",
+      "proposal": "Provide complete XMP for a regular mailbox, an Exchange-only identifier and malformed source text. Distinguish different XML spellings of the same RDF term from a change in the address itself.",
+      "refs": [
+        [
+          "FOAF writer",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/src/main/java/eapdf/PdfMetadataWriter.java"
+        ],
+        [
+          "Mailbox checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/MailboxChecks.java"
+        ]
+      ]
+    },
+    {
+      "id": "Q25b",
+      "title": "When is an empty or partial attachment inventory sufficient?",
+      "source": "Table 18, p. 88. §9.8.4 and Table 19, pp. 89–90.",
+      "rule": "Section 9.8.4 recommends describing all original attachments, including removals, and requires an unordered set of zero or more attachment descriptions. Table 18 counts original attachments in an email. Table 19 gives requirements for each supplied description.",
+      "example": "One message has zero attachments. Another has two originals, one withheld by policy, and a single description. An outer collection has no message bodies of its own.",
+      "release": "The Creator emits the attachments Bag even when empty. The Java Validator checks for the Bag and assesses inventory completeness when the original can be examined. A partial description set, a wrong original count and an invalid supplied record are distinct findings.",
+      "ask": "Which files must carry an empty Bag? How should a validator assess a partial inventory, particularly in an isolated file or in a collection wrapper?",
+      "proposal": "Provide three packets and expected results covering no attachments, a known withheld attachment and an outer collection. Identify the original count, every supplied record and the evidence needed for each check.",
+      "refs": [
+        [
+          "Required containers",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/EaPdfChecks.java"
+        ],
+        [
+          "Original inventory checks",
+          "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator-desktop/src/main/java/eapdf/MetadataChecks.java"
+        ]
+      ]
+    }
+  ],
+  "corrections": [
+    [
+      "Table 2, p. 9",
+      "Correct the 1m label PDF/A-4fe to PDF/A-4e as proposed in issue #10. Q01 separately addresses profile eligibility."
+    ],
+    [
+      "Figure 6, pp. 24–25",
+      "Align the identification diagram with Tables 14–15. The 1.0 identification property is pdfmailid:version. Footnote 25 reserves pdfmailid:part for future ISO standardization. Table 14 requires pdfmail, pdfmailid and pdfmailmeta."
+    ],
+    [
+      "Examples 3–4, pp. 46–48",
+      "Correct the MIME-parameter and PDF object examples. Supply parseable replacements with and without parameters, alongside the expected XMP. See Q16."
+    ],
+    [
+      "Figure 11, pp. 49–51",
+      "Correct the reversed left and right references in the scenario descriptions on p. 49. Identify each drawing by the location of its source so the caption and discussion agree."
+    ],
+    [
+      "Collection examples, pp. 52–55, 67–68",
+      "Use the catalog key Collection consistently. Correct the duplicate object numbering and identify the owners of the embedded files. Reconcile the schema columns and size examples with Tables 5–6."
+    ],
+    [
+      "Table 8, pp. 70–71",
+      "Keep the PDF name types for Mail_ContentSetType and Mail_Subtype. Approved ISO 32000-2 erratum #86 permits DPM name values with valid UTF-8 after expansion. Add the dependency reference in response to report #13."
+    ],
+    [
+      "DPart example, pp. 69–74",
+      "Correct repeated object numbers and the DPart child arrays, Parent links and page ranges. For a single-page leaf, give Start alone. Table 409 requires End for a multipage leaf and excludes it otherwise. The PDF 2.0 correction also prohibits an XMP Metadata stream on a DPart dictionary (PDF erratum #290)."
+    ],
+    [
+      "Table 11, p. 76",
+      "Confirm whether Mail_Field replaces the undefined Mail_ContentField. Check its parent and child rules against Tables 10 and 13. See Q21."
+    ],
+    [
+      "Example 7, pp. 81–83",
+      "Correct the content-set element name and the operands of TJ. Show the element namespaces and a single Document root, explicit or role-mapped as applicable. Correct the example’s warning against an array. Section 9.7 permits a one-element K array."
+    ],
+    [
+      "Tables 16 and 19, pp. 85, 89–90",
+      "Fix the spelling of “case-sensitive”. Preserve the published case of asset ContentType and Checksum, and attachment Content-Type and CheckSum. A spelling change to a property needs a compatibility decision. A supplied PDF embedded-file CheckSum is a 16-byte binary MD5 digest. The XMP forms encode the digest as 32 hexadecimal characters."
+    ],
+    [
+      "Specification PDF",
+      "Issue #8 reports an odd-length Nums array in object 335 of the distributed PDF. Publish a versioned repair of the file and retain the fingerprint of the copy used for this review."
+    ]
+  ],
+  "issues": [
+    [
+      "8",
+      "Open. Reports a malformed number tree in the published specification PDF. The defect concerns the distributed PDF file."
+    ],
+    [
+      "10",
+      "Open. Identifies PDF/A-4fe as a typographical error for PDF/A-4e in Table 2. The report does not decide the profile matrix in Q01."
+    ],
+    [
+      "13",
+      "Open. Proposes text strings for two DPM values based on the uncorrected base standard. Approved PDF erratum #86 already permits the name values used by Table 8."
+    ],
+    [
+      "14",
+      "Open. Covers NonFullScreenPageMode, the number of catalog Source entries and spelling differences in the metadata tables. The reporter offers one reading of the source count. The published text still needs the clarification in Q12."
+    ],
+    [
+      "17",
+      "Open. Reports the Size mismatch and missing Message-ID column and questions required Bcc. A comment explains the working group’s preservation rationale for keeping Bcc. It gives no prescribed serialization for unknown versus known-empty."
+    ],
+    [
+      "21",
+      "Open. Proposes revisiting fixed compatibility mappings and mandatory ISO/TS 32005 conformance when preserving imperfect HTML structure. The quoted first role-map pair is reversed relative to Table 9. Q19–Q20 quote the direction from the published table."
+    ],
+    [
+      "22",
+      "Open. Proposes accepting higher extension levels and discusses xmp:CreateDate. A response defends exactly level 5. Comments describe different archival practices and discuss PDF creation and provenance history. Sections 9.5 and 9.8 give the 1.0 rules used in Q17 and Q23."
+    ],
+    [
+      "27",
+      "Open, filed 10 November 2026. Requests an example spanning folders and subsequently a 1c example. The Association added links to code and examples on the specification page and said new samples would be discussed as it considers 1.1. The thread reports no adopted 1.1 rule."
+    ],
+    [
+      "12",
+      "Related, open. Requests PDF/A-4 guidance and a schema example for PDF Declarations. Relevant to Q20’s example. The EA-PDF 1.0 declaration requirement remains in §9.7."
+    ]
+  ],
+  "sources": [
+    [
+      "PDF Association · EA-PDF specification, downloads and examples",
+      "https://pdfa.org/resource/ea-pdf/"
+    ],
+    [
+      "PDF Association · public issue tracker, all states",
+      "https://github.com/pdf-association/report-an-issue/issues?q=is%3Aissue"
+    ],
+    [
+      "PDF 2.0 approved corrections · DPM values and DPart dictionaries",
+      "https://pdf-issues.pdfa.org/32000-2-2020/clause14.html#H14.12.4.2"
+    ],
+    [
+      "Approved PDF issue #86 · DPM name values",
+      "https://github.com/pdf-association/pdf-issues/issues/86"
+    ],
+    [
+      "Approved PDF issue #290 · DPart Metadata streams",
+      "https://github.com/pdf-association/pdf-issues/issues/290"
+    ],
+    [
+      "Main · published 2.4.0-beta.5 prerelease, 22 November 2026",
+      "https://github.com/thinkbox-digital/eapdf/releases/tag/v2.4.0-beta.5"
+    ],
+    [
+      "Main · tagged source commit 6783ef362a1d9a9fb8aa3b6fcb5edfd79dec78c5",
+      "https://github.com/thinkbox-digital/eapdf/commit/6783ef362a1d9a9fb8aa3b6fcb5edfd79dec78c5"
+    ],
+    [
+      "Main · rule catalogue and wording",
+      "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/validator_rule_text.json"
+    ],
+    [
+      "Main · standalone validation coverage and report outcomes",
+      "https://github.com/thinkbox-digital/eapdf/blob/v2.4.0-beta.5/docs/VALIDATOR_COVERAGE.md"
+    ],
+    [
+      "Association response to #27 · links to implementation and examples",
+      "https://github.com/pdf-association/report-an-issue/issues/27#issuecomment-6800638561"
+    ],
+    [
+      "Association follow-up to #27 · possible 1.1 work and samples",
+      "https://github.com/pdf-association/report-an-issue/issues/27#issuecomment-6802069288"
+    ]
+  ],
+  "exhibits": [
+    37,
+    87,
+    88
+  ],
+  "specification_sha256": "b89e7471afd3aabaa4e58bd6ca1f3241378c1596cf528023e740d9e79183dbae",
+  "review_date": "2026-11-23"
+}

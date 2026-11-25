@@ -74,11 +74,13 @@ final class BoundedPdfStreams {
                 Path next = IOUtils.createProtectedTempFile(Path.of(System.getProperty("java.io.tmpdir")), "eapdf-decoded-", ".bin");
                 boolean complete = false;
                 try {
-                  try (InputStream input = previous == null ? stream.createRawInputStream() : Files.newInputStream(previous);
+                  try (InputStream raw = previous == null ? stream.createRawInputStream() : Files.newInputStream(previous);
+                     EndMarkerInputStream input = new EndMarkerInputStream(raw, filters.isEmpty() ? null : filters.get(i));
                      OutputStream file = Files.newOutputStream(next);
                      OutputStream output = bounded(file, maximum)) {
                     if (filters.isEmpty()) input.transferTo(output);
                     else FilterFactory.INSTANCE.getFilter(filters.get(i)).decode(input, output, stream, i);
+                    input.requireEndMarker();
                   }
                     complete = true;
                 } finally { if (!complete) Files.deleteIfExists(next); }
@@ -95,6 +97,69 @@ final class BoundedPdfStreams {
             };
         } finally { if (previous != null) Files.deleteIfExists(previous); }
     }
+
+    /** PDFBox accepts EOF for these legacy encodings, but PDF requires their explicit EOD marker. */
+    private static final class EndMarkerInputStream extends FilterInputStream {
+        private enum Type { NONE, ASCII_HEX, ASCII_85, RUN_LENGTH }
+        private final Type type;
+        private boolean ended, tilde;
+        private int runLengthPayload;
+
+        EndMarkerInputStream(InputStream input, COSName filter) {
+            super(input);
+            type = filter == null ? Type.NONE : switch (filter.getName()) {
+                case "ASCIIHexDecode", "AHx" -> Type.ASCII_HEX;
+                case "ASCII85Decode", "A85" -> Type.ASCII_85;
+                case "RunLengthDecode", "RL" -> Type.RUN_LENGTH;
+                default -> Type.NONE;
+            };
+        }
+
+        @Override public int read() throws IOException {
+            int value = super.read();
+            if (value >= 0) observe(value);
+            return value;
+        }
+
+        @Override public int read(byte[] data, int offset, int length) throws IOException {
+            int count = super.read(data, offset, length);
+            if (type != Type.NONE) for (int i = 0; i < count; i++) observe(data[offset + i] & 0xff);
+            return count;
+        }
+
+        // PDFBox closes a filter's encoded input before returning from decode.
+        // The outer raw-input resource owns that close so ASCII85 can verify its
+        // trailing '>' after PDFBox has consumed the leading '~'.
+        @Override public void close() { }
+
+        private void observe(int value) {
+            switch (type) {
+                case ASCII_HEX -> ended |= value == '>';
+                case ASCII_85 -> {
+                    if (tilde && value == '>') ended = true;
+                    tilde = value == '~';
+                }
+                case RUN_LENGTH -> {
+                    if (ended) return;
+                    if (runLengthPayload > 0) runLengthPayload--;
+                    else if (value == 128) ended = true;
+                    else runLengthPayload = value <= 127 ? value + 1 : 1;
+                }
+                case NONE -> { }
+            }
+        }
+
+        void requireEndMarker() throws IOException {
+            if (type == Type.ASCII_85 && tilde && !ended) read();
+            if (type != Type.NONE && !ended) throw new IOException("PDF " + switch (type) {
+                case ASCII_HEX -> "ASCIIHex";
+                case ASCII_85 -> "ASCII85";
+                case RUN_LENGTH -> "RunLength";
+                case NONE -> "stream";
+            } + " stream lacks its required end marker");
+        }
+    }
+
     private static OutputStream bounded(OutputStream file, long maximum) {
         return new FilterOutputStream(file) {
             long count;
