@@ -90,7 +90,7 @@ static FSStream trustedRenderAsset(String uri) {
 
 
 
-record RenderedMessagePart(EmailRecord record, Path pdfPath) {}
+record RenderedMessagePart(EmailRecord record, Path pdfPath, Map<String, BitSet> fontUsage) {}
 
 static class SingleMessageBuildResult {
   final byte[] pdfBytes;
@@ -480,7 +480,7 @@ private static RenderedMessagePart buildArchiveMessagePdf(EmailRecord r, String 
       Path finalized = parts.createPdf();
       PdfFontMetadata.save(doc, finalized.toFile());
       ProcessingLimits.checkOutput(Files.size(finalized));
-      return new RenderedMessagePart(r, finalized);
+      return new RenderedMessagePart(r, finalized, ArchiveFontSubsets.scanPart(doc));
     }
   }
 }
@@ -558,12 +558,14 @@ private static void forEachArchiveMessagePart(List<EmailRecord> records, String 
     return;
   }
 
+  // Leave room for finished parts behind a slower part while keeping assembly ordered.
+  int submissionWindow = parallelism * 2;
   ExecutorService pool = Common.newWorkers(parallelism);
   try {
     Map<Integer, Future<RenderedMessagePart>> inFlight = new LinkedHashMap<>();
     int submitted = 0;
     for (int expected = 1; expected <= source.size(); expected++) {
-      while (submitted < source.size() && inFlight.size() < parallelism) {
+      while (submitted < source.size() && inFlight.size() < submissionWindow) {
         final int idx = submitted + 1;
         final EmailRecord record = source.get(submitted);
         inFlight.put(idx, pool.submit(() -> {
@@ -619,12 +621,13 @@ private static void saveArchiveDocument(Path temporary, Path out, List<EmailReco
       archive.setVersion(2.0f);
       archive.getDocument().setVersion(2.0f);
       ArchiveResourcePool resources = new ArchiveResourcePool();
+      var fontUsage = new ArchiveFontSubsets.Usage();
       try (PayloadStore parts = new PayloadStore()) {
         forEachArchiveMessagePart(records, fontPath, debug, debugDir, archiveProfile, parts, rendered -> {
           try (PDDocument part = Loader.loadPDF(rendered.pdfPath().toFile(), org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
             int startPage = archive.getNumberOfPages() + 1;
             MessageSegment segment = new MessageSegment(rendered.record(), startPage, startPage + part.getNumberOfPages() - 1);
-            appendClonedPagesWithLast(archive, part, segment, resources);
+            appendClonedPagesWithLast(archive, part, segment, resources.cloner(archive, rendered.fontUsage(), fontUsage));
             segments.add(segment);
           }
         });
@@ -650,11 +653,11 @@ private static void saveArchiveDocument(Path temporary, Path out, List<EmailReco
       ConversionProgress.begin("page_streams", archive.getNumberOfPages(), "pages");
       normalizePageContentStreams(archive);
       Files.createDirectories(out.getParent() == null ? Paths.get(".") : out.getParent());
+      ConversionProgress.stage("balancing_parent_tree");
       SemanticStructure.balanceParentTree(archive);
-      ArchiveFontSubsets.apply(archive);
-      ConversionProgress.saving(temporary);
+      fontUsage.apply(archive);
       // Larger bounded groups improve lossless compression of repeated archive structures.
-      PdfFontMetadata.save(archive, temporary.toFile(), new org.apache.pdfbox.pdfwriter.compress.CompressParameters(2000));
+      PdfFontMetadata.saveWithProgress(archive, temporary, new org.apache.pdfbox.pdfwriter.compress.CompressParameters(2000));
     } finally {
       PdfDocumentParts.releaseAllocator(archive);
     }
@@ -672,12 +675,12 @@ static int appendClonedPages(PDDocument target, PDDocument source, MessageSegmen
 private record AppendedPages(int count, PDPage lastPage) {}
 
 static int appendClonedPages(PDDocument target, PDDocument source, MessageSegment segment, ArchiveResourcePool resources) throws Exception {
-  return appendClonedPagesWithLast(target, source, segment, resources).count();
+  if (target == null || source == null) return 0;
+  PDFCloneUtility cloner = resources == null ? new PDFCloneUtility(target) {} : resources.cloner(target);
+  return appendClonedPagesWithLast(target, source, segment, cloner).count();
 }
 
-private static AppendedPages appendClonedPagesWithLast(PDDocument target, PDDocument source, MessageSegment segment, ArchiveResourcePool resources) throws Exception {
-  if (target == null || source == null) return new AppendedPages(0, null);
-  PDFCloneUtility cloner = resources == null ? new PDFCloneUtility(target) {} : resources.cloner(target);
+private static AppendedPages appendClonedPagesWithLast(PDDocument target, PDDocument source, MessageSegment segment, PDFCloneUtility cloner) throws Exception {
   int count = 0;
   PDPage lastPage = null;
   for (PDPage page : source.getPages()) {
@@ -725,9 +728,9 @@ static void writeEaPdfCollection(Path out, List<EmailRecord> records, String fon
     normalizePageContentStreams(archive);
     Files.createDirectories(out.getParent() == null ? Paths.get(".") : out.getParent());
     Common.writeOuterPdfAtomically(out, temporary -> {
+      ConversionProgress.stage("balancing_parent_tree");
       SemanticStructure.balanceParentTree(archive);
-      ConversionProgress.saving(temporary);
-      PdfFontMetadata.save(archive, temporary.toFile());
+      PdfFontMetadata.saveWithProgress(archive, temporary, org.apache.pdfbox.pdfwriter.compress.CompressParameters.DEFAULT_COMPRESSION);
       ConversionProgress.stage(EapdfConfig.get().validateOnCreation ? "checking" : "writing");
       // Release the collection scratch streams before reopening and checking the saved PDF.
       archive.close();

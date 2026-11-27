@@ -75,8 +75,20 @@ Future runs write `progress.json` in the output directory. The file contains
 Archive work also reports `stage_completed`, `stage_total` and `stage_unit` for
 bookmarks, document parts, embedding, page numbering, tagging, page streams,
 embedded-file checks and output publication. Counts describe that stage only.
-Saving reports bytes written with an unknown total. Stages without a measurable
-total keep it `null`; no estimated overall percentage is presented.
+Archive progress identifies parent-tree balancing and save preparation before
+writing starts. The saving stage reports bytes written and fills in the exact
+total once the save succeeds. Counted stages with an unknown total display
+“total unknown” and keep `stage_total` at `null` while the work is active.
+
+For a multi-message archive, `font_use_pages_scanned` increases as rendering
+workers record glyph use. The `font_subsets` stage counts font dictionaries
+considered and reports cumulative `font_subsets_accepted` and
+`font_subsets_rejected` counts.
+
+The creation checker separates metadata indexing from checking indexed objects
+and uses the index size as the total. Attachment annotation checks show the
+declared attachment total and the current message's one-based index when the
+record supplies a matching message identifier.
 
 `elapsed_seconds` and `stage_elapsed_seconds` show elapsed time. `last_progress`
 changes when recorded work advances or a stage changes; a heartbeat alone does
@@ -189,10 +201,29 @@ updates stage progress, and preserves a completed root PDF/A outcome if later
 checking fails. A normal report, a compact `.summary.json`, and `.progress.json`
 are separate files. Failure to finish is not itself a proven PDF rule violation.
 
-Each upstream PDF/A or ISO 32005 pass runs on its own thread, which terminates
-before the next PDF model opens. This releases the rule engine's private
-thread-local state as well as its documented caches. Merely closing the parser
-left a large model retained during the later EA-PDF checks in a real PST run.
+The validator reports separate progress stages for discovering associated
+files, scanning marked content, checking file attachment annotations, and
+verifying embedded files and checksums. Read `stage_completed` with
+`stage_unit` and `stage_total` when the total is known. Checksum progress
+also reports encoded and decoded bytes and the current file relationship
+when available.
+
+The PDF/A and ISO 32005 indexing stages count entries and decoded bytes read
+from cross-reference streams. Encoded byte totals include each completed
+cross-reference stream. During upstream checking, the progress sidecar includes
+`upstream_checks`, `upstream_failed_checks`, `upstream_processed_objects`, and
+`upstream_pending_objects`. `upstream_activity` identifies PDF model or XMP
+package construction when active. The sidecar refreshes every five seconds
+during long stages, including report writing.
+
+For PDF/A-4f documents where ISO 32005 applies, the Main validator can check
+both standards in one traversal. Progress shows `Checking PDF/A and ISO 32005`
+and counts work across both standards. The report records each standard
+separately. The validator retries the checks separately if the shared pass
+fails or returns an incomplete result. Other PDF/A flavours use separate checks.
+
+Each upstream parser runs on a thread that terminates before the next PDF model
+opens. This releases the rule engine's thread-local state and documented caches.
 
 Standalone validation reserves one third of currently available memory for native
 allocations, mapped files and system headroom; the Java heap receives the other

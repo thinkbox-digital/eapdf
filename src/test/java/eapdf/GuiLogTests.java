@@ -21,6 +21,10 @@ class GuiLogTests {
   assertEquals("100", progress.total());
   assertEquals(new GuiLog.Progress("checking", "checking", "18", "?"), GuiLog.Progress.parse(
       "[progress] checking — 0s in stage; 32s total; CPU nulls; emails completed 18/?"));
+  assertEquals("saving — 2048 bytes (total unknown)", GuiLog.Progress.parse(
+      "[progress] saving — 2048 bytes (total unknown) — CPU 32s — emails completed 18/100").description());
+  assertEquals("checking attachment annotations — 2/5 attachments — message 12", GuiLog.Progress.parse(
+      "[progress] checking attachment annotations — 2/5 attachments — message 12 — CPU 32s — emails completed 18/100").description());
  }
 
  @Test void rapidStagesKeepTheJobStatusAndLongStagesShowTheirLatestCount() {

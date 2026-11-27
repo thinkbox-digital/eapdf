@@ -43,6 +43,8 @@ class XrefStreamParser {
     private final COSXRefInfo section;
     private final COSStream xrefCOSStream;
 
+    private record ObjectRange(long first, long count) {}
+
     /**
      * Constructor.
      *
@@ -63,8 +65,9 @@ class XrefStreamParser {
     void parseStreamAndTrailer() throws IOException {
         try (ASInputStream xrefInputStream = xrefCOSStream.getData(COSStream.FilterFlags.DECODE)) {
             COSObject indexObject = initializeIndex();
-            List<Long> objIDs = initializeObjIDs(indexObject);
-            parseStream(xrefInputStream, objIDs);
+            var progress = XrefProgress.listener();
+            parseStream(xrefInputStream, objectRanges(indexObject), progress);
+            if (progress != null) progress.advance(0, Math.max(0, xrefCOSStream.getLength()), 0);
             setTrailer();
         }
     }
@@ -89,22 +92,19 @@ class XrefStreamParser {
     }
 
     /**
-     * This method calculates object ID for all objects, described in this xref
-     * stream using Index array.
+     * Keep ranges from the Index array without allocating one boxed ID per entry.
      */
-    private List<Long> initializeObjIDs(COSObject indexObject) throws IOException {
-        List<Long> objIDs = new ArrayList<>();
+    private List<ObjectRange> objectRanges(COSObject indexObject) throws IOException {
+        List<ObjectRange> ranges = new ArrayList<>();
         for (int i = 0; i < indexObject.size(); i += 2) {
             Long firstID = indexObject.at(i).getInteger();
             Long lengthOfSubsection = indexObject.at(i + 1).getInteger();
             if (firstID == null || lengthOfSubsection == null) {
                 throw new IOException("Failed to initialize objects ids");
             }
-            for (int j = 0; j < lengthOfSubsection; ++j) {
-                objIDs.add(firstID + j);
-            }
+            if (lengthOfSubsection > 0) ranges.add(new ObjectRange(firstID, lengthOfSubsection));
         }
-        return objIDs;
+        return ranges;
     }
 
     /**
@@ -112,7 +112,8 @@ class XrefStreamParser {
      *
      * @throws IOException
      */
-    private void parseStream(ASInputStream xrefInputStream, List<Long> objIDs) throws IOException {
+    private void parseStream(ASInputStream xrefInputStream, List<ObjectRange> ranges,
+                             XrefProgress.Listener progress) throws IOException {
         COSObject sizesObject = xrefCOSStream.getKey(ASAtom.W);
         if (sizesObject.getType() != COSObjType.COS_ARRAY || sizesObject.size() != 3) {
             throw new IOException("W array in xref shall have 3 elements.");
@@ -126,8 +127,12 @@ class XrefStreamParser {
         byte[] field0 = new byte[field0Size.intValue()];
         byte[] field1 = new byte[field1Size.intValue()];
         byte[] field2 = new byte[field2Size.intValue()];
+        if (field0.length == 0 && field1.length == 0 && field2.length == 0 && !ranges.isEmpty()) {
+            throw new IOException("Cross-reference entries have zero byte width.");
+        }
         byte[] remainedBytes = new byte[0];
-        int objIdIndex = 0;
+        int rangeIndex = 0;
+        long offsetInRange = 0;
 
         while (true) {
             byte[] buffer = new byte[ASBufferedInFilter.BF_BUFFER_SIZE];
@@ -138,13 +143,20 @@ class XrefStreamParser {
             buffer = ASBufferedInFilter.concatenate(remainedBytes, remainedBytes.length,
                     buffer, (int) read);
 
-            for (int pointer = 0; objIdIndex < objIDs.size(); ++objIdIndex) {
+            long entries = 0;
+            for (int pointer = 0; rangeIndex < ranges.size();) {
                 if (pointer + field0.length + field1.length + field2.length >
                         buffer.length) {
                     remainedBytes = Arrays.copyOfRange(buffer, pointer, buffer.length);
                     break;
                 }
-                Long id = objIDs.get(objIdIndex);
+                ObjectRange range = ranges.get(rangeIndex);
+                long id = range.first() + offsetInRange++;
+                if (offsetInRange == range.count()) {
+                    rangeIndex++;
+                    offsetInRange = 0;
+                }
+                entries++;
                 System.arraycopy(buffer, pointer, field0, 0, field0.length);
                 pointer += field0.length;
                 System.arraycopy(buffer, pointer, field1, 0, field1.length);
@@ -167,7 +179,7 @@ class XrefStreamParser {
                         } else {
                             xref.generation = 0;
                         }
-                        section.getXRefSection().add(new COSKey(id.intValue(),
+                        section.getXRefSection().add(new COSKey((int) id,
                                 xref.generation), xref.offset);
                         break;
                     case 2:
@@ -178,13 +190,14 @@ class XrefStreamParser {
                         if (field2.length > 0) {
                             xref.generation = 0;
                         }
-                        section.getXRefSection().add(new COSKey(id.intValue(),
+                        section.getXRefSection().add(new COSKey((int) id,
                                 xref.generation), xref.offset);
                         break;
                     default:
                         throw new IOException("Error in parsing xref stream");
                 }
             }
+            if (progress != null) progress.advance(entries, 0, read);
         }
     }
 

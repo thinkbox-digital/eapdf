@@ -123,14 +123,16 @@ final class PdfCreationValidator {
     }
     if (profile.equals("s") || profile.equals("si")) require(emails.size() == 1, "Single-message profile requires one email");
     if (profile.equals("m") || profile.equals("mi")) require(emails.size() >= 2, "Multi-message profile requires two emails");
-    java.util.Set<String> identifiers = new java.util.HashSet<>();
-    for (Element email : emails) {
+    var messageIndexes = new java.util.HashMap<String, Integer>();
+    for (int index = 0; index < emails.size(); index++) {
+      Element email = emails.get(index);
       String sent = value(email, "Sent");
+      String identifier = value(email, "Mail_GUID");
       boolean knownMissing = sent.isBlank() && context.inventory != null
-          && context.inventory.permitsMissingSent(value(email, "Mail_GUID"));
+          && context.inventory.permitsMissingSent(identifier);
       require(Common.validSentDate(sent) || knownMissing, "Missing or invalid Sent");
-      require(!value(email, "Mail_GUID").isBlank(), "Email is missing Mail_GUID");
-      require(identifiers.add(value(email, "Mail_GUID")), "Duplicate email Mail_GUID");
+      require(!identifier.isBlank(), "Email is missing Mail_GUID");
+      require(messageIndexes.putIfAbsent(identifier, index + 1) == null, "Duplicate email Mail_GUID");
     }
     require(document.getNumberOfPages() > 0 && catalog.getDocumentOutline() != null, "Missing pages or outlines");
     boolean hasEmailAttachments = emails.stream().anyMatch(email -> {
@@ -178,14 +180,22 @@ final class PdfCreationValidator {
     }
     var attachments = metadata.getElementsByTagNameNS(MAIL, "attachments");
     AttachmentPages attachmentPages = null;
-    if (depth == 0 && context.reportProgress) ConversionProgress.beginUnknown("checking_attachment_annotations", "attachments");
+    boolean attachmentProgress = depth == 0 && context.reportProgress;
+    if (attachmentProgress) {
+      long total = 0;
+      for (int index = 0; index < attachments.getLength(); index++)
+        total += ((Element) attachments.item(index)).getElementsByTagNameNS(RDF, "li").getLength();
+      ConversionProgress.begin("checking_attachment_annotations", total, "attachments");
+    }
     for (int index = 0; index < attachments.getLength(); index++) {
       Element container = (Element) attachments.item(index);
       var items = container.getElementsByTagNameNS(RDF, "li");
       for (int item = 0; item < items.getLength(); item++) {
         if (attachmentPages == null) attachmentPages = new AttachmentPages(document);
-        validateAttachment(attachmentPages, (Element) items.item(item));
-        if (depth == 0 && context.reportProgress) ConversionProgress.advance("checking_attachment_annotations");
+        Element attachment = (Element) items.item(item);
+        if (attachmentProgress) ConversionProgress.attachmentMessage(messageIndexes.get(value(attachment, "Mail_GUID")));
+        validateAttachment(attachmentPages, attachment);
+        if (attachmentProgress) ConversionProgress.advance("checking_attachment_annotations");
       }
     }
     if (depth == 0 && context.reportProgress) ConversionProgress.stage("checking_preservation");

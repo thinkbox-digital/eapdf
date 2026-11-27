@@ -104,12 +104,33 @@ class ConversionProgressTests {
    assertTrue(read().get("stage_total").isJsonNull());
    Files.write(pdf,new byte[2048]); ConversionProgress.flush();
    assertEquals(2048,read().get("stage_completed").getAsLong());
+   ConversionProgress.saved();
+   assertEquals(2048,read().get("stage_total").getAsLong());
    ConversionProgress.detach(); ConversionProgress.attach(workspace);
    ConversionProgress.begin("publishing",1,"files"); ConversionProgress.advance("publishing");
    assertEquals(2,read().get("emails_completed").getAsInt());
    assertEquals(2,read().get("emails_total").getAsInt());
    supervisor.finish("COMPLETED"); ConversionProgress.flush();
    assertEquals("COMPLETED",read().get("state").getAsString());
+  } finally {ConversionProgress.detach();}
+ }
+ @Test void subsetCountsSurviveHandoffAndAttachmentMessageResets() throws Exception {
+  Path workspace=directory.resolve("worker");begin(workspace);
+  try {
+   ConversionProgress.attach(workspace);
+   ConversionProgress.begin("font_subsets",2,"fonts");
+   ConversionProgress.fontSubsetChecked(true);
+   ConversionProgress.fontSubsetChecked(false);
+   assertEquals(2,read().get("stage_completed").getAsInt());
+   ConversionProgress.detach(); ConversionProgress.attach(workspace);
+   ConversionProgress.begin("checking_attachment_annotations",1,"attachments");
+   ConversionProgress.attachmentMessage(3);
+   ConversionProgress.advance("checking_attachment_annotations");
+   assertEquals(1,read().get("font_subsets_accepted").getAsInt());
+   assertEquals(1,read().get("font_subsets_rejected").getAsInt());
+   assertEquals(3,read().get("attachment_message_index").getAsInt());
+   ConversionProgress.stage("checking_preservation");
+   assertFalse(read().has("attachment_message_index"));
   } finally {ConversionProgress.detach();}
  }
  @Test void receiptsBindFinalBytesAndSurvivePublicationHandoffWithoutInventingValidation() throws Exception {

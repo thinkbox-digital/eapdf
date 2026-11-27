@@ -7,7 +7,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <body>
 <section class="chapter" id="start">
 <h1>EA-PDF</h1>
-<p class="edition" data-edition="2026-11-25">User Manual · Creator and validators 2.5.0-beta.1 · documentation revision 25 November 2026</p>
+<p class="edition" data-edition="2026-11-27">User Manual · Creator and validators 2.7.0-beta.1 · documentation revision 27 November 2026</p>
 <p>EA-PDF converts email into PDF files for preservation and access. It supports saved EML and MSG messages, PST and MBOX mailboxes, and Gmail downloads.</p>
 <p>The creator produces readable email pages with structured metadata and retained source messages and attachments where the selected profile allows them. The validators check PDF/A and EA-PDF requirements. The viewer lets people browse messages, collections and embedded files.</p>
 <p>Created by <strong>Thinkbox.DIGITAL</strong>.</p>
@@ -22,6 +22,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <p>Each entry in <code>conversion_diagnostics</code> identifies the source and message, explains what happened and its effect, and suggests what to do. For example, <code>TEXT_RECOVERED</code> means some displayed characters may differ from the original. <code>SOURCE_INCOMPLETE</code> means source content could not be recovered. A <code>DATE_PRECISION_REDUCED</code> warning means native PST fractional seconds became whole seconds in the reconstructed message and PDF date. Keep the original PST if that timing matters.</p>
 <p>If an EML attachment or inline image fails MIME transfer decoding, the creator reports <code>SOURCE_INCOMPLETE</code> and continues with the available content. The PDF omits the affected decoded part. The creator warns about malformed MIME parameters and omits them from generated metadata. It retains readable content and assigns a generated name when an attachment has no readable filename. If a declared multipart boundary is missing from the body, the creator warns and uses a complete boundary found in the body. An unreadable section is omitted if no complete boundary can be recovered. Profiles <strong>1s</strong>, <strong>1m</strong> and <strong>1c</strong> embed the original EML byte for byte.</p>
 <p>The creation receipt identifies the finished PDF but does not replace validation. Its PDF/A and EA-PDF validation fields say <code>NOT_RUN</code> because those checks belong to the separate validator. Run the Java validator on the published PDF and keep its report. A passing report does not erase conversion warnings.</p>
+<p>The Creator keeps table rows that are entirely covered by cells spanning from above. A PDF/UA-2 checker can still report that such a row has zero columns. Record that accessibility finding alongside the PDF/A-4f result while the standards group reviews the case. See <a href="https://github.com/veraPDF/veraPDF-library/issues/1667">the veraPDF discussion</a>.</p>
 <h2>What the project produces</h2>
 <p>The creator turns email into searchable PDF pages and adds information that identifies messages, their sources and their attachments. EA-PDF means <strong>Email Archiving PDF</strong>: it describes how email information is organized inside the PDF. PDF/A is a preservation format for PDFs. This creator currently writes PDF 2.0 with PDF/A-4f identification for all six EA-PDF profiles.</p>
 <p>A validator checks the file's structure and available evidence. The viewer helps you read it. A PDF opening successfully does not mean it passed validation. A validation PASS does not mean every embedded file is safe to run, or that the PDF is independently certified.</p>
@@ -47,10 +48,11 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <p>The letter <strong>i</strong> means isolated. It does <strong>not</strong> mean anonymized or redacted. Visible addresses, body text, metadata and inline images can remain. Attachment markers may remain while their payloads contain zero bytes.</p>
 <h2>Keep your originals</h2>
 <p>For EML and MSG, a retained-source PDF includes the original message asset. For PST, MBOX and Gmail, it includes individual exported or reconstructed messages. It does <strong>not</strong> include the original PST/MBOX container or a complete copy of the Gmail account. Keep the original mailbox export separately when its full format and properties matter. Conversion does not recover information that was already missing or damaged.</p>
+<p>PST conversion uses stored transport headers to recover message fields such as the sender, recipients and date. Keep the original PST for the full transport header block, including mail relay and routing details.</p>
 <p>A collection's outer pages are its introduction and index. To read the actual emails, open its embedded message PDFs. A basic PDF reader may show only those outer pages. The project viewer supports browsing these children.</p>
 </section>
 <section class="chapter" id="installation"><h1>2. Get the tools ready</h1>
-<p>Open the <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.5.0-beta.1">release downloads</a>. Install a desktop version of Java 21 or later, then download the apps you need.</p>
+<p>Open the <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.7.0-beta.1">release downloads</a>. Install a desktop version of Java 21 or later, then download the apps you need.</p>
 <ul><li><strong>Desktop Viewer:</strong> open a PDF and browse its email and attachments.</li><li><strong>Validator:</strong> check a PDF and save a report.</li><li><strong>Creator:</strong> turn email into PDFs in a desktop window.</li></ul>
 <p>The Creator can run with built-in settings. See the <a href="https://github.com/thinkbox-digital/eapdf/blob/main/config/README.md">configuration guide</a> to customize them.</p>
 <p>Double-click a desktop app’s JAR file to open it. A JAR is the app itself. If a ZIP or archive program opens, use <strong>Open with</strong> in your file manager and select Java.</p>
@@ -125,10 +127,10 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <section class="chapter" id="viewer"><h1>7. Viewer: read messages and attachments</h1>
 
 <h2 id="desktop-viewer">Open a PDF in Desktop Viewer</h2>
-<ol><li><a href="https://github.com/thinkbox-digital/eapdf/releases/download/v2.5.0-beta.1/eapdf-desktop-viewer-full-0.10.0.jar">Download Desktop Viewer 0.10.0</a> and double-click the JAR.</li><li>Choose <strong>Open PDF…</strong> or drag a PDF into the window.</li><li>Select a message or folder to see its pages. Use the Files pane to preview or save an attachment. In a collection, open a member and use <strong>Parent</strong> to return.</li><li>Use <strong>Search</strong> to find text. Open Portfolio view when you want to browse the files in a PDF Portfolio.</li></ol>
+<ol><li><a href="https://github.com/thinkbox-digital/eapdf/releases/download/v2.7.0-beta.1/eapdf-desktop-viewer-full-0.11.0.jar">Download Desktop Viewer 0.11.0</a> and double-click the JAR.</li><li>Choose <strong>Open PDF…</strong> or drag a PDF into the window.</li><li>Select a message or folder to see its pages. Use the Files pane to preview or save an attachment. In a collection, open a member and use <strong>Parent</strong> to return.</li><li>Use <strong>Search</strong> to find text. Open Portfolio view when you want to browse the files in a PDF Portfolio.</li></ol>
 <p>Desktop Viewer requires a desktop version of Java 21 or later. On Linux, the app uses a graphical session with GTK 3. See the <a href="https://github.com/thinkbox-digital/eapdf/blob/main/desktop-viewer/USER_GUIDE.md">Desktop Viewer guide</a> for more controls.</p>
 <h2>Read in your browser</h2>
-<p>The <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.5.0-beta.1">Full browser reader</a> is an alternative for Chromium and Firefox.</p>
+<p>The <a href="https://github.com/thinkbox-digital/eapdf/releases/tag/v2.7.0-beta.1">Full browser reader</a> is an alternative for Chromium and Firefox.</p>
 <h2>Install in Chromium or Chrome</h2>
 <p>Use the Chromium viewer ZIP, extract it, and keep the extracted folder in a stable location. The current package requires Chromium 156 or newer.</p>
 <ol><li>Enter <code>chrome://extensions</code> in the browser's address bar.</li><li>Enable <strong>Developer mode</strong>.</li><li>Click <strong>Load unpacked</strong> and select the extracted extension folder containing <code>manifest.json</code>.</li><li>Open the extensions menu and click <strong>EA-PDF viewer beta</strong>. Pin it if you want easy access.</li></ol>
@@ -222,7 +224,7 @@ body {font-family: sans-serif; max-width: 58rem; margin: 2rem auto; padding: 1re
 <section class="chapter" id="maintenance"><h1>11. Updates and help</h1>
 <h2>Edition and verification notes</h2>
 <p>This manual was updated on 25 November 2026.</p>
-<p class="note"><strong>Edition and availability.</strong> This guide covers creator and validator 2.5.0-beta.1, Desktop Viewer 0.10.0, and Full browser reader 1.14.0. The Full reader reports an incomplete inventory when it reaches a file inspection limit. macOS Firefox rendering still needs platform verification. Read the release notes for the exact package you use.</p>
+<p class="note"><strong>Edition and availability.</strong> This guide covers creator and validator 2.7.0-beta.1, Desktop Viewer 0.11.0, and Full browser reader 1.15.0. The Full reader reports an incomplete inventory when it reaches a file inspection limit. macOS Firefox rendering still needs platform verification. Read the release notes for the exact package you use.</p>
 <p>The names, addresses, messages and attachments in the screenshots are fictional. The screenshots come from the actual applications on Linux; window borders and file pickers will look different on other systems. Linux and the listed browser versions are the tested environment.</p>
 <h2>Update carefully</h2>
 <p>Keep a copy of your configuration, originals and completed records. Read the new release notes, download the intended files, and test a small known email before a large job. Replacing a JAR does not update a conversion that is already running. Unpacked viewer installations need an explicit reload and a new viewer tab.</p>

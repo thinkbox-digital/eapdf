@@ -2,6 +2,7 @@ package eapdf.viewer;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.text.PDFTextStripper;
 
@@ -29,6 +31,20 @@ final class ViewerSearch {
         var search = new Search(Pattern.compile(phrase, Pattern.LITERAL | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE),
                 Math.max(0, ViewerApplication.MAX_CHILD_DEPTH - root.depth()), canceled, progress);
         search.checkCanceled();
+        if (!root.mail.collection()) {
+            try (var pdf = PdfSearchDocument.open(root)) {
+                if (pdf != null) {
+                    search.scanText(pdf, root.name, List.of());
+                    search.checkCanceled();
+                    return List.copyOf(search.hits);
+                }
+            } catch (InterruptedIOException interrupted) {
+                throw interrupted;
+            } catch (IOException | UncheckedIOException repair) {
+                search.hits.clear();
+                // Retry with PDFBox's ordinary parser if recovery is needed.
+            }
+        }
         try (var pdf = PdfNavigation.open(root.renderingPath)) {
             search.scan(pdf, root.name, List.of());
         }
@@ -74,32 +90,7 @@ final class ViewerSearch {
         void scan(PdfNavigation pdf, String name, List<String> path) throws IOException {
             checkCanceled();
             documents++;
-            progress.accept(name);
-            var buffer = new PageBuffer();
-            try {
-                new PDFTextStripper() {
-                    @Override protected void startPage(PDPage page) throws IOException {
-                        checkCanceled();
-                        if (hits.size() >= MAX_RESULTS) throw new ResultLimit();
-                        buffer.text.setLength(0);
-                    }
-
-                    @Override protected void endPage(PDPage page) throws IOException {
-                        checkCanceled();
-                        String text = normalized(buffer.text.toString());
-                        var matches = query.matcher(text);
-                        if (hits.size() < MAX_RESULTS && matches.find()) {
-                            int first = Math.max(0, matches.start() - 45);
-                            int last = Math.min(text.length(), matches.end() + 70);
-                            String excerpt = (first == 0 ? "" : "…") + text.substring(first, last)
-                                    + (last == text.length() ? "" : "…");
-                            hits.add(new Hit(path, getCurrentPageNo() - 1, excerpt));
-                        }
-                    }
-                }.writeText(pdf.document(), buffer);
-            } catch (ResultLimit reached) {
-                return;
-            }
+            scanText(pdf.document(), name, path);
             if (path.size() >= depthLimit || hits.size() >= MAX_RESULTS) return;
             var mail = MailNavigation.read(pdf.document());
             if (!mail.collection()) return;
@@ -129,6 +120,36 @@ final class ViewerSearch {
                 } catch (IOException unreadable) {
                     skipped++;
                 }
+            }
+        }
+
+        void scanText(PDDocument document, String name, List<String> path) throws IOException {
+            checkCanceled();
+            progress.accept(name);
+            var buffer = new PageBuffer();
+            try {
+                new PDFTextStripper() {
+                    @Override protected void startPage(PDPage page) throws IOException {
+                        checkCanceled();
+                        if (hits.size() >= MAX_RESULTS) throw new ResultLimit();
+                        buffer.text.setLength(0);
+                    }
+
+                    @Override protected void endPage(PDPage page) throws IOException {
+                        checkCanceled();
+                        String text = normalized(buffer.text.toString());
+                        var matches = query.matcher(text);
+                        if (hits.size() < MAX_RESULTS && matches.find()) {
+                            int first = Math.max(0, matches.start() - 45);
+                            int last = Math.min(text.length(), matches.end() + 70);
+                            String excerpt = (first == 0 ? "" : "…") + text.substring(first, last)
+                                    + (last == text.length() ? "" : "…");
+                            hits.add(new Hit(path, getCurrentPageNo() - 1, excerpt));
+                        }
+                    }
+                }.writeText(document, buffer);
+            } catch (ResultLimit reached) {
+                // The result limit also ends collection traversal.
             }
         }
 

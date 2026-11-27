@@ -6,17 +6,17 @@
 
 Turn saved emails and mailboxes into PDFs you can read, search and archive. Supports EML, MSG, PST, MBOX and Gmail.
 
-[User manual](docs/manual/user-manual.html) · [PDF manual](docs/EA-PDF_User_Manual.pdf) · [Release downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.5.0-beta.1)
+[User manual](docs/manual/user-manual.html) · [PDF manual](docs/EA-PDF_User_Manual.pdf) · [Release downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.7.0-beta.1)
 
 ![EA-PDF Desktop Viewer displaying the anonymized Seating Question email in a 1m archive](docs/screenshots/readme-viewer-1m.png)
 
 ## Download
 | Item | Use it to |
 | --- | --- |
-| [Creator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.5.0-beta.1/emailtopdfa-2.5.0-beta.1-gui.jar) | Convert email to PDF in a desktop window. |
-| [Validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.5.0-beta.1/eapdf-validator-2.5.0-beta.1.jar) | Check a PDF and save a report. |
-| [Desktop Viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.5.0-beta.1/eapdf-desktop-viewer-full-0.10.0.jar) | Open PDFs, browse email and attachments, and save files. |
-| Full browser readers for [Chromium](https://github.com/thinkbox-digital/eapdf/releases/download/v2.5.0-beta.1/eapdf-viewer-1.14.0-chromium.zip) and [Firefox](https://github.com/thinkbox-digital/eapdf/releases/download/v2.5.0-beta.1/eapdf-viewer-1.14.0-firefox.zip) | Read PDFs in your browser. |
+| [Creator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.7.0-beta.1/emailtopdfa-2.7.0-beta.1-gui.jar) | Convert email to PDF in a desktop window. |
+| [Validator](https://github.com/thinkbox-digital/eapdf/releases/download/v2.7.0-beta.1/eapdf-validator-2.7.0-beta.1.jar) | Check a PDF and save a report. |
+| [Desktop Viewer](https://github.com/thinkbox-digital/eapdf/releases/download/v2.7.0-beta.1/eapdf-desktop-viewer-full-0.11.0.jar) | Open PDFs, browse email and attachments, and save files. |
+| Full browser readers for [Chromium](https://github.com/thinkbox-digital/eapdf/releases/download/v2.7.0-beta.1/eapdf-viewer-1.15.0-chromium.zip) and [Firefox](https://github.com/thinkbox-digital/eapdf/releases/download/v2.7.0-beta.1/eapdf-viewer-1.15.0-firefox.zip) | Read PDFs in your browser. |
 | [Examples (ZIP)](https://thinkbox-digital.github.io/eapdf/ea-pdf-examples.zip) | Download sample EA-PDF messages, archives and collections. |
 
 ## Get started

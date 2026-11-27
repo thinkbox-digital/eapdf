@@ -8,7 +8,8 @@ import org.verapdf.pdfa.flavours.PDFAFlavour;
 
 class DecodedObjectStreamCacheTests {
   @org.junit.jupiter.api.io.TempDir Path temporary;
-  record Result(boolean compliant,long checks,int failures) {}
+  record Finding(String rule, String context) {}
+  record Result(boolean compliant, long checks, int failures, java.util.List<Finding> findings) {}
   private Result validate(Path path,boolean bounded) throws Exception {
     // veraPDF retains both model caches and a Rhino context in ThreadLocals.
     // Use the same disposable-worker boundary as JavaValidation.pdfa(), so this
@@ -32,10 +33,19 @@ class DecodedObjectStreamCacheTests {
     JavaValidation.initialise();var foundry=Foundries.defaultInstance();
     try(var parser=foundry.createParser(path.toFile(),PDFAFlavour.NO_FLAVOUR);
         var validator=foundry.createValidator(parser.getFlavour(),100,false,true,false)) {
-      var cache=bounded?DecodedObjectStreamCache.install(parser,2):null;
+      // A one-byte budget forces byte-based eviction while allowing a single
+      // oversized stream to stay open for the current object.
+      var cache=bounded?DecodedObjectStreamCache.install(parser,1024,1):null;
       BoundedGlyphCache.install();var result=validator.validate(parser);
-      if(cache!=null){assertTrue(cache.size()<=2);assertTrue(cache.evictions>0,"Real fixture must exercise eviction");}
-      return new Result(result.isCompliant(),result.getTotalAssertions(),result.getFailedChecks().size());
+      if(cache!=null){
+        assertEquals(1, cache.size());
+        assertTrue(cache.evictions > 0, "Real fixture must exercise byte-based eviction");
+        assertTrue(cache.peakBytes() > 1);
+      }
+      var findings = result.getTestAssertions().stream()
+          .map(assertion -> new Finding(assertion.getRuleId().toString(), assertion.getLocationContext()))
+          .toList();
+      return new Result(result.isCompliant(),result.getTotalAssertions(),result.getFailedChecks().size(), findings);
     }
   }
   @Test void evictedStreamsCanBeReopenedWithoutChangingRealPdfaResults() throws Exception {

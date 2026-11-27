@@ -1,6 +1,7 @@
 package eapdf;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.*;
@@ -38,7 +39,11 @@ final class PdfFontMetadata {
   static void save(PDDocument document, OutputStream output) throws IOException {
     prepare(document); document.save(output);
   }
-  static void save(PDDocument document, File file, CompressParameters compression) throws IOException {
-    prepare(document); document.save(file, compression);
+  static void saveWithProgress(PDDocument document, Path file, CompressParameters compression) throws IOException {
+    ConversionProgress.stage("preparing_save");
+    prepare(document);
+    ConversionProgress.saving(file);
+    document.save(file.toFile(), compression);
+    ConversionProgress.saved();
   }
 }

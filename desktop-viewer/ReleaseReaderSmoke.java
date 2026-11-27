@@ -32,12 +32,15 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 
@@ -94,6 +97,7 @@ public final class ReleaseReaderSmoke extends Application {
                 "canceled opening cleanup");
         check(fx(this::current) == null, "Canceled PDF never became the active document");
         checkMetadataDecoding();
+        checkOrientationAndAssociatedFiles();
         runAttachmentImageChecks();
         checkLargeArchiveOpen(open);
         checkImageWindowLifecycle(open, Path.of(documents.getAsJsonObject("1s").get("path").getAsString()));
@@ -162,6 +166,57 @@ public final class ReleaseReaderSmoke extends Application {
             }
         }
         System.out.println("PASS: desktop opened all six validated PDFs, navigated messages and children, and exported exact bytes.");
+    }
+
+    private static void checkOrientationAndAssociatedFiles() throws IOException {
+        var pdf = Files.createTempFile("viewer-associations-", ".pdf");
+        var af = COSName.getPDFName("AF");
+        try {
+            try (var document = new PDDocument()) {
+                document.addPage(new PDPage(new PDRectangle(300, 600)));
+                document.addPage(new PDPage(new PDRectangle(600, 300)));
+                var catalog = document.getDocumentCatalog().getCOSObject();
+                var rootFile = new PDComplexFileSpecification();
+                rootFile.setFile("catalog.bin");
+                var catalogFiles = new COSArray();
+                catalogFiles.add(rootFile.getCOSObject());
+                catalog.setItem(af, catalogFiles);
+
+                var directFile = new PDComplexFileSpecification();
+                directFile.setFile("direct.bin");
+                directFile.getCOSObject().setDirect(true);
+                var associated = new COSArray();
+                associated.add(directFile.getCOSObject());
+                associated.add(rootFile.getCOSObject());
+                var other = new COSDictionary();
+                other.setItem(af, associated);
+                catalog.setItem(COSName.getPDFName("AssociatedFileTest"), other);
+                document.save(pdf.toFile());
+            }
+
+            var renderer = new ViewerRenderingDocument(pdf.toFile());
+            try {
+                check(renderer.getNumberOfPages() == 2 && !renderer.isLandscape(0) && renderer.isLandscape(1),
+                        "Page-tree traversal preserves page order and orientation");
+            } finally {
+                renderer.close();
+            }
+            try (var input = new RandomAccessReadBufferedFile(pdf.toFile());
+                 var navigation = PdfNavigation.open(pdf)) {
+                var result = PdfAssociatedFiles.read(input, navigation.document(), 1_000);
+                check(!result.incomplete() && result.files().size() == 3, "Inventory includes direct and indirect associations");
+                var root = navigation.document().getDocumentCatalog().getCOSObject().getCOSArray(af).getObject(0);
+                check(result.files().stream().anyMatch(file -> file.catalog() && file.specification() == root),
+                        "Catalog association resolves in the active PDF document");
+                check(result.files().stream().anyMatch(file -> !file.catalog() && file.specification() == root),
+                        "The same file can also be associated elsewhere");
+                check(result.files().stream().anyMatch(file -> !file.catalog()
+                                && "direct.bin".equals(file.specification().getString(COSName.F))),
+                        "Direct file specifications outside the name tree are preserved");
+            }
+        } finally {
+            Files.deleteIfExists(pdf);
+        }
     }
 
     private static void checkMetadataDecoding() throws IOException {

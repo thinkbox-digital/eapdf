@@ -77,6 +77,11 @@ class JavaValidationTests {
     JsonObject report = JavaValidation.validate(SAMPLE);
     assertEquals("PASS", report.getAsJsonObject("pdfa").get("status").getAsString());
     assertTrue(has(report, "ISO32005_UPSTREAM", "PASS"));
+    var iso = report.getAsJsonArray("items").asList().stream().map(value -> value.getAsJsonObject())
+        .filter(item -> "ISO32005_UPSTREAM".equals(item.get("code").getAsString()))
+        .findFirst().orElseThrow().getAsJsonObject("details");
+    assertEquals(JavaValidation.pdfa(SAMPLE, null).get("checks"), report.getAsJsonObject("pdfa").get("checks"));
+    assertEquals(JavaValidation.iso(SAMPLE).get("checks"), iso.get("checks"));
     assertFalse(has(report, "VALIDATION_ERROR", "WARN"));
     assertEquals(0, report.getAsJsonObject("summary").get("fail").getAsInt());
     // The fully compared ordinary sample can PASS; unavailable required evidence still prevents PASS.

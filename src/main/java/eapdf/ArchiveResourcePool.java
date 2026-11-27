@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HexFormat;
 import java.util.IdentityHashMap;
@@ -22,6 +23,10 @@ final class ArchiveResourcePool {
   long reusedFonts;
 
   PDFCloneUtility cloner(PDDocument target) {
+    return cloner(target, Map.of(), null);
+  }
+
+  PDFCloneUtility cloner(PDDocument target, Map<String, BitSet> partUsage, ArchiveFontSubsets.Usage usage) {
     return new PDFCloneUtility(target) {
       private final Map<COSDictionary, String> fingerprints = new IdentityHashMap<>();
       private final Map<COSDictionary, COSDictionary> copied = new IdentityHashMap<>();
@@ -46,16 +51,21 @@ final class ArchiveResourcePool {
         else { key = fingerprint(dictionary); fingerprints.put(dictionary, key); }
         if (key == null) return (T)dictionary(dictionary);
         COSDictionary existing = fonts.get(key);
-        if (existing != null) { reusedFonts++; copied.put(dictionary, existing); return (T)existing; }
+        if (existing != null) {
+          reusedFonts++; copied.put(dictionary, existing);
+          if (usage != null && ArchiveFontSubsets.candidate(dictionary)) usage.record(existing, partUsage.get(key));
+          return (T)existing;
+        }
         T copy = (T)dictionary(dictionary);
         if (fonts.size() >= 4096) fonts.remove(fonts.keySet().iterator().next());
         fonts.put(key, (COSDictionary)copy);
+        if (usage != null && ArchiveFontSubsets.candidate(dictionary)) usage.record((COSDictionary)copy, partUsage.get(key));
         return copy;
       }
     };
   }
 
-  private static String fingerprint(COSBase value) throws IOException {
+  static String fingerprint(COSBase value) throws IOException {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
       try (var output = new DataOutputStream(new DigestOutputStream(OutputStream.nullOutputStream(), digest))) {

@@ -21,11 +21,15 @@ final class ConversionProgress {
   private String stage = "reading";
   private boolean warned;
   private long stageCompleted, lastLog;
+  private long fontUsePagesScanned;
+  private long fontSubsetsAccepted, fontSubsetsRejected;
+  private Integer attachmentMessageIndex;
   private Long stageTotal;
   private String stageUnit, stageStarted = Instant.now().toString(), lastProgress = stageStarted;
   private String loggedStage;
   private long loggedCompleted = -1;
   private Path savingFile;
+  private boolean savingComplete;
   private JsonArray creationReceipts = new JsonArray();
   private long receiptBytes;
   private JsonObject conversionWarnings = new JsonObject();
@@ -95,6 +99,9 @@ final class ConversionProgress {
       if (snapshot.has("conversion_warnings")) active.conversionWarnings = snapshot.getAsJsonObject("conversion_warnings").deepCopy();
       if (snapshot.has("conversion_diagnostics")) active.conversionDiagnostics = snapshot.getAsJsonArray("conversion_diagnostics").deepCopy();
       active.completed = snapshot.get("emails_completed").getAsLong();
+      if (snapshot.has("font_use_pages_scanned")) active.fontUsePagesScanned = snapshot.get("font_use_pages_scanned").getAsLong();
+      if (snapshot.has("font_subsets_accepted")) active.fontSubsetsAccepted = snapshot.get("font_subsets_accepted").getAsLong();
+      if (snapshot.has("font_subsets_rejected")) active.fontSubsetsRejected = snapshot.get("font_subsets_rejected").getAsLong();
       active.discovered = snapshot.get("emails_discovered").getAsLong();
       active.total = snapshot.get("emails_total").isJsonNull() ? null : snapshot.get("emails_total").getAsLong();
     }
@@ -178,6 +185,19 @@ final class ConversionProgress {
   }
   static void total(long count) { var p = active; if (p != null) synchronized (p) { p.total = count; p.emit(true); } }
   static void completed() { var p = active; if (p != null) synchronized (p) { p.completed++; p.changed(); p.emit(p.total != null && p.completed == p.total); } }
+  static void fontUsePageScanned() {
+    var p = active;
+    if (p != null) synchronized (p) { p.fontUsePagesScanned++; p.changed(); p.emit(false); }
+  }
+  static void fontSubsetChecked(boolean accepted) {
+    var p = active;
+    if (p != null) synchronized (p) {
+      if (!p.stage.equals("font_subsets")) return;
+      if (accepted) p.fontSubsetsAccepted++;
+      else p.fontSubsetsRejected++;
+      p.advanceStage();
+    }
+  }
   static void stage(String value) {
     var p = active; if (p != null) synchronized (p) {
       if (!p.stage.equals(value)) { p.setStage(value, null, null); p.emit(true); }
@@ -193,23 +213,39 @@ final class ConversionProgress {
       p.setStage(value, null, unit); p.emit(true);
     }
   }
+  static void attachmentMessage(Integer index) {
+    var p = active;
+    if (p != null) synchronized (p) {
+      if (p.stage.equals("checking_attachment_annotations")) p.attachmentMessageIndex = index;
+    }
+  }
   // Expected stage prevents nested message rendering from updating archive counters.
   static void advance(String expectedStage) {
     var p = active; if (p != null) synchronized (p) {
       if (!p.stage.equals(expectedStage) || p.stageUnit == null) return;
-      p.stageCompleted++; p.changed();
-      p.emit(p.stageTotal != null && p.stageCompleted == p.stageTotal);
+      p.advanceStage();
     }
+  }
+  private void advanceStage() {
+    stageCompleted++; changed();
+    emit(stageTotal != null && stageCompleted == stageTotal);
   }
   static void saving(Path file) {
     var p = active; if (p != null) synchronized (p) {
       p.setStage("saving", null, "bytes"); p.savingFile = file; p.emit(true);
     }
   }
+  static void saved() {
+    var p = active; if (p != null) synchronized (p) {
+      if (p.savingFile == null) return;
+      p.savingComplete = true; p.changed(); p.emit(true);
+    }
+  }
   private void changed() { lastProgress = Instant.now().toString(); }
   private void setStage(String value, Long count, String unit) {
     stage = value; stageCompleted = 0; stageTotal = count; stageUnit = unit;
-    stageStarted = Instant.now().toString(); savingFile = null; changed();
+    stageStarted = Instant.now().toString(); savingFile = null; savingComplete = false;
+    attachmentMessageIndex = null; changed();
   }
   private static long secondsSince(String value) {
     return Math.max(0, java.time.Duration.between(Instant.parse(value), Instant.now()).getSeconds());
@@ -245,6 +281,7 @@ final class ConversionProgress {
     if (savingFile != null && Files.exists(savingFile)) {
       long bytes = Files.size(savingFile);
       if (bytes != stageCompleted) { stageCompleted = bytes; changed(); }
+      if (savingComplete) stageTotal = bytes;
     }
     long done = stage.equals("rendering") ? completed : stage.equals("reading") ? discovered : stageCompleted;
     Long count = stage.equals("rendering") ? total : stageTotal;
@@ -259,6 +296,10 @@ final class ConversionProgress {
     snapshot.put("total_known", total != null); snapshot.put("emails_discovered", discovered);
     snapshot.put("stage_completed", unit == null ? null : done);
     snapshot.put("stage_total", count); snapshot.put("stage_unit", unit);
+    snapshot.put("font_use_pages_scanned", fontUsePagesScanned);
+    snapshot.put("font_subsets_accepted", fontSubsetsAccepted);
+    snapshot.put("font_subsets_rejected", fontSubsetsRejected);
+    if (attachmentMessageIndex != null) snapshot.put("attachment_message_index", attachmentMessageIndex);
     snapshot.put("stage_started", stageStarted); snapshot.put("last_progress", lastProgress);
     snapshot.put("elapsed_seconds", elapsed); snapshot.put("stage_elapsed_seconds", stageElapsed);
     snapshot.put("process_id", ProcessHandle.current().pid());
@@ -279,6 +320,10 @@ final class ConversionProgress {
         || count != null && done == count && done != loggedCompleted) {
       String unit = stage.equals("rendering") || stage.equals("reading") ? "emails" : stageUnit;
       String work = unit == null ? "" : " — " + done + (count == null ? "" : "/" + count) + " " + unit;
+      if (unit != null && count == null) work += " (total unknown)";
+      if (stage.equals("rendering") && fontUsePagesScanned > 0) work += " — font use scanned on " + fontUsePagesScanned + " pages";
+      if (stage.equals("font_subsets")) work += " — " + fontSubsetsAccepted + " accepted, " + fontSubsetsRejected + " rejected";
+      if (attachmentMessageIndex != null) work += " — message " + attachmentMessageIndex;
       Long cpu = ProcessHandle.current().info().totalCpuDuration().map(java.time.Duration::toSeconds).orElse(null);
       System.out.println("[progress] " + stage.replace('_', ' ') + work + " — CPU " + cpu + "s — emails completed " + completed + "/" + (total == null ? "?" : total));
       loggedStage = stage; loggedCompleted = done; lastLog = now;

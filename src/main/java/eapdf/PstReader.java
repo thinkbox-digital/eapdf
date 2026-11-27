@@ -178,7 +178,7 @@ class PstReader {
   }
 
   static void normalizeExportedAddressHeaders(EmailRecord record) throws Exception {
-    // XMP compares with the reconstructed RFC822 source. Original native header bytes remain in the Supplement.
+    // XMP compares with the reconstructed RFC822 source.
     record.rawFrom = Common.encodeAddressHeader(Common.nz(record.rawFrom));
     record.rawTo = Common.encodeAddressHeader(Common.nz(record.rawTo));
     record.rawCc = Common.encodeAddressHeader(Common.nz(record.rawCc));
@@ -277,16 +277,9 @@ class PstReader {
   static void populatePstHeadersAndRecipients(PSTMessage m, EmailRecord r) throws Exception {
     String headers = Common.nz(m.getTransportMessageHeaders());
     if (headers.isBlank()) return;
-    AssociatedFile originalHeaders = new AssociatedFile();
-    originalHeaders.filename = "transport-headers.txt";
-    originalHeaders.mime = "text/plain";
-    originalHeaders.afRelationship = "Supplement";
-    originalHeaders.sourceSetMember = true;
-    originalHeaders.description = "Native PST transport message header property, stored as UTF-8 text";
-    originalHeaders.bytes = headers.getBytes(StandardCharsets.UTF_8);
-    ProcessingLimits.checkMessage(originalHeaders.bytes.length, "PST transport headers");
-    r.associatedFiles.add(originalHeaders);
-    byte[] rawHeaders = (headers + "\r\n\r\n").getBytes(StandardCharsets.UTF_8);
+    String separator = "\r\n\r\n";
+    byte[] rawHeaders = (headers + separator).getBytes(StandardCharsets.UTF_8);
+    ProcessingLimits.checkMessage(rawHeaders.length - separator.length(), "PST transport headers");
     Session s = EmlReader.mimeSession(rawHeaders);
     try (ByteArrayInputStream in = new ByteArrayInputStream(rawHeaders)) {
       MimeMessage mm = new MimeMessage(s, in);
@@ -451,12 +444,6 @@ class PstReader {
         af.inline = false;
         af.afRelationship = "Data";
         af.description = "Attached email exported from PST";
-        for (AssociatedFile companion : child.associatedFiles) {
-          if (!companion.sourceSetMember) continue;
-          companion.filename = "attached-" + (i + 1) + "-" + companion.filename;
-          companion.description += "; attached email: " + af.filename;
-          r.associatedFiles.add(companion);
-        }
       } else if (method == PSTAttachment.ATTACHMENT_METHOD_BY_VALUE || method == PSTAttachment.ATTACHMENT_METHOD_OLE) {
         if (!EaPdfPstProperties.hasAttachmentPayload(a0)) {
           Common.sourceProblem(r, "Attachment data could not be recovered from the original PST file: "

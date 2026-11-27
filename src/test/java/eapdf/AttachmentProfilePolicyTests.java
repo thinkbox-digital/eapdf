@@ -209,9 +209,7 @@ class AttachmentProfilePolicyTests {
     byte[] pdf = PdfMailWriter.buildSingleMessagePdf(tempDir.resolve("pst_1s.pdf"), record, TestSupport.fontPath(), TestSupport.iccPath(), false, tempDir, 1, "s").pdfBytes;
     try (PDDocument document = Loader.loadPDF(pdf)) {
       Map<String, PDComplexFileSpecification> embedded = files(document);
-      Assertions.assertEquals(2, embedded.size());
-      AssociatedFile headers = record.associatedFiles.stream().filter(file -> file.sourceSetMember).findFirst().orElseThrow();
-      Assertions.assertArrayEquals(headers.data(), bytes(embedded.get(headers.filename)));
+      Assertions.assertEquals(1, embedded.size());
       PDComplexFileSpecification source = embedded.values().stream().filter(file ->
           "Source".equals(file.getCOSObject().getNameAsString(COSName.getPDFName("AFRelationship")))).findFirst().orElseThrow();
       Assertions.assertEquals("Source", source.getCOSObject().getNameAsString(COSName.getPDFName("AFRelationship")));

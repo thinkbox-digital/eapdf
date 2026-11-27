@@ -19,7 +19,9 @@ final class CollectionValidationPool implements AutoCloseable {
     private final Thread shutdown;
     private volatile boolean closed;
 
-    record Result(JsonObject report, int descendants, long bytes) { }
+    record Result(JavaValidation.ChildReport member, int descendants, long bytes) {
+        JsonObject report() { return member.report(); }
+    }
 
     static boolean enabled() {
         if (Boolean.getBoolean("eapdf.validator.childWorker")) return false;
@@ -117,6 +119,7 @@ final class CollectionValidationPool implements AutoCloseable {
             JsonObject task = new JsonObject();
             task.addProperty("id", id); task.addProperty("input", input.toAbsolutePath().toString());
             task.addProperty("output", output.toString()); task.addProperty("response", response.toString()); task.addProperty("depth", depth);
+            task.addProperty("identification_limit", BoundedPdfStreams.metadataLimit());
             task.add("ancestors", JavaValidation.JSON.toJsonTree(ancestors));
             try {
                 requests.write(task.toString()); requests.newLine(); requests.flush();
@@ -137,7 +140,8 @@ final class CollectionValidationPool implements AutoCloseable {
                     || !Set.of("PASS", "FAIL", "INCOMPLETE").contains(JavaValidation.text(result.getAsJsonObject("summary"), "status")))
                     throw new IOException("Incomplete collection worker report");
                 used++;
-                return new Result(result, ack.get("count").getAsInt(), ack.get("bytes").getAsLong());
+                var member = new JavaValidation.ChildReport(result, ack.get("identified").getAsBoolean());
+                return new Result(member, ack.get("count").getAsInt(), ack.get("bytes").getAsLong());
             } catch (Exception error) {
                 stop(); throw error;
             } finally { Files.deleteIfExists(output); Files.deleteIfExists(response); }
@@ -175,7 +179,11 @@ final class CollectionValidationPool implements AutoCloseable {
                     var children = new JavaValidation.Children();
                     children.sharedBudget = budget;
                     for (var value : task.getAsJsonArray("ancestors")) children.active.add(value.getAsString());
-                    JsonObject report = JavaValidation.validate(Path.of(JavaValidation.text(task, "input")), children, task.get("depth").getAsInt());
+                    long identificationLimit = task.has("identification_limit")
+                        ? task.get("identification_limit").getAsLong() : BoundedPdfStreams.metadataLimit();
+                    var member = JavaValidation.validateChild(Path.of(JavaValidation.text(task, "input")), children,
+                        task.get("depth").getAsInt(), identificationLimit);
+                    JsonObject report = member.report();
                     Path output = Path.of(JavaValidation.text(task, "output"));
                     Path temporary = Files.createTempFile(output.getParent(), ".child-result-", ".json");
                     try {
@@ -186,6 +194,7 @@ final class CollectionValidationPool implements AutoCloseable {
                         ValidationSession.replace(temporary, output);
                     } finally { Files.deleteIfExists(temporary); }
                     ack.addProperty("ok", true); ack.addProperty("count", children.count); ack.addProperty("bytes", children.bytes);
+                    ack.addProperty("identified", member.identified());
                 } catch (Exception error) { ack.addProperty("ok", false); ack.addProperty("error", error.toString()); }
                 Path response = Path.of(JavaValidation.text(task, "response"));
                 Path temporary = Files.createTempFile(response.getParent(), ".child-response-", ".json");

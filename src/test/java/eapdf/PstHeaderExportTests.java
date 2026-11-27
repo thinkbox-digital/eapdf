@@ -142,22 +142,22 @@ class PstHeaderExportTests {
     Assertions.assertTrue(exported.contains("Cc: " + original + "\r\n"));
   }
   @Test
-  void nativeTransportHeadersRemainInTheSourceSetWithoutChangingTheExportOrAttachmentCount() throws Exception {
+  void nativeTransportHeadersPopulateTheMessageWithoutAddingASidecar() throws Exception {
     String headers = "From: Author <author@example.org>\r\nTo: reader@example.org\r\n"
         + "Date: Fri, 23 Oct 2026 12:00:00 +0000\r\nReceived: from relay.example.org\r\n\tby archive.example.org; Fri, 23 Oct 2026 12:00:00 +0000\r\n"
         + "Received: from origin.example.org by relay.example.org\r\nReturn-Path: <bounce@example.org>\r\nX-Archive-Note: Résumé 工作\r\n";
     try (var nativeItem = new PstItemSelectionTests.NativeItem()) {
       PstAuthorPreservationTests.strings(nativeItem.message, java.util.Map.of(0x007d, headers));
       EmailRecord record = PstReader.readMessage(nativeItem.message, "Inbox", PstItemSelectionTests.SOURCE.toString(), "", List.of(), false, 0);
-      AssociatedFile companion = record.associatedFiles.stream().filter(file -> file.sourceSetMember
-          && file.filename.equals("transport-headers.txt")).findFirst().orElseThrow();
-      Assertions.assertArrayEquals(headers.getBytes(StandardCharsets.UTF_8), companion.data());
-      Assertions.assertFalse(companion.emailAttachment);
-      int count = record.attachmentCount;
+      Assertions.assertTrue(record.associatedFiles.isEmpty());
+      Assertions.assertEquals(0, record.attachmentCount);
+      Assertions.assertEquals("author@example.org", record.fromAgents.getFirst().email);
+      Assertions.assertEquals("reader@example.org", record.toAgents.getFirst().email);
       byte[] exported = Common.synthesizeEml(record);
-      record.associatedFiles.remove(companion);
-      Assertions.assertArrayEquals(exported, Common.synthesizeEml(record), "Source companions do not become MIME attachments or change MIME boundaries");
-      record.associatedFiles.add(companion);
+      var email = new MimeMessage(EmlReader.mimeSession(exported), new ByteArrayInputStream(exported));
+      Assertions.assertEquals(record.rawFrom, email.getHeader("From", null));
+      Assertions.assertEquals(record.rawTo, email.getHeader("To", null));
+      Assertions.assertEquals(record.rawDateHeader, email.getHeader("Date", null));
       java.nio.file.Path directory = java.nio.file.Files.createTempDirectory("pst-header-check-");
       try {
         for (String profile : List.of("s", "si")) {
@@ -165,18 +165,18 @@ class PstHeaderExportTests {
               TestSupport.fontPath(), TestSupport.iccPath(), false, directory, 1, profile).pdfBytes;
           try (var document = org.apache.pdfbox.Loader.loadPDF(pdf)) {
             var files = AttachmentProfilePolicyTests.files(document);
+            var stripper = new org.apache.pdfbox.text.PDFTextStripper();
+            String text = stripper.getText(document);
+            Assertions.assertTrue(text.contains("author@example.org"));
+            Assertions.assertTrue(text.contains("reader@example.org"));
             if (profile.equals("s")) {
-              var file = files.get(companion.filename);
-              Assertions.assertNotNull(file);
-              Assertions.assertEquals("Supplement", file.getCOSObject().getNameAsString(org.apache.pdfbox.cos.COSName.getPDFName("AFRelationship")));
-              Assertions.assertArrayEquals(companion.data(), AttachmentProfilePolicyTests.bytes(file));
+              Assertions.assertEquals(1, files.size());
               var source = files.values().stream().filter(f -> "Source".equals(f.getCOSObject().getNameAsString(
                   org.apache.pdfbox.cos.COSName.getPDFName("AFRelationship")))).findFirst().orElseThrow();
               Assertions.assertArrayEquals(exported, AttachmentProfilePolicyTests.bytes(source));
             } else {
               Assertions.assertTrue(files.isEmpty(), "Isolation omits the source set");
             }
-            Assertions.assertEquals(count, record.attachmentCount);
             PdfCreationValidator.validate(document);
           }
         }
