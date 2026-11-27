@@ -25,6 +25,7 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.io.IOUtils;
+import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
@@ -81,11 +82,13 @@ final class PdfNavigation implements AutoCloseable {
     private record OutlineEntry(PDOutlineItem item, int depth) {}
 
     private final Path source;
+    private final RandomAccessReadBufferedFile sourceBytes;
     private final PDDocument document;
     private PdfAssetIndex assetIndex;
 
-    private PdfNavigation(Path source, PDDocument document) {
+    private PdfNavigation(Path source, RandomAccessReadBufferedFile sourceBytes, PDDocument document) {
         this.source = source;
+        this.sourceBytes = sourceBytes;
         this.document = document;
     }
 
@@ -94,7 +97,17 @@ final class PdfNavigation implements AutoCloseable {
     }
 
     static PdfNavigation open(Path path, String password) throws IOException {
-        return new PdfNavigation(path, Loader.loadPDF(path.toFile(), password, IOUtils.createTempFileOnlyStreamCache()));
+        var input = new RandomAccessReadBufferedFile(path.toFile());
+        try {
+            return new PdfNavigation(path, input, Loader.loadPDF(input, password, IOUtils.createTempFileOnlyStreamCache()));
+        } catch (IOException | RuntimeException | Error failure) {
+            try {
+                input.close();
+            } catch (IOException closeFailure) {
+                failure.addSuppressed(closeFailure);
+            }
+            throw failure;
+        }
     }
 
     PDDocument document() { return document; }
@@ -133,12 +146,12 @@ final class PdfNavigation implements AutoCloseable {
     }
 
     List<Asset> assets() {
-        if (assetIndex == null) assetIndex = new PdfAssetIndex(document, MailNavigation.read(document));
+        if (assetIndex == null) assetIndex = new PdfAssetIndex(sourceBytes, document, MailNavigation.read(document));
         return assetIndex.assets();
     }
 
     List<Asset> assets(MailNavigation mail) {
-        if (assetIndex == null) assetIndex = new PdfAssetIndex(document, mail);
+        if (assetIndex == null) assetIndex = new PdfAssetIndex(sourceBytes, document, mail);
         return assetIndex.assets();
     }
 

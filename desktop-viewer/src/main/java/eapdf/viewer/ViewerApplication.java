@@ -122,7 +122,7 @@ public final class ViewerApplication extends Application {
     private double rightDivider;
     private double[] pendingSidebarPositions;
     private ViewerWindowState windowState;
-    private long documentSearchRequest;
+    private volatile long documentSearchRequest;
     private ListView<ViewerSearch.Hit> archiveHitList;
     private ViewerSession archiveHitRoot;
     private String archiveHitQuery;
@@ -1225,15 +1225,16 @@ public final class ViewerApplication extends Application {
         messageRows.clear();
         syncing = true;
         try {
-            tree.setRoot(root);
-            if (current == null || navigationDocument == null) return;
+            if (current == null || navigationDocument == null) {
+                tree.setRoot(root);
+                return;
+            }
             var browse = root;
             if ("Messages".equals(navigationMode.get()) && isArchive(navigationDocument) && filter.getText().isBlank()) {
                 browse = new TreeItem<>(new NavigationRow(navigationDocument.name, "", null, null, -1, null,
                         List.of(), true));
                 browse.setExpanded(true);
                 root.getChildren().add(browse);
-                if (archiveOverview && current == navigationDocument) tree.getSelectionModel().select(browse);
             }
             switch (navigationMode.getValue()) {
                 case "Conversations" -> addConversations(root);
@@ -1251,6 +1252,11 @@ public final class ViewerApplication extends Application {
             if (root.getChildren().isEmpty()) {
                 root.getChildren().add(new TreeItem<>(new NavigationRow(
                         "Nothing to show", "", null, null, -1, null)));
+            }
+            // Attaching the complete tree avoids updating row indexes for each child.
+            tree.setRoot(root);
+            if (browse != root && archiveOverview && current == navigationDocument) {
+                tree.getSelectionModel().select(browse);
             }
         } finally {
             syncing = false;
@@ -1868,19 +1874,22 @@ public final class ViewerApplication extends Application {
         clearDocumentSearch();
         if (query.isEmpty() || !(view.getDocument() instanceof PDFView.SearchableDocument document)) return;
         long token = ++documentSearchRequest;
+        var session = current;
         view.setSearchText(query);
         boolean reportMatches = "This PDF".equals(searchScope.getValue());
         if (reportMatches) searchCount.setText("Searching…");
         Thread.ofVirtual().start(() -> {
             try {
-                var results = document.getSearchResults(query);
+                var results = document instanceof ViewerRenderingDocument renderer && session != null
+                        ? renderer.search(session, query, () -> token != documentSearchRequest)
+                        : document.getSearchResults(query);
                 Platform.runLater(() -> {
                     if (token != documentSearchRequest) return;
                     view.getSearchResults().setAll(results);
                     viewport.setSearchResults(results, null);
                     updateSearchCount();
                 });
-            } catch (RuntimeException failure) {
+            } catch (IOException | RuntimeException failure) {
                 Platform.runLater(() -> {
                     if (token == documentSearchRequest && reportMatches) searchCount.setText("Could not search this PDF");
                 });

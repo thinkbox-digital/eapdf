@@ -459,10 +459,11 @@ final class SemanticStructure {
   }
 
   private static boolean pruneEmpty(COSDictionary element) {
-    // A blank cell still occupies a column. Removing it makes an otherwise
-    // regular table ragged and shifts the relationships read by assistive tools.
-    boolean keepCell = PdfMailWriter.pdfUaFeaturesEnabled()
-        && Set.of("TD", "TH", "Mail_FieldValue").contains(element.getNameAsString(COSName.S, ""));
+    // A row can have no cells of its own when spans from above cover it.
+    // Removing the row would shift those spans into the next row of data.
+    String role = element.getNameAsString(COSName.S, "");
+    boolean keepElement = "TR".equals(role) || (PdfMailWriter.pdfUaFeaturesEnabled()
+        && Set.of("TD", "TH", "Mail_FieldValue").contains(role));
     COSBase content = element.getDictionaryObject(COSName.K);
     if (content instanceof COSArray array) {
       for (int index = array.size() - 1; index >= 0; index--) {
@@ -470,15 +471,15 @@ final class SemanticStructure {
         if (child != null && child.containsKey(COSName.S) && !pruneEmpty(child)) array.remove(index);
       }
       if (array.size() == 0) element.removeItem(COSName.K);
-      return keepCell || array.size() > 0;
+      return keepElement || array.size() > 0;
     }
     COSDictionary child = dictionary(content);
     if (child != null && child.containsKey(COSName.S)) {
       if (pruneEmpty(child)) return true;
       element.removeItem(COSName.K);
-      return keepCell;
+      return keepElement;
     }
-    return keepCell || content != null;
+    return keepElement || content != null;
   }
 
   private static void remap(COSDictionary object, String name, Map<Integer, Integer> remapped) {

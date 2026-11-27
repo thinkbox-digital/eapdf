@@ -22,9 +22,14 @@ final class MarkedFileAssociations {
   private final long instructionLimit;
   private MarkedFileAssociations(PDDocument document) { this.document = document; instructionLimit = InspectionBudget.instructions(document); }
 
-  static Set<COSDictionary> collect(PDDocument document) throws IOException {
+  static Set<COSDictionary> collect(PDDocument document, ValidationSession.CountedProgress progress) throws IOException {
     var scan = new MarkedFileAssociations(document);
-    for (var page : document.getPages()) scan.parse(page, page.getResources(), 0);
+    int pages = 0;
+    for (var page : document.getPages()) {
+      scan.parse(page, page.getResources(), 0);
+      progress.advance(++pages);
+    }
+    progress.finish(pages);
     return scan.files;
   }
 

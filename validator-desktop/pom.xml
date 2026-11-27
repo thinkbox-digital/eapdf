@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>local</groupId><artifactId>eapdf-validator</artifactId><version>2.5.0-beta.1</version>
+  <groupId>local</groupId><artifactId>eapdf-validator</artifactId><version>2.7.0-beta.1</version>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
     <validator.main.class>eapdf.ValidatorGui</validator.main.class>
@@ -68,7 +68,7 @@
         <includes><include>jutf7-MIT.txt</include></includes>
       </resource>
       <resource><directory>src/main/java</directory><targetPath>META-INF/eapdf/modified-verapdf-sources</targetPath><filtering>false</filtering>
-        <includes><include>org/verapdf/pdfa/validation/validators/BaseValidator.java</include><include>org/verapdf/pdfa/validation/validators/SpillableIdSet.java</include><include>org/verapdf/parser/XrefStreamParser.java</include><include>org/verapdf/pd/structure/StructureElementAccessObject.java</include><include>org/verapdf/gf/model/impl/pd/GFPDContentStream.java</include><include>org/verapdf/as/filters/ASInFilter.java</include><include>org/verapdf/cos/COSDictionary.java</include></includes>
+        <includes><include>org/verapdf/pdfa/validation/validators/BaseValidator.java</include><include>org/verapdf/pdfa/validation/validators/SpillableIdSet.java</include><include>org/verapdf/parser/XrefStreamParser.java</include><include>org/verapdf/parser/XrefProgress.java</include><include>org/verapdf/pd/structure/StructureElementAccessObject.java</include><include>org/verapdf/gf/model/impl/pd/GFPDContentStream.java</include><include>org/verapdf/as/filters/ASInFilter.java</include><include>org/verapdf/cos/COSDictionary.java</include></includes>
       </resource>
       <resource><directory>${project.basedir}</directory><targetPath>META-INF/eapdf</targetPath><filtering>false</filtering>
         <includes><include>README.md</include><include>THIRD_PARTY_NOTICES.md</include></includes>

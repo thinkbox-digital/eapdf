@@ -55,6 +55,7 @@ final class EmbeddedTextSearch {
     private static final int MAX_PAGES = 200_000;
     private static final int MAX_POSTINGS = 5_000_000;
     private static final int MAX_MATCHES = 250;
+    private static final long MAX_CACHED_BYTES = 64L * MIB;
     private static final Pattern SHA256 = Pattern.compile("[0-9a-f]{64}");
     private static final Pattern MD5 = Pattern.compile("[0-9a-f]{32}");
     private static final Pattern SIGNATURE = Pattern.compile("[0-9]{20}:[0-9]{20}");
@@ -68,7 +69,32 @@ final class EmbeddedTextSearch {
     private record DocumentRow(Route route, String md5, long size, int pages) {}
     private record PageRow(int document, int page, int text, String guid) {}
     private record Index(List<DocumentRow> documents, List<PageRow> pages, List<String> texts,
-                         Map<Route, List<DocumentRow>> children) {}
+                         Map<Route, List<DocumentRow>> children, long estimatedBytes) {}
+    private record Verified(PdfFileStamp stamp, String digest, Index index,
+                            Map<DocumentRow, PdfNavigation.Asset> children) {}
+
+    static final class Cache {
+        private Verified verified;
+        private boolean closed;
+
+        synchronized Verified find(PdfFileStamp current) {
+            if (verified != null && !Objects.equals(verified.stamp(), current)) verified = null;
+            return verified;
+        }
+
+        synchronized void store(Verified index) {
+            if (!closed) verified = index;
+        }
+
+        synchronized void discard(Verified index) {
+            if (verified == index) verified = null;
+        }
+
+        synchronized void close() {
+            closed = true;
+            verified = null;
+        }
+    }
     private record Header(int documents, int pages, int texts, int terms, int postings, String digest) {}
     private record Guard(BooleanSupplier canceled, long deadline) {
         void check() throws IOException {
@@ -89,13 +115,39 @@ final class EmbeddedTextSearch {
         var guard = new Guard(canceled, System.nanoTime() + TimeUnit.MINUTES.toNanos(2));
         try {
             guard.check();
-            Envelope envelope = envelope(root, guard);
-            if (envelope == null) return Optional.empty();
-            verifyHost(root.path, envelope.digest(), guard);
-            Index index = parse(envelope.payload(), root, guard);
-            var children = childBindings(root.assets, index.children().getOrDefault(index.documents().getFirst().route(), List.of()));
-            require(!root.pdf.assetsIncomplete());
-            return Optional.of(query(index, root, children, normalize(query), guard));
+            var stamp = PdfFileStamp.read(root.path);
+            var verified = root.searchIndex.find(stamp);
+            if (verified == null) {
+                Envelope envelope = envelope(root, guard);
+                if (envelope == null) return Optional.empty();
+                verifyHost(root.path, envelope.digest(), guard);
+                Index index = parse(envelope.payload(), root, guard);
+                var children = childBindings(root.assets, index.children().getOrDefault(index.documents().getFirst().route(), List.of()));
+                require(!root.pdf.assetsIncomplete());
+                verified = new Verified(stamp, envelope.digest(), index, children);
+                if (stamp != null) require(stamp.equals(PdfFileStamp.read(root.path)));
+                if (index.estimatedBytes() <= MAX_CACHED_BYTES) root.searchIndex.store(verified);
+            } else if (stamp == null) {
+                // Without a reliable change time, verify the file before reusing the decoded index.
+                try {
+                    verifyHost(root.path, verified.digest(), guard);
+                } catch (InterruptedIOException canceledSearch) {
+                    throw canceledSearch;
+                } catch (IOException changed) {
+                    root.searchIndex.discard(verified);
+                    throw changed;
+                }
+            }
+            var hits = query(verified.index(), root, verified.children(), normalize(query), guard);
+            if (stamp != null) {
+                var current = PdfFileStamp.read(root.path);
+                if (!stamp.equals(current)) {
+                    root.searchIndex.find(current);
+                    return Optional.empty();
+                }
+            }
+            guard.check();
+            return Optional.of(hits);
         } catch (InterruptedIOException canceledSearch) {
             throw canceledSearch;
         } catch (IOException | RuntimeException | XMLStreamException unavailable) {
@@ -448,7 +500,7 @@ final class EmbeddedTextSearch {
                     && texts.size() == header.texts() && terms.size() == header.terms()
                     && postings == header.postings() && postings == expectedPostings);
             for (int i = 0; i < documents.size(); i++) require(pageCounts[i] == documents.get(i).pages());
-            return new Index(documents, pages, texts, children);
+            return new Index(documents, pages, texts, children, retained);
         }
     }
 

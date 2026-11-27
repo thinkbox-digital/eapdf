@@ -22,13 +22,18 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider;
+import org.verapdf.parser.XrefProgress;
 import org.verapdf.pdfa.Foundries;
+import org.verapdf.pdfa.PDFAParser;
 import org.verapdf.pdfa.flavours.PDFAFlavour;
 import org.verapdf.pdfa.results.ValidationResult;
 import org.verapdf.pdfa.validation.profiles.Profiles;
+import org.verapdf.pdfa.validation.profiles.ValidationProfile;
+import org.verapdf.pdfa.validation.validators.BaseValidator;
 import org.verapdf.processor.reports.enums.JobEndStatus;
 
 /** Independent Java EA-PDF checks, with the pinned veraPDF engine in the same JAR. */
@@ -63,11 +68,12 @@ public final class JavaValidation {
     String runId = System.getProperty(ValidationSession.RUN_ID_PROPERTY, java.util.UUID.randomUUID().toString());
     try (ValidationSession session = new ValidationSession(input, output, runId, false)) {
       try (Report report = inspect(input, new Children(), 0, true)) {
+        ValidationSession.stage("Writing validation report", input);
         report.write(output, session);
         session.completed();
         code = "PASS".equals(text(report.summary(), "status")) ? 0 : 2;
       } catch (OutOfMemoryError | StackOverflowError error) {
-        session.failed("Validation ran out of memory; no complete compliance verdict was produced.");
+        session.memoryFailure(error);
       } catch (Exception error) {
         session.failed("Validation could not finish: " + error);
       }
@@ -168,8 +174,8 @@ public final class JavaValidation {
       return true;
     }
     final Set<String> active = new LinkedHashSet<>();
-    final Map<String, JsonObject> cache = new LinkedHashMap<>(32, 0.75f, true) {
-      @Override protected boolean removeEldestEntry(Map.Entry<String, JsonObject> eldest) { return size() > 32; }
+    final Map<String, ChildReport> cache = new LinkedHashMap<>(32, 0.75f, true) {
+      @Override protected boolean removeEldestEntry(Map.Entry<String, ChildReport> eldest) { return size() > 32; }
     };
   }
 
@@ -178,38 +184,64 @@ public final class JavaValidation {
   }
 
   private static Report inspect(Path path, Children children, int depth, boolean streamed) {
+    return inspect(path, children, depth, streamed, null);
+  }
+
+  record ChildReport(JsonObject report, boolean identified) {}
+  private record MemberProbe(boolean isoApplicable, boolean identified) {}
+
+  static ChildReport validateChild(Path path, Children children, int depth, long identificationLimit) throws Exception {
+    initialise();
+    MemberProbe member = inspectMember(path, identificationLimit);
+    try (Report report = inspect(path, children, depth, false, member.isoApplicable())) {
+      return new ChildReport(report.result(), member.identified());
+    }
+  }
+
+  private static MemberProbe inspectMember(Path path, long identificationLimit) throws Exception {
+    // Collect the member type during the existing standards applicability probe.
+    // Closing the probe before veraPDF opens keeps the two models separate.
+    try (PDDocument probe = openForInspection(path)) {
+      boolean identified = EaPdfChecks.identifiedEmail(probe, identificationLimit);
+      return new MemberProbe(isoApplicable(probe), identified);
+    } catch (BoundedPdfStreams.Limit limit) {
+      throw limit;
+    } catch (IOException ignored) {
+      return new MemberProbe(false, false);
+    }
+  }
+
+  private static Report inspect(Path path, Children children, int depth, boolean streamed, Boolean memberIsoApplicable) {
     initialise();
     Report report = new Report(path.toAbsolutePath().toString(), streamed);
     boolean complete = false;
     try {
     ValidationSession.stage("Checking PDF/A", path);
-    JsonObject pdfa = pdfa(path, null);
+    boolean checkIso = memberIsoApplicable != null ? memberIsoApplicable : isoApplicable(path);
+    UpstreamPass upstreamPass = checkIso ? checkWithSharedTraversal(path) : new UpstreamPass(pdfa(path, null), null);
+    JsonObject pdfa = upstreamPass.primary();
     report.pdfa = pdfa;
     String upstream = text(pdfa, "status");
     report.add("PASS".equals(upstream) ? "PASS" : "FAIL".equals(upstream) ? "FAIL" : "WARN",
         "PDFA_FIRST_PASS", text(pdfa, "message"), pdfa);
     if (!Set.of("PASS", "FAIL").contains(upstream)) report.unavailable("VALIDATION_INCOMPLETE", "PDF/A checking did not finish.");
     if (depth == 0) ValidationSession.pdfaFinished(pdfa);
-    // Finish independent parser passes before retaining the PDFBox object graph.
+    // Finish the standards checks before retaining the PDFBox object graph.
     // Otherwise large archives keep two complete PDF representations alive together.
-    if ("PASS".equals(upstream)) {
-      boolean isoApplicable = false;
-      try (PDDocument probe = IndexedPdfLoader.load(path, org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
-        isoApplicable = probe.getVersion() == 2.0f
-            && EaPdfChecks.dict(probe.getDocumentCatalog().getCOSObject(), "StructTreeRoot") != null;
-      } catch (IOException ignored) { /* The normal open check below reports this failure. */ }
-      if (isoApplicable) {
+    if (checkIso && "PASS".equals(upstream)) {
+      report.iso32005 = upstreamPass.iso();
+      if (report.iso32005 == null) {
         ValidationSession.stage("Checking ISO 32005", path);
         try { report.iso32005 = iso(path); }
         catch (Exception error) {
           report.iso32005 = new JsonObject(); report.iso32005.addProperty("status", "ERROR");
           report.iso32005.addProperty("message", "ISO 32005 could not finish: " + error);
         }
-        if (depth == 0) ValidationSession.isoFinished(report.iso32005);
       }
+      if (depth == 0) ValidationSession.isoFinished(report.iso32005);
     }
     ValidationSession.stage("Checking EA-PDF", path);
-    try (PDDocument document = IndexedPdfLoader.load(path, org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
+    try (PDDocument document = openForInspection(path)) {
       report.check("OPEN", true, "PDF opened.", Map.of("pages", document.getNumberOfPages()));
       new EaPdfChecks(document, report, children, depth).run(path);
     } catch (Exception error) {
@@ -222,15 +254,53 @@ public final class JavaValidation {
     } finally { if (!complete) report.close(); }
   }
 
+  private static PDDocument openForInspection(Path path) throws IOException {
+    return IndexedPdfLoader.load(path, org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache());
+  }
+
+  private static boolean isoApplicable(PDDocument probe) {
+    return probe.getVersion() == 2.0f
+        && EaPdfChecks.dict(probe.getDocumentCatalog().getCOSObject(), "StructTreeRoot") != null;
+  }
+
+  private static boolean isoApplicable(Path path) {
+    try (PDDocument probe = openForInspection(path)) {
+      return isoApplicable(probe);
+    } catch (IOException ignored) {
+      return false;
+    }
+  }
+
+  private static byte[] isoProfile() throws Exception {
+    return resource("config/verapdf/ISO-32005.xml", "9e49c6f93e2d62c150f6ac1c842e90f1e5bf6a7a336420db0f94eda384c58624");
+  }
+
   static JsonObject iso(Path path) throws Exception {
-    return pdfa(path, resource("config/verapdf/ISO-32005.xml", "9e49c6f93e2d62c150f6ac1c842e90f1e5bf6a7a336420db0f94eda384c58624"));
+    return pdfa(path, isoProfile());
   }
 
   static JsonObject pdfa(Path path, byte[] profile) {
+    return onUpstreamThread(() -> checkUpstream(path, profile, false)).primary();
+  }
+
+  private record UpstreamPass(JsonObject primary, JsonObject iso) {}
+
+  private static UpstreamPass checkWithSharedTraversal(Path path) {
+    try {
+      UpstreamPass pass = onUpstreamThread(() -> checkUpstream(path, null, true));
+      if (pass != null) return pass;
+    } catch (OutOfMemoryError | StackOverflowError retry) {
+      // The attempt's worker has ended and its parser and caches are released.
+    }
+    ValidationSession.stage("Retrying PDF/A and ISO 32005 separately", path);
+    return new UpstreamPass(pdfa(path, null), null);
+  }
+
+  private static <T> T onUpstreamThread(Callable<T> check) {
     // The rule engine retains a Rhino context in thread-local storage even
     // after its parser and documented caches are closed. Finish an owned
     // thread before loading the next PDF model so all such references die.
-    var task = new java.util.concurrent.FutureTask<JsonObject>(() -> pdfaOnCurrentThread(path, profile));
+    var task = new java.util.concurrent.FutureTask<>(check);
     Thread worker = new Thread(task, "eapdf-upstream-check");
     worker.setDaemon(true);
     worker.start();
@@ -263,7 +333,99 @@ public final class JavaValidation {
     return text.toString();
   }
 
-  private static JsonObject pdfaOnCurrentThread(Path path, byte[] profile) {
+  private static PDFAParser openUpstreamParser(Path path, PDFAFlavour flavour, String profile)
+      throws org.verapdf.core.ModelParsingException, org.verapdf.core.EncryptedPdfException {
+    var progress = ValidationSession.count("Indexing " + profile, path, "cross-reference stream entries", -1);
+    long[] totals = new long[3];
+    try (var tracking = new XrefProgress((entries, encoded, decoded) -> {
+      totals[0] += entries;
+      totals[1] += encoded;
+      totals[2] += decoded;
+      progress.advance(totals[0], totals[1], totals[2], null);
+    })) {
+      PDFAParser parser = Foundries.defaultInstance().createParser(path.toFile(), flavour);
+      progress.finish(totals[0], totals[1], totals[2], null);
+      return parser;
+    }
+  }
+
+  private static UpstreamPass checkUpstream(Path path, byte[] profile, boolean tryShared) {
+    JsonObject out = upstreamResult(path);
+    boolean shared = false;
+    try {
+      initialise();
+      var foundry = Foundries.defaultInstance();
+      String profileName = profile == null ? "PDF/A" : "ISO 32005";
+      try (var parser = openUpstreamParser(path, profile == null ? PDFAFlavour.NO_FLAVOUR : PDFAFlavour.PDFUA_2, profileName)) {
+        shared = tryShared && parser.getFlavour() == PDFAFlavour.PDFA_4_F;
+        if (shared) return sharedPass(path, parser, out);
+        try (var validator = profile == null ? foundry.createValidator(parser.getFlavour(), 100, false, true, false)
+                 : foundry.createValidator(Profiles.profileFromXml(new ByteArrayInputStream(profile)), 100, false, true, false)) {
+          var streams = DecodedObjectStreamCache.install(parser);
+          BoundedGlyphCache.install();
+          ValidationSession.stage("Checking " + profileName, path);
+          try (var progress = ValidationSession.monitor(validator)) {
+            recordUpstreamResult(out, validator.validate(parser), profile != null, streams);
+          }
+        }
+      }
+    } catch (org.verapdf.core.ModelParsingException invalid) {
+      if (shared) return null;
+      out.addProperty("status", "FAIL"); out.addProperty("ran", true);
+      out.add("compliant", com.google.gson.JsonNull.INSTANCE);
+      out.addProperty("profile_name", ""); out.addProperty("job_end_status", ""); out.addProperty("failed_rules", 0);
+      out.addProperty("message", "veraPDF could not parse the input PDF: " + invalid.getMessage());
+    } catch (Exception error) {
+      if (shared) return null;
+      out.addProperty("message", "PDF/A checks could not finish: " + failureReason(error));
+    } finally {
+      clearUpstreamState();
+    }
+    return new UpstreamPass(out, null);
+  }
+
+  private static final class SharedValidator extends BaseValidator {
+    SharedValidator(ValidationProfile pdfa, ValidationProfile iso) {
+      super(List.of(pdfa, iso), 100, false, true, false);
+    }
+  }
+
+  private static UpstreamPass sharedPass(Path path, PDFAParser parser, JsonObject pdfa) throws Exception {
+    var pdfaProfile = Profiles.getVeraProfileDirectory().getValidationProfileByFlavour(parser.getFlavour());
+    var isoProfile = Profiles.profileFromXml(new ByteArrayInputStream(isoProfile()));
+    var streams = DecodedObjectStreamCache.install(parser);
+    BoundedGlyphCache.install();
+    try (var validator = new SharedValidator(pdfaProfile, isoProfile)) {
+      ValidationSession.stage("Checking PDF/A and ISO 32005", path);
+      List<ValidationResult> results;
+      try (var progress = ValidationSession.monitor(validator)) {
+        results = validator.validateAll(parser);
+      }
+      // Separate passes remain authoritative for failures and partial results.
+      if (results.size() != 2 || !completedPass(results.get(0), PDFAFlavour.PDFA_4_F)
+          || !completedPass(results.get(1), PDFAFlavour.PDFUA_2)) return null;
+      JsonObject iso = upstreamResult(path);
+      recordUpstreamResult(pdfa, results.get(0), false, streams);
+      recordUpstreamResult(iso, results.get(1), true, streams);
+      return new UpstreamPass(pdfa, iso);
+    }
+  }
+
+  private static boolean completedPass(ValidationResult result, PDFAFlavour flavour) {
+    return result.getPDFAFlavour() == flavour && result.getJobEndStatus() == JobEndStatus.NORMAL
+        && result.isCompliant() && result.getTotalAssertions() > 0;
+  }
+
+  private static void clearUpstreamState() {
+    // Closing the parser releases its file. These containers retain thread-local model data.
+    org.verapdf.pd.structure.StructureElementAccessObject.clearParentTreeCache();
+    org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
+    org.verapdf.containers.StaticCoreContainers.clearAllContainers();
+    org.verapdf.tools.StaticResources.clear();
+    org.verapdf.xmp.containers.StaticXmpCoreContainers.clearAllContainers();
+  }
+
+  private static JsonObject upstreamResult(Path path) {
     JsonObject out = new JsonObject();
     out.addProperty("file", path.toString());
     out.addProperty("tool", "Bundled veraPDF Java library");
@@ -271,65 +433,45 @@ public final class JavaValidation {
     out.addProperty("ran", false);
     out.addProperty("compliant", false);
     out.addProperty("profile_allowed", false);
-    try {
-      initialise();
-      var foundry = Foundries.defaultInstance();
-      try (var parser = foundry.createParser(path.toFile(), profile == null ? PDFAFlavour.NO_FLAVOUR : PDFAFlavour.PDFUA_2);
-           var validator = profile == null ? foundry.createValidator(parser.getFlavour(), 100, false, true, false)
-               : foundry.createValidator(Profiles.profileFromXml(new ByteArrayInputStream(profile)), 100, false, true, false)) {
-        DecodedObjectStreamCache.install(parser);
-        BoundedGlyphCache.install();
-        ValidationResult result;
-        try (var progress = ValidationSession.monitor(validator)) { result = validator.validate(parser); }
-        boolean allowed = profile != null || ALLOWED.contains(result.getPDFAFlavour());
-        boolean completed = result.getJobEndStatus() == JobEndStatus.NORMAL;
-        out.addProperty("ran", true);
-        out.addProperty("compliant", result.isCompliant());
-        out.addProperty("profile_allowed", allowed);
-        out.addProperty("profile_name", result.getProfileDetails().getName());
-        out.addProperty("flavour", result.getPDFAFlavour().getId());
-        out.addProperty("status", !completed ? "ERROR" : result.isCompliant() && allowed ? "PASS" : "FAIL");
-        out.addProperty("message", !completed ? "veraPDF did not finish." : !allowed ? "The declared PDF/A flavour is not allowed for EA-PDF."
-            : result.isCompliant() ? "PDF/A checks passed." : "PDF/A checks failed.");
-        out.addProperty("job_end_status", result.getJobEndStatus().getValue());
-        out.addProperty("rule_total", result.getValidationProfile().getRules().size());
-        out.addProperty("failed_rules", result.getFailedChecks().size());
-        out.addProperty("checks", result.getTotalAssertions());
-        JsonArray failures = new JsonArray();
-        for (var assertion : result.getTestAssertions()) {
-          if (assertion.getStatus() == org.verapdf.pdfa.results.TestAssertion.Status.PASSED) continue;
-          JsonObject finding = new JsonObject();
-          finding.addProperty("specification", assertion.getRuleId().getSpecification().toString());
-          finding.addProperty("clause", assertion.getRuleId().getClause());
-          finding.addProperty("test", assertion.getRuleId().getTestNumber());
-          finding.addProperty("message", assertion.getMessage());
-          String context = assertion.getLocationContext();
-          if ((context == null || context.isEmpty()) && assertion.getLocation() != null) {
-            var location = assertion.getLocation();
-            context = location.getContext();
-          }
-          finding.addProperty("context", context);
-          finding.addProperty("error", assertion.getErrorMessage());
-          failures.add(finding);
-        }
-        out.add("findings", failures);
-      }
-    } catch (org.verapdf.core.ModelParsingException invalid) {
-      out.addProperty("status", "FAIL"); out.addProperty("ran", true);
-      out.add("compliant", com.google.gson.JsonNull.INSTANCE);
-      out.addProperty("profile_name", ""); out.addProperty("job_end_status", ""); out.addProperty("failed_rules", 0);
-      out.addProperty("message", "veraPDF could not parse the input PDF: " + invalid.getMessage());
-    } catch (Exception error) { out.addProperty("message", "PDF/A checks could not finish: " + failureReason(error)); } finally {
-      // GFModelParser.close() closes the file but retains thread-local models.
-      // Release the same four containers reset by its next parser construction,
-      // before loading the next document/EA-PDF graph on this thread.
-      org.verapdf.pd.structure.StructureElementAccessObject.clearParentTreeCache();
-      org.verapdf.gf.model.impl.containers.StaticContainers.clearAllContainers();
-      org.verapdf.containers.StaticCoreContainers.clearAllContainers();
-      org.verapdf.tools.StaticResources.clear();
-      org.verapdf.xmp.containers.StaticXmpCoreContainers.clearAllContainers();
-    }
     return out;
+  }
+
+  private static void recordUpstreamResult(JsonObject out, ValidationResult result, boolean iso,
+                                           DecodedObjectStreamCache streams) {
+    boolean allowed = iso || ALLOWED.contains(result.getPDFAFlavour());
+    boolean completed = result.getJobEndStatus() == JobEndStatus.NORMAL;
+    out.addProperty("ran", true);
+    out.addProperty("compliant", result.isCompliant());
+    out.addProperty("profile_allowed", allowed);
+    out.addProperty("profile_name", result.getProfileDetails().getName());
+    out.addProperty("flavour", result.getPDFAFlavour().getId());
+    out.addProperty("status", !completed ? "ERROR" : result.isCompliant() && allowed ? "PASS" : "FAIL");
+    out.addProperty("message", !completed ? "veraPDF did not finish." : !allowed ? "The declared PDF/A flavour is not allowed for EA-PDF."
+        : result.isCompliant() ? "PDF/A checks passed." : "PDF/A checks failed.");
+    out.addProperty("job_end_status", result.getJobEndStatus().getValue());
+    out.addProperty("rule_total", result.getValidationProfile().getRules().size());
+    out.addProperty("failed_rules", result.getFailedChecks().size());
+    out.addProperty("checks", result.getTotalAssertions());
+    out.addProperty("object_stream_cache_evictions", streams.evictions);
+    out.addProperty("object_stream_cache_peak_decoded_bytes", streams.peakBytes());
+    JsonArray failures = new JsonArray();
+    for (var assertion : result.getTestAssertions()) {
+      if (assertion.getStatus() == org.verapdf.pdfa.results.TestAssertion.Status.PASSED) continue;
+      JsonObject finding = new JsonObject();
+      finding.addProperty("specification", assertion.getRuleId().getSpecification().toString());
+      finding.addProperty("clause", assertion.getRuleId().getClause());
+      finding.addProperty("test", assertion.getRuleId().getTestNumber());
+      finding.addProperty("message", assertion.getMessage());
+      String context = assertion.getLocationContext();
+      if ((context == null || context.isEmpty()) && assertion.getLocation() != null) {
+        var location = assertion.getLocation();
+        context = location.getContext();
+      }
+      finding.addProperty("context", context);
+      finding.addProperty("error", assertion.getErrorMessage());
+      failures.add(finding);
+    }
+    out.add("findings", failures);
   }
 
   static String text(JsonObject object, String key) {

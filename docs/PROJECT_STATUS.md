@@ -7,9 +7,18 @@ children, runs the packaged Creator and Validator GUIs, and launches the Desktop
 Viewer JAR. GitHub publication through the acceptance workflow uses the packages
 and checksums from the successful job.
 
-Main release **2.5.0-beta.1** includes the Full browser reader **1.14.0** and
-Desktop Viewer **0.10.0**.
-[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.5.0-beta.1).
+Main release **2.7.0-beta.1** includes the Full browser reader **1.15.0** and
+Desktop Viewer **0.11.0**.
+[Downloads](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.7.0-beta.1).
+
+The creator removes the separate PST transport header file.
+It still reads the stored header to populate message fields and embeds the
+reconstructed EML in retained-source profiles.
+
+The Main validator can share a traversal for PDF/A-4f and ISO 32005.
+Separate checks provide the report when the shared pass fails or cannot finish.
+The validator caches rule lookup by PDF object type and reuses the existing
+PDF probe when identifying collection members.
 
 C2PA/PAdES, WeasyPrint and other experimental changes remain separate in
 `../eapdf-secure` on `experiment/c2pa-pades`. Normal development continues in this

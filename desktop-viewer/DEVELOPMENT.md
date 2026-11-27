@@ -23,6 +23,8 @@ on viewer changes and attaches it to releases published from a tag that
 includes the desktop release workflow.
 
 The viewer uses PDFViewFX 3.6.1 and the bundled PDFBox 3.0.8 backport.
+The bundled PDFViewFX adapter builds its orientation cache with a single
+page-tree traversal. Recheck the local adapter when updating PDFViewFX.
 Packaging checks the shaded PDFBox and FontBox classes against the pinned artifacts.
 The standalone viewer is shared across all three editions. Secure's signature
 and provenance verification is available through its browser reader and

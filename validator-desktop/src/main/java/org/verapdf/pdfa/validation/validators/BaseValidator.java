@@ -30,6 +30,9 @@ import org.verapdf.component.Components;
 import org.verapdf.core.ModelParsingException;
 import org.verapdf.core.ValidationException;
 import org.verapdf.core.utils.ValidationProgress;
+import org.verapdf.gf.model.impl.cos.GFCosDocument;
+import org.verapdf.gf.model.impl.cos.IndirectObjectLinks;
+import org.verapdf.model.GenericModelObject;
 import org.verapdf.model.baselayer.Object;
 import org.verapdf.pdfa.PDFAParser;
 import org.verapdf.pdfa.PDFAValidator;
@@ -44,6 +47,7 @@ import org.verapdf.processor.reports.enums.JobEndStatus;
 
 import java.net.URI;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,15 +61,45 @@ public class BaseValidator implements PDFAValidator {
 	private static final URI componentId = URI.create("http://pdfa.verapdf.org/validators#default");
 	private static final String componentName = "veraPDF Validator";
 	private static final ComponentDetails componentDetails = Components.libraryDetails(componentId, componentName);
+	private static final ClassValue<Boolean> TYPE_BASED_INHERITANCE = new ClassValue<>() {
+		@Override
+		protected Boolean computeValue(Class<?> modelClass) {
+			try {
+				return modelClass.getMethod("getSuperTypes").getDeclaringClass() == GenericModelObject.class;
+			} catch (NoSuchMethodException ignored) {
+				return false;
+			}
+		}
+	};
 	List<FlavourValidator> validators = new LinkedList<>();
 	private ScriptableObject scope;
 
-	private final Deque<Object> objectsStack = new ArrayDeque<>();
+	private final Deque<java.lang.Object> objectsStack = new ArrayDeque<>();
 	private final Deque<ContextPath> objectsContext = new ArrayDeque<>();
+	private long pendingIndirectObjects;
+	private volatile String modelActivity;
+	private final Map<String, ObjectChecks> checksByType = new HashMap<>();
+
+	private record RuleCheck(FlavourValidator validator, Rule rule) {}
+	private record ObjectChecks(RuleCheck[] rules, Variable[] variables) {}
+
+	private static final class IndirectBatch {
+		final IndirectObjectLinks links;
+		final BitSet accepted;
+		int next;
+
+		IndirectBatch(IndirectObjectLinks links, BitSet accepted) {
+			this.links = links;
+			this.accepted = accepted;
+			this.next = accepted.nextSetBit(0);
+		}
+	}
 
 	// Local change: share immutable prefixes while objects wait on the frontier.
 	// Capture ID/extra text when enqueued, and format only when a rule needs it.
-	static record ContextPath(ContextPath parent, String link, int index, String id, String extra) {
+	static record ContextPath(ContextPath parent, String link, int index, String id, String extra) implements Supplier<String> {
+		@Override public String get() { return toString(); }
+
 		@Override public String toString() {
 			Deque<ContextPath> path = new ArrayDeque<>();
 			for (ContextPath node = this; node != null; node = node.parent) path.push(node);
@@ -165,7 +199,14 @@ public class BaseValidator implements PDFAValidator {
 	public List<ValidationResult> validateAll(PDFAParser toValidate) throws ValidationException {
 		toValidate.setFlavours(getFlavours());
 		try {
-			return this.validate(toValidate.getRoot());
+			Object root;
+			modelActivity = "Building PDF model";
+			try {
+				root = toValidate.getRoot();
+			} finally {
+				modelActivity = null;
+			}
+			return this.validate(root);
 		} catch (RuntimeException e) {
 			throw new ValidationException("Caught unexpected runtime exception during validation", e);
 		} catch (ModelParsingException excep) {
@@ -185,7 +226,10 @@ public class BaseValidator implements PDFAValidator {
 
 	@Override
 	public Map<String, java.lang.Object> getValidationProgressStats() {
-		return validationProgress.getCurrentValidationJobStats();
+		var stats = validationProgress.getCurrentValidationJobStats();
+		String activity = modelActivity;
+		if (activity != null) stats.put("modelActivity", activity);
+		return stats;
 	}
 
 	@Override
@@ -208,14 +252,15 @@ public class BaseValidator implements PDFAValidator {
 		while (!isAbortProcessing() && !this.objectsStack.isEmpty()) {
 			checkNext();
 			this.validationProgress.incrementNumberOfProcessedObjects();
-			this.validationProgress.updateNumberOfObjectsToBeProcessed(objectsStack.size());
+			this.validationProgress.updateNumberOfObjectsToBeProcessed(
+					(int) Math.min(Integer.MAX_VALUE, objectsStack.size() + pendingIndirectObjects));
 		}
 
 		for (FlavourValidator validator : validators) {
 			for (Map.Entry<Rule, List<ObjectWithContext>> entry : validator.getDeferredRules().entrySet()) {
 				for (ObjectWithContext objectWithContext : entry.getValue()) {
 					if (!isAbortProcessing()) {
-						checkObjWithRule(validator, objectWithContext.getObject(), objectWithContext.getContext(), entry.getKey());
+							checkObjWithRule(validator, objectWithContext.getObject(), objectWithContext.context, entry.getKey());
 					}
 				}
 			}			
@@ -244,6 +289,8 @@ public class BaseValidator implements PDFAValidator {
 		this.scope = JavaScriptEvaluator.initialise();
 		this.objectsStack.clear();
 		this.objectsContext.clear();
+		this.pendingIndirectObjects = 0;
+		this.checksByType.clear();
 		this.idSet.clear();
 		for (FlavourValidator validator : validators) {
 			validator.getFailedChecks().clear();
@@ -273,37 +320,73 @@ public class BaseValidator implements PDFAValidator {
 	}
 
 	private void checkNext() throws ValidationException {
-		Object checkObject = this.objectsStack.pop();
-		ContextPath checkContext = this.objectsContext.pop();
+		java.lang.Object entry = this.objectsStack.peek();
+		Object checkObject;
+		ContextPath checkContext;
+		if (entry instanceof IndirectBatch batch) {
+			int index = batch.next;
+			checkObject = batch.links.get(index);
+			checkContext = new ContextPath(objectsContext.peek(), "indirectObjects", index, checkObject.getID(), null);
+			batch.next = batch.accepted.nextSetBit(index + 1);
+			if (batch.next < 0) {
+				objectsStack.pop();
+				objectsContext.pop();
+			} else pendingIndirectObjects--;
+		} else {
+			checkObject = (Object) this.objectsStack.pop();
+			checkContext = this.objectsContext.pop();
+		}
 
-		checkAllRules(checkObject, checkContext);
-
-		updateVariables(checkObject);
+		// The bundled model defines the inheritance list by type. Keep the
+		// plan local to this traversal because its profiles can change.
+		String type = checkObject.getObjectType();
+		ObjectChecks checks;
+		if (TYPE_BASED_INHERITANCE.get(checkObject.getClass())) {
+			checks = checksByType.get(type);
+			if (checks == null) {
+				checks = objectChecks(type, checkObject.getSuperTypes());
+				checksByType.put(type, checks);
+			}
+		} else {
+			checks = objectChecks(type, checkObject.getSuperTypes());
+		}
+		for (RuleCheck check : checks.rules()) {
+			firstProcessObjectWithRule(check.validator(), checkObject, checkContext, check.rule());
+		}
+		for (Variable var : checks.variables()) {
+			java.lang.Object value = JavaScriptEvaluator.evalVariableResult(var, checkObject, this.scope);
+			this.scope.put(var.getName(), this.scope, value);
+		}
 
 		addAllLinkedObjects(checkObject, checkContext);
 	}
 
-	private void updateVariables(Object object) {
-		if (object != null) {
-			updateVariableForObjectWithType(object, object.getObjectType());
-
-			for (String parentName : object.getSuperTypes()) {
-				updateVariableForObjectWithType(object, parentName);
-			}
-		}
-	}
-
-	private void updateVariableForObjectWithType(Object object, String objectType) {
+	private ObjectChecks objectChecks(String type, List<String> superTypes) {
+		List<RuleCheck> rules = new ArrayList<>();
+		List<Variable> variables = new ArrayList<>();
+		List<String> types = new ArrayList<>(superTypes.size() + 1);
+		types.add(type);
+		types.addAll(superTypes);
+		// Rules are ordered by profile, then type. Variables are ordered by
+		// type, then profile. Preserve duplicates and the scope update order.
 		for (FlavourValidator flavourValidator : validators) {
-			for (Variable var : flavourValidator.getProfile().getVariablesByObject(objectType)) {
-				if (var == null) {
-					continue;
+			for (String checkType : types) {
+				Set<Rule> applicable = flavourValidator.getProfile().getRulesByObject(checkType);
+				if (applicable != null) {
+					for (Rule rule : applicable) {
+						if (rule != null) rules.add(new RuleCheck(flavourValidator, rule));
+					}
 				}
-				java.lang.Object variable = JavaScriptEvaluator.evalVariableResult(var, object, this.scope);
-
-				this.scope.put(var.getName(), this.scope, variable);
 			}
 		}
+		for (String checkType : types) {
+			for (FlavourValidator flavourValidator : validators) {
+				for (Variable var : flavourValidator.getProfile().getVariablesByObject(checkType)) {
+					if (var != null) variables.add(var);
+				}
+			}
+		}
+		return new ObjectChecks(rules.toArray(RuleCheck[]::new), variables.toArray(Variable[]::new));
 	}
 
 	private void addAllLinkedObjects(Object checkObject, ContextPath checkContext)
@@ -315,7 +398,21 @@ public class BaseValidator implements PDFAValidator {
 			if (link == null) {
 				throw new ValidationException("There is a null link name in an object. Context: " + checkContext);
 			}
-			List<? extends Object> objects = checkObject.getLinkedObjects(link);
+			if ("indirectObjects".equals(link) && checkObject.getClass() == GFCosDocument.class) {
+				addIndirectObjects((GFCosDocument) checkObject, checkContext);
+				continue;
+			}
+			List<? extends Object> objects;
+			if ("XMPPackage".equals(link)) {
+				modelActivity = "Building XMP package";
+				try {
+					objects = checkObject.getLinkedObjects(link);
+				} finally {
+					modelActivity = null;
+				}
+			} else {
+				objects = checkObject.getLinkedObjects(link);
+			}
 			if (objects == null) {
 				throw new ValidationException("There is a null link in an object. Context: " + checkContext);
 			}
@@ -348,35 +445,30 @@ public class BaseValidator implements PDFAValidator {
 		}
 	}
 
+	private void addIndirectObjects(GFCosDocument document, ContextPath context) {
+		var indirect = new IndirectObjectLinks(document);
+		var accepted = new BitSet(indirect.size());
+		// Reserve IDs in the same reverse order as the ordinary frontier. Nested links
+		// must already see all sibling IDs as visited when the first child runs.
+		for (int i = indirect.size() - 1; i >= 0; i--) {
+			if (idSet.add(indirect.id(i))) accepted.set(i);
+		}
+		int count = accepted.cardinality();
+		if (count == 0) return;
+		objectsStack.push(new IndirectBatch(indirect, accepted));
+		objectsContext.push(context);
+		pendingIndirectObjects += count - 1L;
+	}
+
 	private boolean checkRequired(Object obj) {
 		return obj.getID() == null || !this.idSet.contains(obj.getID());
 	}
 
-	private boolean checkAllRules(Object checkObject, ContextPath contextPath) {
-		String checkContext = null;
-		boolean res = true;
-		for (FlavourValidator flavourValidator : validators) {
-			Set<Rule> roolsForObject = flavourValidator.getProfile().getRulesByObject(checkObject.getObjectType());
-			for (Rule rule : roolsForObject) {
-				if (checkContext == null) checkContext = contextPath.toString();
-				res &= firstProcessObjectWithRule(flavourValidator, checkObject, checkContext, rule);
-			}
-			for (String checkType : checkObject.getSuperTypes()) {
-				roolsForObject = flavourValidator.getProfile().getRulesByObject(checkType);
-				if (roolsForObject != null) {
-					for (Rule rule : roolsForObject) {
-						if (rule != null) {
-							if (checkContext == null) checkContext = contextPath.toString();
-							res &= firstProcessObjectWithRule(flavourValidator, checkObject, checkContext, rule);
-						}
-					}
-				}
-			}
-		}
-		return res;
+	public boolean firstProcessObjectWithRule(FlavourValidator flavourValidator, Object checkObject, String checkContext, Rule rule) {
+		return firstProcessObjectWithRule(flavourValidator, checkObject, () -> checkContext, rule);
 	}
 
-	public boolean firstProcessObjectWithRule(FlavourValidator flavourValidator, Object checkObject, String checkContext, Rule rule) {
+	private boolean firstProcessObjectWithRule(FlavourValidator flavourValidator, Object checkObject, Supplier<String> checkContext, Rule rule) {
 		Boolean deferred = rule.getDeferred();
 		if (deferred != null && deferred) {
 			List<BaseValidator.ObjectWithContext> list = flavourValidator.getDeferredRules().computeIfAbsent(rule, k -> new ArrayList<>());
@@ -402,7 +494,7 @@ public class BaseValidator implements PDFAValidator {
 		return object;
 	}
 
-	private boolean checkObjWithRule(FlavourValidator flavourValidator, Object obj, String contextForRule, Rule rule) {
+	private boolean checkObjWithRule(FlavourValidator flavourValidator, Object obj, Supplier<String> contextForRule, Rule rule) {
 		boolean testEvalResult = JavaScriptEvaluator.getTestEvalResult(obj, rule, this.scope);
 
 		this.processAssertionResult(flavourValidator, testEvalResult, contextForRule, rule, obj);
@@ -415,6 +507,11 @@ public class BaseValidator implements PDFAValidator {
 
 	protected void processAssertionResult(FlavourValidator flavourValidator, final boolean assertionResult, final String locationContext,
 										  final Rule rule, final Object obj) {
+		processAssertionResult(flavourValidator, assertionResult, () -> locationContext, rule, obj);
+	}
+
+	private void processAssertionResult(FlavourValidator flavourValidator, boolean assertionResult, Supplier<String> locationContext,
+										Rule rule, Object obj) {
 		if (!isAbortProcessing()) {
 			flavourValidator.testCounter++;
 			if (flavourValidator.isCompliant) {
@@ -425,7 +522,7 @@ public class BaseValidator implements PDFAValidator {
 				flavourValidator.getFailedChecks().put(rule.getRuleId(), ++failedChecksNumberOfRule);
 				if ((failedChecksNumberOfRule <= maxNumberOfDisplayedFailedChecks || maxNumberOfDisplayedFailedChecks == -1) &&
 						(flavourValidator.results.size() <= MAX_CHECKS_NUMBER || failedChecksNumberOfRule <= 1)) {
-					Location location = ValidationResults.locationFromValues(this.rootType, locationContext);
+					Location location = ValidationResults.locationFromValues(this.rootType, locationContext.get());
 					List<ErrorArgument> errorArguments = showErrorMessages ?
 							JavaScriptEvaluator.getErrorArgumentsResult(obj, rule.getError().getArguments(),
 									this.scope) : Collections.emptyList();
@@ -435,7 +532,7 @@ public class BaseValidator implements PDFAValidator {
 					flavourValidator.results.add(assertion);
 				}
 			} else if (this.logPassedChecks && flavourValidator.results.size() <= MAX_CHECKS_NUMBER) {
-				Location location = ValidationResults.locationFromValues(this.rootType, locationContext);
+				Location location = ValidationResults.locationFromValues(this.rootType, locationContext.get());
 				TestAssertion assertion = ValidationResults.assertionFromValues(flavourValidator.testCounter, rule.getRuleId(),
 						Status.PASSED, rule.getDescription(), location, obj.getContext(), null, Collections.emptyList());
 				flavourValidator.results.add(assertion);
@@ -461,9 +558,13 @@ public class BaseValidator implements PDFAValidator {
 
 	public static class ObjectWithContext {
 		private final Object object;
-		private final String context;
+		private final Supplier<String> context;
 
 		public ObjectWithContext(Object object, String context) {
+			this(object, () -> context);
+		}
+
+		private ObjectWithContext(Object object, Supplier<String> context) {
 			this.object = object;
 			this.context = context;
 		}
@@ -473,7 +574,7 @@ public class BaseValidator implements PDFAValidator {
 		}
 
 		public String getContext() {
-			return this.context;
+			return this.context.get();
 		}
 	}
 }

@@ -30,9 +30,9 @@ final class MetadataScanner extends PDFParser {
     try (var source = new RandomAccessReadBufferedFile(path.toFile())) {
       var scanner = new MetadataScanner(source);
       try {
+        if (progress) ConversionProgress.stage("indexing_metadata_objects");
         if (!scanner.parsePDFHeader()) throw new IOException("Missing PDF header");
         scanner.retrieveTrailer(); scanner.initialParseDone = true;
-        if (progress) ConversionProgress.beginUnknown("checking_metadata_objects", "objects");
         scanner.direct(scanner.document.getTrailer(), null);
         var xref = scanner.document.getXrefTable();
         var ordered = new ArrayList<>(xref.entrySet());
@@ -40,6 +40,7 @@ final class MetadataScanner extends PDFParser {
         // otherwise defeats the bounded cache and repeatedly decompresses a stream.
         ordered.sort(Comparator.<Map.Entry<COSObjectKey,Long>>comparingLong(Map.Entry::getValue)
             .thenComparingLong(entry -> entry.getKey().getNumber()));
+        if (progress) ConversionProgress.begin("checking_metadata_objects", ordered.size(), "objects");
         for (var entry : ordered) {
           var key = entry.getKey();
           ProcessingLimits.checkCancelled();

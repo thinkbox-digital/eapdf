@@ -2,6 +2,7 @@ package eapdf;
 
 import com.google.gson.*;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.file.*;
 import java.time.Instant;
 import java.util.List;
@@ -18,10 +19,13 @@ final class ValidationSession implements AutoCloseable {
     private final String runId;
     private final long started = System.nanoTime();
     private volatile String stage = "Starting validation", detail = "";
+    private volatile Work work;
     private volatile boolean complete;
     private volatile JsonObject pdfa, iso32005;
     private byte[] reserve = new byte[512 * 1024];
     private final Thread shutdown;
+    private final ScheduledExecutorService heartbeat;
+    private PDFAValidator upstreamValidator;
 
     ValidationSession(Path input, Path output) throws IOException {
         this(input, output, java.util.UUID.randomUUID().toString(), false);
@@ -59,6 +63,12 @@ final class ValidationSession implements AutoCloseable {
             if (!complete) failed("Validation was interrupted during " + stage + ".");
         }, "validation-outcome");
         Runtime.getRuntime().addShutdownHook(shutdown); current = this;
+        heartbeat = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread thread = new Thread(r, "validation-progress");
+            thread.setDaemon(true);
+            return thread;
+        });
+        heartbeat.scheduleWithFixedDelay(this::heartbeat, 5, 5, TimeUnit.SECONDS);
     }
     static void stage(String stage, Path file) {
         ValidationSession session = current;
@@ -66,15 +76,63 @@ final class ValidationSession implements AutoCloseable {
             if (Boolean.getBoolean("eapdf.validator.childWorker")) System.out.println("[validation] " + stage + " — " + file.getFileName());
             return;
         }
-        session.stage = stage; session.detail = file.getFileName().toString();
-        session.updateProgress();
+        synchronized (session) {
+            session.stage = stage; session.detail = file.getFileName().toString(); session.work = null;
+            session.updateProgress();
+        }
+    }
+    private record Work(long completed, long total, String unit, long encoded, long decoded, String relationship) {}
+
+    static CountedProgress count(String stage, Path file, String unit, long total) {
+        ValidationSession session = current;
+        var counter = new CountedProgress(session, stage, unit, total);
+        if (session == null) stage(stage, file);
+        else synchronized (session) {
+            session.stage = stage;
+            counter.finish(0);
+        }
+        return counter;
+    }
+
+    static final class CountedProgress {
+        private final ValidationSession session;
+        private final String stage, unit;
+        private final long total;
+        private long lastUpdate;
+
+        private CountedProgress(ValidationSession session, String stage, String unit, long total) {
+            this.session = session;
+            this.stage = stage;
+            this.unit = unit;
+            this.total = total;
+        }
+        void advance(long completed) { advance(completed, -1, -1, null); }
+        void finish(long completed) { finish(completed, -1, -1, null); }
+        void advance(long completed, long encoded, long decoded, String relationship) {
+            if (session != null && System.nanoTime() - lastUpdate >= TimeUnit.SECONDS.toNanos(1))
+                finish(completed, encoded, decoded, relationship);
+        }
+        void finish(long completed, long encoded, long decoded, String relationship) {
+            if (session == null) return;
+            synchronized (session) {
+                if (!stage.equals(session.stage)) return;
+                lastUpdate = System.nanoTime();
+                session.work = new Work(completed, total, unit, encoded, decoded, relationship);
+                session.detail = completed + (total >= 0 ? "/" + total : "") + " " + unit
+                        + (decoded >= 0 ? ", " + decoded + " decoded bytes" : "");
+                session.updateProgress();
+            }
+        }
     }
     static void collectionProgress(int completed, int total) {
         ValidationSession session = current;
         if (session == null) return;
-        session.stage = "Checking embedded email PDFs";
-        session.detail = completed + " of " + total + " collection members finished; four processes";
-        session.updateProgress();
+        synchronized (session) {
+            session.stage = "Checking embedded email PDFs";
+            session.work = null;
+            session.detail = completed + " of " + total + " collection members finished; four processes";
+            session.updateProgress();
+        }
     }
     static void pdfaFinished(JsonObject result) {
         ValidationSession session = current;
@@ -94,25 +152,78 @@ final class ValidationSession implements AutoCloseable {
     static Monitor monitor(PDFAValidator validator) {
         ValidationSession session = current;
         if (session == null) return () -> {};
-        var timer = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread thread = new Thread(r, "validation-progress"); thread.setDaemon(true); return thread;
-        });
-        timer.scheduleAtFixedRate(() -> {
-            session.detail = validator.getValidationProgressString(); session.updateProgress();
-        }, 0, 10, TimeUnit.SECONDS);
-        return timer::shutdownNow;
+        synchronized (session) {
+            session.upstreamValidator = validator;
+            session.detail = validator.getValidationProgressString();
+            session.updateProgress();
+        }
+        return () -> {
+            synchronized (session) {
+                session.upstreamValidator = null;
+            }
+        };
     }
-    private synchronized void updateProgress() {
+    private synchronized void heartbeat() {
+        if (complete) return;
+        if (upstreamValidator != null) detail = upstreamValidator.getValidationProgressString();
+        updateProgress(upstreamValidator != null);
+    }
+    private void updateProgress() { updateProgress(true); }
+    private synchronized void updateProgress(boolean log) {
         JsonObject value = new JsonObject();
-        value.addProperty("stage", stage); value.addProperty("detail", detail);
+        String progressDetail = detail;
+        if (upstreamValidator != null) {
+            var stats = upstreamValidator.getValidationProgressStats();
+            value.addProperty("upstream_checks", (Number) stats.get("checks"));
+            value.addProperty("upstream_failed_checks", (Number) stats.get("failedChecks"));
+            value.addProperty("upstream_processed_objects", (Number) stats.get("processedObjects"));
+            value.addProperty("upstream_pending_objects", (Number) stats.get("objectsToBeProcessed"));
+            if (stats.get("modelActivity") instanceof String activity) {
+                value.addProperty("upstream_activity", activity);
+                progressDetail += " " + activity + ".";
+            }
+        }
+        value.addProperty("stage", stage); value.addProperty("detail", progressDetail);
         value.addProperty("elapsed_seconds", (System.nanoTime() - started) / 1_000_000_000);
         value.addProperty("updated", Instant.now().toString());
         value.addProperty("validation_target", "eapdf");
         value.addProperty("report", outputs.report().toString());
         value.addProperty("run_id", runId);
+        Work counter = work;
+        if (counter != null) {
+            value.addProperty("stage_completed", counter.completed());
+            if (counter.total() >= 0) value.addProperty("stage_total", counter.total());
+            value.addProperty("stage_unit", counter.unit());
+            if (counter.encoded() >= 0) value.addProperty("stage_encoded_bytes", counter.encoded());
+            if (counter.decoded() >= 0) value.addProperty("stage_decoded_bytes", counter.decoded());
+            if (counter.relationship() != null) value.addProperty("stage_relationship", counter.relationship());
+        }
+        Runtime runtime = Runtime.getRuntime();
+        value.addProperty("process_id", ProcessHandle.current().pid());
+        value.addProperty("heap_used_bytes", runtime.totalMemory() - runtime.freeMemory());
+        value.addProperty("heap_max_bytes", runtime.maxMemory());
+        long rss = residentBytes();
+        if (rss >= 0) value.addProperty("rss_bytes", rss);
+        long gcCount = 0, gcMillis = 0;
+        for (var collector : ManagementFactory.getGarbageCollectorMXBeans()) {
+            gcCount += Math.max(0, collector.getCollectionCount());
+            gcMillis += Math.max(0, collector.getCollectionTime());
+        }
+        value.addProperty("gc_count", gcCount);
+        value.addProperty("gc_milliseconds", gcMillis);
         try { write(outputs.progress(), value); }
         catch (IOException error) { System.err.println("Unable to write validation progress: " + error.getMessage()); }
-        System.out.println("[validation] " + stage + " — " + detail);
+        if (log) System.out.println("[validation] " + stage + " — " + progressDetail);
+    }
+    private static long residentBytes() {
+        try (var status = Files.newBufferedReader(Path.of("/proc/self/status"))) {
+            for (String line; (line = status.readLine()) != null;) {
+                if (line.startsWith("VmRSS:")) return Long.parseLong(line.split("\\s+")[1]) * 1024L;
+            }
+        } catch (IOException | IllegalArgumentException | SecurityException ignored) {
+            // This operating system may not expose process RSS through procfs.
+        }
+        return -1;
     }
     private synchronized void snapshot(String reason, String state) throws IOException {
         JsonObject result = new JsonObject(), summary = new JsonObject(); JsonArray items = new JsonArray();
@@ -155,11 +266,20 @@ final class ValidationSession implements AutoCloseable {
         write(outputs.summary(), brief);
         write(outputs.report(), result);
     }
-    void failed(String reason) {
+    synchronized void failed(String reason) {
+        if (complete) return;
         reserve = null;
         try { snapshot(reason, "INCOMPLETE"); }
         catch (Exception error) { System.err.println("Unable to write incomplete validation report: " + error); }
-        stage = "Incomplete"; detail = reason; updateProgress(); complete = true;
+        stage = "Incomplete"; detail = reason; work = null; updateProgress(); complete = true;
+    }
+    void memoryFailure(Error error) {
+        reserve = null;
+        String kind = error instanceof StackOverflowError ? "exceeded the Java stack" : "ran out of memory";
+        StackTraceElement[] trace = error.getStackTrace();
+        String location = trace.length == 0 ? "" : " at " + trace[0];
+        failed("Validation " + kind + " during " + stage + " (" + error + location + ").");
+        error.printStackTrace(System.err);
     }
     JsonObject completedSummary(JsonObject summary) {
         summary.addProperty("run_id", runId);
@@ -177,7 +297,7 @@ final class ValidationSession implements AutoCloseable {
         writeAtomic(output, result, protectedInputs);
     }
 
-    void completed() { complete = true; stage = "Finished"; detail = "Validation report saved."; updateProgress(); }
+    synchronized void completed() { complete = true; stage = "Finished"; detail = "Validation report saved."; work = null; updateProgress(); }
     static void writeAtomic(Path output, JsonObject result) throws IOException {
         writeAtomic(output, result, List.of());
     }
@@ -196,6 +316,7 @@ final class ValidationSession implements AutoCloseable {
         catch (AtomicMoveNotSupportedException error) { Files.move(temporary, output, StandardCopyOption.REPLACE_EXISTING); }
     }
     @Override public void close() {
+        heartbeat.shutdownNow();
         current = null;
         try { Runtime.getRuntime().removeShutdownHook(shutdown); } catch (IllegalStateException ignored) { }
         reserve = null;

@@ -84,6 +84,7 @@ final class EaPdfChecks {
 
     boolean sameBytes(Embedded other) {
       if (size != other.size) return false;
+      if (stream != null && stream == other.stream && payload == null && other.payload == null) return true;
       try (var first = open(); var second = other.open()) {
         while (true) {
           byte[] chunk = first.readNBytes(8192);
@@ -95,15 +96,21 @@ final class EaPdfChecks {
   }
 
   private static Embedded inspectEmbedded(COSDictionary spec, COSStream stream, String name,
-      String media, String relationship) throws Exception {
+      String media, String relationship, Map<COSStream, Embedded> inspectedStreams) throws Exception {
+    BoundedPdfStreams.file();
+    Embedded prior = inspectedStreams.get(stream);
+    if (prior != null) {
+      return new Embedded("", spec, stream, null, name, media, prior.md5(), relationship, prior.size());
+    }
     var digest = MessageDigest.getInstance("MD5");
     long size;
-    BoundedPdfStreams.file();
     try (var input = BoundedPdfStreams.open(stream, BoundedPdfStreams.streamLimit())) {
       size = input.transferTo(new java.security.DigestOutputStream(java.io.OutputStream.nullOutputStream(), digest));
     }
     // Keep only measured size and checksum; decode payloads on demand while the PDF remains open.
-    return new Embedded("", spec, stream, null, name, media, HexFormat.of().formatHex(digest.digest()), relationship, size);
+    var embedded = new Embedded("", spec, stream, null, name, media, HexFormat.of().formatHex(digest.digest()), relationship, size);
+    inspectedStreams.put(stream, embedded);
+    return embedded;
   }
 
   EaPdfChecks(PDDocument document, JavaValidation.Report report, JavaValidation.Children children, int depth) {
@@ -135,9 +142,7 @@ final class EaPdfChecks {
     }
     catalog();
     outlines();
-    ValidationSession.stage("Checking embedded files", path);
     embedded(path);
-    sourceFileSets();
     collection();
     ValidationSession.stage("Checking document parts", path);
     documentParts();
@@ -182,13 +187,17 @@ final class EaPdfChecks {
   }
 
   private static Element parseMetadata(COSStream stream) throws Exception {
+    return parseMetadata(stream, BoundedPdfStreams.metadataLimit());
+  }
+
+  private static Element parseMetadata(COSStream stream, long maximum) throws Exception {
     var factory = DocumentBuilderFactory.newInstance();
     factory.setNamespaceAware(true);
     factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
     factory.setAttribute("jdk.xml.maxElementDepth", MAX_XMP_DEPTH);
     factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
     factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-    try (var input = BoundedPdfStreams.open(stream, BoundedPdfStreams.metadataLimit())) {
+    try (var input = BoundedPdfStreams.open(stream, maximum)) {
       return factory.newDocumentBuilder().parse(input).getDocumentElement();
     } catch (org.xml.sax.SAXParseException error) {
       if (error.toString().contains("JAXP00010006")) {
@@ -419,15 +428,20 @@ final class EaPdfChecks {
   }
 
   private void embedded(Path path) throws Exception {
+    var discovery = ValidationSession.count("Discovering associated files", path, "PDF objects", -1);
     COSDictionary names = dict(catalog, "Names");
     readNameTree(dict(names, "EmbeddedFiles"));
     Set<COSDictionary> allSpecs = identitySet();
     allSpecs.addAll(nameTreeSpecs);
     if (java.nio.file.Files.size(path) >= 128L * 1024 * 1024 && !document.isEncrypted())
-      associatedSpecs.addAll(PdfAssociationScanner.collect(path, document, InspectionBudget.nodes(document)));
-    else scanAssociations(catalog, associatedSpecs, identitySet(), InspectionBudget.nodes(document));
-    associatedSpecs.addAll(MarkedFileAssociations.collect(document));
+      associatedSpecs.addAll(PdfAssociationScanner.collect(path, document, InspectionBudget.nodes(document), discovery));
+    else scanAssociations(catalog, associatedSpecs, identitySet(), InspectionBudget.nodes(document), discovery);
+    int pageCount = document.getNumberOfPages();
+    var marked = ValidationSession.count("Scanning marked-content file associations", path, "pages", pageCount);
+    associatedSpecs.addAll(MarkedFileAssociations.collect(document, marked));
     allSpecs.addAll(associatedSpecs);
+    var annotations = ValidationSession.count("Checking file attachment annotations", path, "pages", pageCount);
+    int pages = 0;
     for (PDPage page : document.getPages()) {
       for (var annotation : page.getAnnotations()) {
         if (annotation instanceof PDAnnotationFileAttachment attachment) {
@@ -438,7 +452,9 @@ final class EaPdfChecks {
           else report.check("ANNOTATION_CONTENTS_REQUIRED", get(attachment.getCOSObject(), "Contents") instanceof COSString, "A file attachment annotation requires Contents as a PDF text string; empty text is allowed.", null);
         }
       }
+      annotations.advance(++pages);
     }
+    annotations.finish(pages);
     COSBase associated = get(catalog, "AF");
     if (associated instanceof COSArray array) for (int index = 0; index < array.size(); index++) {
       COSBase value = array.getObject(index);
@@ -453,8 +469,12 @@ final class EaPdfChecks {
     }
     if (sourceSpecs.isEmpty()) report.add(profile.endsWith("i") ? "PASS" : "WARN", "SOURCE_MIME_NONE", "No primary Source media type is available to check.", null);
     report.supported("AF_RULE", "SOURCE_AF", "SOURCE_IN_ISOLATED");
+    var verification = ValidationSession.count("Verifying embedded files and checksums", path, "file specifications", allSpecs.size());
+    Map<COSStream, Embedded> inspectedStreams = new IdentityHashMap<>();
+    long checked = 0, encoded = 0, decoded = 0;
     for (COSDictionary spec : allSpecs) {
       COSDictionary ef = dict(spec, "EF");
+      String relationship = name(get(spec, "AFRelationship"));
       Set<COSStream> streams = identitySet();
       if (ef != null) for (COSName key : ef.keySet()) if (get(ef, key.getName()) instanceof COSStream stream) streams.add(stream);
       String filename = string(get(spec, "UF"));
@@ -467,7 +487,9 @@ final class EaPdfChecks {
       }
       for (COSStream stream : streams) {
         String media = name(get(stream, "Subtype"));
-        Embedded embedded = inspectEmbedded(spec, stream, filename, media, name(get(spec, "AFRelationship")));
+        Embedded embedded = inspectEmbedded(spec, stream, filename, media, relationship, inspectedStreams);
+        encoded += Math.max(0, stream.getLength());
+        decoded += Math.max(0, embedded.size());
         String md5 = embedded.md5();
         COSDictionary parameters = dict(stream, "Params");
         COSBase size = get(stream, "Size") == null ? get(parameters, "Size") : get(stream, "Size");
@@ -498,15 +520,18 @@ final class EaPdfChecks {
         report.check("EMBEDDED_MEDIATYPE_RECONSTRUCTION", get(stream, "Subtype") instanceof COSName
             && (mediaParameters == null || mediaParameters instanceof COSString), "An embedded media type must reconstruct from its name and optional parameter text.", Map.of("file", filename));
       }
+      verification.advance(++checked, encoded, decoded, relationship);
     }
+    verification.finish(checked, encoded, decoded, null);
     if (!report.seen.contains("EMBEDDED_FILESPEC_NO_PATH_COMPONENTS")) report.check("EMBEDDED_FILESPEC_NO_PATH_COMPONENTS", true, "No embedded file specification contains a prohibited path component.", null);
     report.supported("ANNOTATION_CONTENTS_REQUIRED", "EMBEDDED_STREAM", "EMBEDDED_FILESPEC_NO_PATH_COMPONENTS", "EMBEDDED_SIZE_MATCH", "EMBEDDED_MD5_MATCH", "EMBEDDED_SIZE_RECOMMENDED", "EMBEDDED_MD5_RECOMMENDED", "EMBEDDED_MD5_BINARY_FORMAT", "EMBEDDED_MEDIATYPE_PARAMETERS_TYPE", "AF_IN_NAME_TREE", "ASSOCIATED_FILE_MODDATE", "EMBEDDED_MEDIATYPE_RECONSTRUCTION");
     report.check("EMBEDDEDFILES_PRESENT", !nameTreeSpecs.isEmpty() || profile.endsWith("i") && associatedSpecs.isEmpty(), "Associated embedded files require the EmbeddedFiles name tree.", Map.of("files", nameTreeSpecs.size()));
+    sourceFileSets(inspectedStreams);
   }
 
   private boolean isAssociated(COSDictionary spec) { return associatedSpecs.contains(spec); }
 
-  private void sourceFileSets() throws Exception {
+  private void sourceFileSets(Map<COSStream, Embedded> inspectedStreams) throws Exception {
     int declarations = 0;
     Set<COSStream> related = identitySet();
     for (COSDictionary source : sourceSpecs) {
@@ -531,7 +556,7 @@ final class EaPdfChecks {
           if (!valid) continue;
           COSStream stream = (COSStream) payload;
           if (!related.add(stream)) continue;
-          files.add(inspectEmbedded(new COSDictionary(), stream, string(filename), name(get(stream, "Subtype")), "RF"));
+          files.add(inspectEmbedded(new COSDictionary(), stream, string(filename), name(get(stream, "Subtype")), "RF", inspectedStreams));
         }
       }
     }
@@ -581,11 +606,17 @@ final class EaPdfChecks {
   }
 
   static void scanAssociations(COSBase object, Set<COSDictionary> specs, Set<COSBase> seen, int limit) throws IOException {
+    scanAssociations(object, specs, seen, limit, null);
+  }
+
+  private static void scanAssociations(COSBase object, Set<COSDictionary> specs, Set<COSBase> seen, int limit,
+      ValidationSession.CountedProgress progress) throws IOException {
     // PDF references form a graph, including long sibling chains and back links.
     // Their traversal depth is not the nesting depth of a PDF tree.
     var pending = new java.util.ArrayDeque<COSBase>();
     object = resolve(object);
     if (object != null) { seen.add(object); pending.add(object); }
+    long visited = 0;
     while (!pending.isEmpty()) {
       COSBase current = pending.removeLast();
       if (current instanceof COSDictionary dictionary) {
@@ -593,7 +624,9 @@ final class EaPdfChecks {
           if (resolve(item) instanceof COSDictionary spec) specs.add(spec);
         for (COSName key : dictionary.keySet()) queueAssociation(dictionary.getItem(key), pending, seen, limit);
       } else if (current instanceof COSArray array) for (COSBase item : array) queueAssociation(item, pending, seen, limit);
+      if (progress != null && (++visited & 1023) == 0) progress.advance(visited);
     }
+    if (progress != null) progress.finish(visited);
   }
 
   private static void queueAssociation(COSBase value, java.util.ArrayDeque<COSBase> pending, Set<COSBase> seen, int limit) throws IOException {
@@ -685,21 +718,35 @@ final class EaPdfChecks {
   }
 
   private static boolean identifiedEmail(Path temporary) throws Exception {
-        boolean identified = false;
-        try (PDDocument child = IndexedPdfLoader.load(temporary, org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
-          if (child.getDocumentCatalog().getMetadata() != null) {
-            Element metadata = parseMetadata(child.getDocumentCatalog().getMetadata().getCOSObject());
-            Map<String, String> identification = new LinkedHashMap<>();
-            for (Element element : descendants(metadata)) if (is(element, RDF, "Description")) {
-              for (Element property : children(element)) if (ID.equals(property.getNamespaceURI()) && simple(property)) identification.put(property.getLocalName(), property.getTextContent());
-              for (String property : List.of("version", "rev", "conformance")) if (element.hasAttributeNS(ID, property)) identification.put(property, element.getAttributeNS(ID, property));
-            }
-            identified = "1".equals(identification.get("version")) && "2024".equals(identification.get("rev")) && PROFILES.contains(identification.getOrDefault("conformance", ""));
-          }
-        } catch (BoundedPdfStreams.Limit limit) {
-          throw limit;
-        } catch (IOException error) { /* An unreadable PDF cannot establish the required member type. */ }
-    return identified;
+    try (PDDocument child = IndexedPdfLoader.load(temporary, org.apache.pdfbox.io.IOUtils.createTempFileOnlyStreamCache())) {
+      return identifiedEmail(child, BoundedPdfStreams.metadataLimit());
+    } catch (BoundedPdfStreams.Limit limit) {
+      throw limit;
+    } catch (IOException error) {
+      return false;
+    }
+  }
+
+  static boolean identifiedEmail(PDDocument child, long identificationLimit) throws Exception {
+    var stream = child.getDocumentCatalog().getMetadata();
+    if (stream == null) return false;
+    Element metadata;
+    try {
+      metadata = parseMetadata(stream.getCOSObject(), identificationLimit);
+    } catch (BoundedPdfStreams.Limit limit) {
+      throw limit;
+    } catch (IOException error) {
+      return false;
+    }
+    Map<String, String> identification = new LinkedHashMap<>();
+    for (Element element : descendants(metadata)) if (is(element, RDF, "Description")) {
+      for (Element property : children(element)) if (ID.equals(property.getNamespaceURI()) && simple(property))
+        identification.put(property.getLocalName(), property.getTextContent());
+      for (String property : List.of("version", "rev", "conformance")) if (element.hasAttributeNS(ID, property))
+        identification.put(property, element.getAttributeNS(ID, property));
+    }
+    return "1".equals(identification.get("version")) && "2024".equals(identification.get("rev"))
+        && PROFILES.contains(identification.getOrDefault("conformance", ""));
   }
 
   private void children(MetadataChecks metadataChecks) throws Exception {
@@ -725,25 +772,37 @@ final class EaPdfChecks {
           input.transferTo(output);
         }
         hash = HexFormat.of().formatHex(digest.digest());
-        boolean identified = identifiedEmail(temporary);
-        report.check("COLLECTION_CONTENT_TYPES", identified, "Every non-source collection member must be an EA-PDF.", Map.of("file", file.name()));
-        typeChecked = true;
         boolean pdf = "application/pdf".equalsIgnoreCase(file.mediaType());
         if (!pdf) try (var input = Files.newInputStream(temporary)) {
           pdf = new String(input.readNBytes(5), java.nio.charset.StandardCharsets.US_ASCII).equals("%PDF-");
         }
-        if (get(file.spec(), "CI") == null && !pdf) { countEvidenceComplete = false; continue; }
+        boolean eligible = get(file.spec(), "CI") != null || pdf;
+        boolean recursive = children.active.contains(hash);
+        JavaValidation.ChildReport checked = null;
+        Exception validationError = null;
+        if (eligible && !recursive) {
+          activeAdded = children.active.add(hash);
+          try {
+            checked = children.cache.get(hash);
+            if (checked == null) {
+              checked = JavaValidation.validateChild(temporary, children, depth + 1, BoundedPdfStreams.metadataLimit());
+              children.cache.put(hash, checked);
+            }
+          } catch (Exception error) {
+            validationError = error;
+          }
+        }
+        boolean identified = checked != null ? checked.identified() : identifiedEmail(temporary);
+        report.check("COLLECTION_CONTENT_TYPES", identified, "Every non-source collection member must be an EA-PDF.", Map.of("file", file.name()));
+        typeChecked = true;
+        if (!eligible) { countEvidenceComplete = false; continue; }
         inspected++;
-        if (!children.active.add(hash)) {
+        if (recursive) {
           report.check("COLLECTION_CHILD_VALIDATION", false, "Recursive collection child detected.", Map.of("file", file.name()));
-          countEvidenceComplete = false; hash = null; continue;
+          countEvidenceComplete = false; continue;
         }
-        activeAdded = true;
-        com.google.gson.JsonObject result = children.cache.get(hash);
-        if (result == null) {
-          result = JavaValidation.validate(temporary, children, depth + 1);
-          children.cache.put(hash, result);
-        }
+        if (validationError != null) throw validationError;
+        var result = checked.report();
         String status = JavaValidation.text(result.getAsJsonObject("summary"), "status");
         if (metadataChecks != null) metadataChecks.childCounts(result);
         if ("INCOMPLETE".equals(status)) report.unavailable("COLLECTION_CHILD_VALIDATION", "Contained email validation is incomplete: " + file.name());
@@ -761,7 +820,7 @@ final class EaPdfChecks {
     if (metadataChecks != null) metadataChecks.finishChildren(!limited && countEvidenceComplete && inspected > 0);
   }
 
-  private record ChildWork(Embedded file, Path path, String hash, boolean identified,
+  private record ChildWork(Embedded file, Path path, String hash,
       boolean eligible, boolean recursive, java.util.concurrent.Future<CollectionValidationPool.Result> future, Exception error) { }
 
   private ChildWork prepareChild(Embedded file, CollectionValidationPool pool) {
@@ -771,7 +830,6 @@ final class EaPdfChecks {
       var digest = MessageDigest.getInstance("SHA-256");
       try (var input = file.open(); var output = new java.security.DigestOutputStream(Files.newOutputStream(temporary), digest)) { input.transferTo(output); }
       String hash = HexFormat.of().formatHex(digest.digest());
-      boolean identified = identifiedEmail(temporary);
       boolean pdf = "application/pdf".equalsIgnoreCase(file.mediaType());
       if (!pdf) try (var input = Files.newInputStream(temporary)) {
         pdf = new String(input.readNBytes(5), java.nio.charset.StandardCharsets.US_ASCII).equals("%PDF-");
@@ -786,8 +844,8 @@ final class EaPdfChecks {
           future = pool.submit(temporary, lineage, depth + 1);
         }
       }
-      return new ChildWork(file, temporary, hash, identified, eligible, recursive, future, null);
-    } catch (Exception error) { return new ChildWork(file, temporary, null, false, false, false, null, error); }
+      return new ChildWork(file, temporary, hash, eligible, recursive, future, null);
+    } catch (Exception error) { return new ChildWork(file, temporary, null, false, false, null, error); }
   }
 
   /** Stage parent streams serially; validate at most four children in isolated JVMs. */
@@ -819,7 +877,14 @@ final class EaPdfChecks {
         ChildWork work = pending.remove(); boolean typeChecked = false;
         try {
           if (work.error() != null) throw work.error();
-          report.check("COLLECTION_CONTENT_TYPES", work.identified(), "Every non-source collection member must be an EA-PDF.", Map.of("file", work.file().name()));
+          CollectionValidationPool.Result checked = null;
+          java.util.concurrent.ExecutionException validationError = null;
+          if (work.future() != null) {
+            try { checked = work.future().get(); }
+            catch (java.util.concurrent.ExecutionException error) { validationError = error; }
+          }
+          boolean identified = checked != null ? checked.member().identified() : identifiedEmail(work.path());
+          report.check("COLLECTION_CONTENT_TYPES", identified, "Every non-source collection member must be an EA-PDF.", Map.of("file", work.file().name()));
           typeChecked = true;
           if (!work.eligible()) { evidence = false; continue; }
           inspected++;
@@ -827,9 +892,9 @@ final class EaPdfChecks {
             report.check("COLLECTION_CHILD_VALIDATION", false, "Recursive collection child detected.", Map.of("file", work.file().name()));
             evidence = false; continue;
           }
-          CollectionValidationPool.Result checked = work.future().get();
+          if (validationError != null) throw validationError;
           children.count = Math.addExact(children.count, checked.descendants()); children.bytes = Math.addExact(children.bytes, checked.bytes());
-          var result = checked.report(); children.cache.put(work.hash(), result);
+          var result = checked.report(); children.cache.put(work.hash(), checked.member());
           String status = JavaValidation.text(result.getAsJsonObject("summary"), "status");
           if (metadataChecks != null) metadataChecks.childCounts(result);
           if ("INCOMPLETE".equals(status)) report.unavailable("COLLECTION_CHILD_VALIDATION", "Contained email validation is incomplete: " + work.file().name());

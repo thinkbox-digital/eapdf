@@ -1,9 +1,9 @@
 # Reader beta
 
-Full reader **1.14.0** is included with **EA-PDF 2.5.0-beta.1**. The
+Full reader **1.15.0** is included with **EA-PDF 2.7.0-beta.1**. The
 Even More Lite reader is distributed by the Lite edition.
 
-Get the browser ZIP from the [release page](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.5.0-beta.1),
+Get the browser ZIP from the [release page](https://github.com/thinkbox-digital/eapdf/releases/tag/v2.7.0-beta.1),
 then follow the [installation guide](../README.md#install).
 
 Full includes search, filtering, independent CSV/XMP export, Conversations, Portfolio

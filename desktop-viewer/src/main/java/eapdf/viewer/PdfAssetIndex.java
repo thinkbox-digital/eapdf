@@ -5,6 +5,7 @@ import eapdf.viewer.PdfNavigation.AssetStream;
 import eapdf.viewer.PdfNavigation.CollectionMember;
 import eapdf.viewer.PdfNavigation.PageLink;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.regex.Pattern;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
@@ -28,6 +30,7 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.cos.COSString;
+import org.apache.pdfbox.io.RandomAccessRead;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -45,6 +48,7 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPa
 
 /** Catalog and page references inventory file specifications without decoding their payloads. */
 final class PdfAssetIndex {
+    private static final int DETACHED_SCAN_THRESHOLD = 1_000_000;
     private static final int MAX_OBJECTS = 1_000_000;
     private static final COSName AF = COSName.getPDFName("AF");
     private static final COSName AF_RELATIONSHIP = COSName.getPDFName("AFRelationship");
@@ -82,14 +86,14 @@ final class PdfAssetIndex {
     private final boolean namesIncomplete;
     private boolean incomplete;
 
-    PdfAssetIndex(PDDocument document, MailNavigation mail) {
+    PdfAssetIndex(RandomAccessRead source, PDDocument document, MailNavigation mail) {
         this.document = document;
         COSDictionary catalog = document.getDocumentCatalog().getCOSObject();
         if (catalog.getDictionaryObject(COSName.NAMES) instanceof COSDictionary names) {
             readNames(names.getDictionaryObject(COSName.EMBEDDED_FILES));
         }
         namesIncomplete = incomplete;
-        readAssociatedFiles(catalog);
+        readAssociatedFiles(source, catalog);
         int page = 0;
         for (PDPage pdfPage : document.getPages()) readAnnotations(pdfPage, page++);
 
@@ -179,6 +183,30 @@ final class PdfAssetIndex {
         if (!pending.isEmpty() || work >= MAX_OBJECTS) incomplete = true;
     }
 
+    private void readAssociatedFiles(RandomAccessRead source, COSDictionary catalog) {
+        if (!document.isEncrypted() && document.getDocument().getXrefTable().size() >= DETACHED_SCAN_THRESHOLD) {
+            try {
+                var inventory = PdfAssociatedFiles.read(source, document, MAX_OBJECTS);
+                for (var file : inventory.files()) recordAssociation(file.specification(), file.catalog());
+                incomplete |= inventory.incomplete();
+                return;
+            } catch (InterruptedIOException canceled) {
+                throw new CancellationException(canceled.getMessage());
+            } catch (IOException unavailable) {
+                if (Thread.currentThread().isInterrupted()) throw new CancellationException();
+                // Use the active parser's recovery behavior for irregular PDFs.
+            }
+        }
+        readAssociatedFiles(catalog);
+    }
+
+    private void recordAssociation(COSBase candidate, boolean catalog) {
+        AssetEntry entry = addFile(candidate);
+        if (entry == null) return;
+        if (catalog) entry.catalog = true;
+        else entry.associatedObject = true;
+    }
+
     private void readAssociatedFiles(COSDictionary catalog) {
         var pending = new ArrayDeque<COSBase>();
         Set<COSBase> queued = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -188,11 +216,7 @@ final class PdfAssetIndex {
             if (value instanceof COSDictionary dictionary) {
                 if (dictionary.getDictionaryObject(AF) instanceof COSArray associated) {
                     for (COSBase candidate : associated) {
-                        AssetEntry entry = addFile(candidate);
-                        if (entry != null) {
-                            if (dictionary == catalog) entry.catalog = true;
-                            else entry.associatedObject = true;
-                        }
+                        recordAssociation(candidate, dictionary == catalog);
                     }
                 } else if (dictionary.containsKey(AF)) {
                     incomplete = true;

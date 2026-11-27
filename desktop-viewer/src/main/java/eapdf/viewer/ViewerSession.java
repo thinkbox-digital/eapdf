@@ -13,6 +13,8 @@ import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 final class ViewerSession implements AutoCloseable {
     final Path path;
     final Path renderingPath;
+    final PdfFileStamp sourceStamp;
+    final EmbeddedTextSearch.Cache searchIndex = new EmbeddedTextSearch.Cache();
     final String name;
     final ViewerSession parent;
     final PdfNavigation.Asset parentAsset;
@@ -23,11 +25,12 @@ final class ViewerSession implements AutoCloseable {
     int page;
     ContinuousReader.Position position;
 
-    private ViewerSession(Path path, Path renderingPath, String name, ViewerSession parent, PdfNavigation.Asset parentAsset,
+    private ViewerSession(Path path, Path renderingPath, PdfFileStamp sourceStamp, String name, ViewerSession parent, PdfNavigation.Asset parentAsset,
                           PdfNavigation pdf, MailNavigation mail, List<PdfNavigation.Asset> assets,
                           List<PdfNavigation.Bookmark> bookmarks) {
         this.path = path;
         this.renderingPath = renderingPath;
+        this.sourceStamp = sourceStamp;
         this.name = name;
         this.parent = parent;
         this.parentAsset = parentAsset;
@@ -44,6 +47,7 @@ final class ViewerSession implements AutoCloseable {
 
     static ViewerSession open(Path path, String name, ViewerSession parent, PdfNavigation.Asset asset,
                               String password) throws IOException {
+        var sourceStamp = PdfFileStamp.read(path);
         PdfNavigation pdf = null;
         Path renderingPath = path;
         try {
@@ -58,7 +62,7 @@ final class ViewerSession implements AutoCloseable {
                     render.save(renderingPath.toFile());
                 }
             }
-            return new ViewerSession(path, renderingPath, name, parent, asset, pdf, mail, pdf.assets(mail), pdf.bookmarks());
+            return new ViewerSession(path, renderingPath, sourceStamp, name, parent, asset, pdf, mail, pdf.assets(mail), pdf.bookmarks());
         } catch (IOException | RuntimeException | OutOfMemoryError error) {
             release(pdf, path, false);
             if (!renderingPath.equals(path)) deleteTemporaryFile(renderingPath);
@@ -119,6 +123,7 @@ final class ViewerSession implements AutoCloseable {
 
     @Override
     public void close() {
+        searchIndex.close();
         release(pdf, path, parent != null);
         if (!renderingPath.equals(path)) deleteTemporaryFile(renderingPath);
     }
